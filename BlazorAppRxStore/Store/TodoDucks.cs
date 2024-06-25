@@ -1,20 +1,24 @@
+using System.Collections.Immutable;
+
 namespace BlazorAppRxStore.Store;
 
 // State
 public record TodoState
 {
-    public List<TodoItem> Todos { get; init; } =
+    public IImmutableList<TodoItem> Todos { get; init; } =
     [
-        new TodoItem { Title = "Learn Blazor", IsCompleted = true },
-        new TodoItem { Title = "Learn Redux" },
-        new TodoItem { Title = "Learn Rx.NET" },
+        new TodoItem("Learn Blazor") { IsCompleted = true },
+        new TodoItem("Learn Redux"),
+        new TodoItem("Learn Rx.NET")
     ];
 }
 
-public record TodoItem
+public record TodoItem(string Title)
 {
-    public required string Title { get; set; }
-    public bool IsCompleted { get; set; }
+    public bool IsCompleted { get; init; }
+    
+    public TodoItem ToggleIsCompleted()
+        => this with { IsCompleted = !IsCompleted };
 }
 
 // Actions
@@ -29,22 +33,22 @@ public class TodoReducer : ReducerBase<TodoState>
 {
     public TodoReducer()
     {
-        Register<AddTodo>((state, action)
-            => state with { Todos = [..state.Todos, new TodoItem { Title = action.Title, IsCompleted = false }] });
-
-        Register<ToggleTodo>((state, action)
-            => state with
-            {
-                Todos = new List<TodoItem>(state.Todos)
-                {
-                    [action.Index] = state.Todos[action.Index] with { IsCompleted = !state.Todos[action.Index].IsCompleted }
-                }
-            });
-
-        Register<RemoveTodo>((state, action)
-            => state with
-            {
-                Todos = new List<TodoItem>(state.Todos).FindAll(item => item != state.Todos[action.Index])
-            });
+        Register<AddTodo>(RegisterAddTodo);
+        Register<ToggleTodo>(RegisterToggleTodo);
+        Register<RemoveTodo>(RegisterRemoveTodo);
     }
+
+    private static TodoState RegisterAddTodo(TodoState state, AddTodo action)
+        => state with { Todos = state.Todos.Add(new TodoItem(action.Title)) };
+
+    private static TodoState RegisterToggleTodo(TodoState state, ToggleTodo action)
+        => state with
+        {
+            Todos = state.Todos
+                .Select((todo, idx) => idx == action.Index ? todo.ToggleIsCompleted() : todo)
+                .ToImmutableList()
+        };
+
+    private static TodoState RegisterRemoveTodo(TodoState state, RemoveTodo action)
+        => state with { Todos = state.Todos.RemoveAt(action.Index) };
 }

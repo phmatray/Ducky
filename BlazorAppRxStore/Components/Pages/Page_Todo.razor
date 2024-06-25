@@ -23,7 +23,8 @@
 
   protected override async Task OnInitializedAsync()
   {
-    _todos = await SubscribeToStateAsync(state => state.Todos, nameof(_todos));
+    ArgumentNullException.ThrowIfNull(_todos);
+    await SubscribeToStateAsync(state => state.Todos.ToList(), nameof(_todos));
   }
 
   private void AddTodo()
