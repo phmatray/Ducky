@@ -1,0 +1,32 @@
+@page "/counter"
+@inherits RxComponentBase<CounterState>
+
+<h3>Counter</h3>
+
+<button @onclick="Increment">Increment</button>
+
+<div>Current Count: @_count</div>
+
+<button @onclick="Decrement">Decrement</button>
+
+<button @onclick="Reset">Reset Counter</button>
+
+@code {
+
+  private int _count;
+
+  protected override async Task OnInitializedAsync()
+  {
+    _count = await SubscribeToStateAsync(state => state.Count, nameof(_count));
+  }
+
+  private void Increment()
+    => Store.Dispatch(new Increment());
+
+  private void Decrement()
+    => Store.Dispatch(new Decrement());
+
+  private void Reset()
+    => Store.Dispatch(new Reset());
+
+}
