@@ -8,7 +8,9 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add RxStore
-builder.Services.AddRxStore();
+builder.Services.AddRxStore<AppState, AppReducer>();
+builder.Services.AddRxStore<CounterState, CounterReducer>();
+builder.Services.AddRxStore<TodoState, TodoReducer>();
 
 var app = builder.Build();
 

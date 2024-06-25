@@ -1,5 +1,3 @@
-using BlazorAppRxStore.SeedWork;
-
 namespace BlazorAppRxStore.Store;
 
 // State
@@ -19,7 +17,7 @@ public class CounterReducer : ReducerBase<CounterState>
     public CounterReducer()
     {
         Register<Reset>((state, action)
-            => new CounterState { Count = 0 });
+            => new CounterState());
         
         Register<Increment>((state, action)
             => new CounterState { Count = state.Count + 1 });

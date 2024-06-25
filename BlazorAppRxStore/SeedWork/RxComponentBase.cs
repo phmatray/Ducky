@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Components;
 
 namespace BlazorAppRxStore.SeedWork;
 
-public class RxComponentBase<TState> : ComponentBase, IDisposable
+public class RxComponentBase<TState, TReducer>
+    : ComponentBase, IDisposable
+    where TReducer : ReducerBase<TState>, new()
 {
     private readonly List<IDisposable> _subscriptions = [];
     
     [Inject]
-    protected RxStore<TState> Store { get; init; } = default!;
+    protected RxStore<TState, TReducer> Store { get; init; } = default!;
 
     protected async Task<T> SubscribeToStateAsync<T>(Func<TState, T> selector, string fieldName)
     {

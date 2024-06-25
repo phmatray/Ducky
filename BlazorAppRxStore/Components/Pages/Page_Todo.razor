@@ -1,0 +1,43 @@
+@page "/todo"
+@inherits RxComponentBase<TodoState, TodoReducer>
+
+<h3>Todo List</h3>
+
+<input @bind="_newTodo" placeholder="Enter new todo" />
+<button @onclick="AddTodo">Add Todo</button>
+
+<ul>
+  @foreach (var todo in _todos)
+  {
+    <li>
+      <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(_todos.IndexOf(todo))" />
+      @todo.Title
+      <button @onclick="() => RemoveTodoItem(_todos.IndexOf(todo))">Remove</button>
+    </li>
+  }
+</ul>
+
+@code {
+  private string _newTodo = string.Empty;
+  private List<TodoItem> _todos = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    _todos = await SubscribeToStateAsync(state => state.Todos, nameof(_todos));
+  }
+
+  private void AddTodo()
+  {
+    if (!string.IsNullOrWhiteSpace(_newTodo))
+    {
+      Store.Dispatch(new AddTodo(_newTodo));
+      _newTodo = string.Empty;
+    }
+  }
+
+  private void ToggleTodoItem(int index)
+    => Store.Dispatch(new ToggleTodo(index));
+
+  private void RemoveTodoItem(int index)
+    => Store.Dispatch(new RemoveTodo(index));
+}

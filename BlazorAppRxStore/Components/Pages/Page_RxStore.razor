@@ -1,39 +1,28 @@
 @page "/rxstore"
-@inject RxStore<AppState> Store
+@inject RxStore<AppState, AppReducer> Store
 
 <h3>RxStore Example</h3>
-<p>Counter: @state.Count</p>
-<p>Message: @state.Message</p>
-<button @onclick="IncrementCounter">Increment Counter</button>
+<p>Message: @_state.Message</p>
 <button @onclick="SetNewMessage">Set New Message</button>
 
 @code {
   
-  private AppState state;
-  private IDisposable subscription;
+  private AppState _state;
+  private IDisposable _subscription;
 
   protected override void OnInitialized()
   {
-    subscription = Store.State.Subscribe(s =>
+    _subscription = Store.State.Subscribe(s =>
     {
-      state = s;
+      _state = s;
       InvokeAsync(StateHasChanged);
     });
   }
 
-  private void IncrementCounter()
-  {
-    Store.Dispatch(new Increment());
-  }
-
   private void SetNewMessage()
-  {
-    Store.Dispatch(new SetMessage("New message from Blazor!"));
-  }
+    => Store.Dispatch(new SetMessage("New message from Blazor!"));
 
   public void Dispose()
-  {
-    subscription.Dispose();
-  }
-  
+    => _subscription.Dispose();
+
 }
