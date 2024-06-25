@@ -10,6 +10,11 @@ public class RxStore<TState>
 
     public IObservable<TState> State
         => _state.AsObservable();
+    
+    public RxStore(Func<TState, IAction, TState> reducer)
+        : this(Activator.CreateInstance<TState>(), reducer)
+    {
+    }
 
     public RxStore(TState initialState, Func<TState, IAction, TState> reducer)
     {

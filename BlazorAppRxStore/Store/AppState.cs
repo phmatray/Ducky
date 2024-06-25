@@ -4,32 +4,18 @@ namespace BlazorAppRxStore.Store;
 
 public record AppState
 {
-    public int Count { get; set; }
-    public string Message { get; set; }
+    public int Count { get; init; } = 0;
+    public string Message { get; init; } = "Hello, Blazor!";
 }
 
 public record SetMessage(string Message) : IAction;
 
-public static class Reducers
+public class AppReducer : ReducerBase<AppState>
 {
-    public static AppState RootReducer(AppState state, IAction action)
+    public AppReducer()
     {
-        return action switch
-        {
-            SetMessage setMessage => state with { Message = setMessage.Message },
-            _ => state
-        };
-    }
-    
-    public static CounterState CounterReducer(CounterState state, IAction action)
-    {
-        return action switch
-        {
-            Reset => new CounterState { Count = 0 },
-            Increment => new CounterState { Count = state.Count + 1 },
-            Decrement => new CounterState { Count = state.Count - 1 },
-            _ => state
-        };
+        Register<SetMessage>((state, action)
+            => state with { Message = action.Message });
     }
 }
 
@@ -37,13 +23,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddRxStore(this IServiceCollection services)
     {
-        services.AddSingleton(new RxStore<AppState>(
-            new AppState { Count = 0, Message = "Hello, Blazor!" },
-            Reducers.RootReducer));
+        var appReducer = new AppReducer();
+        services.AddSingleton(new RxStore<AppState>(appReducer.Reduce));
 
-        services.AddSingleton(new RxStore<CounterState>(
-            new CounterState { Count = 10 },
-            Reducers.CounterReducer));
+        var counterReducer = new CounterReducer();
+        services.AddSingleton(new RxStore<CounterState>(counterReducer.Reduce));
 
         return services;
     }
