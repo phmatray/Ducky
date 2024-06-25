@@ -46,6 +46,9 @@ public class RxComponentBase<TState, TReducer>
         field.SetValue(this, value);
     }
     
+    public void Dispatch(IAction action)
+        => Store.Dispatch(action);
+    
     public void Dispose()
     {
         foreach (var subscription in _subscriptions)

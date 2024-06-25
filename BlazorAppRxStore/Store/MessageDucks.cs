@@ -1,9 +1,8 @@
 namespace BlazorAppRxStore.Store;
 
 // State
-public record AppState
+public record MessageState
 {
-    public int Count { get; init; } = 0;
     public string Message { get; init; } = "Hello, Blazor!";
 }
 
@@ -11,11 +10,11 @@ public record AppState
 public record SetMessage(string Message) : IAction;
 
 // Reducer
-public class AppReducer : ReducerBase<AppState>
+public class MessageReducer : ReducerBase<MessageState>
 {
-    public AppReducer()
+    public MessageReducer()
     {
         Register<SetMessage>((state, action)
-            => state with { Message = action.Message });
+            => new MessageState { Message = action.Message });
     }
 }

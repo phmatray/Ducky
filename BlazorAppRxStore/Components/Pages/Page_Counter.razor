@@ -3,11 +3,11 @@
 
 <h3>Counter</h3>
 
-<button @onclick="Increment">Increment</button>
-
-<div>Current Count: @_count</div>
-
-<button @onclick="Decrement">Decrement</button>
+<div style="display: flex;">
+  <button @onclick="Decrement">Decrement</button>
+  <div style="margin: 0 10px;">Current Count: @_count</div>
+  <button @onclick="Increment">Increment</button>
+</div>
 
 <button @onclick="Reset">Reset Counter</button>
 
@@ -21,12 +21,12 @@
   }
 
   private void Increment()
-    => Store.Dispatch(new Increment());
+    => Dispatch(new Increment());
 
   private void Decrement()
-    => Store.Dispatch(new Decrement());
+    => Dispatch(new Decrement());
 
   private void Reset()
-    => Store.Dispatch(new Reset());
+    => Dispatch(new Reset());
 
 }

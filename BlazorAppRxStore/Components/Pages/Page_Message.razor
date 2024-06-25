@@ -1,0 +1,21 @@
+@page "/message"
+@inherits RxComponentBase<MessageState, MessageReducer>
+
+<h3>Message Example</h3>
+
+<p>Message: @_message</p>
+<button @onclick="SetMessage">Set New Message</button>
+
+@code {
+
+  private string _message;
+  
+  protected override async Task OnInitializedAsync()
+  {
+    _message = await SubscribeToStateAsync(state => state.Message, nameof(_message));
+  }
+
+  private void SetMessage()
+    => Dispatch(new SetMessage("New message from Blazor!"));
+
+}
