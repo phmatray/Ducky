@@ -1,5 +1,5 @@
-using System.Reactive.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Components;
 
 namespace BlazorAppRxStore.SeedWork;
@@ -9,41 +9,42 @@ public class RxComponentBase<TState, TReducer>
     where TReducer : ReducerBase<TState>, new()
 {
     private readonly List<IDisposable> _subscriptions = [];
+    private readonly Dictionary<string, Action<object>> _fieldSetters = new();
     
     [Inject]
     protected RxStore<TState, TReducer> Store { get; init; } = default!;
     
-    protected async Task<T> SubscribeToStateAsync<T>(Func<TState, T> selector, string fieldName)
+    protected void SubscribeToState<T>(
+        Func<TState, T> selector,
+        object argument, 
+        [CallerArgumentExpression("argument")] string? fieldName = null)
     {
-        var initialValue = await Store.State
-            .Select(selector)
-            .FirstAsync();
+        ArgumentNullException.ThrowIfNull(fieldName);
 
-        SetFieldValue(fieldName, initialValue);
-
+        if (!_fieldSetters.TryGetValue(fieldName, out var setter))
+        {
+            setter = CreateFieldSetter(fieldName);
+            _fieldSetters[fieldName] = setter;
+        }
+        
         var subscription = Store
             .Select(selector)
             .Subscribe(value =>
             {
-                SetFieldValue(fieldName, value);
+                setter(value!);
                 InvokeAsync(StateHasChanged);
             });
-
+    
         _subscriptions.Add(subscription);
-
-        return initialValue;
     }
 
-    private void SetFieldValue<T>(string fieldName, T value)
+    private Action<object> CreateFieldSetter(string fieldName)
     {
-        var field = GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+        var field =
+            GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new ArgumentException($"Field '{fieldName}' not found on '{GetType().Name}'.");
 
-        if (field == null)
-        {
-            throw new ArgumentException($"Field '{fieldName}' not found on '{GetType().Name}'.");
-        }
-
-        field.SetValue(this, value);
+        return value => field.SetValue(this, value);
     }
 
     protected void Dispatch(IAction action)

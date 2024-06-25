@@ -15,9 +15,9 @@
 
   private int _count;
 
-  protected override async Task OnInitializedAsync()
+  protected override void OnInitialized()
   {
-    _count = await SubscribeToStateAsync(state => state.Count, nameof(_count));
+    SubscribeToState(state => state.Count, _count);
   }
 
   private void Increment()

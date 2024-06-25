@@ -16,10 +16,10 @@
   private bool _isRunning;
   private System.Timers.Timer? _timer;
 
-  protected override async Task OnInitializedAsync()
+  protected override void OnInitialized()
   {
-    _time = await SubscribeToStateAsync(state => state.Time, nameof(_time));
-    _isRunning = await SubscribeToStateAsync(state => state.IsRunning, nameof(_isRunning));
+    SubscribeToState(state => state.Time, _time);
+    SubscribeToState(state => state.IsRunning, _isRunning);
     
     if (_isRunning)
     {

@@ -10,9 +10,9 @@
 
   private string _message;
   
-  protected override async Task OnInitializedAsync()
+  protected override void OnInitialized()
   {
-    _message = await SubscribeToStateAsync(state => state.Message, nameof(_message));
+    SubscribeToState(state => state.Message, _message);
   }
 
   private void SetMessage()

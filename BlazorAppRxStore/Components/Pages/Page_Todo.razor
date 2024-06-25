@@ -19,12 +19,11 @@
 
 @code {
   private string _newTodo = string.Empty;
-  private List<TodoItem> _todos = new();
+  private List<TodoItem> _todos = [];
 
-  protected override async Task OnInitializedAsync()
+  protected override void OnInitialized()
   {
-    ArgumentNullException.ThrowIfNull(_todos);
-    await SubscribeToStateAsync(state => state.Todos.ToList(), nameof(_todos));
+    SubscribeToState(state => state.Todos.ToList(), _todos);
   }
 
   private void AddTodo()
