@@ -12,7 +12,7 @@ public class RxComponentBase<TState, TReducer>
     
     [Inject]
     protected RxStore<TState, TReducer> Store { get; init; } = default!;
-
+    
     protected async Task<T> SubscribeToStateAsync<T>(Func<TState, T> selector, string fieldName)
     {
         var initialValue = await Store.State
@@ -45,8 +45,8 @@ public class RxComponentBase<TState, TReducer>
 
         field.SetValue(this, value);
     }
-    
-    public void Dispatch(IAction action)
+
+    protected void Dispatch(IAction action)
         => Store.Dispatch(action);
     
     public void Dispose()

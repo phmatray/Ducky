@@ -17,12 +17,7 @@ public abstract class ReducerBase<TState>
         => _handlers[typeof(TAction)] = (_, _) => handler();
 
     public TState Reduce(TState state, IAction action)
-    {
-        if (_handlers.TryGetValue(action.GetType(), out var handler))
-        {
-            return handler(state, action);
-        }
-
-        return state;
-    }
+        => _handlers.TryGetValue(action.GetType(), out var handler)
+            ? handler(state, action)
+            : state;
 }

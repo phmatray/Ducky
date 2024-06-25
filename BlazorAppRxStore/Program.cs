@@ -11,6 +11,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddRxStore<MessageState, MessageReducer>();
 builder.Services.AddRxStore<CounterState, CounterReducer>();
 builder.Services.AddRxStore<TodoState, TodoReducer>();
+builder.Services.AddRxStore<TimerState, TimerReducer>();
 
 var app = builder.Build();
 
