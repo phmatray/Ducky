@@ -1,4 +1,5 @@
 @page "/todo"
+@using System.Collections.Immutable
 @inherits RxComponentBase<TodoState, TodoReducer>
 
 <h3>Todo List</h3>
@@ -6,24 +7,43 @@
 <input @bind="_newTodo" placeholder="Enter new todo" />
 <button @onclick="AddTodo">Add Todo</button>
 
+<h4>Active Todos (@_activeTodosCount)</h4>
 <ul>
-  @foreach (var todo in _todos)
+  @foreach (var todo in _activeTodos)
   {
-    <li>
-      <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(_todos.IndexOf(todo))" />
+    <li @key="todo.Id">
+      <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)" />
       @todo.Title
-      <button @onclick="() => RemoveTodoItem(_todos.IndexOf(todo))">Remove</button>
+      <button @onclick="() => RemoveTodoItem(todo.Id)">Remove</button>
+    </li>
+  }
+</ul>
+
+<h4>Completed Todos (@_completedTodosCount)</h4>
+<ul>
+  @foreach (var todo in _completedTodos)
+  {
+    <li @key="todo.Id">
+      <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)"/>
+      @todo.Title
+      <button @onclick="() => RemoveTodoItem(todo.Id)">Remove</button>
     </li>
   }
 </ul>
 
 @code {
   private string _newTodo = string.Empty;
-  private List<TodoItem> _todos = [];
+  private IImmutableList<TodoItem> _activeTodos = [];
+  private int _activeTodosCount;
+  private IImmutableList<TodoItem> _completedTodos = [];
+  private int _completedTodosCount;
 
   protected override void OnInitialized()
   {
-    SubscribeToState(state => state.Todos.ToList(), _todos);
+    SubscribeToState(state => state.ActiveTodos, _activeTodos);
+    SubscribeToState(state => state.ActiveTodosCount, _activeTodosCount);
+    SubscribeToState(state => state.CompletedTodos, _completedTodos);
+    SubscribeToState(state => state.CompletedTodosCount, _completedTodosCount);
   }
 
   private void AddTodo()
@@ -35,9 +55,9 @@
     }
   }
 
-  private void ToggleTodoItem(int index)
-    => Dispatch(new ToggleTodo(index));
+  private void ToggleTodoItem(Guid id)
+    => Dispatch(new ToggleTodo(id));
 
-  private void RemoveTodoItem(int index)
-    => Dispatch(new RemoveTodo(index));
+  private void RemoveTodoItem(Guid id)
+    => Dispatch(new RemoveTodo(id));
 }

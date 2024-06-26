@@ -11,10 +11,25 @@ public record TodoState
         new TodoItem("Learn Redux"),
         new TodoItem("Learn Rx.NET")
     ];
+    
+    // Selectors
+    public IImmutableList<TodoItem> ActiveTodos
+        => Todos.Where(todo => !todo.IsCompleted).ToImmutableList();
+    
+    public int ActiveTodosCount
+        => ActiveTodos.Count;
+    
+    public IImmutableList<TodoItem> CompletedTodos
+        => Todos.Where(todo => todo.IsCompleted).ToImmutableList();
+    
+    public int CompletedTodosCount
+        => CompletedTodos.Count;
 }
 
 public record TodoItem(string Title)
 {
+    public Guid Id { get; init; } = Guid.NewGuid();
+    
     public bool IsCompleted { get; init; }
     
     public TodoItem ToggleIsCompleted()
@@ -24,9 +39,9 @@ public record TodoItem(string Title)
 // Actions
 public record AddTodo(string Title) : IAction;
 
-public record ToggleTodo(int Index) : IAction;
+public record ToggleTodo(Guid Id) : IAction;
 
-public record RemoveTodo(int Index) : IAction;
+public record RemoveTodo(Guid Id) : IAction;
 
 // Reducer
 public class TodoReducer : ReducerBase<TodoState>
@@ -39,16 +54,24 @@ public class TodoReducer : ReducerBase<TodoState>
     }
 
     private static TodoState RegisterAddTodo(TodoState state, AddTodo action)
-        => state with { Todos = state.Todos.Add(new TodoItem(action.Title)) };
+        => state with
+        {
+            Todos = state.Todos.Add(new TodoItem(action.Title))
+        };
 
     private static TodoState RegisterToggleTodo(TodoState state, ToggleTodo action)
         => state with
         {
             Todos = state.Todos
-                .Select((todo, idx) => idx == action.Index ? todo.ToggleIsCompleted() : todo)
+                .Select(todo => todo.Id == action.Id ? todo.ToggleIsCompleted() : todo)
                 .ToImmutableList()
         };
 
     private static TodoState RegisterRemoveTodo(TodoState state, RemoveTodo action)
-        => state with { Todos = state.Todos.RemoveAt(action.Index) };
+        => state with
+        {
+            Todos = state.Todos
+                .Where(todo => todo.Id != action.Id)
+                .ToImmutableList()
+        };
 }
