@@ -11,18 +11,33 @@ public static class RxStoreExtensions
         return services;
     }
     
-    public static IServiceCollection AddRxStore<TState, TReducer>(
+    public static IServiceCollection AddRxStore<TState, TReducer, TReducerFactory>(
         this IServiceCollection services)
-        where TState : class
-        where TReducer : IActionReducer<TState>, new()
+        where TReducer : ActionReducer<TState>
+        where TReducerFactory : IActionReducerFactory<TState>
+        where TState : new()
     {
-        services.AddSingleton<ActionsSubject>();
+        services.AddSingleton<ReducerManager<TState>>(provider =>
+            new ReducerManager<TState>(
+                provider.GetRequiredService<ActionsSubject>(),
+                new TState(),
+                new Dictionary<string, IActionReducer<TState>>
+                {
+                    { typeof(TReducer).Name, ActivatorUtilities.CreateInstance<TReducer>(provider) }
+                },
+                ActivatorUtilities.CreateInstance<TReducerFactory>(provider)));
 
-        services.AddSingleton<RxStore<TState, TReducer>>(
-            provider => new RxStore<TState, TReducer>(provider.GetRequiredService<ActionsSubject>()));
+        services.AddSingleton<State<TState>>(provider =>
+            new State<TState>(
+                provider.GetRequiredService<ActionsSubject>(),
+                provider.GetRequiredService<ReducerManager<TState>>().Reducers,
+                new TState()));
 
-        services.AddSingleton(provider => provider.GetRequiredService<RxStore<TState, TReducer>>().State);
-        services.AddSingleton(provider => provider.GetRequiredService<RxStore<TState, TReducer>>().Actions);
+        services.AddSingleton<RxStore<TState>>(provider =>
+            new RxStore<TState>(
+                provider.GetRequiredService<State<TState>>(),
+                provider.GetRequiredService<ActionsSubject>(),
+                provider.GetRequiredService<ReducerManager<TState>>()));
 
         return services;
     }

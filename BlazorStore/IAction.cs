@@ -8,6 +8,6 @@ public interface IAction
     /// <summary>
     /// Gets the type of the action.
     /// </summary>
-    public string Type
+    string Type
         => GetType().Name;
 }

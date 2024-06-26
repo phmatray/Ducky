@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace BlazorStore;
 
 public abstract class ActionReducer<TState> : IActionReducer<TState>
@@ -17,7 +19,16 @@ public abstract class ActionReducer<TState> : IActionReducer<TState>
         => _handlers[typeof(TAction)] = (_, _) => handler();
 
     public TState Invoke(TState state, IAction action)
-        => _handlers.TryGetValue(action.GetType(), out var handler)
-            ? handler(state, action)
-            : state;
+    {
+        if (!_handlers.TryGetValue(action.GetType(), out var handler))
+        {
+            return state;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        var newState = handler(state, action);
+        stopwatch.Stop();
+        StateLogger.LogStateChange(action, state, newState, stopwatch.Elapsed.TotalMilliseconds);
+        return newState;
+    }
 }

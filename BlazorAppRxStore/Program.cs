@@ -3,43 +3,23 @@ using BlazorAppRxStore.Services;
 using BlazorAppRxStore.Store;
 
 var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
+services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add RxStore
-builder.Services.AddBlazorStore();
+services.AddBlazorStore();
 
-builder.Services.AddSingleton<ReducerManager<CounterState>>(provider =>
-    new ReducerManager<CounterState>(
-        provider.GetRequiredService<ActionsSubject>(),
-        new CounterState(),
-        new Dictionary<string, IActionReducer<CounterState>>
-        {
-            { nameof(CounterReducer), new CounterReducer() }
-        },
-        new CounterReducerFactory()));
+services.AddRxStore<CounterState, CounterReducer, CounterReducerFactory>();
+services.AddRxStore<TodoState, TodoReducer, TodoReducerFactory>();
+services.AddRxStore<MessageState, MessageReducer, MessageReducerFactory>();
+services.AddRxStore<TimerState, TimerReducer, TimerReducerFactory>();
 
-builder.Services.AddSingleton<ReducerManager<TodoState>>(
-    provider => new ReducerManager<TodoState>(
-        provider.GetRequiredService<ActionsSubject>(),
-        new TodoState(),
-        new Dictionary<string, IActionReducer<TodoState>> 
-        {
-            { nameof(TodoReducer), new TodoReducer() }
-        },
-        new TodoReducerFactory()));
-
-builder.Services.AddRxStore<MessageState, MessageReducer>();
-builder.Services.AddRxStore<CounterState, CounterReducer>();
-builder.Services.AddRxStore<TodoState, TodoReducer>();
-builder.Services.AddRxStore<TimerState, TimerReducer>();
-//
 // // builder.Services.AddSingleton<MovieEffects>();
-builder.Services.AddSingleton<MovieService>();
-builder.Services.AddRxStore<MovieState, MovieReducer>();
-
+services.AddTransient<MovieService>();
+services.AddRxStore<MovieState, MovieReducer, MovieReducerFactory>();
 
 var app = builder.Build();
 

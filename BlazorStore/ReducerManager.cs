@@ -42,7 +42,7 @@ public class ReducerManager<TState> : IDisposable
     private void UpdateReducers(IEnumerable<string> keys)
     {
         _reducerSubject.OnNext(_reducerFactory.CreateReducer(_reducers, _initialState));
-        _dispatcher.OnNext(new UpdateReducerAction());
+        _dispatcher.OnNext(new UpdateReducersAction(keys));
     }
 
     public void Dispose()

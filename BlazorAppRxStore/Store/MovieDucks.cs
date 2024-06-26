@@ -37,6 +37,16 @@ public class MovieReducer : ActionReducer<MovieState>
     }
 }
 
+public class MovieReducerFactory : IActionReducerFactory<MovieState>
+{
+    public IActionReducer<MovieState> CreateReducer(
+        IDictionary<string, IActionReducer<MovieState>> reducers,
+        MovieState initialState)
+    {
+        return new MovieReducer();
+    }
+}
+
 // Effects
 // public class MovieEffects : EffectsBase<MovieState>
 // {

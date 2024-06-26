@@ -4,15 +4,14 @@ using Microsoft.AspNetCore.Components;
 
 namespace BlazorStore;
 
-public class RxComponentBase<TState, TReducer>
+public class RxComponentBase<TState>
     : ComponentBase, IDisposable
-    where TReducer : IActionReducer<TState>, new()
 {
     private readonly List<IDisposable> _subscriptions = [];
     private readonly Dictionary<string, Action<object>> _fieldSetters = new();
     
     [Inject]
-    protected RxStore<TState, TReducer> Store { get; init; } = default!;
+    protected RxStore<TState> Store { get; init; } = default!;
     
     protected void SubscribeToState<T>(
         Func<TState, T> selector,

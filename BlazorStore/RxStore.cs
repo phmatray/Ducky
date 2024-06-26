@@ -1,35 +1,28 @@
-using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace BlazorStore;
 
-public class RxStore<TState, TReducer>
-    where TReducer : IActionReducer<TState>, new()
+public class RxStore<TState>
 {
-    private readonly BehaviorSubject<TState> _state;
+    private readonly State<TState> _state;
     private readonly ActionsSubject _actionsObserver;
-    private readonly TReducer _reducer;
-    
-    private readonly ReducerManager<TState> _reducerManager; 
+    private readonly ReducerManager<TState> _reducerManager;
 
     public IObservable<TState> State => _state.AsObservable();
     public IObservable<IAction> Actions => _actionsObserver.Actions;
     
-    public RxStore(ActionsSubject actionsSubject)
-        : this(actionsSubject, Activator.CreateInstance<TState>())
+    public RxStore(
+        State<TState> state,
+        ActionsSubject actionsObserver,
+        ReducerManager<TState> reducerManager)
     {
-    }
-    
-    public RxStore(ActionsSubject actionsSubject, TState initialState)
-    {
-        _state = new BehaviorSubject<TState>(initialState);
-        _actionsObserver = actionsSubject ?? throw new ArgumentNullException(nameof(actionsSubject));
-        _reducer = new TReducer();
-
-        _actionsObserver.Actions
-            .Scan(initialState, Reduce)
-            .Subscribe(_state);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(actionsObserver);
+        ArgumentNullException.ThrowIfNull(reducerManager);
+        
+        _state = state;
+        _actionsObserver = actionsObserver;
+        _reducerManager = reducerManager;
     }
 
     public IObservable<TResult> Select<TResult>(Func<TState, TResult> selector)
@@ -53,13 +46,4 @@ public class RxStore<TState, TReducer>
 
     public void RemoveReducer(string key)
         => _reducerManager.RemoveReducer(key);
-
-    private TState Reduce(TState state, IAction action)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        var newState = _reducer.Invoke(state, action);
-        stopwatch.Stop();
-        StateLogger.LogStateChange(action, state, newState, stopwatch.Elapsed.TotalMilliseconds);
-        return newState;
-    }
 }

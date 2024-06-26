@@ -24,3 +24,13 @@ public class TimerReducer : ActionReducer<TimerState>
         Register<Tick>(state => state with { Time = state.Time + 1 });
     }
 }
+
+public class TimerReducerFactory : IActionReducerFactory<TimerState>
+{
+    public IActionReducer<TimerState> CreateReducer(
+        IDictionary<string, IActionReducer<TimerState>> reducers,
+        TimerState initialState)
+    {
+        return new TimerReducer();
+    }
+}

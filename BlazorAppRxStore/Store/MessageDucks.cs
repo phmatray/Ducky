@@ -18,3 +18,13 @@ public class MessageReducer : ActionReducer<MessageState>
             => new MessageState { Message = action.Message });
     }
 }
+
+public class MessageReducerFactory : IActionReducerFactory<MessageState>
+{
+    public IActionReducer<MessageState> CreateReducer(
+        IDictionary<string, IActionReducer<MessageState>> reducers,
+        MessageState initialState)
+    {
+        return new MessageReducer();
+    }
+}
