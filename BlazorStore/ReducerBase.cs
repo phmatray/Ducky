@@ -1,4 +1,4 @@
-namespace BlazorAppRxStore.SeedWork;
+namespace BlazorStore;
 
 public abstract class ReducerBase<TState> : IReducer<TState>
 {

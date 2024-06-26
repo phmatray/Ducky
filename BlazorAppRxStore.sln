@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorAppRxStore", "BlazorAppRxStore\BlazorAppRxStore.csproj", "{C1C9746E-3537-4BF3-8DDD-F655499F8AC4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorStore", "BlazorStore\BlazorStore.csproj", "{6F3B56BE-EA55-465D-9811-F5F50AC2FC5E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{C1C9746E-3537-4BF3-8DDD-F655499F8AC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1C9746E-3537-4BF3-8DDD-F655499F8AC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1C9746E-3537-4BF3-8DDD-F655499F8AC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F3B56BE-EA55-465D-9811-F5F50AC2FC5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F3B56BE-EA55-465D-9811-F5F50AC2FC5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F3B56BE-EA55-465D-9811-F5F50AC2FC5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F3B56BE-EA55-465D-9811-F5F50AC2FC5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

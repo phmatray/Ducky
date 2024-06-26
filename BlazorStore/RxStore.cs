@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace BlazorAppRxStore.SeedWork;
+namespace BlazorStore;
 
 public class RxStore<TState, TReducer>
     where TReducer : IReducer<TState>, new()

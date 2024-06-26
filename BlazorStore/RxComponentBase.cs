@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Components;
 
-namespace BlazorAppRxStore.SeedWork;
+namespace BlazorStore;
 
 public class RxComponentBase<TState, TReducer>
     : ComponentBase, IDisposable

@@ -1,4 +1,6 @@
-namespace BlazorAppRxStore.SeedWork;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace BlazorStore;
 
 public static class RxStoreExtensions
 {

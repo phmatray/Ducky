@@ -1,4 +1,4 @@
-namespace BlazorAppRxStore.SeedWork;
+namespace BlazorStore;
 
 /// <summary>
 /// Defines a method that a class implements to handle state transitions based on actions.

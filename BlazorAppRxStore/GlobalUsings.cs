@@ -1,3 +1,3 @@
 // Global using directives
 
-global using BlazorAppRxStore.SeedWork;
+global using BlazorStore;

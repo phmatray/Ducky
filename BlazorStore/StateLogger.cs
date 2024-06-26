@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace BlazorAppRxStore.SeedWork;
+namespace BlazorStore;
 
 public static class StateLogger
 {
