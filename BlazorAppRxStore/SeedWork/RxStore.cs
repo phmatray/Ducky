@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -25,13 +26,22 @@ public class RxStore<TState, TReducer>
         _reducer = new TReducer();
 
         _actions
-            .Scan(initialState, _reducer.Reduce)
+            .Scan(initialState, Reduce)
             .Subscribe(_state);
     }
+
+    public IObservable<TResult> Select<TResult>(Func<TState, TResult> selector)
+        => _state.Select(selector).DistinctUntilChanged();
 
     public void Dispatch(IAction action)
         => _actions.OnNext(action);
 
-    public IObservable<TResult> Select<TResult>(Func<TState, TResult> selector)
-        => _state.Select(selector).DistinctUntilChanged();
+    private TState Reduce(TState state, IAction action)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        var newState = _reducer.Reduce(state, action);
+        stopwatch.Stop();
+        StateLogger.LogStateChange(action, state, newState, stopwatch.Elapsed.TotalMilliseconds);
+        return newState;
+    }
 }
