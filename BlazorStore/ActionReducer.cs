@@ -1,6 +1,6 @@
 namespace BlazorStore;
 
-public abstract class ReducerBase<TState> : IReducer<TState>
+public abstract class ActionReducer<TState> : IActionReducer<TState>
 {
     private readonly Dictionary<Type, Func<TState, IAction, TState>> _handlers = new();
 
@@ -16,7 +16,7 @@ public abstract class ReducerBase<TState> : IReducer<TState>
         where TAction : IAction
         => _handlers[typeof(TAction)] = (_, _) => handler();
 
-    public TState Reduce(TState state, IAction action)
+    public TState Invoke(TState state, IAction action)
         => _handlers.TryGetValue(action.GetType(), out var handler)
             ? handler(state, action)
             : state;

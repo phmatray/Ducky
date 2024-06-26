@@ -6,7 +6,7 @@ namespace BlazorStore;
 
 public class RxComponentBase<TState, TReducer>
     : ComponentBase, IDisposable
-    where TReducer : IReducer<TState>, new()
+    where TReducer : IActionReducer<TState>, new()
 {
     private readonly List<IDisposable> _subscriptions = [];
     private readonly Dictionary<string, Action<object>> _fieldSetters = new();
@@ -16,7 +16,7 @@ public class RxComponentBase<TState, TReducer>
     
     protected void SubscribeToState<T>(
         Func<TState, T> selector,
-        object argument, 
+        object? argument, 
         [CallerArgumentExpression("argument")] string? fieldName = null)
     {
         ArgumentNullException.ThrowIfNull(fieldName);

@@ -12,7 +12,7 @@ public record Decrement : IAction;
 public record Reset : IAction;
 
 // Reducer
-public class CounterReducer : ReducerBase<CounterState>
+public class CounterReducer : ActionReducer<CounterState>
 {
     public CounterReducer()
     {
@@ -22,3 +22,12 @@ public class CounterReducer : ReducerBase<CounterState>
     }
 }
 
+public class CounterReducerFactory : IActionReducerFactory<CounterState>
+{
+    public IActionReducer<CounterState> CreateReducer(
+        IDictionary<string, IActionReducer<CounterState>> reducers,
+        CounterState initialState)
+    {
+        return new CounterReducer();
+    }
+}

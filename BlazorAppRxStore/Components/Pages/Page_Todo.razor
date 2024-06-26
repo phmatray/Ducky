@@ -1,5 +1,4 @@
 @page "/todo"
-@using System.Collections.Immutable
 @inherits RxComponentBase<TodoState, TodoReducer>
 
 <h3>Todo List</h3>
@@ -32,6 +31,7 @@
 </ul>
 
 @code {
+
   private string _newTodo = string.Empty;
   private IImmutableList<TodoItem> _activeTodos = [];
   private int _activeTodosCount;
@@ -60,4 +60,5 @@
 
   private void RemoveTodoItem(Guid id)
     => Dispatch(new RemoveTodo(id));
+
 }

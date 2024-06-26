@@ -10,7 +10,7 @@ public record MessageState
 public record SetMessage(string Message) : IAction;
 
 // Reducer
-public class MessageReducer : ReducerBase<MessageState>
+public class MessageReducer : ActionReducer<MessageState>
 {
     public MessageReducer()
     {

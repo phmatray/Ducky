@@ -39,7 +39,7 @@ public static class StateLogger
             .ToArray();
         
         return properties.Length == 0
-            ? "{{ }}"
+            ? "{ }"
             : $"{{ {string.Join(", ", properties)} }}";
     }  
 }

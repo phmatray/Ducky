@@ -14,7 +14,7 @@ public record ResetTimer : IAction;
 public record Tick : IAction;
 
 // Reducer
-public class TimerReducer : ReducerBase<TimerState>
+public class TimerReducer : ActionReducer<TimerState>
 {
     public TimerReducer()
     {

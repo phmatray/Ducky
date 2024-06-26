@@ -1,5 +1,3 @@
-using System.Collections.Immutable;
-
 namespace BlazorAppRxStore.Store;
 
 // State
@@ -26,16 +24,6 @@ public record TodoState
         => CompletedTodos.Count;
 }
 
-public record TodoItem(string Title)
-{
-    public Guid Id { get; init; } = Guid.NewGuid();
-    
-    public bool IsCompleted { get; init; }
-    
-    public TodoItem ToggleIsCompleted()
-        => this with { IsCompleted = !IsCompleted };
-}
-
 // Actions
 public record AddTodo(string Title) : IAction;
 
@@ -44,7 +32,7 @@ public record ToggleTodo(Guid Id) : IAction;
 public record RemoveTodo(Guid Id) : IAction;
 
 // Reducer
-public class TodoReducer : ReducerBase<TodoState>
+public class TodoReducer : ActionReducer<TodoState>
 {
     public TodoReducer()
     {
@@ -74,4 +62,14 @@ public class TodoReducer : ReducerBase<TodoState>
                 .Where(todo => todo.Id != action.Id)
                 .ToImmutableList()
         };
+}
+
+public class TodoReducerFactory : IActionReducerFactory<TodoState>
+{
+    public IActionReducer<TodoState> CreateReducer(
+        IDictionary<string, IActionReducer<TodoState>> reducers,
+        TodoState initialState)
+    {
+        return new TodoReducer();
+    }
 }
