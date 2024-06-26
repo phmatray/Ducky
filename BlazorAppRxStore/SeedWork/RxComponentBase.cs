@@ -6,7 +6,7 @@ namespace BlazorAppRxStore.SeedWork;
 
 public class RxComponentBase<TState, TReducer>
     : ComponentBase, IDisposable
-    where TReducer : ReducerBase<TState>, new()
+    where TReducer : IReducer<TState>, new()
 {
     private readonly List<IDisposable> _subscriptions = [];
     private readonly Dictionary<string, Action<object>> _fieldSetters = new();

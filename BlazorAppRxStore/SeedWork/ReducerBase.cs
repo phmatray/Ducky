@@ -1,6 +1,6 @@
 namespace BlazorAppRxStore.SeedWork;
 
-public abstract class ReducerBase<TState>
+public abstract class ReducerBase<TState> : IReducer<TState>
 {
     private readonly Dictionary<Type, Func<TState, IAction, TState>> _handlers = new();
 

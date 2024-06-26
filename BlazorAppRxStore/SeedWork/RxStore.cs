@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 namespace BlazorAppRxStore.SeedWork;
 
 public class RxStore<TState, TReducer>
-    where TReducer : ReducerBase<TState>, new()
+    where TReducer : IReducer<TState>, new()
 {
     private readonly BehaviorSubject<TState> _state;
     private readonly Subject<IAction> _actions;
