@@ -2,6 +2,6 @@ namespace BlazorStore;
 
 public class StateActionPair<TState>
 {
-    public TState State { get; set; }
-    public IAction Action { get; set; }
+    public required TState State { get; init; }
+    public IAction? Action { get; init; }
 }

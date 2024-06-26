@@ -1,6 +1,4 @@
 using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace BlazorStore;
 
@@ -36,10 +34,16 @@ public class State<TState> : StateObservable<TState>, IDisposable
         return _stateSubject.Subscribe(observer);
     }
 
-    private StateActionPair<TState> ReduceState(StateActionPair<TState> stateActionPair, (IAction action, IActionReducer<TState> reducer) actionReducerPair)
+    private StateActionPair<TState> ReduceState(
+        StateActionPair<TState> stateActionPair,
+        (IAction action, IActionReducer<TState> reducer) actionReducerPair)
     {
         var (action, reducer) = actionReducerPair;
-        return new StateActionPair<TState> { State = reducer.Invoke(stateActionPair.State, action), Action = action };
+        return new StateActionPair<TState>
+        {
+            State = reducer.Invoke(stateActionPair.State, action),
+            Action = action
+        };
     }
 
     public void Dispose()

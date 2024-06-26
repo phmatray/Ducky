@@ -1,18 +1,18 @@
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 namespace BlazorStore;
 
 public class ReducerManager<TState> : IDisposable
 {
     private readonly ActionsSubject _dispatcher;
     private readonly TState _initialState;
-    private IDictionary<string, IActionReducer<TState>> _reducers;
+    private readonly IDictionary<string, IActionReducer<TState>> _reducers;
     private readonly IActionReducerFactory<TState> _reducerFactory;
     private readonly BehaviorSubject<IActionReducer<TState>> _reducerSubject;
 
-    public IDictionary<string, IActionReducer<TState>> CurrentReducers => _reducers;
-    public IObservable<IActionReducer<TState>> Reducers => _reducerSubject.AsObservable();
+    public IDictionary<string, IActionReducer<TState>> CurrentReducers
+        => _reducers;
+    
+    public IObservable<IActionReducer<TState>> Reducers
+        => _reducerSubject.AsObservable();
 
     public ReducerManager(
         ActionsSubject dispatcher,
@@ -20,23 +20,27 @@ public class ReducerManager<TState> : IDisposable
         IDictionary<string, IActionReducer<TState>> reducers,
         IActionReducerFactory<TState> reducerFactory)
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        ArgumentNullException.ThrowIfNull(reducers);
+        ArgumentNullException.ThrowIfNull(reducerFactory);
+        
+        _dispatcher = dispatcher;
         _initialState = initialState;
-        _reducers = reducers ?? throw new ArgumentNullException(nameof(reducers));
-        _reducerFactory = reducerFactory ?? throw new ArgumentNullException(nameof(reducerFactory));
+        _reducers = reducers;
+        _reducerFactory = reducerFactory;
         _reducerSubject = new BehaviorSubject<IActionReducer<TState>>(_reducerFactory.CreateReducer(reducers, initialState));
     }
 
     public void AddReducer(string key, IActionReducer<TState> reducer)
     {
         _reducers[key] = reducer;
-        UpdateReducers(new[] { key });
+        UpdateReducers([key]);
     }
 
     public void RemoveReducer(string key)
     {
-        _reducers = Utils.Omit(_reducers, key);
-        UpdateReducers(new[] { key });
+        _reducers.Remove(key);
+        UpdateReducers([key]);
     }
 
     private void UpdateReducers(IEnumerable<string> keys)

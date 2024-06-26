@@ -14,7 +14,7 @@ public class MessageReducer : ActionReducer<MessageState>
 {
     public MessageReducer()
     {
-        Register<SetMessage>((state, action)
+        Register<SetMessage>((_, action)
             => new MessageState { Message = action.Message });
     }
 }

@@ -3,8 +3,8 @@ namespace BlazorAppRxStore.Store;
 // State
 public record TimerState
 {
-    public int Time { get; init; } = 0;
-    public bool IsRunning { get; init; } = false;
+    public int Time { get; init; }
+    public bool IsRunning { get; init; }
 }
 
 // Actions
@@ -20,7 +20,7 @@ public class TimerReducer : ActionReducer<TimerState>
     {
         Register<StartTimer>(state => state with { IsRunning = true });
         Register<StopTimer>(state => state with { IsRunning = false });
-        Register<ResetTimer>(state => new TimerState());
+        Register<ResetTimer>(_ => new TimerState());
         Register<Tick>(state => state with { Time = state.Time + 1 });
     }
 }
