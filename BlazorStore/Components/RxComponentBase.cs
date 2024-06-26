@@ -11,7 +11,7 @@ public class RxComponentBase<TState>
     private readonly Dictionary<string, Action<object>> _fieldSetters = new();
     
     [Inject]
-    protected RxStore<TState> Store { get; init; } = default!;
+    protected Store<TState> Store { get; init; } = default!;
     
     protected void SubscribeToState<T>(
         Func<TState, T> selector,

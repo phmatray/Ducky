@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BlazorStore.Tests;
 
-public class RxStoreExtensionsTests
+public class StoreExtensionsTests
 {
     // private class TestState
     // {

@@ -1,22 +1,23 @@
 namespace BlazorStore.Tests;
 
-public class RxStoreTests
+public class StoreTests
 {
     private readonly ActionsSubject _actionsSubject;
     private readonly ReducerManager<TodoState> _reducerManager;
     private readonly State<TodoState> _state;
-    private readonly RxStore<TodoState> _store;
+    private readonly Store<TodoState> _store;
 
-    public RxStoreTests()
+    public StoreTests()
     {
         _actionsSubject = new ActionsSubject();
         _reducerManager = new ReducerManager<TodoState>(
+            
             _actionsSubject,
             new TodoState(),
             new Dictionary<string, IActionReducer<TodoState>> { { "TodoReducer", new TodoReducer() } },
             new TodoReducerFactory());
         _state = new State<TodoState>(_actionsSubject, _reducerManager.Reducers, new TodoState());
-        _store = new RxStore<TodoState>(_state, _actionsSubject, _reducerManager);
+        _store = new Store<TodoState>(_state, _actionsSubject, _reducerManager);
     }
 
     [Fact]

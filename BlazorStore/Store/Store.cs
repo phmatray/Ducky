@@ -2,7 +2,7 @@ using System.Reactive.Linq;
 
 namespace BlazorStore;
 
-public class RxStore<TState>
+public class Store<TState>
 {
     private readonly State<TState> _state;
     private readonly ActionsSubject _actionsObserver;
@@ -11,7 +11,7 @@ public class RxStore<TState>
     public IObservable<TState> State => _state.AsObservable();
     public IObservable<IAction> Actions => _actionsObserver.Actions;
     
-    public RxStore(
+    public Store(
         State<TState> state,
         ActionsSubject actionsObserver,
         ReducerManager<TState> reducerManager)
