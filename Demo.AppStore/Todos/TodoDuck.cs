@@ -5,9 +5,11 @@ public record TodoState
 {
     public ImmutableArray<TodoItem> Todos { get; init; } =
     [
-        new TodoItem("Learn Blazor") { IsCompleted = true },
+        new TodoItem("Learn Blazor", true),
         new TodoItem("Learn Redux"),
-        new TodoItem("Learn Rx.NET")
+        new TodoItem("Learn Reactive Programming"),
+        new TodoItem("Create a Todo App", true),
+        new TodoItem("Publish a NuGet package")
     ];
     
     // Selectors
@@ -25,23 +27,23 @@ public record TodoState
 }
 
 // Actions
-public record AddTodo(string Title) : IAction;
+public record CreateTodo(string Title) : IAction;
 
 public record ToggleTodo(Guid Id) : IAction;
 
-public record RemoveTodo(Guid Id) : IAction;
+public record DeleteTodo(Guid Id) : IAction;
 
 // Reducer
 public class TodoReducer : Reducer<TodoState>
 {
     public TodoReducer()
     {
-        Register<AddTodo>(ReduceAddTodo);
+        Register<CreateTodo>(ReduceCreateTodo);
         Register<ToggleTodo>(ReduceToggleTodo);
-        Register<RemoveTodo>(ReduceRemoveTodo);
+        Register<DeleteTodo>(ReduceDeleteTodo);
     }
 
-    private static TodoState ReduceAddTodo(TodoState state, AddTodo action)
+    private static TodoState ReduceCreateTodo(TodoState state, CreateTodo action)
         => state with
         {
             Todos = state.Todos.Add(new TodoItem(action.Title))
@@ -55,7 +57,7 @@ public class TodoReducer : Reducer<TodoState>
                 .ToImmutableArray()
         };
 
-    private static TodoState ReduceRemoveTodo(TodoState state, RemoveTodo action)
+    private static TodoState ReduceDeleteTodo(TodoState state, DeleteTodo action)
         => state with
         {
             Todos = state.Todos

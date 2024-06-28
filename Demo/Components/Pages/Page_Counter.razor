@@ -1,11 +1,23 @@
 @page "/counter"
 @inherits R3duxComponent<int>
 
-<h3>Counter</h3>
+<PageTitle>R3dux - Counter</PageTitle>
+<hgroup>
+  <p class="chapter">Example</p>
+  <h1>Counter</h1>
+  <p>
+    Creates an interactive counter using the R3dux state management library for predictable state handling,
+    featuring increment, decrement, and reset buttons to manage the counter state.
+  </p>
+  <ul>
+    <li>If the counter exceeds 15, then an effect will be triggered to reset the counter to 10 after 1 second.</li>
+    <li>If the counter reaches zero, the decrement button will be disabled.</li>
+  </ul>
+</hgroup>
 
-<div style="display: flex;">
-  <button @onclick="Decrement">Decrement</button>
-  <div style="margin: 0 10px;">Current Count: @State</div>
+<div style="display: flex; margin-bottom: 10px;">
+  <button @onclick="Decrement" disabled="@(State <= 0)">Decrement</button>
+  <div style="margin: 0 10px;">Current Count: <strong>@State</strong></div>
   <button @onclick="Increment">Increment</button>
 </div>
 

@@ -1,7 +1,12 @@
 @page "/message"
 @inherits R3duxComponent<MessageState>
 
-<h3>Message Example</h3>
+<PageTitle>R3dux - Message</PageTitle>
+<hgroup>
+  <p class="chapter">Example</p>
+  <h1>Message</h1>
+  <p>Creates a simple message example using the R3dux state management library for predictable state handling, featuring a button to set a new message.</p>
+</hgroup>
 
 <p>Message: @State.Message</p>
 <button @onclick="SetMessage">Set New Message</button>

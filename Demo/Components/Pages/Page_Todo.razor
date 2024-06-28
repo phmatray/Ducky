@@ -1,31 +1,36 @@
 @page "/todo"
 @inherits R3duxComponent<TodoState>
 
-<h3>Todo List</h3>
+<PageTitle>R3dux - Todo List</PageTitle>
+<hgroup>
+  <p class="chapter">Example</p>
+  <h1>Todo List</h1>
+  <p>Creates an interactive todo list using the R3dux state management library for predictable state handling, featuring functionality to add, toggle, and remove todo items.</p>
+</hgroup>
 
 <input @bind="_newTodo" placeholder="Enter new todo" />
-<button @onclick="AddTodo">Add Todo</button>
+<button @onclick="CreateTodoItem">Add Todo</button>
 
-<h4>Active Todos (@ActiveTodosCount)</h4>
+<h4>Active Todos (@State.ActiveTodosCount)</h4>
 <ul>
-  @foreach (var todo in ActiveTodos)
+  @foreach (var todo in State.ActiveTodos)
   {
     <li @key="todo.Id">
       <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)" />
       @todo.Title
-      <button @onclick="() => RemoveTodoItem(todo.Id)">Remove</button>
+      <button @onclick="() => DeleteTodoItem(todo.Id)">Remove</button>
     </li>
   }
 </ul>
 
-<h4>Completed Todos (@CompletedTodosCount)</h4>
+<h4>Completed Todos (@State.CompletedTodosCount)</h4>
 <ul>
-  @foreach (var todo in CompletedTodos)
+  @foreach (var todo in State.CompletedTodos)
   {
     <li @key="todo.Id">
       <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)"/>
       @todo.Title
-      <button @onclick="() => RemoveTodoItem(todo.Id)">Remove</button>
+      <button @onclick="() => DeleteTodoItem(todo.Id)">Delete</button>
     </li>
   }
 </ul>
@@ -34,23 +39,11 @@
 
   private string _newTodo = string.Empty;
   
-  private IImmutableList<TodoItem> ActiveTodos
-    => State.ActiveTodos;
-  
-  private int ActiveTodosCount
-    => State.ActiveTodosCount;
-  
-  private IImmutableList<TodoItem> CompletedTodos
-    => State.CompletedTodos;
-  
-  private int CompletedTodosCount
-    => State.CompletedTodosCount;
-
-  private void AddTodo()
+  private void CreateTodoItem()
   {
     if (!string.IsNullOrWhiteSpace(_newTodo))
     {
-      Dispatch(new AddTodo(_newTodo));
+      Dispatch(new CreateTodo(_newTodo));
       _newTodo = string.Empty;
     }
   }
@@ -58,7 +51,7 @@
   private void ToggleTodoItem(Guid id)
     => Dispatch(new ToggleTodo(id));
 
-  private void RemoveTodoItem(Guid id)
-    => Dispatch(new RemoveTodo(id));
+  private void DeleteTodoItem(Guid id)
+    => Dispatch(new DeleteTodo(id));
 
 }

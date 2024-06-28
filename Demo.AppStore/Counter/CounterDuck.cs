@@ -25,15 +25,16 @@ public class CounterReducer : Reducer<int>
 // Effects
 public class IncrementEffect : Effect<int>
 {
-    /// <inheritdoc />
     public override Observable<IAction> Handle(
         Observable<IAction> actions, Observable<int> state)
     {
+        // if the Value is greater than 15, then reset the counter
         return actions
             .OfType<IAction, Increment>()
-            .Delay(TimeSpan.FromSeconds(1))
             .WithLatestFrom(state, (action, stateValue) => new { action, stateValue })
-            .Select(x => new SetValue(x.stateValue + 1))
-            .Cast<SetValue, IAction>();
+            .Where(x => x.stateValue > 15)
+            .Delay(TimeSpan.FromSeconds(1))
+            .Select(x => new Reset())
+            .Cast<Reset, IAction>();
     }
 }

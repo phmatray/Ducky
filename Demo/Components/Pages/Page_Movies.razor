@@ -1,6 +1,13 @@
 @page "/movies"
 @inherits R3duxComponent<MovieState>
 
+<PageTitle>R3dux - Movies</PageTitle>
+<hgroup>
+  <p class="chapter">Example</p>
+  <h1>Movies</h1>
+  <p>Creates a simple movie example using the R3dux state management library for predictable state handling, featuring loading state and error handling for displaying movies from the 80s.</p>
+</hgroup>
+
 <h3>Movies from the 80s</h3>
 
 @if (ErrorMessage != null)

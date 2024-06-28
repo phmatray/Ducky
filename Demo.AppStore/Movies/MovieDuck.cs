@@ -39,24 +39,30 @@ public class MovieReducer : Reducer<MovieState>
 //     catchError(error => of(ItemActions.loadItemsFailure({ error })))
 //   ))
 // ));
-// public class LoadMoviesEffect : Effect<MoviesState>
+// public class LoadMoviesEffect : Effect<MovieState>
 // {
-//     private readonly MoviesService _moviesService = new();
+//     private readonly MoviesService _moviesService;
+//     
+//     public LoadMoviesEffect(MoviesService moviesService)
+//     {
+//         _moviesService = moviesService;
+//     }
 //
-//     public override Observable<StoreAction> Handle(
-//         Observable<StoreAction> actions)
+//     /// <inheritdoc />
+//     public override Observable<IAction> Handle(
+//         Observable<IAction> actions, Observable<MovieState> state)
 //     {
 //         var observable = _moviesService
 //             .GetMoviesAsync()
 //             .ToObservable()
 //             .Select(movies => new LoadMoviesSuccess([..movies]))
-//             .Cast<LoadMoviesSuccess, StoreAction>()
-//             .Catch<StoreAction, Exception>(ex => Observable
+//             .Cast<LoadMoviesSuccess, IAction>()
+//             .Catch<IAction, Exception>(ex => Observable
 //                 .Return(new LoadMoviesFailure(ex))
-//                 .Cast<LoadMoviesFailure, StoreAction>());
+//                 .Cast<LoadMoviesFailure, IAction>());
 //
 //         return actions
-//             .OfType<StoreAction, LoadMovies>()
+//             .OfType<IAction, LoadMovies>()
 //             .Merge(observable);
 //     }
 // }
