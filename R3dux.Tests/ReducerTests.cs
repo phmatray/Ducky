@@ -14,7 +14,7 @@ public class ReducerTests
         Increment action = new();
 
         // Act
-        var newState = _reducer.ReduceAction(initialState, action);
+        var newState = _reducer.Reduce(initialState, action);
 
         // Assert
         newState.Should().Be(1);
@@ -28,7 +28,7 @@ public class ReducerTests
         Decrement action = new();
 
         // Act
-        var newState = _reducer.ReduceAction(initialState, action);
+        var newState = _reducer.Reduce(initialState, action);
 
         // Assert
         newState.Should().Be(-1);
@@ -43,7 +43,7 @@ public class ReducerTests
         SetValue action = new(newValue);
 
         // Act
-        var newState = _reducer.ReduceAction(initialState, action);
+        var newState = _reducer.Reduce(initialState, action);
 
         // Assert
         newState.Should().Be(newValue);
@@ -57,7 +57,7 @@ public class ReducerTests
         UnknownAction action = new();
 
         // Act
-        var newState = _reducer.ReduceAction(initialState, action);
+        var newState = _reducer.Reduce(initialState, action);
 
         // Assert
         newState.Should().Be(0);

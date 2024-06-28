@@ -12,7 +12,7 @@ public record SetMessage(string Message) : IAction;
 // Reducer
 public class MessageReducer : Reducer<MessageState>
 {
-    public override MessageState ReduceAction(MessageState state, IAction action)
+    public override MessageState Reduce(MessageState state, IAction action)
     {
         return action switch
         {

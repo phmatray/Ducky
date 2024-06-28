@@ -5,34 +5,6 @@ namespace R3dux;
 
 public interface IAction;
 
-
-public abstract class Reducer<TState>
-{
-    protected delegate TState ReduceHandler<in TAction>(TState state, TAction action);
-    protected delegate TState ReduceHandler(TState state);
-    protected delegate TState ReduceHandlerEmpty();
-    
-    private readonly Dictionary<Type, ReduceHandler<IAction>> _handlers = new();
-
-    protected void Register<TAction>(ReduceHandler<TAction> reduce)
-        where TAction : IAction
-        => _handlers[typeof(TAction)] = (state, action) => reduce(state, (TAction)action);
-    
-    protected void Register<TAction>(ReduceHandler reduce)
-        where TAction : IAction
-        => _handlers[typeof(TAction)] = (state, _) => reduce(state);
-    
-    protected void Register<TAction>(ReduceHandlerEmpty reduce)
-        where TAction : IAction
-        => _handlers[typeof(TAction)] = (_, _) => reduce();
-
-    public virtual TState ReduceAction(TState state, IAction action)
-        => _handlers.TryGetValue(action.GetType(), out var handler)
-            ? handler(state, action)
-            : state;
-}
-
-
 public abstract class Effect<TState>
 {
     public abstract Observable<IAction> Handle(
@@ -42,6 +14,7 @@ public abstract class Effect<TState>
 
 
 public class Store<TState>
+    where TState : notnull, new()
 {
     private readonly Reducer<TState> _reducer;
     private readonly ReactiveProperty<TState> _stateSubject;
@@ -71,7 +44,7 @@ public class Store<TState>
         var prevState = _stateSubject.Value;
         var stopwatch = Stopwatch.StartNew();
 
-        var newState = _reducer.ReduceAction(prevState, action);
+        var newState = _reducer.Reduce(prevState, action);
         _stateSubject.Value = newState;
 
         stopwatch.Stop();

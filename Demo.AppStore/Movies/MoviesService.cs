@@ -12,9 +12,29 @@ public class MoviesService
         new Movie("The Lord of the Rings: The Return of the King", "Peter Jackson", 2003)
     ];
     
-    public async Task<ImmutableArray<Movie>> GetMoviesAsync()
+    // public async Task<ImmutableArray<Movie>> GetMoviesAsync(CancellationToken ct = default)
+    // {
+    //     await Task.Delay(1000, ct);
+    //
+    //     // 1/3 chance of failing
+    //     if (Random.Shared.Next(3) == 0)
+    //     {
+    //         throw new Exception("Failed to load movies");
+    //     }
+    //     
+    //     return Movies;
+    // }
+    
+    public async ValueTask<ImmutableArray<Movie>> GetMoviesAsync(CancellationToken ct = default)
     {
-        await Task.Delay(1000);
+        await Task.Delay(1000, ct);
+
+        // 1/3 chance of failing
+        if (Random.Shared.Next(3) == 0)
+        {
+            throw new Exception("Failed to load movies");
+        }
+        
         return Movies;
     }
 }

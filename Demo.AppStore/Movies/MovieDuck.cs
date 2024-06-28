@@ -6,6 +6,15 @@ public record MovieState
     public ImmutableArray<Movie> Movies { get; init; } = [];
     public bool IsLoading { get; init; }
     public Exception? Error { get; init; }
+    
+    // 5 more recent movies
+    public ImmutableArray<Movie> MoviesByYear =>
+    [
+        ..Movies
+            .Sort((a, b) => a.Year.CompareTo(b.Year))
+            .TakeLast(5)
+            .Reverse()
+    ];
 }
 
 // Actions
@@ -25,44 +34,55 @@ public class MovieReducer : Reducer<MovieState>
             => state with { Movies = action.Movies, IsLoading = false });
         
         Register<LoadMoviesFailure>((state, action)
-            => state with { Error = action.Error, IsLoading = false });
+            => new MovieState { Movies = [], Error = action.Error, IsLoading = false });
     }
 }
 
-// Service
-
 // Effects
-// loadItems$ = createEffect(() => this.actions$.pipe(
-//   ofType(ItemActions.loadItems),
-//   mergeMap(() => this.itemService.getItems().pipe(
-//     map(items => ItemActions.loadItemsSuccess({ items })),
-//     catchError(error => of(ItemActions.loadItemsFailure({ error })))
-//   ))
-// ));
-// public class LoadMoviesEffect : Effect<MovieState>
-// {
-//     private readonly MoviesService _moviesService;
-//     
-//     public LoadMoviesEffect(MoviesService moviesService)
-//     {
-//         _moviesService = moviesService;
-//     }
-//
-//     /// <inheritdoc />
-//     public override Observable<IAction> Handle(
-//         Observable<IAction> actions, Observable<MovieState> state)
-//     {
-//         var observable = _moviesService
-//             .GetMoviesAsync()
-//             .ToObservable()
-//             .Select(movies => new LoadMoviesSuccess([..movies]))
-//             .Cast<LoadMoviesSuccess, IAction>()
-//             .Catch<IAction, Exception>(ex => Observable
-//                 .Return(new LoadMoviesFailure(ex))
-//                 .Cast<LoadMoviesFailure, IAction>());
-//
-//         return actions
-//             .OfType<IAction, LoadMovies>()
-//             .Merge(observable);
-//     }
-// }
+public class LoadMoviesEffect(MoviesService moviesService)
+    : Effect<MovieState>
+{
+    /// <inheritdoc />
+    public override Observable<IAction> Handle(
+        Observable<IAction> actions, Observable<MovieState> state)
+    {
+        return actions
+            .FilterActions<LoadMovies>()
+            .LogMessage("Loading movies...")
+            .InvokeService(
+                action => moviesService.GetMoviesAsync(),
+                movies => new LoadMoviesSuccess(movies),
+                ex => new LoadMoviesFailure(ex))
+            .LogMessage("Movies loaded.");
+
+        // THE SAME CODE CAN BE WRITTEN WITHOUT THE EXTENSION METHODS
+        // ============================================================
+        // return actions
+        //     .OfType<IAction, LoadMovies>()
+        //     .Do(_ => Console.WriteLine("Loading movies..."))
+        //     .SelectMany(action => moviesService
+        //         .GetMoviesAsync()
+        //         .ToObservable()
+        //         .Select(movies => (IAction)new LoadMoviesSuccess(movies))
+        //         .Do(_ => Console.WriteLine("Movies loaded.")))
+        //     .Catch<IAction, Exception>(ex => Observable.Return<IAction>(new LoadMoviesFailure(ex)));
+
+        // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
+        // ============================================================
+        // return actions
+        //     .OfType<IAction, LoadMovies>()
+        //     .Do(_ => Console.WriteLine("Loading movies..."))
+        //     .SelectAwait(async (action, ct) =>
+        //     {
+        //         try
+        //         {
+        //             var movies = await moviesService.GetMoviesAsync(ct);
+        //             return new LoadMoviesSuccess(movies) as IAction;
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             return new LoadMoviesFailure(ex);
+        //         }
+        //     });
+    }
+}

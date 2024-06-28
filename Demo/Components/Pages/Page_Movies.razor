@@ -5,21 +5,23 @@
 <hgroup>
   <p class="chapter">Example</p>
   <h1>Movies</h1>
-  <p>Creates a simple movie example using the R3dux state management library for predictable state handling, featuring loading state and error handling for displaying movies from the 80s.</p>
+  <p>
+    Creates a simple movie example using the R3dux state management library for predictable state handling,
+    featuring loading state and error handling for displaying movies.
+  </p>
 </hgroup>
-
-<h3>Movies from the 80s</h3>
 
 @if (ErrorMessage != null)
 {
-  <p>@ErrorMessage</p>
+  <p><strong>@ErrorMessage</strong></p>
 }
 else if (IsLoading)
 {
-  <p>Loading movies...</p>
+  <p><strong>Loading movies...</strong></p>
 }
 else
 {
+  <h3>5 more recent movies</h3>
   <ul>
     @foreach (var movie in Movies)
     {
@@ -28,10 +30,12 @@ else
   </ul>
 }
 
+<button @onclick="LoadMovies">Reload Movies</button>
+
 @code {
   
   private IImmutableList<Movie> Movies
-    => State.Movies;
+    => State.MoviesByYear;
   
   private bool IsLoading
     => State.IsLoading;
@@ -39,9 +43,16 @@ else
   private string? ErrorMessage
     => State.Error?.Message;
 
-  protected override void OnInitialized()
+  protected override void OnAfterRender(bool firstRender)
   {
-    Dispatch(new LoadMovies());
+    if (firstRender)
+    {
+      Console.WriteLine("First render - loading movies...");
+      Dispatch(new LoadMovies());
+    }
   }
+  
+  private void LoadMovies()
+    => Dispatch(new LoadMovies());
 
 }

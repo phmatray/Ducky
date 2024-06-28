@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Components;
 
 namespace R3dux.Blazor;
 
-public abstract class R3duxLayout<TState> : R3duxComponent<TState>
+public abstract class R3duxLayout<TState>
+    : R3duxComponent<TState>
+    where TState : notnull, new()
 {
     /// <summary>
     /// Gets the content to be rendered inside the layout.

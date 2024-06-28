@@ -17,7 +17,7 @@ public record SetTitle(string Title) : IAction;
 // Reducer
 public class LayoutReducer : Reducer<LayoutState>
 {
-    public override LayoutState ReduceAction(LayoutState state, IAction action)
+    public override LayoutState Reduce(LayoutState state, IAction action)
         => action switch
         {
             SetTitle setTitleAction => state with { Title = setTitleAction.Title },

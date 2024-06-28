@@ -29,10 +29,10 @@ builder.Services.AddScoped(_ => new Store<MessageState>(
 ));
 
 services.AddScoped<MoviesService>();
-builder.Services.AddScoped(_ => new Store<MovieState>(
+builder.Services.AddScoped(sp => new Store<MovieState>(
     initialState: new MovieState(),
     reducer: new MovieReducer(),
-    effects: []
+    effects: [new LoadMoviesEffect(sp.GetRequiredService<MoviesService>())]
 ));
 
 builder.Services.AddScoped(_ => new Store<TimerState>(

@@ -5,6 +5,7 @@ namespace R3dux.Blazor;
 
 public abstract class R3duxComponent<TState>
     : ComponentBase, IDisposable
+    where TState : notnull, new()
 {
     [Inject]
     public required Store<TState> Store { get; set; }

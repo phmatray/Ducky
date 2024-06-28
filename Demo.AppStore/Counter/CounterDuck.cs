@@ -11,7 +11,7 @@ public class CounterReducer : Reducer<int>
 {
     private const int InitialState = 10;
 
-    public override int ReduceAction(int state, IAction action)
+    public override int Reduce(int state, IAction action)
         => action switch
         {
             Increment => state + 1,
