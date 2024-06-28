@@ -30,11 +30,10 @@ public class IncrementEffect : Effect<int>
     {
         // if the Value is greater than 15, then reset the counter
         return actions
-            .OfType<IAction, Increment>()
+            .FilterActions<Increment>()
             .WithLatestFrom(state, (action, stateValue) => new { action, stateValue })
             .Where(x => x.stateValue > 15)
             .Delay(TimeSpan.FromSeconds(1))
-            .Select(x => new Reset())
-            .Cast<Reset, IAction>();
+            .SelectAction(x => new Reset());
     }
 }
