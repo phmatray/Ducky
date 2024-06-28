@@ -1,0 +1,40 @@
+@page "/movies"
+@inherits R3duxComponent<MovieState>
+
+<h3>Movies from the 80s</h3>
+
+@if (ErrorMessage != null)
+{
+  <p>@ErrorMessage</p>
+}
+else if (IsLoading)
+{
+  <p>Loading movies...</p>
+}
+else
+{
+  <ul>
+    @foreach (var movie in Movies)
+    {
+      <li>@movie.Title (@movie.Year)</li>
+    }
+  </ul>
+}
+
+@code {
+  
+  private IImmutableList<Movie> Movies
+    => State.Movies;
+  
+  private bool IsLoading
+    => State.IsLoading;
+  
+  private string? ErrorMessage
+    => State.Error?.Message;
+
+  protected override void OnInitialized()
+  {
+    Dispatch(new LoadMovies());
+  }
+
+}

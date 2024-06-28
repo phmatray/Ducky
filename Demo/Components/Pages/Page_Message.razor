@@ -1,0 +1,14 @@
+@page "/message"
+@inherits R3duxComponent<MessageState>
+
+<h3>Message Example</h3>
+
+<p>Message: @State.Message</p>
+<button @onclick="SetMessage">Set New Message</button>
+
+@code {
+
+  private void SetMessage()
+    => Dispatch(new SetMessage("New message from Blazor!"));
+
+}

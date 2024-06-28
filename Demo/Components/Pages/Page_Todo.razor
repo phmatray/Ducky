@@ -1,0 +1,64 @@
+@page "/todo"
+@inherits R3duxComponent<TodoState>
+
+<h3>Todo List</h3>
+
+<input @bind="_newTodo" placeholder="Enter new todo" />
+<button @onclick="AddTodo">Add Todo</button>
+
+<h4>Active Todos (@ActiveTodosCount)</h4>
+<ul>
+  @foreach (var todo in ActiveTodos)
+  {
+    <li @key="todo.Id">
+      <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)" />
+      @todo.Title
+      <button @onclick="() => RemoveTodoItem(todo.Id)">Remove</button>
+    </li>
+  }
+</ul>
+
+<h4>Completed Todos (@CompletedTodosCount)</h4>
+<ul>
+  @foreach (var todo in CompletedTodos)
+  {
+    <li @key="todo.Id">
+      <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)"/>
+      @todo.Title
+      <button @onclick="() => RemoveTodoItem(todo.Id)">Remove</button>
+    </li>
+  }
+</ul>
+
+@code {
+
+  private string _newTodo = string.Empty;
+  
+  private IImmutableList<TodoItem> ActiveTodos
+    => State.ActiveTodos;
+  
+  private int ActiveTodosCount
+    => State.ActiveTodosCount;
+  
+  private IImmutableList<TodoItem> CompletedTodos
+    => State.CompletedTodos;
+  
+  private int CompletedTodosCount
+    => State.CompletedTodosCount;
+
+  private void AddTodo()
+  {
+    if (!string.IsNullOrWhiteSpace(_newTodo))
+    {
+      Dispatch(new AddTodo(_newTodo));
+      _newTodo = string.Empty;
+    }
+  }
+
+  private void ToggleTodoItem(Guid id)
+    => Dispatch(new ToggleTodo(id));
+
+  private void RemoveTodoItem(Guid id)
+    => Dispatch(new RemoveTodo(id));
+
+}

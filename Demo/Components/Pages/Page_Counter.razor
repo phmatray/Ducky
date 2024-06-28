@@ -1,0 +1,25 @@
+@page "/counter"
+@inherits R3duxComponent<int>
+
+<h3>Counter</h3>
+
+<div style="display: flex;">
+  <button @onclick="Decrement">Decrement</button>
+  <div style="margin: 0 10px;">Current Count: @State</div>
+  <button @onclick="Increment">Increment</button>
+</div>
+
+<button @onclick="Reset">Reset Counter</button>
+
+@code {
+
+  private void Increment()
+    => Dispatch(new Increment());
+
+  private void Decrement()
+    => Dispatch(new Decrement());
+
+  private void Reset()
+    => Dispatch(new Reset());
+
+}
