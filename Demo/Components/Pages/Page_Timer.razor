@@ -8,11 +8,12 @@
   <p>Creates an interactive timer using the R3dux state management library for predictable state handling, featuring start, stop, and reset functionality.</p>
 </hgroup>
 
-<div>
-  <div>Time: @Time seconds</div>
-  <button @onclick="ToggleTimer">
-    @(IsRunning ? "Stop" : "Start")
-  </button>
+<article>
+  Time: <strong>@Time</strong> seconds
+</article>
+
+<div role="group">
+  <button @onclick="ToggleTimer">@(IsRunning ? "Stop" : "Start")</button>
   <button @onclick="Reset">Reset</button>
 </div>
 

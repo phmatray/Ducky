@@ -1,26 +1,54 @@
 ﻿@inherits R3duxLayout<LayoutState>
 
 <header>
-  <NavLink href="message">Message</NavLink>
-  &nbsp;-&nbsp;
-  <NavLink href="counter">Counter</NavLink>
-  &nbsp;-&nbsp;
-  <NavLink href="todo">Todo</NavLink>
-  &nbsp;-&nbsp;
-  <NavLink href="timer">Timer</NavLink>
-  &nbsp;-&nbsp;
-  <NavLink href="movies">Movies</NavLink>
-  <hr />
+  <div class="container">
+    <nav>
+      <ul>
+        <li><strong>@State.SelectFullTitle()</strong></li>
+      </ul>
+      <ul>
+        <li><NavLink href="message">Message</NavLink></li>
+        <li><NavLink href="counter">Counter</NavLink></li>
+        <li> <NavLink href="todo">Todo</NavLink></li>
+        <li><NavLink href="timer">Timer</NavLink></li>
+        <li><NavLink href="movies">Movies</NavLink></li>
+      </ul>
+    </nav>
+  </div>
+  <hr/>
 </header>
 
-@Body
+<section class="container">
+  @Body
+</section>
 
 <footer>
-  <br />
-  <hr />
-  <p>@State.SelectFullTitle()</p>
-  <button @onclick="ChangeTitle">Set Title</button>
+  <hr/>
+  <div class="container">
+    <p>Made with ❤️ by Philippe Matray</p>
+    <button @onclick="OpenModal">Open Modal</button>
+  </div>
 </footer>
+
+<dialog open="@State.IsModalOpen">
+  <article>
+    <header>
+      <button aria-label="Close" rel="prev" @onclick="CloseModal"></button>
+      <p>
+        <strong>🗓️ Thank You for Registering!</strong>
+      </p>
+    </header>
+    <p>
+      We're excited to have you join us for our
+      upcoming event. Please arrive at the museum
+      on time to check in and get started.
+    </p>
+    <ul>
+      <li>Date: Saturday, April 15</li>
+      <li>Time: 10:00am - 12:00pm</li>
+    </ul>
+  </article>
+</dialog>
 
 @* <div id="blazor-error-ui"> *@
 @*   An unhandled error has occurred. *@
@@ -30,7 +58,10 @@
 
 @code {
 
-  private void ChangeTitle()
-    => Dispatch(new SetTitle("Hello, Blazor!"));
+  private void OpenModal()
+    => Dispatch(new OpenModal());
+  
+  private void CloseModal()
+    => Dispatch(new CloseModal());
 
 }

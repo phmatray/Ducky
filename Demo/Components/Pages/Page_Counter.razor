@@ -4,7 +4,7 @@
 <PageTitle>R3dux - Counter</PageTitle>
 <hgroup>
   <p class="chapter">Example</p>
-  <h1>Counter</h1>
+  <h1>Counter <strong>@State</strong></h1>
   <p>
     Creates an interactive counter using the R3dux state management library for predictable state handling,
     featuring increment, decrement, and reset buttons to manage the counter state.
@@ -15,13 +15,20 @@
   </ul>
 </hgroup>
 
-<div style="display: flex; margin-bottom: 10px;">
+@if(State > 15)
+{
+  <progress></progress>
+}
+else
+{
+  <progress value="@State" max="15"></progress>
+}
+
+<div role="group">
   <button @onclick="Decrement" disabled="@(State <= 0)">Decrement</button>
-  <div style="margin: 0 10px;">Current Count: <strong>@State</strong></div>
+  <button @onclick="Reset">Reset Counter</button>
   <button @onclick="Increment">Increment</button>
 </div>
-
-<button @onclick="Reset">Reset Counter</button>
 
 @code {
 

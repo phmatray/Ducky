@@ -5,11 +5,17 @@
 <hgroup>
   <p class="chapter">Example</p>
   <h1>Message</h1>
-  <p>Creates a simple message example using the R3dux state management library for predictable state handling, featuring a button to set a new message.</p>
+  <p>
+    Creates a simple message example using the R3dux state management library for predictable state handling,
+    featuring a button to set a new message.
+  </p>
 </hgroup>
 
-<p>Message: <strong>@State.Message</strong></p>
-<p>Character count: <strong>@State.SelectMessageLength()</strong></p>
+<article>
+  <p>Message: <strong>@State.Message</strong></p>
+  <p>Character count: <strong>@State.SelectMessageLength()</strong></p>
+  
+</article>
 <button @onclick="SetMessage">Set New Message</button>
 
 @code {

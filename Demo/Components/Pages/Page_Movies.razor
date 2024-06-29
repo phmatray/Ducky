@@ -11,39 +11,50 @@
   </p>
 </hgroup>
 
-@if (ErrorMessage != null)
-{
-  <p><strong>@ErrorMessage</strong></p>
-}
-else if (IsLoading)
-{
-  <p><strong>Loading movies...</strong></p>
-}
-else
-{
-  <h3>5 more recent movies</h3>
-  <table style="margin-bottom: 20px;">
-    <thead>
-    <tr>
-      <th style="text-align: left;">Title</th>
-      <th style="text-align: left;">Director</th>
-      <th style="text-align: left;">Year</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var movie in Movies)
-    {
+<article>
+  <header>5 more recent movies</header>
+  @if (ErrorMessage != null)
+  {
+    <p><strong>@ErrorMessage</strong></p>
+  }
+  else if (IsLoading)
+  {
+    <p><strong>Loading movies...</strong></p>
+  }
+  else
+  {
+    <table>
+      <thead>
       <tr>
-        <td>@movie.Title</td>
-        <td>@movie.Director</td>
-        <td>@movie.Year</td>
+        <th>Title</th>
+        <th>Director</th>
+        <th>Year</th>
       </tr>
+      </thead>
+      <tbody>
+      @foreach (var movie in Movies)
+      {
+        <tr>
+          <td>@movie.Title</td>
+          <td>@movie.Director</td>
+          <td>@movie.Year</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+  }
+  <footer>
+    @if (IsLoading)
+    {
+      <button aria-busy="true" disabled>Please wait...</button>
     }
-    </tbody>
-  </table>
-}
+    else
+    {
+      <button @onclick="LoadMovies">Reload Movies</button>
+    }
+  </footer>
+</article>
 
-<button @onclick="LoadMovies">Reload Movies</button>
 
 @code {
   
@@ -52,6 +63,9 @@ else
   
   private bool IsLoading
     => State.IsLoading;
+  
+  private string IsLoadingString
+    => IsLoading ? "true" : "false";
   
   private string? ErrorMessage
     => State.Error?.Message;
