@@ -8,6 +8,9 @@ public record MessageState
     // Selectors
     public int SelectMessageLength()
         => Message.Length;
+    
+    public string SelectMessageInReverse() 
+        => new(Message.Reverse().ToArray());
 }
 
 // Actions

@@ -14,9 +14,11 @@
 <article>
   <p>Message: <strong>@State.Message</strong></p>
   <p>Character count: <strong>@State.SelectMessageLength()</strong></p>
-  
+  <p>Reverse: <strong>@State.SelectMessageInReverse()</strong></p>
+  <footer>
+    <button @onclick="SetMessage">Set New Message</button>
+  </footer>
 </article>
-<button @onclick="SetMessage">Set New Message</button>
 
 @code {
 

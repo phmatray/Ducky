@@ -15,20 +15,23 @@
   </ul>
 </hgroup>
 
-@if(State > 15)
-{
+<article>
+  @if(State > 15)
+  {
   <progress></progress>
-}
-else
-{
+  }
+  else
+  {
   <progress value="@State" max="15"></progress>
-}
-
-<div role="group">
-  <button @onclick="Decrement" disabled="@(State <= 0)">Decrement</button>
-  <button @onclick="Reset">Reset Counter</button>
-  <button @onclick="Increment">Increment</button>
-</div>
+  }
+  <footer>
+    <div role="group">
+      <button @onclick="Decrement" disabled="@(State <= 0)">Decrement</button>
+      <button @onclick="Reset">Reset Counter</button>
+      <button @onclick="Increment">Increment</button>
+    </div>
+  </footer>
+</article>
 
 @code {
 

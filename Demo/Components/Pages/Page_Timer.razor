@@ -10,12 +10,14 @@
 
 <article>
   Time: <strong>@Time</strong> seconds
+  <footer>
+    <div role="group">
+      <button @onclick="ToggleTimer">@(IsRunning ? "Stop" : "Start")</button>
+      <button @onclick="Reset">Reset</button>
+    </div>
+  </footer>
 </article>
 
-<div role="group">
-  <button @onclick="ToggleTimer">@(IsRunning ? "Stop" : "Start")</button>
-  <button @onclick="Reset">Reset</button>
-</div>
 
 @code {
 
