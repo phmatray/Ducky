@@ -22,12 +22,25 @@ else if (IsLoading)
 else
 {
   <h3>5 more recent movies</h3>
-  <ul>
+  <table style="margin-bottom: 20px;">
+    <thead>
+    <tr>
+      <th style="text-align: left;">Title</th>
+      <th style="text-align: left;">Director</th>
+      <th style="text-align: left;">Year</th>
+    </tr>
+    </thead>
+    <tbody>
     @foreach (var movie in Movies)
     {
-      <li>@movie.Title (@movie.Year)</li>
+      <tr>
+        <td>@movie.Title</td>
+        <td>@movie.Director</td>
+        <td>@movie.Year</td>
+      </tr>
     }
-  </ul>
+    </tbody>
+  </table>
 }
 
 <button @onclick="LoadMovies">Reload Movies</button>
@@ -35,7 +48,7 @@ else
 @code {
   
   private IImmutableList<Movie> Movies
-    => State.MoviesByYear;
+    => State.SelectMoviesByYear();
   
   private bool IsLoading
     => State.IsLoading;

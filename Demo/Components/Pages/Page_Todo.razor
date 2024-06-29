@@ -11,9 +11,9 @@
 <input @bind="_newTodo" placeholder="Enter new todo" />
 <button @onclick="CreateTodoItem">Add Todo</button>
 
-<h4>Active Todos (@State.ActiveTodosCount)</h4>
+<h4>Active Todos (@State.SelectActiveTodosCount())</h4>
 <ul>
-  @foreach (var todo in State.ActiveTodos)
+  @foreach (var todo in State.SelectActiveTodos())
   {
     <li @key="todo.Id">
       <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)" />
@@ -23,9 +23,9 @@
   }
 </ul>
 
-<h4>Completed Todos (@State.CompletedTodosCount)</h4>
+<h4>Completed Todos (@State.SelectCompletedTodosCount())</h4>
 <ul>
-  @foreach (var todo in State.CompletedTodos)
+  @foreach (var todo in State.SelectCompletedTodos())
   {
     <li @key="todo.Id">
       <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)"/>

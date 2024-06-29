@@ -6,7 +6,8 @@ public record LayoutState
     public string Title { get; init; } = "Demo App Store";
     public string Version { get; init; } = "v1.0.0";
     
-    public string FullTitle
+    // Selectors
+    public string SelectFullTitle()
         => $"{Title} - {Version}";
 }
 

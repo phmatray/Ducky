@@ -7,14 +7,20 @@ public record MovieState
     public bool IsLoading { get; init; }
     public Exception? Error { get; init; }
     
-    // 5 more recent movies
-    public ImmutableArray<Movie> MoviesByYear =>
-    [
-        ..Movies
+    // Selectors
+    // ==========
+    // We can define selectors as methods in the state record
+    // to encapsulate the logic of selecting data from the state.
+    // Each method should begin with the word "Select".
+    public int SelectMovieCount()
+        => Movies.Length;
+
+    public ImmutableArray<Movie> SelectMoviesByYear(int takeCount = 5)
+        => Movies
             .Sort((a, b) => a.Year.CompareTo(b.Year))
-            .TakeLast(5)
+            .TakeLast(takeCount)
             .Reverse()
-    ];
+            .ToImmutableArray();
 }
 
 // Actions

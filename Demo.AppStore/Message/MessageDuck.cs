@@ -4,6 +4,10 @@ namespace Demo.AppStore;
 public record MessageState
 {
     public string Message { get; init; } = "Hello, Blazor!";
+    
+    // Selectors
+    public int SelectMessageLength()
+        => Message.Length;
 }
 
 // Actions

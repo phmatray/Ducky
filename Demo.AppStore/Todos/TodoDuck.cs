@@ -3,7 +3,7 @@ namespace Demo.AppStore;
 // State
 public record TodoState
 {
-    public ImmutableArray<TodoItem> Todos { get; init; } =
+    public ImmutableList<TodoItem> Todos { get; init; } =
     [
         new TodoItem("Learn Blazor", true),
         new TodoItem("Learn Redux"),
@@ -13,17 +13,21 @@ public record TodoState
     ];
     
     // Selectors
-    public IImmutableList<TodoItem> ActiveTodos
-        => Todos.Where(todo => !todo.IsCompleted).ToImmutableList();
+    public ImmutableList<TodoItem> SelectActiveTodos()
+        => Todos
+            .Where(todo => !todo.IsCompleted)
+            .ToImmutableList();
     
-    public int ActiveTodosCount
-        => ActiveTodos.Count;
+    public int SelectActiveTodosCount()
+        => SelectActiveTodos().Count;
     
-    public IImmutableList<TodoItem> CompletedTodos
-        => Todos.Where(todo => todo.IsCompleted).ToImmutableList();
+    public ImmutableList<TodoItem> SelectCompletedTodos()
+        => Todos
+            .Where(todo => todo.IsCompleted)
+            .ToImmutableList();
     
-    public int CompletedTodosCount
-        => CompletedTodos.Count;
+    public int SelectCompletedTodosCount()
+        => SelectCompletedTodos().Count;
 }
 
 // Actions
@@ -54,7 +58,7 @@ public class TodoReducer : Reducer<TodoState>
         {
             Todos = state.Todos
                 .Select(todo => todo.Id == action.Id ? todo.ToggleIsCompleted() : todo)
-                .ToImmutableArray()
+                .ToImmutableList()
         };
 
     private static TodoState ReduceDeleteTodo(TodoState state, DeleteTodo action)
@@ -62,6 +66,6 @@ public class TodoReducer : Reducer<TodoState>
         {
             Todos = state.Todos
                 .Where(todo => todo.Id != action.Id)
-                .ToImmutableArray()
+                .ToImmutableList()
         };
 }

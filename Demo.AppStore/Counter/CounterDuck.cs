@@ -1,36 +1,7 @@
 ﻿namespace Demo.AppStore;
 
-public interface IFsaAction<out TPayload>
-    : IAction
-{
-    string Type { get; }
-    TPayload? Payload { get; }
-    string? Error { get; }
-    object? Meta { get; }
-}
-
-public abstract record FsaAction<TPayload>(
-    TPayload? Payload = default,
-    string? Error = null,
-    object? Meta = null)
-    : IFsaAction<TPayload>
-{
-    public virtual string Domain
-        => GetType().Namespace ?? string.Empty;
-    
-    public virtual string Type
-        => $"[{Domain}] {GetType().Name}";
-    
-    public bool HasError
-        => !string.IsNullOrEmpty(Error);
-}
-
-public record FsaAction
-    : FsaAction<object?>;
-
 // Actions
-public record Increment : FsaAction;
-
+public record Increment : IAction;
 public record Decrement : IAction;
 public record Reset : IAction;
 public record SetValue(int Value) : IAction;
