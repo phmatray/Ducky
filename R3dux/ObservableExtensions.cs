@@ -30,14 +30,6 @@ public static class ObservableExtensions
         where TSource : IAction
         => source.Catch<TSource, Exception>(ex 
             => Observable.Return(selector(ex)));
-    
-    public static Observable<IAction> InvokeService<TAction, TResult>(
-        this Observable<TAction> source,
-        Func<TAction, ValueTask<TResult>> serviceCall,
-        Func<TResult, IAction> successSelector)
-        where TAction : IAction
-        => source.SelectMany(action 
-            => serviceCall(action).ToObservable().Select(successSelector));
 
     public static Observable<IAction> InvokeService<TAction, TResult>(
         this Observable<TAction> source,
@@ -45,8 +37,11 @@ public static class ObservableExtensions
         Func<TResult, IAction> successSelector,
         Func<Exception, IAction> errorSelector)
         where TAction : IAction
-        => source.InvokeService(serviceCall, successSelector)
-            .CatchAction(errorSelector);
+        => source.SelectMany(action
+            => serviceCall(action)
+                .ToObservable()
+                .Select(successSelector)
+                .CatchAction(errorSelector));
     
     public static Observable<TSource> LogMessage<TSource>(
         this Observable<TSource> source,

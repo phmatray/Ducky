@@ -5,7 +5,7 @@ public record MovieState
 {
     public ImmutableArray<Movie> Movies { get; init; } = [];
     public bool IsLoading { get; init; }
-    public Exception? Error { get; init; }
+    public string? ErrorMessage { get; init; }
     
     // Selectors
     // ==========
@@ -26,7 +26,7 @@ public record MovieState
 // Actions
 public record LoadMovies : IAction;
 public record LoadMoviesSuccess(ImmutableArray<Movie> Movies) : IAction;
-public record LoadMoviesFailure(Exception Error) : IAction;
+public record LoadMoviesFailure(string ErrorMessage) : IAction;
 
 // Reducer
 public class MovieReducer : Reducer<MovieState>
@@ -34,13 +34,13 @@ public class MovieReducer : Reducer<MovieState>
     public MovieReducer()
     {
         Register<LoadMovies>((state, _)
-            => state with { IsLoading = true, Error = null });
+            => state with { IsLoading = true, ErrorMessage = null });
         
         Register<LoadMoviesSuccess>((state, action)
             => state with { Movies = action.Movies, IsLoading = false });
         
         Register<LoadMoviesFailure>((state, action)
-            => new MovieState { Movies = [], Error = action.Error, IsLoading = false });
+            => new MovieState { Movies = [], ErrorMessage = action.ErrorMessage, IsLoading = false });
     }
 }
 
@@ -58,7 +58,7 @@ public class LoadMoviesEffect(MoviesService moviesService)
             .InvokeService(
                 action => moviesService.GetMoviesAsync(),
                 movies => new LoadMoviesSuccess(movies),
-                ex => new LoadMoviesFailure(ex))
+                ex => new LoadMoviesFailure(ex.Message))
             .LogMessage("Movies loaded.");
 
         // THE SAME CODE CAN BE WRITTEN WITHOUT THE EXTENSION METHODS
@@ -70,8 +70,8 @@ public class LoadMoviesEffect(MoviesService moviesService)
         //         .GetMoviesAsync()
         //         .ToObservable()
         //         .Select(movies => (IAction)new LoadMoviesSuccess(movies))
-        //         .Do(_ => Console.WriteLine("Movies loaded.")))
-        //     .Catch<IAction, Exception>(ex => Observable.Return<IAction>(new LoadMoviesFailure(ex)));
+        //         .Do(_ => Console.WriteLine("Movies loaded."))
+        //         .Catch<IAction, Exception>(ex => Observable.Return<IAction>(new LoadMoviesFailure(ex.Message))));
 
         // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
         // ============================================================
@@ -87,7 +87,7 @@ public class LoadMoviesEffect(MoviesService moviesService)
         //         }
         //         catch (Exception ex)
         //         {
-        //             return new LoadMoviesFailure(ex);
+        //             return new LoadMoviesFailure(ex.Message);
         //         }
         //     });
     }

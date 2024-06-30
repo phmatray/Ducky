@@ -33,7 +33,7 @@ public class IncrementEffect : Effect<int>
             .FilterActions<Increment>()
             .WithLatestFrom(state, (action, stateValue) => new { action, stateValue })
             .Where(x => x.stateValue > 15)
-            .Delay(TimeSpan.FromSeconds(1))
+            .Delay(TimeSpan.FromSeconds(3))
             .SelectAction(x => new Reset());
     }
 }

@@ -1,4 +1,5 @@
-using System.Collections;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace R3dux;
 
@@ -7,6 +8,12 @@ namespace R3dux;
 /// </summary>
 public static class StateLogger
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     /// <summary>
     /// Logs the details of a state change.
     /// </summary>
@@ -45,7 +52,6 @@ public static class StateLogger
     private static string GetObjectDetails(object? obj)
     {
         const string nullString = "NULL";
-        const string emptyString = "EMPTY OBJECT";
         
         // if obj is null, return "null"
         if (obj is null)
@@ -53,24 +59,15 @@ public static class StateLogger
             return nullString;
         }
         
-        // if obj is a basic type, return its string representation
-        if (obj.GetType().IsPrimitive || obj is string)
+        try
         {
-            return obj.ToString() ?? nullString;
+            return JsonSerializer
+                .Serialize(obj, SerializerOptions)
+                .Replace(Environment.NewLine, $"{Environment.NewLine}  ");
         }
-        
-        var properties = obj.GetType().GetProperties()
-            .Select(p =>
-            {
-                var value = p.GetValue(obj);
-                return value is IEnumerable collection and not string
-                    ? $"{p.Name}: {collection.Cast<object>().Count()} items"
-                    : $"{p.Name}: {value ?? nullString}";
-            })
-            .ToArray();
-        
-        return properties.Length == 0
-            ? emptyString
-            : $"{{ {string.Join(", ", properties)} }}";
+        catch (Exception ex)
+        {
+            return $"Error serializing object: {ex.Message}";
+        }
     }  
 }
