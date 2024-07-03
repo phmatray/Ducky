@@ -2,7 +2,7 @@ namespace R3dux.Tests;
 
 public class DispatcherTests
 {
-    private class TestAction(string name) : IAction
+    private class TestAction(string name)
     {
         private string Name { get; } = name;
 
@@ -36,7 +36,7 @@ public class DispatcherTests
         var action1 = new TestAction("Action1");
         var action2 = new TestAction("Action2");
 
-        var emittedActions = new List<IAction>();
+        var emittedActions = new List<object>();
         dispatcher.ActionStream.Subscribe(emittedActions.Add);
 
         // Act
@@ -70,7 +70,7 @@ public class DispatcherTests
         var action2 = new TestAction("Action2");
         var action3 = new TestAction("Action3");
 
-        var emittedActions = new List<IAction>();
+        var emittedActions = new List<object>();
         dispatcher.ActionStream.Subscribe(emittedActions.Add);
 
         // Act
@@ -93,7 +93,7 @@ public class DispatcherTests
         var action1 = new TestAction("Action1");
         var action2 = new TestAction("Action2");
 
-        var emittedActions = new List<IAction>();
+        var emittedActions = new List<object>();
         var subscription = dispatcher.ActionStream.Subscribe(emittedActions.Add);
 
         // Act

@@ -12,21 +12,29 @@ public record LayoutState
         => $"{Title} - {Version}";
 }
 
-// Actions
-public record SetTitle(string Title) : IAction;
-public record OpenModal : IAction;
-public record CloseModal : IAction;
-
-
-// Reducer
-public class LayoutReducer : Reducer<LayoutState>
+public record LayoutSlice : Slice<LayoutState>
 {
-    public override LayoutState Reduce(LayoutState state, IAction action)
-        => action switch
-        {
-            SetTitle setTitleAction => state with { Title = setTitleAction.Title },
-            OpenModal => state with { IsModalOpen = true },
-            CloseModal => state with { IsModalOpen = false },
-            _ => state
-        };
+    
+}
+
+// Actions
+public record SetTitle(string Title);
+public record OpenModal;
+public record CloseModal;
+
+
+// Reducers
+public class LayoutReducers : ReducerCollection<LayoutState>
+{
+    public LayoutReducers()
+    {
+        Map<SetTitle>((state, action)
+            => state with { Title = action.Title });
+        
+        Map<OpenModal>((state, _)
+            => state with { IsModalOpen = true });
+        
+        Map<CloseModal>((state, _)
+            => state with { IsModalOpen = false });
+    }
 }

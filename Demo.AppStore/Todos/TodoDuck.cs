@@ -31,29 +31,29 @@ public record TodoState
 }
 
 // Actions
-public record CreateTodo(string Title) : IAction;
+public record CreateTodo(string Title);
 
-public record ToggleTodo(Guid Id) : IAction;
+public record ToggleTodo(Guid Id);
 
-public record DeleteTodo(Guid Id) : IAction;
+public record DeleteTodo(Guid Id);
 
-// Reducer
-public class TodoReducer : Reducer<TodoState>
+// Reducers
+public class TodoReducers : ReducerCollection<TodoState>
 {
-    public TodoReducer()
+    public TodoReducers()
     {
-        Register<CreateTodo>(ReduceCreateTodo);
-        Register<ToggleTodo>(ReduceToggleTodo);
-        Register<DeleteTodo>(ReduceDeleteTodo);
+        Map<CreateTodo>(MapCreateTodo);
+        Map<ToggleTodo>(MapToggleTodo);
+        Map<DeleteTodo>(MapDeleteTodo);
     }
 
-    private static TodoState ReduceCreateTodo(TodoState state, CreateTodo action)
+    private static TodoState MapCreateTodo(TodoState state, CreateTodo action)
         => state with
         {
             Todos = state.Todos.Add(new TodoItem(action.Title))
         };
 
-    private static TodoState ReduceToggleTodo(TodoState state, ToggleTodo action)
+    private static TodoState MapToggleTodo(TodoState state, ToggleTodo action)
         => state with
         {
             Todos = state.Todos
@@ -61,7 +61,7 @@ public class TodoReducer : Reducer<TodoState>
                 .ToImmutableList()
         };
 
-    private static TodoState ReduceDeleteTodo(TodoState state, DeleteTodo action)
+    private static TodoState MapDeleteTodo(TodoState state, DeleteTodo action)
         => state with
         {
             Todos = state.Todos

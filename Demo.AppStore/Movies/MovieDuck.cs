@@ -24,33 +24,31 @@ public record MovieState
 }
 
 // Actions
-public record LoadMovies : IAction;
-public record LoadMoviesSuccess(ImmutableArray<Movie> Movies) : IAction;
-public record LoadMoviesFailure(string ErrorMessage) : IAction;
+public record LoadMovies;
+public record LoadMoviesSuccess(ImmutableArray<Movie> Movies);
+public record LoadMoviesFailure(string ErrorMessage);
 
-// Reducer
-public class MovieReducer : Reducer<MovieState>
+// Reducers
+public class MovieReducers : ReducerCollection<MovieState>
 {
-    public MovieReducer()
+    public MovieReducers()
     {
-        Register<LoadMovies>((state, _)
+        Map<LoadMovies>((state, _)
             => state with { IsLoading = true, ErrorMessage = null });
         
-        Register<LoadMoviesSuccess>((state, action)
+        Map<LoadMoviesSuccess>((state, action)
             => state with { Movies = action.Movies, IsLoading = false });
         
-        Register<LoadMoviesFailure>((state, action)
+        Map<LoadMoviesFailure>((state, action)
             => new MovieState { Movies = [], ErrorMessage = action.ErrorMessage, IsLoading = false });
     }
 }
 
 // Effects
-public class LoadMoviesEffect(MoviesService moviesService)
-    : Effect<MovieState>
+public class LoadMoviesEffect(MoviesService moviesService) : Effect
 {
-    /// <inheritdoc />
-    public override Observable<IAction> Handle(
-        Observable<IAction> actions, Observable<MovieState> state)
+    public override Observable<object> Handle(
+        Observable<object> actions, Store store)
     {
         return actions
             .FilterActions<LoadMovies>()
@@ -64,26 +62,26 @@ public class LoadMoviesEffect(MoviesService moviesService)
         // THE SAME CODE CAN BE WRITTEN WITHOUT THE EXTENSION METHODS
         // ============================================================
         // return actions
-        //     .OfType<IAction, LoadMovies>()
+        //     .OfType<object, LoadMovies>()
         //     .Do(_ => Console.WriteLine("Loading movies..."))
         //     .SelectMany(action => moviesService
         //         .GetMoviesAsync()
         //         .ToObservable()
-        //         .Select(movies => (IAction)new LoadMoviesSuccess(movies))
+        //         .Select(movies => (object)new LoadMoviesSuccess(movies))
         //         .Do(_ => Console.WriteLine("Movies loaded."))
-        //         .Catch<IAction, Exception>(ex => Observable.Return<IAction>(new LoadMoviesFailure(ex.Message))));
+        //         .Catch<object, Exception>(ex => Observable.Return<object>(new LoadMoviesFailure(ex.Message))));
 
         // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
         // ============================================================
         // return actions
-        //     .OfType<IAction, LoadMovies>()
+        //     .OfType<object, LoadMovies>()
         //     .Do(_ => Console.WriteLine("Loading movies..."))
         //     .SelectAwait(async (action, ct) =>
         //     {
         //         try
         //         {
         //             var movies = await moviesService.GetMoviesAsync(ct);
-        //             return new LoadMoviesSuccess(movies) as IAction;
+        //             return new LoadMoviesSuccess(movies) as object;
         //         }
         //         catch (Exception ex)
         //         {

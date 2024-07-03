@@ -8,19 +8,26 @@ public record TimerState
 }
 
 // Actions
-public record StartTimer : IAction;
-public record StopTimer : IAction;
-public record ResetTimer : IAction;
-public record Tick : IAction;
+public record StartTimer;
+public record StopTimer;
+public record ResetTimer;
+public record Tick;
 
-// Reducer
-public class TimerReducer : Reducer<TimerState>
+// Reducers
+public class TimerReducers : ReducerCollection<TimerState>
 {
-    public TimerReducer()
+    public TimerReducers()
     {
-        Register<StartTimer>(state => state with { IsRunning = true });
-        Register<StopTimer>(state => state with { IsRunning = false });
-        Register<ResetTimer>(() => new TimerState());
-        Register<Tick>(state => state with { Time = state.Time + 1 });
+        Map<StartTimer>((state, _)
+            => state with { IsRunning = true });
+        
+        Map<StopTimer>((state, _)
+            => state with { IsRunning = false });
+        
+        Map<ResetTimer>((_, _)
+            => new TimerState());
+        
+        Map<Tick>((state, _)
+            => state with { Time = state.Time + 1 });
     }
 }

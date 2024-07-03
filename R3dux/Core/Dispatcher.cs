@@ -1,4 +1,5 @@
 using R3;
+using R3dux.Exceptions;
 
 namespace R3dux;
 
@@ -9,15 +10,15 @@ public class Dispatcher
     : IDispatcher, IDisposable
 {
     private readonly object _syncRoot = new();
-    private readonly Queue<IAction> _queuedActions = new();
-    private readonly Subject<IAction> _actionSubject = new();
+    private readonly Queue<object> _queuedActions = new();
+    private readonly Subject<object> _actionSubject = new();
     private volatile bool _isDequeuing;
     private bool _disposed;
     
     /// <summary>
     /// Gets an observable stream of dispatched actions.
     /// </summary>
-    public Observable<IAction> ActionStream
+    public Observable<object> ActionStream
         => _actionSubject.AsObservable();
 
     /// <summary>
@@ -26,11 +27,13 @@ public class Dispatcher
     /// <param name="action">The action to dispatch.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="action"/> is null.</exception>
     /// <exception cref="ObjectDisposedException">Thrown when the dispatcher has been disposed.</exception>
-    public void Dispatch(IAction action)
+    public void Dispatch(object action)
     {
         if (_disposed)
         {
-            throw new ObjectDisposedException(nameof(Dispatcher));
+            throw new R3duxException(
+                "The dispatcher has been disposed.",
+                new ObjectDisposedException(nameof(Dispatcher)));
         }
 
         ArgumentNullException.ThrowIfNull(action);
@@ -60,7 +63,7 @@ public class Dispatcher
 
         while (true)
         {
-            IAction dequeuedAction;
+            object dequeuedAction;
 
             lock (_syncRoot)
             {

@@ -23,7 +23,7 @@ public static class StateLogger
     /// <param name="newState">The new state after the change.</param>
     /// <param name="elapsedMilliseconds">The time taken for the state change in milliseconds.</param>
     public static void LogStateChange<TState>(
-        IAction action, TState prevState, TState newState, double elapsedMilliseconds)
+        object action, TState prevState, TState newState, double elapsedMilliseconds)
     {
         var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
         var actionName = GetActionType(action);
@@ -39,7 +39,7 @@ public static class StateLogger
     /// </summary>
     /// <param name="action">The action.</param>
     /// <returns>The name of the action type.</returns>
-    private static string GetActionType(IAction action)
+    private static string GetActionType(object action)
     {
         return action.GetType().Name;
     }

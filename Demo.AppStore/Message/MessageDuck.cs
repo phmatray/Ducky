@@ -14,17 +14,18 @@ public record MessageState
 }
 
 // Actions
-public record SetMessage(string Message) : IAction;
+public record SetMessage(string Message);
 
-// Reducer
-public class MessageReducer : Reducer<MessageState>
+// Reducers
+public class MessageReducers : ReducerCollection<MessageState>
 {
-    public override MessageState Reduce(MessageState state, IAction action)
+    public MessageReducers()
     {
-        return action switch
-        {
-            SetMessage setMessage => new MessageState { Message = setMessage.Message },
-            _ => state
-        };
+        Map<SetMessage>((state, action)
+            => new MessageState { Message = action.Message });
     }
+
+    // private void Map<T>(Func<object, T, object> reduceFx)
+    // {
+    // }
 }

@@ -9,43 +9,60 @@ services.AddRazorComponents()
 
 // Add RxStore
 services.AddR3dux();
+services.AddSingleton(sp =>
+{
+    var dispatcher = sp.GetRequiredService<IDispatcher>();
+    var moviesService = new MoviesService();
+    
+    SliceCollection slices =
+    [
+        new Slice<LayoutState>
+        {
+            Key = "layout",
+            InitialState = new LayoutState(),
+            Reducers = new LayoutReducers()
+        },
+        
+        new Slice<int>
+        {
+            Key = "counter",
+            InitialState = 10,
+            Reducers = new CounterReducers(),
+            Effects = [new IncrementEffect()]
+        },
+        
+        new Slice<MessageState>
+        {
+            Key = "message",
+            InitialState = new MessageState(),
+            Reducers = new MessageReducers()
+        },
+    
+        new Slice<MovieState>
+        {
+            Key = "movies",
+            InitialState = new MovieState(),
+            Reducers = new MovieReducers(),
+            Effects = [new LoadMoviesEffect(moviesService)]
+        },
+    
+        new Slice<TimerState>
+        {
+            Key = "timer",
+            InitialState = new TimerState(),
+            Reducers = new TimerReducers()
+        },
+    
+        new Slice<TodoState>
+        {
+            Key = "todos",
+            InitialState = new TodoState(),
+            Reducers = new TodoReducers()
+        }
+    ];
 
-builder.Services.AddScoped(_ => new Store<LayoutState>(
-    initialState: new LayoutState(),
-    reducer: new LayoutReducer(),
-    effects: []
-));
-
-builder.Services.AddScoped(_ => new Store<int>(
-    initialState: 10,
-    reducer: new CounterReducer(),
-    effects: [new IncrementEffect()]
-));
-
-builder.Services.AddScoped(_ => new Store<MessageState>(
-    initialState: new MessageState(),
-    reducer: new MessageReducer(),
-    effects: []
-));
-
-services.AddScoped<MoviesService>();
-builder.Services.AddScoped(sp => new Store<MovieState>(
-    initialState: new MovieState(),
-    reducer: new MovieReducer(),
-    effects: [new LoadMoviesEffect(sp.GetRequiredService<MoviesService>())]
-));
-
-builder.Services.AddScoped(_ => new Store<TimerState>(
-    initialState: new TimerState(),
-    reducer: new TimerReducer(),
-    effects: []
-));
-
-builder.Services.AddScoped(_ => new Store<TodoState>(
-    initialState: new TodoState(),
-    reducer: new TodoReducer(),
-    effects: []
-));
+    return new Store(slices, dispatcher);
+});
 
 var app = builder.Build();
 

@@ -2,9 +2,9 @@ namespace R3dux.Tests;
 
 public class ReducerTests
 {
-    private readonly CounterReducer _reducer = new();
+    private readonly CounterReducers _reducer = new();
     
-    private record UnknownAction : IAction;
+    private record UnknownAction;
 
     [Fact]
     public void IncrementAction_Should_Increment_State_Value()

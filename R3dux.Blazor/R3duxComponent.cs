@@ -8,13 +8,16 @@ public abstract class R3duxComponent<TState>
     where TState : notnull, new()
 {
     [Inject]
-    public required Store<TState> Store { get; set; }
+    public required Store Store { get; set; }
+    
+    [Inject]
+    public required IDispatcher Dispatcher { get; set; }
 
     private IDisposable? _stateSubscription;
 
     protected override void OnInitialized()
     {
-        _stateSubscription = Store.State
+        _stateSubscription = Store.GetStateStream()
             .DistinctUntilChanged()
             .Subscribe(_ => StateHasChanged());
     }
@@ -25,16 +28,17 @@ public abstract class R3duxComponent<TState>
     public void Dispose()
         => _stateSubscription?.Dispose();
 
-    protected void Dispatch(IAction action)
-        => Store.Dispatch(action);
+    protected void Dispatch(object action)
+        => Dispatcher.Dispatch(action);
     
     private TState GetState()
     {
-        var stateAsync = Store.State
+        var stateAsync = Store.GetStateStream()
             .Select(state => state)
             .FirstAsync();
         
         stateAsync.Wait();
-        return stateAsync.Result;
+        // return stateAsync.Result;
+        return new TState();
     }
 }
