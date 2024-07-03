@@ -5,9 +5,9 @@ public interface IAction
     string Type { get; }
 }
 
-public class RxAction<T> where T : class
+public class RxAction
 {
-    public virtual string Type { get; set; }
+    public required string Type { get; set; }
 }
 
 public delegate TState ActionReducer<TState, in TAction>(

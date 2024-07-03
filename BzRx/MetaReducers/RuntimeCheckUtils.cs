@@ -49,5 +49,5 @@ public static class RuntimeCheckUtils
         => target?.GetType().GetProperty(propertyName) != null;
 
     public static bool IsPrimitive(this object? obj)
-        => obj?.GetType().IsPrimitive == true || obj is string || obj is DateTime || obj is TimeSpan;
+        => obj?.GetType().IsPrimitive == true || obj is string or DateTime or TimeSpan;
 }

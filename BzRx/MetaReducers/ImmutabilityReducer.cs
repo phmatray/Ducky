@@ -36,7 +36,7 @@ public static class ImmutabilityReducer
         else
         {
             foreach (var prop in targetType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                         .Where(p => p.CanRead && p.CanWrite && !p.Name.StartsWith("ɵ")))
+                         .Where(p => p is { CanRead: true, CanWrite: true } && !p.Name.StartsWith("ɵ")))
             {
                 var propValue = prop.GetValue(target);
                 if (propValue != null && !IsImmutable(propValue))

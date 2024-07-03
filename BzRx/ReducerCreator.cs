@@ -51,13 +51,10 @@ public static class ReducerCreator
 
         return (state, action) =>
         {
-            if (state == null) state = initialState;
-            if (map.TryGetValue(action.Type, out var reducer))
-            {
-                return reducer(state, action);
-            }
-
-            return state;
+            state ??= initialState;
+            return map.TryGetValue(action.Type, out var reducer)
+                ? reducer(state, action)
+                : state;
         };
     }
 }

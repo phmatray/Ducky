@@ -32,7 +32,7 @@ public class SerializationReducer
     {
         path ??= new List<string>();
 
-        if ((RuntimeCheckUtils.IsUndefined(target) || RuntimeCheckUtils.IsNull(target)) && path.Count == 0)
+        if ((target.IsUndefined() || target.IsNull()) && path.Count == 0)
         {
             return (new[] { "root" }, target);
         }
@@ -44,22 +44,22 @@ public class SerializationReducer
         {
             var value = targetType.GetProperty(key).GetValue(target);
 
-            if (RuntimeCheckUtils.IsComponent(value))
+            if (value.IsComponent())
             {
                 continue;
             }
 
-            if (RuntimeCheckUtils.IsUndefined(value) ||
-                RuntimeCheckUtils.IsNull(value) ||
-                RuntimeCheckUtils.IsNumber(value) ||
-                RuntimeCheckUtils.IsBoolean(value) ||
-                RuntimeCheckUtils.IsString(value) ||
-                RuntimeCheckUtils.IsArray(value))
+            if (value.IsUndefined() ||
+                value.IsNull() ||
+                value.IsNumber() ||
+                value.IsBoolean() ||
+                value.IsString() ||
+                value.IsArray())
             {
                 continue;
             }
 
-            if (RuntimeCheckUtils.IsPlainObject(value))
+            if (value.IsPlainObject())
             {
                 var unserializable = GetUnserializable(value, path.Append(key).ToList());
                 if (unserializable.HasValue)

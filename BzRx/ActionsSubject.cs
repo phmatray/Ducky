@@ -8,8 +8,7 @@ public static class Actions
     public const string INIT = "@bzrx/store/init";
 }
 
-public class ActionsSubject
-    : ReactiveProperty<RxAction>, IDisposable
+public class ActionsSubject : ReactiveProperty<RxAction>
 {
     public ActionsSubject()
         : base(new RxAction { Type = Actions.INIT }) { }
@@ -27,12 +26,6 @@ public class ActionsSubject
         }
 
         base.OnNext(action);
-    }
-
-    public void Dispose()
-    {
-        // Complete the subject when disposing
-        base.OnCompleted();
     }
 }
 
