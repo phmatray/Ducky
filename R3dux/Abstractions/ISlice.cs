@@ -4,12 +4,11 @@ public interface ISlice
 {
     string Key { get; }
     object InitialState { get; }
-    IReducer<object> Reducers { get; }
-    IEffect[] Effects { get; }
+    Type StateType { get; }
 }
 
 public interface ISlice<TState> : ISlice
 {
     new TState InitialState { get; }
-    new IReducer<TState> Reducers { get; }
+    IReducer<TState> Reducers { get; }
 }

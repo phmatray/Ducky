@@ -8,60 +8,10 @@ services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add RxStore
-services.AddR3dux();
-services.AddSingleton(sp =>
+services.AddTransient<MoviesService>();
+services.AddR3dux(options =>
 {
-    var dispatcher = sp.GetRequiredService<IDispatcher>();
-    var moviesService = new MoviesService();
-    
-    SliceCollection slices =
-    [
-        new Slice<LayoutState>
-        {
-            Key = "layout",
-            InitialState = new LayoutState(),
-            Reducers = new LayoutReducers()
-        },
-        
-        new Slice<int>
-        {
-            Key = "counter",
-            InitialState = 10,
-            Reducers = new CounterReducers(),
-            Effects = [new IncrementEffect()]
-        },
-        
-        new Slice<MessageState>
-        {
-            Key = "message",
-            InitialState = new MessageState(),
-            Reducers = new MessageReducers()
-        },
-    
-        new Slice<MovieState>
-        {
-            Key = "movies",
-            InitialState = new MovieState(),
-            Reducers = new MovieReducers(),
-            Effects = [new LoadMoviesEffect(moviesService)]
-        },
-    
-        new Slice<TimerState>
-        {
-            Key = "timer",
-            InitialState = new TimerState(),
-            Reducers = new TimerReducers()
-        },
-    
-        new Slice<TodoState>
-        {
-            Key = "todos",
-            InitialState = new TodoState(),
-            Reducers = new TodoReducers()
-        }
-    ];
-
-    return new Store(slices, dispatcher);
+    options.Assemblies = [typeof(CounterSlice).Assembly];
 });
 
 var app = builder.Build();

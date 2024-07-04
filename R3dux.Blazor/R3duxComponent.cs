@@ -17,7 +17,7 @@ public abstract class R3duxComponent<TState>
 
     protected override void OnInitialized()
     {
-        _stateSubscription = Store.GetStateStream()
+        _stateSubscription = Store.State
             .DistinctUntilChanged()
             .Subscribe(_ => StateHasChanged());
     }
@@ -33,7 +33,7 @@ public abstract class R3duxComponent<TState>
     
     private TState GetState()
     {
-        var stateAsync = Store.GetStateStream()
+        var stateAsync = Store.State
             .Select(state => state)
             .FirstAsync();
         

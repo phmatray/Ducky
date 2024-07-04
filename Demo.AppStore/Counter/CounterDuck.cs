@@ -1,10 +1,10 @@
 ﻿namespace Demo.AppStore;
 
 // Actions
-public record Increment;
-public record Decrement;
-public record Reset;
-public record SetValue(int Value);
+public record Increment : IAction;
+public record Decrement : IAction;
+public record Reset : IAction;
+public record SetValue(int Value) : IAction;
 
 // Reducers
 public class CounterReducers : ReducerCollection<int>
@@ -13,17 +13,10 @@ public class CounterReducers : ReducerCollection<int>
 
     public CounterReducers()
     {
-        Map<Increment>((state, _)
-            => state + 1);
-        
-        Map<Decrement>((state, _)
-            => state - 1);
-        
-        Map<Reset>((_, _)
-            => InitialState);
-        
-        Map<SetValue>((_, action)
-            => action.Value);
+        Map<Increment>((state, _) => state + 1);
+        Map<Decrement>((state, _) => state - 1);
+        Map<Reset>((_, _) => InitialState);
+        Map<SetValue>((_, action) => action.Value);
     }
 }
 
@@ -52,4 +45,12 @@ public class IncrementEffect : Effect
             .Delay(TimeSpan.FromSeconds(3))
             .SelectAction(x => new Reset());
     }
+}
+
+// Slice
+public record CounterSlice : Slice<int>
+{
+    public override string Key => "counter";
+    public override int InitialState => 10;
+    public override IReducer<int> Reducers { get; } = new CounterReducers();
 }

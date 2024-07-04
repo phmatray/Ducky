@@ -14,7 +14,7 @@ public record MessageState
 }
 
 // Actions
-public record SetMessage(string Message);
+public record SetMessage(string Message) : IAction;
 
 // Reducers
 public class MessageReducers : ReducerCollection<MessageState>
@@ -24,8 +24,13 @@ public class MessageReducers : ReducerCollection<MessageState>
         Map<SetMessage>((state, action)
             => new MessageState { Message = action.Message });
     }
+}
 
-    // private void Map<T>(Func<object, T, object> reduceFx)
-    // {
-    // }
+// Slice
+// ReSharper disable once UnusedType.Global
+public record MessageSlice : Slice<MessageState>
+{
+    public override string Key => "message";
+    public override MessageState InitialState { get; } = new();
+    public override IReducer<MessageState> Reducers { get; } = new MessageReducers();
 }

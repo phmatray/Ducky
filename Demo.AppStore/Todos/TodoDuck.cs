@@ -31,11 +31,11 @@ public record TodoState
 }
 
 // Actions
-public record CreateTodo(string Title);
+public record CreateTodo(string Title) : IAction;
 
-public record ToggleTodo(Guid Id);
+public record ToggleTodo(Guid Id) : IAction;
 
-public record DeleteTodo(Guid Id);
+public record DeleteTodo(Guid Id) : IAction;
 
 // Reducers
 public class TodoReducers : ReducerCollection<TodoState>
@@ -68,4 +68,13 @@ public class TodoReducers : ReducerCollection<TodoState>
                 .Where(todo => todo.Id != action.Id)
                 .ToImmutableList()
         };
+}
+
+// Slice
+// ReSharper disable once UnusedType.Global
+public record TodoSlice : Slice<TodoState>
+{
+    public override string Key => "todos";
+    public override TodoState InitialState { get; } = new();
+    public override IReducer<TodoState> Reducers { get; } = new TodoReducers();
 }

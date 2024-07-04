@@ -24,9 +24,9 @@ public record MovieState
 }
 
 // Actions
-public record LoadMovies;
-public record LoadMoviesSuccess(ImmutableArray<Movie> Movies);
-public record LoadMoviesFailure(string ErrorMessage);
+public record LoadMovies : IAction;
+public record LoadMoviesSuccess(ImmutableArray<Movie> Movies) : IAction;
+public record LoadMoviesFailure(string ErrorMessage) : IAction;
 
 // Reducers
 public class MovieReducers : ReducerCollection<MovieState>
@@ -45,6 +45,7 @@ public class MovieReducers : ReducerCollection<MovieState>
 }
 
 // Effects
+// ReSharper disable once UnusedType.Global
 public class LoadMoviesEffect(MoviesService moviesService) : Effect
 {
     public override Observable<object> Handle(
@@ -89,4 +90,13 @@ public class LoadMoviesEffect(MoviesService moviesService) : Effect
         //         }
         //     });
     }
+}
+
+// Slice
+// ReSharper disable once UnusedType.Global
+public record MovieSlice : Slice<MovieState>
+{
+    public override string Key => "movies";
+    public override MovieState InitialState { get; } = new();
+    public override IReducer<MovieState> Reducers { get; } = new MovieReducers();
 }

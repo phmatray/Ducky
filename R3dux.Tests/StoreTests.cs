@@ -9,7 +9,7 @@ public class StoreTests
         var store = CreateTestCounterStore();
 
         // Act
-        var result = await store.GetStateStream().FirstAsync();
+        var result = await store.State.FirstAsync();
 
         // Assert
         result.Should().Be(0);
@@ -22,7 +22,7 @@ public class StoreTests
         var store = CreateTestCounterStore();
 
         // Act
-        var resultTask = store.GetStateStream().Skip(1).FirstAsync();
+        var resultTask = store.State.Skip(1).FirstAsync();
         store.Dispatch(new Increment());
         var result = await resultTask;
 
@@ -37,7 +37,7 @@ public class StoreTests
         var store = CreateTestCounterStore();
 
         // Act
-        var resultTask = store.GetStateStream().Skip(1).FirstAsync();
+        var resultTask = store.State.Skip(1).FirstAsync();
         store.Dispatch(new Decrement());
         var result = await resultTask;
 
@@ -53,7 +53,7 @@ public class StoreTests
         const int newValue = 5;
 
         // Act
-        var resultTask = store.GetStateStream().Skip(1).FirstAsync();
+        var resultTask = store.State.Skip(1).FirstAsync();
         store.Dispatch(new SetValue(newValue));
         var result = await resultTask;
 
@@ -69,11 +69,10 @@ public class StoreTests
     //     var action = new Increment();
     //     var stateChanges = new List<int>();
     //
-    //     store.GetStateStream()
-    //         .Subscribe(state => stateChanges.Add(state));
+    //     store.State.Subscribe(state => stateChanges.Add(state));
     //
     //     // Act
-    //     var resultTask = store.GetStateStream().Skip(1).FirstAsync();
+    //     var resultTask = store.State.Skip(1).FirstAsync();
     //     store.Dispatch(action);
     //     await resultTask;
     //

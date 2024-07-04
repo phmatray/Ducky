@@ -1,4 +1,5 @@
 using System.Collections;
+using R3dux.Temp;
 
 namespace R3dux;
 
@@ -8,6 +9,7 @@ public class ReducerCollection<TState>
     private readonly Dictionary<Type, object> _reducers = [];
 
     public void Map<TAction>(Func<TState, TAction, TState> reducer)
+        where TAction : IAction
     {
         ArgumentNullException.ThrowIfNull(reducer);
         _reducers[typeof(TAction)] = reducer;
@@ -26,9 +28,11 @@ public class ReducerCollection<TState>
     }
 
     public void Remove<TAction>()
+        where TAction : IAction
         => _reducers.Remove(typeof(TAction));
 
     public bool Contains<TAction>()
+        where TAction : IAction
         => _reducers.ContainsKey(typeof(TAction));
 
     public void Clear()

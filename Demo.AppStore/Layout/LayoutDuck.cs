@@ -12,15 +12,10 @@ public record LayoutState
         => $"{Title} - {Version}";
 }
 
-public record LayoutSlice : Slice<LayoutState>
-{
-    
-}
-
 // Actions
-public record SetTitle(string Title);
-public record OpenModal;
-public record CloseModal;
+public record SetTitle(string Title) : IAction;
+public record OpenModal : IAction;
+public record CloseModal : IAction;
 
 
 // Reducers
@@ -37,4 +32,13 @@ public class LayoutReducers : ReducerCollection<LayoutState>
         Map<CloseModal>((state, _)
             => state with { IsModalOpen = false });
     }
+}
+
+// Slice
+// ReSharper disable once UnusedType.Global
+public record LayoutSlice : Slice<LayoutState>
+{
+    public override string Key => "layout";
+    public override LayoutState InitialState { get; } = new();
+    public override IReducer<LayoutState> Reducers { get; } = new LayoutReducers();
 }

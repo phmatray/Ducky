@@ -13,7 +13,7 @@
   <footer>
     <div role="group">
       <button @onclick="ToggleTimer">@(IsRunning ? "Stop" : "Start")</button>
-      <button @onclick="Reset">Reset</button>
+      <button @onclick="ResetTimer">Reset</button>
     </div>
   </footer>
 </article>
@@ -24,8 +24,6 @@
   private int Time => State.Time;
   private bool IsRunning => State.IsRunning;
   
-  private System.Timers.Timer? _timer;
-
   protected override void OnInitialized()
   {
     if (IsRunning)
@@ -33,51 +31,33 @@
       StartTimer();
     }
   }
-
-  private void StartTimer()
-  {
-    if (_timer == null)
-    {
-      _timer = new System.Timers.Timer(1000);
-      _timer.Elapsed += OnTimerElapsed;
-      _timer.Start();
-    }
-  }
-
-  private void StopTimer()
-  {
-    if (_timer != null)
-    {
-      _timer.Stop();
-      _timer.Elapsed -= OnTimerElapsed;
-      _timer.Dispose();
-      _timer = null;
-    }
-  }
-
-  private async void OnTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
-  {
-    await InvokeAsync(() => Dispatch(new Tick()));
-  }
-
+  
   private void ToggleTimer()
   {
     if (IsRunning)
     {
-      Dispatch(new StopTimer());
       StopTimer();
     }
     else
     {
-      Dispatch(new StartTimer());
       StartTimer();
     }
   }
 
-  private void Reset()
+  private void ResetTimer()
   {
     Dispatch(new ResetTimer());
     StopTimer();
+  }
+
+  private void StartTimer()
+  {
+    Dispatch(new StartTimer());
+  }
+
+  private void StopTimer()
+  {
+    Dispatch(new StopTimer());
   }
 
 }
