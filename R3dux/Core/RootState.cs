@@ -4,7 +4,7 @@ namespace R3dux;
 
 public record RootState
 {
-    private readonly Dictionary<string, ISlice> _state = [];
+    private readonly Dictionary<string, object> _state = [];
 
     public RootState()
     {
@@ -13,12 +13,12 @@ public record RootState
     public RootState(List<ISlice> slices)
     {
         ArgumentNullException.ThrowIfNull(slices);
-        slices.ForEach(slice => _state.Add(slice.Key, slice));
+        slices.ForEach(slice => _state.Add(slice.Key, slice.InitialState));
     }
 
-    public ISlice this[string key]
+    public object this[string key]
     {
-        get => Select<ISlice>(key);
+        get => Select<object>(key);
         set => _state[key] = value;
     }
 

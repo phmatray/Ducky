@@ -39,8 +39,9 @@ public class Store
     {
         ArgumentNullException.ThrowIfNull(slice);
         _slices.Add(slice.Key, slice);
+        State.Value[slice.Key] = slice.InitialState;
     }
-    
+
     public void AddSlices(IEnumerable<ISlice> slices)
     {
         ArgumentNullException.ThrowIfNull(slices);
@@ -73,9 +74,8 @@ public class Store
             .Aggregate(State.Value, (RootState rootState, ISlice slice) =>
             {
                 var stopwatch = Stopwatch.StartNew();
-                ISlice prevState = rootState[slice.Key];
-                // var updatedState = slice.Reducers.Reduce(prevState, action);
-                ISlice updatedState = null;
+                var prevState = rootState[slice.Key];
+                var updatedState = slice.Reduce(prevState, action);
                 rootState[slice.Key] = updatedState;
                 stopwatch.Stop();
                 StateLogger.LogStateChange(action, prevState, updatedState, stopwatch.Elapsed.TotalMilliseconds);

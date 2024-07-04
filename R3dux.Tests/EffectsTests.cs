@@ -1,3 +1,5 @@
+// using R3dux.Temp;
+//
 // namespace R3dux.Tests;
 //
 // public class IncrementEffectTests
@@ -8,8 +10,8 @@
 //         // Arrange
 //         const int initialState = 10;
 //         var effect = new IncrementEffect();
-//         var actions = new Subject<object>();
-//         var dispatchedActions = new List<object>();
+//         var actions = new Subject<IAction>();
+//         var dispatchedActions = new List<IAction>();
 //         var state = Observable.Return(initialState);
 //
 //         effect
