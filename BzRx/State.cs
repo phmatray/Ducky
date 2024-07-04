@@ -60,9 +60,9 @@ public class State<T>
     }
 }
 
-public class StateActionPair<T>
+public class StateActionPair<TState>
 {
-    public T State { get; set; }
+    public TState State { get; set; }
     public IAction Action { get; set; }
 }
 

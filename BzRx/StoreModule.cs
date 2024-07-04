@@ -69,7 +69,8 @@ public class StoreFeatureModule : IDisposable
 
 public static class StoreModule
 {
-    public static IServiceCollection AddStoreRoot<T, V>(this IServiceCollection services,
+    public static IServiceCollection AddStoreRoot<T, V>(
+        this IServiceCollection services,
         ActionReducerMap<T, V> reducers = null,
         RootStoreConfig<T, V> config = null)
         where V : IAction

@@ -40,7 +40,7 @@ public class ReducerManager
 
     public void AddFeature(StoreFeature<object, IAction> feature)
     {
-        AddFeatures(new List<StoreFeature<object, IAction>> { feature });
+        AddFeatures([feature]);
     }
 
     public void AddFeatures(List<StoreFeature<object, IAction>> features)
