@@ -1,8 +1,10 @@
+using R3dux.Temp;
+
 namespace R3dux.Tests;
 
 public class DispatcherTests
 {
-    private class TestAction(string name)
+    private class TestAction(string name) : IAction
     {
         private string Name { get; } = name;
 

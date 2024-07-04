@@ -4,16 +4,26 @@ namespace R3dux;
 
 public record RootState
 {
-    private readonly Dictionary<string, object> _state = [];
-    
-    public object this[string key]
+    private readonly Dictionary<string, ISlice> _state = [];
+
+    public RootState()
     {
-        get => Select<object>(key);
+    }
+
+    public RootState(List<ISlice> slices)
+    {
+        ArgumentNullException.ThrowIfNull(slices);
+        slices.ForEach(slice => _state.Add(slice.Key, slice));
+    }
+
+    public ISlice this[string key]
+    {
+        get => Select<ISlice>(key);
         set => _state[key] = value;
     }
 
     public TState Select<TState>(string key)
-        where TState : notnull, new()
+        where TState : notnull
         => _state[key] is not TState state
             ? throw new R3duxException($"State with key '{key}' is not of type '{typeof(TState).Name}'.")
             : state;

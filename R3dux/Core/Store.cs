@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using R3;
+using R3dux.Temp;
 
 namespace R3dux;
 
@@ -27,11 +28,8 @@ public class Store
     public TState GetState<TState>(string key)
         where TState : notnull, new()
         => State.Value.Select<TState>(key);
-    
-    public IDispatcher GetDispatcher()
-        => _dispatcher;
 
-    public void Dispatch(object action)
+    public void Dispatch(IAction action)
     {
         ArgumentNullException.ThrowIfNull(action);
         _dispatcher.Dispatch(action);
@@ -69,34 +67,27 @@ public class Store
         }
     }
 
-    private void OnDispatch(object action)
+    private void OnDispatch(IAction action)
     {
-        var rootState = _slices
-            .Aggregate(State.Value, (state, slice) =>
+        var rootState = _slices.Values
+            .Aggregate(State.Value, (RootState rootState, ISlice slice) =>
             {
                 var stopwatch = Stopwatch.StartNew();
-                var prevState = state[slice.Key];
+                ISlice prevState = rootState[slice.Key];
                 // var updatedState = slice.Reducers.Reduce(prevState, action);
-                object? updatedState = null;
-                state[slice.Key] = updatedState;
+                ISlice updatedState = null;
+                rootState[slice.Key] = updatedState;
                 stopwatch.Stop();
                 StateLogger.LogStateChange(action, prevState, updatedState, stopwatch.Elapsed.TotalMilliseconds);
-                return state;
+                return rootState;
             }); 
 
-        State.Value = rootState;
+        State.OnNext(rootState);
     }
     
     private RootState GetInitialState()
     {
-        var rootState = new RootState();
-        
-        foreach (var slice in _slices.Values)
-        {
-            rootState[slice.Key] = slice.InitialState;
-        }
-        
-        return rootState;
+        return new RootState(_slices.Values.ToList());
     }
     
     private void SubscribeToDispatcherActions()

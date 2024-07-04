@@ -36,15 +36,15 @@ public class TimerReducers : ReducerCollection<TimerState>
 // ReSharper disable once UnusedType.Global
 public class StartTimerEffect : Effect
 {
-    public override Observable<object> Handle(
-        Observable<object> actions, Store store)
+    public override Observable<IAction> Handle(
+        Observable<IAction> actions, Store store)
     {
         return actions
             .FilterActions<StartTimer>()
             .SelectMany(_ => Observable.Interval(TimeSpan.FromSeconds(1)))
             .Select(_ => new Tick())
             .TakeUntil(actions.FilterActions<StopTimer>())
-            .Cast<Tick, object>();
+            .Cast<Tick, IAction>();
     }
 }
 

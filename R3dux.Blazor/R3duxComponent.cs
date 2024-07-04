@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using R3;
+using R3dux.Temp;
 
 namespace R3dux.Blazor;
 
@@ -28,7 +29,7 @@ public abstract class R3duxComponent<TState>
     public void Dispose()
         => _stateSubscription?.Dispose();
 
-    protected void Dispatch(object action)
+    protected void Dispatch(IAction action)
         => Dispatcher.Dispatch(action);
     
     private TState GetState()

@@ -1,4 +1,5 @@
 using R3;
+using R3dux.Temp;
 
 namespace R3dux;
 
@@ -14,8 +15,8 @@ public static class CustomOperators
     /// <param name="source">The source observable sequence.</param>
     /// <returns>An observable sequence that contains elements from the input sequence of type TAction.</returns>
     public static Observable<TAction> FilterActions<TAction>(
-        this Observable<object> source)
-        => source.OfType<object, TAction>();
+        this Observable<IAction> source)
+        => source.OfType<IAction, TAction>();
     
     /// <summary>
     /// Projects each element of an observable sequence into a new form and casts it to IAction.
@@ -25,11 +26,11 @@ public static class CustomOperators
     /// <param name="source">The source observable sequence.</param>
     /// <param name="selector">A transform function to apply to each element.</param>
     /// <returns>An observable sequence of IAction.</returns>
-    public static Observable<object> SelectAction<TSource, TResult>(
+    public static Observable<IAction> SelectAction<TSource, TResult>(
         this Observable<TSource> source,
         Func<TSource, TResult> selector)
         => source.Select(selector)
-            .Cast<TResult, object>();
+            .Cast<TResult, IAction>();
     
     /// <summary>
     /// Catches exceptions in the observable sequence and replaces the exception with a specified value.
@@ -54,11 +55,11 @@ public static class CustomOperators
     /// <param name="successSelector">A function that selects the success action based on the result.</param>
     /// <param name="errorSelector">A function that selects the error action based on the exception.</param>
     /// <returns>An observable sequence of actions resulting from the service call.</returns>
-    public static Observable<object> InvokeService<TAction, TResult>(
+    public static Observable<IAction> InvokeService<TAction, TResult>(
         this Observable<TAction> source,
         Func<TAction, ValueTask<TResult>> serviceCall,
-        Func<TResult, object> successSelector,
-        Func<Exception, object> errorSelector)
+        Func<TResult, IAction> successSelector,
+        Func<Exception, IAction> errorSelector)
         => source.SelectMany(action
             => serviceCall(action)
                 .ToObservable()
