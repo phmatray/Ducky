@@ -16,7 +16,7 @@ public class Store
         ArgumentNullException.ThrowIfNull(dispatcher);
         _dispatcher = dispatcher;
         
-        State = new ReactiveProperty<RootState>(GetInitialState());
+        State = new ReactiveProperty<RootState>();
         SubscribeToDispatcherActions();
         IsInitialized = true;
     }
@@ -28,6 +28,8 @@ public class Store
     public TState GetState<TState>(string key)
         where TState : notnull, new()
         => State.Value.Select<TState>(key);
+    
+    // TODO: GetStates method
 
     public void Dispatch(IAction action)
     {
@@ -83,11 +85,6 @@ public class Store
             }); 
 
         State.OnNext(rootState);
-    }
-    
-    private RootState GetInitialState()
-    {
-        return new RootState(_slices.Values.ToList());
     }
     
     private void SubscribeToDispatcherActions()

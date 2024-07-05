@@ -21,6 +21,7 @@ public static class DependencyInjections
     {
         // Configure options
         R3duxOptions options = new();
+        // TODO: AddR3dux with IConfiguration
         configureOptions?.Invoke(options);
 
         // Add Reactive Extensions
@@ -31,8 +32,8 @@ public static class DependencyInjections
         services.AddSingleton<IStoreFactory, StoreFactory>();
         
         // Scan and register all Slices an Effects
-        services.ScanAndRegister(options.Assemblies, typeof(ISlice));
-        services.ScanAndRegister(options.Assemblies, typeof(IEffect));
+        services.ScanAndRegister<ISlice>(options.Assemblies);
+        services.ScanAndRegister<IEffect>(options.Assemblies);
         
         // Add Store
         services.AddSingleton(sp =>
@@ -54,14 +55,13 @@ public static class DependencyInjections
     /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
     /// <param name="assemblies">The assemblies to scan for classes.</param>
     /// <param name="type">The type to scan for and register.</param>
-    private static void ScanAndRegister(
+    private static void ScanAndRegister<T>(
         this IServiceCollection services,
-        Assembly[] assemblies,
-        Type type)
+        Assembly[] assemblies)
     {
         services.Scan(scan => scan
             .FromAssemblies(assemblies)
-            .AddClasses(classes => classes.AssignableTo(type))
+            .AddClasses(classes => classes.AssignableTo(typeof(T)))
             .AsImplementedInterfaces()
             .WithSingletonLifetime());
     }
@@ -75,5 +75,14 @@ public class R3duxOptions
     /// <summary>
     /// Gets or sets the assemblies to scan for slices and effects. Defaults to the executing assembly.
     /// </summary>
-    public Assembly[] Assemblies { get; set; } = [Assembly.GetExecutingAssembly()];
+    public Assembly[] Assemblies { get; set; } = GetDefaultAssemblies();
+
+    private static Assembly[] GetDefaultAssemblies()
+    {
+        var entryAssembly = 
+            Assembly.GetEntryAssembly()
+            ?? throw new InvalidOperationException("Unable to determine the entry assembly.");
+        
+        return [entryAssembly];
+    }
 }

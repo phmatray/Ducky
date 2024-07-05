@@ -42,6 +42,9 @@ public class IncrementEffect : Effect
         return actions
             .FilterActions<Increment>()
             .Where(x => store.GetState<int>("counter") > 15)
+            // TODO: Implement WithSliceState
+            // .WithSliceState<CounterState>()
+            // .Where((sliceState, action) => sliceState > 15)
             .Delay(TimeSpan.FromSeconds(3))
             .SelectAction(x => new Reset());
     }
