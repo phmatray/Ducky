@@ -30,6 +30,7 @@ public static class DependencyInjections
         // Add Store services
         services.AddSingleton<IDispatcher, Dispatcher>();
         services.AddSingleton<IStoreFactory, StoreFactory>();
+        services.AddSingleton<IRootStateSerializer, RootStateSerializer>();
         
         // Scan and register all Slices an Effects
         services.ScanAndRegister<ISlice>(options.Assemblies);

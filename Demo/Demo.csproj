@@ -11,8 +11,4 @@
     <ProjectReference Include="..\R3dux.Blazor\R3dux.Blazor.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="AppStore\" />
-  </ItemGroup>
-
 </Project>

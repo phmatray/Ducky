@@ -11,10 +11,11 @@ public class RootStateSerializerTests
         const string key = "testKey";
         var initialState = new TestState { Value = 42 };
         rootState.AddOrUpdateSliceState(key, initialState);
+        var rootStateSerializer = new RootStateSerializer();
 
         // Act
-        var json = RootStateSerializer.Serialize(rootState);
-        var deserializedState = RootStateSerializer.Deserialize(json);
+        var json = rootStateSerializer.Serialize(rootState);
+        var deserializedState = rootStateSerializer.Deserialize(json);
         
         // Assert
         deserializedState.ContainsKey(key).Should().BeTrue();
@@ -29,14 +30,15 @@ public class RootStateSerializerTests
         const string key = "testKey";
         var initialState = new TestState { Value = 42 };
         rootState.AddOrUpdateSliceState(key, initialState);
+        var rootStateSerializer = new RootStateSerializer();
 
         var filePath = Path.GetTempFileName();
 
         try
         {
             // Act
-            RootStateSerializer.SaveToFile(rootState, filePath);
-            var loadedState = RootStateSerializer.LoadFromFile(filePath);
+            rootStateSerializer.SaveToFile(rootState, filePath);
+            var loadedState = rootStateSerializer.LoadFromFile(filePath);
 
             // Assert
             loadedState.ContainsKey(key).Should().BeTrue();
