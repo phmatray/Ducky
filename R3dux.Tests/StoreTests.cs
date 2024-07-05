@@ -1,3 +1,5 @@
+using R3dux.Tests.TestModels;
+
 namespace R3dux.Tests;
 
 public class StoreTests
@@ -6,7 +8,7 @@ public class StoreTests
     public async Task Store_Should_Initialize_With_Provided_State()
     {
         // Arrange
-        var store = CreateTestCounterStore();
+        var store = TestStoreFactory.CreateTestCounterStore();
 
         // Act
         var result = await store.State.FirstAsync();
@@ -19,7 +21,7 @@ public class StoreTests
     public async Task Store_Should_Apply_IncrementAction()
     {
         // Arrange
-        var store = CreateTestCounterStore();
+        var store = TestStoreFactory.CreateTestCounterStore();
 
         // Act
         var resultTask = store.State.Skip(1).FirstAsync();
@@ -34,7 +36,7 @@ public class StoreTests
     public async Task Store_Should_Apply_DecrementAction()
     {
         // Arrange
-        var store = CreateTestCounterStore();
+        var store = TestStoreFactory.CreateTestCounterStore();
 
         // Act
         var resultTask = store.State.Skip(1).FirstAsync();
@@ -49,7 +51,7 @@ public class StoreTests
     public async Task Store_Should_Apply_SetValueAction()
     {
         // Arrange
-        var store = CreateTestCounterStore();
+        var store = TestStoreFactory.CreateTestCounterStore();
         const int newValue = 5;
 
         // Act
@@ -65,7 +67,7 @@ public class StoreTests
     // public async Task Store_Should_Notify_Subscribers_On_State_Change()
     // {
     //     // Arrange
-    //     var store = CreateTestCounterStore();
+    //     var store = TestStoreFactory.CreateTestCounterStore();
     //     var action = new Increment();
     //     var stateChanges = new List<int>();
     //
