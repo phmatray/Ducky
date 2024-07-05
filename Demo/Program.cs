@@ -1,4 +1,5 @@
 using Demo.AppStore;
+using Demo.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -6,6 +7,9 @@ var services = builder.Services;
 // Add services to the container.
 services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Add front services
+services.AddScoped<IJsonColorizer, JsonColorizer>();
 
 // Add RxStore
 services.AddTransient<MoviesService>();
