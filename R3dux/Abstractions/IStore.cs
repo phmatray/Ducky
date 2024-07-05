@@ -4,6 +4,8 @@ namespace R3dux;
 
 public interface IStore
 {
+    RootState GetRootState();
+    
     bool IsInitialized { get; }
     void Dispatch(IAction action);
     

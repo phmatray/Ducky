@@ -16,7 +16,7 @@ public class Store
         ArgumentNullException.ThrowIfNull(dispatcher);
         _dispatcher = dispatcher;
         
-        State = new ReactiveProperty<RootState>();
+        State = new ReactiveProperty<RootState>(new RootState());
         SubscribeToDispatcherActions();
         IsInitialized = true;
     }
@@ -24,6 +24,9 @@ public class Store
     public bool IsInitialized { get; }
     
     public ReactiveProperty<RootState> State { get; private set; }
+
+    public RootState GetRootState()
+        => State.Value;
 
     public TState GetState<TState>(string key)
         where TState : notnull, new()

@@ -1,8 +1,36 @@
 ﻿@page "/"
+@using Demo.Helpers
+@inject Store Store
+@inject IRootStateSerializer RootStateSerializer
 
 <PageTitle>R3dux</PageTitle>
 
+<h2>About</h2>
 <article>
   <p>Welcome to the R3dux state management library demo!</p>
   <p>Use the links above to navigate to the various examples.</p>
 </article>
+
+@if (_rootStateColorized is not null)
+{
+  <h2>Serialized State</h2>
+  <article>
+    <code style="width: 100%;">
+      <pre>
+        @((MarkupString)_rootStateColorized)
+      </pre>
+    </code>
+  </article>
+}
+
+@code
+{
+  private string? _rootStateColorized;
+
+  protected override void OnInitialized()
+  {
+    var rootState = Store.GetRootState();
+    var rootStateSerialized = RootStateSerializer.Serialize(rootState);
+    _rootStateColorized = JsonColorizer.ColorizeJson(rootStateSerialized);
+  }
+}
