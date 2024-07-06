@@ -76,5 +76,5 @@ public record TodoSlice : Slice<TodoState>
 {
     public override string Key => "todos";
     public override TodoState InitialState { get; } = new();
-    public override IReducer<TodoState> Reducers { get; } = new TodoReducers();
+    public override ReducerCollection<TodoState> Reducers { get; } = new TodoReducers();
 }

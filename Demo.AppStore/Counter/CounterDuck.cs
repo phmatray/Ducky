@@ -55,5 +55,5 @@ public record CounterSlice : Slice<int>
 {
     public override string Key => "counter";
     public override int InitialState => 10;
-    public override IReducer<int> Reducers { get; } = new CounterReducers();
+    public override ReducerCollection<int> Reducers { get; } = new CounterReducers();
 }

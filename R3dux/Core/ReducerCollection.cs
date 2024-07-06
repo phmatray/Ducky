@@ -4,40 +4,41 @@ using R3dux.Temp;
 namespace R3dux;
 
 public class ReducerCollection<TState>
-    : IReducer<TState>, IEnumerable
 {
-    private readonly Dictionary<Type, object> _reducers = [];
+    protected readonly Dictionary<Type, object> Reducers = new();
 
     public void Map<TAction>(Func<TState, TAction, TState> reducer)
         where TAction : IAction
     {
         ArgumentNullException.ThrowIfNull(reducer);
-        _reducers[typeof(TAction)] = reducer;
+        Reducers[typeof(TAction)] = new Reducer<TState, TAction>(reducer);
     }
 
-    public TState Reduce(TState state, object action)
+    public TState Reduce<TAction>(TState state, TAction action)
+        where TAction : IAction
     {
         ArgumentNullException.ThrowIfNull(action);
-        
-        if (_reducers.TryGetValue(action.GetType(), out var reducer))
+
+        if (Reducers.TryGetValue(action.GetType(), out var reducerObj)
+            && reducerObj is Reducer<TState, TAction> reducer)
         {
-            return ((Func<TState, object, TState>)reducer)(state, action);
+            return reducer.Reduce(state, action);
         }
-        
+
         return state;
     }
 
     public void Remove<TAction>()
         where TAction : IAction
-        => _reducers.Remove(typeof(TAction));
+        => Reducers.Remove(typeof(TAction));
 
     public bool Contains<TAction>()
         where TAction : IAction
-        => _reducers.ContainsKey(typeof(TAction));
+        => Reducers.ContainsKey(typeof(TAction));
 
     public void Clear()
-        => _reducers.Clear();
+        => Reducers.Clear();
 
     public IEnumerator GetEnumerator()
-        => _reducers.Values.GetEnumerator();
+        => Reducers.Values.GetEnumerator();
 }

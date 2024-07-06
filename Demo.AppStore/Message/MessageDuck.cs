@@ -32,5 +32,5 @@ public record MessageSlice : Slice<MessageState>
 {
     public override string Key => "message";
     public override MessageState InitialState { get; } = new();
-    public override IReducer<MessageState> Reducers { get; } = new MessageReducers();
+    public override ReducerCollection<MessageState> Reducers { get; } = new MessageReducers();
 }

@@ -42,7 +42,7 @@ public class RootStateSerializer : IRootStateSerializer
         foreach (var kvp in typedDictionary)
         {
             var typeName = 
-                kvp.Value["Type"].ToString()
+                kvp.Value["type"].ToString()
                 ?? throw new InvalidOperationException("Type not found.");
             
             var type = 
@@ -50,7 +50,7 @@ public class RootStateSerializer : IRootStateSerializer
                 ?? throw new InvalidOperationException($"Type '{typeName}' not found.");
 
             var valueJson = 
-                kvp.Value["Value"].ToString()
+                kvp.Value["value"].ToString()
                 ?? throw new InvalidOperationException("Value not found.");
             
             var value = 

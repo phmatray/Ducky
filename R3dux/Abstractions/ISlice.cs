@@ -13,5 +13,5 @@ public interface ISlice
 public interface ISlice<TState> : ISlice
 {
     new TState InitialState { get; }
-    IReducer<TState> Reducers { get; }
+    ReducerCollection<TState> Reducers { get; }
 }

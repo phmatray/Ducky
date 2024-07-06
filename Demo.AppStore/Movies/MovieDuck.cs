@@ -98,5 +98,5 @@ public record MovieSlice : Slice<MovieState>
 {
     public override string Key => "movies";
     public override MovieState InitialState { get; } = new();
-    public override IReducer<MovieState> Reducers { get; } = new MovieReducers();
+    public override ReducerCollection<MovieState> Reducers { get; } = new MovieReducers();
 }

@@ -1,10 +1,12 @@
+using R3dux.Temp;
+
 namespace R3dux.Tests;
 
 public class ReducerTests
 {
     private readonly CounterReducers _reducer = new();
     
-    private record UnknownAction;
+    private record UnknownAction : IAction;
 
     [Fact]
     public void IncrementAction_Should_Increment_State_Value()

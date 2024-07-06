@@ -40,5 +40,5 @@ public record LayoutSlice : Slice<LayoutState>
 {
     public override string Key => "layout";
     public override LayoutState InitialState { get; } = new();
-    public override IReducer<LayoutState> Reducers { get; } = new LayoutReducers();
+    public override ReducerCollection<LayoutState> Reducers { get; } = new LayoutReducers();
 }

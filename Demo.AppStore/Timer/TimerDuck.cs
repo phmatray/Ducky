@@ -54,5 +54,5 @@ public record TimerSlice : Slice<TimerState>
 {
     public override string Key => "timer";
     public override TimerState InitialState { get; } = new();
-    public override IReducer<TimerState> Reducers { get; } = new TimerReducers();
+    public override ReducerCollection<TimerState> Reducers { get; } = new TimerReducers();
 }

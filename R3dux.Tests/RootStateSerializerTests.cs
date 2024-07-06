@@ -8,7 +8,7 @@ public class RootStateSerializerTests
     {
         // Arrange
         var rootState = new RootState();
-        const string key = "testKey";
+        const string key = "test-key";
         var initialState = new TestState { Value = 42 };
         rootState.AddOrUpdateSliceState(key, initialState);
         var rootStateSerializer = new RootStateSerializer();
@@ -27,7 +27,7 @@ public class RootStateSerializerTests
     {
         // Arrange
         var rootState = new RootState();
-        const string key = "testKey";
+        const string key = "test-key";
         var initialState = new TestState { Value = 42 };
         rootState.AddOrUpdateSliceState(key, initialState);
         var rootStateSerializer = new RootStateSerializer();
