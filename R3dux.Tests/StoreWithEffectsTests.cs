@@ -1,3 +1,5 @@
+// using R3dux.Tests.TestModels;
+//
 // namespace R3dux.Tests;
 //
 // public class StoreWithEffectsTests
@@ -8,10 +10,10 @@
 //         // Arrange
 //         const int initialState = 10;
 //         IEffect[] effects = [new IncrementEffect()];
-//         var store = CreateTestCounterStore(initialState, effects);
+//         var store = TestStoreFactory.CreateTestCounterStore(initialState, effects);
 //         var selectedValues = new List<int>();
 //
-//         store.GetStateStream().Subscribe(state => selectedValues.Add(state));
+//         store.State.Subscribe(state => selectedValues.Add(state));
 //
 //         // Act
 //         store.Dispatch(new Increment());

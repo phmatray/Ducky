@@ -1,48 +1,80 @@
-namespace R3dux.Tests;
+using R3dux.Tests.TestModels;
 
+namespace R3dux.Tests;
 
 public class RootStateSerializerTests
 {
+    private const string Key = "test-key";
+    
+    private const string JsonString =
+        """
+        {
+          "test-key": {
+            "type": "R3dux.Tests.TestModels.TestState, R3dux.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "value": {
+              "value": 42
+            }
+          }
+        }
+        """;
+    
+    private readonly RootStateSerializer _sut = new();
+    private readonly RootState _rootState = new();
+    private readonly TestState _initialState = new() { Value = 42 };
+
+    public RootStateSerializerTests()
+    {
+        _rootState.AddOrUpdateSliceState(Key, _initialState);
+    }
+    
+    [Fact]
+    public void Serialize_Should_Work_Correctly()
+    {
+        // Act
+        var json = _sut.Serialize(_rootState);
+        
+        // Assert
+        json.Should().BeEquivalentTo(JsonString);
+    }
+    
+    [Fact]
+    public void Deserialize_Should_Work_Correctly()
+    {
+        // Act
+        var deserializedState = _sut.Deserialize(JsonString);
+        
+        // Assert
+        deserializedState.ContainsKey(Key).Should().BeTrue();
+        deserializedState.Select<TestState>(Key).Should().BeEquivalentTo(_initialState);
+    }
+    
     [Fact]
     public void SerializeAndDeserialize_Should_Work_Correctly()
     {
-        // Arrange
-        var rootState = new RootState();
-        const string key = "test-key";
-        var initialState = new TestState { Value = 42 };
-        rootState.AddOrUpdateSliceState(key, initialState);
-        var rootStateSerializer = new RootStateSerializer();
-
         // Act
-        var json = rootStateSerializer.Serialize(rootState);
-        var deserializedState = rootStateSerializer.Deserialize(json);
+        var json = _sut.Serialize(_rootState);
+        var deserializedState = _sut.Deserialize(json);
         
         // Assert
-        deserializedState.ContainsKey(key).Should().BeTrue();
-        deserializedState.Select<TestState>(key).Should().BeEquivalentTo(initialState);
+        deserializedState.ContainsKey(Key).Should().BeTrue();
+        deserializedState.Select<TestState>(Key).Should().BeEquivalentTo(_initialState);
     }
 
     [Fact]
     public void SaveAndLoadState_Should_Persist_State_Correctly()
     {
         // Arrange
-        var rootState = new RootState();
-        const string key = "test-key";
-        var initialState = new TestState { Value = 42 };
-        rootState.AddOrUpdateSliceState(key, initialState);
-        var rootStateSerializer = new RootStateSerializer();
-
         var filePath = Path.GetTempFileName();
 
         try
         {
             // Act
-            rootStateSerializer.SaveToFile(rootState, filePath);
-            var loadedState = rootStateSerializer.LoadFromFile(filePath);
+            _sut.SaveToFile(_rootState, filePath);
+            var loadedState = _sut.LoadFromFile(filePath);
 
             // Assert
-            loadedState.ContainsKey(key).Should().BeTrue();
-            loadedState.Select<TestState>(key).Should().BeEquivalentTo(initialState);
+            loadedState.ContainsKey(Key).Should().BeTrue();
+            loadedState.Select<TestState>(Key).Should().BeEquivalentTo(_initialState);
         }
         finally
         {
@@ -52,10 +84,5 @@ public class RootStateSerializerTests
                 File.Delete(filePath);
             }
         }
-    }
-
-    private class TestState
-    {
-        public int Value { get; set; }
     }
 }

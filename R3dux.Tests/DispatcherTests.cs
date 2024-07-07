@@ -1,62 +1,47 @@
-using R3dux.Temp;
+using R3dux.Tests.TestModels;
 
 namespace R3dux.Tests;
 
 public class DispatcherTests
 {
-    private class TestAction(string name) : IAction
-    {
-        private string Name { get; } = name;
-
-        public override bool Equals(object? obj)
-            => obj is TestAction action
-               && Name == action.Name;
-
-        public override int GetHashCode()
-            => HashCode.Combine(Name);
-    }
-
+    private readonly Dispatcher _sut = new();
+    private readonly TestAction _action1 = new("Action1");
+    private readonly TestAction _action2 = new("Action2");
+    private readonly TestAction _action3 = new("Action3");
+    
     [Fact]
     public void Dispatch_Should_EnqueueAction()
     {
         // Arrange
-        var dispatcher = new Dispatcher();
         var action = new TestAction("Test");
 
         // Act
-        dispatcher.Dispatch(action);
+        _sut.Dispatch(action);
 
         // Assert
-        dispatcher.ActionStream.Should().NotBeNull();
+        _sut.ActionStream.Should().NotBeNull();
     }
 
     [Fact]
     public void ActionStream_Should_EmitDispatchedActions()
     {
         // Arrange
-        var dispatcher = new Dispatcher();
-        var action1 = new TestAction("Action1");
-        var action2 = new TestAction("Action2");
-
         var emittedActions = new List<object>();
-        dispatcher.ActionStream.Subscribe(emittedActions.Add);
+        _sut.ActionStream.Subscribe(emittedActions.Add);
 
         // Act
-        dispatcher.Dispatch(action1);
-        dispatcher.Dispatch(action2);
+        _sut.Dispatch(_action1);
+        _sut.Dispatch(_action2);
 
         // Assert
-        emittedActions.Should().ContainInOrder(action1, action2);
+        emittedActions.Should().ContainInOrder(_action1, _action2);
     }
 
     [Fact]
     public void Dispatch_NullAction_Should_Throw_ArgumentNullException()
     {
-        // Arrange
-        var dispatcher = new Dispatcher();
-
         // Act
-        Action act = () => dispatcher.Dispatch(null!);
+        Action act = () => _sut.Dispatch(null!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -67,23 +52,18 @@ public class DispatcherTests
     public void Dispatch_MultipleConcurrentActions_Should_EmitInOrder()
     {
         // Arrange
-        var dispatcher = new Dispatcher();
-        var action1 = new TestAction("Action1");
-        var action2 = new TestAction("Action2");
-        var action3 = new TestAction("Action3");
-
         var emittedActions = new List<object>();
-        dispatcher.ActionStream.Subscribe(emittedActions.Add);
+        _sut.ActionStream.Subscribe(emittedActions.Add);
 
         // Act
         Parallel.Invoke(
-            () => dispatcher.Dispatch(action1),
-            () => dispatcher.Dispatch(action2),
-            () => dispatcher.Dispatch(action3)
+            () => _sut.Dispatch(_action1),
+            () => _sut.Dispatch(_action2),
+            () => _sut.Dispatch(_action3)
         );
 
         // Assert
-        emittedActions.Should().Contain(new[] { action1, action2, action3 });
+        emittedActions.Should().Contain(new[] { _action1, _action2, _action3 });
     }
     
     [Fact]
@@ -91,20 +71,16 @@ public class DispatcherTests
     public void UnsubscribingFromActionStream_Should_NotReceiveFurtherActions()
     {
         // Arrange
-        var dispatcher = new Dispatcher();
-        var action1 = new TestAction("Action1");
-        var action2 = new TestAction("Action2");
-
         var emittedActions = new List<object>();
-        var subscription = dispatcher.ActionStream.Subscribe(emittedActions.Add);
+        var subscription = _sut.ActionStream.Subscribe(emittedActions.Add);
 
         // Act
-        dispatcher.Dispatch(action1);
+        _sut.Dispatch(_action1);
         subscription.Dispose();
-        dispatcher.Dispatch(action2);
+        _sut.Dispatch(_action2);
 
         // Assert
-        emittedActions.Should().ContainSingle().Which.Should().Be(action1);
+        emittedActions.Should().ContainSingle().Which.Should().Be(_action1);
     }
     
     [Fact]
@@ -112,12 +88,8 @@ public class DispatcherTests
     // when there are no subscribers to the ActionStream.
     public void Dispatch_Should_NotBlockWhenNoSubscribers()
     {
-        // Arrange
-        var dispatcher = new Dispatcher();
-        var action = new TestAction("Action1");
-
         // Act
-        Action act = () => dispatcher.Dispatch(action);
+        Action act = () => _sut.Dispatch(_action1);
 
         // Assert
         act.Should().NotThrow();
@@ -129,12 +101,11 @@ public class DispatcherTests
     public void ActionStream_Should_CompleteWhenDispatcherDisposed()
     {
         // Arrange
-        var dispatcher = new Dispatcher();
         var completed = false;
-        dispatcher.ActionStream.Subscribe(_ => { }, _ => completed = true);
+        _sut.ActionStream.Subscribe(_ => { }, _ => completed = true);
 
         // Act
-        dispatcher.Dispose();
+        _sut.Dispose();
 
         // Assert
         completed.Should().BeTrue();
