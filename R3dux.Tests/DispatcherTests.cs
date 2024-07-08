@@ -1,3 +1,4 @@
+using R3dux.Exceptions;
 using R3dux.Tests.TestModels;
 
 namespace R3dux.Tests;
@@ -109,5 +110,32 @@ public class DispatcherTests
 
         // Assert
         completed.Should().BeTrue();
+    }
+    
+    [Fact]
+    public void Dispatch_Should_ThrowR3duxException_AfterDispose()
+    {
+        // Arrange
+        _sut.Dispose();
+
+        // Act
+        Action act = () => _sut.Dispatch(_action1);
+
+        // Assert
+        act.Should().Throw<R3duxException>().WithInnerException<ObjectDisposedException>();
+    }
+
+    [Fact]
+    public void Dispose_Should_NotThrowIfCalledMultipleTimes()
+    {
+        // Act
+        Action act = () =>
+        {
+            _sut.Dispose();
+            _sut.Dispose();
+        };
+
+        // Assert
+        act.Should().NotThrow();
     }
 }
