@@ -1,6 +1,6 @@
 using R3dux.Tests.TestModels;
 
-namespace R3dux.Tests;
+namespace R3dux.Tests.Services;
 
 public class RootStateSerializerTests
 {

@@ -1,8 +1,4 @@
-using System.Text;
-using R3dux.Temp;
-using R3dux.Tests.TestModels;
-
-namespace R3dux.Tests;
+namespace R3dux.Tests.Extensions;
 
 public class CustomOperatorsTests
 {

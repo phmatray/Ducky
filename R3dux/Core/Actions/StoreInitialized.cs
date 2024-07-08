@@ -1,4 +1,4 @@
-namespace R3dux.Actions;
+namespace R3dux;
 
 /// <summary>
 /// Represents an action that is dispatched when the store is initialized.

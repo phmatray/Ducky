@@ -1,4 +1,4 @@
-namespace R3dux.Tests;
+namespace R3dux.Tests.Core;
 
 public class SliceTests
 {
