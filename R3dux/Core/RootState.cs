@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using R3dux.Exceptions;
 
 namespace R3dux;
@@ -8,7 +9,7 @@ namespace R3dux;
 /// </summary>
 public record RootState
 {
-    private readonly ConcurrentDictionary<string, object> _state = [];
+    private ImmutableSortedDictionary<string, object> _state = ImmutableSortedDictionary<string, object>.Empty;
     
     /// <summary>
     /// Gets the underlying state dictionary for serialization purposes.
@@ -38,7 +39,8 @@ public record RootState
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(initialState);
         
-        _state[key] = initialState;
+        // _state[key] = initialState;
+        _state = _state.Add(key, initialState);
     }
 
     /// <summary>

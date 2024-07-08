@@ -9,7 +9,7 @@ public abstract class R3duxComponent<TState>
     where TState : notnull
 {
     [Inject]
-    public required Store Store { get; set; }
+    public required IStore Store { get; set; }
     
     [Inject]
     public required IDispatcher Dispatcher { get; set; }
@@ -39,6 +39,7 @@ public abstract class R3duxComponent<TState>
             .FirstAsync();
         
         stateAsync.Wait();
+        //Cannot convert expression type 'R3dux.RootState' to return type 'TState'
         // return stateAsync.Result;
         // return new TState();
         return default!;

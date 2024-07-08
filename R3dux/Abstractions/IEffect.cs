@@ -1,5 +1,4 @@
 using R3;
-using R3dux.Temp;
 
 namespace R3dux;
 
@@ -14,5 +13,5 @@ public interface IEffect
     /// <param name="actions">The source observable sequence of actions.</param>
     /// <param name="state">The store containing the current state.</param>
     /// <returns>An observable sequence of resulting actions.</returns>
-    Observable<IAction> Handle(Observable<IAction> actions, Store state);
+    Observable<IAction> Handle(Observable<IAction> actions, IStore state);
 }

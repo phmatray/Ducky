@@ -35,7 +35,7 @@ public class StoreTests
     }
     
     [Fact]
-    public void Store_Should_Add_Slices_And_Propagate_State_Changes()
+    public void Store_Should_Add_Slice_And_Propagate_State_Changes()
     {
         // Arrange
         var counterSlice = new CounterSlice();

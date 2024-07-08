@@ -37,7 +37,7 @@ public static class DependencyInjections
         services.ScanAndRegister<IEffect>(options.Assemblies);
         
         // Add Store
-        services.AddSingleton(sp =>
+        services.AddSingleton<IStore, Store>(sp =>
         {
             var storeFactory = sp.GetRequiredService<IStoreFactory>();
             var dispatcher = sp.GetRequiredService<IDispatcher>();

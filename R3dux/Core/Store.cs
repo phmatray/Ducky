@@ -66,6 +66,9 @@ public class Store
     {
         ArgumentNullException.ThrowIfNull(slice);
         
+        // Initialize the slice state in the root state
+        UpdateRootState(slice);
+        
         // Subscribe the slice to the dispatcher's action stream
         _dispatcher.ActionStream
             .Subscribe(slice.OnDispatch)
@@ -73,15 +76,15 @@ public class Store
         
         // Update the root state when a slice state is updated
         slice.StateUpdated
-            .Subscribe(_ =>
-            {
-                var currentState = RootState.Value;
-                currentState[slice.GetKey()] = slice.GetState();
-                RootState.Value = currentState;
-            })
+            .Subscribe(_ => UpdateRootState(slice))
             .AddTo(_disposables);
     }
-    
+
+    private void UpdateRootState(ISlice slice)
+    {
+        RootState.Value[slice.GetKey()] = slice.GetState();
+    }
+
     public void AddEffects(IEnumerable<IEffect> effects)
     {
         ArgumentNullException.ThrowIfNull(effects);

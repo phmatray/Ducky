@@ -35,7 +35,7 @@ public class IncrementEffect : Effect
     //         .SelectAction(x => new Reset());
     // }
 
-    public override Observable<IAction> Handle(Observable<IAction> actions, Store store)
+    public override Observable<IAction> Handle(Observable<IAction> actions, IStore store)
     {
         // if the Value is greater than 15, then reset the counter
         return actions

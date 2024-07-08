@@ -1,5 +1,4 @@
 using R3;
-using R3dux.Temp;
 
 namespace R3dux;
 
@@ -7,5 +6,5 @@ namespace R3dux;
 public abstract class Effect : IEffect
 {
     /// <inheritdoc />
-    public abstract Observable<IAction> Handle(Observable<IAction> actions, Store store);
+    public abstract Observable<IAction> Handle(Observable<IAction> actions, IStore store);
 }
