@@ -50,6 +50,7 @@ public abstract record Slice<TState> : ISlice<TState>
         return _state.Value;
     }
 
+    /// <inheritdoc />
     public void OnDispatch(IAction action)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -58,6 +59,11 @@ public abstract record Slice<TState> : ISlice<TState>
         var prevState = (TState)GetState();
         var updatedState = Reducers.Reduce(prevState, action);
         stopwatch.Stop();
+        
+        if (prevState?.Equals(updatedState) == true)
+        {
+            return;
+        }
         
         _state.OnNext(updatedState);
         _stateUpdated.OnNext(Unit.Default);

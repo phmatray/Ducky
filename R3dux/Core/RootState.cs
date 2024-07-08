@@ -39,8 +39,9 @@ public record RootState
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(initialState);
         
-        // _state[key] = initialState;
-        _state = _state.Add(key, initialState);
+        _state = _state.ContainsKey(key)
+            ? _state.SetItem(key, initialState)
+            : _state.Add(key, initialState);
     }
 
     /// <summary>
