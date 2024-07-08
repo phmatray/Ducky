@@ -5,13 +5,17 @@ namespace Demo.Helpers;
 /// </summary>
 public static class HtmlSpanHelper
 {
-    private const string ColorBlue = "blue";
-    private const string ColorBrown = "brown";
-    private const string ColorGreen = "green";
-    private const string ColorGray = "gray";
-    private const string ColorPurple = "purple";
-    private const string ColorRed = "red";
+    private const string ColorBraces = Palette.Black;
+    private const string ColorBrackets = Palette.Purple;
+ 
+    private const string ColorQuote = Palette.BlueGrey;
+    private const string ColorPropertyName = Palette.Pink;
     
+    private const string ColorString = Palette.Green;
+    private const string ColorNumber = Palette.Orange;
+    private const string ColorBool = Palette.Blue;
+    private const string ColorNull = Palette.Red;
+
     /// <summary>
     /// Generates an HTML span element with the specified text and color.
     /// </summary>
@@ -27,7 +31,7 @@ public static class HtmlSpanHelper
     /// <param name="text">The JSON string value.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonString(string text)
-        => Span($"&quot;{text}&quot;", ColorRed);
+        => SpanQuote() + Span(text, ColorString) + SpanQuote();
 
     /// <summary>
     /// Generates an HTML span element for a JSON number value.
@@ -35,7 +39,7 @@ public static class HtmlSpanHelper
     /// <param name="text">The JSON number value.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonNumber(string text)
-        => Span(text, ColorBlue);
+        => Span(text, ColorNumber);
 
     /// <summary>
     /// Generates an HTML span element for a JSON boolean value.
@@ -43,42 +47,50 @@ public static class HtmlSpanHelper
     /// <param name="text">The JSON boolean value.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonBool(string text)
-        => Span(text, ColorPurple);
+        => Span(text, ColorBool);
 
     /// <summary>
     /// Generates an HTML span element for a JSON null value.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonNull()
-        => Span("null", ColorGray);
+        => Span("null", ColorNull);
 
     /// <summary>
     /// Generates an HTML span element for an open brace.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanOpenBrace()
-        => Span("{", ColorBrown);
+        => Span("{", ColorBraces);
 
     /// <summary>
     /// Generates an HTML span element for a close brace.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanCloseBrace()
-        => Span("}", ColorBrown);
+        => Span("}", ColorBraces);
 
     /// <summary>
     /// Generates an HTML span element for a close brace.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanOpenBracket()
-        => Span("[", ColorBrown);
+        => Span("[", ColorBrackets);
 
     /// <summary>
     /// Generates an HTML span element for a close bracket.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanCloseBracket()
-        => Span("]", ColorBrown);
+        => Span("]", ColorBrackets);
+
+    // SpanQuote
+    /// <summary>
+    /// Generates an HTML span element for a quote.
+    /// </summary>
+    /// <returns>An HTML span element as a string.</returns>
+    public static string SpanQuote()
+        => Span("&quot;", ColorQuote);
 
     /// <summary>
     /// Generates an HTML span element for a JSON property name.
@@ -86,5 +98,5 @@ public static class HtmlSpanHelper
     /// <param name="name">The JSON property name.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonPropertyName(string name)
-        => Span($"&quot;{name}&quot;", ColorGreen);
+        => SpanQuote() + Span(name, ColorPropertyName) + SpanQuote();
 }
