@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using R3dux.Exceptions;
 
@@ -34,14 +33,12 @@ public record RootState
     /// <param name="key">The key of the state to add or update.</param>
     /// <param name="initialState">The initial state to set.</param>
     /// <exception cref="ArgumentNullException">Thrown when the key or initial state is null.</exception>
-    public void AddOrUpdateSliceState(string key, object initialState)
+    public void AddOrUpdateSliceState<TState>(string key, TState initialState)
     {
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(initialState);
         
-        _state = _state.ContainsKey(key)
-            ? _state.SetItem(key, initialState)
-            : _state.Add(key, initialState);
+        _state = _state.SetItem(key, initialState);
     }
 
     /// <summary>
@@ -60,6 +57,27 @@ public record RootState
         }
 
         throw new R3duxException($"State with key '{key}' is not of type '{typeof(TState).Name}'.");
+    }
+    
+    /// <summary>
+    /// Selects the state of the specified type.
+    /// </summary>
+    /// <typeparam name="TState">The type of the state to select.</typeparam>
+    /// <returns>The state of the specified type.</returns>
+    /// <exception cref="R3duxException">Thrown when the state is not found.</exception>
+    public TState Select<TState>()
+        where TState : notnull
+    { 
+        // take the first state of the specified type
+        foreach (var value in _state.Values)
+        {
+            if (value is TState state)
+            {
+                return state;
+            }
+        }
+        
+        throw new R3duxException($"State of type '{typeof(TState).Name}' not found.");
     }
 
     /// <summary>

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Components;
 using R3;
-using R3dux.Temp;
 
 namespace R3dux.Blazor;
 
@@ -19,6 +18,7 @@ public abstract class R3duxComponent<TState>
     protected override void OnInitialized()
     {
         _stateSubscription = Store.RootState
+            // .Select(state => state.Select<TState>("layout"))
             .DistinctUntilChanged()
             .Subscribe(_ => StateHasChanged());
     }
@@ -35,13 +35,10 @@ public abstract class R3duxComponent<TState>
     private TState GetState()
     {
         var stateAsync = Store.RootState
-            .Select(state => state)
+            .Select(state => state.Select<TState>())
             .FirstAsync();
         
         stateAsync.Wait();
-        //Cannot convert expression type 'R3dux.RootState' to return type 'TState'
-        // return stateAsync.Result;
-        // return new TState();
-        return default!;
+        return stateAsync.Result;
     }
 }
