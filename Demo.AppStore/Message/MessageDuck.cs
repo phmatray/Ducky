@@ -3,7 +3,7 @@ namespace Demo.AppStore;
 // State
 public record MessageState
 {
-    public string Message { get; init; } = "Hello, Blazor!";
+    public required string Message { get; init; }
     
     // Selectors
     public int SelectMessageLength()
@@ -30,7 +30,12 @@ public class MessageReducers : ReducerCollection<MessageState>
 // ReSharper disable once UnusedType.Global
 public record MessageSlice : Slice<MessageState>
 {
-    public override string Key => "message";
-    public override MessageState InitialState { get; } = new();
     public override ReducerCollection<MessageState> Reducers { get; } = new MessageReducers();
+    
+    public override string GetKey() => "message";
+
+    public override MessageState GetInitialState() => new()
+    {
+        Message = "Hello, Blazor!"
+    };
 }

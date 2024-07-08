@@ -31,7 +31,7 @@ public static class CustomOperators
         Func<TSource, TResult> selector)
         => source.Select(selector)
             .Cast<TResult, IAction>();
-    
+
     /// <summary>
     /// Catches exceptions in the observable sequence and replaces the exception with a specified value.
     /// </summary>
@@ -42,8 +42,18 @@ public static class CustomOperators
     public static Observable<TSource> CatchAction<TSource>(
         this Observable<TSource> source,
         Func<Exception, TSource> selector)
-        => source.Catch<TSource, Exception>(ex 
-            => Observable.Return(selector(ex)));
+    {
+        return Observable.Create<TSource>(observer => source
+            .Subscribe(
+                onNext: observer.OnNext,
+                onErrorResume: ex =>
+                {
+                    var replacementValue = selector(ex);
+                    observer.OnNext(replacementValue);
+                    observer.OnCompleted();
+                },
+                onCompleted: observer.OnCompleted));
+    }
 
     /// <summary>
     /// Invokes a service call for each element in the observable sequence, returning a sequence of actions based on the result or error.

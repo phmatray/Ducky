@@ -17,7 +17,7 @@ public class ReducerCollectionTests
         _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
 
         // Assert
-        _sut.Contains<IncrementAction>().Should().BeTrue();
+        _sut.Reducers.Should().ContainKey(typeof(IncrementAction));
     }
 
     [Fact]
@@ -27,6 +27,21 @@ public class ReducerCollectionTests
         _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
         var initialState = new TestState(0);
         var action = new IncrementAction(5);
+
+        // Act
+        var newState = _sut.Reduce(initialState, action);
+
+        // Assert
+        newState.Value.Should().Be(5);
+    }
+
+    [Fact]
+    public void Reduce_Should_ApplyReducer_WithInterface()
+    {
+        // Arrange
+        _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
+        var initialState = new TestState(0);
+        IAction action = new IncrementAction(5);
 
         // Act
         var newState = _sut.Reduce(initialState, action);
@@ -47,54 +62,6 @@ public class ReducerCollectionTests
 
         // Assert
         newState.Should().Be(initialState);
-    }
-
-    [Fact]
-    public void Remove_Should_RemoveReducer()
-    {
-        // Arrange
-        _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
-        
-        // Act
-        _sut.Remove<IncrementAction>();
-
-        // Assert
-        _sut.Contains<IncrementAction>().Should().BeFalse();
-    }
-
-    [Fact]
-    public void Clear_Should_RemoveAllReducers()
-    {
-        // Arrange
-        _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
-        _sut.Map<DecrementAction>((state, action) => new TestState(state.Value - action.Amount));
-        
-        // Act
-        _sut.Clear();
-
-        // Assert
-        _sut.Contains<IncrementAction>().Should().BeFalse();
-        _sut.Contains<DecrementAction>().Should().BeFalse();
-    }
-
-    [Fact]
-    public void Enumerator_Should_IterateReducers()
-    {
-        // Arrange
-        _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
-        _sut.Map<DecrementAction>((state, action) => new TestState(state.Value - action.Amount));
-        
-        var enumerator = _sut.GetEnumerator();
-        var count = 0;
-        
-        // Act
-        while (enumerator.MoveNext())
-        {
-            count++;
-        }
-
-        // Assert
-        count.Should().Be(2);
     }
 
     [Fact]

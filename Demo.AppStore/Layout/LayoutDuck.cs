@@ -3,9 +3,9 @@ namespace Demo.AppStore;
 // State
 public record LayoutState
 {
-    public string Title { get; init; } = "R3dux";
-    public string Version { get; init; } = "v1.0.0";
-    public bool IsModalOpen { get; init; } = false;
+    public required string Title { get; init; }
+    public required string Version { get; init; }
+    public required bool IsModalOpen { get; init; }
     
     // Selectors
     public string SelectFullTitle()
@@ -38,7 +38,14 @@ public class LayoutReducers : ReducerCollection<LayoutState>
 // ReSharper disable once UnusedType.Global
 public record LayoutSlice : Slice<LayoutState>
 {
-    public override string Key => "layout";
-    public override LayoutState InitialState { get; } = new();
     public override ReducerCollection<LayoutState> Reducers { get; } = new LayoutReducers();
+
+    public override string GetKey() => "layout";
+
+    public override LayoutState GetInitialState() => new()
+    {
+        Title = "R3dux",
+        Version = "v1.0.0",
+        IsModalOpen = false
+    };
 }

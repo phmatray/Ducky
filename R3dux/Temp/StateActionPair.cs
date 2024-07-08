@@ -11,8 +11,3 @@ public record StateActionPair<TState, TAction>(
     TState State,
     TAction Action)
     where TAction : IAction;
-
-/// <summary>
-/// Defines a contract for an action.
-/// </summary>
-public interface IAction;

@@ -5,7 +5,7 @@ namespace R3dux.Blazor;
 
 public abstract class R3duxLayout<TState>
     : R3duxComponent<TState>
-    where TState : notnull, new()
+    where TState : notnull
 {
     /// <summary>
     /// Gets the content to be rendered inside the layout.

@@ -6,7 +6,6 @@ public interface IStore
 {
     RootState GetRootState();
     
-    bool IsInitialized { get; }
     void Dispatch(IAction action);
     
     void AddSlice(ISlice slice);

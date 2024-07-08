@@ -52,7 +52,13 @@ public class StartTimerEffect : Effect
 // ReSharper disable once UnusedType.Global
 public record TimerSlice : Slice<TimerState>
 {
-    public override string Key => "timer";
-    public override TimerState InitialState { get; } = new();
     public override ReducerCollection<TimerState> Reducers { get; } = new TimerReducers();
+
+    public override string GetKey() => "timer";
+    
+    public override TimerState GetInitialState() => new()
+    {
+        Time = 0,
+        IsRunning = false
+    };
 }

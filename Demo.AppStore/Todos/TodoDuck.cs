@@ -3,14 +3,7 @@ namespace Demo.AppStore;
 // State
 public record TodoState
 {
-    public ImmutableList<TodoItem> Todos { get; init; } =
-    [
-        new TodoItem("Learn Blazor", true),
-        new TodoItem("Learn Redux"),
-        new TodoItem("Learn Reactive Programming"),
-        new TodoItem("Create a Todo App", true),
-        new TodoItem("Publish a NuGet package")
-    ];
+    public required ImmutableList<TodoItem> Todos { get; init; }
     
     // Selectors
     public ImmutableList<TodoItem> SelectActiveTodos()
@@ -74,7 +67,19 @@ public class TodoReducers : ReducerCollection<TodoState>
 // ReSharper disable once UnusedType.Global
 public record TodoSlice : Slice<TodoState>
 {
-    public override string Key => "todos";
-    public override TodoState InitialState { get; } = new();
     public override ReducerCollection<TodoState> Reducers { get; } = new TodoReducers();
+
+    public override string GetKey() => "todos";
+
+    public override TodoState GetInitialState() => new()
+    {
+        Todos =
+        [
+            new TodoItem("Learn Blazor", true),
+            new TodoItem("Learn Redux"),
+            new TodoItem("Learn Reactive Programming"),
+            new TodoItem("Create a Todo App", true),
+            new TodoItem("Publish a NuGet package")
+        ]
+    };
 }

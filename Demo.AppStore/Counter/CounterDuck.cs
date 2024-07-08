@@ -35,8 +35,7 @@ public class IncrementEffect : Effect
     //         .SelectAction(x => new Reset());
     // }
 
-    public override Observable<IAction> Handle(
-        Observable<IAction> actions, Store store)
+    public override Observable<IAction> Handle(Observable<IAction> actions, Store store)
     {
         // if the Value is greater than 15, then reset the counter
         return actions
@@ -53,7 +52,9 @@ public class IncrementEffect : Effect
 // Slice
 public record CounterSlice : Slice<int>
 {
-    public override string Key => "counter";
-    public override int InitialState => 10;
     public override ReducerCollection<int> Reducers { get; } = new CounterReducers();
+
+    public override string GetKey() => "counter";
+    
+    public override int GetInitialState() => 10;
 }

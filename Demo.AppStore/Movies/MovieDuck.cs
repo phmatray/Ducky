@@ -3,9 +3,9 @@ namespace Demo.AppStore;
 // State
 public record MovieState
 {
-    public ImmutableArray<Movie> Movies { get; init; } = [];
-    public bool IsLoading { get; init; }
-    public string? ErrorMessage { get; init; }
+    public required ImmutableArray<Movie> Movies { get; init; }
+    public required bool IsLoading { get; init; }
+    public required string? ErrorMessage { get; init; }
     
     // Selectors
     // ==========
@@ -96,7 +96,14 @@ public class LoadMoviesEffect(MoviesService moviesService) : Effect
 // ReSharper disable once UnusedType.Global
 public record MovieSlice : Slice<MovieState>
 {
-    public override string Key => "movies";
-    public override MovieState InitialState { get; } = new();
     public override ReducerCollection<MovieState> Reducers { get; } = new MovieReducers();
+
+    public override string GetKey() => "movies";
+    
+    public override MovieState GetInitialState() => new()
+    {
+        Movies = ImmutableArray<Movie>.Empty,
+        IsLoading = false,
+        ErrorMessage = null
+    };
 }

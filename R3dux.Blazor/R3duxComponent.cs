@@ -6,7 +6,7 @@ namespace R3dux.Blazor;
 
 public abstract class R3duxComponent<TState>
     : ComponentBase, IDisposable
-    where TState : notnull, new()
+    where TState : notnull
 {
     [Inject]
     public required Store Store { get; set; }
@@ -18,7 +18,7 @@ public abstract class R3duxComponent<TState>
 
     protected override void OnInitialized()
     {
-        _stateSubscription = Store.State
+        _stateSubscription = Store.RootState
             .DistinctUntilChanged()
             .Subscribe(_ => StateHasChanged());
     }
@@ -34,12 +34,13 @@ public abstract class R3duxComponent<TState>
     
     private TState GetState()
     {
-        var stateAsync = Store.State
+        var stateAsync = Store.RootState
             .Select(state => state)
             .FirstAsync();
         
         stateAsync.Wait();
         // return stateAsync.Result;
-        return new TState();
+        // return new TState();
+        return default!;
     }
 }
