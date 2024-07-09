@@ -23,7 +23,7 @@ public record RootState
     /// <exception cref="R3duxException">Thrown when the state is not of the expected type.</exception>
     public object this[string key]
     {
-        get => Select<object>(key);
+        get => GetSliceState<object>(key);
         set => AddOrUpdateSliceState(key, value);
     }
     
@@ -31,24 +31,24 @@ public record RootState
     /// Adds or updates the state associated with the specified key.
     /// </summary>
     /// <param name="key">The key of the state to add or update.</param>
-    /// <param name="initialState">The initial state to set.</param>
+    /// <param name="state">The state to add or update.</param>
     /// <exception cref="ArgumentNullException">Thrown when the key or initial state is null.</exception>
-    public void AddOrUpdateSliceState<TState>(string key, TState initialState)
+    public void AddOrUpdateSliceState<TState>(string key, TState state)
     {
         ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(initialState);
+        ArgumentNullException.ThrowIfNull(state);
         
-        _state = _state.SetItem(key, initialState);
+        _state = _state.SetItem(key, state);
     }
 
     /// <summary>
-    /// Selects the state associated with the specified key.
+    /// Gets the slice state associated with the specified key.
     /// </summary>
     /// <typeparam name="TState">The type of the state to select.</typeparam>
     /// <param name="key">The key of the state to select.</param>
     /// <returns>The state associated with the specified key.</returns>
     /// <exception cref="R3duxException">Thrown when the state is not of the expected type.</exception>
-    public TState Select<TState>(string key)
+    public TState GetSliceState<TState>(string key)
         where TState : notnull
     { 
         if (_state.TryGetValue(key, out var value) && value is TState state)
@@ -60,12 +60,12 @@ public record RootState
     }
     
     /// <summary>
-    /// Selects the state of the specified type.
+    /// Gets the slice state of the specified type.
     /// </summary>
     /// <typeparam name="TState">The type of the state to select.</typeparam>
     /// <returns>The state of the specified type.</returns>
     /// <exception cref="R3duxException">Thrown when the state is not found.</exception>
-    public TState Select<TState>()
+    public TState GetSliceState<TState>()
         where TState : notnull
     { 
         // take the first state of the specified type

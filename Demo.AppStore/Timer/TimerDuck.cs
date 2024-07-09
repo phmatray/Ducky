@@ -37,7 +37,8 @@ public class TimerReducers : ReducerCollection<TimerState>
 public class StartTimerEffect : Effect
 {
     public override Observable<IAction> Handle(
-        Observable<IAction> actions, IStore store)
+        Observable<IAction> actions,
+        Observable<RootState> rootState)
     {
         return actions
             .FilterActions<StartTimer>()

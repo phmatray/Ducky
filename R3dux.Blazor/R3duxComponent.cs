@@ -7,31 +7,27 @@ public abstract class R3duxComponent<TState>
     : ComponentBase, IDisposable
     where TState : notnull
 {
-    private IDisposable? _stateSubscription;
+    private readonly CompositeDisposable _disposables = [];
     
     [Inject]
     public required IStore Store { get; set; }
-    
-    [Inject]
-    public required IDispatcher Dispatcher { get; set; }
 
-    protected TState State { get; private set; } = default!;
+    protected Observable<TState> StateObservable
+        => Store.RootState
+            .Select(state => state.GetSliceState<TState>())
+            .DistinctUntilChanged();
 
-    protected void Dispatch(IAction action)
-        => Dispatcher.Dispatch(action);
+    protected TState State
+        => StateObservable.FirstSync();
 
     protected override void OnInitialized()
-    {
-        _stateSubscription = Store.RootState
-            .Select(state => state.Select<TState>())
-            .DistinctUntilChanged()
-            .Subscribe(sliceState =>
-            {
-                State = sliceState;
-                StateHasChanged();
-            });
-    }
+        => StateObservable
+            .Subscribe(_ => StateHasChanged())
+            .AddTo(_disposables);
+
+    protected void Dispatch(IAction action)
+        => Store.Dispatch(action);
 
     public void Dispose()
-        => _stateSubscription?.Dispose();
+        => _disposables.Dispose();
 }

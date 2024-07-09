@@ -10,8 +10,8 @@ public class StoreTests
     public void Store_Should_Initialize_With_Default_State()
     {
         // Act
-        var rootState = _sut.GetRootState();
-
+        var rootState = _sut.RootState.FirstSync();
+    
         // Assert
         rootState.Should().NotBeNull();
         rootState.Should().BeOfType<RootState>();

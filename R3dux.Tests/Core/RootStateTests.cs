@@ -19,7 +19,7 @@ public class RootStateTests
 
         // Assert
         _sut.ContainsKey(TestKey).Should().BeTrue();
-        _sut.Select<TestState>(TestKey).Should().BeEquivalentTo(_initialState);
+        _sut.GetSliceState<TestState>(TestKey).Should().BeEquivalentTo(_initialState);
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class RootStateTests
 
         // Assert
         _sut.ContainsKey(TestKey).Should().BeTrue();
-        _sut.Select<TestState>(TestKey).Should().BeEquivalentTo(updatedState);
+        _sut.GetSliceState<TestState>(TestKey).Should().BeEquivalentTo(updatedState);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class RootStateTests
     public void Select_Should_Throw_Exception_If_State_Not_Found()
     {
         // Act
-        Action act = () => _sut.Select<TestState>(NonExistingKey);
+        Action act = () => _sut.GetSliceState<TestState>(NonExistingKey);
 
         // Assert
         act.Should().Throw<R3duxException>()

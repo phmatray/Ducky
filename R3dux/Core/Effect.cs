@@ -6,5 +6,7 @@ namespace R3dux;
 public abstract class Effect : IEffect
 {
     /// <inheritdoc />
-    public abstract Observable<IAction> Handle(Observable<IAction> actions, IStore store);
+    public abstract Observable<IAction> Handle(
+        Observable<IAction> actions,
+        Observable<RootState> rootState);
 }

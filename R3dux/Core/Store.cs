@@ -7,6 +7,7 @@ public class Store
 {
     private readonly IDispatcher _dispatcher;
     private readonly CompositeDisposable _disposables;
+    private readonly ReactiveProperty<RootState> _rootState;
     private bool _isDisposed;
 
     public Store(IDispatcher dispatcher)
@@ -15,25 +16,26 @@ public class Store
         
         _dispatcher = dispatcher;
         _disposables = [];
+        _rootState = new ReactiveProperty<RootState>(new RootState());
         
-        RootState = new ReactiveProperty<RootState>(new RootState());
         DispatchStoreInitialized();
     }
     
     public IDispatcher Dispatcher
         => _dispatcher;
 
-    public ReactiveProperty<RootState> RootState { get; }
+    public Observable<RootState> RootState
+        => _rootState;
 
-    public RootState GetRootState()
-    {
-        return RootState.Value;
-    }
+    // public RootState GetRootState()
+    // {
+    //     return RootState.Value;
+    // }
 
     public TState GetState<TState>(string key)
         where TState : notnull, new()
     {
-        return RootState.Value.Select<TState>(key);
+        return _rootState.Value.GetSliceState<TState>(key);
     }
 
     public void Dispatch(IAction action)
@@ -82,7 +84,7 @@ public class Store
 
     private void UpdateRootState(ISlice slice)
     {
-        RootState.Value[slice.GetKey()] = slice.GetState();
+        _rootState.Value.AddOrUpdateSliceState(slice.GetKey(), slice.GetState());
     }
 
     public void AddEffects(IEnumerable<IEffect> effects)
@@ -97,7 +99,7 @@ public class Store
     public void AddEffect(IEffect effect)
     {
         effect
-            .Handle(_dispatcher.ActionStream, this)
+            .Handle(_dispatcher.ActionStream, RootState)
             .Subscribe(_dispatcher.Dispatch)
             .AddTo(_disposables);
     }

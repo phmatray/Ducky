@@ -48,7 +48,8 @@ public class MovieReducers : ReducerCollection<MovieState>
 public class LoadMoviesEffect(MoviesService moviesService) : Effect
 {
     public override Observable<IAction> Handle(
-        Observable<IAction> actions, IStore store)
+        Observable<IAction> actions,
+        Observable<RootState> rootState)
     {
         return actions
             .FilterActions<LoadMovies>()

@@ -23,29 +23,14 @@ public class CounterReducers : ReducerCollection<int>
 // Effects
 public class IncrementEffect : Effect
 {
-    // public override Observable<object> Handle(
-    //     Observable<object> actions, Observable<int> state)
-    // {
-    //     // if the Value is greater than 15, then reset the counter
-    //     return actions
-    //         .FilterActions<Increment>()
-    //         .WithLatestFrom(state, (action, stateValue) => new { action, stateValue })
-    //         .Where(x => x.stateValue > 15)
-    //         .Delay(TimeSpan.FromSeconds(3))
-    //         .SelectAction(x => new Reset());
-    // }
-
-    public override Observable<IAction> Handle(Observable<IAction> actions, IStore store)
+    public override Observable<IAction> Handle(
+        Observable<IAction> actions,
+        Observable<RootState> rootState)
     {
         // if the Value is greater than 15, then reset the counter
         return actions
-            .FilterActions<Increment>()
-            // .Where(x => store.GetState<int>("counter") > 15)
-            .CombineLatest(
-                store.RootState.Select(state => state.Select<int>("counter")),
-                (action, sliceState) => new StateActionPair<int, Increment>(sliceState, action))
-            // TODO: Implement WithSliceState
-            // .WithSliceState<CounterState, Increment>()
+            .FilterActions<Increment>()    
+            .WithSliceState<int, Increment>(rootState)
             .Where(pair => pair.State > 15)
             .Delay(TimeSpan.FromSeconds(3))
             .SelectAction(_ => new Reset());

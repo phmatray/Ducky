@@ -15,8 +15,55 @@ public static class CustomOperators
     /// <returns>An observable sequence that contains elements from the input sequence of type TAction.</returns>
     public static Observable<TAction> FilterActions<TAction>(
         this Observable<IAction> source)
+        where TAction : IAction
         => source.OfType<IAction, TAction>();
-    
+       
+    /// <summary>
+    /// Combines the observable sequence with the state of a slice and projects the result into a new form.
+    /// </summary>
+    /// <typeparam name="TState">The type of the state.</typeparam>
+    /// <typeparam name="TAction">The type of the action.</typeparam>
+    /// <param name="source">The source observable sequence.</param>
+    /// <param name="rootStateObs">The observable sequence of the root state.</param>
+    /// <param name="sliceKey">The key of the slice to select.</param>
+    /// <returns>An observable sequence of StateActionPair.</returns>
+    public static Observable<StateActionPair<TState, TAction>> WithSliceState<TState, TAction>(
+        this Observable<TAction> source,
+        Observable<RootState> rootStateObs,
+        string? sliceKey = null)
+        where TAction : IAction
+        where TState : notnull
+    {
+        return source.WithLatestFrom(rootStateObs, (action, rootState) =>
+        {
+            var state = sliceKey is null
+                ? rootState.GetSliceState<TState>()
+                : rootState.GetSliceState<TState>(sliceKey);
+
+            return new StateActionPair<TState, TAction>(state, action);
+        });
+
+
+        // return rootStateObs
+        //     .Select(rootState =>
+        //     {
+        //         if (sliceKey is null)
+        //         {
+        //             return rootState.GetSliceState<TState>();
+        //         }
+        //         else
+        //         {
+        //             return rootState.GetSliceState<TState>(sliceKey);
+        //         }
+        //     })
+        //     .CombineLatest(
+        //         source,
+        //         (state, action) =>
+        //         {
+        //             return new StateActionPair<TState, TAction>(state, action);
+        //         });
+    }
+
     /// <summary>
     /// Projects each element of an observable sequence into a new form and casts it to IAction.
     /// </summary>
@@ -28,7 +75,8 @@ public static class CustomOperators
     public static Observable<IAction> SelectAction<TSource, TResult>(
         this Observable<TSource> source,
         Func<TSource, TResult> selector)
-        => source.Select(selector)
+        => source
+            .Select(selector)
             .Cast<TResult, IAction>();
 
     /// <summary>
