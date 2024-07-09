@@ -26,6 +26,9 @@
   
   protected override void OnInitialized()
   {
+    // TODO: Avoid calling base.OnInitialized() if not needed
+    base.OnInitialized();
+    
     if (IsRunning)
     {
       StartTimer();

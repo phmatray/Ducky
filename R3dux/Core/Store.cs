@@ -1,4 +1,5 @@
-﻿using R3;
+﻿using ObservableCollections;
+using R3;
 
 namespace R3dux;
 
@@ -8,6 +9,7 @@ public class Store
     private readonly IDispatcher _dispatcher;
     private readonly CompositeDisposable _disposables;
     private readonly ReactiveProperty<RootState> _rootState;
+    private readonly IObservableCollection<ISlice> _slices;
     private bool _isDisposed;
 
     public Store(IDispatcher dispatcher)
@@ -17,6 +19,12 @@ public class Store
         _dispatcher = dispatcher;
         _disposables = [];
         _rootState = new ReactiveProperty<RootState>(new RootState());
+        _slices = new ObservableList<ISlice>();
+        
+        // refresh the root state when a slice state is updated
+        _slices.ObserveAdd()
+            .Subscribe(ev => UpdateRootState(ev.Value))
+            .AddTo(_disposables);
         
         DispatchStoreInitialized();
     }
