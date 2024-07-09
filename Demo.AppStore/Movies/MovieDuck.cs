@@ -15,16 +15,15 @@ public record MovieState
     public int SelectMovieCount()
         => Movies.Length;
 
-    public ImmutableArray<Movie> SelectMoviesByYear(int takeCount = 5)
+    public ImmutableArray<Movie> SelectMoviesByYear()
         => Movies
             .Sort((a, b) => a.Year.CompareTo(b.Year))
-            .TakeLast(takeCount)
             .Reverse()
             .ToImmutableArray();
 }
 
 // Actions
-public record LoadMovies : IAction;
+public record LoadMovies(int PageNumber = 1, int PageSize = 5) : IAction;
 public record LoadMoviesSuccess(ImmutableArray<Movie> Movies) : IAction;
 public record LoadMoviesFailure(string ErrorMessage) : IAction;
 
@@ -39,7 +38,7 @@ public class MovieReducers : ReducerCollection<MovieState>
         Map<LoadMoviesSuccess>((state, action)
             => state with { Movies = action.Movies, IsLoading = false });
         
-        Map<LoadMoviesFailure>((state, action)
+        Map<LoadMoviesFailure>((_, action)
             => new MovieState { Movies = [], ErrorMessage = action.ErrorMessage, IsLoading = false });
     }
 }
@@ -55,7 +54,7 @@ public class LoadMoviesEffect(MoviesService moviesService) : Effect
             .FilterActions<LoadMovies>()
             .LogMessage("Loading movies...")
             .InvokeService(
-                action => moviesService.GetMoviesAsync(),
+                action => moviesService.GetMoviesAsync(action.PageNumber, action.PageSize),
                 movies => new LoadMoviesSuccess(movies),
                 ex => new LoadMoviesFailure(ex.Message))
             .LogMessage("Movies loaded.");

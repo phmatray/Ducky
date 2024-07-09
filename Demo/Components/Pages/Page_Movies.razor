@@ -64,9 +64,6 @@
   private bool IsLoading
     => State.IsLoading;
   
-  private string IsLoadingString
-    => IsLoading ? "true" : "false";
-  
   private string? ErrorMessage
     => State.ErrorMessage;
 
@@ -75,7 +72,7 @@
     if (firstRender)
     {
       Console.WriteLine("First render - loading movies...");
-      Dispatch(new LoadMovies());
+      LoadMovies();
     }
   }
   
