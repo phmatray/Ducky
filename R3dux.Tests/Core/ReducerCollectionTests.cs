@@ -76,7 +76,7 @@ public class ReducerCollectionTests
     public void Reduce_Should_ThrowArgumentNullException_WhenActionIsNull()
     {
         // Act
-        Action act = () => _sut.Reduce(new TestState(0), (IncrementAction)null!);
+        Action act = () => _sut.Reduce(new TestState(0), null!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();

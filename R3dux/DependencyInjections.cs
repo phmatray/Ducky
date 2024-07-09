@@ -55,7 +55,6 @@ public static class DependencyInjections
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
     /// <param name="assemblies">The assemblies to scan for classes.</param>
-    /// <param name="type">The type to scan for and register.</param>
     private static void ScanAndRegister<T>(
         this IServiceCollection services,
         Assembly[] assemblies)

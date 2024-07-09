@@ -21,8 +21,7 @@ public class MessageReducers : ReducerCollection<MessageState>
 {
     public MessageReducers()
     {
-        Map<SetMessage>((state, action)
-            => new MessageState { Message = action.Message });
+        Map<SetMessage>((_, action) => new MessageState { Message = action.Message });
     }
 }
 

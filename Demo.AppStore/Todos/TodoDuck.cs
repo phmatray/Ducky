@@ -41,13 +41,13 @@ public class TodoReducers : ReducerCollection<TodoState>
     }
 
     private static TodoState MapCreateTodo(TodoState state, CreateTodo action)
-        => state with
+        => new()
         {
             Todos = state.Todos.Add(new TodoItem(action.Title))
         };
 
     private static TodoState MapToggleTodo(TodoState state, ToggleTodo action)
-        => state with
+        => new()
         {
             Todos = state.Todos
                 .Select(todo => todo.Id == action.Id ? todo.ToggleIsCompleted() : todo)
@@ -55,7 +55,7 @@ public class TodoReducers : ReducerCollection<TodoState>
         };
 
     private static TodoState MapDeleteTodo(TodoState state, DeleteTodo action)
-        => state with
+        => new()
         {
             Todos = state.Todos
                 .Where(todo => todo.Id != action.Id)

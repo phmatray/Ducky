@@ -40,12 +40,15 @@ public class IncrementEffect : Effect
         // if the Value is greater than 15, then reset the counter
         return actions
             .FilterActions<Increment>()
-            .Where(x => store.GetState<int>("counter") > 15)
+            // .Where(x => store.GetState<int>("counter") > 15)
+            .CombineLatest(
+                store.RootState.Select(state => state.Select<int>("counter")),
+                (action, sliceState) => new StateActionPair<int, Increment>(sliceState, action))
             // TODO: Implement WithSliceState
-            // .WithSliceState<CounterState>()
-            // .Where((sliceState, action) => sliceState > 15)
+            // .WithSliceState<CounterState, Increment>()
+            .Where(pair => pair.State > 15)
             .Delay(TimeSpan.FromSeconds(3))
-            .SelectAction(x => new Reset());
+            .SelectAction(_ => new Reset());
     }
 }
 

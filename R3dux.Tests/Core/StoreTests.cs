@@ -4,7 +4,6 @@ namespace R3dux.Tests.Core;
 
 public class StoreTests
 {
-    private const string CounterKey = "counter";
     private readonly Store _sut = TestStoreFactory.CreateTestCounterStore();
 
     [Fact]
