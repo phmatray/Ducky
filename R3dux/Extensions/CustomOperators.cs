@@ -71,18 +71,7 @@ public static class CustomOperators
     public static Observable<TSource> CatchAction<TSource>(
         this Observable<TSource> source,
         Func<Exception, TSource> selector)
-    {
-        return Observable.Create<TSource>(observer => source
-            .Subscribe(
-                onNext: observer.OnNext,
-                onErrorResume: ex =>
-                {
-                    var replacementValue = selector(ex);
-                    observer.OnNext(replacementValue);
-                    observer.OnCompleted();
-                },
-                onCompleted: observer.OnCompleted));
-    }
+        => source.Catch<TSource, Exception>(ex => Observable.Return(selector(ex)));
 
     /// <summary>
     /// Invokes a service call for each element in the observable sequence, returning a sequence of actions based on the result or error.
