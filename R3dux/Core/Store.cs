@@ -27,14 +27,10 @@ public class Store
     public Observable<RootState> RootState
         => _rootState;
 
-    // public RootState GetRootState()
-    // {
-    //     return RootState.Value;
-    // }
-
     public TState GetState<TState>(string key)
         where TState : notnull, new()
     {
+        ArgumentNullException.ThrowIfNull(key);
         return _rootState.Value.GetSliceState<TState>(key);
     }
 
@@ -58,6 +54,7 @@ public class Store
     public void AddSlices(IEnumerable<ISlice> slices)
     {
         ArgumentNullException.ThrowIfNull(slices);
+        
         foreach (var slice in slices)
         {
             AddSlice(slice);
@@ -85,11 +82,13 @@ public class Store
     private void UpdateRootState(ISlice slice)
     {
         _rootState.Value.AddOrUpdateSliceState(slice.GetKey(), slice.GetState());
+        _rootState.OnNext(_rootState.Value);
     }
 
     public void AddEffects(IEnumerable<IEffect> effects)
     {
         ArgumentNullException.ThrowIfNull(effects);
+        
         foreach (var effect in effects)
         {
             AddEffect(effect);
@@ -98,9 +97,11 @@ public class Store
     
     public void AddEffect(IEffect effect)
     {
+        ArgumentNullException.ThrowIfNull(effect);
+        
         effect
             .Handle(_dispatcher.ActionStream, RootState)
-            .Subscribe(_dispatcher.Dispatch)
+            .Subscribe(Dispatch)
             .AddTo(_disposables);
     }
 

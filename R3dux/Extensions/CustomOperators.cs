@@ -34,34 +34,16 @@ public static class CustomOperators
         where TAction : IAction
         where TState : notnull
     {
-        return source.WithLatestFrom(rootStateObs, (action, rootState) =>
-        {
-            var state = sliceKey is null
-                ? rootState.GetSliceState<TState>()
-                : rootState.GetSliceState<TState>(sliceKey);
+        return source.WithLatestFrom(
+            rootStateObs,
+            (action, rootState) =>
+            {
+                var sliceState = sliceKey is null
+                    ? rootState.GetSliceState<TState>()
+                    : rootState.GetSliceState<TState>(sliceKey);
 
-            return new StateActionPair<TState, TAction>(state, action);
-        });
-
-
-        // return rootStateObs
-        //     .Select(rootState =>
-        //     {
-        //         if (sliceKey is null)
-        //         {
-        //             return rootState.GetSliceState<TState>();
-        //         }
-        //         else
-        //         {
-        //             return rootState.GetSliceState<TState>(sliceKey);
-        //         }
-        //     })
-        //     .CombineLatest(
-        //         source,
-        //         (state, action) =>
-        //         {
-        //             return new StateActionPair<TState, TAction>(state, action);
-        //         });
+                return new StateActionPair<TState, TAction>(sliceState, action);
+            });
     }
 
     /// <summary>

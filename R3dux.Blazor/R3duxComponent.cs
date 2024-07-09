@@ -22,7 +22,7 @@ public abstract class R3duxComponent<TState>
 
     protected override void OnInitialized()
         => StateObservable
-            .Subscribe(_ => StateHasChanged())
+            .Subscribe(_ => InvokeAsync(StateHasChanged))
             .AddTo(_disposables);
 
     protected void Dispatch(IAction action)
