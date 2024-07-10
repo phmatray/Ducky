@@ -6,6 +6,8 @@ namespace R3dux;
 /// <typeparam name="TState">The type of the state.</typeparam>
 public class ReducerCollection<TState>
 {
+    // TODO: make this class implements IEnumerable
+    // TODO: make the following field private
     /// <summary>
     /// A dictionary that holds the reducers mapped by the type of action.
     /// </summary>

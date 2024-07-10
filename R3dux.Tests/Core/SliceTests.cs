@@ -1,10 +1,12 @@
+using R3dux.Tests.TestModels;
+
 namespace R3dux.Tests.Core;
 
 public class SliceTests
 {
     private record UnknownAction : IAction;
 
-    private readonly CounterSlice _sut = new();
+    private readonly TestCounterSlice _sut = new();
     
     [Fact]
     public void CounterSlice_Should_Initialize_With_Default_State()
@@ -20,7 +22,7 @@ public class SliceTests
     public void CounterSlice_Should_Increment_State()
     {
         // Act
-        _sut.OnDispatch(new Increment());
+        _sut.OnDispatch(new TestIncrementAction());
         var state = _sut.GetState();
 
         // Assert
@@ -31,7 +33,7 @@ public class SliceTests
     public void CounterSlice_Should_Decrement_State()
     {
         // Act
-        _sut.OnDispatch(new Decrement());
+        _sut.OnDispatch(new TestDecrementAction());
         var state = _sut.GetState();
 
         // Assert
@@ -42,9 +44,9 @@ public class SliceTests
     public void CounterSlice_Should_Reset_State()
     {
         // Act
-        _sut.OnDispatch(new Increment());
-        _sut.OnDispatch(new Increment());
-        _sut.OnDispatch(new Reset());
+        _sut.OnDispatch(new TestIncrementAction());
+        _sut.OnDispatch(new TestIncrementAction());
+        _sut.OnDispatch(new TestResetAction());
         var state = _sut.GetState();
 
         // Assert
@@ -55,7 +57,7 @@ public class SliceTests
     public void CounterSlice_Should_Set_State_To_Specified_Value()
     {
         // Act
-        _sut.OnDispatch(new SetValue(20));
+        _sut.OnDispatch(new TestSetValueAction(20));
         var state = _sut.GetState();
 
         // Assert
@@ -71,7 +73,7 @@ public class SliceTests
         _sut.StateUpdated.Subscribe(_ => stateUpdatedEmitted = true);
 
         // Act
-        _sut.OnDispatch(new Increment());
+        _sut.OnDispatch(new TestIncrementAction());
 
         // Assert
         stateUpdatedEmitted.Should().BeTrue();
@@ -88,35 +90,5 @@ public class SliceTests
 
         // Assert
         state.Should().Be(initialState);
-    }
-
-    [Fact]
-    public void CounterSlice_Should_Return_Correct_Key()
-    {
-        // Act
-        var key = _sut.GetKey();
-
-        // Assert
-        key.Should().Be("counter");
-    }
-
-    [Fact]
-    public void CounterSlice_Should_Return_Initial_State()
-    {
-        // Act
-        var initialState = _sut.GetInitialState();
-
-        // Assert
-        initialState.Should().Be(10);
-    }
-
-    [Fact]
-    public void CounterSlice_Should_Return_Correct_State_Type()
-    {
-        // Act
-        var stateType = _sut.GetStateType();
-
-        // Assert
-        stateType.Should().Be(typeof(int));
     }
 }

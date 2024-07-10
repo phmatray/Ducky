@@ -1,7 +1,14 @@
 namespace Demo.AppStore;
 
+public interface IMoviesService
+{
+    ValueTask<ImmutableArray<Movie>> GetMoviesAsync(
+        int pageNumber, 
+        int pageSize, 
+        CancellationToken ct = default);
+}
 
-public class MoviesService
+public class MoviesService : IMoviesService
 {
     public async ValueTask<ImmutableArray<Movie>> GetMoviesAsync(
         int pageNumber = 1, 

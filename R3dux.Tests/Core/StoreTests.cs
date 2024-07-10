@@ -38,12 +38,12 @@ public class StoreTests
     public void Store_Should_Add_Slice_And_Propagate_State_Changes()
     {
         // Arrange
-        var counterSlice = new CounterSlice();
+        var counterSlice = new TestCounterSlice();
         _sut.AddSlice(counterSlice);
 
         // Act
-        counterSlice.OnDispatch(new Increment());
-        var updatedState = _sut.GetState<int>("counter");
+        counterSlice.OnDispatch(new TestIncrementAction());
+        var updatedState = _sut.GetState<int>("test-counter");
 
         // Assert
         updatedState.Should().Be(11);
@@ -56,7 +56,7 @@ public class StoreTests
         _sut.Dispose();
 
         // Assert
-        Action act = () => _sut.Dispatch(new Increment());
+        Action act = () => _sut.Dispatch(new TestIncrementAction());
         act.Should().Throw<ObjectDisposedException>();
     }
 }

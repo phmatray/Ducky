@@ -11,8 +11,10 @@ services.AddRazorComponents()
 // Add front services
 services.AddScoped<IJsonColorizer, JsonColorizer>();
 
+// Add data services
+services.AddTransient<IMoviesService, MoviesService>();
+
 // Add RxStore
-services.AddTransient<MoviesService>();
 services.AddR3dux(options =>
 {
     options.Assemblies = [typeof(CounterSlice).Assembly];

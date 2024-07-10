@@ -45,7 +45,7 @@ public class MovieReducers : ReducerCollection<MovieState>
 
 // Effects
 // ReSharper disable once UnusedType.Global
-public class LoadMoviesEffect(MoviesService moviesService) : Effect
+public class LoadMoviesEffect(IMoviesService moviesService) : Effect
 {
     public override Observable<IAction> Handle(
         Observable<IAction> actions,

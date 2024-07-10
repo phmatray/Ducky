@@ -32,7 +32,7 @@ public class IncrementEffect : Effect
             .FilterActions<Increment>()    
             .WithSliceState<int, Increment>(rootState)
             .Where(pair => pair.State > 15)
-            .Delay(TimeSpan.FromSeconds(3))
+            .Delay(TimeSpan.FromSeconds(3), TimeProvider)
             .SelectAction(_ => new Reset());
     }
 }

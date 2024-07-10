@@ -42,7 +42,7 @@ public class StartTimerEffect : Effect
     {
         return actions
             .FilterActions<StartTimer>()
-            .SelectMany(_ => Observable.Interval(TimeSpan.FromSeconds(1)))
+            .SelectMany(_ => Observable.Interval(TimeSpan.FromSeconds(1), TimeProvider))
             .Select(_ => new Tick())
             .TakeUntil(actions.FilterActions<StopTimer>())
             .Cast<Tick, IAction>();

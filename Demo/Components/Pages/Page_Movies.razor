@@ -67,11 +67,12 @@
   private string? ErrorMessage
     => State.ErrorMessage;
 
-  protected override void OnAfterRender(bool firstRender)
+  protected override void OnInitialized()
   {
-    if (firstRender)
+    base.OnInitialized();
+
+    if (Movies.Count == 0)
     {
-      Console.WriteLine("First render - loading movies...");
       LoadMovies();
     }
   }

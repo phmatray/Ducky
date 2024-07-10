@@ -8,7 +8,7 @@ internal static class Factories
     {
         IStoreFactory storeFactory = new StoreFactory();
         IDispatcher dispatcher = new Dispatcher();
-        CounterSlice counterSlice = new();
+        TestCounterSlice counterSlice = new();
         effects ??= [];
         
         return storeFactory.CreateStore(dispatcher, [counterSlice], effects);
