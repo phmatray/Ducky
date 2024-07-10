@@ -12,8 +12,8 @@ public interface IStore
     void Dispatch(IAction action);
     
     void AddSlice(ISlice slice);
-    void AddSlices(IEnumerable<ISlice> slices);
+    void AddSlices(params ISlice[] slices);
     
     void AddEffect(IEffect effect);
-    void AddEffects(IEnumerable<IEffect> effects);
+    void AddEffects(params IEffect[] effects);
 }

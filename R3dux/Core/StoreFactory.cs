@@ -8,8 +8,8 @@ public class StoreFactory : IStoreFactory
     /// <inheritdoc />
     public Store CreateStore(
         IDispatcher dispatcher,
-        IEnumerable<ISlice> slices,
-        IEnumerable<IEffect> effects)
+        ISlice[] slices,
+        IEffect[] effects)
     {
         var store = new Store(dispatcher);
 

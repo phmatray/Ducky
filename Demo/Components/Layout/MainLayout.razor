@@ -6,7 +6,7 @@
       <ul>
         <li>
           <NavLink href="">
-            <strong>@State?.SelectFullTitle()</strong>
+            <strong>@State.SelectFullTitle()</strong>
           </NavLink>
         </li>
       </ul>
@@ -34,7 +34,7 @@
   </div>
 </footer>
 
-<dialog open="@State?.IsModalOpen">
+<dialog open="@State.IsModalOpen">
   <article>
     <header>
       <button aria-label="Close" rel="prev" @onclick="CloseModal"></button>

@@ -1,13 +1,15 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using R3;
 
 namespace R3dux;
 
 /// <summary>
 /// Provides logging functionalities for state changes.
 /// </summary>
-public static class StateLogger
+public class StateLoggerObserver<TState> : Observer<StateChange<TState>>
 {
+    // ReSharper disable once StaticMemberInGenericType
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = false,
@@ -15,15 +17,40 @@ public static class StateLogger
     };
 
     /// <summary>
+    /// Handles the reception of a state change notification.
+    /// </summary>
+    /// <param name="stateChange">The state change notification.</param>
+    protected override void OnNextCore(StateChange<TState> stateChange)
+    {
+        LogStateChange(stateChange.Action, stateChange.PreviousState, stateChange.NewState,
+            stateChange.ElapsedMilliseconds);
+    }
+
+    /// <summary>
+    /// Handles the completion of the state change stream.
+    /// </summary>
+    protected override void OnCompletedCore(Result result)
+    {
+        Console.WriteLine("State change observation completed.");
+    }
+
+    /// <summary>
+    /// Handles an error in the state change stream.
+    /// </summary>
+    /// <param name="error">The error encountered.</param>
+    protected override void OnErrorResumeCore(Exception error)
+    {
+        Console.WriteLine($"State change observation error: {error.Message}");
+    }
+
+    /// <summary>
     /// Logs the details of a state change.
     /// </summary>
-    /// <typeparam name="TState">The type of the state.</typeparam>
     /// <param name="action">The action causing the state change.</param>
     /// <param name="prevState">The previous state before the change.</param>
     /// <param name="newState">The new state after the change.</param>
     /// <param name="elapsedMilliseconds">The time taken for the state change in milliseconds.</param>
-    public static void LogStateChange<TState>(
-        object action, TState prevState, TState newState, double elapsedMilliseconds)
+    private void LogStateChange(IAction action, TState prevState, TState newState, double elapsedMilliseconds)
     {
         var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
         var actionName = GetActionType(action);
@@ -39,7 +66,7 @@ public static class StateLogger
     /// </summary>
     /// <param name="action">The action.</param>
     /// <returns>The name of the action type.</returns>
-    private static string GetActionType(object action)
+    private static string GetActionType(IAction action)
     {
         return action.GetType().Name;
     }
@@ -52,13 +79,13 @@ public static class StateLogger
     private static string GetObjectDetails(object? obj)
     {
         const string nullString = "NULL";
-        
+
         // if obj is null, return "null"
         if (obj is null)
         {
             return nullString;
         }
-        
+
         try
         {
             return JsonSerializer
@@ -69,5 +96,5 @@ public static class StateLogger
         {
             return $"Error serializing object: {ex.Message}";
         }
-    }  
+    }
 }

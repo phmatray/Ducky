@@ -41,8 +41,8 @@ public static class DependencyInjections
         {
             var storeFactory = sp.GetRequiredService<IStoreFactory>();
             var dispatcher = sp.GetRequiredService<IDispatcher>();
-            var slices = sp.GetServices<ISlice>();
-            var effects = sp.GetServices<IEffect>();
+            var slices = sp.GetServices<ISlice>().ToArray();
+            var effects = sp.GetServices<IEffect>().ToArray();
 
             return storeFactory.CreateStore(dispatcher, slices, effects);
         });

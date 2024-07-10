@@ -14,6 +14,6 @@ public interface IStoreFactory
     /// <returns>A new instance of <see cref="Store"/>.</returns>
     Store CreateStore(
         IDispatcher dispatcher,
-        IEnumerable<ISlice> slices,
-        IEnumerable<IEffect> effects);
+        ISlice[] slices,
+        IEffect[] effects);
 }

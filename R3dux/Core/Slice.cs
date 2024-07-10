@@ -13,6 +13,7 @@ public abstract record Slice<TState> : ISlice<TState>
     private bool _isInitialized;
     private readonly ReactiveProperty<TState> _state = new();
     private readonly Subject<Unit> _stateUpdated = new();
+    private readonly StateLoggerObserver<TState> _stateLoggerObserver = new();
 
     /// <inheritdoc />
     public virtual Observable<TState> State => _state;
@@ -65,8 +66,18 @@ public abstract record Slice<TState> : ISlice<TState>
             return;
         }
         
+        // First update the state...
         _state.OnNext(updatedState);
+        
+        // ...then notify subscribers that the state has been updated.
         _stateUpdated.OnNext(Unit.Default);
-        StateLogger.LogStateChange(action, prevState, updatedState, stopwatch.Elapsed.TotalMilliseconds);
+
+        var stateChange = new StateChange<TState>(
+            action,
+            prevState,
+            updatedState,
+            stopwatch.Elapsed.TotalMilliseconds);
+        
+        _stateLoggerObserver.OnNext(stateChange);
     }
 }

@@ -65,7 +65,7 @@ public class Store
         Dispatch(new StoreInitialized());
     }
 
-    public void AddSlices(IEnumerable<ISlice> slices)
+    public void AddSlices(params ISlice[] slices)
     {
         ArgumentNullException.ThrowIfNull(slices);
         
@@ -104,7 +104,7 @@ public class Store
         }
     }
 
-    public void AddEffects(IEnumerable<IEffect> effects)
+    public void AddEffects(params IEffect[] effects)
     {
         ArgumentNullException.ThrowIfNull(effects);
         
