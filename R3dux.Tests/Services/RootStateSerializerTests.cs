@@ -19,13 +19,8 @@ public class RootStateSerializerTests
         """;
     
     private readonly RootStateSerializer _sut = new();
-    private readonly RootState _rootState = new();
+    private readonly RootState _rootState = Factories.CreateTestRootState();
     private readonly TestState _initialState = new() { Value = 42 };
-
-    public RootStateSerializerTests()
-    {
-        _rootState.AddOrUpdateSliceState(Key, _initialState);
-    }
     
     [Fact]
     public void Serialize_Should_Work_Correctly()

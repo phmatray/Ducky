@@ -4,7 +4,7 @@ namespace R3dux;
 
 public interface IStore
 {
-    Observable<RootState> RootState { get; }
+    Observable<RootState> RootStateObservable { get; }
 
     TState GetState<TState>(string key)
         where TState : notnull, new();

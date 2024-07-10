@@ -13,7 +13,7 @@ public abstract class R3duxComponent<TState>
     public required IStore Store { get; set; }
 
     protected Observable<TState> StateObservable
-        => Store.RootState
+        => Store.RootStateObservable
             .Select(state => state.GetSliceState<TState>())
             .DistinctUntilChanged();
 

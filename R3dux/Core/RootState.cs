@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using ObservableCollections;
 using R3dux.Exceptions;
 
 namespace R3dux;
@@ -9,38 +8,23 @@ namespace R3dux;
 /// </summary>
 public record RootState
 {
-    private ImmutableSortedDictionary<string, object> _state = ImmutableSortedDictionary<string, object>.Empty;
-    
+    private readonly ImmutableSortedDictionary<string, object> _state;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RootState"/> class.
+    /// </summary>
+    /// <param name="state">The state dictionary.</param>
+    public RootState(ImmutableSortedDictionary<string, object> state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        _state = state;
+    }
+
     /// <summary>
     /// Gets the underlying state dictionary for serialization purposes.
     /// </summary>
-    internal IDictionary<string, object> GetStateDictionary() => _state;
-
-    /// <summary>
-    /// Gets or sets the state associated with the specified key.
-    /// </summary>
-    /// <param name="key">The key of the state to get or set.</param>
-    /// <returns>The state associated with the specified key.</returns>
-    /// <exception cref="R3duxException">Thrown when the state is not of the expected type.</exception>
-    public object this[string key]
-    {
-        get => GetSliceState<object>(key);
-        set => AddOrUpdateSliceState(key, value);
-    }
-    
-    /// <summary>
-    /// Adds or updates the state associated with the specified key.
-    /// </summary>
-    /// <param name="key">The key of the state to add or update.</param>
-    /// <param name="state">The state to add or update.</param>
-    /// <exception cref="ArgumentNullException">Thrown when the key or initial state is null.</exception>
-    public void AddOrUpdateSliceState<TState>(string key, TState state)
-    {
-        ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(state);
-        
-        _state = _state.SetItem(key, state);
-    }
+    public ImmutableSortedDictionary<string, object> GetStateDictionary()
+        => _state;
 
     /// <summary>
     /// Gets the slice state associated with the specified key.

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text.Json;
 
 namespace R3dux;
@@ -37,7 +38,7 @@ public class RootStateSerializer : IRootStateSerializer
             JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(json, Options)
             ?? new Dictionary<string, Dictionary<string, object>>();
 
-        var rootState = new RootState();
+        var state = new Dictionary<string, object>();
 
         foreach (var kvp in typedDictionary)
         {
@@ -57,10 +58,10 @@ public class RootStateSerializer : IRootStateSerializer
                 JsonSerializer.Deserialize(valueJson, type, Options)
                 ?? throw new InvalidOperationException("Value not deserialized.");
 
-            rootState.AddOrUpdateSliceState(kvp.Key, value);
+            state[kvp.Key] = value;
         }
 
-        return rootState;
+        return new RootState(state.ToImmutableSortedDictionary());
     }
 
     /// <inheritdoc />
