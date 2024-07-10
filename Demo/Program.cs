@@ -15,10 +15,12 @@ services.AddScoped<IJsonColorizer, JsonColorizer>();
 services.AddTransient<IMoviesService, MoviesService>();
 
 // Add RxStore
-services.AddR3dux(options =>
-{
-    options.Assemblies = [typeof(CounterSlice).Assembly];
-});
+services.AddR3dux(builder.Configuration);
+// ==== or ====
+// services.AddR3dux(options =>
+// {
+//     options.Assemblies = [typeof(CounterSlice).Assembly];
+// });
 
 var app = builder.Build();
 
