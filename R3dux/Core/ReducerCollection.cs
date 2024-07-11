@@ -4,14 +4,12 @@ namespace R3dux;
 /// Represents a collection of reducers for a specific state type.
 /// </summary>
 /// <typeparam name="TState">The type of the state.</typeparam>
-public class ReducerCollection<TState>
+public abstract class ReducerCollection<TState>
 {
-    // TODO: make this class implements IEnumerable
-    // TODO: make the following field private
     /// <summary>
     /// A dictionary that holds the reducers mapped by the type of action.
     /// </summary>
-    public readonly Dictionary<Type, Func<TState, IAction, TState>> Reducers = new();
+    public Dictionary<Type, Func<TState, IAction, TState>> Reducers { get; } = new();
 
     /// <summary>
     /// Maps a reducer function to a specific action type.

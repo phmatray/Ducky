@@ -6,7 +6,7 @@ namespace R3dux;
 /// <summary>
 /// Represents the root state of the application, managing slice states.
 /// </summary>
-public record RootState
+public sealed record RootState
 {
     private readonly ImmutableSortedDictionary<string, object> _state;
 

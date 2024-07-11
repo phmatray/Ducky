@@ -76,6 +76,8 @@ public sealed class ObservableSlices
     /// <param name="slice">The slice to add.</param>
     public void AddSlice(ISlice slice)
     {
+        ArgumentNullException.ThrowIfNull(slice);
+        
         lock (_lock)
         {
             _slices[slice.GetKey()] = slice;
@@ -88,6 +90,8 @@ public sealed class ObservableSlices
     /// <param name="key">The key of the slice to remove.</param>
     public void RemoveSlice(string key)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        
         lock (_lock)
         {
             if (_slices.ContainsKey(key))
@@ -104,6 +108,9 @@ public sealed class ObservableSlices
     /// <param name="slice">The new slice to add.</param>
     public void ReplaceSlice(string key, ISlice slice)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(slice);
+        
         lock (_lock)
         {
             _slices[key] = slice;

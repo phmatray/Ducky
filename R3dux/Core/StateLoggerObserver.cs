@@ -7,7 +7,8 @@ namespace R3dux;
 /// <summary>
 /// Provides logging functionalities for state changes.
 /// </summary>
-public class StateLoggerObserver<TState> : Observer<StateChange<TState>>
+public sealed class StateLoggerObserver<TState>
+    : Observer<StateChange<TState>>
 {
     // ReSharper disable once StaticMemberInGenericType
     private static readonly JsonSerializerOptions SerializerOptions = new()

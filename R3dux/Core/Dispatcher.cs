@@ -6,7 +6,7 @@ namespace R3dux;
 /// <summary>
 /// A dispatcher that queues and dispatches actions, providing an observable stream of dispatched actions.
 /// </summary>
-public class Dispatcher
+public sealed class Dispatcher
     : IDispatcher, IDisposable
 {
     private readonly object _syncRoot = new();

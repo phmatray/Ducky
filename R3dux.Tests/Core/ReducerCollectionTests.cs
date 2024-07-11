@@ -1,59 +1,57 @@
+using R3dux.Tests.TestModels;
+
 namespace R3dux.Tests.Core;
 
 public class ReducerCollectionTests
 {
-    private record TestState(int Value);
-    
-    private record IncrementAction(int Amount) : IAction;
-    
-    private readonly ReducerCollection<TestState> _sut = new();
+    private readonly TestCounterReducers _sut = new();
 
     [Fact]
     public void Map_Should_AddReducer()
     {
         // Act
-        _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
+        _sut.Map<IntegerAction>((state, action) => state + action.Value);
 
         // Assert
-        _sut.Reducers.Should().ContainKey(typeof(IncrementAction));
+        _sut.Reducers.Should().ContainKey(typeof(IntegerAction));
     }
 
     [Fact]
     public void Reduce_Should_ApplyReducer()
     {
         // Arrange
-        _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
-        var initialState = new TestState(0);
-        var action = new IncrementAction(5);
+        _sut.Map<IntegerAction>((state, action) => state + action.Value);
+        var initialState = 0;
+        var action = new IntegerAction(5);
 
         // Act
         var newState = _sut.Reduce(initialState, action);
 
         // Assert
-        newState.Value.Should().Be(5);
+        newState.Should().Be(5);
     }
 
     [Fact]
     public void Reduce_Should_ApplyReducer_WithInterface()
     {
         // Arrange
-        _sut.Map<IncrementAction>((state, action) => new TestState(state.Value + action.Amount));
-        var initialState = new TestState(0);
-        IAction action = new IncrementAction(5);
+        _sut.Map<IntegerAction>((state, action) => state + action.Value);
+        const int initialState = 0;
+        IAction action = new IntegerAction(5);
 
         // Act
         var newState = _sut.Reduce(initialState, action);
 
         // Assert
-        newState.Value.Should().Be(5);
+        newState.Should().Be(5);
     }
 
     [Fact]
     public void Reduce_Should_ReturnOriginalState_IfNoReducerFound()
     {
         // Arrange
-        var initialState = new TestState(0);
-        var action = new IncrementAction(5);
+        const int initialState = 0;
+        var action = new IntegerAction(5);
         
         // Act
         var newState = _sut.Reduce(initialState, action);
@@ -66,7 +64,7 @@ public class ReducerCollectionTests
     public void Map_Should_ThrowArgumentNullException_WhenReducerIsNull()
     {
         // Act
-        Action act = () => _sut.Map<IncrementAction>(null!);
+        Action act = () => _sut.Map<IntegerAction>(null!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
@@ -76,7 +74,7 @@ public class ReducerCollectionTests
     public void Reduce_Should_ThrowArgumentNullException_WhenActionIsNull()
     {
         // Act
-        Action act = () => _sut.Reduce(new TestState(0), null!);
+        Action act = () => _sut.Reduce(0, null!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>();

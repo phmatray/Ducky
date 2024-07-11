@@ -7,5 +7,5 @@ namespace R3dux;
 /// <typeparam name="TAction">The type of the action, which must implement <see cref="IAction"/>.</typeparam>
 /// <param name="State">The current state.</param>
 /// <param name="Action">The action to be performed.</param>
-public record StateActionPair<TState, TAction>(TState State, TAction Action)
+public sealed record StateActionPair<TState, TAction>(TState State, TAction Action)
     where TAction : IAction;

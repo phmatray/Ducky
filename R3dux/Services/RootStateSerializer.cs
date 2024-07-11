@@ -6,7 +6,7 @@ namespace R3dux;
 /// <summary>
 /// Provides methods for serializing and deserializing <see cref="RootState"/> instances.
 /// </summary>
-public class RootStateSerializer : IRootStateSerializer
+public sealed class RootStateSerializer : IRootStateSerializer
 {
     private static readonly JsonSerializerOptions Options = new()
     {

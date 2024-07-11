@@ -8,7 +8,7 @@ namespace R3dux;
 /// <param name="PreviousState">The previous state before the change.</param>
 /// <param name="NewState">The new state after the change.</param>
 /// <param name="ElapsedMilliseconds">The time taken for the state change in milliseconds.</param>
-public record StateChange<TState>(
+public sealed record StateChange<TState>(
     IAction Action,
     TState PreviousState,
     TState NewState,

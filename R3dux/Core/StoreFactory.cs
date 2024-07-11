@@ -3,7 +3,7 @@ namespace R3dux;
 /// <summary>
 /// Factory for creating instances of <see cref="Store"/>.
 /// </summary>
-public class StoreFactory : IStoreFactory
+public sealed class StoreFactory : IStoreFactory
 {
     /// <inheritdoc />
     public Store CreateStore(

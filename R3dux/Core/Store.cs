@@ -2,7 +2,7 @@
 
 namespace R3dux;
 
-public class Store
+public sealed class Store
     : IStore, IDisposable
 {
     private readonly IDispatcher _dispatcher;
