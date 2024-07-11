@@ -1,6 +1,7 @@
 namespace Demo.AppStore;
 
-// State
+#region State
+
 public record TodoState
 {
     public required ImmutableList<TodoItem> Todos { get; init; }
@@ -23,14 +24,20 @@ public record TodoState
         => SelectCompletedTodos().Count;
 }
 
-// Actions
+#endregion
+
+#region Actions
+
 public record CreateTodo(string Title) : IAction;
 
 public record ToggleTodo(Guid Id) : IAction;
 
 public record DeleteTodo(Guid Id) : IAction;
 
-// Reducers
+#endregion
+
+#region Reducers
+
 public class TodoReducers : ReducerCollection<TodoState>
 {
     public TodoReducers()
@@ -63,7 +70,10 @@ public class TodoReducers : ReducerCollection<TodoState>
         };
 }
 
-// Slice
+#endregion
+
+#region Slice
+
 // ReSharper disable once UnusedType.Global
 public record TodoSlice : Slice<TodoState>
 {
@@ -83,3 +93,5 @@ public record TodoSlice : Slice<TodoState>
         ]
     };
 }
+
+#endregion

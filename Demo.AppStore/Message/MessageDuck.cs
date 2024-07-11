@@ -1,6 +1,7 @@
 namespace Demo.AppStore;
 
-// State
+#region State
+
 public record MessageState
 {
     public required string Message { get; init; }
@@ -13,10 +14,16 @@ public record MessageState
         => new(Message.Reverse().ToArray());
 }
 
-// Actions
+#endregion
+
+#region Actions
+
 public record SetMessage(string Message) : IAction;
 
-// Reducers
+#endregion
+
+#region Reducers
+
 public class MessageReducers : ReducerCollection<MessageState>
 {
     public MessageReducers()
@@ -25,7 +32,10 @@ public class MessageReducers : ReducerCollection<MessageState>
     }
 }
 
-// Slice
+#endregion
+
+#region Slice
+
 // ReSharper disable once UnusedType.Global
 public record MessageSlice : Slice<MessageState>
 {
@@ -38,3 +48,5 @@ public record MessageSlice : Slice<MessageState>
         Message = "Hello, Blazor!"
     };
 }
+
+#endregion

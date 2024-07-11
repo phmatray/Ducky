@@ -1,6 +1,7 @@
 namespace Demo.AppStore;
 
-// State
+#region State
+
 public record LayoutState
 {
     public required string Title { get; init; }
@@ -12,13 +13,18 @@ public record LayoutState
         => $"{Title} - {Version}";
 }
 
-// Actions
+#endregion
+
+#region Actions
+
 public record SetTitle(string Title) : IAction;
 public record OpenModal : IAction;
 public record CloseModal : IAction;
 
+#endregion
 
-// Reducers
+#region Reducers
+
 public class LayoutReducers : ReducerCollection<LayoutState>
 {
     public LayoutReducers()
@@ -34,7 +40,10 @@ public class LayoutReducers : ReducerCollection<LayoutState>
     }
 }
 
-// Slice
+#endregion
+
+#region Slice
+
 // ReSharper disable once UnusedType.Global
 public record LayoutSlice : Slice<LayoutState>
 {
@@ -49,3 +58,5 @@ public record LayoutSlice : Slice<LayoutState>
         IsModalOpen = false
     };
 }
+
+#endregion

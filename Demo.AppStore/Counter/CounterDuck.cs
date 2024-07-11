@@ -1,12 +1,16 @@
 ﻿namespace Demo.AppStore;
 
-// Actions
+#region Actions
+
 public record Increment : IAction;
 public record Decrement : IAction;
 public record Reset : IAction;
 public record SetValue(int Value) : IAction;
 
-// Reducers
+#endregion
+
+#region Reducers
+
 public class CounterReducers : ReducerCollection<int>
 {
     private const int InitialState = 10;
@@ -20,7 +24,10 @@ public class CounterReducers : ReducerCollection<int>
     }
 }
 
-// Effects
+#endregion
+
+#region Effects
+
 public class IncrementEffect : Effect
 {
     public override Observable<IAction> Handle(
@@ -37,7 +44,10 @@ public class IncrementEffect : Effect
     }
 }
 
-// Slice
+#endregion
+
+#region 
+
 public record CounterSlice : Slice<int>
 {
     public override ReducerCollection<int> Reducers { get; } = new CounterReducers();
@@ -46,3 +56,5 @@ public record CounterSlice : Slice<int>
     
     public override int GetInitialState() => 10;
 }
+
+#endregion

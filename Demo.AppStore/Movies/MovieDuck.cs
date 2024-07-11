@@ -1,6 +1,7 @@
 namespace Demo.AppStore;
 
-// State
+#region State
+
 public record MovieState
 {
     public required ImmutableArray<Movie> Movies { get; init; }
@@ -22,12 +23,18 @@ public record MovieState
             .ToImmutableArray();
 }
 
-// Actions
+#endregion
+
+#region Actions
+
 public record LoadMovies(int PageNumber = 1, int PageSize = 5) : IAction;
 public record LoadMoviesSuccess(ImmutableArray<Movie> Movies) : IAction;
 public record LoadMoviesFailure(string ErrorMessage) : IAction;
 
-// Reducers
+#endregion
+
+#region Reducers
+
 public class MovieReducers : ReducerCollection<MovieState>
 {
     public MovieReducers()
@@ -43,7 +50,10 @@ public class MovieReducers : ReducerCollection<MovieState>
     }
 }
 
-// Effects
+#endregion
+
+#region Effects
+
 // ReSharper disable once UnusedType.Global
 public class LoadMoviesEffect(IMoviesService moviesService) : Effect
 {
@@ -51,14 +61,14 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         Observable<IAction> actions,
         Observable<RootState> rootState)
     {
-        return actions
-            .FilterActions<LoadMovies>()
-            .LogMessage("Loading movies...")
-            .InvokeService(
-                action => moviesService.GetMoviesAsync(action.PageNumber, action.PageSize),
-                movies => new LoadMoviesSuccess(movies),
-                ex => new LoadMoviesFailure(ex.Message))
-            .LogMessage("Movies loaded.");
+        // return actions
+        //     .FilterActions<LoadMovies>()
+        //     .LogMessage("Loading movies...")
+        //     .InvokeService(
+        //         action => moviesService.GetMoviesAsync(action.PageNumber, action.PageSize),
+        //         movies => new LoadMoviesSuccess(movies),
+        //         ex => new LoadMoviesFailure(ex.Message))
+        //     .LogMessage("Movies loaded.");
 
         // THE SAME CODE CAN BE WRITTEN WITHOUT THE EXTENSION METHODS
         // ============================================================
@@ -71,28 +81,33 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         //         .Select(movies => (object)new LoadMoviesSuccess(movies))
         //         .Do(_ => Console.WriteLine("Movies loaded."))
         //         .Catch<object, Exception>(ex => Observable.Return<object>(new LoadMoviesFailure(ex.Message))));
-
+        
         // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
         // ============================================================
-        // return actions
-        //     .OfType<object, LoadMovies>()
-        //     .Do(_ => Console.WriteLine("Loading movies..."))
-        //     .SelectAwait(async (action, ct) =>
-        //     {
-        //         try
-        //         {
-        //             var movies = await moviesService.GetMoviesAsync(ct);
-        //             return new LoadMoviesSuccess(movies) as object;
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             return new LoadMoviesFailure(ex.Message);
-        //         }
-        //     });
+        return actions
+            .OfType<IAction, LoadMovies>()
+            .Do(_ => Console.WriteLine("Loading movies..."))
+            .SelectAwait(async (action, ct) =>
+            {
+                try
+                {
+                    var movies = await moviesService
+                        .GetMoviesAsync(action.PageNumber, action.PageSize, ct);
+                    
+                    return new LoadMoviesSuccess(movies) as IAction;
+                }
+                catch (Exception ex)
+                {
+                    return new LoadMoviesFailure(ex.Message);
+                }
+            });
     }
 }
 
-// Slice
+#endregion
+
+#region Slice
+
 // ReSharper disable once UnusedType.Global
 public record MovieSlice : Slice<MovieState>
 {
@@ -107,3 +122,5 @@ public record MovieSlice : Slice<MovieState>
         ErrorMessage = null
     };
 }
+
+#endregion

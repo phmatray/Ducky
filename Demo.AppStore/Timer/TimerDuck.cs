@@ -1,19 +1,26 @@
 namespace Demo.AppStore;
 
-// State
+#region State
+
 public record TimerState
 {
     public int Time { get; init; }
     public bool IsRunning { get; init; }
 }
 
-// Actions
+#endregion
+
+#region Actions
+
 public record StartTimer : IAction;
 public record StopTimer : IAction;
 public record ResetTimer : IAction;
 public record Tick : IAction;
 
-// Reducers
+#endregion
+
+#region Reducers
+
 public class TimerReducers : ReducerCollection<TimerState>
 {
     public TimerReducers()
@@ -32,7 +39,10 @@ public class TimerReducers : ReducerCollection<TimerState>
     }
 }
 
-// Effects
+#endregion
+
+#region Effects
+
 // ReSharper disable once UnusedType.Global
 public class StartTimerEffect : Effect
 {
@@ -49,7 +59,10 @@ public class StartTimerEffect : Effect
     }
 }
 
-// Slice
+#endregion
+
+#region Slice
+
 // ReSharper disable once UnusedType.Global
 public record TimerSlice : Slice<TimerState>
 {
@@ -63,3 +76,5 @@ public record TimerSlice : Slice<TimerState>
         IsRunning = false
     };
 }
+
+#endregion
