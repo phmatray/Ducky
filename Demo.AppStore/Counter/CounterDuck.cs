@@ -13,14 +13,17 @@ public record SetValue(int Value) : IAction;
 
 public class CounterReducers : ReducerCollection<int>
 {
-    private const int InitialState = 10;
-
     public CounterReducers()
     {
         Map<Increment>((state, _) => state + 1);
         Map<Decrement>((state, _) => state - 1);
-        Map<Reset>((_, _) => InitialState);
+        Map<Reset>((_, _) => GetInitialState());
         Map<SetValue>((_, action) => action.Value);
+    }
+
+    public override int GetInitialState()
+    {
+        return 10;
     }
 }
 
@@ -53,8 +56,6 @@ public record CounterSlice : Slice<int>
     public override ReducerCollection<int> Reducers { get; } = new CounterReducers();
 
     public override string GetKey() => "counter";
-    
-    public override int GetInitialState() => 10;
 }
 
 #endregion

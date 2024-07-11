@@ -4,17 +4,39 @@ namespace Demo.AppStore.Tests.Todos;
 
 public class TodoReducersTests
 {
-    private readonly TodoReducers _reducers = new();
+    private readonly TodoReducers _sut = new();
+    
+    private readonly TodoState _initialState = new()
+    {
+        Todos =
+        [
+            new TodoItem(SampleIds.Id1, "Learn Blazor", true),
+            new TodoItem(SampleIds.Id2, "Learn Redux"),
+            new TodoItem(SampleIds.Id3, "Learn Reactive Programming"),
+            new TodoItem(SampleIds.Id4, "Create a Todo App", true),
+            new TodoItem(SampleIds.Id5, "Publish a NuGet package")
+        ]
+    };
+
+    [Fact]
+    public void TodoReducers_Should_Return_Initial_State()
+    {
+        // Act
+        var initialState = _sut.GetInitialState();
+
+        // Assert
+        initialState.Should().BeEquivalentTo(_initialState);
+    }
 
     [Fact]
     public void CreateTodo_ShouldAddNewTodoItem()
     {
         // Arrange
-        var initialState = new TodoState { Todos = [] };
+        var state = new TodoState { Todos = [] };
         const string newTitle = "New Todo";
 
         // Act
-        var newState = _reducers.Reduce(initialState, new CreateTodo(newTitle));
+        var newState = _sut.Reduce(state, new CreateTodo(newTitle));
 
         // Assert
         newState.Todos.Should().ContainSingle(todo => todo.Title == newTitle && !todo.IsCompleted);
@@ -25,10 +47,10 @@ public class TodoReducersTests
     {
         // Arrange
         var todoItem = new TodoItem("Sample Todo");
-        var initialState = new TodoState { Todos = [todoItem] };
+        var state = new TodoState { Todos = [todoItem] };
 
         // Act
-        var newState = _reducers.Reduce(initialState, new ToggleTodo(todoItem.Id));
+        var newState = _sut.Reduce(state, new ToggleTodo(todoItem.Id));
 
         // Assert
         newState.Todos.Single(todo => todo.Id == todoItem.Id).IsCompleted.Should().Be(!todoItem.IsCompleted);
@@ -39,10 +61,10 @@ public class TodoReducersTests
     {
         // Arrange
         var todoItem = new TodoItem("Sample Todo");
-        var initialState = new TodoState { Todos = [todoItem] };
+        var state = new TodoState { Todos = [todoItem] };
 
         // Act
-        var newState = _reducers.Reduce(initialState, new DeleteTodo(todoItem.Id));
+        var newState = _sut.Reduce(state, new DeleteTodo(todoItem.Id));
 
         // Assert
         newState.Todos.Should().NotContain(todo => todo.Id == todoItem.Id);

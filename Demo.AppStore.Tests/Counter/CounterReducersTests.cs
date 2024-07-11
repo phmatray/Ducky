@@ -4,8 +4,19 @@ namespace Demo.AppStore.Tests.Counter;
 
 public class CounterReducersTests
 {
-    private readonly CounterReducers _reducers = new();
+    private readonly CounterReducers _sut = new();
+    
     private const int InitialState = 10;
+
+    [Fact]
+    public void CounterReducers_Should_Return_Initial_State()
+    {
+        // Act
+        var initialState = _sut.GetInitialState();
+
+        // Assert
+        initialState.Should().Be(InitialState);
+    }
 
     [Fact]
     public void Increment_ShouldIncreaseStateByOne()
@@ -14,7 +25,7 @@ public class CounterReducersTests
         const int initialState = 0;
 
         // Act
-        int newState = _reducers.Reduce(initialState, new Increment());
+        int newState = _sut.Reduce(initialState, new Increment());
 
         // Assert
         newState.Should().Be(initialState + 1);
@@ -27,7 +38,7 @@ public class CounterReducersTests
         const int initialState = 1;
 
         // Act
-        int newState = _reducers.Reduce(initialState, new Decrement());
+        int newState = _sut.Reduce(initialState, new Decrement());
 
         // Assert
         newState.Should().Be(initialState - 1);
@@ -40,7 +51,7 @@ public class CounterReducersTests
         const int initialState = 20;
 
         // Act
-        int newState = _reducers.Reduce(initialState, new Reset());
+        int newState = _sut.Reduce(initialState, new Reset());
 
         // Assert
         newState.Should().Be(InitialState);
@@ -54,7 +65,7 @@ public class CounterReducersTests
         const int valueToSet = 42;
 
         // Act
-        int newState = _reducers.Reduce(initialState, new SetValue(valueToSet));
+        int newState = _sut.Reduce(initialState, new SetValue(valueToSet));
 
         // Assert
         newState.Should().Be(valueToSet);

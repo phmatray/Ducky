@@ -30,6 +30,14 @@ public class MessageReducers : ReducerCollection<MessageState>
     {
         Map<SetMessage>((_, action) => new MessageState { Message = action.Message });
     }
+
+    public override MessageState GetInitialState()
+    {
+        return new MessageState
+        {
+            Message = "Hello, Blazor!"
+        };
+    }
 }
 
 #endregion
@@ -42,11 +50,6 @@ public record MessageSlice : Slice<MessageState>
     public override ReducerCollection<MessageState> Reducers { get; } = new MessageReducers();
     
     public override string GetKey() => "message";
-
-    public override MessageState GetInitialState() => new()
-    {
-        Message = "Hello, Blazor!"
-    };
 }
 
 #endregion

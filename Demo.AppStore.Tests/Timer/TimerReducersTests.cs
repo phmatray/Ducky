@@ -4,16 +4,29 @@ namespace Demo.AppStore.Tests.Timer;
 
 public class TimerReducersTests
 {
-    private readonly TimerReducers _reducers = new();
+    private readonly TimerReducers _sut = new();
+
+    private readonly TimerState _initialState = new()
+    {
+        Time = 0,
+        IsRunning = false
+    };
+
+    [Fact]
+    public void TimerReducers_Should_Return_Initial_State()
+    {
+        // Act
+        var initialState = _sut.GetInitialState();
+
+        // Assert
+        initialState.Should().BeEquivalentTo(_initialState);
+    }
 
     [Fact]
     public void StartTimer_ShouldSetIsRunningToTrue()
     {
-        // Arrange
-        var initialState = new TimerState { Time = 0, IsRunning = false };
-
         // Act
-        var newState = _reducers.Reduce(initialState, new StartTimer());
+        var newState = _sut.Reduce(_initialState, new StartTimer());
 
         // Assert
         newState.IsRunning.Should().BeTrue();
@@ -23,10 +36,10 @@ public class TimerReducersTests
     public void StopTimer_ShouldSetIsRunningToFalse()
     {
         // Arrange
-        var initialState = new TimerState { Time = 0, IsRunning = true };
+        var state = _initialState with { IsRunning = true };
 
         // Act
-        var newState = _reducers.Reduce(initialState, new StopTimer());
+        var newState = _sut.Reduce(state, new StopTimer());
 
         // Assert
         newState.IsRunning.Should().BeFalse();
@@ -36,10 +49,10 @@ public class TimerReducersTests
     public void ResetTimer_ShouldResetState()
     {
         // Arrange
-        var initialState = new TimerState { Time = 5, IsRunning = true };
+        var state = new TimerState { Time = 5, IsRunning = true };
 
         // Act
-        var newState = _reducers.Reduce(initialState, new ResetTimer());
+        var newState = _sut.Reduce(state, new ResetTimer());
 
         // Assert
         newState.Time.Should().Be(0);
@@ -50,12 +63,12 @@ public class TimerReducersTests
     public void Tick_ShouldIncrementTimeByOne()
     {
         // Arrange
-        var initialState = new TimerState { Time = 5, IsRunning = true };
+        var state = new TimerState { Time = 5, IsRunning = true };
 
         // Act
-        var newState = _reducers.Reduce(initialState, new Tick());
+        var newState = _sut.Reduce(state, new Tick());
 
         // Assert
-        newState.Time.Should().Be(initialState.Time + 1);
+        newState.Time.Should().Be(state.Time + 1);
     }
 }

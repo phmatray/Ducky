@@ -9,14 +9,17 @@ public record TestSetValueAction(int Value) : IAction;
 // Reducers
 public class TestCounterReducers : ReducerCollection<int>
 {
-    private const int InitialState = 10;
-
     public TestCounterReducers()
     {
         Map<TestIncrementAction>((state, _) => state + 1);
         Map<TestDecrementAction>((state, _) => state - 1);
-        Map<TestResetAction>((_, _) => InitialState);
+        Map<TestResetAction>((_, _) => GetInitialState());
         Map<TestSetValueAction>((_, action) => action.Value);
+    }
+
+    public override int GetInitialState()
+    {
+        return 10;
     }
 }
 
@@ -43,6 +46,4 @@ public record TestCounterSlice : Slice<int>
     public override ReducerCollection<int> Reducers { get; } = new TestCounterReducers();
 
     public override string GetKey() => "test-counter";
-    
-    public override int GetInitialState() => 10;
 }

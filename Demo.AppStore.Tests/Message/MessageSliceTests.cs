@@ -17,19 +17,6 @@ public class MessageSliceTests
     }
 
     [Fact]
-    public void MessageSlice_Should_Return_Initial_State()
-    {
-        // Act
-        var initialState = _sut.GetInitialState();
-
-        // Assert
-        initialState.Should().BeEquivalentTo(new MessageState
-        {
-            Message = "Hello, Blazor!"
-        });
-    }
-
-    [Fact]
     public void MessageSlice_Should_Return_Correct_State_Type()
     {
         // Act

@@ -68,6 +68,21 @@ public class TodoReducers : ReducerCollection<TodoState>
                 .Where(todo => todo.Id != action.Id)
                 .ToImmutableList()
         };
+
+    public override TodoState GetInitialState()
+    {
+        return new TodoState
+        {
+            Todos =
+            [
+                new TodoItem(SampleIds.Id1, "Learn Blazor", true),
+                new TodoItem(SampleIds.Id2, "Learn Redux"),
+                new TodoItem(SampleIds.Id3, "Learn Reactive Programming"),
+                new TodoItem(SampleIds.Id4, "Create a Todo App", true),
+                new TodoItem(SampleIds.Id5, "Publish a NuGet package")
+            ]
+        };
+    }
 }
 
 #endregion
@@ -80,18 +95,6 @@ public record TodoSlice : Slice<TodoState>
     public override ReducerCollection<TodoState> Reducers { get; } = new TodoReducers();
 
     public override string GetKey() => "todos";
-
-    public override TodoState GetInitialState() => new()
-    {
-        Todos =
-        [
-            new TodoItem("Learn Blazor", true),
-            new TodoItem("Learn Redux"),
-            new TodoItem("Learn Reactive Programming"),
-            new TodoItem("Create a Todo App", true),
-            new TodoItem("Publish a NuGet package")
-        ]
-    };
 }
 
 #endregion

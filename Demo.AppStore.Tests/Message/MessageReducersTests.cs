@@ -4,17 +4,31 @@ namespace Demo.AppStore.Tests.Message;
 
 public class MessageReducersTests
 {
-    private readonly MessageReducers _reducers = new();
+    private readonly MessageReducers _sut = new();
+
+    private readonly MessageState _initialState = new()
+    {
+        Message = "Hello, Blazor!"
+    };
+
+    [Fact]
+    public void MessageReducer_Should_Return_Initial_State()
+    {
+        // Act
+        var initialState = _sut.GetInitialState();
+
+        // Assert
+        initialState.Should().BeEquivalentTo(_initialState);
+    }
 
     [Fact]
     public void SetMessage_ShouldUpdateMessage()
     {
         // Arrange
-        var initialState = new MessageState { Message = "Old Message" };
         const string newMessage = "New Message";
 
         // Act
-        var newState = _reducers.Reduce(initialState, new SetMessage(newMessage));
+        var newState = _sut.Reduce(_initialState, new SetMessage(newMessage));
 
         // Assert
         newState.Message.Should().Be(newMessage);

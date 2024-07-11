@@ -28,9 +28,6 @@ public abstract record Slice<TState> : ISlice<TState>
     public abstract string GetKey();
 
     /// <inheritdoc />
-    public abstract TState GetInitialState();
-
-    /// <inheritdoc />
     public virtual Type GetStateType()
         => typeof(TState);
 
@@ -39,7 +36,7 @@ public abstract record Slice<TState> : ISlice<TState>
     {
         if (!_isInitialized)
         {
-            _state.OnNext(GetInitialState());
+            _state.OnNext(Reducers.GetInitialState());
             _isInitialized = true;
         }
         

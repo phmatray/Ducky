@@ -4,6 +4,10 @@ namespace R3dux;
 /// Represents a collection of reducers for a specific state type.
 /// </summary>
 /// <typeparam name="TState">The type of the state.</typeparam>
+/// <remarks>
+/// Each "slice reducer" is responsible for providing an initial value
+/// and calculating the updates to that slice of the state.
+/// </remarks>
 public abstract class ReducerCollection<TState>
 {
     /// <summary>
@@ -38,5 +42,14 @@ public abstract class ReducerCollection<TState>
         return Reducers.TryGetValue(action.GetType(), out var reducer) 
             ? reducer(state, action)
             : state;
+    }
+    
+    /// <summary>
+    /// Gets the initial state of the reducer.
+    /// </summary>
+    /// <returns>The initial state.</returns>
+    public virtual TState GetInitialState()
+    {
+        return default!;
     }
 }

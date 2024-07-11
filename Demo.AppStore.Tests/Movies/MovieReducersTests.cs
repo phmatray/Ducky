@@ -1,26 +1,34 @@
 using System.Collections.Immutable;
 using FluentAssertions;
-using R3dux;
 
 namespace Demo.AppStore.Tests.Movies;
 
 public class MovieReducersTests
 {
-    private readonly MovieReducers _reducers = new();
+    private readonly MovieReducers _sut = new();
+
+    private readonly MovieState _initialState = new()
+    {
+        Movies = [],
+        IsLoading = false,
+        ErrorMessage = null
+    };
+
+    [Fact]
+    public void MovieReducers_Should_Return_Initial_State()
+    {
+        // Act
+        var initialState = _sut.GetInitialState();
+
+        // Assert
+        initialState.Should().BeEquivalentTo(_initialState);
+    }
 
     [Fact]
     public void LoadMovies_ShouldSetIsLoadingToTrue()
     {
-        // Arrange
-        var initialState = new MovieState
-        {
-            Movies = [],
-            IsLoading = false,
-            ErrorMessage = null
-        };
-
         // Act
-        var newState = _reducers.Reduce(initialState, new LoadMovies());
+        var newState = _sut.Reduce(_initialState, new LoadMovies());
 
         // Assert
         newState.IsLoading.Should().BeTrue();
@@ -31,17 +39,10 @@ public class MovieReducersTests
     public void LoadMoviesSuccess_ShouldSetMoviesAndIsLoadingToFalse()
     {
         // Arrange
-        var initialState = new MovieState
-        {
-            Movies = [],
-            IsLoading = true,
-            ErrorMessage = null
-        };
-
         var movies = ImmutableArray.Create(MoviesExamples.Movies[0]);
 
         // Act
-        var newState = _reducers.Reduce(initialState, new LoadMoviesSuccess(movies));
+        var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies));
 
         // Assert
         newState.Movies.Should().BeEquivalentTo(movies);
@@ -53,17 +54,10 @@ public class MovieReducersTests
     public void LoadMoviesFailure_ShouldSetErrorMessageAndIsLoadingToFalse()
     {
         // Arrange
-        var initialState = new MovieState
-        {
-            Movies = [],
-            IsLoading = true,
-            ErrorMessage = null
-        };
-
         const string errorMessage = "Failed to load movies.";
 
         // Act
-        var newState = _reducers.Reduce(initialState, new LoadMoviesFailure(errorMessage));
+        var newState = _sut.Reduce(_initialState, new LoadMoviesFailure(errorMessage));
 
         // Assert
         newState.ErrorMessage.Should().Be(errorMessage);
@@ -75,11 +69,13 @@ public class MovieReducersTests
     public void SelectMovieCount_ShouldReturnCorrectCount()
     {
         // Arrange
-        var state = new MovieState
+        var state = _initialState with
         {
-            Movies = [MoviesExamples.Movies[0], MoviesExamples.Movies[1]],
-            IsLoading = false,
-            ErrorMessage = null
+            Movies =
+            [
+                MoviesExamples.Movies[0],
+                MoviesExamples.Movies[1]
+            ]
         };
 
         // Act
@@ -93,11 +89,13 @@ public class MovieReducersTests
     public void SelectMoviesByYear_ShouldReturnMoviesSortedByYearDescending()
     {
         // Arrange
-        var state = new MovieState
+        var state = _initialState with
         {
-            Movies = [MoviesExamples.Movies[0], MoviesExamples.Movies[1]],
-            IsLoading = false,
-            ErrorMessage = null
+            Movies =
+            [
+                MoviesExamples.Movies[0],
+                MoviesExamples.Movies[1]
+            ]
         };
 
         // Act

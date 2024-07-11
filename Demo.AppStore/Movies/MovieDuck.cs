@@ -48,6 +48,16 @@ public class MovieReducers : ReducerCollection<MovieState>
         Map<LoadMoviesFailure>((_, action)
             => new MovieState { Movies = [], ErrorMessage = action.ErrorMessage, IsLoading = false });
     }
+
+    public override MovieState GetInitialState()
+    {
+        return new MovieState
+        {
+            Movies = ImmutableArray<Movie>.Empty,
+            IsLoading = false,
+            ErrorMessage = null
+        };
+    }
 }
 
 #endregion
@@ -114,13 +124,6 @@ public record MovieSlice : Slice<MovieState>
     public override ReducerCollection<MovieState> Reducers { get; } = new MovieReducers();
 
     public override string GetKey() => "movies";
-    
-    public override MovieState GetInitialState() => new()
-    {
-        Movies = ImmutableArray<Movie>.Empty,
-        IsLoading = false,
-        ErrorMessage = null
-    };
 }
 
 #endregion

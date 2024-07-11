@@ -37,6 +37,15 @@ public class TimerReducers : ReducerCollection<TimerState>
         Map<Tick>((state, _)
             => state with { Time = state.Time + 1 });
     }
+
+    public override TimerState GetInitialState()
+    {
+        return new TimerState
+        {
+            Time = 0,
+            IsRunning = false
+        };
+    }
 }
 
 #endregion
@@ -69,12 +78,6 @@ public record TimerSlice : Slice<TimerState>
     public override ReducerCollection<TimerState> Reducers { get; } = new TimerReducers();
 
     public override string GetKey() => "timer";
-    
-    public override TimerState GetInitialState() => new()
-    {
-        Time = 0,
-        IsRunning = false
-    };
 }
 
 #endregion

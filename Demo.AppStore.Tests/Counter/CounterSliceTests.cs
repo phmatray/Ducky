@@ -17,16 +17,6 @@ public class CounterSliceTests
     }
 
     [Fact]
-    public void CounterSlice_Should_Return_Initial_State()
-    {
-        // Act
-        var initialState = _sut.GetInitialState();
-
-        // Assert
-        initialState.Should().Be(10);
-    }
-
-    [Fact]
     public void CounterSlice_Should_Return_Correct_State_Type()
     {
         // Act

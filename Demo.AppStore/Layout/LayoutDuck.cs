@@ -38,6 +38,16 @@ public class LayoutReducers : ReducerCollection<LayoutState>
         Map<CloseModal>((state, _)
             => state with { IsModalOpen = false });
     }
+
+    public override LayoutState GetInitialState()
+    {
+        return new LayoutState
+        {
+            Title = "R3dux",
+            Version = "v1.0.0",
+            IsModalOpen = false
+        };
+    }
 }
 
 #endregion
@@ -50,13 +60,6 @@ public record LayoutSlice : Slice<LayoutState>
     public override ReducerCollection<LayoutState> Reducers { get; } = new LayoutReducers();
 
     public override string GetKey() => "layout";
-
-    public override LayoutState GetInitialState() => new()
-    {
-        Title = "R3dux",
-        Version = "v1.0.0",
-        IsModalOpen = false
-    };
 }
 
 #endregion

@@ -18,21 +18,6 @@ public class MovieSliceTests
     }
 
     [Fact]
-    public void MovieSlice_Should_Return_Initial_State()
-    {
-        // Act
-        var initialState = _sut.GetInitialState();
-
-        // Assert
-        initialState.Should().BeEquivalentTo(new MovieState
-        {
-            Movies = ImmutableArray<Movie>.Empty,
-            IsLoading = false,
-            ErrorMessage = null
-        });
-    }
-
-    [Fact]
     public void MovieSlice_Should_Return_Correct_State_Type()
     {
         // Act

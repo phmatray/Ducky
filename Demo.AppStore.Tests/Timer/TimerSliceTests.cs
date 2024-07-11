@@ -17,20 +17,6 @@ public class TimerSliceTests
     }
 
     [Fact]
-    public void TimerSlice_Should_Return_Initial_State()
-    {
-        // Act
-        var initialState = _sut.GetInitialState();
-
-        // Assert
-        initialState.Should().BeEquivalentTo(new TimerState
-        {
-            Time = 0,
-            IsRunning = false
-        });
-    }
-
-    [Fact]
     public void TimerSlice_Should_Return_Correct_State_Type()
     {
         // Act

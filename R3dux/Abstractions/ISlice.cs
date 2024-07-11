@@ -45,12 +45,6 @@ public interface ISlice
 public interface ISlice<TState> : ISlice
 {
     /// <summary>
-    /// Gets the initial state of this slice.
-    /// </summary>
-    /// <returns>The initial state</returns>
-    TState GetInitialState();
-    
-    /// <summary>
     /// Gets an observable sequence that produces the state of this slice.
     /// </summary>
     /// <value>The observable sequence of the state.</value>
