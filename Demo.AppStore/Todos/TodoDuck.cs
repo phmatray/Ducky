@@ -93,8 +93,6 @@ public class TodoReducers : ReducerCollection<TodoState>
 public record TodoSlice : Slice<TodoState>
 {
     public override ReducerCollection<TodoState> Reducers { get; } = new TodoReducers();
-
-    public override string GetKey() => "todos";
 }
 
 #endregion

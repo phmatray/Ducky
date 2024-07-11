@@ -17,6 +17,8 @@ public class TodoReducersTests
             new TodoItem(SampleIds.Id5, "Publish a NuGet package")
         ]
     };
+    
+    private const string Key = "todo";
 
     [Fact]
     public void TodoReducers_Should_Return_Initial_State()
@@ -26,6 +28,16 @@ public class TodoReducersTests
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
+    }
+    
+    [Fact]
+    public void TodoReducers_Should_Return_Key()
+    {
+        // Act
+        var key = _sut.GetKey();
+
+        // Assert
+        key.Should().Be(Key);
     }
 
     [Fact]

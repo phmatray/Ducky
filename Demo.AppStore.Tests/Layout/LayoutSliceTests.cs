@@ -7,16 +7,6 @@ public class LayoutSliceTests
     private readonly LayoutSlice _sut = new();
     
     [Fact]
-    public void LayoutSlice_Should_Return_Correct_Key()
-    {
-        // Act
-        var key = _sut.GetKey();
-
-        // Assert
-        key.Should().Be("layout");
-    }
-
-    [Fact]
     public void LayoutSlice_Should_Return_Correct_State_Type()
     {
         // Act

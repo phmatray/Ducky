@@ -44,6 +44,4 @@ public class TestIncrementEffect : Effect
 public record TestCounterSlice : Slice<int>
 {
     public override ReducerCollection<int> Reducers { get; } = new TestCounterReducers();
-
-    public override string GetKey() => "test-counter";
 }

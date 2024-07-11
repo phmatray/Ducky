@@ -7,6 +7,7 @@ public class CounterReducersTests
     private readonly CounterReducers _sut = new();
     
     private const int InitialState = 10;
+    private const string Key = "counter";
 
     [Fact]
     public void CounterReducers_Should_Return_Initial_State()
@@ -16,6 +17,16 @@ public class CounterReducersTests
 
         // Assert
         initialState.Should().Be(InitialState);
+    }
+    
+    [Fact]
+    public void CounterReducers_Should_Return_Key()
+    {
+        // Act
+        var key = _sut.GetKey();
+
+        // Assert
+        key.Should().Be(Key);
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace R3dux;
 
 /// <summary>
@@ -8,7 +10,7 @@ namespace R3dux;
 /// Each "slice reducer" is responsible for providing an initial value
 /// and calculating the updates to that slice of the state.
 /// </remarks>
-public abstract class ReducerCollection<TState>
+public abstract partial class ReducerCollection<TState>
 {
     /// <summary>
     /// A dictionary that holds the reducers mapped by the type of action.
@@ -52,4 +54,33 @@ public abstract class ReducerCollection<TState>
     {
         return default!;
     }
+
+    /// <summary>
+    /// Gets the unique key for this reducers slice.
+    /// </summary>
+    /// <returns>The unique key as a string.</returns>
+    public virtual string GetKey()
+    {
+        // get type of the inheriting class
+        string typeName = GetType().Name;
+
+        // the key should not end with "Reducers" or "Reducer"
+        if (typeName.EndsWith("Reducers"))
+        {
+            typeName = typeName[..^8];
+        }
+        else if (typeName.EndsWith("Reducer"))
+        {
+            typeName = typeName[..^7];
+        }
+        
+        // convert to kebab case
+        typeName = LowerCharUpperCharRegex().Replace(typeName, "$1-$2");
+
+        // return the key in lowercase
+        return typeName.ToLower();
+    }
+
+    [GeneratedRegex("([a-z])([A-Z])", RegexOptions.Compiled)]
+    private static partial Regex LowerCharUpperCharRegex();
 }

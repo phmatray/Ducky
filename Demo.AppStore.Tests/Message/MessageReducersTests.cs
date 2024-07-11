@@ -10,6 +10,8 @@ public class MessageReducersTests
     {
         Message = "Hello, Blazor!"
     };
+    
+    private const string Key = "message";
 
     [Fact]
     public void MessageReducer_Should_Return_Initial_State()
@@ -19,6 +21,16 @@ public class MessageReducersTests
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
+    }
+    
+    [Fact]
+    public void MessageReducer_Should_Return_Key()
+    {
+        // Act
+        var key = _sut.GetKey();
+
+        // Assert
+        key.Should().Be(Key);
     }
 
     [Fact]

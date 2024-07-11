@@ -23,10 +23,11 @@ public abstract record Slice<TState> : ISlice<TState>
 
     /// <inheritdoc />
     public abstract ReducerCollection<TState> Reducers { get; }
-    
-    /// <inheritdoc />
-    public abstract string GetKey();
 
+    /// <inheritdoc />
+    public string GetKey()
+        => Reducers.GetKey();
+    
     /// <inheritdoc />
     public virtual Type GetStateType()
         => typeof(TState);

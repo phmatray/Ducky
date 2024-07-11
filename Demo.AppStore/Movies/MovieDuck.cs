@@ -122,8 +122,6 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
 public record MovieSlice : Slice<MovieState>
 {
     public override ReducerCollection<MovieState> Reducers { get; } = new MovieReducers();
-
-    public override string GetKey() => "movies";
 }
 
 #endregion

@@ -76,8 +76,6 @@ public class StartTimerEffect : Effect
 public record TimerSlice : Slice<TimerState>
 {
     public override ReducerCollection<TimerState> Reducers { get; } = new TimerReducers();
-
-    public override string GetKey() => "timer";
 }
 
 #endregion

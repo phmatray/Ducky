@@ -13,6 +13,8 @@ public class MovieReducersTests
         IsLoading = false,
         ErrorMessage = null
     };
+    
+    private const string Key = "movie";
 
     [Fact]
     public void MovieReducers_Should_Return_Initial_State()
@@ -22,6 +24,16 @@ public class MovieReducersTests
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
+    }
+    
+    [Fact]
+    public void MovieReducers_Should_Return_Key()
+    {
+        // Act
+        var key = _sut.GetKey();
+
+        // Assert
+        key.Should().Be(Key);
     }
 
     [Fact]

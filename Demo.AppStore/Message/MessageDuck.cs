@@ -48,8 +48,6 @@ public class MessageReducers : ReducerCollection<MessageState>
 public record MessageSlice : Slice<MessageState>
 {
     public override ReducerCollection<MessageState> Reducers { get; } = new MessageReducers();
-    
-    public override string GetKey() => "message";
 }
 
 #endregion

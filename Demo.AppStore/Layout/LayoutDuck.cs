@@ -58,8 +58,6 @@ public class LayoutReducers : ReducerCollection<LayoutState>
 public record LayoutSlice : Slice<LayoutState>
 {
     public override ReducerCollection<LayoutState> Reducers { get; } = new LayoutReducers();
-
-    public override string GetKey() => "layout";
 }
 
 #endregion

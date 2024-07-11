@@ -8,16 +8,6 @@ public class MovieSliceTests
     private readonly MovieSlice _sut = new();
     
     [Fact]
-    public void MovieSlice_Should_Return_Correct_Key()
-    {
-        // Act
-        var key = _sut.GetKey();
-
-        // Assert
-        key.Should().Be("movies");
-    }
-
-    [Fact]
     public void MovieSlice_Should_Return_Correct_State_Type()
     {
         // Act

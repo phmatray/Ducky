@@ -11,6 +11,8 @@ public class TimerReducersTests
         Time = 0,
         IsRunning = false
     };
+    
+    private const string Key = "timer";
 
     [Fact]
     public void TimerReducers_Should_Return_Initial_State()
@@ -20,6 +22,16 @@ public class TimerReducersTests
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
+    }
+    
+    [Fact]
+    public void TimerReducers_Should_Return_Key()
+    {
+        // Act
+        var key = _sut.GetKey();
+
+        // Assert
+        key.Should().Be(Key);
     }
 
     [Fact]

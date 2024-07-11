@@ -5,16 +5,6 @@ namespace Demo.AppStore.Tests.Todos;
 public class TodoSliceTests
 {
     private readonly TodoSlice _sut = new();
-    
-    [Fact]
-    public void TodoSlice_Should_Return_Correct_Key()
-    {
-        // Act
-        var key = _sut.GetKey();
-
-        // Assert
-        key.Should().Be("todos");
-    }
 
     [Fact]
     public void TodoSlice_Should_Return_Correct_State_Type()

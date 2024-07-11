@@ -54,8 +54,6 @@ public class IncrementEffect : Effect
 public record CounterSlice : Slice<int>
 {
     public override ReducerCollection<int> Reducers { get; } = new CounterReducers();
-
-    public override string GetKey() => "counter";
 }
 
 #endregion

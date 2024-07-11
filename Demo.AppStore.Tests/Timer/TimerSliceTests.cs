@@ -5,16 +5,6 @@ namespace Demo.AppStore.Tests.Timer;
 public class TimerSliceTests
 {
     private readonly TimerSlice _sut = new();
-    
-    [Fact]
-    public void TimerSlice_Should_Return_Correct_Key()
-    {
-        // Act
-        var key = _sut.GetKey();
-
-        // Assert
-        key.Should().Be("timer");
-    }
 
     [Fact]
     public void TimerSlice_Should_Return_Correct_State_Type()

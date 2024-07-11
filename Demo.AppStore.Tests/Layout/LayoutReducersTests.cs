@@ -13,6 +13,8 @@ public class LayoutReducersTests
         IsModalOpen = false
     };
     
+    private const string Key = "layout";
+    
     [Fact]
     public void LayoutReducers_Should_Return_Initial_State()
     {
@@ -21,6 +23,16 @@ public class LayoutReducersTests
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
+    }
+    
+    [Fact]
+    public void LayoutReducers_Should_Return_Key()
+    {
+        // Act
+        var key = _sut.GetKey();
+
+        // Assert
+        key.Should().Be(Key);
     }
 
     [Fact]

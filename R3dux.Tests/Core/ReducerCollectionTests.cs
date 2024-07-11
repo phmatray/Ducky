@@ -79,4 +79,14 @@ public class ReducerCollectionTests
         // Assert
         act.Should().Throw<ArgumentNullException>();
     }
+    
+    [Fact]
+    public void GetKey_Should_ReturnTypeName_Transformed()
+    {
+        // Act
+        var key = _sut.GetKey();
+
+        // Assert
+        key.Should().Be("test-counter");
+    }
 }
