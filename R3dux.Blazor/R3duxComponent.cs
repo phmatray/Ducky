@@ -21,9 +21,13 @@ public abstract class R3duxComponent<TState>
         => StateObservable.FirstSync();
 
     protected override void OnInitialized()
-        => StateObservable
+    {
+        base.OnInitialized();
+        
+        StateObservable
             .Subscribe(_ => InvokeAsync(StateHasChanged))
             .AddTo(_disposables);
+    }
 
     protected void Dispatch(IAction action)
         => Store.Dispatch(action);
