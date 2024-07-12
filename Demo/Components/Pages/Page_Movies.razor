@@ -43,7 +43,7 @@
       </tbody>
     </table>
   }
-  <footer>
+  <footer style="display: flex; justify-content: space-between;">
     @if (IsLoading)
     {
       <button aria-busy="true" disabled>Please wait...</button>
@@ -52,6 +52,21 @@
     {
       <button @onclick="LoadMovies">Reload Movies</button>
     }
+    <div>
+      <button
+        @onclick="PreviousPage"
+        disabled="@(State.Pagination.CurrentPage == 1)">
+        Previous
+      </button>
+      <span style="margin: 0 1rem;">
+        Page @State.Pagination.CurrentPage of @State.Pagination.TotalPages
+      </span>
+      <button
+        @onclick="NextPage"
+        disabled="@(State.Pagination.CurrentPage == State.Pagination.TotalPages)">
+        Next
+      </button>
+    </div>
   </footer>
 </article>
 
@@ -79,5 +94,23 @@
   
   private void LoadMovies()
     => Dispatch(new LoadMovies());
+  
+  private void PreviousPage()
+  {
+    if (State.Pagination.CurrentPage > 1)
+    {
+      Dispatch(new SetCurrentPage(State.Pagination.CurrentPage - 1));
+      LoadMovies();
+    }
+  }
+
+  private void NextPage()
+  {
+    if (State.Pagination.CurrentPage < State.Pagination.TotalPages)
+    {
+      Dispatch(new SetCurrentPage(State.Pagination.CurrentPage + 1));
+      LoadMovies();
+    }
+  }
 
 }

@@ -17,8 +17,8 @@ public class MoviesServiceTests
         var result = await _moviesService.GetMoviesAsync(pageNumber, pageSize);
 
         // Assert
-        result.Should().HaveCount(pageSize);
-        result.Should().BeEquivalentTo(MoviesExamples.Movies.Take(pageSize));
+        result.Movies.Should().HaveCount(pageSize);
+        result.Movies.Should().BeEquivalentTo(MoviesExamples.Movies.Take(pageSize));
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class MoviesServiceTests
         var result = await _moviesService.GetMoviesAsync(pageNumber, pageSize);
 
         // Assert
-        result.Should().BeEmpty();
+        result.Movies.Should().BeEmpty();
     }
 
     [Fact]

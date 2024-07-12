@@ -11,7 +11,13 @@ public class MovieReducersTests
     {
         Movies = [],
         IsLoading = false,
-        ErrorMessage = null
+        ErrorMessage = null,
+        Pagination = new Pagination
+        {
+            CurrentPage = 1,
+            TotalPages = 1,
+            TotalItems = 0
+        }
     };
     
     private const string Key = "movie";
@@ -54,7 +60,7 @@ public class MovieReducersTests
         var movies = ImmutableArray.Create(MoviesExamples.Movies[0]);
 
         // Act
-        var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies));
+        var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Length));
 
         // Assert
         newState.Movies.Should().BeEquivalentTo(movies);

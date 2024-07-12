@@ -2,11 +2,19 @@ namespace Demo.AppStore;
 
 #region State
 
+public record Pagination
+{
+    public int CurrentPage { get; init; }
+    public int TotalPages { get; init; }
+    public int TotalItems { get; init; }
+}
+
 public record MovieState
 {
     public required ImmutableArray<Movie> Movies { get; init; }
     public required bool IsLoading { get; init; }
     public required string? ErrorMessage { get; init; }
+    public required Pagination Pagination { get; init; }
     
     // Selectors
     // ==========
@@ -28,8 +36,9 @@ public record MovieState
 #region Actions
 
 public record LoadMovies(int PageNumber = 1, int PageSize = 5) : IAction;
-public record LoadMoviesSuccess(ImmutableArray<Movie> Movies) : IAction;
+public record LoadMoviesSuccess(ImmutableArray<Movie> Movies, int TotalItems) : IAction;
 public record LoadMoviesFailure(string ErrorMessage) : IAction;
+public record SetCurrentPage(int CurrentPage) : IAction;
 
 #endregion
 
@@ -43,10 +52,22 @@ public class MovieReducers : ReducerCollection<MovieState>
             => state with { IsLoading = true, ErrorMessage = null });
         
         Map<LoadMoviesSuccess>((state, action)
-            => state with { Movies = action.Movies, IsLoading = false });
+            => state with
+            {
+                Movies = action.Movies,
+                IsLoading = false,
+                Pagination = state.Pagination with
+                {
+                    TotalItems = action.TotalItems,
+                    TotalPages = (int)Math.Ceiling(action.TotalItems / 5.0)
+                }
+            });
         
-        Map<LoadMoviesFailure>((_, action)
-            => new MovieState { Movies = [], ErrorMessage = action.ErrorMessage, IsLoading = false });
+        Map<LoadMoviesFailure>((state, action)
+            => state with { Movies = [], ErrorMessage = action.ErrorMessage, IsLoading = false });
+        
+        Map<SetCurrentPage>((state, action)
+            => state with { Pagination = state.Pagination with { CurrentPage = action.CurrentPage } });
     }
 
     public override MovieState GetInitialState()
@@ -55,7 +76,13 @@ public class MovieReducers : ReducerCollection<MovieState>
         {
             Movies = ImmutableArray<Movie>.Empty,
             IsLoading = false,
-            ErrorMessage = null
+            ErrorMessage = null,
+            Pagination = new Pagination
+            {
+                CurrentPage = 1,
+                TotalPages = 1,
+                TotalItems = 0
+            }
         };
     }
 }
@@ -97,14 +124,16 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         return actions
             .OfType<IAction, LoadMovies>()
             .Do(_ => Console.WriteLine("Loading movies..."))
-            .SelectAwait(async (action, ct) =>
+            .WithSliceState<MovieState, LoadMovies>(rootState)
+            .SelectAwait(async (pair, ct) =>
             {
                 try
                 {
-                    var movies = await moviesService
-                        .GetMoviesAsync(action.PageNumber, action.PageSize, ct);
+                    var (state, action) = pair;
+                    var currentPage = state.Pagination.CurrentPage;
+                    var response = await moviesService.GetMoviesAsync(currentPage, action.PageSize, ct);
                     
-                    return new LoadMoviesSuccess(movies) as IAction;
+                    return new LoadMoviesSuccess(response.Movies, response.TotalItems) as IAction;
                 }
                 catch (Exception ex)
                 {

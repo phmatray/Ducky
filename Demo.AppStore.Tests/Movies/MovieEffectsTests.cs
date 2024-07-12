@@ -38,7 +38,7 @@ public sealed class MovieEffectsTests : IDisposable
         var immutableMovies = ImmutableArray.CreateRange(movies);
         _moviesServiceMock
             .Setup(service => service.GetMoviesAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None))
-            .ReturnsAsync(immutableMovies);
+            .ReturnsAsync(new GetMoviesResponse(immutableMovies, movies.Count));
 
         // Act
         _actionsSubject.OnNext(new LoadMovies(1, 10));

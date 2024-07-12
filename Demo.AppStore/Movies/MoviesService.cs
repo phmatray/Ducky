@@ -1,8 +1,12 @@
 namespace Demo.AppStore;
 
+public record GetMoviesResponse(
+    ImmutableArray<Movie> Movies,
+    int TotalItems);
+
 public interface IMoviesService
 {
-    ValueTask<ImmutableArray<Movie>> GetMoviesAsync(
+    ValueTask<GetMoviesResponse> GetMoviesAsync(
         int pageNumber, 
         int pageSize, 
         CancellationToken ct = default);
@@ -10,7 +14,7 @@ public interface IMoviesService
 
 public class MoviesService : IMoviesService
 {
-    public async ValueTask<ImmutableArray<Movie>> GetMoviesAsync(
+    public async ValueTask<GetMoviesResponse> GetMoviesAsync(
         int pageNumber = 1, 
         int pageSize = 5, 
         CancellationToken ct = default)
@@ -30,7 +34,7 @@ public class MoviesService : IMoviesService
         // Ensure the start index is within the range of the total number of movies.
         if (startIndex >= totalMovies)
         {
-            return ImmutableArray<Movie>.Empty;
+            return new GetMoviesResponse(ImmutableArray<Movie>.Empty, totalMovies);
         }
 
         // Calculate the number of movies to return on the current page.
@@ -42,6 +46,6 @@ public class MoviesService : IMoviesService
             .Take(moviesToTake)
             .ToImmutableArray();
 
-        return paginatedMovies;
+        return new GetMoviesResponse(paginatedMovies, totalMovies);
     }
 }
