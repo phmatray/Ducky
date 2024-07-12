@@ -34,12 +34,13 @@ public class CounterReducersTests
     {
         // Arrange
         const int initialState = 0;
+        const int expectedState = 1;
 
         // Act
         int newState = _sut.Reduce(initialState, new Increment());
 
         // Assert
-        newState.Should().Be(initialState + 1);
+        newState.Should().Be(expectedState);
     }
 
     [Fact]
@@ -47,22 +48,23 @@ public class CounterReducersTests
     {
         // Arrange
         const int initialState = 1;
+        const int expectedState = 0;
 
         // Act
         int newState = _sut.Reduce(initialState, new Decrement());
 
         // Assert
-        newState.Should().Be(initialState - 1);
+        newState.Should().Be(expectedState);
     }
 
     [Fact]
     public void Reset_ShouldSetStateToInitialState()
     {
         // Arrange
-        const int initialState = 20;
+        const int state = 20;
 
         // Act
-        int newState = _sut.Reduce(initialState, new Reset());
+        int newState = _sut.Reduce(state, new Reset());
 
         // Assert
         newState.Should().Be(InitialState);
@@ -72,11 +74,10 @@ public class CounterReducersTests
     public void SetValue_ShouldSetStateToGivenValue()
     {
         // Arrange
-        const int initialState = 0;
         const int valueToSet = 42;
 
         // Act
-        int newState = _sut.Reduce(initialState, new SetValue(valueToSet));
+        int newState = _sut.Reduce(InitialState, new SetValue(valueToSet));
 
         // Assert
         newState.Should().Be(valueToSet);

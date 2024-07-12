@@ -28,11 +28,65 @@ public record TodoState
 
 #region Actions
 
-public record CreateTodo(string Title) : IAction;
+public sealed record CreateTodo
+    : FluxStandardAction<CreateTodo.ActionPayload, CreateTodo.ActionMeta>
+{
+    // Optionally, you can use models defined within the action or external models like TodoItem.
+    public sealed record ActionPayload(string Title);
 
-public record ToggleTodo(Guid Id) : IAction;
+    // Meta information can store additional data such as a timestamp.
+    public sealed record ActionMeta(DateTime TimeStamp);
 
-public record DeleteTodo(Guid Id) : IAction;
+    // [Recommended] Write Action Types as domain/eventName
+    public override string TypeKey { get; init; } = "todos/create";
+
+    // Action creators are represented as constructors.
+    public CreateTodo(string title)
+    {
+        Payload = new ActionPayload(title);
+        Meta = new ActionMeta(DateTime.UtcNow);
+    }
+}
+
+public sealed record ToggleTodo
+    : FluxStandardAction<ToggleTodo.ActionPayload, ToggleTodo.ActionMeta>
+{
+    // Payload containing the ID of the todo to be toggled.
+    public sealed record ActionPayload(Guid Id);
+
+    // Meta information can store additional data such as a timestamp.
+    public sealed record ActionMeta(DateTime TimeStamp);
+
+    // [Recommended] Write Action Types as domain/eventName
+    public override string TypeKey { get; init; } = "todos/toggle";
+
+    // Action creators are represented as constructors.
+    public ToggleTodo(Guid id)
+    {
+        Payload = new ActionPayload(id);
+        Meta = new ActionMeta(DateTime.UtcNow);
+    }
+}
+
+public sealed record DeleteTodo
+    : FluxStandardAction<DeleteTodo.ActionPayload, DeleteTodo.ActionMeta>
+{
+    // Payload containing the ID of the todo to be deleted.
+    public sealed record ActionPayload(Guid Id);
+
+    // Meta information can store additional data such as a timestamp.
+    public sealed record ActionMeta(DateTime TimeStamp);
+
+    // [Recommended] Write Action Types as domain/eventName
+    public override string TypeKey { get; init; } = "todos/delete";
+
+    // Action creators are represented as constructors.
+    public DeleteTodo(Guid id)
+    {
+        Payload = new ActionPayload(id);
+        Meta = new ActionMeta(DateTime.UtcNow);
+    }
+}
 
 #endregion
 
@@ -50,14 +104,14 @@ public class TodoReducers : ReducerCollection<TodoState>
     private static TodoState MapCreateTodo(TodoState state, CreateTodo action)
         => new()
         {
-            Todos = state.Todos.Add(new TodoItem(action.Title))
+            Todos = state.Todos.Add(new TodoItem(action.Payload.Title))
         };
 
     private static TodoState MapToggleTodo(TodoState state, ToggleTodo action)
         => new()
         {
             Todos = state.Todos
-                .Select(todo => todo.Id == action.Id ? todo.ToggleIsCompleted() : todo)
+                .Select(todo => todo.Id == action.Payload.Id ? todo.ToggleIsCompleted() : todo)
                 .ToImmutableList()
         };
 
@@ -65,7 +119,7 @@ public class TodoReducers : ReducerCollection<TodoState>
         => new()
         {
             Todos = state.Todos
-                .Where(todo => todo.Id != action.Id)
+                .Where(todo => todo.Id != action.Payload.Id)
                 .ToImmutableList()
         };
 

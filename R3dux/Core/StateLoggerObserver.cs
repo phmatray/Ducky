@@ -69,7 +69,12 @@ public sealed class StateLoggerObserver<TState>
     /// <returns>The name of the action type.</returns>
     private static string GetActionType(IAction action)
     {
-        return action.GetType().Name;
+        // if the action object has a property named "TypeKey", return its value
+        return action.GetType().GetProperty(nameof(FluxStandardAction.TypeKey)) is { } typeKeyProperty
+            ? typeKeyProperty.GetValue(action)?.ToString() ?? GetActionName()
+            : GetActionName();
+
+        string GetActionName() => action.GetType().Name;
     }
 
     /// <summary>
