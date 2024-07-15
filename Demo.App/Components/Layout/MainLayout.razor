@@ -106,31 +106,61 @@
 
     private readonly PaletteDark _darkPalette = new()
     {
-        Primary = "#7e6fff",
-        Surface = "#1e1e2d",
-        Background = "#1a1a27",
+        // Primary = "#7e6fff",
+        // Surface = "#1e1e2d",
+        // Background = "#1a1a27",
+        // BackgroundGray = "#151521",
+        // AppbarText = "#92929f",
+        // AppbarBackground = "rgba(26,26,39,0.8)",
+        // DrawerBackground = "#1a1a27",
+        // ActionDefault = "#74718e",
+        // ActionDisabled = "#9999994d",
+        // ActionDisabledBackground = "#605f6d4d",
+        // TextPrimary = "#b2b0bf",
+        // TextSecondary = "#92929f",
+        // TextDisabled = "#ffffff33",
+        // DrawerIcon = "#92929f",
+        // DrawerText = "#92929f",
+        // GrayLight = "#2a2833",
+        // GrayLighter = "#1e1e2d",
+        // Info = "#4a86ff",
+        // Success = "#3dcb6c",
+        // Warning = "#ffb545",
+        // Error = "#ff3f5f",
+        // LinesDefault = "#33323e",
+        // TableLines = "#33323e",
+        // Divider = "#292838",
+        // OverlayLight = "#1e1e2d80",
+        
+        // Adapted from Dracula 
+        // https://github.com/dracula/dracula-theme
+        
+        Primary = "#bd93f9", // Purple
+        Secondary = "ffb86c", // Orange
+        Surface = "#44475a", // Current Line
+        Background = "#282a36", // Background
         BackgroundGray = "#151521",
-        AppbarText = "#92929f",
-        AppbarBackground = "rgba(26,26,39,0.8)",
-        DrawerBackground = "#1a1a27",
+        AppbarText = "#f8f8f2", // Foreground
+        AppbarBackground = "#6272a4", // Comment
+        DrawerBackground = "#44475a", // Selection
         ActionDefault = "#74718e",
         ActionDisabled = "#9999994d",
         ActionDisabledBackground = "#605f6d4d",
-        TextPrimary = "#b2b0bf",
-        TextSecondary = "#92929f",
+        TextPrimary = "#f8f8f2", // Foreground
+        TextSecondary = "#f8f8f2", // Foreground
         TextDisabled = "#ffffff33",
-        DrawerIcon = "#92929f",
-        DrawerText = "#92929f",
+        DrawerIcon = "#f8f8f2", // Foreground
+        DrawerText = "#f8f8f2", // Foreground
         GrayLight = "#2a2833",
-        GrayLighter = "#1e1e2d",
-        Info = "#4a86ff",
-        Success = "#3dcb6c",
-        Warning = "#ffb545",
-        Error = "#ff3f5f",
+        GrayLighter = "#44475a", // Current Line
+        Info = "#8be9fd", // Cyan
+        Success = "#50fa7b", // Green
+        Warning = "#f1fa8c", // Yellow
+        Error = "#ff5555", // Red
         LinesDefault = "#33323e",
         TableLines = "#33323e",
         Divider = "#292838",
-        OverlayLight = "#1e1e2d80",
+        OverlayLight = "#44475a80", // Current Line @ 50%
     };
 
     public string DarkLightModeButtonIcon => _isDarkMode switch

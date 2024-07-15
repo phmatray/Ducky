@@ -4,19 +4,20 @@
 
 <PageTitle>R3dux</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">About</MudText>
-<article>
-  <p>Welcome to the R3dux state management library demo!</p>
-  <p>Use the links above to navigate to the various examples.</p>
-</article>
-
-@if (_rootStateSerialized is not null)
-{
-  <h2>Serialized State</h2>
-  <MudPaper Class="pa-4 overflow-auto">
-    <JsonMarkup Data="@_rootStateSerialized" />
-  </MudPaper>
-}
+<MudGrid>
+  <MudItem xs="12">
+    <MudText Typo="Typo.h3">Serialized State</MudText>
+  </MudItem>
+  
+  @if (_rootStateSerialized is not null)
+  {
+    <MudItem xs="12">
+      <MudPaper Class="pa-4 overflow-auto">
+        <JsonMarkup Data="@_rootStateSerialized"/>
+      </MudPaper>
+    </MudItem>
+  }
+</MudGrid>
 
 @code
 {

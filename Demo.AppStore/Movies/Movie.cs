@@ -11,4 +11,10 @@ public record Movie
     public required string Description { get; init; }
     public required string Director { get; init; }
     public ImmutableArray<string> Actors { get; init; } = [];
+    
+    /// <summary>
+    /// Returns the IMDb rating as a whole number from 0 to 5.
+    /// </summary>
+    public int Score
+        => (int)Math.Round(Imdb / 2);
 }

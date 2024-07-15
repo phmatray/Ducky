@@ -2,51 +2,89 @@
 @inherits R3duxComponent<TodoState>
 
 <PageTitle>R3dux - Todo List</PageTitle>
-<MudStack>
-  <p class="chapter">Example</p>
-  <MudText Typo="Typo.h3">Todo List</MudText>
-  <p>Creates an interactive todo list using the R3dux state management library for predictable state handling, featuring functionality to add, toggle, and remove todo items.</p>
-</MudStack>
 
-<section>
-  <fieldset role="group">
-    <input name="_newTodo" @bind="_newTodo" placeholder="Enter new todo" />
-    <input type="submit" value="Add Todo" @onclick="CreateTodoItem" />
-  </fieldset>
-</section>
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Todo List</MudText>
+      <MudText Typo="Typo.body1">
+        Creates an interactive todo list using the R3dux state management library for predictable state handling,<br/>
+        featuring functionality to add, toggle, and remove todo items.
+      </MudText>
+    </MudStack>
+  </MudItem>
 
-<section class="grid">
-  <article>
-    <header>Active Todos (@State.SelectActiveTodosCount())</header>
-    <ul>
-      @foreach (var todo in State.SelectActiveTodos())
-      {
-        <li @key="todo.Id">
-          <label>
-            <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)"/>
-            @todo.Title
-            <MudButton OnClick="() => DeleteTodoItem(todo.Id)">Delete</MudButton>
-          </label>
-        </li>
-      }
-    </ul>
-  </article>
-  <article>
-    <header>Completed Todos (@State.SelectCompletedTodosCount())</header>
-    <ul>
-      @foreach (var todo in State.SelectCompletedTodos())
-      {
-        <li @key="todo.Id">
-          <label>
-            <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)"/>
-            @todo.Title
-            <MudButton OnClick="() => DeleteTodoItem(todo.Id)">Delete</MudButton>
-          </label>
-        </li>
-      }
-    </ul>
-  </article>
-</section>
+  <MudItem xs="12" lg="6">
+    <MudStack>
+      <div>
+        <MudBadge Content="@State.SelectActiveTodosCount()" Color="Color.Primary" Class="mt-5">
+          <MudText Typo="Typo.h5">Active Todos</MudText>
+        </MudBadge>
+      </div>
+      
+      <MudPaper>
+        @if (State.SelectActiveTodosCount() == 0)
+        {
+          <MudText Typo="Typo.h6" Class="ma-4">
+            No active todos - add a new todo item to get started!
+          </MudText>
+        }
+        <MudList T="TodoItem">
+          @foreach (var todo in State.SelectActiveTodos())
+          {
+            <MudListItem @key="todo.Id">
+              <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                <MudIconButton Icon="@Icons.Material.Filled.CheckBoxOutlineBlank" OnClick="() => ToggleTodoItem(todo.Id)"/>
+                <MudText>@todo.Title</MudText>
+                <MudSpacer/>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => DeleteTodoItem(todo.Id)">Delete</MudButton>
+              </MudStack>
+            </MudListItem>
+          }
+        </MudList>
+      </MudPaper>
+      
+      <MudCard>
+        <MudCardContent>
+          <MudTextField
+            @bind-Value="_newTodo"
+            Variant="Variant.Filled"
+            Label="New Todo"
+            HelperText="Type a new todo item and click 'Add Todo' to add it to the list."/>
+        </MudCardContent>
+        <MudCardActions>
+          <MudButton Variant="Variant.Outlined" OnClick="CreateTodoItem" Class="ml-auto mr-2 mb-2">Add Todo</MudButton>
+        </MudCardActions>
+      </MudCard>
+    </MudStack>
+  </MudItem>
+  
+  <MudItem xs="12" lg="6">
+    <MudStack>
+      <div>
+        <MudBadge Content="@State.SelectCompletedTodosCount()" Color="Color.Secondary" Class="mt-5">
+          <MudText Typo="Typo.h5">Completed Todos</MudText>
+        </MudBadge>
+      </div>
+      <MudPaper>
+        <MudList T="TodoItem">
+          @foreach (var todo in State.SelectCompletedTodos())
+          {
+            <MudListItem @key="todo.Id">
+              <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                <MudIconButton Icon="@Icons.Material.Filled.CheckBox" OnClick="() => ToggleTodoItem(todo.Id)"/>
+                <MudText>@todo.Title</MudText>
+                <MudSpacer/>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => DeleteTodoItem(todo.Id)">Delete</MudButton>
+              </MudStack>
+            </MudListItem>
+          }
+        </MudList>
+      </MudPaper>
+    </MudStack>
+  </MudItem>
+</MudGrid>
 
 
 @code {

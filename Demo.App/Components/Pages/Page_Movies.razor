@@ -2,78 +2,82 @@
 @inherits R3duxComponent<MovieState>
 
 <PageTitle>R3dux - Movies</PageTitle>
-<MudStack>
-  <p class="chapter">Example</p>
-  <MudText Typo="Typo.h3">Movies</MudText>
-  <p>
-    Creates a simple movie example using the R3dux state management library for predictable state handling,
-    featuring loading state and error handling for displaying movies.
-  </p>
-</MudStack>
 
-<article>
-  <header>5 more recent movies</header>
-  @if (ErrorMessage != null)
-  {
-    <p><strong>@ErrorMessage</strong></p>
-  }
-  else if (IsLoading)
-  {
-    <p><strong>Loading movies...</strong></p>
-  }
-  else
-  {
-    <MudSimpleTable>
-      <thead>
-      <tr>
-        <th>Title</th>
-        <th>Director</th>
-        <th>Year</th>
-        <th>Duration</th>
-      </tr>
-      </thead>
-      <tbody>
-      @foreach (var movie in Movies)
-      {
-        <tr>
-          <td>@movie.Title</td>
-          <td>@movie.Director</td>
-          <td>@movie.Year</td>
-          <td>@movie.Duration</td>
-        </tr>
-      }
-      </tbody>
-    </MudSimpleTable>
-  }
-  <footer style="display: flex; justify-content: space-between;">
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Movies</MudText>
+      <MudText Typo="Typo.body1">
+        Creates a simple movie example using the R3dux state management library for predictable state handling,<br/>
+        featuring loading state and error handling for displaying movies.
+      </MudText>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12">
     @if (IsLoading)
     {
-      <MudButton Variant="Variant.Outlined" aria-busy="true" Disabled>Please wait...</MudButton>
+      <MudButton Variant="Variant.Outlined" Disabled>Please wait...</MudButton>
     }
     else
     {
       <MudButton Variant="Variant.Outlined" OnClick="LoadMovies">Reload Movies</MudButton>
     }
-    <div>
-      <MudButton
-        Variant="Variant.Outlined"
-        Disabled="@(State.Pagination.CurrentPage == 1)"
-        OnClick="PreviousPage">
-        Previous
-      </MudButton>
-      <span style="margin: 0 1rem;">
-        Page @State.Pagination.CurrentPage of @State.Pagination.TotalPages
-      </span>
-      <MudButton
-        Variant="Variant.Outlined"
-        Disabled="@(State.Pagination.CurrentPage == State.Pagination.TotalPages)"
-        OnClick="NextPage">
-        Next
-      </MudButton>
-    </div>
-  </footer>
-</article>
+  </MudItem>
+  
+  <MudItem xs="12">
+    @if (ErrorMessage != null)
+    {
+      <MudText Color="Color.Error"><strong>@ErrorMessage</strong></MudText>
+    }
+    else if (IsLoading)
+    {
+      <MudText><strong>Loading movies...</strong></MudText>
+      
+      <MudProgressLinear
+        Color="Color.Primary"
+        Size="Size.Large"
+        Rounded
+        Indeterminate/>
+    }
+    else
+    {
+      <MudSimpleTable>
+        <thead>
+        <tr>
+          <th>Title</th>
+          <th>Director</th>
+          <th>Year</th>
+          <th>Duration</th>
+          <th>Score</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var movie in Movies)
+        {
+          <tr>
+            <td>@movie.Title</td>
+            <td>@movie.Director</td>
+            <td>@movie.Year</td>
+            <td>@movie.Duration</td>
+            <td><MudRating SelectedValue="@movie.Score" ReadOnly/></td>
+          </tr>
+        }
+        </tbody>
+      </MudSimpleTable>
+    }
+  </MudItem>
 
+  <MudItem xs="12">
+    <MudStack Row Justify="Justify.Center">
+      <MudPagination
+        SelectedChanged="SetCurrentPage"
+        Variant="Variant.Filled"
+        Count="State.Pagination.TotalPages"/>
+    </MudStack>
+  </MudItem>
+</MudGrid>
 
 @code {
   
@@ -98,7 +102,13 @@
   
   private void LoadMovies()
     => Dispatch(new LoadMovies());
-  
+
+  private void SetCurrentPage(int page)
+  {
+    Dispatch(new SetCurrentPage(page));
+    LoadMovies();
+  }
+
   private void PreviousPage()
   {
     if (State.Pagination.CurrentPage > 1)

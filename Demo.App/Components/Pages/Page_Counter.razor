@@ -2,36 +2,41 @@
 @inherits R3duxComponent<int>
 
 <PageTitle>R3dux - Counter</PageTitle>
-<MudStack>
-  <p class="chapter">Example</p>
-  <MudText Typo="Typo.h3">Counter <strong>@State</strong></MudText>
-  <p>
-    Creates an interactive counter using the R3dux state management library for predictable state handling,
-    featuring increment, decrement, and reset buttons to manage the counter state.
-  </p>
-  <ul>
-    <li>If the counter exceeds 15, then an effect will be triggered to reset the counter to 10 after 3 second.</li>
-    <li>If the counter reaches zero, the decrement button will be disabled.</li>
-  </ul>
-</MudStack>
 
-<article>
-  @if(State > 15)
-  {
-    <progress></progress>
-  }
-  else
-  {
-    <progress value="@State" max="15"></progress>
-  }
-  <footer>
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Counter <strong>@State</strong></MudText>
+      <MudText Typo="Typo.body1">
+        Creates an interactive counter using the R3dux state management library for predictable state handling,<br/>
+        featuring increment, decrement, and reset buttons to manage the counter state.
+      </MudText>
+      <ul>
+        <li>If the counter exceeds 15, then an effect will be triggered to reset the counter to 10 after 3 second.</li>
+        <li>If the counter reaches zero, the decrement button will be disabled.</li>
+      </ul>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12">
     <MudButtonGroup Variant="Variant.Outlined">
       <MudButton @onclick="Decrement" Disabled="@(State <= 0)">Decrement</MudButton>
       <MudButton @onclick="Reset">Reset Counter</MudButton>
       <MudButton @onclick="Increment">Increment</MudButton>
     </MudButtonGroup>
-  </footer>
-</article>
+  </MudItem>
+  
+  <MudItem xs="12">
+    <MudProgressLinear
+      Color="Color.Primary"
+      Size="Size.Large"
+      Rounded
+      Indeterminate="(State > 15)"
+      Value="@State"
+      Max="15"/>
+  </MudItem>
+</MudGrid>
 
 @code {
 

@@ -2,28 +2,35 @@
 @inherits R3duxComponent<TimerState>
 
 <PageTitle>R3dux - Timer</PageTitle>
-<MudStack>
-  <MudText Typo="Typo.subtitle1">Example</MudText>
-  <MudText Typo="Typo.h3">Timer</MudText>
-  <MudText Typo="Typo.body1">
-    Creates an interactive timer using the R3dux state management library 
-    for predictable state handling, featuring start, stop, and reset functionality.
-  </MudText>
-</MudStack>
 
-<article>
-  Time: <strong>@Time</strong> seconds
-  <footer>
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Timer</MudText>
+      <MudText Typo="Typo.body1">
+        Creates an interactive timer using the R3dux state management library for predictable state handling,<br/>
+        featuring start, stop, and reset functionality.
+      </MudText>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12">
     <MudButtonGroup Variant="Variant.Outlined">
       <MudButton Variant="Variant.Outlined" OnClick="ToggleTimer">@(IsRunning ? "Stop" : "Start")</MudButton>
       <MudButton Variant="Variant.Outlined" OnClick="ResetTimer">Reset</MudButton>
     </MudButtonGroup>
-  </footer>
-</article>
+  </MudItem>
 
-<div class="mt-4">
-  <AnalogClock/>
-</div>
+  <MudItem xs="12">
+    <MudStack Row>
+      <MudStack AlignItems="AlignItems.Center">
+        <MudText>Time: <strong>@Time</strong> seconds</MudText>
+        <AnalogClock/>
+      </MudStack>
+    </MudStack>
+  </MudItem>
+</MudGrid>
 
 @code {
 
