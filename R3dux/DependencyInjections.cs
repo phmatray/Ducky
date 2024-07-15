@@ -70,7 +70,7 @@ public static class DependencyInjections
         services.ScanAndRegister<IEffect>(options.Assemblies);
         
         // Add Store
-        services.AddSingleton<IStore, Store>(sp =>
+        services.AddScoped<IStore, Store>(sp =>
         {
             var storeFactory = sp.GetRequiredService<IStoreFactory>();
             var dispatcher = sp.GetRequiredService<IDispatcher>();
@@ -96,7 +96,7 @@ public static class DependencyInjections
             .FromAssemblies(assemblies)
             .AddClasses(classes => classes.AssignableTo(typeof(T)))
             .AsImplementedInterfaces()
-            .WithSingletonLifetime());
+            .WithScopedLifetime());
     }
 }
 

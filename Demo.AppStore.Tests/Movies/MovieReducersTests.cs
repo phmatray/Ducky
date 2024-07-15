@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using FluentAssertions;
+using R3dux.Exceptions;
 
 namespace Demo.AppStore.Tests.Movies;
 
@@ -93,9 +94,10 @@ public class MovieReducersTests
     {
         // Arrange
         const string errorMessage = "Failed to load movies.";
+        R3duxException exception = new(errorMessage);
 
         // Act
-        var newState = _sut.Reduce(_initialState, new LoadMoviesFailure(errorMessage));
+        var newState = _sut.Reduce(_initialState, new LoadMoviesFailure(exception));
 
         // Assert
         newState.ErrorMessage.Should().Be(errorMessage);

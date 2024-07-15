@@ -37,7 +37,7 @@ public record MovieState
 
 public record LoadMovies(int PageNumber = 1, int PageSize = 5) : IAction;
 public record LoadMoviesSuccess(ImmutableArray<Movie> Movies, int TotalItems) : IAction;
-public record LoadMoviesFailure(string ErrorMessage) : IAction;
+public record LoadMoviesFailure(Exception Error) : IAction;
 public record SetCurrentPage(int CurrentPage) : IAction;
 
 #endregion
@@ -67,7 +67,7 @@ public record MovieReducers : SliceReducers<MovieState>
             => state with
             {
                 Movies = [],
-                ErrorMessage = action.ErrorMessage,
+                ErrorMessage = action.Error.Message,
                 IsLoading = false
             });
         
@@ -142,7 +142,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
                 }
                 catch (Exception ex)
                 {
-                    return new LoadMoviesFailure(ex.Message);
+                    return new LoadMoviesFailure(ex);
                 }
             });
     }

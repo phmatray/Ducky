@@ -1,6 +1,7 @@
 using Demo.App.Components;
 using Demo.App.Helpers;
 using Demo.AppStore;
+using MudBlazor;
 using MudBlazor.Services;
 using R3dux;
 
@@ -12,7 +13,12 @@ services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add front services
-services.AddMudServices();
+services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+});
+
 services.AddScoped<IJsonColorizer, JsonColorizer>();
 
 // Add data services
