@@ -21,7 +21,7 @@ public record Tick : IAction;
 
 #region Reducers
 
-public class TimerReducers : ReducerCollection<TimerState>
+public record TimerReducers : SliceReducers<TimerState>
 {
     public TimerReducers()
     {
@@ -66,16 +66,6 @@ public class StartTimerEffect : Effect
             .TakeUntil(actions.FilterActions<StopTimer>())
             .Cast<Tick, IAction>();
     }
-}
-
-#endregion
-
-#region Slice
-
-// ReSharper disable once UnusedType.Global
-public record TimerSlice : Slice<TimerState>
-{
-    public override ReducerCollection<TimerState> Reducers { get; } = new TimerReducers();
 }
 
 #endregion

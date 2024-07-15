@@ -7,7 +7,7 @@ public record TestResetAction : IAction;
 public record TestSetValueAction(int Value) : IAction;
 
 // Reducers
-public class TestCounterReducers : ReducerCollection<int>
+public record TestCounterReducers : SliceReducers<int>
 {
     public TestCounterReducers()
     {
@@ -38,10 +38,4 @@ public class TestIncrementEffect : Effect
             .Delay(TimeSpan.FromSeconds(3))
             .SelectAction(_ => new TestResetAction());
     }
-}
-
-// Slice
-public record TestCounterSlice : Slice<int>
-{
-    public override ReducerCollection<int> Reducers { get; } = new TestCounterReducers();
 }

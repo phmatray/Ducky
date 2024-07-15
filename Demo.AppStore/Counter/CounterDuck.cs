@@ -11,7 +11,7 @@ public record SetValue(int Value) : IAction;
 
 #region Reducers
 
-public class CounterReducers : ReducerCollection<int>
+public record CounterReducers : SliceReducers<int>
 {
     public CounterReducers()
     {
@@ -45,15 +45,6 @@ public class IncrementEffect : Effect
             .Delay(TimeSpan.FromSeconds(3), TimeProvider)
             .SelectAction(_ => new Reset());
     }
-}
-
-#endregion
-
-#region 
-
-public record CounterSlice : Slice<int>
-{
-    public override ReducerCollection<int> Reducers { get; } = new CounterReducers();
 }
 
 #endregion

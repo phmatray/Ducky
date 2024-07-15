@@ -44,7 +44,7 @@ public record SetCurrentPage(int CurrentPage) : IAction;
 
 #region Reducers
 
-public class MovieReducers : ReducerCollection<MovieState>
+public record MovieReducers : SliceReducers<MovieState>
 {
     public MovieReducers()
     {
@@ -64,7 +64,12 @@ public class MovieReducers : ReducerCollection<MovieState>
             });
         
         Map<LoadMoviesFailure>((state, action)
-            => state with { Movies = [], ErrorMessage = action.ErrorMessage, IsLoading = false });
+            => state with
+            {
+                Movies = [],
+                ErrorMessage = action.ErrorMessage,
+                IsLoading = false
+            });
         
         Map<SetCurrentPage>((state, action)
             => state with { Pagination = state.Pagination with { CurrentPage = action.CurrentPage } });
@@ -141,16 +146,6 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
                 }
             });
     }
-}
-
-#endregion
-
-#region Slice
-
-// ReSharper disable once UnusedType.Global
-public record MovieSlice : Slice<MovieState>
-{
-    public override ReducerCollection<MovieState> Reducers { get; } = new MovieReducers();
 }
 
 #endregion

@@ -92,7 +92,7 @@ public sealed record DeleteTodo
 
 #region Reducers
 
-public class TodoReducers : ReducerCollection<TodoState>
+public record TodoReducers : SliceReducers<TodoState>
 {
     public TodoReducers()
     {
@@ -137,16 +137,6 @@ public class TodoReducers : ReducerCollection<TodoState>
             ]
         };
     }
-}
-
-#endregion
-
-#region Slice
-
-// ReSharper disable once UnusedType.Global
-public record TodoSlice : Slice<TodoState>
-{
-    public override ReducerCollection<TodoState> Reducers { get; } = new TodoReducers();
 }
 
 #endregion

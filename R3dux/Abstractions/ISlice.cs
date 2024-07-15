@@ -54,5 +54,5 @@ public interface ISlice<TState> : ISlice
     /// Gets the collection of reducers for this state slice.
     /// </summary>
     /// <value>The collection of reducers.</value>
-    ReducerCollection<TState> Reducers { get; }
+    Dictionary<Type, Func<TState, IAction, TState>> Reducers { get; }
 }

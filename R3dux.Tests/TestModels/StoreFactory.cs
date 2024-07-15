@@ -8,10 +8,10 @@ internal static class Factories
     {
         IStoreFactory storeFactory = new StoreFactory();
         IDispatcher dispatcher = new Dispatcher();
-        TestCounterSlice counterSlice = new();
+        TestCounterReducers counterReducers = new();
         effects ??= [];
         
-        return storeFactory.CreateStore(dispatcher, [counterSlice], effects);
+        return storeFactory.CreateStore(dispatcher, [counterReducers], effects);
     }
     
     public static RootState CreateTestRootState()

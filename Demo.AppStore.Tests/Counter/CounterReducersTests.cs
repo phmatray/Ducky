@@ -30,6 +30,26 @@ public class CounterReducersTests
     }
 
     [Fact]
+    public void CounterReducers_Should_Return_Correct_State_Type()
+    {
+        // Act
+        var stateType = _sut.GetStateType();
+
+        // Assert
+        stateType.Should().Be(typeof(int));
+    }
+
+    [Fact]
+    public void CounterReducers_Should_Return_Reducers()
+    {
+        // Act
+        var reducers = _sut.Reducers;
+
+        // Assert
+        reducers.Should().HaveCount(4);
+    }
+
+    [Fact]
     public void Increment_ShouldIncreaseStateByOne()
     {
         // Arrange

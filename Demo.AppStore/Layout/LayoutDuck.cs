@@ -25,7 +25,7 @@ public record CloseModal : IAction;
 
 #region Reducers
 
-public class LayoutReducers : ReducerCollection<LayoutState>
+public record LayoutReducers : SliceReducers<LayoutState>
 {
     public LayoutReducers()
     {
@@ -48,16 +48,6 @@ public class LayoutReducers : ReducerCollection<LayoutState>
             IsModalOpen = false
         };
     }
-}
-
-#endregion
-
-#region Slice
-
-// ReSharper disable once UnusedType.Global
-public record LayoutSlice : Slice<LayoutState>
-{
-    public override ReducerCollection<LayoutState> Reducers { get; } = new LayoutReducers();
 }
 
 #endregion

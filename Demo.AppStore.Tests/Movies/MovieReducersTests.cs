@@ -41,6 +41,26 @@ public class MovieReducersTests
         // Assert
         key.Should().Be(Key);
     }
+    
+    [Fact]
+    public void MovieReducers_Should_Return_Correct_State_Type()
+    {
+        // Act
+        var stateType = _sut.GetStateType();
+
+        // Assert
+        stateType.Should().Be(typeof(MovieState));
+    }
+    
+    [Fact]
+    public void MovieReducers_Should_Return_Reducers()
+    {
+        // Act
+        var reducers = _sut.Reducers;
+
+        // Assert
+        reducers.Should().HaveCount(3);
+    }
 
     [Fact]
     public void LoadMovies_ShouldSetIsLoadingToTrue()

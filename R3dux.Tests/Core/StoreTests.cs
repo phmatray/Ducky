@@ -38,7 +38,7 @@ public class StoreTests
     public void Store_Should_Add_Slice_And_Propagate_State_Changes()
     {
         // Arrange
-        var counterSlice = new TestCounterSlice();
+        var counterSlice = new TestCounterReducers();
         _sut.AddSlice(counterSlice);
 
         // Act

@@ -14,7 +14,7 @@ public class MessageReducersTests
     private const string Key = "message";
 
     [Fact]
-    public void MessageReducer_Should_Return_Initial_State()
+    public void MessageReducers_Should_Return_Initial_State()
     {
         // Act
         var initialState = _sut.GetInitialState();
@@ -24,13 +24,33 @@ public class MessageReducersTests
     }
     
     [Fact]
-    public void MessageReducer_Should_Return_Key()
+    public void MessageReducers_Should_Return_Key()
     {
         // Act
         var key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
+    }
+    
+    [Fact]
+    public void MessageReducers_Should_Return_Correct_State_Type()
+    {
+        // Act
+        var stateType = _sut.GetStateType();
+
+        // Assert
+        stateType.Should().Be(typeof(MessageState));
+    }
+    
+    [Fact]
+    public void MessageReducers_Should_Return_Reducers()
+    {
+        // Act
+        var reducers = _sut.Reducers;
+
+        // Assert
+        reducers.Should().HaveCount(1);
     }
 
     [Fact]

@@ -35,6 +35,26 @@ public class TimerReducersTests
     }
 
     [Fact]
+    public void TimerReducers_Should_Return_Correct_State_Type()
+    {
+        // Act
+        var stateType = _sut.GetStateType();
+
+        // Assert
+        stateType.Should().Be(typeof(TimerState));
+    }
+    
+    [Fact]
+    public void TimerReducers_Should_Return_Reducers()
+    {
+        // Act
+        var reducers = _sut.Reducers;
+
+        // Assert
+        reducers.Should().HaveCount(4);
+    }
+
+    [Fact]
     public void StartTimer_ShouldSetIsRunningToTrue()
     {
         // Act

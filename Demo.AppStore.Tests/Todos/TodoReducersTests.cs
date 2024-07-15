@@ -41,6 +41,26 @@ public class TodoReducersTests
     }
 
     [Fact]
+    public void TodoReducers_Should_Return_Correct_State_Type()
+    {
+        // Act
+        var stateType = _sut.GetStateType();
+
+        // Assert
+        stateType.Should().Be(typeof(TodoState));
+    }
+    
+    [Fact]
+    public void TodoReducers_Should_Return_Reducers()
+    {
+        // Act
+        var reducers = _sut.Reducers;
+
+        // Assert
+        reducers.Should().HaveCount(3);
+    }
+
+    [Fact]
     public void CreateTodo_ShouldAddNewTodoItem()
     {
         // Arrange

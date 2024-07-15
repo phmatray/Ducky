@@ -24,7 +24,7 @@ public record SetMessage(string Message) : IAction;
 
 #region Reducers
 
-public class MessageReducers : ReducerCollection<MessageState>
+public record MessageReducers : SliceReducers<MessageState>
 {
     public MessageReducers()
     {
@@ -38,16 +38,6 @@ public class MessageReducers : ReducerCollection<MessageState>
             Message = "Hello, Blazor!"
         };
     }
-}
-
-#endregion
-
-#region Slice
-
-// ReSharper disable once UnusedType.Global
-public record MessageSlice : Slice<MessageState>
-{
-    public override ReducerCollection<MessageState> Reducers { get; } = new MessageReducers();
 }
 
 #endregion
