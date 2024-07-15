@@ -1,0 +1,31 @@
+﻿@page "/"
+@inject IStore Store
+@inject IRootStateSerializer RootStateSerializer
+
+<PageTitle>R3dux</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">About</MudText>
+<article>
+  <p>Welcome to the R3dux state management library demo!</p>
+  <p>Use the links above to navigate to the various examples.</p>
+</article>
+
+@if (_rootStateSerialized is not null)
+{
+  <h2>Serialized State</h2>
+  <MudPaper Class="pa-4 overflow-auto">
+    <JsonMarkup Data="@_rootStateSerialized" />
+  </MudPaper>
+}
+
+@code
+{
+  private string? _rootStateSerialized;
+
+  /// <inheritdoc />
+  protected override void OnInitialized()
+  {
+    var rootState = Store.RootStateObservable.FirstSync();
+    _rootStateSerialized = RootStateSerializer.Serialize(rootState);
+  }
+}

@@ -1,0 +1,71 @@
+@page "/todo"
+@inherits R3duxComponent<TodoState>
+
+<PageTitle>R3dux - Todo List</PageTitle>
+<MudStack>
+  <p class="chapter">Example</p>
+  <MudText Typo="Typo.h3">Todo List</MudText>
+  <p>Creates an interactive todo list using the R3dux state management library for predictable state handling, featuring functionality to add, toggle, and remove todo items.</p>
+</MudStack>
+
+<section>
+  <fieldset role="group">
+    <input name="_newTodo" @bind="_newTodo" placeholder="Enter new todo" />
+    <input type="submit" value="Add Todo" @onclick="CreateTodoItem" />
+  </fieldset>
+</section>
+
+<section class="grid">
+  <article>
+    <header>Active Todos (@State.SelectActiveTodosCount())</header>
+    <ul>
+      @foreach (var todo in State.SelectActiveTodos())
+      {
+        <li @key="todo.Id">
+          <label>
+            <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)"/>
+            @todo.Title
+            <MudButton OnClick="() => DeleteTodoItem(todo.Id)">Delete</MudButton>
+          </label>
+        </li>
+      }
+    </ul>
+  </article>
+  <article>
+    <header>Completed Todos (@State.SelectCompletedTodosCount())</header>
+    <ul>
+      @foreach (var todo in State.SelectCompletedTodos())
+      {
+        <li @key="todo.Id">
+          <label>
+            <input type="checkbox" checked="@todo.IsCompleted" @onclick="() => ToggleTodoItem(todo.Id)"/>
+            @todo.Title
+            <MudButton OnClick="() => DeleteTodoItem(todo.Id)">Delete</MudButton>
+          </label>
+        </li>
+      }
+    </ul>
+  </article>
+</section>
+
+
+@code {
+
+  private string _newTodo = string.Empty;
+  
+  private void CreateTodoItem()
+  {
+    if (!string.IsNullOrWhiteSpace(_newTodo))
+    {
+      Dispatch(new CreateTodo(_newTodo));
+      _newTodo = string.Empty;
+    }
+  }
+
+  private void ToggleTodoItem(Guid id)
+    => Dispatch(new ToggleTodo(id));
+
+  private void DeleteTodoItem(Guid id)
+    => Dispatch(new DeleteTodo(id));
+
+}

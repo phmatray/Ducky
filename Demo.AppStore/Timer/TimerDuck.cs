@@ -6,6 +6,10 @@ public record TimerState
 {
     public int Time { get; init; }
     public bool IsRunning { get; init; }
+    
+    // Selectors
+    public string SelectAngle()
+        => $"{Time % 60 * 6}deg";
 }
 
 #endregion
