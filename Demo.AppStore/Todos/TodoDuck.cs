@@ -15,6 +15,9 @@ public record TodoState
     public int SelectActiveTodosCount()
         => SelectActiveTodos().Count;
     
+    public bool SelectHasActiveTodos()
+        => SelectActiveTodosCount() > 0;
+    
     public ImmutableList<TodoItem> SelectCompletedTodos()
         => Todos
             .Where(todo => todo.IsCompleted)
@@ -22,6 +25,9 @@ public record TodoState
     
     public int SelectCompletedTodosCount()
         => SelectCompletedTodos().Count;
+    
+    public bool SelectHasCompletedTodos()
+        => SelectCompletedTodosCount() > 0;
 }
 
 #endregion

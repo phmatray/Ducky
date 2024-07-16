@@ -74,7 +74,7 @@
       <MudPagination
         SelectedChanged="SetCurrentPage"
         Variant="Variant.Filled"
-        Count="State.Pagination.TotalPages"/>
+        Count="@TotalPages"/>
     </MudStack>
   </MudItem>
 </MudGrid>
@@ -89,6 +89,9 @@
   
   private string? ErrorMessage
     => State.ErrorMessage;
+  
+  private int TotalPages
+    => State.Pagination.TotalPages;
 
   protected override void OnInitialized()
   {
@@ -107,24 +110,6 @@
   {
     Dispatch(new SetCurrentPage(page));
     LoadMovies();
-  }
-
-  private void PreviousPage()
-  {
-    if (State.Pagination.CurrentPage > 1)
-    {
-      Dispatch(new SetCurrentPage(State.Pagination.CurrentPage - 1));
-      LoadMovies();
-    }
-  }
-
-  private void NextPage()
-  {
-    if (State.Pagination.CurrentPage < State.Pagination.TotalPages)
-    {
-      Dispatch(new SetCurrentPage(State.Pagination.CurrentPage + 1));
-      LoadMovies();
-    }
   }
 
 }

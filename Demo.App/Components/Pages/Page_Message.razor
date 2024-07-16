@@ -17,9 +17,9 @@
 
   <MudItem xs="12">
     <MudButtonGroup Variant="Variant.Outlined">
-      <MudButton @onclick="SetMessage">Set New Message</MudButton>
-      <MudButton @onclick="AppendMessage">Append Message</MudButton>
-      <MudButton @onclick="ClearMessage">Clear Message</MudButton>
+      <MudButton OnClick="SetMessage">Set New Message</MudButton>
+      <MudButton OnClick="AppendMessage">Append Message</MudButton>
+      <MudButton OnClick="ClearMessage">Clear Message</MudButton>
     </MudButtonGroup>
   </MudItem>
   
@@ -28,15 +28,15 @@
       <tbody>
       <tr>
         <td style="width: 25%">Message</td>
-        <td><b>@State.Message</b></td>
+        <td><b>@Message</b></td>
       </tr>
       <tr>
         <td>Character count</td>
-        <td><b>@State.SelectMessageLength()</b></td>
+        <td><b>@MessageLength</b></td>
       </tr>
       <tr>
         <td>Reverse</td>
-        <td><b>@State.SelectMessageInReverse()</b></td>
+        <td><b>@MessageInReverse</b></td>
       </tr>
       </tbody>
     </MudSimpleTable>
@@ -44,6 +44,15 @@
 </MudGrid>
 
 @code {
+  
+  private string Message
+    => State.Message;
+  
+  private int MessageLength
+    => State.SelectMessageLength();
+  
+  private string MessageInReverse
+    => State.SelectMessageInReverse();
 
   private void SetMessage()
     => Dispatch(new SetMessage("New message from Blazor!"));

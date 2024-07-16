@@ -7,7 +7,7 @@
   <MudItem xs="12">
     <MudStack>
       <MudText Typo="Typo.subtitle1">Example</MudText>
-      <MudText Typo="Typo.h3">Counter <strong>@State</strong></MudText>
+      <MudText Typo="Typo.h3">Counter <strong>@CounterValue</strong></MudText>
       <MudText Typo="Typo.body1">
         Creates an interactive counter using the R3dux state management library for predictable state handling,<br/>
         featuring increment, decrement, and reset buttons to manage the counter state.
@@ -21,9 +21,9 @@
 
   <MudItem xs="12">
     <MudButtonGroup Variant="Variant.Outlined">
-      <MudButton @onclick="Decrement" Disabled="@(State <= 0)">Decrement</MudButton>
-      <MudButton @onclick="Reset">Reset Counter</MudButton>
-      <MudButton @onclick="Increment">Increment</MudButton>
+      <MudButton OnClick="Decrement" Disabled="@IsDisabled">Decrement</MudButton>
+      <MudButton OnClick="Reset">Reset Counter</MudButton>
+      <MudButton OnClick="Increment">Increment</MudButton>
     </MudButtonGroup>
   </MudItem>
   
@@ -32,13 +32,22 @@
       Color="Color.Primary"
       Size="Size.Large"
       Rounded
-      Indeterminate="(State > 15)"
-      Value="@State"
+      Indeterminate="@IsEffectTriggered"
+      Value="@CounterValue"
       Max="15"/>
   </MudItem>
 </MudGrid>
 
 @code {
+  
+  private int CounterValue
+    => State;
+  
+  private bool IsDisabled
+    => State <= 0;
+  
+  private bool IsEffectTriggered
+    => State > 15;
 
   private void Increment()
     => Dispatch(new Increment());

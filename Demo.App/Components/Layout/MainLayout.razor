@@ -1,6 +1,6 @@
 ﻿@inherits R3duxLayout<LayoutState>
 
-<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+<MudThemeProvider Theme="@_theme" IsDarkMode="@IsDarkMode" />
 
 <MudPopoverProvider/>
 <MudDialogProvider/>
@@ -12,20 +12,22 @@
       Icon="@Icons.Material.Filled.Menu"
       Color="Color.Inherit" 
       Edge="Edge.Start"
-      OnClick="@((e) => DrawerToggle())" />
-    <MudText Typo="Typo.h5" Class="ml-3">@State.SelectFullTitle()</MudText>
+      OnClick="ToggleDrawer" />
+    <MudText Typo="Typo.h5" Class="ml-3">
+      @FullTitle
+    </MudText>
     <MudSpacer />
     <MudIconButton
-      Icon="@(DarkLightModeButtonIcon)"
+      Icon="@DarkLightModeButtonIcon"
       Color="Color.Inherit"
-      OnClick="@DarkModeToggle" />
+      OnClick="ToggleDarkMode" />
     <MudIconButton
-      Icon="@Icons.Material.Filled.MoreVert"
+      Icon="@Icons.Material.Filled.Info"
       Color="Color.Inherit"
       Edge="Edge.End"
-      @onclick="OpenAboutDialog" />
+      OnClick="OpenAboutDialog" />
   </MudAppBar>
-  <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+  <MudDrawer Open="@IsDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
     <NavMenu />
   </MudDrawer>
   <MudMainContent Class="mt-4 pa-4">
@@ -41,88 +43,26 @@
 
 @code {
 
-  private bool _drawerOpen = true;
-  private bool _isDarkMode = true;
-  private MudTheme? _theme;
+  private readonly AppTheme _theme = new();
+  
+  private string FullTitle
+    => State.SelectFullTitle();
+  
+  private bool IsDrawerOpen
+    => State.IsDrawerOpen;
 
-  protected override void OnInitialized()
-  {
-    base.OnInitialized();
+  private bool IsDarkMode
+    => State.IsDarkMode;
 
-    _theme = new()
-    {
-      PaletteLight = _lightPalette,
-      PaletteDark = _darkPalette,
-      LayoutProperties = new LayoutProperties()
-    };
-  }
+  private string DarkLightModeButtonIcon
+    => AppTheme.GetDarkLightModeButtonIcon(State.IsDarkMode);
+  
+  private void ToggleDrawer()
+    => Dispatch(new ToggleDrawer());
 
-  private void DrawerToggle()
-  {
-    _drawerOpen = !_drawerOpen;
-  }
-
-  private void DarkModeToggle()
-  {
-    _isDarkMode = !_isDarkMode;
-  }
-
-  private readonly PaletteLight _lightPalette = new()
-  {
-    Black = "#110e2d",
-    AppbarText = "#424242",
-    AppbarBackground = "rgba(255,255,255,0.8)",
-    DrawerBackground = "#ffffff",
-    GrayLight = "#e8e8e8",
-    GrayLighter = "#f9f9f9",
-  };
-
-  private readonly PaletteDark _darkPalette = new()
-  {
-    // Adapted from Dracula 
-    // https://github.com/dracula/dracula-theme
-
-    Primary = "#bd93f9", // Purple
-    Secondary = "ffb86c", // Orange
-    Info = "#8be9fd", // Cyan
-    Success = "#50fa7b", // Green
-    Warning = "#f1fa8c", // Yellow
-    Error = "#ff5555", // Red
-    GrayLight = "#2a2833",
-    GrayLighter = "#44475a", // Current Line
-    
-    Surface = "#44475a", // Current Line
-    Background = "#282a36", // Background
-    BackgroundGray = "#151521",
-    
-    TextPrimary = "#f8f8f2", // Foreground
-    TextSecondary = "#f8f8f2", // Foreground
-    TextDisabled = "#ffffff33",
-    
-    AppbarText = "#f8f8f2", // Foreground
-    AppbarBackground = "#6272a4", // Comment
-    
-    DrawerBackground = "#44475a", // Selection
-    DrawerIcon = "#f8f8f2", // Foreground
-    DrawerText = "#f8f8f2", // Foreground
-    
-    ActionDefault = "#74718e",
-    ActionDisabled = "#9999994d",
-    ActionDisabledBackground = "#605f6d4d",
-    
-    LinesDefault = "#33323e",
-    TableLines = "#33323e",
-    Divider = "#292838",
-    OverlayLight = "#44475a80", // Current Line @ 50%
-  };
-
-  public string DarkLightModeButtonIcon => _isDarkMode switch
-  {
-    true => Icons.Material.Rounded.AutoMode,
-    false => Icons.Material.Outlined.DarkMode,
-  };
+  private void ToggleDarkMode()
+    => Dispatch(new ToggleDarkMode());
 
   private void OpenAboutDialog()
     => Dispatch(new OpenAboutDialog());
-
 }

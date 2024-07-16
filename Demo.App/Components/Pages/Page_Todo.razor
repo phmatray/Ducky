@@ -18,20 +18,20 @@
   <MudItem xs="12" lg="6">
     <MudStack>
       <div>
-        <MudBadge Content="@State.SelectActiveTodosCount()" Color="Color.Primary" Class="mt-5">
+        <MudBadge Content="@ActiveTodosCount" Color="Color.Primary" Class="mt-5">
           <MudText Typo="Typo.h5">Active Todos</MudText>
         </MudBadge>
       </div>
       
       <MudPaper>
-        @if (State.SelectActiveTodosCount() == 0)
+        @if (!HasActiveTodos)
         {
           <MudText Typo="Typo.h6" Class="ma-4">
             No active todos - add a new todo item to get started!
           </MudText>
         }
         <MudList T="TodoItem">
-          @foreach (var todo in State.SelectActiveTodos())
+          @foreach (var todo in ActiveTodos)
           {
             <MudListItem @key="todo.Id">
               <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
@@ -63,13 +63,13 @@
   <MudItem xs="12" lg="6">
     <MudStack>
       <div>
-        <MudBadge Content="@State.SelectCompletedTodosCount()" Color="Color.Secondary" Class="mt-5">
+        <MudBadge Content="@CompletedTodosCount" Color="Color.Secondary" Class="mt-5">
           <MudText Typo="Typo.h5">Completed Todos</MudText>
         </MudBadge>
       </div>
       <MudPaper>
         <MudList T="TodoItem">
-          @foreach (var todo in State.SelectCompletedTodos())
+          @foreach (var todo in CompletedTodos)
           {
             <MudListItem @key="todo.Id">
               <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
@@ -90,6 +90,21 @@
 @code {
 
   private string _newTodo = string.Empty;
+  
+  private ImmutableList<TodoItem> ActiveTodos
+    => State.SelectActiveTodos();
+
+  private int ActiveTodosCount
+    => State.SelectActiveTodosCount();
+
+  private bool HasActiveTodos
+    => State.SelectHasActiveTodos();
+  
+  private ImmutableList<TodoItem> CompletedTodos
+    => State.SelectCompletedTodos();
+  
+  private int CompletedTodosCount
+    => State.SelectCompletedTodosCount();
   
   private void CreateTodoItem()
   {

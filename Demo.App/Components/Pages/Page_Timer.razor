@@ -17,7 +17,8 @@
 
   <MudItem xs="12">
     <MudButtonGroup Variant="Variant.Outlined">
-      <MudButton Variant="Variant.Outlined" OnClick="ToggleTimer">@(IsRunning ? "Stop" : "Start")</MudButton>
+      <MudButton Variant="Variant.Outlined" OnClick="StartTimer" Disabled="IsRunning">Start</MudButton>
+      <MudButton Variant="Variant.Outlined" OnClick="StopTimer" Disabled="!IsRunning">Stop</MudButton>
       <MudButton Variant="Variant.Outlined" OnClick="ResetTimer">Reset</MudButton>
     </MudButtonGroup>
   </MudItem>
@@ -34,8 +35,11 @@
 
 @code {
 
-  private int Time => State.Time;
-  private bool IsRunning => State.IsRunning;
+  private int Time
+    => State.Time;
+  
+  private bool IsRunning
+    => State.IsRunning;
 
   protected override void OnInitialized()
   {
@@ -48,22 +52,10 @@
     }
   }
   
-  private void ToggleTimer()
-  {
-    if (IsRunning)
-    {
-      StopTimer();
-    }
-    else
-    {
-      StartTimer();
-    }
-  }
-
   private void ResetTimer()
   {
-    Dispatch(new ResetTimer());
     StopTimer();
+    Dispatch(new ResetTimer());
   }
 
   private void StartTimer()
