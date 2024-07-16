@@ -14,9 +14,12 @@ public class LoadMoviesFailureEffect(ISnackbar snackbar) : Effect
     {
         return actions
             .OfType<IAction, LoadMoviesFailure>()
-            .Select(GetSnackBarMessage)
-            .Do(message => snackbar.Add(message, Severity.Error))
-            .Select(_ => (IAction)new SnackBarAction());
+            .Do(action => snackbar.Add(action.Error.Message, Severity.Error))
+            .Select(action =>
+            {
+                var notification = new ExceptionNotification(action.Error);
+                return (IAction)new AddNotification(notification);
+            });
     }
     
     private static string GetSnackBarMessage(LoadMoviesFailure action)

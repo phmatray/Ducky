@@ -51,7 +51,7 @@ public class AppTheme : MudTheme
         AppbarText = "#f8f8f2", // Foreground
         AppbarBackground = "#6272a4", // Comment
     
-        DrawerBackground = "#44475a", // Selection
+        DrawerBackground = "#44475a", // Current Line
         DrawerIcon = "#f8f8f2", // Foreground
         DrawerText = "#f8f8f2", // Foreground
     

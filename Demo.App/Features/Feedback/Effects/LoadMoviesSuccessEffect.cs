@@ -15,9 +15,19 @@ public class LoadMoviesSuccessEffect(ISnackbar snackbar) : Effect
             .OfType<IAction, LoadMoviesSuccess>()
             .Select(GetSnackBarMessage)
             .Do(message => snackbar.Add(message, Severity.Success))
-            .Select(_ => (IAction)new SnackBarAction());
+            .Select(message =>
+            {
+                var notification = new Notification(message)
+                {
+                    Severity = NotificationSeverity.Success
+                };
+
+                return (IAction)new AddNotification(notification);
+            });
     }
     
     private static string GetSnackBarMessage(LoadMoviesSuccess action)
         => $"Loaded {action.Movies.Length} movies from the server.";
+    
+    
 }

@@ -24,13 +24,17 @@
     <MudIconButton
       Icon="@Icons.Material.Filled.Info"
       Color="Color.Inherit"
-      Edge="Edge.End"
       OnClick="OpenAboutDialog" />
+    <NotificationsBadge/>
   </MudAppBar>
-  <MudDrawer Open="@IsDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+  <MudDrawer
+    Open="@IsDrawerOpen"
+    ClipMode="DrawerClipMode.Always"
+    Elevation="2">
     <NavMenu />
   </MudDrawer>
-  <MudMainContent Class="mt-4 pa-4">
+  <NotificationsDrawer/>
+  <MudMainContent Class="mt-16 pa-4">
     @Body
   </MudMainContent>
 </MudLayout>
@@ -62,7 +66,7 @@
 
   private void ToggleDarkMode()
     => Dispatch(new ToggleDarkMode());
-
+  
   private void OpenAboutDialog()
     => Dispatch(new OpenAboutDialog());
 }
