@@ -1,4 +1,4 @@
-namespace Demo.App.Helpers;
+namespace Demo.App.Features.JsonColoring;
 
 /// <summary>
 /// Defines a method to colorize a JSON string to an HTML string with color coding.

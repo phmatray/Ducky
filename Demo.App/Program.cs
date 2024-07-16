@@ -1,5 +1,5 @@
 using Demo.App.Components;
-using Demo.App.Helpers;
+using Demo.App.Features.JsonColoring;
 using Demo.AppStore;
 using MudBlazor;
 using MudBlazor.Services;

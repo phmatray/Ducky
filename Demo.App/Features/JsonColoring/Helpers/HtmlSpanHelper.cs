@@ -1,4 +1,4 @@
-namespace Demo.App.Helpers;
+namespace Demo.App.Features.JsonColoring;
 
 /// <summary>
 /// Provides methods to generate HTML span elements with colors for JSON formatting.

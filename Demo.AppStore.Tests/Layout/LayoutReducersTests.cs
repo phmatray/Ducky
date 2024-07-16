@@ -9,8 +9,7 @@ public class LayoutReducersTests
     private readonly LayoutState _initialState = new()
     {
         Title = "R3dux",
-        Version = "v1.0.0",
-        IsModalOpen = false
+        Version = "v1.0.0"
     };
     
     private const string Key = "layout";
@@ -66,32 +65,6 @@ public class LayoutReducersTests
 
         // Assert
         newState.Title.Should().Be(newTitle);
-    }
-
-    [Fact]
-    public void OpenModal_ShouldSetIsModalOpenToTrue()
-    {
-        // Arrange
-        var initialState = _initialState with { IsModalOpen = false };
-        
-        // Act
-        var newState = _sut.Reduce(initialState, new OpenModal());
-
-        // Assert
-        newState.IsModalOpen.Should().BeTrue();
-    }
-
-    [Fact]
-    public void CloseModal_ShouldSetIsModalOpenToFalse()
-    {
-        // Arrange
-        var initialState = _initialState with { IsModalOpen = true };
-
-        // Act
-        var newState = _sut.Reduce(initialState, new CloseModal());
-
-        // Assert
-        newState.IsModalOpen.Should().BeFalse();
     }
 
     [Fact]

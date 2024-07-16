@@ -3,14 +3,13 @@ using MudBlazor;
 using R3;
 using R3dux;
 
-namespace Demo.App.Effects;
+namespace Demo.App.Features.Feedback;
 
 // ReSharper disable once UnusedType.Global
 public class LoadMoviesSuccessEffect(ISnackbar snackbar) : Effect
 {
     public override Observable<IAction> Handle(
-        Observable<IAction> actions,
-        Observable<RootState> rootState)
+        Observable<IAction> actions, Observable<RootState> rootState)
     {
         return actions
             .OfType<IAction, LoadMoviesSuccess>()

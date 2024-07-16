@@ -1,4 +1,4 @@
-namespace Demo.App.Helpers;
+namespace Demo.App.Features.JsonColoring;
 
 public static class Palette
 {

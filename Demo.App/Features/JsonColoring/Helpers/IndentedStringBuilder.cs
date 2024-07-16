@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Demo.App.Helpers;
+namespace Demo.App.Features.JsonColoring;
 
 /// <summary>
 /// Provides a helper class to build indented strings using a <see cref="StringBuilder"/>.

@@ -3,7 +3,7 @@ using MudBlazor;
 using R3;
 using R3dux;
 
-namespace Demo.App.Effects;
+namespace Demo.App.Features.Feedback;
 
 // ReSharper disable once UnusedType.Global
 public class LoadMoviesFailureEffect(ISnackbar snackbar) : Effect

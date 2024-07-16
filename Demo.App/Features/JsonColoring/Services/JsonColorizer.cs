@@ -1,7 +1,7 @@
 using System.Text.Json;
-using static Demo.App.Helpers.HtmlSpanHelper;
+using static Demo.App.Features.JsonColoring.HtmlSpanHelper;
 
-namespace Demo.App.Helpers;
+namespace Demo.App.Features.JsonColoring;
 
 /// <inheritdoc />
 public class JsonColorizer : IJsonColorizer

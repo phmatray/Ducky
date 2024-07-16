@@ -1,5 +1,50 @@
-<h3>AboutDialog</h3>
+@inherits R3duxComponent<LayoutState>
+
+<MudDialog>
+  <TitleContent>
+    @State.SelectFullTitle()
+  </TitleContent>
+  <DialogContent>
+    <MudStack>
+      
+      <MudText Typo="Typo.h6">About This Application</MudText>
+      <MudDivider/>
+      <MudText>
+        This application is a demonstration of the R3dux framework, showcasing its capabilities in building responsive and interactive web applications using .NET 8 and Blazor.
+      </MudText>
+      <MudSpacer/>
+      <MudText Typo="Typo.subtitle1">Version Information</MudText>
+      <MudDivider/>
+      <MudText>
+        <strong>Version:</strong> @State.Version
+      </MudText>
+      <MudSpacer/>
+      <MudText Typo="Typo.subtitle1">Credits</MudText>
+      <MudDivider/>
+      <MudText>
+        Made with ❤️ by Philippe Matray and the R3dux Team. We acknowledge all contributors and open-source projects that have made this application possible.
+      </MudText>
+      <MudSpacer/>
+      <MudText Typo="Typo.subtitle1">Useful Links</MudText>
+      <MudDivider/>
+      <MudList T="string">
+        <MudListItem>
+          <MudLink Href="https://github.com/R3dux" Target="_blank">GitHub Repository</MudLink>
+        </MudListItem>
+        <MudListItem>
+          <MudLink Href="https://r3dux.io/docs" Target="_blank">Documentation</MudLink>
+        </MudListItem>
+        <MudListItem>
+          <MudLink Href="https://r3dux.io/community" Target="_blank">Community Forum</MudLink>
+        </MudListItem>
+      </MudList>
+    </MudStack>
+  </DialogContent>
+</MudDialog>
 
 @code {
-  
+
+  [CascadingParameter]
+  private MudDialogInstance MudDialog { get; set; } = null!;
+
 }

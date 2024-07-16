@@ -6,7 +6,6 @@ public record LayoutState
 {
     public required string Title { get; init; }
     public required string Version { get; init; }
-    public required bool IsModalOpen { get; init; }
     
     // Selectors
     public string SelectFullTitle()
@@ -18,8 +17,6 @@ public record LayoutState
 #region Actions
 
 public record SetTitle(string Title) : IAction;
-public record OpenModal : IAction;
-public record CloseModal : IAction;
 
 #endregion
 
@@ -31,12 +28,6 @@ public record LayoutReducers : SliceReducers<LayoutState>
     {
         Map<SetTitle>((state, action)
             => state with { Title = action.Title });
-        
-        Map<OpenModal>((state, _)
-            => state with { IsModalOpen = true });
-        
-        Map<CloseModal>((state, _)
-            => state with { IsModalOpen = false });
     }
 
     public override LayoutState GetInitialState()
@@ -44,8 +35,7 @@ public record LayoutReducers : SliceReducers<LayoutState>
         return new LayoutState
         {
             Title = "R3dux",
-            Version = "v1.0.0",
-            IsModalOpen = false
+            Version = "v1.0.0"
         };
     }
 }
