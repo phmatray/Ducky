@@ -1,0 +1,85 @@
+@page "/errors"
+@inherits R3duxComponent<LayoutState>
+
+<PageTitle>R3dux - Notifications</PageTitle>
+
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">System</MudText>
+      <MudText Typo="Typo.h3">Errors</MudText>
+      <MudText Typo="Typo.body1">
+        Review and manage system errors and exceptions.
+      </MudText>
+    </MudStack>
+  </MudItem>
+  
+  <MudItem xs="12">
+    @if (ErrorNotifications.Any())
+    {
+      <MudList T="Notification" Dense>
+        <MudListSubheader>
+          <MudTextField 
+            @bind-Value="@_searchTerm"
+            AdornmentIcon="@Icons.Material.Filled.FindInPage"
+            Adornment="Adornment.End"
+            Immediate="true"
+            Variant="Variant.Outlined" />
+        </MudListSubheader>
+        @foreach (var notification in ErrorNotifications)
+        {
+          <MudListItem>
+            <MudAlert
+              Severity="@ToMudSeverity(notification.Severity)"
+              Variant="Variant.Outlined"
+              CloseIconClicked="() => MarkNotificationAsRead(notification.Id)">
+              <MudStack Spacing="0" StretchItems="StretchItems.All">
+                <MudText>
+                  <MudHighlighter Text="@notification.Message" HighlightedText="@_searchTerm" />
+                </MudText>
+                <MudText Typo="Typo.caption">
+                  @notification.Timestamp.Humanize()
+                </MudText>
+                @if (notification is ExceptionNotification error)
+                {
+                  <MudPaper Class="mt-4">
+                    <MudText Typo="Typo.body2" Class="pa-4">
+                      <MudHighlighter Text="@error.StackTrace" HighlightedText="@_searchTerm" />
+                    </MudText>
+                  </MudPaper>
+                }
+                <MudStack AlignItems="AlignItems.Start">
+                  <MudButton Variant="Variant.Outlined" Class="mt-2" OnClick="() => MarkNotificationAsRead(notification.Id)">
+                    Marks as Read
+                  </MudButton>
+                </MudStack>
+              </MudStack>
+            </MudAlert>
+          </MudListItem>
+        }
+      </MudList>
+    }
+    else
+    {
+      <MudStack Row Class="ml-6">
+        <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" />
+        <MudText>There are no error notifications.</MudText>
+      </MudStack>
+    }
+  </MudItem>
+</MudGrid>
+
+@code {
+  
+  string _searchTerm = "";
+  
+  private ImmutableList<Notification> ErrorNotifications
+    => State.SelectErrorNotifications();
+  
+  private void MarkNotificationAsRead(Guid id)
+    => Dispatch(new MarkNotificationAsRead(id));
+
+  private Severity ToMudSeverity(NotificationSeverity severity)
+    => (Severity)(int)severity;
+  
+}

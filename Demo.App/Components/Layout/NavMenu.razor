@@ -1,8 +1,13 @@
 <MudNavMenu Bordered="true" Color="Color.Info">
-  <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-  <MudNavLink Href="message" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Message">Message</MudNavLink>
-  <CounterLink/>
-  <MudNavLink Href="todo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Task">Todo</MudNavLink>
-  <MudNavLink Href="timer" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Timer">Timer</MudNavLink>
-  <MudNavLink Href="movies" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Movie">Movies</MudNavLink>
+  <MudNavGroup Expanded Title="System">
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <MudNavLink Href="errors" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Error">Errors</MudNavLink>
+  </MudNavGroup>
+  <MudNavGroup Expanded Title="Demos">
+    <CounterLink/>
+    <MudNavLink Href="message" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Message">Message</MudNavLink>
+    <MudNavLink Href="todo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Task">Todo</MudNavLink>
+    <MudNavLink Href="timer" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Timer">Timer</MudNavLink>
+    <MudNavLink Href="movies" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Movie">Movies</MudNavLink>
+  </MudNavGroup>
 </MudNavMenu>

@@ -27,6 +27,16 @@ public record LayoutState
     public int SelectUnreadNotificationCount()
         => Notifications
             .Count(n => !n.IsRead);
+    
+    public ImmutableList<Notification> SelectNotificationsBySeverity(
+        NotificationSeverity severity)
+        => Notifications
+            .Where(n => !n.IsRead)
+            .Where(n => n.Severity == severity)
+            .ToImmutableList();
+    
+    public ImmutableList<Notification> SelectErrorNotifications()
+        => SelectNotificationsBySeverity(NotificationSeverity.Error);
 }
 
 #endregion
