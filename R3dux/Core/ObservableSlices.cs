@@ -49,12 +49,6 @@ public sealed class ObservableSlices
         => _rootState.AsObservable();
 
     /// <summary>
-    /// Gets the current root state.
-    /// </summary>
-    public RootState RootState
-        => _rootState.CurrentValue;
-    
-    /// <summary>
     /// Creates a new root state based on the current slices.
     /// </summary>
     /// <returns>A new <see cref="RootState"/> object.</returns>

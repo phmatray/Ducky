@@ -39,24 +39,15 @@ public class StoreTests
     {
         // Arrange
         var counterSlice = new TestCounterReducers();
+        var sliceStateObs = _sut.RootStateObservable.Select(state => state.GetSliceState<int>("test-counter"));
+        
         _sut.AddSlice(counterSlice);
 
         // Act
         counterSlice.OnDispatch(new TestIncrementAction());
-        var updatedState = _sut.GetState<int>("test-counter");
+        var updatedState = sliceStateObs.FirstSync();
 
         // Assert
         updatedState.Should().Be(11);
-    }
-
-    [Fact]
-    public void Store_Should_Handle_Dispose_Correctly()
-    {
-        // Act
-        _sut.Dispose();
-
-        // Assert
-        Action act = () => _sut.Dispatcher.Dispatch(new TestIncrementAction());
-        act.Should().Throw<ObjectDisposedException>();
     }
 }

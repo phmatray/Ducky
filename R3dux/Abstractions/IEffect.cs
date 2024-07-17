@@ -8,6 +8,18 @@ namespace R3dux;
 public interface IEffect
 {
     /// <summary>
+    /// Gets the key that identifies the effect.
+    /// </summary>
+    /// <returns>The key that identifies the effect.</returns>
+    string GetKey();
+    
+    /// <summary>
+    /// Gets the assembly-qualified name of the effect.
+    /// </summary>
+    /// <returns>The assembly-qualified name of the effect.</returns>
+    string GetAssemblyName();
+    
+    /// <summary>
     /// Handles a stream of actions and produces a stream of resulting actions.
     /// </summary>
     /// <param name="actions">The source observable sequence of actions.</param>

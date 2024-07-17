@@ -7,26 +7,29 @@ public sealed class Store
     : IStore, IDisposable
 {
     private readonly ILogger<Store> _logger;
-    private readonly CompositeDisposable _disposables = [];
+    private readonly CompositeDisposable _stateUpdateSubscriptions = [];
+    private readonly CompositeDisposable _sliceSubscriptions = [];
+    private readonly CompositeDisposable _effectSubscriptions = [];
     private readonly ObservableSlices _slices = new();
     private bool _isDisposed;
 
     public Store(IDispatcher dispatcher, ILogger<Store> logger)
     {
-        _logger = logger;
         ArgumentNullException.ThrowIfNull(dispatcher);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _logger = logger;
+        
         Dispatcher = dispatcher;
         Dispatcher.Dispatch(new StoreInitialized());
+        
+        _logger.StoreInitialized();
     }
     
     public IDispatcher Dispatcher { get; }
 
     public Observable<RootState> RootStateObservable
         => _slices.RootStateObservable;
-    
-    public TState GetState<TState>(string key)
-        where TState : notnull, new()
-        => _slices.RootState.GetSliceState<TState>(key);
 
     public void AddSlices(params ISlice[] slices)
     {
@@ -48,12 +51,14 @@ public sealed class Store
         // Subscribe the slice to the dispatcher's action stream
         Dispatcher.ActionStream
             .Subscribe(slice.OnDispatch)
-            .AddTo(_disposables);
+            .AddTo(_sliceSubscriptions);
 
         // Update the root state when a slice state is updated
         slice.StateUpdated
             .Subscribe(_ => _slices.ReplaceSlice(slice.GetKey(), slice))
-            .AddTo(_disposables);
+            .AddTo(_stateUpdateSubscriptions);
+        
+        _logger.SliceAdded(slice.GetKey());
     }
 
     public void AddEffects(params IEffect[] effects)
@@ -73,15 +78,22 @@ public sealed class Store
         effect
             .Handle(Dispatcher.ActionStream, RootStateObservable)
             .Subscribe(Dispatcher.Dispatch)
-            .AddTo(_disposables);
+            .AddTo(_effectSubscriptions);
+        
+        _logger.EffectAdded(effect.GetKey(), effect.GetAssemblyName());
     }
 
     public void Dispose()
     {
         if (!_isDisposed)
         {
+            _logger.DisposingStore();
+
+            _stateUpdateSubscriptions.Dispose();
+            _sliceSubscriptions.Dispose();
+            _effectSubscriptions.Dispose();
+
             _isDisposed = true;
-            _disposables.Dispose();
         }
     }
 }

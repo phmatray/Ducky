@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace R3dux.Blazor;
 
-public static partial class R3duxComponentLogMessages
+internal static partial class R3duxComponentLogMessages
 {
     [LoggerMessage(
         EventId = 1000,
@@ -14,7 +14,7 @@ public static partial class R3duxComponentLogMessages
     
     [LoggerMessage(
         EventId = 1001,
-        Level = LogLevel.Debug,
+        Level = LogLevel.Information,
         Message = "[{ComponentName}] component initialized")]
     public static partial void ComponentInitialized(
         this ILogger<R3duxComponent<object>> logger,
@@ -22,7 +22,7 @@ public static partial class R3duxComponentLogMessages
     
     [LoggerMessage(
         EventId = 1002,
-        Level = LogLevel.Debug,
+        Level = LogLevel.Warning,
         Message = "[{ComponentName}] subscription already assigned")]
     public static partial void SubscriptionAlreadyAssigned(
         this ILogger<R3duxComponent<object>> logger,
@@ -30,7 +30,7 @@ public static partial class R3duxComponentLogMessages
     
     [LoggerMessage(
         EventId = 1003,
-        Level = LogLevel.Debug,
+        Level = LogLevel.Information,
         Message = "[{ComponentName}] disposing component")]
     public static partial void DisposingComponent(
         this ILogger<R3duxComponent<object>> logger,
@@ -46,7 +46,7 @@ public static partial class R3duxComponentLogMessages
 
     [LoggerMessage(
         EventId = 1005,
-        Level = LogLevel.Debug,
+        Level = LogLevel.Information,
         Message = "[{ComponentName}] component refreshed")]
     public static partial void ComponentRefreshed(
         this ILogger<R3duxComponent<object>> logger,

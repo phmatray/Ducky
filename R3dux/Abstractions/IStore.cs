@@ -7,9 +7,6 @@ public interface IStore
     IDispatcher Dispatcher { get; }
     Observable<RootState> RootStateObservable { get; }
 
-    TState GetState<TState>(string key)
-        where TState : notnull, new();
-    
     void AddSlice(ISlice slice);
     void AddSlices(params ISlice[] slices);
     
