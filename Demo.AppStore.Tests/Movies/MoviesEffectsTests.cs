@@ -1,8 +1,3 @@
-using System.Collections.Immutable;
-using Moq;
-using R3;
-using R3dux;
-
 namespace Demo.AppStore.Tests.Movies;
 
 public sealed class MoviesEffectsTests : IDisposable
