@@ -1,5 +1,3 @@
-using FluentAssertions;
-
 namespace Demo.AppStore.Tests.Layout;
 
 public class LayoutReducersTests
@@ -12,8 +10,7 @@ public class LayoutReducersTests
         Version = "v1.0.0",
         IsDarkMode = true,
         IsDrawerOpen = true,
-        IsNotificationOpen = false,
-        Notifications = []
+        IsNotificationOpen = false
     };
     
     private const string Key = "layout";
@@ -30,7 +27,6 @@ public class LayoutReducersTests
         initialState.IsDarkMode.Should().Be(_initialState.IsDarkMode);
         initialState.IsDrawerOpen.Should().Be(_initialState.IsDrawerOpen);
         initialState.IsNotificationOpen.Should().Be(_initialState.IsNotificationOpen);
-        initialState.Notifications.Should().HaveCount(3);
     }
     
     [Fact]
@@ -60,7 +56,7 @@ public class LayoutReducersTests
         var reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(6);
+        reducers.Should().HaveCount(4);
     }
 
     [Fact]

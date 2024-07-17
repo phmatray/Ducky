@@ -1,5 +1,3 @@
-using FluentAssertions;
-
 namespace Demo.AppStore.Tests.Counter;
 
 public class CounterReducersTests

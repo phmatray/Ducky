@@ -9,7 +9,7 @@ public record Pagination
     public int TotalItems { get; init; }
 }
 
-public record MovieState
+public record MoviesState
 {
     public required ImmutableDictionary<int, Movie> Movies { get; init; }
     public required bool IsLoading { get; init; }
@@ -43,9 +43,9 @@ public record SetCurrentPage(int CurrentPage) : IAction;
 
 #region Reducers
 
-public record MovieReducers : SliceReducers<MovieState>
+public record MoviesReducers : SliceReducers<MoviesState>
 {
-    public MovieReducers()
+    public MoviesReducers()
     {
         Map<LoadMovies>((state, _)
             => state with { IsLoading = true, ErrorMessage = null });
@@ -74,9 +74,9 @@ public record MovieReducers : SliceReducers<MovieState>
             => state with { Pagination = state.Pagination with { CurrentPage = action.CurrentPage } });
     }
 
-    public override MovieState GetInitialState()
+    public override MoviesState GetInitialState()
     {
-        return new MovieState
+        return new MoviesState
         {
             Movies = ImmutableDictionary<int, Movie>.Empty,
             IsLoading = false,
@@ -128,7 +128,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         return actions
             .OfType<IAction, LoadMovies>()
             .Do(_ => Console.WriteLine("Loading movies..."))
-            .WithSliceState<MovieState, LoadMovies>(rootState)
+            .WithSliceState<MoviesState, LoadMovies>(rootState)
             .SelectAwait(async (pair, ct) =>
             {
                 try

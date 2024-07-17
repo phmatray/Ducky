@@ -1,14 +1,13 @@
 using System.Collections.Immutable;
-using FluentAssertions;
 using R3dux.Exceptions;
 
 namespace Demo.AppStore.Tests.Movies;
 
-public class MovieReducersTests
+public class MoviesReducersTests
 {
-    private readonly MovieReducers _sut = new();
+    private readonly MoviesReducers _sut = new();
 
-    private readonly MovieState _initialState = new()
+    private readonly MoviesState _initialState = new()
     {
         Movies = ImmutableDictionary<int, Movie>.Empty,
         IsLoading = false,
@@ -21,7 +20,7 @@ public class MovieReducersTests
         }
     };
     
-    private const string Key = "movie";
+    private const string Key = "movies";
 
     [Fact]
     public void MovieReducers_Should_Return_Initial_State()
@@ -50,7 +49,7 @@ public class MovieReducersTests
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(MovieState));
+        stateType.Should().Be(typeof(MoviesState));
     }
     
     [Fact]

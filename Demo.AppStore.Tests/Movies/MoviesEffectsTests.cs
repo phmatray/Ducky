@@ -1,12 +1,11 @@
 using System.Collections.Immutable;
-using FluentAssertions;
 using Moq;
 using R3;
 using R3dux;
 
 namespace Demo.AppStore.Tests.Movies;
 
-public sealed class MovieEffectsTests : IDisposable
+public sealed class MoviesEffectsTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
     private readonly Subject<IAction> _actionsSubject = new();
@@ -14,7 +13,7 @@ public sealed class MovieEffectsTests : IDisposable
     private readonly List<IAction> _actualActions = [];
     private readonly Mock<IMoviesService> _moviesServiceMock = new();
 
-    public MovieEffectsTests()
+    public MoviesEffectsTests()
     {
         new LoadMoviesEffect(_moviesServiceMock.Object)
             .Handle(_actionsSubject, _rootStateSubject)

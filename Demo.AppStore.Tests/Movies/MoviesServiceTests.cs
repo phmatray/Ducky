@@ -1,5 +1,3 @@
-using FluentAssertions;
-
 namespace Demo.AppStore.Tests.Movies;
 
 public class MoviesServiceTests

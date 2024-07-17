@@ -28,12 +28,12 @@
     <NotificationsBadge/>
   </MudAppBar>
   <MudDrawer
-    Open="@IsDrawerOpen"
+    Open="IsDrawerOpen"
     ClipMode="DrawerClipMode.Always"
     Elevation="2">
     <NavMenu />
   </MudDrawer>
-  <NotificationsDrawer/>
+  <NotificationsDrawer IsOpen="IsNotificationOpen"/>
   <MudMainContent Class="mt-16 pa-4">
     @Body
   </MudMainContent>
@@ -54,6 +54,9 @@
   
   private bool IsDrawerOpen
     => State.IsDrawerOpen;
+
+  private bool IsNotificationOpen
+    => State.IsNotificationOpen;
 
   private bool IsDarkMode
     => State.IsDarkMode;

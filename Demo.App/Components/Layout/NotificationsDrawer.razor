@@ -1,7 +1,7 @@
-@inherits R3duxComponent<LayoutState>
+@inherits R3duxComponent<NotificationsState>
 
 <MudDrawer
-  Open="@IsNotificationOpen"
+  Open="@IsOpen"
   Anchor="Anchor.End"
   ClipMode="DrawerClipMode.Always"
   Width="420px"
@@ -43,9 +43,9 @@
 </MudDrawer>
 
 @code {
-  
-  private bool IsNotificationOpen
-    => State.IsNotificationOpen;
+
+  [Parameter, EditorRequired]
+  public bool IsOpen { get; set; }
   
   private ImmutableList<Notification> UnreadNotifications
     => State.SelectUnreadNotifications();
