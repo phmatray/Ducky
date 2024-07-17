@@ -16,7 +16,7 @@
       {
         <MudListItem>
           <MudAlert 
-            Severity="@ToMudSeverity(notification.Severity)"
+            Severity="@notification.Severity.ToMudSeverity()"
             Variant="Variant.Outlined"
             ShowCloseIcon
             CloseIconClicked="() => MarkNotificationAsRead(notification.Id)">
@@ -55,8 +55,5 @@
   
   private void MarkNotificationAsRead(Guid id)
     => Dispatch(new MarkNotificationAsRead(id));
-
-  private Severity ToMudSeverity(NotificationSeverity severity)
-    => (Severity)(int)severity;
   
 }

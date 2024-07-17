@@ -8,9 +8,7 @@ public record TodoState
     
     // Selectors
     public ImmutableList<TodoItem> SelectActiveTodos()
-        => Todos
-            .Where(todo => !todo.IsCompleted)
-            .ToImmutableList();
+        => [..Todos.Where(todo => !todo.IsCompleted)];
     
     public int SelectActiveTodosCount()
         => SelectActiveTodos().Count;
@@ -19,9 +17,7 @@ public record TodoState
         => SelectActiveTodosCount() > 0;
     
     public ImmutableList<TodoItem> SelectCompletedTodos()
-        => Todos
-            .Where(todo => todo.IsCompleted)
-            .ToImmutableList();
+        => [..Todos.Where(todo => todo.IsCompleted)];
     
     public int SelectCompletedTodosCount()
         => SelectCompletedTodos().Count;

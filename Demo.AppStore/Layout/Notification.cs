@@ -25,11 +25,17 @@ public record ErrorNotification(string Message)
 
 public record ExceptionNotification : Notification
 {
+    private readonly Exception _exception;
+    
     public ExceptionNotification(Exception ex)
         : base(ex.Message, NotificationSeverity.Error)
     {
-        StackTrace = ex.StackTrace;
+        _exception = ex;
     }
     
-    public string? StackTrace { get; init; }
+    public string? StackTrace
+        => _exception.StackTrace;
+    
+    public string? Source
+        => _exception.Source;
 }

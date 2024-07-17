@@ -15,58 +15,32 @@
   </MudItem>
   
   <MudItem xs="12">
+
+    <MudTextField
+      @bind-Value="@_searchTerm"
+      AdornmentIcon="@Icons.Material.Filled.FindInPage"
+      Adornment="Adornment.End"
+      Immediate="true"
+      Variant="Variant.Outlined"
+      Label="Search" />
+    
     @if (ErrorNotifications.Any())
     {
-      <MudList T="Notification" Dense>
-        <MudListSubheader>
-          <MudTextField 
-            @bind-Value="@_searchTerm"
-            AdornmentIcon="@Icons.Material.Filled.FindInPage"
-            Adornment="Adornment.End"
-            Immediate="true"
-            Variant="Variant.Outlined" />
-        </MudListSubheader>
+      <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Start">
         @foreach (var notification in ErrorNotifications)
         {
-          <MudListItem>
-            <MudAlert
-              Severity="@ToMudSeverity(notification.Severity)"
-              Variant="Variant.Outlined"
-              CloseIconClicked="() => MarkNotificationAsRead(notification.Id)">
-              <MudStack Spacing="0" StretchItems="StretchItems.All">
-                <MudText>
-                  <MudHighlighter Text="@notification.Message" HighlightedText="@_searchTerm" />
-                </MudText>
-                <MudText Typo="Typo.caption">
-                  Raised at @notification.Timestamp @Separator @notification.Timestamp.Humanize()
-                </MudText>
-                @if (notification is ExceptionNotification error)
-                {
-                  <MudPaper Class="mt-4">
-                    <MudText Typo="Typo.body2" Class="pa-4">
-                      <MudHighlighter Text="@error.StackTrace" HighlightedText="@_searchTerm" />
-                    </MudText>
-                  </MudPaper>
-                }
-                <MudStack AlignItems="AlignItems.Start">
-                  <MudButton
-                    Variant="Variant.Outlined"
-                    Class="mt-2"
-                    OnClick="() => MarkNotificationAsRead(notification.Id)"
-                    StartIcon="@Icons.Material.Filled.MarkChatRead">
-                    Marks as Read
-                  </MudButton>
-                </MudStack>
-              </MudStack>
-            </MudAlert>
-          </MudListItem>
+          <MudTimelineItem @key="notification.Id" Color="@notification.Severity.ToMudColor()" Variant="Variant.Filled">
+            <ItemContent>
+              <ExceptionDetailsAlert Notification="@notification" SearchTerm="@_searchTerm"/>
+            </ItemContent>
+          </MudTimelineItem>
         }
-      </MudList>
+      </MudTimeline>
     }
     else
     {
       <MudStack Row Class="ml-6">
-        <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" />
+        <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Secondary"/>
         <MudText>There are no error notifications.</MudText>
       </MudStack>
     }
@@ -75,16 +49,9 @@
 
 @code {
   
-  private const string Separator = "•";
   private string _searchTerm = "";
   
   private ImmutableList<Notification> ErrorNotifications
     => State.SelectErrorNotifications();
-  
-  private void MarkNotificationAsRead(Guid id)
-    => Dispatch(new MarkNotificationAsRead(id));
 
-  private Severity ToMudSeverity(NotificationSeverity severity)
-    => (Severity)(int)severity;
-  
 }

@@ -61,7 +61,7 @@ public class AppTheme : MudTheme
     
         LinesDefault = "#33323e",
         TableLines = "#33323e",
-        Divider = "#292838",
+        Divider = "#44475a", // Current Line
         OverlayLight = "#44475a80", // Current Line @ 50%
     };
 }
