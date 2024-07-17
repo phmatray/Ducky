@@ -36,6 +36,8 @@ public sealed record RootState
     public TState GetSliceState<TState>(string key)
         where TState : notnull
     { 
+        ArgumentNullException.ThrowIfNull(key);
+        
         if (_state.TryGetValue(key, out var value) && value is TState state)
         {
             return state;

@@ -1,69 +1,32 @@
-﻿using R3;
+﻿using Microsoft.Extensions.Logging;
+using R3;
 
 namespace R3dux;
 
 public sealed class Store
     : IStore, IDisposable
 {
-    private readonly IDispatcher _dispatcher;
-    private readonly CompositeDisposable _disposables;
-    private readonly ObservableSlices _slices;
-    private readonly object _lock;
+    private readonly ILogger<Store> _logger;
+    private readonly CompositeDisposable _disposables = [];
+    private readonly ObservableSlices _slices = new();
     private bool _isDisposed;
 
-    public Store(IDispatcher dispatcher)
+    public Store(IDispatcher dispatcher, ILogger<Store> logger)
     {
+        _logger = logger;
         ArgumentNullException.ThrowIfNull(dispatcher);
-        
-        _dispatcher = dispatcher;
-        _disposables = new CompositeDisposable();
-        _slices = new ObservableSlices();
-        _lock = new object();
-        
-        DispatchStoreInitialized();
+        Dispatcher = dispatcher;
+        Dispatcher.Dispatch(new StoreInitialized());
     }
     
-    public IDispatcher Dispatcher
-        => _dispatcher;
+    public IDispatcher Dispatcher { get; }
 
     public Observable<RootState> RootStateObservable
-    {
-        get
-        {
-            lock (_lock)
-            {
-                return _slices.RootStateObservable;
-            }
-        }
-    }
-
+        => _slices.RootStateObservable;
+    
     public TState GetState<TState>(string key)
         where TState : notnull, new()
-    {
-        ArgumentNullException.ThrowIfNull(key);
-
-        lock (_slices)
-        {
-            return _slices.RootState.GetSliceState<TState>(key);
-        }
-    }
-
-    public void Dispatch(IAction action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-        
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(Store));
-        }
-        
-        _dispatcher.Dispatch(action);
-    }
-    
-    private void DispatchStoreInitialized()
-    {
-        Dispatch(new StoreInitialized());
-    }
+        => _slices.RootState.GetSliceState<TState>(key);
 
     public void AddSlices(params ISlice[] slices)
     {
@@ -79,29 +42,18 @@ public sealed class Store
     {
         ArgumentNullException.ThrowIfNull(slice);
 
-        lock (_lock)
-        {
-            // Add the slice to the ObservableSlices collection
-            _slices.AddSlice(slice);
-        }
+        // Add the slice to the ObservableSlices collection
+        _slices.AddSlice(slice);
 
         // Subscribe the slice to the dispatcher's action stream
-        _dispatcher.ActionStream
+        Dispatcher.ActionStream
             .Subscribe(slice.OnDispatch)
             .AddTo(_disposables);
 
         // Update the root state when a slice state is updated
         slice.StateUpdated
-            .Subscribe(_ => UpdateRootState(slice))
+            .Subscribe(_ => _slices.ReplaceSlice(slice.GetKey(), slice))
             .AddTo(_disposables);
-    }
-
-    private void UpdateRootState(ISlice slice)
-    {
-        lock (_lock)
-        {
-            _slices.ReplaceSlice(slice.GetKey(), slice);
-        }
     }
 
     public void AddEffects(params IEffect[] effects)
@@ -119,8 +71,8 @@ public sealed class Store
         ArgumentNullException.ThrowIfNull(effect);
         
         effect
-            .Handle(_dispatcher.ActionStream, RootStateObservable)
-            .Subscribe(Dispatch)
+            .Handle(Dispatcher.ActionStream, RootStateObservable)
+            .Subscribe(Dispatcher.Dispatch)
             .AddTo(_disposables);
     }
 

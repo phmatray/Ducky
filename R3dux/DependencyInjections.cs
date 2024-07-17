@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using R3;
 
 namespace R3dux;
@@ -74,10 +75,11 @@ public static class DependencyInjections
         {
             var storeFactory = sp.GetRequiredService<IStoreFactory>();
             var dispatcher = sp.GetRequiredService<IDispatcher>();
+            var logger = sp.GetRequiredService<ILogger<Store>>();
             var slices = sp.GetServices<ISlice>().ToArray();
             var effects = sp.GetServices<IEffect>().ToArray();
 
-            return storeFactory.CreateStore(dispatcher, slices, effects);
+            return storeFactory.CreateStore(dispatcher, logger, slices, effects);
         });
         
         return services;

@@ -56,7 +56,7 @@ public class StoreTests
         _sut.Dispose();
 
         // Assert
-        Action act = () => _sut.Dispatch(new TestIncrementAction());
+        Action act = () => _sut.Dispatcher.Dispatch(new TestIncrementAction());
         act.Should().Throw<ObjectDisposedException>();
     }
 }

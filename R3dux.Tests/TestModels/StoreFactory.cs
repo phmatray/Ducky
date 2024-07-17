@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Microsoft.Extensions.Logging;
 
 namespace R3dux.Tests.TestModels;
 
@@ -6,12 +7,12 @@ internal static class Factories
 {
     public static Store CreateTestCounterStore(IEffect[]? effects = null)
     {
-        IStoreFactory storeFactory = new StoreFactory();
-        IDispatcher dispatcher = new Dispatcher();
+        var storeFactory = new StoreFactory();
+        var dispatcher = new Dispatcher();
+        var logger = new Logger<Store>(new LoggerFactory());
         TestCounterReducers counterReducers = new();
-        effects ??= [];
-        
-        return storeFactory.CreateStore(dispatcher, [counterReducers], effects);
+
+        return storeFactory.CreateStore(dispatcher, logger, [counterReducers], effects ?? []);
     }
     
     public static RootState CreateTestRootState()

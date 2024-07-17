@@ -4,12 +4,11 @@ namespace R3dux;
 
 public interface IStore
 {
+    IDispatcher Dispatcher { get; }
     Observable<RootState> RootStateObservable { get; }
 
     TState GetState<TState>(string key)
         where TState : notnull, new();
-    
-    void Dispatch(IAction action);
     
     void AddSlice(ISlice slice);
     void AddSlices(params ISlice[] slices);
