@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="R3" Version="1.1.13" />
-    <PackageReference Include="R3Extensions.Blazor" Version="1.1.13" />
+    <PackageReference Include="R3" Version="1.1.15" />
+    <PackageReference Include="R3Extensions.Blazor" Version="1.1.15" />
   </ItemGroup>
 
   <ItemGroup>
