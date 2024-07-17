@@ -38,7 +38,7 @@
                   <MudHighlighter Text="@notification.Message" HighlightedText="@_searchTerm" />
                 </MudText>
                 <MudText Typo="Typo.caption">
-                  @notification.Timestamp.Humanize()
+                  Raised at @notification.Timestamp @Separator @notification.Timestamp.Humanize()
                 </MudText>
                 @if (notification is ExceptionNotification error)
                 {
@@ -49,7 +49,11 @@
                   </MudPaper>
                 }
                 <MudStack AlignItems="AlignItems.Start">
-                  <MudButton Variant="Variant.Outlined" Class="mt-2" OnClick="() => MarkNotificationAsRead(notification.Id)">
+                  <MudButton
+                    Variant="Variant.Outlined"
+                    Class="mt-2"
+                    OnClick="() => MarkNotificationAsRead(notification.Id)"
+                    StartIcon="@Icons.Material.Filled.MarkChatRead">
                     Marks as Read
                   </MudButton>
                 </MudStack>
@@ -71,7 +75,8 @@
 
 @code {
   
-  string _searchTerm = "";
+  private const string Separator = "•";
+  private string _searchTerm = "";
   
   private ImmutableList<Notification> ErrorNotifications
     => State.SelectErrorNotifications();

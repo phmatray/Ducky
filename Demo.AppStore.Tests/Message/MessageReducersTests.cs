@@ -50,7 +50,7 @@ public class MessageReducersTests
         var reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(1);
+        reducers.Should().HaveCount(3);
     }
 
     [Fact]

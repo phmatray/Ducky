@@ -60,7 +60,7 @@ public class MovieReducersTests
         var reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(3);
+        reducers.Should().HaveCount(4);
     }
 
     [Fact]

@@ -16,24 +16,26 @@ public record LayoutState
         => $"{Title} - {Version}";
 
     public ImmutableList<Notification> SelectUnreadNotifications()
-        => Notifications
-            .Where(n => !n.IsRead)
-            .ToImmutableList();
+        =>
+        [
+            ..Notifications
+                .Where(n => !n.IsRead)
+                .Reverse()
+        ];
     
     public bool SelectHasUnreadNotifications()
-        => Notifications
-            .Any(n => !n.IsRead);
+        => !SelectUnreadNotifications().IsEmpty;
 
     public int SelectUnreadNotificationCount()
-        => Notifications
-            .Count(n => !n.IsRead);
-    
+        => SelectUnreadNotifications().Count;
+
     public ImmutableList<Notification> SelectNotificationsBySeverity(
         NotificationSeverity severity)
-        => Notifications
-            .Where(n => !n.IsRead)
-            .Where(n => n.Severity == severity)
-            .ToImmutableList();
+        =>
+        [
+            ..SelectUnreadNotifications()
+                .Where(n => n.Severity == severity)
+        ];
     
     public ImmutableList<Notification> SelectErrorNotifications()
         => SelectNotificationsBySeverity(NotificationSeverity.Error);
@@ -76,9 +78,11 @@ public record LayoutReducers : SliceReducers<LayoutState>
         Map<MarkNotificationAsRead>((state, action)
             => state with
             {
-                Notifications = state.Notifications
-                    .Select(n => n.Id == action.NotificationId ? n with { IsRead = true } : n)
-                    .ToImmutableList()
+                Notifications =
+                [
+                    ..state.Notifications.Select(n => 
+                        n.Id == action.NotificationId ? n with { IsRead = true } : n)
+                ]
             });
     }
 
@@ -93,18 +97,9 @@ public record LayoutReducers : SliceReducers<LayoutState>
             IsNotificationOpen = false,
             Notifications =
             [
-                new Notification("Welcome to R3dux!")
-                {
-                    Severity = NotificationSeverity.Success
-                },
-                new Notification("This is a warning.")
-                {
-                    Severity = NotificationSeverity.Warning
-                },
-                new Notification("This is an error.")
-                {
-                    Severity = NotificationSeverity.Error
-                },
+                new SuccessNotification("Welcome to R3dux!"),
+                new WarningNotification("This is a warning."),
+                new ErrorNotification("This is an error.")
             ]
         };
     }

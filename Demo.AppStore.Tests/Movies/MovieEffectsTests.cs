@@ -67,7 +67,7 @@ public sealed class MovieEffectsTests : IDisposable
         // Assert
         _actualActions.Should().HaveCount(1); // One for failure
         _actualActions[0].Should().BeOfType<LoadMoviesFailure>()
-            .Which.ErrorMessage.Should().Be(exceptionMessage);
+            .Which.Error.Message.Should().Be(exceptionMessage);
     }
 
     private void SetupRootState()

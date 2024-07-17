@@ -9,7 +9,11 @@ public class LayoutReducersTests
     private readonly LayoutState _initialState = new()
     {
         Title = "R3dux",
-        Version = "v1.0.0"
+        Version = "v1.0.0",
+        IsDarkMode = true,
+        IsDrawerOpen = true,
+        IsNotificationOpen = false,
+        Notifications = []
     };
     
     private const string Key = "layout";
@@ -21,7 +25,12 @@ public class LayoutReducersTests
         var initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Should().BeEquivalentTo(_initialState);
+        initialState.Title.Should().BeEquivalentTo(_initialState.Title);
+        initialState.Version.Should().BeEquivalentTo(_initialState.Version);
+        initialState.IsDarkMode.Should().Be(_initialState.IsDarkMode);
+        initialState.IsDrawerOpen.Should().Be(_initialState.IsDrawerOpen);
+        initialState.IsNotificationOpen.Should().Be(_initialState.IsNotificationOpen);
+        initialState.Notifications.Should().HaveCount(3);
     }
     
     [Fact]
@@ -51,7 +60,7 @@ public class LayoutReducersTests
         var reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(3);
+        reducers.Should().HaveCount(6);
     }
 
     [Fact]

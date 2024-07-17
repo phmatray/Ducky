@@ -17,11 +17,7 @@ public class LoadMoviesSuccessEffect(ISnackbar snackbar) : Effect
             .Do(message => snackbar.Add(message, Severity.Success))
             .Select(message =>
             {
-                var notification = new Notification(message)
-                {
-                    Severity = NotificationSeverity.Success
-                };
-
+                var notification = new SuccessNotification(message);
                 return (IAction)new AddNotification(notification);
             });
     }
