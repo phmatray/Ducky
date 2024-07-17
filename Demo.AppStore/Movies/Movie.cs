@@ -2,6 +2,7 @@ namespace Demo.AppStore;
 
 public record Movie
 {
+    public required int Id { get; init; }
     public required string Title { get; init; }
     public required int Year { get; init; }
     public required string Duration { get; init; }

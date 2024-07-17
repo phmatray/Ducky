@@ -11,7 +11,7 @@ public record Pagination
 
 public record MovieState
 {
-    public required ImmutableArray<Movie> Movies { get; init; }
+    public required ImmutableDictionary<int, Movie> Movies { get; init; }
     public required bool IsLoading { get; init; }
     public required string? ErrorMessage { get; init; }
     public required Pagination Pagination { get; init; }
@@ -22,13 +22,12 @@ public record MovieState
     // to encapsulate the logic of selecting data from the state.
     // Each method should begin with the word "Select".
     public int SelectMovieCount()
-        => Movies.Length;
+        => Movies.Count;
 
-    public ImmutableArray<Movie> SelectMoviesByYear()
+    public ImmutableDictionary<int, Movie> SelectMoviesByYear()
         => Movies
-            .Sort((a, b) => a.Year.CompareTo(b.Year))
-            .Reverse()
-            .ToImmutableArray();
+            .OrderByDescending(pair => pair.Value.Year)
+            .ToImmutableDictionary();
 }
 
 #endregion
@@ -36,7 +35,7 @@ public record MovieState
 #region Actions
 
 public record LoadMovies(int PageNumber = 1, int PageSize = 5) : IAction;
-public record LoadMoviesSuccess(ImmutableArray<Movie> Movies, int TotalItems) : IAction;
+public record LoadMoviesSuccess(ImmutableDictionary<int, Movie> Movies, int TotalItems) : IAction;
 public record LoadMoviesFailure(Exception Error) : IAction;
 public record SetCurrentPage(int CurrentPage) : IAction;
 
@@ -66,7 +65,7 @@ public record MovieReducers : SliceReducers<MovieState>
         Map<LoadMoviesFailure>((state, action)
             => state with
             {
-                Movies = [],
+                Movies = ImmutableDictionary<int, Movie>.Empty,
                 ErrorMessage = action.Error.Message,
                 IsLoading = false
             });
@@ -79,7 +78,7 @@ public record MovieReducers : SliceReducers<MovieState>
     {
         return new MovieState
         {
-            Movies = ImmutableArray<Movie>.Empty,
+            Movies = ImmutableDictionary<int, Movie>.Empty,
             IsLoading = false,
             ErrorMessage = null,
             Pagination = new Pagination
@@ -137,8 +136,9 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
                     var (state, action) = pair;
                     var currentPage = state.Pagination.CurrentPage;
                     var response = await moviesService.GetMoviesAsync(currentPage, action.PageSize, ct);
+                    var dictionary = response.Movies.ToImmutableDictionary(movie => movie.Id);
                     
-                    return new LoadMoviesSuccess(response.Movies, response.TotalItems) as IAction;
+                    return new LoadMoviesSuccess(dictionary, response.TotalItems) as IAction;
                 }
                 catch (Exception ex)
                 {

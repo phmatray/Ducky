@@ -10,7 +10,7 @@ public class MovieReducersTests
 
     private readonly MovieState _initialState = new()
     {
-        Movies = [],
+        Movies = ImmutableDictionary<int, Movie>.Empty,
         IsLoading = false,
         ErrorMessage = null,
         Pagination = new Pagination
@@ -78,10 +78,11 @@ public class MovieReducersTests
     public void LoadMoviesSuccess_ShouldSetMoviesAndIsLoadingToFalse()
     {
         // Arrange
-        var movies = ImmutableArray.Create(MoviesExamples.Movies[0]);
+        var movies = ImmutableDictionary<int, Movie>.Empty
+            .Add(1, MoviesExamples.Movies[0]);
 
         // Act
-        var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Length));
+        var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Count));
 
         // Assert
         newState.Movies.Should().BeEquivalentTo(movies);
@@ -111,11 +112,9 @@ public class MovieReducersTests
         // Arrange
         var state = _initialState with
         {
-            Movies =
-            [
-                MoviesExamples.Movies[0],
-                MoviesExamples.Movies[1]
-            ]
+            Movies = ImmutableDictionary<int, Movie>.Empty
+                .Add(1, MoviesExamples.Movies[0])
+                .Add(2, MoviesExamples.Movies[1])
         };
 
         // Act
@@ -131,15 +130,13 @@ public class MovieReducersTests
         // Arrange
         var state = _initialState with
         {
-            Movies =
-            [
-                MoviesExamples.Movies[0],
-                MoviesExamples.Movies[1]
-            ]
+            Movies = ImmutableDictionary<int, Movie>.Empty
+                .Add(1, MoviesExamples.Movies[0])
+                .Add(2, MoviesExamples.Movies[1])
         };
 
         // Act
-        var sortedMovies = state.SelectMoviesByYear();
+        var sortedMovies = state.SelectMoviesByYear().Values;
 
         // Assert
         sortedMovies.Should().BeInDescendingOrder(movie => movie.Year);
