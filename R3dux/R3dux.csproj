@@ -17,8 +17,4 @@
     <PackageReference Include="R3Extensions.Blazor" Version="1.1.15" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Toolkit\" />
-  </ItemGroup>
-
 </Project>

@@ -115,14 +115,11 @@ public abstract record NormalizedState<TKey, TEntity, TState>
 
     private ImmutableDictionary<TKey, TEntity> MergeFailIfDuplicate(ImmutableDictionary<TKey, TEntity> entities)
     {
-        foreach (var kvp in entities)
+        foreach (var kvp in entities.Where(kvp => ById.ContainsKey(kvp.Key)))
         {
-            if (ById.ContainsKey(kvp.Key))
-            {
-                throw new R3duxException($"Duplicate entity with key '{kvp.Key}' found during merge.");
-            }
+            throw new R3duxException($"Duplicate entity with key '{kvp.Key}' found during merge.");
         }
-        
+
         return ById.AddRange(entities);
     }
 

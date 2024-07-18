@@ -32,7 +32,7 @@ public record TodoState
 #region Actions
 
 public sealed record CreateTodo
-    : FluxStandardAction<CreateTodo.ActionPayload, CreateTodo.ActionMeta>
+    : Fsa<CreateTodo.ActionPayload, CreateTodo.ActionMeta>
 {
     // Optionally, you can use models defined within the action or external models like TodoItem.
     public sealed record ActionPayload(string Title);
@@ -41,18 +41,15 @@ public sealed record CreateTodo
     public sealed record ActionMeta(DateTime TimeStamp);
 
     // [Recommended] Write Action Types as domain/eventName
-    public override string TypeKey { get; init; } = "todos/create";
+    public override string TypeKey => "todos/create";
 
     // Action creators are represented as constructors.
     public CreateTodo(string title)
-    {
-        Payload = new ActionPayload(title);
-        Meta = new ActionMeta(DateTime.UtcNow);
-    }
+        : base(new ActionPayload(title), new ActionMeta(DateTime.UtcNow)) { }
 }
 
 public sealed record ToggleTodo
-    : FluxStandardAction<ToggleTodo.ActionPayload, ToggleTodo.ActionMeta>
+    : Fsa<ToggleTodo.ActionPayload, ToggleTodo.ActionMeta>
 {
     // Payload containing the ID of the todo to be toggled.
     public sealed record ActionPayload(Guid Id);
@@ -61,34 +58,26 @@ public sealed record ToggleTodo
     public sealed record ActionMeta(DateTime TimeStamp);
 
     // [Recommended] Write Action Types as domain/eventName
-    public override string TypeKey { get; init; } = "todos/toggle";
+    public override string TypeKey => "todos/toggle";
 
     // Action creators are represented as constructors.
     public ToggleTodo(Guid id)
-    {
-        Payload = new ActionPayload(id);
-        Meta = new ActionMeta(DateTime.UtcNow);
-    }
+        : base(new ActionPayload(id), new ActionMeta(DateTime.UtcNow)) { }
 }
 
 public sealed record DeleteTodo
-    : FluxStandardAction<DeleteTodo.ActionPayload, DeleteTodo.ActionMeta>
+    : Fsa<DeleteTodo.ActionPayload, ActionMeta>
 {
     // Payload containing the ID of the todo to be deleted.
     public sealed record ActionPayload(Guid Id);
 
-    // Meta information can store additional data such as a timestamp.
-    public sealed record ActionMeta(DateTime TimeStamp);
-
     // [Recommended] Write Action Types as domain/eventName
-    public override string TypeKey { get; init; } = "todos/delete";
+    public override string TypeKey => "todos/delete";
 
     // Action creators are represented as constructors.
+    // You can also use the ActionMeta.Create() method from R3dux to create a timestamp.
     public DeleteTodo(Guid id)
-    {
-        Payload = new ActionPayload(id);
-        Meta = new ActionMeta(DateTime.UtcNow);
-    }
+        : base(new ActionPayload(id), ActionMeta.Create()) { }
 }
 
 #endregion

@@ -39,11 +39,14 @@ public class MoviesServiceTests
         // Arrange
         const int pageNumber = 1;
         const int pageSize = 2;
-        using var cts = new CancellationTokenSource();
-        await cts.CancelAsync();
 
         // Act
-        Func<Task> act = async () => await _moviesService.GetMoviesAsync(pageNumber, pageSize, cts.Token);
+        Func<Task> act = async () =>
+        {
+            using var cts = new CancellationTokenSource();
+            await cts.CancelAsync();
+            await _moviesService.GetMoviesAsync(pageNumber, pageSize, cts.Token);
+        };
 
         // Assert
         await act.Should().ThrowAsync<TaskCanceledException>();
