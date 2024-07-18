@@ -21,13 +21,14 @@ public class JsonColorizer : IJsonColorizer
         IndentedStringBuilder sb,
         bool inArray = false)
     {
+        if (inArray)
+        {
+            sb.AppendIndentation();
+        }
+        
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
-                if (inArray)
-                {
-                    sb.AppendIndentation();
-                }
                 sb.Append(SpanOpenBrace()).Append("<br>");
                 sb.Indent();
                 var properties = element.EnumerateObject().ToArray();

@@ -1,21 +1,51 @@
 namespace R3dux.Blazor.Router;
 
-// see: https://ngrx.io/guide/router-store/actions
+// original doc: https://ngrx.io/guide/router-store/actions
+// original src: https://github.com/ngrx/platform/tree/main/modules/router-store/src
 
-// routerRequestAction
-// At the start of each navigation, the router will dispatch a ROUTER_REQUEST action.
+/// <summary>
+/// An action dispatched when a router navigation request is fired.
+/// </summary>
+public sealed record RouterRequestAction
+    : FluxStandardAction<RouterRequestAction.ActionPayload, object>
+{
+    public sealed record ActionPayload(object RouterState, object Event);
+    
+    public override string TypeKey { get; init; } = "router-store/request";
+}
 
-// routerNavigationAction
-// During navigation, before any guards or resolvers run, the router will dispatch a ROUTER_NAVIGATION action.
-// If you want the ROUTER_NAVIGATION to be dispatched after guards or resolvers run, change the Navigation Action Timing.
+/// <summary>
+/// An action dispatched when the router navigates.
+/// </summary>
+public sealed record RouterNavigationAction
+    : FluxStandardAction
+{
+    public override string TypeKey { get; init; } = "router-store/navigation";
+}
 
-// routerNavigatedAction
-// After a successful navigation, the router will dispatch a ROUTER_NAVIGATED action.
+/// <summary>
+/// An action dispatched after navigation has ended and new route is active.
+/// </summary>
+public sealed record RouterNavigatedAction
+    : FluxStandardAction
+{
+    public override string TypeKey { get; init; } = "router-store/navigated";
+}
 
-// routerCancelAction
-// When the navigation is cancelled, for example due to a guard saying that the user cannot access the requested page, the router will dispatch a ROUTER_CANCEL action.
-// The action contains the store state before the navigation. You can use it to restore the consistency of the store.
+/// <summary>
+/// An action dispatched when the router cancels navigation.
+/// </summary>
+public sealed record RouterCancelAction
+    : FluxStandardAction
+{
+    public override string TypeKey { get; init; } = "router-store/cancel";
+}
 
-// routerErrorAction
-// When there is an error during navigation, the router will dispatch a ROUTER_ERROR action.
-// The action contains the store state before the navigation. You can use it to restore the consistency of the store.
+/// <summary>
+/// An action dispatched when the router errors.
+/// </summary>
+public sealed record RouterErrorAction
+    : FluxStandardAction
+{
+    public override string TypeKey { get; init; } = "router-store/error";
+}

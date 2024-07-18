@@ -1,13 +1,25 @@
+using R3dux.Normalization;
+
 namespace Demo.AppStore;
 
-public record TodoItem(string Title, bool IsCompleted = false)
+public record TodoItem : IEntity<Guid>
 {
     public TodoItem(Guid id, string title, bool isCompleted = false)
-        : this(title, isCompleted)
-        => Id = id;
+    {
+        Id = id;
+        Title = title;
+        IsCompleted = isCompleted;
+    }
+
+    public TodoItem(string title, bool isCompleted = false)
+        : this(Guid.NewGuid(), title, isCompleted)
+    {
+    }
 
     public Guid Id { get; init; } = Guid.NewGuid();
-    
+    public string Title { get; init; }
+    public bool IsCompleted { get; init; }
+
     public TodoItem ToggleIsCompleted()
         => this with { IsCompleted = !IsCompleted };
 }

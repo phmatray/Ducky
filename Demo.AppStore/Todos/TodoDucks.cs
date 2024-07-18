@@ -1,29 +1,30 @@
+using R3dux.Normalization;
+
 namespace Demo.AppStore;
 
 #region State
 
 public record TodoState
+    : NormalizedState<Guid, TodoItem, TodoState>
 {
-    public required ImmutableList<TodoItem> Todos { get; init; }
-    
     // Selectors
-    public ImmutableList<TodoItem> SelectActiveTodos()
-        => [..Todos.Where(todo => !todo.IsCompleted)];
-    
-    public int SelectActiveTodosCount()
-        => SelectActiveTodos().Count;
-    
-    public bool SelectHasActiveTodos()
-        => SelectActiveTodosCount() > 0;
-    
     public ImmutableList<TodoItem> SelectCompletedTodos()
-        => [..Todos.Where(todo => todo.IsCompleted)];
+        => SelectImmutableList(todo => todo.IsCompleted);
     
     public int SelectCompletedTodosCount()
         => SelectCompletedTodos().Count;
     
     public bool SelectHasCompletedTodos()
-        => SelectCompletedTodosCount() > 0;
+        => !SelectCompletedTodos().IsEmpty;
+    
+    public ImmutableList<TodoItem> SelectActiveTodos()
+        => SelectImmutableList(todo => !todo.IsCompleted);
+    
+    public int SelectActiveTodosCount()
+        => SelectActiveTodos().Count;
+    
+    public bool SelectHasActiveTodos()
+        => !SelectActiveTodos().IsEmpty;
 }
 
 #endregion
@@ -104,40 +105,33 @@ public record TodoReducers : SliceReducers<TodoState>
     }
 
     private static TodoState MapCreateTodo(TodoState state, CreateTodo action)
-        => new()
-        {
-            Todos = state.Todos.Add(new TodoItem(action.Payload.Title))
-        };
+    {
+        var newTodo = new TodoItem(action.Payload.Title);
+        return state.AddOrUpdate(newTodo);
+    }
 
     private static TodoState MapToggleTodo(TodoState state, ToggleTodo action)
-        => new()
-        {
-            Todos = state.Todos
-                .Select(todo => todo.Id == action.Payload.Id ? todo.ToggleIsCompleted() : todo)
-                .ToImmutableList()
-        };
+    {
+        var id = action.Payload.Id;
+        var updatedTodo = state[id].ToggleIsCompleted();
+        return state.AddOrUpdate(updatedTodo);
+    }
 
     private static TodoState MapDeleteTodo(TodoState state, DeleteTodo action)
-        => new()
-        {
-            Todos = state.Todos
-                .Where(todo => todo.Id != action.Payload.Id)
-                .ToImmutableList()
-        };
+    {
+        var id = action.Payload.Id;
+        return state.Remove(id);
+    }
 
     public override TodoState GetInitialState()
     {
-        return new TodoState
-        {
-            Todos =
-            [
-                new TodoItem(SampleIds.Id1, "Learn Blazor", true),
-                new TodoItem(SampleIds.Id2, "Learn Redux"),
-                new TodoItem(SampleIds.Id3, "Learn Reactive Programming"),
-                new TodoItem(SampleIds.Id4, "Create a Todo App", true),
-                new TodoItem(SampleIds.Id5, "Publish a NuGet package")
-            ]
-        };
+        return TodoState.Create([
+            new TodoItem(SampleIds.Id1, "Learn Blazor", true),
+            new TodoItem(SampleIds.Id2, "Learn Redux"),
+            new TodoItem(SampleIds.Id3, "Learn Reactive Programming"),
+            new TodoItem(SampleIds.Id4, "Create a Todo App", true),
+            new TodoItem(SampleIds.Id5, "Publish a NuGet package")
+        ]);
     }
 }
 
