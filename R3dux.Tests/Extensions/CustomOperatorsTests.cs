@@ -1,22 +1,11 @@
-using System.Collections.Immutable;
-using R3;
-
 namespace R3dux.Tests.Extensions;
 
 public class CustomOperatorsTests
 {
-    private record TestAction(int Value = 0) : IAction;
+    private record TestAction : IAction;
 
     private record OtherAction : IAction;
 
-    private record SuccessAction(int Result) : IAction;
-
-    private record ErrorAction(string ErrorMessage) : IAction;
-    
-    private record StateActionPair<TState, TAction>(TState State, TAction Action)
-        where TState : notnull
-        where TAction : IAction;
-    
     private readonly CompositeDisposable _disposables = new();
 
     [Fact]
@@ -48,9 +37,9 @@ public class CustomOperatorsTests
         var actions = new List<IAction>();
 
         source.AsObservable()
-            .SelectAction<int, TestAction>(i => new TestAction { Value = i })
+            .SelectAction<int, TestAction>(_ => new TestAction())
             .Subscribe(actions.Add)
-            .AddTo(_disposables);;
+            .AddTo(_disposables);
 
         // Act
         source.OnNext(1);

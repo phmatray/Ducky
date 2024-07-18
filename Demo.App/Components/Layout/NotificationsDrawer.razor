@@ -23,7 +23,7 @@
             <MudStack Spacing="0">
               <MudText>@notification.Message</MudText>
               <MudText Typo="Typo.caption">@notification.Timestamp.Humanize()</MudText>
-              @if (notification is ExceptionNotification error)
+              @if (notification is ExceptionNotification)
               {
                 <MudButton Variant="Variant.Outlined" Class="mt-2">Show Details</MudButton>
               }

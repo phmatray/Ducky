@@ -15,10 +15,10 @@ public record CounterReducers : SliceReducers<int>
 {
     public CounterReducers()
     {
-        Map<Increment>((state, action) => state + 1);
-        Map<Decrement>((state, action) => state - 1);
-        Map<Reset>((state, action) => GetInitialState());
-        Map<SetValue>((state, action) => action.Value);
+        Map<Increment>(state => state + 1);
+        Map<Decrement>(state => state - 1);
+        Map<Reset>(GetInitialState);
+        Map<SetValue>((_, action) => action.Value);
     }
 
     public override int GetInitialState()

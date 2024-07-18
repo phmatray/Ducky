@@ -6,6 +6,11 @@ namespace Demo.App.Features.JsonColoring;
 /// <inheritdoc />
 public class JsonColorizer : IJsonColorizer
 {
+    /// <summary>
+    /// The break line element.
+    /// </summary>
+    public static string BreakLine => "<br>";
+    
     /// <inheritdoc />
     public string ColorizeJson(string json)
     {
@@ -29,61 +34,65 @@ public class JsonColorizer : IJsonColorizer
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
-                sb.Append(SpanOpenBrace()).Append("<br>");
-                sb.Indent();
-                var properties = element.EnumerateObject().ToArray();
-                for (int i = 0; i < properties.Length; i++)
-                {
-                    var property = properties[i];
-                    sb.AppendIndentation();
-                    sb.Append($"{SpanJsonPropertyName(property.Name)}: ");
-                    ProcessElement(property.Value, sb);
-                    sb.Append(i < properties.Length - 1 ? ",<br>" : "<br>");
-                }
-                sb.Unindent();
-                sb.AppendIndentation();
-                sb.Append(SpanCloseBrace());
+                ProcessObject(element, sb);
                 break;
-
             case JsonValueKind.Array:
-                var items = element.EnumerateArray().ToArray();
-                if (items.Length == 0)
-                {
-                    sb.Append(SpanOpenBracket()).Append(SpanCloseBracket());
-                }
-                else
-                {
-                    sb.Append(SpanOpenBracket()).Append("<br>");
-                    sb.Indent();
-                    for (int i = 0; i < items.Length; i++)
-                    {
-                        var item = items[i];
-                        ProcessElement(item, sb, true);
-                        sb.Append(i < items.Length - 1 ? ",<br>" : "<br>");
-                    }
-                    sb.Unindent();
-                    sb.AppendIndentation();
-                    sb.Append(SpanCloseBracket());  
-                }
-                
+                ProcessArray(element, sb);
                 break;
-
             case JsonValueKind.String:
                 sb.Append(SpanJsonString(element.GetString() ?? string.Empty));
                 break;
-
             case JsonValueKind.Number:
                 sb.Append(SpanJsonNumber(element.GetRawText()));
                 break;
-
             case JsonValueKind.True:
             case JsonValueKind.False:
                 sb.Append(SpanJsonBool(element.GetRawText()));
                 break;
-
             case JsonValueKind.Null:
                 sb.Append(SpanJsonNull());
                 break;
+        }
+    }
+
+    private void ProcessObject(JsonElement element, IndentedStringBuilder sb)
+    {
+        sb.Append(SpanOpenBrace()).Append(BreakLine);
+        sb.Indent();
+        var properties = element.EnumerateObject().ToArray();
+        for (int i = 0; i < properties.Length; i++)
+        {
+            var property = properties[i];
+            sb.AppendIndentation();
+            sb.Append($"{SpanJsonPropertyName(property.Name)}: ");
+            ProcessElement(property.Value, sb);
+            sb.Append(i < properties.Length - 1 ? $",{BreakLine}" : BreakLine);
+        }
+        sb.Unindent();
+        sb.AppendIndentation();
+        sb.Append(SpanCloseBrace());
+    }
+
+    private void ProcessArray(JsonElement element, IndentedStringBuilder sb)
+    {
+        var items = element.EnumerateArray().ToArray();
+        if (items.Length == 0)
+        {
+            sb.Append(SpanOpenBracket()).Append(SpanCloseBracket());
+        }
+        else
+        {
+            sb.Append(SpanOpenBracket()).Append(BreakLine);
+            sb.Indent();
+            for (int i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                ProcessElement(item, sb, true);
+                sb.Append(i < items.Length - 1 ? $",{BreakLine}" : BreakLine);
+            }
+            sb.Unindent();
+            sb.AppendIndentation();
+            sb.Append(SpanCloseBracket());  
         }
     }
 }

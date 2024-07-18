@@ -63,16 +63,6 @@ public class SliceReducersTests
     }
 
     [Fact]
-    public void Map_Should_ThrowArgumentNullException_WhenReducerIsNull()
-    {
-        // Act
-        Action act = () => _sut.Map<IntegerAction>(null!);
-
-        // Assert
-        act.Should().Throw<ArgumentNullException>();
-    }
-
-    [Fact]
     public void Reduce_Should_ThrowArgumentNullException_WhenActionIsNull()
     {
         // Act

@@ -39,7 +39,7 @@ public abstract class R3duxComponent<TState>
             Logger.SubscribingToStateObservable(ComponentName);
 
             _subscription = StateObservable
-                .Subscribe(state =>
+                .Subscribe(_ =>
                 {
                     InvokeAsync(StateHasChanged);
                     Logger.ComponentRefreshed(ComponentName);

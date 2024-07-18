@@ -21,14 +21,4 @@ public class LoadMoviesFailureEffect(ISnackbar snackbar) : Effect
                 return (IAction)new AddNotification(notification);
             });
     }
-    
-    private static string GetSnackBarMessage(LoadMoviesFailure action)
-    {
-        Exception exception = action.Error;
-        
-        // return message and stack trace if available
-        return exception.StackTrace is not null
-            ? $"{exception.Message}\n{exception.StackTrace}"
-            : exception.Message;
-    }
 }

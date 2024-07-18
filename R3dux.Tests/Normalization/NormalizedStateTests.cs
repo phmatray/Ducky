@@ -226,7 +226,7 @@ public class NormalizedStateTests
         var state2 = new SampleState().AddOrUpdate(entity2);
         
         // Act
-        Action act = () => state1.Merge(state2.ById, MergeStrategy.FailIfDuplicate);
+        Action act = () => state1.Merge(state2.ById);
         
         // Assert
         act.Should().Throw<R3duxException>().WithMessage($"Duplicate entity with key '{id}' found during merge.");

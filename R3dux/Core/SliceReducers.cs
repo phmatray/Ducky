@@ -117,6 +117,28 @@ public abstract partial record SliceReducers<TState> : ISlice<TState>
         ArgumentNullException.ThrowIfNull(reducer);
         Reducers[typeof(TAction)] = (state, action) => reducer(state, (TAction)action);
     }
+    
+    /// <summary>
+    /// Maps a reducer function to a specific action type.
+    /// </summary>
+    /// <param name="reducer">The reducer function that takes only the state and returns a new state.</param>
+    /// <typeparam name="TAction">The type of the action.</typeparam>
+    public void Map<TAction>(Func<TState, TState> reducer)
+    {
+        ArgumentNullException.ThrowIfNull(reducer);
+        Reducers[typeof(TAction)] = (state, _) => reducer(state);
+    }
+    
+    /// <summary>
+    /// Maps a reducer function to a specific action type.
+    /// </summary>
+    /// <param name="reducer">The reducer function that takes no arguments and returns a new state.</param>
+    /// <typeparam name="TAction">The type of the action.</typeparam>
+    public void Map<TAction>(Func<TState> reducer)
+    {
+        ArgumentNullException.ThrowIfNull(reducer);
+        Reducers[typeof(TAction)] = (_, _) => reducer();
+    }
 
     /// <summary>
     /// Reduces the state using the appropriate reducer for the given action.
