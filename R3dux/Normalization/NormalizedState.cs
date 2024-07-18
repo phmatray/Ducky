@@ -15,6 +15,14 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     where TState : NormalizedState<TKey, TEntity, TState>, new()
 {
     /// <summary>
+    /// Creates a new state with the specified entities.
+    /// </summary>
+    /// <param name="entities">The entities to create the state with.</param>
+    /// <returns>A new state with the entities.</returns>
+    public static TState Create(ImmutableList<TEntity> entities)
+        => new() { ById = entities.ToImmutableDictionary(entity => entity.Id) };
+    
+    /// <summary>
     /// Gets or sets the dictionary of entities.
     /// </summary>
     public ImmutableDictionary<TKey, TEntity> ById { get; init; } = ImmutableDictionary<TKey, TEntity>.Empty;
@@ -55,8 +63,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <returns>A new state with the entity added or updated.</returns>
     /// <exception cref="R3duxException">The state must be of type TState.</exception>
     public TState AddOrUpdate(TEntity entity)
-        => this with { ById = ById.SetItem(entity.Id, entity) } as TState
-           ?? throw new R3duxException("The state must be of type TState.");
+        => CreateWith(ById.SetItem(entity.Id, entity));
 
     /// <summary>
     /// Removes an entity from the state.
@@ -65,8 +72,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <returns>A new state with the entity removed.</returns>
     /// <exception cref="R3duxException">The state must be of type TState.</exception>
     public TState Remove(TKey key)
-        => this with { ById = ById.Remove(key) } as TState
-           ?? throw new R3duxException("The state must be of type TState.");
+        => CreateWith(ById.Remove(key));
 
     /// <summary>
     /// Checks if an entity with the specified key exists in the state.
@@ -86,17 +92,41 @@ public abstract record NormalizedState<TKey, TEntity, TState>
         => ById.TryGetValue(key, out var value)
             ? value
             : throw new R3duxException("The entity does not exist.");
-    
+
     /// <summary>
-    /// Creates a new state with the specified entities.
+    /// Merges the specified entities into the state using the provided merge strategy.
     /// </summary>
-    /// <param name="entities">The entities to create the state with.</param>
-    /// <returns>A new state with the entities.</returns>
+    /// <param name="entities">The entities to merge into the state.</param>
+    /// <param name="strategy">The strategy to use when merging entities.</param>
+    /// <returns>A new state with the entities merged.</returns>
     /// <exception cref="R3duxException">The state must be of type TState.</exception>
-    public static TState Create(ImmutableList<TEntity> entities)
+    public TState Merge(
+        ImmutableDictionary<TKey, TEntity> entities,
+        MergeStrategy strategy = MergeStrategy.FailIfDuplicate)
     {
-        var byId = entities.ToImmutableDictionary(entity => entity.Id);
-        var state = new TState { ById = byId };
-        return state ?? throw new R3duxException("The state must be of type TState.");
+        var byId = strategy switch
+        {
+            MergeStrategy.FailIfDuplicate => MergeFailIfDuplicate(entities),
+            MergeStrategy.Overwrite => ById.SetItems(entities),
+            _ => throw new ArgumentOutOfRangeException(nameof(strategy), strategy, null)
+        };
+        return CreateWith(byId);
     }
+
+    private ImmutableDictionary<TKey, TEntity> MergeFailIfDuplicate(ImmutableDictionary<TKey, TEntity> entities)
+    {
+        foreach (var kvp in entities)
+        {
+            if (ById.ContainsKey(kvp.Key))
+            {
+                throw new R3duxException($"Duplicate entity with key '{kvp.Key}' found during merge.");
+            }
+        }
+        
+        return ById.AddRange(entities);
+    }
+
+    private TState CreateWith(ImmutableDictionary<TKey, TEntity> byId)
+        => this with { ById = byId } as TState
+           ?? throw new R3duxException("The state must be of type TState.");
 }

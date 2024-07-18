@@ -180,6 +180,59 @@ public class NormalizedStateTests
     }
 
     [Fact]
+    public void Merge_ShouldMergeStates()
+    {
+        // Arrange
+        var entity1 = new SampleEntity { Id = Guid.NewGuid(), Name = "Entity 1" };
+        var entity2 = new SampleEntity { Id = Guid.NewGuid(), Name = "Entity 2" };
+        var state1 = new SampleState().AddOrUpdate(entity1);
+        var state2 = new SampleState().AddOrUpdate(entity2);
+
+        // Act
+        SampleState mergedState = state1.Merge(state2.ById);
+
+        // Assert
+        mergedState.ById.Should().ContainKeys(entity1.Id, entity2.Id);
+        mergedState.ById[entity1.Id].Should().Be(entity1);
+        mergedState.ById[entity2.Id].Should().Be(entity2);
+    }
+    
+    [Fact]
+    public void Merge_ShouldReplaceEntities_WhenStateContainsEntitiesWithSameKey()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var entity1 = new SampleEntity { Id = id, Name = "Entity 1" };
+        var entity2 = new SampleEntity { Id = id, Name = "Entity 2" };
+        var state1 = new SampleState().AddOrUpdate(entity1);
+        var state2 = new SampleState().AddOrUpdate(entity2);
+        
+        // Act
+        SampleState mergedState = state1.Merge(state2.ById, MergeStrategy.Overwrite);
+        
+        // Assert
+        mergedState.ById.Should().ContainKey(id);
+        mergedState.ById[id].Name.Should().Be("Entity 2");
+    }
+    
+    [Fact]
+    public void Merge_ShouldThrowException_WhenStateContainsEntitiesWithSameKey()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var entity1 = new SampleEntity { Id = id, Name = "Entity 1" };
+        var entity2 = new SampleEntity { Id = id, Name = "Entity 2" };
+        var state1 = new SampleState().AddOrUpdate(entity1);
+        var state2 = new SampleState().AddOrUpdate(entity2);
+        
+        // Act
+        Action act = () => state1.Merge(state2.ById, MergeStrategy.FailIfDuplicate);
+        
+        // Assert
+        act.Should().Throw<R3duxException>().WithMessage($"Duplicate entity with key '{id}' found during merge.");
+    }
+            
+    [Fact]
     public void Create_ShouldInitializeStateWithEntities()
     {
         // Arrange
