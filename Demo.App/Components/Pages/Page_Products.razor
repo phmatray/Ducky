@@ -1,0 +1,142 @@
+@page "/products"
+@inherits R3duxComponent<ProductState>
+
+<PageTitle>R3dux - Product Catalog</PageTitle>
+
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Product Catalog</MudText>
+      <MudText Typo="Typo.body1">
+        This page demonstrates a product catalog using the R3dux state management library for predictable state handling.<br/>
+        It features functionality to add and remove products, and calculates the total price of products by category efficiently using memoized selectors.
+      </MudText>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12" lg="6">
+    <MudStack>
+      <div>
+        <MudBadge Content="@ElectronicsCount" Color="Color.Primary" Class="mt-5">
+          <MudText Typo="Typo.h5">Electronics</MudText>
+        </MudBadge>
+      </div>
+
+      <MudPaper>
+        @if (!HasElectronics)
+        {
+          <MudText Typo="Typo.h6" Class="ma-4">
+            No electronics available - add a new product to get started!
+          </MudText>
+        }
+        <MudList T="Product">
+          @foreach (var product in Electronics)
+          {
+            <MudListItem @key="product.Id">
+              <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                <MudText>@product.Name</MudText>
+                <MudText>@($"${product.Price}")</MudText>
+                <MudSpacer/>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => DeleteProduct(product.Id)">Delete</MudButton>
+              </MudStack>
+            </MudListItem>
+          }
+        </MudList>
+      </MudPaper>
+
+      <MudText Typo="Typo.h6" Class="mt-2">
+        Total Price: @($"${TotalPriceOfElectronics}")
+      </MudText>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12" lg="6">
+    <MudStack>
+      <div>
+        <MudBadge Content="@ClothingCount" Color="Color.Secondary" Class="mt-5">
+          <MudText Typo="Typo.h5">Clothing</MudText>
+        </MudBadge>
+      </div>
+      <MudPaper>
+        @if (!HasClothing)
+        {
+          <MudText Typo="Typo.h6" Class="ma-4">
+            No clothing available - add a new product to get started!
+          </MudText>
+        }
+        <MudList T="Product">
+          @foreach (var product in Clothing)
+          {
+            <MudListItem @key="product.Id">
+              <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                <MudText>@product.Name</MudText>
+                <MudText>@($"${product.Price}")</MudText>
+                <MudSpacer/>
+                <MudButton
+                  Variant="Variant.Outlined"
+                  Color="Color.Error"
+                  OnClick="() => DeleteProduct(product.Id)">
+                  Delete
+                </MudButton>
+              </MudStack>
+            </MudListItem>
+          }
+        </MudList>
+      </MudPaper>
+
+      <MudText Typo="Typo.h6" Class="mt-2">
+        Total Price: @($"${TotalPriceOfClothing}")
+      </MudText>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12">
+    <MudCard>
+      <MudCardContent>
+        <MudTextField @bind-Value="_newProductName" Variant="Variant.Filled" Label="New Product Name"/>
+        <MudTextField @bind-Value="_newProductPrice" Variant="Variant.Filled" Label="Price" Type="number"/>
+        <MudSelect @bind-Value="_newProductCategory" Label="Category">
+          <MudSelectItem Value="@("Electronics")">Electronics</MudSelectItem>
+          <MudSelectItem Value="@("Clothing")">Clothing</MudSelectItem>
+        </MudSelect>
+      </MudCardContent>
+      <MudCardActions>
+        <MudButton Variant="Variant.Outlined" OnClick="CreateProduct" Class="ml-auto mr-2 mb-2">Add Product</MudButton>
+      </MudCardActions>
+    </MudCard>
+  </MudItem>
+</MudGrid>
+
+@code {
+
+  private string _newProductName = string.Empty;
+  private decimal _newProductPrice = 0;
+  private string _newProductCategory = "Electronics";
+  
+  private ImmutableList<Product> Electronics => State.SelectElectronics();
+  private int ElectronicsCount => Electronics.Count;
+  private bool HasElectronics => ElectronicsCount > 0;
+  private decimal TotalPriceOfElectronics => State.SelectTotalPriceOfElectronics();
+
+  private ImmutableList<Product> Clothing => State.SelectClothing();
+  private int ClothingCount => Clothing.Count;
+  private bool HasClothing => ClothingCount > 0;
+  private decimal TotalPriceOfClothing => State.SelectTotalPriceOfClothing();
+  
+  private void CreateProduct()
+  {
+    if (!string.IsNullOrWhiteSpace(_newProductName) && _newProductPrice > 0)
+    {
+      var newProduct = new Product(Guid.NewGuid(), _newProductName, _newProductPrice, _newProductCategory);
+      Dispatch(new AddProduct(newProduct));
+      _newProductName = string.Empty;
+      _newProductPrice = 0;
+      _newProductCategory = "Electronics";
+    }
+  }
+
+  private void DeleteProduct(Guid id)
+    => Dispatch(new RemoveProduct(id));
+  
+}

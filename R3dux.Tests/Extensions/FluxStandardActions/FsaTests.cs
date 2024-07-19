@@ -1,4 +1,4 @@
-namespace R3dux.Tests.FluxStandardActions;
+namespace R3dux.Tests.Extensions.FluxStandardActions;
 
 public class FsaTests
 {

@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using R3dux.Exceptions;
 using R3dux.Normalization;
 
-namespace R3dux.Tests.Normalization;
+namespace R3dux.Tests.Extensions.Normalization;
 
 public class NormalizedStateTests
 {

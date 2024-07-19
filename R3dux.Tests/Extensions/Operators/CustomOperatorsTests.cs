@@ -1,4 +1,4 @@
-namespace R3dux.Tests.Extensions;
+namespace R3dux.Tests.Extensions.Operators;
 
 public class CustomOperatorsTests
 {
