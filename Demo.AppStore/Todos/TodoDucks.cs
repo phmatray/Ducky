@@ -94,34 +94,22 @@ public record TodoReducers : SliceReducers<TodoState>
     }
 
     private static TodoState MapCreateTodo(TodoState state, CreateTodo action)
-    {
-        var newTodo = new TodoItem(action.Payload.Title);
-        return state.AddOrUpdate(newTodo);
-    }
+        => state.SetOne(new TodoItem(action.Payload.Title));
 
     private static TodoState MapToggleTodo(TodoState state, ToggleTodo action)
-    {
-        var id = action.Payload.Id;
-        var updatedTodo = state[id].ToggleIsCompleted();
-        return state.AddOrUpdate(updatedTodo);
-    }
+        => state.UpdateOne(action.Payload.Id, todo => { todo.IsCompleted = !todo.IsCompleted; });
 
     private static TodoState MapDeleteTodo(TodoState state, DeleteTodo action)
-    {
-        var id = action.Payload.Id;
-        return state.Remove(id);
-    }
+        => state.RemoveOne(action.Payload.Id);
 
     public override TodoState GetInitialState()
-    {
-        return TodoState.Create([
+        => TodoState.Create([
             new TodoItem(SampleIds.Id1, "Learn Blazor", true),
             new TodoItem(SampleIds.Id2, "Learn Redux"),
             new TodoItem(SampleIds.Id3, "Learn Reactive Programming"),
             new TodoItem(SampleIds.Id4, "Create a Todo App", true),
             new TodoItem(SampleIds.Id5, "Publish a NuGet package")
         ]);
-    }
 }
 
 #endregion

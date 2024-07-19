@@ -2,7 +2,7 @@ using R3dux.Normalization;
 
 namespace Demo.AppStore;
 
-public record TodoItem : IEntity<Guid>
+public class TodoItem : IEntity<Guid>
 {
     public TodoItem(Guid id, string title, bool isCompleted = false)
     {
@@ -16,12 +16,9 @@ public record TodoItem : IEntity<Guid>
     {
     }
 
-    public Guid Id { get; init; } = Guid.NewGuid();
-    public string Title { get; init; }
-    public bool IsCompleted { get; init; }
-
-    public TodoItem ToggleIsCompleted()
-        => this with { IsCompleted = !IsCompleted };
+    public Guid Id { get; }
+    public string Title { get; set; }
+    public bool IsCompleted { get; set; }
 }
 
 public static class SampleIds

@@ -79,7 +79,7 @@ public class TodoReducersTests
         var newState = _sut.Reduce(state, new ToggleTodo(todoItem.Id));
 
         // Assert
-        newState.SelectImmutableList().Single(todo => todo.Id == todoItem.Id).IsCompleted.Should().Be(!todoItem.IsCompleted);
+        newState[todoItem.Id].IsCompleted.Should().BeTrue();
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class TodoReducersTests
     {
         // Arrange
         var activeTodo = new TodoItem("Active Todo");
-        var completedTodo = new TodoItem("Completed Todo").ToggleIsCompleted();
+        var completedTodo = new TodoItem("Completed Todo", true);
         var state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
@@ -117,7 +117,7 @@ public class TodoReducersTests
     {
         // Arrange
         var activeTodo = new TodoItem("Active Todo");
-        var completedTodo = new TodoItem("Completed Todo").ToggleIsCompleted();
+        var completedTodo = new TodoItem("Completed Todo", true);
         var state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
@@ -132,7 +132,7 @@ public class TodoReducersTests
     {
         // Arrange
         var activeTodo = new TodoItem("Active Todo");
-        var completedTodo = new TodoItem("Completed Todo").ToggleIsCompleted();
+        var completedTodo = new TodoItem("Completed Todo", true);
         var state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
@@ -148,7 +148,7 @@ public class TodoReducersTests
     {
         // Arrange
         var activeTodo = new TodoItem("Active Todo");
-        var completedTodo = new TodoItem("Completed Todo").ToggleIsCompleted();
+        var completedTodo = new TodoItem("Completed Todo", true);
         var state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
