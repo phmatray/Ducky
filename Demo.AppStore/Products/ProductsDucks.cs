@@ -94,7 +94,9 @@ public record ProductsReducers : SliceReducers<ProductState>
             new Product(SampleIds.Id1, "iPhone 12", 799.99m, "Electronics"),
             new Product(SampleIds.Id2, "MacBook Pro", 1299.99m, "Electronics"),
             new Product(SampleIds.Id3, "Nike Air Max", 129, "Clothing"),
-            new Product(SampleIds.Id4, "Adidas Original", 99, "Clothing")
+            new Product(SampleIds.Id4, "Adidas Original", 99, "Clothing"),
+            new Product(SampleIds.Id5, "Samsung Galaxy S21", 699.99m, "Electronics"),
+            new Product(SampleIds.Id6, "Bag Louis Vuitton", 1999.99m, "Clothing")
         ]);
 }
 

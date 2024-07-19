@@ -17,11 +17,14 @@
 
   <MudItem xs="12" lg="6">
     <MudStack>
-      <div>
+      <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Baseline">
         <MudBadge Content="@ElectronicsCount" Color="Color.Primary" Class="mt-5">
           <MudText Typo="Typo.h5">Electronics</MudText>
         </MudBadge>
-      </div>
+        <MudText Typo="Typo.h6" Class="mt-2">
+          <b>Total Price: @($"${TotalPriceOfElectronics}")</b>
+        </MudText>
+      </MudStack>
 
       <MudPaper>
         @if (!HasElectronics)
@@ -44,20 +47,19 @@
           }
         </MudList>
       </MudPaper>
-
-      <MudText Typo="Typo.h6" Class="mt-2">
-        Total Price: @($"${TotalPriceOfElectronics}")
-      </MudText>
     </MudStack>
   </MudItem>
 
   <MudItem xs="12" lg="6">
     <MudStack>
-      <div>
+      <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Baseline">
         <MudBadge Content="@ClothingCount" Color="Color.Secondary" Class="mt-5">
           <MudText Typo="Typo.h5">Clothing</MudText>
         </MudBadge>
-      </div>
+        <MudText Typo="Typo.h6" Class="mt-2">
+          <b>Total Price: @($"${TotalPriceOfClothing}")</b>
+        </MudText>
+      </MudStack>
       <MudPaper>
         @if (!HasClothing)
         {
@@ -84,10 +86,6 @@
           }
         </MudList>
       </MudPaper>
-
-      <MudText Typo="Typo.h6" Class="mt-2">
-        Total Price: @($"${TotalPriceOfClothing}")
-      </MudText>
     </MudStack>
   </MudItem>
 
