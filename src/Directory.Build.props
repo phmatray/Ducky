@@ -1,0 +1,8 @@
+<Project>
+  <Import Project="../msbuild/props/General.props"/>
+  <Import Project="../msbuild/props/Dependencies.props"/>
+  <Import Project="../msbuild/props/CodeAnalysis.props"/>
+  <Import Project="../msbuild/props/ContinuousIntegration.props"/>
+  <Import Project="../msbuild/props/SourceLink.props"/>
+  <Import Project="../msbuild/props/FileInclusion.props"/>
+</Project>

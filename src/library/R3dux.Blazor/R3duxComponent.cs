@@ -1,75 +1,68 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
-using R3;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux.Blazor;
 
+/// <summary>
+/// A base component class for R3dux components that manages state and dispatches actions.
+/// </summary>
+/// <typeparam name="TState">The type of the state managed by this component.</typeparam>
 public abstract class R3duxComponent<TState>
     : ComponentBase, IDisposable
     where TState : notnull
 {
-    private IDisposable? _subscription; 
+    private IDisposable? _subscription;
     private bool _disposed;
-    
+
+    /// <summary>
+    /// Gets or sets the store that manages the application state.
+    /// </summary>
     [Inject]
     public required IStore Store { get; set; }
-    
+
+    /// <summary>
+    /// Gets or sets the logger used for logging information.
+    /// </summary>
     [Inject]
     public required ILogger<R3duxComponent<object>> Logger { get; set; }
-    
+
+    /// <summary>
+    /// Gets an observable stream of the root state of the application.
+    /// </summary>
     protected Observable<RootState> RootStateObservable
         => Store
             .RootStateObservable
             .DistinctUntilChanged();
 
+    /// <summary>
+    /// Gets an observable stream of the state managed by this component.
+    /// </summary>
     protected Observable<TState> StateObservable
         => typeof(TState) == typeof(RootState)
             ? RootStateObservable.Cast<RootState, TState>()
             : RootStateObservable.Select(state => state.GetSliceState<TState>());
 
+    /// <summary>
+    /// Gets the current state of the component.
+    /// </summary>
     protected TState State
         => StateObservable.FirstSync();
-    
+
+    /// <summary>
+    /// Gets the name of the component.
+    /// </summary>
     protected string ComponentName
         => GetType().Name;
-    
+
     /// <summary>
-    /// Invoked after the state subscription has been established.
-    /// This method is intended to be overridden by derived classes.
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
     /// </summary>
-    protected virtual void OnAfterSubscribed() { }
-    
-    protected sealed override void OnInitialized()
+    public void Dispose()
     {
-        Logger.ComponentInitializing(ComponentName);
-
-        base.OnInitialized();
-
-        if (_subscription == null)
-        {
-            Logger.SubscribingToStateObservable(ComponentName);
-            _subscription = StateObservable.Subscribe(OnNext);
-            OnAfterSubscribed();
-        }
-        else
-        {
-            Logger.SubscriptionAlreadyAssigned(ComponentName);
-        }
-        
-        Logger.ComponentInitialized(ComponentName);
-    }
-
-    protected void Dispatch(IAction action)
-        => Store.Dispatcher.Dispatch(action);
-    
-    private void OnNext(TState state)
-    {
-        InvokeAsync(StateHasChanged);
-                    
-        OnParametersSet();
-        OnParametersSetAsync();
-                    
-        Logger.ComponentRefreshed(ComponentName);
+        // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
@@ -92,12 +85,50 @@ public abstract class R3duxComponent<TState>
     }
 
     /// <summary>
-    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// Invoked after the state subscription has been established.
+    /// This method is intended to be overridden by derived classes.
     /// </summary>
-    public void Dispose()
+    protected virtual void OnAfterSubscribed()
     {
-        // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        Dispose(true);
-        GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
+    protected sealed override void OnInitialized()
+    {
+        Logger.ComponentInitializing(ComponentName);
+
+        base.OnInitialized();
+
+        if (_subscription == null)
+        {
+            Logger.SubscribingToStateObservable(ComponentName);
+            _subscription = StateObservable.Subscribe(OnNext);
+            OnAfterSubscribed();
+        }
+        else
+        {
+            Logger.SubscriptionAlreadyAssigned(ComponentName);
+        }
+
+        Logger.ComponentInitialized(ComponentName);
+    }
+
+    /// <summary>
+    /// Dispatches an action to the store.
+    /// </summary>
+    /// <param name="action">The action to dispatch.</param>
+    protected void Dispatch(IAction action)
+    {
+        Store.Dispatcher.Dispatch(action);
+    }
+
+    private void OnNext(TState state)
+    {
+        InvokeAsync(StateHasChanged);
+
+        OnParametersSet();
+        OnParametersSetAsync();
+
+        Logger.ComponentRefreshed(ComponentName);
     }
 }

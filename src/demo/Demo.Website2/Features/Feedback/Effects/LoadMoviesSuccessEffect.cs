@@ -1,10 +1,17 @@
-using R3;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace Demo.Website2.Features.Feedback;
 
+/// <summary>
+/// Effect that handles the LoadMoviesSuccess action.
+/// </summary>
+/// <param name="snackbar">The snackbar service.</param>
 // ReSharper disable once UnusedType.Global
 public class LoadMoviesSuccessEffect(ISnackbar snackbar) : Effect
 {
+    /// <inheritdoc />
     public override Observable<IAction> Handle(
         Observable<IAction> actions, Observable<RootState> rootState)
     {
@@ -18,9 +25,9 @@ public class LoadMoviesSuccessEffect(ISnackbar snackbar) : Effect
                 return (IAction)new AddNotification(notification);
             });
     }
-    
+
     private static string GetSnackBarMessage(LoadMoviesSuccess action)
-        => $"Loaded {action.Movies.Count} movies from the server.";
-    
-    
+    {
+        return $"Loaded {action.Movies.Count} movies from the server.";
+    }
 }

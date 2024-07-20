@@ -1,11 +1,11 @@
-using R3dux.Tests.TestModels;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux.Tests.Core;
 
 public sealed class SliceReducersTests : IDisposable
 {
-    private record UnknownAction : IAction;
-
     private readonly TestCounterReducers _sut = new();
     private bool _disposed;
 
@@ -55,7 +55,7 @@ public sealed class SliceReducersTests : IDisposable
         // Arrange
         const int initialState = 0;
         var action = new IntegerAction(5);
-        
+
         // Act
         var newState = _sut.Reduce(initialState, action);
 
@@ -72,7 +72,7 @@ public sealed class SliceReducersTests : IDisposable
         // Assert
         act.Should().Throw<ArgumentNullException>();
     }
-    
+
     [Fact]
     public void GetKey_Should_ReturnTypeName_Transformed()
     {
@@ -82,7 +82,7 @@ public sealed class SliceReducersTests : IDisposable
         // Assert
         key.Should().Be("test-counter");
     }
-    
+
     [Fact]
     public void GetState_Should_Initialize_With_Default_State()
     {
@@ -138,7 +138,7 @@ public sealed class SliceReducersTests : IDisposable
         // Assert
         state.Should().Be(20);
     }
-    
+
     [Fact]
     public void SliceReducers_Should_Emit_StateUpdated_On_State_Change()
     {
@@ -156,7 +156,6 @@ public sealed class SliceReducersTests : IDisposable
     [Fact]
     public void SliceReducers_Should_Not_Change_State_For_Unknown_Action()
     {
-        
         // Act
         var initialState = _sut.GetState();
         _sut.OnDispatch(new UnknownAction());
@@ -164,6 +163,11 @@ public sealed class SliceReducersTests : IDisposable
 
         // Assert
         state.Should().Be(initialState);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
     }
 
     private void Dispose(bool disposing)
@@ -177,10 +181,5 @@ public sealed class SliceReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 }

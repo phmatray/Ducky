@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore;
 
 #region State
@@ -13,25 +17,21 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
     {
         _selectElectronics = MemoizedSelector.Create<ProductState, ImmutableList<Product>>(
             state => state.SelectImmutableList(product => product.Category == "Electronics"),
-            state => state.ById
-        );
+            state => state.ById);
 
         _selectClothing = MemoizedSelector.Create<ProductState, ImmutableList<Product>>(
             state => state.SelectImmutableList(product => product.Category == "Clothing"),
-            state => state.ById
-        );
+            state => state.ById);
 
         _selectTotalPriceOfElectronics = MemoizedSelector.Compose(
             _selectElectronics,
             products => products.Sum(product => product.Price),
-            state => state.ById
-        );
+            state => state.ById);
 
         _selectTotalPriceOfClothing = MemoizedSelector.Compose(
             _selectClothing,
             products => products.Sum(product => product.Price),
-            state => state.ById
-        );
+            state => state.ById);
     }
 
     // Memoized Selectors
@@ -55,23 +55,27 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
 public sealed record AddProduct
     : Fsa<AddProduct.ActionPayload, ActionMeta>
 {
-    public sealed record ActionPayload(Product Product);
+    public AddProduct(Product product)
+        : base(new ActionPayload(product), ActionMeta.Create())
+    {
+    }
 
     public override string TypeKey => "products/add";
 
-    public AddProduct(Product product)
-        : base(new ActionPayload(product), ActionMeta.Create()) { }
+    public sealed record ActionPayload(Product Product);
 }
 
 public sealed record RemoveProduct
     : Fsa<RemoveProduct.ActionPayload, ActionMeta>
 {
-    public sealed record ActionPayload(Guid ProductId);
+    public RemoveProduct(Guid productId)
+        : base(new ActionPayload(productId), ActionMeta.Create())
+    {
+    }
 
     public override string TypeKey => "products/remove";
 
-    public RemoveProduct(Guid productId)
-        : base(new ActionPayload(productId), ActionMeta.Create()) { }
+    public sealed record ActionPayload(Guid ProductId);
 }
 
 #endregion
@@ -84,7 +88,7 @@ public record ProductsReducers : SliceReducers<ProductState>
     {
         Map<AddProduct>((state, action)
             => state.SetOne(action.Payload.Product));
-        
+
         Map<RemoveProduct>((state, action)
             => state.RemoveOne(action.Payload.ProductId));
     }

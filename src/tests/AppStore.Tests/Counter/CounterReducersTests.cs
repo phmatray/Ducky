@@ -1,12 +1,17 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Counter;
 
 public sealed class CounterReducersTests : IDisposable
 {
-    private readonly CounterReducers _sut = new();
-    private bool _disposed;
-    
-    private const int InitialState = 10;
     private const string Key = "counter";
+    private const int InitialState = 10;
+
+    private readonly CounterReducers _sut = new();
+
+    private bool _disposed;
 
     [Fact]
     public void CounterReducers_Should_Return_Initial_State()
@@ -17,7 +22,7 @@ public sealed class CounterReducersTests : IDisposable
         // Assert
         initialState.Should().Be(InitialState);
     }
-    
+
     [Fact]
     public void CounterReducers_Should_Return_Key()
     {
@@ -102,6 +107,11 @@ public sealed class CounterReducersTests : IDisposable
         newState.Should().Be(valueToSet);
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+    }
+
     private void Dispose(bool disposing)
     {
         if (!_disposed)
@@ -113,10 +123,5 @@ public sealed class CounterReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 }

@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Text.Json;
 using static Demo.Website1.Helpers.HtmlSpanHelper;
 
@@ -7,10 +11,10 @@ namespace Demo.Website1.Helpers;
 public class JsonColorizer : IJsonColorizer
 {
     /// <summary>
-    /// The break line element.
+    /// Gets the break line element.
     /// </summary>
     public static string BreakLine => "<br>";
-    
+
     /// <inheritdoc />
     public string ColorizeJson(string json)
     {
@@ -30,7 +34,7 @@ public class JsonColorizer : IJsonColorizer
         {
             sb.AppendIndentation();
         }
-        
+
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
@@ -57,9 +61,10 @@ public class JsonColorizer : IJsonColorizer
 
     private void ProcessObject(JsonElement element, IndentedStringBuilder sb)
     {
-        sb.Append(SpanOpenBrace()).Append(BreakLine);
+        sb.Append(SpanOpenBrace() + BreakLine);
         sb.Indent();
         var properties = element.EnumerateObject().ToArray();
+
         for (int i = 0; i < properties.Length; i++)
         {
             var property = properties[i];
@@ -68,6 +73,7 @@ public class JsonColorizer : IJsonColorizer
             ProcessElement(property.Value, sb);
             sb.Append(i < properties.Length - 1 ? $",{BreakLine}" : BreakLine);
         }
+
         sb.Unindent();
         sb.AppendIndentation();
         sb.Append(SpanCloseBrace());
@@ -78,21 +84,24 @@ public class JsonColorizer : IJsonColorizer
         var items = element.EnumerateArray().ToArray();
         if (items.Length == 0)
         {
-            sb.Append(SpanOpenBracket()).Append(SpanCloseBracket());
+            sb.Append(SpanOpenBracket());
+            sb.Append(SpanCloseBracket());
         }
         else
         {
-            sb.Append(SpanOpenBracket()).Append(BreakLine);
+            sb.Append(SpanOpenBracket() + BreakLine);
             sb.Indent();
+
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
                 ProcessElement(item, sb, true);
                 sb.Append(i < items.Length - 1 ? $",{BreakLine}" : BreakLine);
             }
+
             sb.Unindent();
             sb.AppendIndentation();
-            sb.Append(SpanCloseBracket());  
+            sb.Append(SpanCloseBracket());
         }
     }
 }

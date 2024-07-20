@@ -1,10 +1,15 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Todos;
 
 public sealed class TodoReducersTests : IDisposable
 {
+    private const string Key = "todo";
+
     private readonly TodoReducers _sut = new();
-    private bool _disposed;
-    
+
     private readonly TodoState _initialState = TodoState.Create([
         new TodoItem(SampleIds.Id1, "Learn Blazor", true),
         new TodoItem(SampleIds.Id2, "Learn Redux"),
@@ -12,8 +17,8 @@ public sealed class TodoReducersTests : IDisposable
         new TodoItem(SampleIds.Id4, "Create a Todo App", true),
         new TodoItem(SampleIds.Id5, "Publish a NuGet package")
     ]);
-    
-    private const string Key = "todo";
+
+    private bool _disposed;
 
     [Fact]
     public void TodoReducers_Should_Return_Initial_State()
@@ -24,7 +29,7 @@ public sealed class TodoReducersTests : IDisposable
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
     }
-    
+
     [Fact]
     public void TodoReducers_Should_Return_Key()
     {
@@ -44,7 +49,7 @@ public sealed class TodoReducersTests : IDisposable
         // Assert
         stateType.Should().Be(typeof(TodoState));
     }
-    
+
     [Fact]
     public void TodoReducers_Should_Return_Reducers()
     {
@@ -159,6 +164,11 @@ public sealed class TodoReducersTests : IDisposable
         completedTodosCount.Should().Be(1);
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+    }
+
     private void Dispose(bool disposing)
     {
         if (!_disposed)
@@ -170,10 +180,5 @@ public sealed class TodoReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 }

@@ -1,8 +1,12 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore;
 
 public static class MoviesExamples
 {
-    private static readonly Movie Movie01 = new()
+    public static readonly Movie Movie01 = new()
     {
         Id = 1,
         Title = "Forrest Gump",
@@ -16,7 +20,7 @@ public static class MoviesExamples
         Actors = ["Tom Hanks", "Robin Wright", "Gary Sinise"]
     };
 
-    private static readonly Movie Movie02 = new()
+    public static readonly Movie Movie02 = new()
     {
         Id = 2,
         Title = "The Shawshank Redemption",
@@ -30,7 +34,7 @@ public static class MoviesExamples
         Actors = ["Tim Robbins", "Morgan Freeman", "Bob Gunton"]
     };
 
-    private static readonly Movie Movie03 = new()
+    public static readonly Movie Movie03 = new()
     {
         Id = 3,
         Title = "The Perks of Being a Wallflower",
@@ -44,7 +48,7 @@ public static class MoviesExamples
         Actors = ["Logan Lerman", "Emma Watson", "Ezra Miller"]
     };
 
-    private static readonly Movie Movie04 = new()
+    public static readonly Movie Movie04 = new()
     {
         Id = 4,
         Title = "The Dark Knight",
@@ -58,7 +62,7 @@ public static class MoviesExamples
         Actors = ["Christian Bale", "Heath Ledger", "Aaron Eckhart"]
     };
 
-    private static readonly Movie Movie05 = new()
+    public static readonly Movie Movie05 = new()
     {
         Id = 5,
         Title = "Changeling",
@@ -72,7 +76,7 @@ public static class MoviesExamples
         Actors = ["Angelina Jolie", "Colm Feore", "Amy Ryan"]
     };
 
-    private static readonly Movie Movie06 = new()
+    public static readonly Movie Movie06 = new()
     {
         Id = 6,
         Title = "This Boy's Life",
@@ -86,7 +90,7 @@ public static class MoviesExamples
         Actors = ["Robert De Niro", "Leonardo DiCaprio", "Ellen Barkin"]
     };
 
-    private static readonly Movie Movie07 = new()
+    public static readonly Movie Movie07 = new()
     {
         Id = 7,
         Title = "It's a Wonderful Life",
@@ -100,7 +104,7 @@ public static class MoviesExamples
         Actors = ["James Stewart", "Donna Reed", "Lionel Barrymore"]
     };
 
-    private static readonly Movie Movie08 = new()
+    public static readonly Movie Movie08 = new()
     {
         Id = 8,
         Title = "The Silence of the Lambs",
@@ -114,7 +118,7 @@ public static class MoviesExamples
         Actors = ["Jodie Foster", "Anthony Hopkins", "Scott Glenn"]
     };
 
-    private static readonly Movie Movie09 = new()
+    public static readonly Movie Movie09 = new()
     {
         Id = 9,
         Title = "8 Mile",
@@ -128,7 +132,7 @@ public static class MoviesExamples
         Actors = ["Eminem", "Brittany Murphy", "Kim Basinger"]
     };
 
-    private static readonly Movie Movie10 = new()
+    public static readonly Movie Movie10 = new()
     {
         Id = 10,
         Title = "The Breakfast Club",
@@ -142,7 +146,7 @@ public static class MoviesExamples
         Actors = ["Emilio Estevez", "Judd Nelson", "Molly Ringwald"]
     };
 
-    private static readonly Movie Movie11 = new()
+    public static readonly Movie Movie11 = new()
     {
         Id = 11,
         Title = "Django Unchained",
@@ -156,7 +160,7 @@ public static class MoviesExamples
         Actors = ["Jamie Foxx", "Christoph Waltz", "Leonardo DiCaprio"]
     };
 
-    private static readonly Movie Movie12 = new()
+    public static readonly Movie Movie12 = new()
     {
         Id = 12,
         Title = "Silver Linings Playbook",
@@ -170,7 +174,7 @@ public static class MoviesExamples
         Actors = ["Bradley Cooper", "Jennifer Lawrence", "Robert De Niro"]
     };
 
-    private static readonly Movie Movie13 = new()
+    public static readonly Movie Movie13 = new()
     {
         Id = 13,
         Title = "The Shining",
@@ -184,7 +188,7 @@ public static class MoviesExamples
         Actors = ["Jack Nicholson", "Shelley Duvall", "Danny Lloyd"]
     };
 
-    private static readonly Movie Movie14 = new()
+    public static readonly Movie Movie14 = new()
     {
         Id = 14,
         Title = "Se7en",
@@ -198,7 +202,7 @@ public static class MoviesExamples
         Actors = ["Morgan Freeman", "Brad Pitt", "Kevin Spacey"]
     };
 
-    private static readonly Movie Movie15 = new()
+    public static readonly Movie Movie15 = new()
     {
         Id = 15,
         Title = "American Beauty",
@@ -212,7 +216,7 @@ public static class MoviesExamples
         Actors = ["Kevin Spacey", "Annette Bening", "Thora Birch"]
     };
 
-    private static readonly Movie Movie16 = new()
+    public static readonly Movie Movie16 = new()
     {
         Id = 16,
         Title = "Pulp Fiction",
@@ -226,7 +230,7 @@ public static class MoviesExamples
         Actors = ["John Travolta", "Uma Thurman", "Samuel L. Jackson"]
     };
 
-    private static readonly Movie Movie17 = new()
+    public static readonly Movie Movie17 = new()
     {
         Id = 17,
         Title = "Zero Dark Thirty",
@@ -240,7 +244,7 @@ public static class MoviesExamples
         Actors = ["Jessica Chastain", "Joel Edgerton", "Chris Pratt"]
     };
 
-    private static readonly Movie Movie18 = new()
+    public static readonly Movie Movie18 = new()
     {
         Id = 18,
         Title = "Argo",
@@ -254,7 +258,7 @@ public static class MoviesExamples
         Actors = ["Ben Affleck", "Bryan Cranston", "John Goodman"]
     };
 
-    private static readonly Movie Movie19 = new()
+    public static readonly Movie Movie19 = new()
     {
         Id = 19,
         Title = "The Hurt Locker",
@@ -268,7 +272,7 @@ public static class MoviesExamples
         Actors = ["Jeremy Renner", "Anthony Mackie", "Brian Geraghty"]
     };
 
-    private static readonly Movie Movie20 = new()
+    public static readonly Movie Movie20 = new()
     {
         Id = 20,
         Title = "The Godfather",
@@ -282,7 +286,7 @@ public static class MoviesExamples
         Actors = ["Marlon Brando", "Al Pacino", "James Caan"]
     };
 
-    private static readonly Movie Movie21 = new()
+    public static readonly Movie Movie21 = new()
     {
         Id = 21,
         Title = "The Town",
@@ -296,7 +300,7 @@ public static class MoviesExamples
         Actors = ["Ben Affleck", "Rebecca Hall", "Jon Hamm"]
     };
 
-    private static readonly Movie Movie22 = new()
+    public static readonly Movie Movie22 = new()
     {
         Id = 22,
         Title = "The Departed",
@@ -310,7 +314,7 @@ public static class MoviesExamples
         Actors = ["Leonardo DiCaprio", "Matt Damon", "Jack Nicholson"]
     };
 
-    private static readonly Movie Movie23 = new()
+    public static readonly Movie Movie23 = new()
     {
         Id = 23,
         Title = "Scream",
@@ -324,7 +328,7 @@ public static class MoviesExamples
         Actors = ["Neve Campbell", "Courteney Cox", "David Arquette"]
     };
 
-    private static readonly Movie Movie24 = new()
+    public static readonly Movie Movie24 = new()
     {
         Id = 24,
         Title = "Up in the Air",
@@ -338,7 +342,7 @@ public static class MoviesExamples
         Actors = ["George Clooney", "Vera Farmiga", "Anna Kendrick"]
     };
 
-    private static readonly Movie Movie25 = new()
+    public static readonly Movie Movie25 = new()
     {
         Id = 25,
         Title = "What's Eating Gilbert Grape",
@@ -352,7 +356,7 @@ public static class MoviesExamples
         Actors = ["Johnny Depp", "Leonardo DiCaprio", "Juliette Lewis"]
     };
 
-    private static readonly Movie Movie26 = new()
+    public static readonly Movie Movie26 = new()
     {
         Id = 26,
         Title = "Lost in Translation",
@@ -366,7 +370,7 @@ public static class MoviesExamples
         Actors = ["Bill Murray", "Scarlett Johansson", "Giovanni Ribisi"]
     };
 
-    private static readonly Movie Movie27 = new()
+    public static readonly Movie Movie27 = new()
     {
         Id = 27,
         Title = "The Conjuring",
@@ -380,7 +384,7 @@ public static class MoviesExamples
         Actors = ["Patrick Wilson", "Vera Farmiga", "Ron Livingston"]
     };
 
-    private static readonly Movie Movie28 = new()
+    public static readonly Movie Movie28 = new()
     {
         Id = 28,
         Title = "Juno",
@@ -394,7 +398,7 @@ public static class MoviesExamples
         Actors = ["Elliot Page", "Michael Cera", "Jennifer Garner"]
     };
 
-    private static readonly Movie Movie29 = new()
+    public static readonly Movie Movie29 = new()
     {
         Id = 29,
         Title = "Stand by Me",
@@ -408,7 +412,7 @@ public static class MoviesExamples
         Actors = ["Wil Wheaton", "River Phoenix", "Corey Feldman"]
     };
 
-    private static readonly Movie Movie30 = new()
+    public static readonly Movie Movie30 = new()
     {
         Id = 30,
         Title = "The Green Mile",
@@ -422,7 +426,7 @@ public static class MoviesExamples
         Actors = ["Tom Hanks", "Michael Clarke Duncan", "David Morse"]
     };
 
-    private static readonly Movie Movie31 = new()
+    public static readonly Movie Movie31 = new()
     {
         Id = 31,
         Title = "Super 8",
@@ -436,7 +440,7 @@ public static class MoviesExamples
         Actors = ["Elle Fanning", "AJ Michalka", "Kyle Chandler"]
     };
 
-    private static readonly Movie Movie32 = new()
+    public static readonly Movie Movie32 = new()
     {
         Id = 32,
         Title = "Jarhead",
@@ -450,7 +454,7 @@ public static class MoviesExamples
         Actors = ["Jake Gyllenhaal", "Jamie Foxx", "Lucas Black"]
     };
 
-    private static readonly Movie Movie33 = new()
+    public static readonly Movie Movie33 = new()
     {
         Id = 33,
         Title = "Misery",
@@ -464,7 +468,7 @@ public static class MoviesExamples
         Actors = ["James Caan", "Kathy Bates", "Richard Farnsworth"]
     };
 
-    private static readonly Movie Movie34 = new()
+    public static readonly Movie Movie34 = new()
     {
         Id = 34,
         Title = "Fight Club",
@@ -478,7 +482,7 @@ public static class MoviesExamples
         Actors = ["Brad Pitt", "Edward Norton", "Meat Loaf"]
     };
 
-    private static readonly Movie Movie35 = new()
+    public static readonly Movie Movie35 = new()
     {
         Id = 35,
         Title = "Shutter Island",
@@ -492,7 +496,7 @@ public static class MoviesExamples
         Actors = ["Leonardo DiCaprio", "Emily Mortimer", "Mark Ruffalo"]
     };
 
-    private static readonly Movie Movie36 = new()
+    public static readonly Movie Movie36 = new()
     {
         Id = 36,
         Title = "Lawless",
@@ -506,7 +510,7 @@ public static class MoviesExamples
         Actors = ["Tom Hardy", "Shia LaBeouf", "Guy Pearce"]
     };
 
-    private static readonly Movie Movie37 = new()
+    public static readonly Movie Movie37 = new()
     {
         Id = 37,
         Title = "Winter's Bone",
@@ -520,7 +524,7 @@ public static class MoviesExamples
         Actors = ["Jennifer Lawrence", "John Hawkes", "Garret Dillahunt"]
     };
 
-    private static readonly Movie Movie38 = new()
+    public static readonly Movie Movie38 = new()
     {
         Id = 38,
         Title = "Taxi Driver",
@@ -534,7 +538,7 @@ public static class MoviesExamples
         Actors = ["Robert De Niro", "Jodie Foster", "Cybill Shepherd"]
     };
 
-    private static readonly Movie Movie39 = new()
+    public static readonly Movie Movie39 = new()
     {
         Id = 39,
         Title = "Saving Private Ryan",
@@ -548,7 +552,7 @@ public static class MoviesExamples
         Actors = ["Tom Hanks", "Matt Damon", "Tom Sizemore"]
     };
 
-    private static readonly Movie Movie40 = new()
+    public static readonly Movie Movie40 = new()
     {
         Id = 40,
         Title = "Black Swan",
@@ -562,7 +566,7 @@ public static class MoviesExamples
         Actors = ["Natalie Portman", "Mila Kunis", "Vincent Cassel"]
     };
 
-    private static readonly Movie Movie41 = new()
+    public static readonly Movie Movie41 = new()
     {
         Id = 41,
         Title = "Inception",
@@ -576,7 +580,7 @@ public static class MoviesExamples
         Actors = ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page"]
     };
 
-    private static readonly Movie Movie42 = new()
+    public static readonly Movie Movie42 = new()
     {
         Id = 42,
         Title = "Boogie Nights",
@@ -590,7 +594,7 @@ public static class MoviesExamples
         Actors = ["Mark Wahlberg", "Julianne Moore", "Burt Reynolds"]
     };
 
-    private static readonly Movie Movie43 = new()
+    public static readonly Movie Movie43 = new()
     {
         Id = 43,
         Title = "50/50",
@@ -604,7 +608,7 @@ public static class MoviesExamples
         Actors = ["Joseph Gordon-Levitt", "Seth Rogen", "Anna Kendrick"]
     };
 
-    private static readonly Movie Movie44 = new()
+    public static readonly Movie Movie44 = new()
     {
         Id = 44,
         Title = "Brothers",
@@ -618,7 +622,7 @@ public static class MoviesExamples
         Actors = ["Jake Gyllenhaal", "Natalie Portman", "Tobey Maguire"]
     };
 
-    private static readonly Movie Movie45 = new()
+    public static readonly Movie Movie45 = new()
     {
         Id = 45,
         Title = "Blood Diamond",
@@ -632,7 +636,7 @@ public static class MoviesExamples
         Actors = ["Leonardo DiCaprio", "Djimon Hounsou", "Jennifer Connelly"]
     };
 
-    private static readonly Movie Movie46 = new()
+    public static readonly Movie Movie46 = new()
     {
         Id = 46,
         Title = "A Few Good Men",
@@ -646,7 +650,7 @@ public static class MoviesExamples
         Actors = ["Tom Cruise", "Jack Nicholson", "Demi Moore"]
     };
 
-    private static readonly Movie Movie47 = new()
+    public static readonly Movie Movie47 = new()
     {
         Id = 47,
         Title = "Gladiator",
@@ -660,7 +664,7 @@ public static class MoviesExamples
         Actors = ["Russell Crowe", "Joaquin Phoenix", "Connie Nielsen"]
     };
 
-    private static readonly Movie Movie48 = new()
+    public static readonly Movie Movie48 = new()
     {
         Id = 48,
         Title = "Law Abiding Citizen",
@@ -674,7 +678,7 @@ public static class MoviesExamples
         Actors = ["Gerard Butler", "Jamie Foxx", "Leslie Bibb"]
     };
 
-    private static readonly Movie Movie49 = new()
+    public static readonly Movie Movie49 = new()
     {
         Id = 49,
         Title = "Lakeview Terrace",
@@ -688,7 +692,7 @@ public static class MoviesExamples
         Actors = ["Samuel L. Jackson", "Patrick Wilson", "Kerry Washington"]
     };
 
-    private static readonly Movie Movie50 = new()
+    public static readonly Movie Movie50 = new()
     {
         Id = 50,
         Title = "Glory Road",
@@ -701,7 +705,7 @@ public static class MoviesExamples
         Director = "James Gartner",
         Actors = ["Josh Lucas", "Derek Luke", "Austin Nichols"]
     };
-    
+
     public static readonly ImmutableArray<Movie> Movies =
     [
         Movie01, Movie02, Movie03, Movie04, Movie05,

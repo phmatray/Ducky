@@ -1,8 +1,12 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Movies;
 
 public sealed class MoviesEffectsTests : IDisposable
 {
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
     private readonly Subject<IAction> _actionsSubject = new();
     private readonly Subject<RootState> _rootStateSubject = new();
     private readonly List<IAction> _actualActions = [];

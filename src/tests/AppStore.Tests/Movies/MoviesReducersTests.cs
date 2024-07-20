@@ -1,10 +1,14 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Movies;
 
 public sealed class MoviesReducersTests : IDisposable
 {
-    private readonly MoviesReducers _sut = new();
-    private bool _disposed;
+    private const string Key = "movies";
 
+    private readonly MoviesReducers _sut = new();
     private readonly MoviesState _initialState = new()
     {
         Movies = ImmutableDictionary<int, Movie>.Empty,
@@ -17,8 +21,8 @@ public sealed class MoviesReducersTests : IDisposable
             TotalItems = 0
         }
     };
-    
-    private const string Key = "movies";
+
+    private bool _disposed;
 
     [Fact]
     public void MovieReducers_Should_Return_Initial_State()
@@ -29,7 +33,7 @@ public sealed class MoviesReducersTests : IDisposable
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
     }
-    
+
     [Fact]
     public void MovieReducers_Should_Return_Key()
     {
@@ -39,7 +43,7 @@ public sealed class MoviesReducersTests : IDisposable
         // Assert
         key.Should().Be(Key);
     }
-    
+
     [Fact]
     public void MovieReducers_Should_Return_Correct_State_Type()
     {
@@ -49,7 +53,7 @@ public sealed class MoviesReducersTests : IDisposable
         // Assert
         stateType.Should().Be(typeof(MoviesState));
     }
-    
+
     [Fact]
     public void MovieReducers_Should_Return_Reducers()
     {
@@ -139,6 +143,11 @@ public sealed class MoviesReducersTests : IDisposable
         sortedMovies.Should().BeInDescendingOrder(movie => movie.Year);
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+    }
+
     private void Dispose(bool disposing)
     {
         if (!_disposed)
@@ -150,10 +159,5 @@ public sealed class MoviesReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 }

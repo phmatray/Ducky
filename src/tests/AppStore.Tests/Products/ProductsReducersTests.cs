@@ -1,19 +1,23 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Products;
 
 public sealed class ProductsReducersTests : IDisposable
 {
+    private const string Key = "products";
+
     private readonly ProductsReducers _sut = new();
-    private bool _disposed;
-    
     private readonly ProductState _initialState = ProductState.Create([
         new Product(SampleIds.Id1, "iPhone 12", 799.99m, "Electronics"),
         new Product(SampleIds.Id2, "MacBook Pro", 1299.99m, "Electronics"),
         new Product(SampleIds.Id3, "Nike Air Max", 129, "Clothing"),
         new Product(SampleIds.Id4, "Adidas Original", 99, "Clothing")
     ]);
-    
-    private const string Key = "products";
-    
+
+    private bool _disposed;
+
     [Fact]
     public void ProductsReducers_Should_Return_Initial_State()
     {
@@ -23,7 +27,7 @@ public sealed class ProductsReducersTests : IDisposable
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
     }
-    
+
     [Fact]
     public void ProductsReducers_Should_Return_Key()
     {
@@ -33,7 +37,7 @@ public sealed class ProductsReducersTests : IDisposable
         // Assert
         key.Should().Be(Key);
     }
-    
+
     [Fact]
     public void ProductsReducers_Should_Return_Correct_State_Type()
     {
@@ -43,7 +47,7 @@ public sealed class ProductsReducersTests : IDisposable
         // Assert
         stateType.Should().Be(typeof(ProductState));
     }
-    
+
     [Fact]
     public void ProductsReducers_Should_Return_Reducers()
     {
@@ -53,7 +57,7 @@ public sealed class ProductsReducersTests : IDisposable
         // Assert
         reducers.Should().HaveCount(2);
     }
-    
+
     [Fact]
     public void AddProduct_ShouldAddNewProduct()
     {
@@ -68,7 +72,7 @@ public sealed class ProductsReducersTests : IDisposable
         state.SelectImmutableList().Should().HaveCount(5);
         state.SelectImmutableList().Should().Contain(product);
     }
-    
+
     [Fact]
     public void RemoveProduct_ShouldRemoveProduct()
     {
@@ -82,9 +86,7 @@ public sealed class ProductsReducersTests : IDisposable
         state.SelectImmutableList().Should().HaveCount(3);
         state.SelectImmutableList().Should().NotContain(product => product.Id == SampleIds.Id1);
     }
-    
-    // Tests for Memoized Selectors
-    
+
     [Fact]
     public void SelectElectronics_Should_Return_Electronics()
     {
@@ -95,7 +97,7 @@ public sealed class ProductsReducersTests : IDisposable
         electronics.Should().HaveCount(2);
         electronics.Should().OnlyContain(product => product.Category == "Electronics");
     }
-    
+
     [Fact]
     public void SelectClothing_Should_Return_Clothing()
     {
@@ -106,7 +108,7 @@ public sealed class ProductsReducersTests : IDisposable
         clothing.Should().HaveCount(2);
         clothing.Should().OnlyContain(product => product.Category == "Clothing");
     }
-    
+
     [Fact]
     public void SelectTotalPriceOfElectronics_Should_Return_TotalPrice()
     {
@@ -116,7 +118,7 @@ public sealed class ProductsReducersTests : IDisposable
         // Assert
         totalPrice.Should().Be(2099.98m);
     }
-    
+
     [Fact]
     public void SelectTotalPriceOfClothing_Should_Return_TotalPrice()
     {
@@ -125,6 +127,11 @@ public sealed class ProductsReducersTests : IDisposable
 
         // Assert
         totalPrice.Should().Be(228m);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
     }
 
     private void Dispose(bool disposing)
@@ -138,10 +145,5 @@ public sealed class ProductsReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 }

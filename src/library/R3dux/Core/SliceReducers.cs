@@ -1,7 +1,10 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
-using R3;
-using R3dux.Exceptions;
 
 namespace R3dux;
 
@@ -21,7 +24,7 @@ public abstract partial record SliceReducers<TState>
     private readonly Subject<Unit> _stateUpdated = new();
     private readonly StateLoggerObserver<TState> _stateLoggerObserver = new();
     private bool _disposed;
-    
+
     /// <inheritdoc />
     public virtual Observable<TState> State => _state;
 
@@ -29,9 +32,9 @@ public abstract partial record SliceReducers<TState>
     public virtual Observable<Unit> StateUpdated => _stateUpdated;
 
     /// <summary>
-    /// A dictionary that holds the reducers mapped by the type of action.
+    /// Gets a dictionary that holds the reducers mapped by the type of action.
     /// </summary>
-    public Dictionary<Type, Func<TState, IAction, TState>> Reducers { get; } = new();
+    public Dictionary<Type, Func<TState, IAction, TState>> Reducers { get; } = [];
 
     /// <inheritdoc />
     public virtual string GetKey()
@@ -40,11 +43,11 @@ public abstract partial record SliceReducers<TState>
         string typeName = GetType().Name;
 
         // the key should not end with "Reducers" or "Reducer"
-        if (typeName.EndsWith("Reducers"))
+        if (typeName.EndsWith("Reducers", StringComparison.InvariantCulture))
         {
             typeName = typeName[..^8];
         }
-        else if (typeName.EndsWith("Reducer"))
+        else if (typeName.EndsWith("Reducer", StringComparison.InvariantCulture))
         {
             typeName = typeName[..^7];
         }
@@ -53,7 +56,7 @@ public abstract partial record SliceReducers<TState>
         typeName = LowerCharUpperCharRegex().Replace(typeName, "$1-$2");
 
         // return the key in lowercase
-        return typeName.ToLower();
+        return typeName.ToLower(CultureInfo.InvariantCulture);
     }
 
     /// <inheritdoc />
@@ -119,7 +122,7 @@ public abstract partial record SliceReducers<TState>
         ArgumentNullException.ThrowIfNull(reducer);
         Reducers[typeof(TAction)] = (state, action) => reducer(state, (TAction)action);
     }
-    
+
     /// <summary>
     /// Maps a reducer function to a specific action type.
     /// </summary>
@@ -130,7 +133,7 @@ public abstract partial record SliceReducers<TState>
         ArgumentNullException.ThrowIfNull(reducer);
         Reducers[typeof(TAction)] = (state, _) => reducer(state);
     }
-    
+
     /// <summary>
     /// Maps a reducer function to a specific action type.
     /// </summary>
@@ -167,8 +170,15 @@ public abstract partial record SliceReducers<TState>
         return default!;
     }
 
-    [GeneratedRegex("([a-z])([A-Z])", RegexOptions.Compiled)]
-    private static partial Regex LowerCharUpperCharRegex();
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
     /// <summary>
     /// Releases the unmanaged resources used by the <see cref="SliceReducers{TState}"/> and optionally releases the managed resources.
@@ -191,13 +201,6 @@ public abstract partial record SliceReducers<TState>
         }
     }
 
-    /// <summary>
-    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-    /// </summary>
-    public void Dispose()
-    {
-        // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+    [GeneratedRegex("([a-z])([A-Z])", RegexOptions.Compiled)]
+    private static partial Regex LowerCharUpperCharRegex();
 }

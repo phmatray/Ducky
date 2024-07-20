@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace Demo.Website1.Helpers;
 
 /// <summary>
@@ -7,10 +11,10 @@ public static class HtmlSpanHelper
 {
     private const string ColorBraces = Palette.Black;
     private const string ColorBrackets = Palette.Purple;
- 
+
     private const string ColorQuote = Palette.BlueGrey;
     private const string ColorPropertyName = Palette.Pink;
-    
+
     private const string ColorString = Palette.Green;
     private const string ColorNumber = Palette.Orange;
     private const string ColorBool = Palette.Blue;
@@ -84,7 +88,6 @@ public static class HtmlSpanHelper
     public static string SpanCloseBracket()
         => Span("]", ColorBrackets);
 
-    // SpanQuote
     /// <summary>
     /// Generates an HTML span element for a quote.
     /// </summary>

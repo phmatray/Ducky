@@ -1,10 +1,14 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Layout;
 
-public class LayoutReducersTests : IDisposable
+public sealed class LayoutReducersTests : IDisposable
 {
+    private const string Key = "layout";
+
     private readonly LayoutReducers _sut = new();
-    private bool _disposed;
-    
     private readonly LayoutState _initialState = new()
     {
         Title = "R3dux",
@@ -13,9 +17,9 @@ public class LayoutReducersTests : IDisposable
         IsDrawerOpen = true,
         IsNotificationOpen = false
     };
-    
-    private const string Key = "layout";
-    
+
+    private bool _disposed;
+
     [Fact]
     public void LayoutReducers_Should_Return_Initial_State()
     {
@@ -29,7 +33,7 @@ public class LayoutReducersTests : IDisposable
         initialState.IsDrawerOpen.Should().Be(_initialState.IsDrawerOpen);
         initialState.IsNotificationOpen.Should().Be(_initialState.IsNotificationOpen);
     }
-    
+
     [Fact]
     public void LayoutReducers_Should_Return_Key()
     {
@@ -39,7 +43,7 @@ public class LayoutReducersTests : IDisposable
         // Assert
         key.Should().Be(Key);
     }
-    
+
     [Fact]
     public void LayoutReducers_Should_Return_Correct_State_Type()
     {
@@ -49,7 +53,7 @@ public class LayoutReducersTests : IDisposable
         // Assert
         stateType.Should().Be(typeof(LayoutState));
     }
-    
+
     [Fact]
     public void LayoutReducers_Should_Return_Reducers()
     {
@@ -83,7 +87,12 @@ public class LayoutReducersTests : IDisposable
         fullTitle.Should().Be("R3dux - v1.0.0");
     }
 
-    protected virtual void Dispose(bool disposing)
+    public void Dispose()
+    {
+        Dispose(true);
+    }
+
+    private void Dispose(bool disposing)
     {
         if (!_disposed)
         {
@@ -94,11 +103,5 @@ public class LayoutReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 }

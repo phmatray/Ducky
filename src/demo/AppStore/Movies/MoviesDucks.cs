@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore;
 
 #region State
@@ -5,29 +9,38 @@ namespace AppStore;
 public record Pagination
 {
     public int CurrentPage { get; init; }
+
     public int TotalPages { get; init; }
+
     public int TotalItems { get; init; }
 }
 
 public record MoviesState
 {
     public required ImmutableDictionary<int, Movie> Movies { get; init; }
+
     public required bool IsLoading { get; init; }
+
     public required string? ErrorMessage { get; init; }
+
     public required Pagination Pagination { get; init; }
-    
+
     // Selectors
     // ==========
     // We can define selectors as methods in the state record
     // to encapsulate the logic of selecting data from the state.
     // Each method should begin with the word "Select".
     public int SelectMovieCount()
-        => Movies.Count;
+    {
+        return Movies.Count;
+    }
 
     public ImmutableDictionary<int, Movie> SelectMoviesByYear()
-        => Movies
+    {
+        return Movies
             .OrderByDescending(pair => pair.Value.Year)
             .ToImmutableDictionary();
+    }
 }
 
 #endregion
@@ -35,8 +48,11 @@ public record MoviesState
 #region Actions
 
 public record LoadMovies(int PageNumber = 1, int PageSize = 5) : IAction;
+
 public record LoadMoviesSuccess(ImmutableDictionary<int, Movie> Movies, int TotalItems) : IAction;
+
 public record LoadMoviesFailure(Exception Error) : IAction;
+
 public record SetCurrentPage(int CurrentPage) : IAction;
 
 #endregion
@@ -49,7 +65,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
     {
         Map<LoadMovies>((state, _)
             => state with { IsLoading = true, ErrorMessage = null });
-        
+
         Map<LoadMoviesSuccess>((state, action)
             => state with
             {
@@ -61,7 +77,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
                     TotalPages = (int)Math.Ceiling(action.TotalItems / 5.0)
                 }
             });
-        
+
         Map<LoadMoviesFailure>((state, action)
             => state with
             {
@@ -69,7 +85,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
                 ErrorMessage = action.Error.Message,
                 IsLoading = false
             });
-        
+
         Map<SetCurrentPage>((state, action)
             => state with { Pagination = state.Pagination with { CurrentPage = action.CurrentPage } });
     }
@@ -122,7 +138,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         //         .Select(movies => (object)new LoadMoviesSuccess(movies))
         //         .Do(_ => Console.WriteLine("Movies loaded."))
         //         .Catch<object, Exception>(ex => Observable.Return<object>(new LoadMoviesFailure(ex.Message))));
-        
+
         // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
         // ============================================================
         return actions
@@ -137,7 +153,6 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
                     var currentPage = state.Pagination.CurrentPage;
                     var response = await moviesService.GetMoviesAsync(currentPage, action.PageSize, ct);
                     var dictionary = response.Movies.ToImmutableDictionary(movie => movie.Id);
-                    
                     return new LoadMoviesSuccess(dictionary, response.TotalItems) as IAction;
                 }
                 catch (Exception ex)

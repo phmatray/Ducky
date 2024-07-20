@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Counter;
 
 public sealed class CounterEffectsTests : IDisposable
@@ -22,7 +26,7 @@ public sealed class CounterEffectsTests : IDisposable
         _actionsSubject.Dispose();
         _rootStateSubject.Dispose();
     }
-    
+
     [Fact]
     public void IncrementEffect_ShouldEmitResetAction_WhenValueGreaterThan15()
     {
@@ -32,7 +36,7 @@ public sealed class CounterEffectsTests : IDisposable
         // Act
         _actionsSubject.OnNext(new Increment());
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
-        
+
         // Assert
         _actualAction.Should().BeOfType<Reset>();
     }
@@ -53,10 +57,7 @@ public sealed class CounterEffectsTests : IDisposable
 
     private void SetupRootState(int counterValue)
     {
-        var dictionary = new Dictionary<string, object>
-        {
-            { "counter", counterValue }
-        };
+        var dictionary = new Dictionary<string, object> { { "counter", counterValue } };
 
         var rootState = new RootState(dictionary.ToImmutableSortedDictionary());
         _rootStateSubject.OnNext(rootState);

@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Text;
 
 namespace Demo.Website1.Helpers;
@@ -15,11 +19,9 @@ public sealed class IndentedStringBuilder(int indentLevel, int indentSize = 2)
     /// Appends the specified string value to the current string.
     /// </summary>
     /// <param name="value">The string to append.</param>
-    /// <returns>The current instance of <see cref="IndentedStringBuilder"/>.</returns>
-    public IndentedStringBuilder Append(string value)
+    public void Append(string value)
     {
         _sb.Append(value);
-        return this;
     }
 
     /// <summary>
@@ -27,56 +29,44 @@ public sealed class IndentedStringBuilder(int indentLevel, int indentSize = 2)
     /// with indentation based on the current indentation level.
     /// </summary>
     /// <param name="value">The string to append.</param>
-    /// <returns>The current instance of <see cref="IndentedStringBuilder"/>.</returns>
-    public IndentedStringBuilder AppendLine(string value)
+    public void AppendLine(string value)
     {
-        _sb.Append(new string(' ', indentLevel * indentSize));
-        _sb.AppendLine(value);
-        return this;
+        _sb.AppendLine(new string(' ', indentLevel * indentSize) + value);
     }
-    
+
     /// <summary>
     /// Appends the current indentation to the current string.
     /// </summary>
-    /// <returns>The current instance of <see cref="IndentedStringBuilder"/>.</returns>
-    public IndentedStringBuilder AppendIndentation()
+    public void AppendIndentation()
     {
         _sb.Append(new string(' ', indentLevel * indentSize));
-        return this;
     }
 
     /// <summary>
     /// Increases the indentation level by one.
     /// </summary>
-    /// <returns>The current instance of <see cref="IndentedStringBuilder"/>.</returns>
-    public IndentedStringBuilder Indent()
+    public void Indent()
     {
         indentLevel++;
-        return this;
     }
 
     /// <summary>
     /// Decreases the indentation level by one if it is greater than zero.
     /// </summary>
-    /// <returns>The current instance of <see cref="IndentedStringBuilder"/>.</returns>
-    public IndentedStringBuilder Unindent()
+    public void Unindent()
     {
         if (indentLevel > 0)
         {
             indentLevel--;
         }
-
-        return this;
     }
 
     /// <summary>
     /// Clears the current string.
     /// </summary>
-    /// <returns>The current instance of <see cref="IndentedStringBuilder"/>.</returns>
-    public IndentedStringBuilder Clear()
+    public void Clear()
     {
         _sb.Clear();
-        return this;
     }
 
     /// <summary>

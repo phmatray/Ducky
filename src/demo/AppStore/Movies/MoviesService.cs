@@ -1,22 +1,22 @@
-namespace AppStore;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
-public record GetMoviesResponse(
-    ImmutableArray<Movie> Movies,
-    int TotalItems);
+namespace AppStore;
 
 public interface IMoviesService
 {
     ValueTask<GetMoviesResponse> GetMoviesAsync(
-        int pageNumber, 
-        int pageSize, 
+        int pageNumber,
+        int pageSize,
         CancellationToken ct = default);
 }
 
 public class MoviesService : IMoviesService
 {
     public async ValueTask<GetMoviesResponse> GetMoviesAsync(
-        int pageNumber = 1, 
-        int pageSize = 5, 
+        int pageNumber = 1,
+        int pageSize = 5,
         CancellationToken ct = default)
     {
         await Task.Delay(1000, ct);
@@ -26,7 +26,7 @@ public class MoviesService : IMoviesService
         {
             throw new Exception("Failed to load movies");
         }
-        
+
         // Calculate the total number of movies and the start index for the requested page.
         var totalMovies = MoviesExamples.Movies.Length;
         var startIndex = (pageNumber - 1) * pageSize;
@@ -49,3 +49,7 @@ public class MoviesService : IMoviesService
         return new GetMoviesResponse(paginatedMovies, totalMovies);
     }
 }
+
+public record GetMoviesResponse(
+    ImmutableArray<Movie> Movies,
+    int TotalItems);

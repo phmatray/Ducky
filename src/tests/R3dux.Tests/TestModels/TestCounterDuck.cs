@@ -1,9 +1,19 @@
-﻿namespace R3dux.Tests.TestModels;
+﻿// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
+#pragma warning disable SA1402
+#pragma warning disable SA1649
+
+namespace R3dux.Tests.TestModels;
 
 // Actions
 public record TestIncrementAction : IAction;
+
 public record TestDecrementAction : IAction;
+
 public record TestResetAction : IAction;
+
 public record TestSetValueAction(int Value) : IAction;
 
 // Reducers
@@ -32,10 +42,13 @@ public class TestIncrementEffect : Effect
     {
         // if the Value is greater than 15, then reset the counter
         return actions
-            .FilterActions<TestIncrementAction>()    
+            .FilterActions<TestIncrementAction>()
             .WithSliceState<int, TestIncrementAction>(rootState)
             .Where(pair => pair.State > 15)
             .Delay(TimeSpan.FromSeconds(3))
             .SelectAction(_ => new TestResetAction());
     }
 }
+
+#pragma warning restore SA1402
+#pragma warning restore SA1649

@@ -1,16 +1,20 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Message;
 
 public sealed class MessageReducersTests : IDisposable
 {
+    private const string Key = "message";
+
     private readonly MessageReducers _sut = new();
-    private bool _disposed;
-    
     private readonly MessageState _initialState = new()
     {
         Message = "Hello, Blazor!"
     };
-    
-    private const string Key = "message";
+
+    private bool _disposed;
 
     [Fact]
     public void MessageReducers_Should_Return_Initial_State()
@@ -21,7 +25,7 @@ public sealed class MessageReducersTests : IDisposable
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
     }
-    
+
     [Fact]
     public void MessageReducers_Should_Return_Key()
     {
@@ -31,7 +35,7 @@ public sealed class MessageReducersTests : IDisposable
         // Assert
         key.Should().Be(Key);
     }
-    
+
     [Fact]
     public void MessageReducers_Should_Return_Correct_State_Type()
     {
@@ -41,7 +45,7 @@ public sealed class MessageReducersTests : IDisposable
         // Assert
         stateType.Should().Be(typeof(MessageState));
     }
-    
+
     [Fact]
     public void MessageReducers_Should_Return_Reducers()
     {
@@ -91,6 +95,11 @@ public sealed class MessageReducersTests : IDisposable
         reversedMessage.Should().Be("olleH");
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+    }
+
     private void Dispose(bool disposing)
     {
         if (!_disposed)
@@ -102,10 +111,5 @@ public sealed class MessageReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 }

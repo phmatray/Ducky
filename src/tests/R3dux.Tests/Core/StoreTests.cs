@@ -1,4 +1,6 @@
-using R3dux.Tests.TestModels;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux.Tests.Core;
 
@@ -10,9 +12,9 @@ public class StoreTests
     public void Store_Should_Initialize_With_Default_State()
     {
         // Act
-        Observable<RootState> observable = _sut.RootStateObservable;
-        RootState rootState = observable.FirstSync();
-    
+        var observable = _sut.RootStateObservable;
+        var rootState = observable.FirstSync();
+
         // Assert
         rootState.Should().NotBeNull();
         rootState.Should().BeOfType<RootState>();
@@ -22,7 +24,7 @@ public class StoreTests
     public void Store_Should_Dispatch_StoreInitialized_Action_On_Initialization()
     {
         // Arrange
-        IDispatcher dispatcher = _sut.Dispatcher;
+        var dispatcher = _sut.Dispatcher;
 
         // Act
         dispatcher.ActionStream.Subscribe(action =>
@@ -30,17 +32,18 @@ public class StoreTests
             // Assert
             action.Should().BeOfType<StoreInitialized>();
         });
-            
+
         dispatcher.Dispatch(new StoreInitialized());
     }
-    
+
     [Fact]
     public void Store_Should_Add_Slice_And_Propagate_State_Changes()
     {
         // Arrange
         var counterSlice = new TestCounterReducers();
-        var sliceStateObs = _sut.RootStateObservable.Select(state => state.GetSliceState<int>("test-counter"));
-        
+        var sliceStateObs = _sut.RootStateObservable
+            .Select(state => state.GetSliceState<int>("test-counter"));
+
         _sut.AddSlice(counterSlice);
 
         // Act

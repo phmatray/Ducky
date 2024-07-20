@@ -1,5 +1,6 @@
-using System.Collections.Immutable;
-using R3dux.Exceptions;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux.Normalization;
 
@@ -16,15 +17,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     where TState : NormalizedState<TKey, TEntity, TState>, new()
 {
     /// <summary>
-    /// Creates a new state with the specified entities.
-    /// </summary>
-    /// <param name="entities">The entities to create the state with.</param>
-    /// <returns>A new state with the entities.</returns>
-    public static TState Create(ImmutableList<TEntity> entities)
-        => new() { ById = entities.ToImmutableDictionary(entity => entity.Id) };
-
-    /// <summary>
-    /// Gets or sets the dictionary of entities.
+    /// Gets or init the dictionary of entities.
     /// </summary>
     public ImmutableDictionary<TKey, TEntity> ById { get; init; } = ImmutableDictionary<TKey, TEntity>.Empty;
 
@@ -41,6 +34,14 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <returns>The entity associated with the specified key.</returns>
     public TEntity this[TKey key]
         => GetByKey(key);
+
+    /// <summary>
+    /// Creates a new state with the specified entities.
+    /// </summary>
+    /// <param name="entities">The entities to create the state with.</param>
+    /// <returns>A new state with the entities.</returns>
+    public static TState Create(ImmutableList<TEntity> entities)
+        => new() { ById = entities.ToImmutableDictionary(entity => entity.Id) };
 
     /// <summary>
     /// Selects entities.
@@ -96,12 +97,12 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     public TState RemoveOne(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        
+
         if (key is string keyString)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(keyString);
         }
-            
+
         return CreateWith(ById.Remove(key));
     }
 
@@ -128,18 +129,18 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(update);
-        
+
         var entity = GetByKey(key);
         update(entity);
         return CreateWith(ById.SetItem(key, entity));
     }
-    
+
     /// <inheritdoc />
     public TState UpdateOne(TKey key, Func<TEntity, TEntity> update)
     {
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(update);
-        
+
         var entity = GetByKey(key);
         entity = update(entity);
         return CreateWith(ById.SetItem(key, entity));
@@ -150,7 +151,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(keys);
         ArgumentNullException.ThrowIfNull(update);
-        
+
         var byId = ById;
         foreach (var key in keys)
         {
@@ -161,13 +162,13 @@ public abstract record NormalizedState<TKey, TEntity, TState>
 
         return CreateWith(byId);
     }
-    
+
     /// <inheritdoc />
     public TState UpdateMany(IEnumerable<TKey> keys, Func<TEntity, TEntity> update)
     {
         ArgumentNullException.ThrowIfNull(keys);
         ArgumentNullException.ThrowIfNull(update);
-        
+
         var byId = ById;
         foreach (var key in keys)
         {
@@ -216,12 +217,12 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     public bool ContainsKey(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        
+
         if (key is string keyString)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(keyString);
         }
-        
+
         return ById.ContainsKey(key);
     }
 
@@ -234,7 +235,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     public TEntity GetByKey(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        
+
         return ById.TryGetValue(key, out var value)
             ? value
             : throw new R3duxException("The entity does not exist.");
@@ -252,14 +253,14 @@ public abstract record NormalizedState<TKey, TEntity, TState>
         MergeStrategy strategy = MergeStrategy.FailIfDuplicate)
     {
         ArgumentNullException.ThrowIfNull(entities);
-        
+
         var byId = strategy switch
         {
             MergeStrategy.FailIfDuplicate => MergeFailIfDuplicate(entities),
             MergeStrategy.Overwrite => ById.SetItems(entities),
             _ => throw new ArgumentOutOfRangeException(nameof(strategy), strategy, null)
         };
-        
+
         return CreateWith(byId);
     }
 
@@ -274,6 +275,8 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     }
 
     private TState CreateWith(ImmutableDictionary<TKey, TEntity> byId)
-        => this with { ById = byId } as TState
-           ?? throw new R3duxException("The state must be of type TState.");
+    {
+        return this with { ById = byId } as TState
+               ?? throw new R3duxException("The state must be of type TState.");
+    }
 }

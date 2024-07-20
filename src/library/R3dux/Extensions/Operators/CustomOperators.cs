@@ -1,4 +1,6 @@
-using R3;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux;
 
@@ -17,7 +19,7 @@ public static class CustomOperators
         this Observable<IAction> source)
         where TAction : IAction
         => source.OfType<IAction, TAction>();
-       
+
     /// <summary>
     /// Combines the observable sequence with the state of a slice and projects the result into a new form.
     /// </summary>
@@ -93,7 +95,7 @@ public static class CustomOperators
                 .ToObservable()
                 .Select(successSelector)
                 .CatchAction(errorSelector));
-    
+
     /// <summary>
     /// Logs a message to the console for each element in the observable sequence.
     /// </summary>
@@ -105,7 +107,4 @@ public static class CustomOperators
         this Observable<TSource> source,
         string message)
         => source.Do(_ => Console.WriteLine(message));
-    
-    
-    
 }

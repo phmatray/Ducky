@@ -1,10 +1,15 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Notifications;
 
 public sealed class NotificationsReducersTests : IDisposable
 {
+    private const string Key = "notifications";
+
     private readonly NotificationsReducers _sut = new();
-    private bool _disposed;
-    
+
     private readonly NotificationsState _initialState = new()
     {
         Notifications =
@@ -14,9 +19,9 @@ public sealed class NotificationsReducersTests : IDisposable
             new ErrorNotification("This is an error.")
         ]
     };
-    
-    private const string Key = "notifications";
-    
+
+    private bool _disposed;
+
     [Fact]
     public void NotificationsReducers_Should_Return_Initial_State()
     {
@@ -29,7 +34,7 @@ public sealed class NotificationsReducersTests : IDisposable
         initialState.Notifications[1].Message.Should().Be("This is a warning.");
         initialState.Notifications[2].Message.Should().Be("This is an error.");
     }
-    
+
     [Fact]
     public void NotificationsReducers_Should_Return_Key()
     {
@@ -39,7 +44,7 @@ public sealed class NotificationsReducersTests : IDisposable
         // Assert
         key.Should().Be(Key);
     }
-    
+
     [Fact]
     public void NotificationsReducers_Should_Return_Correct_State_Type()
     {
@@ -49,7 +54,7 @@ public sealed class NotificationsReducersTests : IDisposable
         // Assert
         stateType.Should().Be(typeof(NotificationsState));
     }
-    
+
     [Fact]
     public void NotificationsReducers_Should_Return_Reducers()
     {
@@ -59,14 +64,14 @@ public sealed class NotificationsReducersTests : IDisposable
         // Assert
         reducers.Should().HaveCount(2);
     }
-    
+
     [Fact]
     public void AddNotification_Should_Add_Notification()
     {
         // Arrange
         var notification = new InfoNotification("This is an info notification.");
         var action = new AddNotification(notification);
-        
+
         // Act
         var state = _sut.Reduce(_initialState, action);
 
@@ -74,19 +79,24 @@ public sealed class NotificationsReducersTests : IDisposable
         state.Notifications.Should().HaveCount(4);
         state.Notifications[3].Should().Be(notification);
     }
-    
+
     [Fact]
     public void MarkNotificationAsRead_Should_Mark_Notification_As_Read()
     {
         // Arrange
         var notificationId = _initialState.Notifications[1].Id;
         var action = new MarkNotificationAsRead(notificationId);
-        
+
         // Act
         var state = _sut.Reduce(_initialState, action);
 
         // Assert
         state.Notifications[1].IsRead.Should().BeTrue();
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
     }
 
     private void Dispose(bool disposing)
@@ -100,10 +110,5 @@ public sealed class NotificationsReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 }

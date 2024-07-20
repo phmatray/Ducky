@@ -1,17 +1,17 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore.Tests.Timer;
 
 public sealed class TimerReducersTests : IDisposable
 {
-    private readonly TimerReducers _sut = new();
-    private bool _disposed;
-
-    private readonly TimerState _initialState = new()
-    {
-        Time = 0,
-        IsRunning = false
-    };
-    
     private const string Key = "timer";
+
+    private readonly TimerReducers _sut = new();
+    private readonly TimerState _initialState = new() { Time = 0, IsRunning = false };
+
+    private bool _disposed;
 
     [Fact]
     public void TimerReducers_Should_Return_Initial_State()
@@ -22,7 +22,7 @@ public sealed class TimerReducersTests : IDisposable
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
     }
-    
+
     [Fact]
     public void TimerReducers_Should_Return_Key()
     {
@@ -42,7 +42,7 @@ public sealed class TimerReducersTests : IDisposable
         // Assert
         stateType.Should().Be(typeof(TimerState));
     }
-    
+
     [Fact]
     public void TimerReducers_Should_Return_Reducers()
     {
@@ -103,6 +103,11 @@ public sealed class TimerReducersTests : IDisposable
         newState.Time.Should().Be(state.Time + 1);
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+    }
+
     private void Dispose(bool disposing)
     {
         if (!_disposed)
@@ -114,11 +119,5 @@ public sealed class TimerReducersTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 }

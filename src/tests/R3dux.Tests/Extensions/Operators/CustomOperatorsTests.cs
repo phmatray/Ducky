@@ -1,12 +1,12 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace R3dux.Tests.Extensions.Operators;
 
 public sealed class CustomOperatorsTests : IDisposable
 {
-    private record TestAction : IAction;
-
-    private record OtherAction : IAction;
-
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
     private bool _disposed;
 
     [Fact]
@@ -75,6 +75,10 @@ public sealed class CustomOperatorsTests : IDisposable
     //     results.Should().HaveElementAt(1, -1);
     //     results.Should().HaveElementAt(2, 2);
     // }
+    public void Dispose()
+    {
+        Dispose(true);
+    }
 
     private void Dispose(bool disposing)
     {
@@ -87,10 +91,5 @@ public sealed class CustomOperatorsTests : IDisposable
 
             _disposed = true;
         }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
     }
 }

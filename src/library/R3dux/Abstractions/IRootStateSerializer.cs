@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace R3dux;
 
 /// <summary>
@@ -11,10 +15,10 @@ public interface IRootStateSerializer
     /// <param name="rootState">The <see cref="RootState"/> to serialize.</param>
     /// <returns>The JSON string representation of the state.</returns>
     string Serialize(RootState rootState);
-    
+
     /// <summary>
     /// Serializes the slice state associated with the specified key to a JSON string.
-    /// </summary
+    /// </summary>
     /// <param name="rootState">The <see cref="RootState"/> to serialize.</param>
     /// <param name="key">The key of the slice state to serialize.</param>
     /// <returns>The JSON string representation of the slice state.</returns>

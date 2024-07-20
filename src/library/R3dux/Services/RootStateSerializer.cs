@@ -1,4 +1,7 @@
-using System.Collections.Immutable;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Text.Json;
 
 namespace R3dux;
@@ -8,13 +11,13 @@ namespace R3dux;
 /// </summary>
 public sealed class RootStateSerializer : IRootStateSerializer
 {
-    private static readonly JsonSerializerOptions Options = new()
+    private static readonly JsonSerializerOptions _options = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.KebabCaseLower,
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
     };
-    
+
     /// <inheritdoc />
     public string Serialize(RootState rootState)
     {
@@ -23,10 +26,9 @@ public sealed class RootStateSerializer : IRootStateSerializer
         var stateDictionary = rootState.GetStateDictionary();
         var typedDictionary = stateDictionary.ToDictionary(
             kvp => kvp.Key,
-            kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value }
-        );
+            kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value });
 
-        return JsonSerializer.Serialize(typedDictionary, Options);
+        return JsonSerializer.Serialize(typedDictionary, _options);
     }
 
     /// <inheritdoc />
@@ -34,14 +36,13 @@ public sealed class RootStateSerializer : IRootStateSerializer
     {
         ArgumentNullException.ThrowIfNull(rootState);
         ArgumentNullException.ThrowIfNull(key);
-        
+
         var stateDictionary = rootState.GetStateDictionary();
         var typedDictionary = stateDictionary.ToDictionary(
             kvp => kvp.Key,
-            kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value }
-        );
-        
-        return JsonSerializer.Serialize(typedDictionary[key], Options);
+            kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value });
+
+        return JsonSerializer.Serialize(typedDictionary[key], _options);
     }
 
     /// <inheritdoc />
@@ -50,27 +51,27 @@ public sealed class RootStateSerializer : IRootStateSerializer
         ArgumentNullException.ThrowIfNull(json);
 
         var typedDictionary =
-            JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(json, Options)
-            ?? new Dictionary<string, Dictionary<string, object>>();
+            JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(json, _options)
+            ?? [];
 
         var state = new Dictionary<string, object>();
 
         foreach (var kvp in typedDictionary)
         {
-            var typeName = 
+            var typeName =
                 kvp.Value["type"].ToString()
                 ?? throw new InvalidOperationException("Type not found.");
-            
-            var type = 
+
+            var type =
                 Type.GetType(typeName)
                 ?? throw new InvalidOperationException($"Type '{typeName}' not found.");
 
-            var valueJson = 
+            var valueJson =
                 kvp.Value["value"].ToString()
                 ?? throw new InvalidOperationException("Value not found.");
-            
-            var value = 
-                JsonSerializer.Deserialize(valueJson, type, Options)
+
+            var value =
+                JsonSerializer.Deserialize(valueJson, type, _options)
                 ?? throw new InvalidOperationException("Value not deserialized.");
 
             state[kvp.Key] = value;
@@ -84,7 +85,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
     {
         ArgumentNullException.ThrowIfNull(rootState);
         ArgumentNullException.ThrowIfNull(filePath);
-        
+
         File.WriteAllText(filePath, Serialize(rootState));
     }
 
@@ -92,7 +93,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
     public RootState LoadFromFile(string filePath)
     {
         ArgumentNullException.ThrowIfNull(filePath);
-        
+
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException($"The file '{filePath}' does not exist.");

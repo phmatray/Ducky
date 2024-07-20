@@ -1,0 +1,95 @@
+<Project>
+  <!-- Dependencies custom properties -->
+  <PropertyGroup>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">false</IsTestProject>
+    <IsConsoleProject Condition="'$(IsConsoleProject)' == ''">false</IsConsoleProject>
+    <IncludeAnalyzers Condition="'$(IncludeAnalyzers)' == ''">true</IncludeAnalyzers>
+  </PropertyGroup>
+
+  <!-- Central Package Version Management -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Indicate to NuGet that Directory.Packages.props isn't being used since this repo is using Directory.Build.props instead -->
+    <CentralPackageVersionsFileImported>true</CentralPackageVersionsFileImported>
+  </PropertyGroup>
+
+  <!-- Package Version Management -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.CodeCoverage" Version="17.8.0" />
+
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
+    <PackageVersion Include="ObservableCollections" Version="2.1.3" />
+    <PackageVersion Include="ObservableCollections.R3" Version="2.1.3" />
+    <PackageVersion Include="R3" Version="1.1.15" />
+    <PackageVersion Include="R3Extensions.Blazor" Version="1.1.15" />
+    <PackageVersion Include="Scrutor" Version="4.2.2" />
+  </ItemGroup>
+
+  <!-- Conditional Package Versions for Analyzers -->
+  <ItemGroup Condition="'$(IncludeAnalyzers)' == 'true'">
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" />
+
+    <PackageVersion Include="Roslynator.Analyzers" Version="4.12.4" />
+    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Universal Development Dependencies -->
+  <!-- These dependencies are used in both production and test projects -->
+  <ItemGroup>
+    <PackageVersion Include="DotNet.ReproducibleBuilds" Version="1.2.4" />
+    <PackageReference Include="DotNet.ReproducibleBuilds" PrivateAssets="all"/>
+
+    <PackageVersion Include="MinVer" Version="5.0.0" />
+    <PackageReference Include="MinVer" PrivateAssets="all"/>
+  </ItemGroup>
+
+  <!-- Library-Specific Dependencies -->
+  <!-- These dependencies are only used in production projects -->
+  <ItemGroup Condition="'$(IsTestProject)' != 'true'">
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- Test-Specific Dependencies -->
+  <!-- These dependencies are only used in test projects -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="8.6.0" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="coverlet.collector" PrivateAssets="all" />
+
+    <PackageVersion Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit" />
+
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+
+    <PackageVersion Include="Snapshooter.Xunit" Version="0.14.1" />
+    <PackageReference Include="Snapshooter.Xunit" />
+
+    <PackageVersion Include="Verify.XUnit" Version="26.0.0" />
+    <PackageReference Include="Verify.XUnit" />
+
+    <PackageVersion Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="FluentAssertions" />
+
+    <PackageVersion Include="FluentAssertions.Analyzers" Version="0.33.0" />
+    <PackageReference Include="FluentAssertions.Analyzers" PrivateAssets="all" />
+
+    <PackageVersion Include="Moq" Version="4.20.70" />
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+</Project>

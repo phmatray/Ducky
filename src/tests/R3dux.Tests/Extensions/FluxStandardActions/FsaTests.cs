@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace R3dux.Tests.Extensions.FluxStandardActions;
 
 public class FsaTests
@@ -58,7 +62,7 @@ public class FsaTests
 
         // Assert
         action.Payload.Should().Be(exception);
-        action.Error.Should().BeTrue();
+        FsaError.Error.Should().BeTrue();
         action.TypeKey.Should().Be("error/action");
     }
 
@@ -75,7 +79,7 @@ public class FsaTests
         // Assert
         action.Payload.Should().Be(exception);
         action.Meta.Should().Be(meta);
-        action.Error.Should().BeTrue();
+        FsaError.Error.Should().BeTrue();
         action.TypeKey.Should().Be("error/action");
     }
 }

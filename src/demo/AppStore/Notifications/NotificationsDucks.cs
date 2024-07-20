@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore;
 
 #region State
@@ -5,7 +9,7 @@ namespace AppStore;
 public record NotificationsState
 {
     public required ImmutableList<Notification> Notifications { get; init; }
-    
+
     // Selectors
     public ImmutableList<Notification> SelectUnreadNotifications()
         =>
@@ -14,7 +18,7 @@ public record NotificationsState
                 .Where(n => !n.IsRead)
                 .Reverse()
         ];
-    
+
     public bool SelectHasUnreadNotifications()
         => !SelectUnreadNotifications().IsEmpty;
 
@@ -28,7 +32,7 @@ public record NotificationsState
             ..SelectUnreadNotifications()
                 .Where(n => n.Severity == severity)
         ];
-    
+
     public ImmutableList<Notification> SelectErrorNotifications()
         => SelectNotificationsBySeverity(NotificationSeverity.Error);
 }
@@ -38,6 +42,7 @@ public record NotificationsState
 #region Actions
 
 public record AddNotification(Notification Notification) : IAction;
+
 public record MarkNotificationAsRead(Guid NotificationId) : IAction;
 
 #endregion
@@ -50,6 +55,19 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
     {
         Map<AddNotification>(ReduceAddNotification);
         Map<MarkNotificationAsRead>(ReduceMarkNotificationAsRead);
+    }
+
+    public override NotificationsState GetInitialState()
+    {
+        return new NotificationsState
+        {
+            Notifications =
+            [
+                new SuccessNotification("Welcome to R3dux!"),
+                new WarningNotification("This is a warning."),
+                new ErrorNotification("This is an error.")
+            ]
+        };
     }
 
     private static NotificationsState ReduceAddNotification(
@@ -66,19 +84,6 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
                     : n)
                 .ToImmutableList()
         };
-
-    public override NotificationsState GetInitialState()
-    {
-        return new NotificationsState
-        {
-            Notifications =
-            [
-                new SuccessNotification("Welcome to R3dux!"),
-                new WarningNotification("This is a warning."),
-                new ErrorNotification("This is an error.")
-            ]
-        };
-    }
 }
 
 #endregion

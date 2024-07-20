@@ -1,11 +1,13 @@
-using R3dux.Tests.TestModels;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux.Tests.Services;
 
 public class RootStateSerializerTests
 {
     private const string Key = "test-key";
-    
+
     private const string JsonString =
         """
         {
@@ -17,39 +19,39 @@ public class RootStateSerializerTests
           }
         }
         """;
-    
+
     private readonly RootStateSerializer _sut = new();
     private readonly RootState _rootState = Factories.CreateTestRootState();
     private readonly TestState _initialState = new() { Value = 42 };
-    
+
     [Fact]
     public void Serialize_Should_Work_Correctly()
     {
         // Act
         var json = _sut.Serialize(_rootState);
-        
+
         // Assert
         json.Should().BeEquivalentTo(JsonString);
     }
-    
+
     [Fact]
     public void Deserialize_Should_Work_Correctly()
     {
         // Act
         var deserializedState = _sut.Deserialize(JsonString);
-        
+
         // Assert
         deserializedState.ContainsKey(Key).Should().BeTrue();
         deserializedState.GetSliceState<TestState>(Key).Should().BeEquivalentTo(_initialState);
     }
-    
+
     [Fact]
     public void SerializeAndDeserialize_Should_Work_Correctly()
     {
         // Act
         var json = _sut.Serialize(_rootState);
         var deserializedState = _sut.Deserialize(json);
-        
+
         // Assert
         deserializedState.ContainsKey(Key).Should().BeTrue();
         deserializedState.GetSliceState<TestState>(Key).Should().BeEquivalentTo(_initialState);

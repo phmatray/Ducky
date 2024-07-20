@@ -1,6 +1,6 @@
-using System.Collections.Immutable;
-using ObservableCollections;
-using R3;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux;
 
@@ -25,11 +25,11 @@ public sealed class ObservableSlices : IDisposable
         var sliceAdded = _slices
             .ObserveAdd()
             .Select(ev => ev.Value.Value);
-        
+
         var sliceRemoved = _slices
             .ObserveRemove()
             .Select(ev => ev.Value.Value);
-        
+
         var sliceReplaced = _slices
             .ObserveReplace()
             .Select(ev => ev.NewValue.Value);
@@ -49,29 +49,13 @@ public sealed class ObservableSlices : IDisposable
         => _rootState.AsObservable();
 
     /// <summary>
-    /// Creates a new root state based on the current slices.
-    /// </summary>
-    /// <returns>A new <see cref="RootState"/> object.</returns>
-    private RootState CreateRootState()
-    {
-        lock (_lock)
-        {
-            var state = _slices.ToImmutableSortedDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value.GetState());
-
-            return new RootState(state);
-        }
-    }
-
-    /// <summary>
     /// Adds a new slice with the specified key and data.
     /// </summary>
     /// <param name="slice">The slice to add.</param>
     public void AddSlice(ISlice slice)
     {
         ArgumentNullException.ThrowIfNull(slice);
-        
+
         lock (_lock)
         {
             _slices[slice.GetKey()] = slice;
@@ -85,7 +69,7 @@ public sealed class ObservableSlices : IDisposable
     public void RemoveSlice(string key)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        
+
         lock (_lock)
         {
             if (_slices.ContainsKey(key))
@@ -94,7 +78,7 @@ public sealed class ObservableSlices : IDisposable
             }
         }
     }
-    
+
     /// <summary>
     /// Replaces the slice with the specified key.
     /// </summary>
@@ -104,15 +88,32 @@ public sealed class ObservableSlices : IDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         ArgumentNullException.ThrowIfNull(slice);
-        
+
         lock (_lock)
         {
             _slices[key] = slice;
         }
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _rootState.Dispose();
+    }
+
+    /// <summary>
+    /// Creates a new root state based on the current slices.
+    /// </summary>
+    /// <returns>A new <see cref="RootState"/> object.</returns>
+    private RootState CreateRootState()
+    {
+        lock (_lock)
+        {
+            var state = _slices.ToImmutableSortedDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.GetState());
+
+            return new RootState(state);
+        }
     }
 }

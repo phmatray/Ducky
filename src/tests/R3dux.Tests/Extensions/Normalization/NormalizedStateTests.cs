@@ -1,13 +1,11 @@
-using System.Collections.Immutable;
-using R3dux.Exceptions;
-using R3dux.Normalization;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux.Tests.Extensions.Normalization;
 
 public class NormalizedStateTests
 {
-    private static SampleGuidEntity CreateEntity(Guid id, string name) => new(id, name);
-
     [Fact]
     public void Indexer_ShouldReturnEntity_WhenEntityExists()
     {
@@ -455,46 +453,9 @@ public class NormalizedStateTests
         // Assert
         newState.ById.Values.Should().AllSatisfy(e => e.Name.Should().Be("Mapped Entity"));
     }
-}
 
-/// <summary>
-/// Represents a sample entity with an Guid identifier.
-/// </summary>
-internal record SampleGuidEntity : IEntity<Guid>
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    
-    public SampleGuidEntity() { }
-    
-    public SampleGuidEntity(Guid id, string name)
+    private static SampleGuidEntity CreateEntity(Guid id, string name)
     {
-        Id = id;
-        Name = name;
+        return new SampleGuidEntity(id, name);
     }
-}
-
-/// <summary>
-/// Represents a sample entity with an Guid identifier.
-/// </summary>
-internal record SampleStringEntity : IEntity<string>
-{
-    public string Id { get; init; } = string.Empty;
-    public string Name { get; init; } = string.Empty;
-    
-    public SampleStringEntity() { }
-    
-    public SampleStringEntity(string id, string name)
-    {
-        Id = id;
-        Name = name;
-    }
-}
-
-/// <summary>
-/// Represents a sample normalized state for collections.
-/// </summary>
-file record SampleState : NormalizedState<Guid, SampleGuidEntity, SampleState>
-{
-    // No additional implementation needed for the tests
 }

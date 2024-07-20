@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore;
 
 #region State
@@ -8,7 +12,9 @@ public record GoalState
 
     // Selectors
     public bool SelectIsGoalMet(string goalKey)
-        => Goals.TryGetValue(goalKey, out var isMet) && isMet;
+    {
+        return Goals.TryGetValue(goalKey, out var isMet) && isMet;
+    }
 }
 
 #endregion
@@ -28,14 +34,19 @@ public record GoalsReducers : SliceReducers<GoalState>
         Map<SetGoalMet>(ReduceSetGoalMet);
     }
 
-    private static GoalState ReduceSetGoalMet(GoalState state, SetGoalMet action)
-        => new() { Goals = state.Goals.SetItem(action.GoalKey, true) };
-
     public override GoalState GetInitialState()
     {
         return new GoalState
         {
             Goals = ImmutableSortedDictionary<string, bool>.Empty
+        };
+    }
+
+    private static GoalState ReduceSetGoalMet(GoalState state, SetGoalMet action)
+    {
+        return new GoalState
+        {
+            Goals = state.Goals.SetItem(action.GoalKey, true)
         };
     }
 }

@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <NoWarn>SA1124;SA1402;SA1600;SA1649</NoWarn>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\..\library\R3dux\R3dux.csproj" />
   </ItemGroup>

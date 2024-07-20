@@ -1,5 +1,6 @@
-using R3;
-using R3dux.Exceptions;
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
 
 namespace R3dux;
 
@@ -14,19 +15,12 @@ public sealed class Dispatcher
     private readonly Subject<IAction> _actionSubject = new();
     private volatile bool _isDequeuing;
     private bool _disposed;
-    
-    /// <summary>
-    /// Gets an observable stream of dispatched actions.
-    /// </summary>
+
+    /// <inheritdoc />
     public Observable<IAction> ActionStream
         => _actionSubject.AsObservable();
 
-    /// <summary>
-    /// Dispatches the specified action.
-    /// </summary>
-    /// <param name="action">The action to dispatch.</param>
-    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="action"/> is null.</exception>
-    /// <exception cref="ObjectDisposedException">Thrown when the dispatcher has been disposed.</exception>
+    /// <inheritdoc />
     public void Dispatch(IAction action)
     {
         if (_disposed)
@@ -42,8 +36,23 @@ public sealed class Dispatcher
         {
             _queuedActions.Enqueue(action);
         }
-        
+
         DequeueActions();
+    }
+
+    /// <summary>
+    /// Releases all resources used by the <see cref="Dispatcher"/> class.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _actionSubject.OnCompleted();
+        _actionSubject.Dispose();
     }
 
     /// <summary>
@@ -78,20 +87,5 @@ public sealed class Dispatcher
 
             _actionSubject.OnNext(dequeuedAction);
         }
-    }
-
-    /// <summary>
-    /// Releases all resources used by the <see cref="Dispatcher"/> class.
-    /// </summary>
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-        _actionSubject.OnCompleted();
-        _actionSubject.Dispose();
     }
 }

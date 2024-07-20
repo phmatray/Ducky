@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 namespace AppStore;
 
 #region State
@@ -5,11 +9,12 @@ namespace AppStore;
 public record TimerState
 {
     public int Time { get; init; }
+
     public bool IsRunning { get; init; }
-    
+
     // Selectors
     public string SelectAngle()
-        => $"{Time % 60 * 6}deg";
+        => $"{(Time % 60) * 6}deg";
 }
 
 #endregion
@@ -17,8 +22,11 @@ public record TimerState
 #region Actions
 
 public record StartTimer : IAction;
+
 public record StopTimer : IAction;
+
 public record ResetTimer : IAction;
+
 public record Tick : IAction;
 
 #endregion
@@ -31,13 +39,13 @@ public record TimerReducers : SliceReducers<TimerState>
     {
         Map<StartTimer>((state, _)
             => state with { IsRunning = true });
-        
+
         Map<StopTimer>((state, _)
             => state with { IsRunning = false });
-        
+
         Map<ResetTimer>((_, _)
             => new TimerState());
-        
+
         Map<Tick>((state, _)
             => state with { Time = state.Time + 1 });
     }

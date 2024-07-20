@@ -1,10 +1,17 @@
-﻿namespace AppStore;
+﻿// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
+namespace AppStore;
 
 #region Actions
 
 public record Increment(int Amount = 1) : IAction;
+
 public record Decrement(int Amount = 1) : IAction;
+
 public record Reset : IAction;
+
 public record SetValue(int Value) : IAction;
 
 #endregion
@@ -39,7 +46,7 @@ public class IncrementEffect : Effect
     {
         // if the Value is greater than 15, then reset the counter
         return actions
-            .FilterActions<Increment>()    
+            .FilterActions<Increment>()
             .WithSliceState<int, Increment>(rootState)
             .Where(pair => pair.State > 15)
             .Delay(TimeSpan.FromSeconds(3), TimeProvider)

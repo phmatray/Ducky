@@ -1,8 +1,11 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using R3;
 
 namespace R3dux;
 
@@ -47,7 +50,7 @@ public static class DependencyInjections
 
         return services.AddR3duxCore(options);
     }
-    
+
     /// <summary>
     /// Core method to add R3dux services to the specified <see cref="IServiceCollection"/>. This method registers the BlazorR3 services, dispatcher, slices, and effects.
     /// </summary>
@@ -65,11 +68,11 @@ public static class DependencyInjections
         services.AddSingleton<IDispatcher, Dispatcher>();
         services.AddSingleton<IStoreFactory, StoreFactory>();
         services.AddSingleton<IRootStateSerializer, RootStateSerializer>();
-        
+
         // Scan and register all Slices an Effects
         services.ScanAndRegister<ISlice>(options.Assemblies);
         services.ScanAndRegister<IEffect>(options.Assemblies);
-        
+
         // Add Store
         services.AddScoped<IStore, Store>(sp =>
         {
@@ -81,10 +84,10 @@ public static class DependencyInjections
 
             return storeFactory.CreateStore(dispatcher, logger, slices, effects);
         });
-        
+
         return services;
     }
-    
+
     /// <summary>
     /// Scans the specified assemblies for classes assignable to the specified type and registers them as singleton services.
     /// </summary>
@@ -99,43 +102,5 @@ public static class DependencyInjections
             .AddClasses(classes => classes.AssignableTo(typeof(T)))
             .AsImplementedInterfaces()
             .WithScopedLifetime());
-    }
-}
-
-/// <summary>
-/// Options for configuring R3dux services.
-/// </summary>
-public class R3duxOptions
-{
-    /// <summary>
-    /// Gets or sets the assemblies to scan for slices and effects.
-    /// </summary>
-    public string[] AssemblyNames { get; set; } = [];
-    
-    /// <summary>
-    /// Gets or sets the assemblies to scan for slices and effects. Defaults to the executing assembly.
-    /// </summary>
-    public Assembly[] Assemblies
-        => GetAssemblies();
-
-    private Assembly[] GetAssemblies()
-    {
-        if (AssemblyNames.Length == 0)
-        {
-            return GetDefaultAssemblies();
-        }
-
-        return AssemblyNames
-            .Select(name => Assembly.Load(name))
-            .ToArray();
-    }
-
-    private static Assembly[] GetDefaultAssemblies()
-    {
-        var entryAssembly = 
-            Assembly.GetEntryAssembly()
-            ?? throw new InvalidOperationException("Unable to determine the entry assembly.");
-        
-        return [entryAssembly];
     }
 }
