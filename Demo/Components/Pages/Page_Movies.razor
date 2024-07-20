@@ -82,10 +82,8 @@
   private string? ErrorMessage
     => State.ErrorMessage;
 
-  protected override void OnInitialized()
+  protected override void OnAfterSubscribed()
   {
-    base.OnInitialized();
-
     if (Movies.Count == 0)
     {
       LoadMovies();

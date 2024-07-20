@@ -24,11 +24,8 @@
   private int Time => State.Time;
   private bool IsRunning => State.IsRunning;
   
-  protected override void OnInitialized()
+  protected override void OnAfterSubscribed()
   {
-    // TODO: Avoid calling base.OnInitialized() if not needed
-    base.OnInitialized();
-    
     if (IsRunning)
     {
       StartTimer();

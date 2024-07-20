@@ -93,7 +93,7 @@
     <MudCard>
       <MudCardContent>
         <MudTextField @bind-Value="_newProductName" Variant="Variant.Filled" Label="New Product Name"/>
-        <MudTextField @bind-Value="_newProductPrice" Variant="Variant.Filled" Label="Price" Type="number"/>
+        <MudNumericField @bind-Value="_newProductPrice" Variant="Variant.Filled" Label="Price"/>
         <MudSelect @bind-Value="_newProductCategory" Label="Category">
           <MudSelectItem Value="@("Electronics")">Electronics</MudSelectItem>
           <MudSelectItem Value="@("Clothing")">Clothing</MudSelectItem>

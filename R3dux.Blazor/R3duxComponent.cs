@@ -27,8 +27,14 @@ public abstract class R3duxComponent<TState>
     
     protected string ComponentName
         => GetType().Name;
-
-    protected override void OnInitialized()
+    
+    /// <summary>
+    /// Invoked after the state subscription has been established.
+    /// This method is intended to be overridden by derived classes.
+    /// </summary>
+    protected virtual void OnAfterSubscribed() { }
+    
+    protected sealed override void OnInitialized()
     {
         Logger.ComponentInitializing(ComponentName);
 
@@ -44,6 +50,8 @@ public abstract class R3duxComponent<TState>
                     InvokeAsync(StateHasChanged);
                     Logger.ComponentRefreshed(ComponentName);
                 });
+            
+            OnAfterSubscribed();
         }
         else
         {

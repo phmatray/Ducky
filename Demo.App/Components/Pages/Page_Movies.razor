@@ -93,10 +93,8 @@
   private int TotalPages
     => State.Pagination.TotalPages;
 
-  protected override void OnInitialized()
+  protected override void OnAfterSubscribed()
   {
-    base.OnInitialized();
-
     if (Movies.Count == 0)
     {
       LoadMovies();
