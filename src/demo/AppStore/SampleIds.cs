@@ -17,4 +17,6 @@ public static class SampleIds
     public static Guid Id5 { get; } = Guid.Parse("00000000-0000-0000-0000-555555555555");
 
     public static Guid Id6 { get; } = Guid.Parse("00000000-0000-0000-0000-666666666666");
+
+    public static Guid Id7 { get; } = Guid.Parse("00000000-0000-0000-0000-777777777777");
 }

@@ -13,7 +13,9 @@ public sealed class ProductsReducersTests : IDisposable
         new Product(SampleIds.Id1, "iPhone 12", 799.99m, "Electronics"),
         new Product(SampleIds.Id2, "MacBook Pro", 1299.99m, "Electronics"),
         new Product(SampleIds.Id3, "Nike Air Max", 129, "Clothing"),
-        new Product(SampleIds.Id4, "Adidas Original", 99, "Clothing")
+        new Product(SampleIds.Id4, "Adidas Original", 99, "Clothing"),
+        new Product(SampleIds.Id5, "Samsung Galaxy S21", 699.99m, "Electronics"),
+        new Product(SampleIds.Id6, "Bag Louis Vuitton", 1999.99m, "Clothing")
     ]);
 
     private bool _disposed;
@@ -62,14 +64,14 @@ public sealed class ProductsReducersTests : IDisposable
     public void AddProduct_ShouldAddNewProduct()
     {
         // Arrange
-        var product = new Product(SampleIds.Id5, "AirPods Pro", 249.99m, "Electronics");
+        var product = new Product(SampleIds.Id7, "AirPods Pro", 249.99m, "Electronics");
         var action = new AddProduct(product);
 
         // Act
         var state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.SelectImmutableList().Should().HaveCount(5);
+        state.SelectImmutableList().Should().HaveCount(7);
         state.SelectImmutableList().Should().Contain(product);
     }
 
@@ -83,7 +85,7 @@ public sealed class ProductsReducersTests : IDisposable
         var state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.SelectImmutableList().Should().HaveCount(3);
+        state.SelectImmutableList().Should().HaveCount(5);
         state.SelectImmutableList().Should().NotContain(product => product.Id == SampleIds.Id1);
     }
 
@@ -94,7 +96,7 @@ public sealed class ProductsReducersTests : IDisposable
         var electronics = _sut.GetInitialState().SelectElectronics();
 
         // Assert
-        electronics.Should().HaveCount(2);
+        electronics.Should().HaveCount(3);
         electronics.Should().OnlyContain(product => product.Category == "Electronics");
     }
 
@@ -105,7 +107,7 @@ public sealed class ProductsReducersTests : IDisposable
         var clothing = _sut.GetInitialState().SelectClothing();
 
         // Assert
-        clothing.Should().HaveCount(2);
+        clothing.Should().HaveCount(3);
         clothing.Should().OnlyContain(product => product.Category == "Clothing");
     }
 
@@ -116,7 +118,7 @@ public sealed class ProductsReducersTests : IDisposable
         var totalPrice = _sut.GetInitialState().SelectTotalPriceOfElectronics();
 
         // Assert
-        totalPrice.Should().Be(2099.98m);
+        totalPrice.Should().Be(2799.97m);
     }
 
     [Fact]
@@ -126,7 +128,7 @@ public sealed class ProductsReducersTests : IDisposable
         var totalPrice = _sut.GetInitialState().SelectTotalPriceOfClothing();
 
         // Assert
-        totalPrice.Should().Be(228m);
+        totalPrice.Should().Be(2227.99m);
     }
 
     public void Dispose()
