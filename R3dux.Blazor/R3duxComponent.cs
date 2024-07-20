@@ -43,14 +43,7 @@ public abstract class R3duxComponent<TState>
         if (_subscription == null)
         {
             Logger.SubscribingToStateObservable(ComponentName);
-
-            _subscription = StateObservable
-                .Subscribe(_ =>
-                {
-                    InvokeAsync(StateHasChanged);
-                    Logger.ComponentRefreshed(ComponentName);
-                });
-            
+            _subscription = StateObservable.Subscribe(OnNext);
             OnAfterSubscribed();
         }
         else
@@ -63,6 +56,16 @@ public abstract class R3duxComponent<TState>
 
     protected void Dispatch(IAction action)
         => Store.Dispatcher.Dispatch(action);
+    
+    private void OnNext(TState state)
+    {
+        InvokeAsync(StateHasChanged);
+                    
+        OnParametersSet();
+        OnParametersSetAsync();
+                    
+        Logger.ComponentRefreshed(ComponentName);
+    }
 
     public void Dispose()
     {

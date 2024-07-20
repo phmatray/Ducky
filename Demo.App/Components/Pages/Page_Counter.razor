@@ -12,19 +12,26 @@
         Creates an interactive counter using the R3dux state management library for predictable state handling,<br/>
         featuring increment, decrement, and reset buttons to manage the counter state.
       </MudText>
-      <ul>
-        <li>If the counter exceeds 15, then an effect will be triggered to reset the counter to 10 after 3 second.</li>
-        <li>If the counter reaches zero, the decrement button will be disabled.</li>
-      </ul>
+      <MudList T="string">
+        <Goal Condition="() => State > 15" ConditionKey="counter-exceeds-15">
+          The counter exceeds 15 (an effect will be triggered to reset the counter to 10 after 3 seconds.)
+        </Goal>
+        <Goal Condition="() => State <= 0" ConditionKey="counter-reaches-zero">
+          The counter reaches zero (the decrement button will be disabled.)
+        </Goal>
+      </MudList>
     </MudStack>
   </MudItem>
 
   <MudItem xs="12">
-    <MudButtonGroup Variant="Variant.Outlined">
-      <MudButton OnClick="Decrement" Disabled="@IsDisabled">Decrement</MudButton>
-      <MudButton OnClick="Reset">Reset Counter</MudButton>
-      <MudButton OnClick="Increment">Increment</MudButton>
-    </MudButtonGroup>
+    <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Start">
+      <MudNumericField @bind-Value="Amount" FullWidth="@false" Min="1" Max="10" Variant="Variant.Outlined"/>
+      <MudButtonGroup Variant="Variant.Outlined">
+        <MudButton OnClick="Decrement" Disabled="@IsDisabled">Decrement</MudButton>
+        <MudButton OnClick="Reset">Reset Counter</MudButton>
+        <MudButton OnClick="Increment">Increment</MudButton>
+      </MudButtonGroup>
+    </MudStack>
   </MudItem>
   
   <MudItem xs="12">
@@ -39,7 +46,9 @@
 </MudGrid>
 
 @code {
-  
+
+  private int Amount { get; set; } = 2;
+
   private int CounterValue
     => State;
   
@@ -50,10 +59,10 @@
     => State > 15;
 
   private void Increment()
-    => Dispatch(new Increment());
+    => Dispatch(new Increment(Amount));
 
   private void Decrement()
-    => Dispatch(new Decrement());
+    => Dispatch(new Decrement(Amount));
 
   private void Reset()
     => Dispatch(new Reset());

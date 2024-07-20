@@ -1,0 +1,35 @@
+@inherits R3duxComponent<GoalState>
+
+<MudListItem
+  T="string"
+  Icon="@Icons.Material.Filled.Check"
+  IconColor="@GetGoalColor(IsConditionMet)">
+  @ChildContent
+</MudListItem>
+
+@code {
+  [Parameter, EditorRequired]
+  public RenderFragment? ChildContent { get; set; }
+
+  [Parameter, EditorRequired]
+  public Func<bool> Condition { get; set; } = () => false;
+
+  [Parameter, EditorRequired]
+  public string ConditionKey { get; set; } = string.Empty;
+
+  private bool IsConditionMet
+    => State.SelectIsGoalMet(ConditionKey) || Condition();
+
+  protected override void OnParametersSet()
+  {
+    base.OnParametersSet();
+
+    if (Condition())
+    {
+      Dispatch(new SetGoalMet(ConditionKey));
+    }
+  }
+
+  private static Color GetGoalColor(bool conditionMet)
+    => conditionMet ? Color.Success : Color.Inherit;
+}

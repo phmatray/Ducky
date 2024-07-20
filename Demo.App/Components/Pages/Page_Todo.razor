@@ -12,6 +12,17 @@
         Creates an interactive todo list using the R3dux state management library for predictable state handling,<br/>
         featuring functionality to add, toggle, and remove todo items.
       </MudText>
+      <MudListItem T="string">
+        <Goal Condition="() => State.SelectActiveTodosCount() >= 5" ConditionKey="todo-active-exceed-5">
+          The number of active todos is 5 or more.
+        </Goal>
+        <Goal Condition="() => State.SelectCompletedTodosCount() >= 5" ConditionKey="todo-completed-exceed-5">
+          The number of completed todos is 5 or more.
+        </Goal>
+        <Goal Condition="() => !State.SelectHasActiveTodos()" ConditionKey="todo-no-active">
+          There are no active todos.
+        </Goal>
+      </MudListItem>
     </MudStack>
   </MudItem>
 

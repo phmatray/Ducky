@@ -12,6 +12,11 @@
         Creates a simple message example using the R3dux state management library for predictable state handling,<br/>
         featuring a button to set a new message.
       </MudText>
+      <MudListItem T="string">
+        <Goal Condition="() => State.Message.Length > 42" ConditionKey="message-exceeds-10">
+          The message exceeds 42 characters.
+        </Goal>
+      </MudListItem>
     </MudStack>
   </MudItem>
 

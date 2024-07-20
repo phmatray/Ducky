@@ -2,8 +2,8 @@
 
 #region Actions
 
-public record Increment : IAction;
-public record Decrement : IAction;
+public record Increment(int Amount = 1) : IAction;
+public record Decrement(int Amount = 1) : IAction;
 public record Reset : IAction;
 public record SetValue(int Value) : IAction;
 
@@ -15,8 +15,8 @@ public record CounterReducers : SliceReducers<int>
 {
     public CounterReducers()
     {
-        Map<Increment>(state => state + 1);
-        Map<Decrement>(state => state - 1);
+        Map<Increment>((state, action) => state + action.Amount);
+        Map<Decrement>((state, action) => state - action.Amount);
         Map<Reset>(GetInitialState);
         Map<SetValue>((_, action) => action.Value);
     }
