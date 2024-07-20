@@ -1,0 +1,60 @@
+@using AppStore
+@inherits R3duxComponent<NotificationsState>
+
+<MudDrawer
+  Open="@IsOpen"
+  Anchor="Anchor.End"
+  ClipMode="DrawerClipMode.Always"
+  Width="420px"
+  Elevation="2">
+  <MudDrawerHeader>
+    <MudText Typo="Typo.h6">Notifications</MudText>
+  </MudDrawerHeader>
+  @if (HasUnreadNotifications)
+  {
+    <MudList T="Notification" Dense>
+      @foreach (var notification in UnreadNotifications)
+      {
+        <MudListItem>
+          <MudAlert 
+            Severity="@notification.Severity.ToMudSeverity()"
+            Variant="Variant.Outlined"
+            ShowCloseIcon
+            CloseIconClicked="() => MarkNotificationAsRead(notification.Id)">
+            <MudStack Spacing="0">
+              <MudText>@notification.Message</MudText>
+              <MudText Typo="Typo.caption">@notification.Timestamp.Humanize()</MudText>
+              @if (notification is ExceptionNotification)
+              {
+                <MudButton Variant="Variant.Outlined" Class="mt-2">Show Details</MudButton>
+              }
+            </MudStack>
+          </MudAlert>
+        </MudListItem>
+      }
+    </MudList>
+  }
+  else
+  {
+    <MudStack Row Class="ml-6">
+      <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" />
+      <MudText>There are no unread notifications.</MudText>
+    </MudStack>
+  }
+</MudDrawer>
+
+@code {
+
+  [Parameter, EditorRequired]
+  public bool IsOpen { get; set; }
+  
+  private ImmutableList<Notification> UnreadNotifications
+    => State.SelectUnreadNotifications();
+  
+  private bool HasUnreadNotifications
+    => State.SelectHasUnreadNotifications();
+  
+  private void MarkNotificationAsRead(Guid id)
+    => Dispatch(new MarkNotificationAsRead(id));
+  
+}

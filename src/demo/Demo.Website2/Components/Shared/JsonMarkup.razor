@@ -1,0 +1,22 @@
+@using Demo.Website2.Features.JsonColoring
+@inject IJsonColorizer JsonColorizer
+
+<code style="width: 100%;">
+  <pre>
+    @_dataColorized
+  </pre>
+</code>
+
+@code {
+  
+  private MarkupString _dataColorized;
+  
+  [Parameter, EditorRequired]
+  public required string Data { get; set; }
+  
+  protected override void OnInitialized()
+  {
+    _dataColorized = (MarkupString)JsonColorizer.ColorizeJson(Data);
+  }
+  
+}

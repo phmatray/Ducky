@@ -1,0 +1,48 @@
+@page "/counter"
+@using AppStore
+@inherits R3duxComponent<int>
+
+<PageTitle>R3dux - Counter</PageTitle>
+<hgroup>
+  <p class="chapter">Example</p>
+  <h1>Counter <strong>@State</strong></h1>
+  <p>
+    Creates an interactive counter using the R3dux state management library for predictable state handling,
+    featuring increment, decrement, and reset buttons to manage the counter state.
+  </p>
+  <ul>
+    <li>If the counter exceeds 15, then an effect will be triggered to reset the counter to 10 after 3 second.</li>
+    <li>If the counter reaches zero, the decrement button will be disabled.</li>
+  </ul>
+</hgroup>
+
+<article>
+  @if(State > 15)
+  {
+    <progress></progress>
+  }
+  else
+  {
+    <progress value="@State" max="15"></progress>
+  }
+  <footer>
+    <div role="group">
+      <button @onclick="Decrement" disabled="@(State <= 0)">Decrement</button>
+      <button @onclick="Reset">Reset Counter</button>
+      <button @onclick="Increment">Increment</button>
+    </div>
+  </footer>
+</article>
+
+@code {
+
+  private void Increment()
+    => Dispatch(new Increment());
+
+  private void Decrement()
+    => Dispatch(new Decrement());
+
+  private void Reset()
+    => Dispatch(new Reset());
+
+}

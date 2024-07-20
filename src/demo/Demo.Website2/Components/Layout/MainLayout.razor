@@ -1,0 +1,76 @@
+﻿@using AppStore
+@inherits R3duxLayout<LayoutState>
+
+<MudThemeProvider Theme="@_theme" IsDarkMode="@IsDarkMode" />
+
+<MudPopoverProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<MudLayout>
+  <MudAppBar Elevation="1">
+    <MudIconButton
+      Icon="@Icons.Material.Filled.Menu"
+      Color="Color.Inherit" 
+      Edge="Edge.Start"
+      OnClick="ToggleDrawer" />
+    <MudText Typo="Typo.h5" Class="ml-3">
+      @FullTitle
+    </MudText>
+    <MudSpacer />
+    <MudIconButton
+      Icon="@DarkLightModeButtonIcon"
+      Color="Color.Inherit"
+      OnClick="ToggleDarkMode" />
+    <MudIconButton
+      Icon="@Icons.Material.Filled.Info"
+      Color="Color.Inherit"
+      OnClick="OpenAboutDialog" />
+    <NotificationsBadge/>
+  </MudAppBar>
+  <MudDrawer
+    Open="IsDrawerOpen"
+    ClipMode="DrawerClipMode.Always"
+    Elevation="2">
+    <NavMenu />
+  </MudDrawer>
+  <NotificationsDrawer IsOpen="IsNotificationOpen"/>
+  <MudMainContent Class="mt-16 pa-4">
+    @Body
+  </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui">
+  An unhandled error has occurred.
+  <a href="" class="reload">Reload</a>
+  <a class="dismiss">🗙</a>
+</div>
+
+@code {
+
+  private readonly AppTheme _theme = new();
+  
+  private string FullTitle
+    => State.SelectFullTitle();
+  
+  private bool IsDrawerOpen
+    => State.IsDrawerOpen;
+
+  private bool IsNotificationOpen
+    => State.IsNotificationOpen;
+
+  private bool IsDarkMode
+    => State.IsDarkMode;
+
+  private string DarkLightModeButtonIcon
+    => AppTheme.GetDarkLightModeButtonIcon(State.IsDarkMode);
+  
+  private void ToggleDrawer()
+    => Dispatch(new ToggleDrawer());
+
+  private void ToggleDarkMode()
+    => Dispatch(new ToggleDarkMode());
+  
+  private void OpenAboutDialog()
+    => Dispatch(new OpenAboutDialog());
+}

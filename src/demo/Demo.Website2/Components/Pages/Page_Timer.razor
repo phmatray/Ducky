@@ -1,0 +1,70 @@
+@page "/timer"
+@using AppStore
+@inherits R3duxComponent<TimerState>
+
+<PageTitle>R3dux - Timer</PageTitle>
+
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Timer</MudText>
+      <MudText Typo="Typo.body1">
+        Creates an interactive timer using the R3dux state management library for predictable state handling,<br/>
+        featuring start, stop, and reset functionality.
+      </MudText>
+      <MudListItem T="string">
+        <Goal Condition="() => State.Time >= 10" ConditionKey="timer-exceeds-10">
+          The timer exceeds 10 seconds.
+        </Goal>
+      </MudListItem>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12">
+    <MudButtonGroup Variant="Variant.Outlined">
+      <MudButton Variant="Variant.Outlined" OnClick="StartTimer" Disabled="IsRunning">Start</MudButton>
+      <MudButton Variant="Variant.Outlined" OnClick="StopTimer" Disabled="!IsRunning">Stop</MudButton>
+      <MudButton Variant="Variant.Outlined" OnClick="ResetTimer">Reset</MudButton>
+    </MudButtonGroup>
+  </MudItem>
+
+  <MudItem xs="12">
+    <MudStack Row>
+      <MudStack AlignItems="AlignItems.Center">
+        <MudText>Time: <strong>@Time</strong> seconds</MudText>
+        <AnalogClock/>
+      </MudStack>
+    </MudStack>
+  </MudItem>
+</MudGrid>
+
+@code {
+
+  private int Time
+    => State.Time;
+  
+  private bool IsRunning
+    => State.IsRunning;
+
+  protected override void OnAfterSubscribed()
+  {
+    if (IsRunning)
+    {
+      StartTimer();
+    }
+  }
+  
+  private void ResetTimer()
+  {
+    StopTimer();
+    Dispatch(new ResetTimer());
+  }
+
+  private void StartTimer()
+    => Dispatch(new StartTimer());
+
+  private void StopTimer()
+    => Dispatch(new StopTimer());
+
+}

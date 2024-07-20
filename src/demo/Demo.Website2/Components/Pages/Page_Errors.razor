@@ -1,0 +1,58 @@
+@page "/errors"
+@using AppStore
+@inherits R3duxComponent<NotificationsState>
+
+<PageTitle>R3dux - Notifications</PageTitle>
+
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">System</MudText>
+      <MudText Typo="Typo.h3">Errors</MudText>
+      <MudText Typo="Typo.body1">
+        Review and manage system errors and exceptions.
+      </MudText>
+    </MudStack>
+  </MudItem>
+  
+  <MudItem xs="12">
+
+    <MudTextField
+      @bind-Value="@_searchTerm"
+      AdornmentIcon="@Icons.Material.Filled.FindInPage"
+      Adornment="Adornment.End"
+      Immediate="true"
+      Variant="Variant.Outlined"
+      Label="Search" />
+    
+    @if (ErrorNotifications.Any())
+    {
+      <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Start">
+        @foreach (var notification in ErrorNotifications)
+        {
+          <MudTimelineItem @key="notification.Id" Color="@notification.Severity.ToMudColor()" Variant="Variant.Filled">
+            <ItemContent>
+              <ExceptionDetailsAlert Notification="@notification" SearchTerm="@_searchTerm"/>
+            </ItemContent>
+          </MudTimelineItem>
+        }
+      </MudTimeline>
+    }
+    else
+    {
+      <MudStack Row Class="ml-6">
+        <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Secondary"/>
+        <MudText>There are no error notifications.</MudText>
+      </MudStack>
+    }
+  </MudItem>
+</MudGrid>
+
+@code {
+  
+  private string _searchTerm = "";
+  
+  private ImmutableList<Notification> ErrorNotifications
+    => State.SelectErrorNotifications();
+
+}

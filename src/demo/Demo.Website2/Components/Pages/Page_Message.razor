@@ -1,0 +1,72 @@
+@page "/message"
+@using AppStore
+@inherits R3duxComponent<MessageState>
+
+<PageTitle>R3dux - Message</PageTitle>
+
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Message</MudText>
+      <MudText Typo="Typo.body1">
+        Creates a simple message example using the R3dux state management library for predictable state handling,<br/>
+        featuring a button to set a new message.
+      </MudText>
+      <MudListItem T="string">
+        <Goal Condition="() => State.Message.Length > 42" ConditionKey="message-exceeds-10">
+          The message exceeds 42 characters.
+        </Goal>
+      </MudListItem>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12">
+    <MudButtonGroup Variant="Variant.Outlined">
+      <MudButton OnClick="SetMessage">Set New Message</MudButton>
+      <MudButton OnClick="AppendMessage">Append Message</MudButton>
+      <MudButton OnClick="ClearMessage">Clear Message</MudButton>
+    </MudButtonGroup>
+  </MudItem>
+  
+  <MudItem xs="12">
+    <MudSimpleTable>
+      <tbody>
+      <tr>
+        <td style="width: 25%">Message</td>
+        <td><b>@Message</b></td>
+      </tr>
+      <tr>
+        <td>Character count</td>
+        <td><b>@MessageLength</b></td>
+      </tr>
+      <tr>
+        <td>Reverse</td>
+        <td><b>@MessageInReverse</b></td>
+      </tr>
+      </tbody>
+    </MudSimpleTable>
+  </MudItem>
+</MudGrid>
+
+@code {
+  
+  private string Message
+    => State.Message;
+  
+  private int MessageLength
+    => State.SelectMessageLength();
+  
+  private string MessageInReverse
+    => State.SelectMessageInReverse();
+
+  private void SetMessage()
+    => Dispatch(new SetMessage("New message from Blazor!"));
+
+  private void AppendMessage()
+    => Dispatch(new AppendMessage(" Appended text"));
+
+  private void ClearMessage()
+    => Dispatch(new ClearMessage());
+
+}
