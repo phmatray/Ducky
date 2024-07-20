@@ -5,10 +5,14 @@
 namespace R3dux;
 
 /// <summary>
-/// Represents an action that is dispatched when the store is initialized.
+/// Represents an entity with an identifier.
 /// </summary>
-public sealed record StoreInitialized : Fsa
+/// <typeparam name="TKey">The type of the entity's key.</typeparam>
+public interface IEntity<out TKey>
+    where TKey : notnull
 {
-    /// <inheritdoc />
-    public override string TypeKey => "store/initialized";
+    /// <summary>
+    /// Gets the identifier of the entity.
+    /// </summary>
+    TKey Id { get; }
 }

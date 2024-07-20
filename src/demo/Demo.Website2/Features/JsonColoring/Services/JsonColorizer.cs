@@ -2,9 +2,9 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using static Demo.Website2.Features.JsonColoring.HtmlSpanHelper;
+using static Demo.Website2.Features.JsonColoring.Helpers.HtmlSpanHelper;
 
-namespace Demo.Website2.Features.JsonColoring;
+namespace Demo.Website2.Features.JsonColoring.Services;
 
 /// <inheritdoc />
 public class JsonColorizer : IJsonColorizer

@@ -33,13 +33,8 @@ public class R3duxOptions
 
     private Assembly[] GetAssemblies()
     {
-        if (AssemblyNames.Length == 0)
-        {
-            return GetDefaultAssemblies();
-        }
-
-        return AssemblyNames
-            .Select(Assembly.Load)
-            .ToArray();
+        return AssemblyNames.Length == 0
+            ? GetDefaultAssemblies()
+            : AssemblyNames.Select(Assembly.Load).ToArray();
     }
 }

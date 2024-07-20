@@ -16,7 +16,7 @@ public sealed class MoviesEffectsTests : IDisposable
     {
         new LoadMoviesEffect(_moviesServiceMock.Object)
             .Handle(_actionsSubject, _rootStateSubject)
-            .Subscribe(action => _actualActions.Add(action))
+            .Subscribe(_actualActions.Add)
             .AddTo(_disposables);
     }
 
@@ -56,7 +56,7 @@ public sealed class MoviesEffectsTests : IDisposable
         const string exceptionMessage = "Service call failed";
         _moviesServiceMock
             .Setup(service => service.GetMoviesAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None))
-            .ThrowsAsync(new Exception(exceptionMessage));
+            .ThrowsAsync(new MovieException(exceptionMessage));
 
         // Act
         _actionsSubject.OnNext(new LoadMovies(1, 10));

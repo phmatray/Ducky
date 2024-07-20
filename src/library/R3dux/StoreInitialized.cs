@@ -5,6 +5,10 @@
 namespace R3dux;
 
 /// <summary>
-/// Defines a contract for an action.
+/// Represents an action that is dispatched when the store is initialized.
 /// </summary>
-public interface IAction;
+public sealed record StoreInitialized : IKeyedAction
+{
+    /// <inheritdoc />
+    public string TypeKey => "store/initialized";
+}

@@ -47,7 +47,14 @@ public abstract class R3duxComponent<TState>
     /// Gets the current state of the component.
     /// </summary>
     protected TState State
-        => StateObservable.FirstSync();
+    {
+        get
+        {
+            var stateAsync = StateObservable.FirstAsync();
+            stateAsync.Wait();
+            return stateAsync.Result;
+        }
+    }
 
     /// <summary>
     /// Gets the name of the component.

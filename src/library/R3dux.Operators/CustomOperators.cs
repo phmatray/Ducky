@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using R3;
+
 namespace R3dux;
 
 /// <summary>
@@ -18,7 +20,9 @@ public static class CustomOperators
     public static Observable<TAction> FilterActions<TAction>(
         this Observable<IAction> source)
         where TAction : IAction
-        => source.OfType<IAction, TAction>();
+    {
+        return source.OfType<IAction, TAction>();
+    }
 
     /// <summary>
     /// Combines the observable sequence with the state of a slice and projects the result into a new form.
@@ -59,9 +63,11 @@ public static class CustomOperators
     public static Observable<IAction> SelectAction<TSource, TResult>(
         this Observable<TSource> source,
         Func<TSource, TResult> selector)
-        => source
+    {
+        return source
             .Select(selector)
             .Cast<TResult, IAction>();
+    }
 
     /// <summary>
     /// Catches exceptions in the observable sequence and replaces the exception with a specified value.
@@ -73,7 +79,9 @@ public static class CustomOperators
     public static Observable<TSource> CatchAction<TSource>(
         this Observable<TSource> source,
         Func<Exception, TSource> selector)
-        => source.Catch<TSource, Exception>(ex => source.Select(_ => selector(ex)));
+    {
+        return source.Catch<TSource, Exception>(ex => source.Select(_ => selector(ex)));
+    }
 
     /// <summary>
     /// Invokes a service call for each element in the observable sequence, returning a sequence of actions based on the result or error.
@@ -90,11 +98,13 @@ public static class CustomOperators
         Func<TAction, ValueTask<TResult>> serviceCall,
         Func<TResult, IAction> successSelector,
         Func<Exception, IAction> errorSelector)
-        => source.SelectMany(action
+    {
+        return source.SelectMany(action
             => serviceCall(action)
                 .ToObservable()
                 .Select(successSelector)
                 .CatchAction(errorSelector));
+    }
 
     /// <summary>
     /// Logs a message to the console for each element in the observable sequence.
@@ -106,5 +116,7 @@ public static class CustomOperators
     public static Observable<TSource> LogMessage<TSource>(
         this Observable<TSource> source,
         string message)
-        => source.Do(_ => Console.WriteLine(message));
+    {
+        return source.Do(_ => Console.WriteLine(message));
+    }
 }

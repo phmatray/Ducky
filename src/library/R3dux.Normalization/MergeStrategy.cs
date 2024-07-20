@@ -5,13 +5,17 @@
 namespace R3dux;
 
 /// <summary>
-/// A Flux Standard action without payload or metadata properties.
+/// Defines strategies for merging entities into the state.
 /// </summary>
-public abstract record Fsa
-    : IAction
+public enum MergeStrategy
 {
     /// <summary>
-    /// Gets the `type` of an action identifies to the consumer the nature of the action that has occurred.
+    /// Fail if a duplicate entity is found during the merge.
     /// </summary>
-    public abstract string TypeKey { get; }
+    FailIfDuplicate,
+
+    /// <summary>
+    /// Overwrite existing entities with the same key during the merge.
+    /// </summary>
+    Overwrite,
 }

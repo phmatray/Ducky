@@ -2,9 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using R3dux.Selectors;
-
-namespace R3dux.Tests.Extensions.Selectors;
+namespace R3dux.Tests.Extensions.Selectors.Models;
 
 internal sealed record TodoState : NormalizedState<Guid, TodoItem, TodoState>
 {
@@ -49,20 +47,32 @@ internal sealed record TodoState : NormalizedState<Guid, TodoItem, TodoState>
 
     // Memoized Selectors
     public ImmutableList<TodoItem> SelectCompletedTodos()
-        => _selectCompletedTodos(this);
+    {
+        return _selectCompletedTodos(this);
+    }
 
     public int SelectCompletedTodosCount()
-        => _selectCompletedTodosCount(this);
+    {
+        return _selectCompletedTodosCount(this);
+    }
 
     public bool SelectHasCompletedTodos()
-        => _selectHasCompletedTodos(this);
+    {
+        return _selectHasCompletedTodos(this);
+    }
 
     public ImmutableList<TodoItem> SelectActiveTodos()
-        => _selectActiveTodos(this);
+    {
+        return _selectActiveTodos(this);
+    }
 
     public int SelectActiveTodosCount()
-        => _selectActiveTodosCount(this);
+    {
+        return _selectActiveTodosCount(this);
+    }
 
     public bool SelectHasActiveTodos()
-        => _selectHasActiveTodos(this);
+    {
+        return _selectHasActiveTodos(this);
+    }
 }

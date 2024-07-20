@@ -6,7 +6,4 @@ global using System.Collections.Immutable;
 global using FluentAssertions;
 global using Microsoft.Extensions.Logging;
 global using R3;
-global using R3dux.Abstractions;
-global using R3dux.Exceptions;
-global using R3dux.Normalization;
 global using R3dux.Tests.TestModels;

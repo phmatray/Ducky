@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace R3dux.Exceptions;
+namespace R3dux;
 
 /// <summary>
 /// Exception type for the R3dux library.
@@ -10,14 +10,14 @@ namespace R3dux.Exceptions;
 public class R3duxException : Exception
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="R3dux.Exceptions.R3duxException"/> class.
+    /// Initializes a new instance of the <see cref="R3duxException"/> class.
     /// </summary>
     public R3duxException()
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="R3dux.Exceptions.R3duxException"/> class with a specified error message.
+    /// Initializes a new instance of the <see cref="R3duxException"/> class with a specified error message.
     /// </summary>
     /// <param name="message">The message that describes the error.</param>
     public R3duxException(string message)
@@ -26,7 +26,7 @@ public class R3duxException : Exception
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="R3dux.Exceptions.R3duxException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
+    /// Initializes a new instance of the <see cref="R3duxException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
     /// </summary>
     /// <param name="message">The message that describes the error.</param>
     /// <param name="innerException">The exception that is the cause of the current exception.</param>

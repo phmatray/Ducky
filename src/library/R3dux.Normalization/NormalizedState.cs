@@ -2,7 +2,9 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace R3dux.Normalization;
+using System.Collections.Immutable;
+
+namespace R3dux;
 
 /// <summary>
 /// Represents a normalized state for collections.
@@ -41,14 +43,21 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <param name="entities">The entities to create the state with.</param>
     /// <returns>A new state with the entities.</returns>
     public static TState Create(ImmutableList<TEntity> entities)
-        => new() { ById = entities.ToImmutableDictionary(entity => entity.Id) };
+    {
+        return new TState
+        {
+            ById = entities.ToImmutableDictionary(entity => entity.Id)
+        };
+    }
 
     /// <summary>
     /// Selects entities.
     /// </summary>
     /// <returns>An immutable list of entities.</returns>
     public ImmutableList<TEntity> SelectImmutableList()
-        => ById.Values.ToImmutableList();
+    {
+        return ById.Values.ToImmutableList();
+    }
 
     /// <summary>
     /// Selects entities based on a predicate.
@@ -56,7 +65,9 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <param name="predicate">The predicate to filter entities.</param>
     /// <returns>An immutable list of entities that match the predicate.</returns>
     public ImmutableList<TEntity> SelectImmutableList(Func<TEntity, bool> predicate)
-        => ById.Values.Where(predicate).ToImmutableList();
+    {
+        return ById.Values.Where(predicate).ToImmutableList();
+    }
 
     /// <inheritdoc />
     public TState AddOne(TEntity entity)
@@ -122,7 +133,9 @@ public abstract record NormalizedState<TKey, TEntity, TState>
 
     /// <inheritdoc />
     public TState RemoveAll()
-        => CreateWith(ImmutableDictionary<TKey, TEntity>.Empty);
+    {
+        return CreateWith(ImmutableDictionary<TKey, TEntity>.Empty);
+    }
 
     /// <inheritdoc />
     public TState UpdateOne(TKey key, Action<TEntity> update)

@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using R3dux.Selectors;
+using R3dux.Tests.Extensions.Selectors.Models;
 
 namespace R3dux.Tests.Extensions.Selectors;
 
@@ -12,13 +12,8 @@ public class MemoizedSelectorTests
     public void Create_ShouldCacheResult_ForSameInput()
     {
         // Arrange
-        int callCount = 0;
-        Func<int, int> selector = x =>
-        {
-            callCount++;
-            return x * 2;
-        };
-        var memoizedSelector = MemoizedSelector.Create(selector);
+        var callCount = 0;
+        var memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
 
         // Act
         var result1 = memoizedSelector(5);
@@ -28,19 +23,21 @@ public class MemoizedSelectorTests
         result1.Should().Be(10);
         result2.Should().Be(10);
         callCount.Should().Be(1, "because the selector function should be called only once for the same input");
+        return;
+
+        int Selector(int x)
+        {
+            callCount++;
+            return x * 2;
+        }
     }
 
     [Fact]
     public void Create_ShouldEvaluateSelector_ForDifferentInputs()
     {
         // Arrange
-        int callCount = 0;
-        Func<int, int> selector = x =>
-        {
-            callCount++;
-            return x * 2;
-        };
-        var memoizedSelector = MemoizedSelector.Create(selector);
+        var callCount = 0;
+        var memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
 
         // Act
         var result1 = memoizedSelector(5);
@@ -50,19 +47,21 @@ public class MemoizedSelectorTests
         result1.Should().Be(10);
         result2.Should().Be(20);
         callCount.Should().Be(2, "because the selector function should be called for each unique input");
+        return;
+
+        int Selector(int x)
+        {
+            callCount++;
+            return x * 2;
+        }
     }
 
     [Fact]
     public void Create_ShouldNotCacheResult_ForDifferentInputs()
     {
         // Arrange
-        int callCount = 0;
-        Func<int, int> selector = x =>
-        {
-            callCount++;
-            return x * 2;
-        };
-        var memoizedSelector = MemoizedSelector.Create(selector);
+        var callCount = 0;
+        var memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
 
         // Act
         var result1 = memoizedSelector(5);
@@ -74,20 +73,22 @@ public class MemoizedSelectorTests
         result2.Should().Be(20);
         result3.Should().Be(10);
         callCount.Should().Be(2, "because the selector function should only be called once for each unique input, and cached results should be used");
+        return;
+
+        int Selector(int x)
+        {
+            callCount++;
+            return x * 2;
+        }
     }
 
     [Fact]
     public void Create_ShouldCacheResult_WhenDependenciesUnchanged()
     {
         // Arrange
-        int callCount = 0;
+        var callCount = 0;
         var state = new TodoState();
-        Func<TodoState, int> selector = s =>
-        {
-            callCount++;
-            return s.SelectCompletedTodos().Count;
-        };
-        var memoizedSelector = MemoizedSelector.Create(selector, s => s.ById);
+        var memoizedSelector = MemoizedSelector.Create((Func<TodoState, int>)Selector, s => s.ById);
 
         // Act
         var result1 = memoizedSelector(state);
@@ -97,21 +98,23 @@ public class MemoizedSelectorTests
         result1.Should().Be(0);
         result2.Should().Be(0);
         callCount.Should().Be(1, "because the selector function should be called only once when dependencies are unchanged");
+        return;
+
+        int Selector(TodoState s)
+        {
+            callCount++;
+            return s.SelectCompletedTodos().Count;
+        }
     }
 
     [Fact]
     public void Create_ShouldRecomputeResult_WhenDependenciesChange()
     {
         // Arrange
-        int callCount = 0;
+        var callCount = 0;
         var state = new TodoState();
         state = state.SetOne(new TodoItem(Guid.NewGuid(), "Test Todo", true));
-        Func<TodoState, int> selector = s =>
-        {
-            callCount++;
-            return s.SelectCompletedTodos().Count;
-        };
-        var memoizedSelector = MemoizedSelector.Create(selector, s => s.ById);
+        var memoizedSelector = MemoizedSelector.Create((Func<TodoState, int>)Selector, s => s.ById);
 
         // Act
         var result1 = memoizedSelector(state);
@@ -122,6 +125,13 @@ public class MemoizedSelectorTests
         result1.Should().Be(1);
         result2.Should().Be(2);
         callCount.Should().Be(2, "because the selector function should be called again when dependencies change");
+        return;
+
+        int Selector(TodoState s)
+        {
+            callCount++;
+            return s.SelectCompletedTodos().Count;
+        }
     }
 
     [Fact]

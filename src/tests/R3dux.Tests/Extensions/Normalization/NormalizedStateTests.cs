@@ -146,7 +146,7 @@ public class NormalizedStateTests
         var state2 = new SampleState().SetOne(entity2);
 
         // Act
-        SampleState mergedState = state1.Merge(state2.ById);
+        var mergedState = state1.Merge(state2.ById);
 
         // Assert
         mergedState.ById.Should().ContainKeys(entity1.Id, entity2.Id);
@@ -165,7 +165,7 @@ public class NormalizedStateTests
         var state2 = new SampleState().SetOne(entity2);
 
         // Act
-        SampleState mergedState = state1.Merge(state2.ById, MergeStrategy.Overwrite);
+        var mergedState = state1.Merge(state2.ById, MergeStrategy.Overwrite);
 
         // Assert
         mergedState.ById.Should().ContainKey(id);

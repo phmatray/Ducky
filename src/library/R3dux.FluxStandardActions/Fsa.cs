@@ -2,8 +2,14 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-global using System.Collections.Immutable;
-global using ObservableCollections;
-global using R3;
-global using R3dux.Abstractions;
-global using R3dux.Exceptions;
+namespace R3dux;
+
+/// <summary>
+/// A Flux Standard action without payload or metadata properties.
+/// </summary>
+public abstract record Fsa
+    : IKeyedAction
+{
+    /// <inheritdoc />
+    public abstract string TypeKey { get; }
+}

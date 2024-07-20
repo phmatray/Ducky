@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace R3dux.Abstractions;
+namespace R3dux;
 
 /// <summary>
 /// Represents a strongly-typed state slice with state management and reducers.

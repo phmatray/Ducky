@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using R3dux.Tests.Extensions.FluxStandardActions.Models;
+
 namespace R3dux.Tests.Extensions.FluxStandardActions;
 
 public class FsaTests
@@ -55,7 +57,7 @@ public class FsaTests
     public void FsaError_ShouldInitializeCorrectly()
     {
         // Arrange
-        var exception = new Exception("An error occurred");
+        var exception = new TestException();
 
         // Act
         var action = new TestFsaError(exception);
@@ -70,7 +72,7 @@ public class FsaTests
     public void FsaError_WithMeta_ShouldInitializeCorrectly()
     {
         // Arrange
-        var exception = new Exception("An error occurred");
+        var exception = new TestException();
         var meta = new { Info = "Some metadata" };
 
         // Act

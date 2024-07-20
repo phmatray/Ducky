@@ -61,7 +61,7 @@ public sealed class CounterReducersTests : IDisposable
         const int expectedState = 1;
 
         // Act
-        int newState = _sut.Reduce(initialState, new Increment());
+        var newState = _sut.Reduce(initialState, new Increment());
 
         // Assert
         newState.Should().Be(expectedState);
@@ -75,7 +75,7 @@ public sealed class CounterReducersTests : IDisposable
         const int expectedState = 0;
 
         // Act
-        int newState = _sut.Reduce(initialState, new Decrement());
+        var newState = _sut.Reduce(initialState, new Decrement());
 
         // Assert
         newState.Should().Be(expectedState);
@@ -88,7 +88,7 @@ public sealed class CounterReducersTests : IDisposable
         const int state = 20;
 
         // Act
-        int newState = _sut.Reduce(state, new Reset());
+        var newState = _sut.Reduce(state, new Reset());
 
         // Assert
         newState.Should().Be(InitialState);
@@ -101,7 +101,7 @@ public sealed class CounterReducersTests : IDisposable
         const int valueToSet = 42;
 
         // Act
-        int newState = _sut.Reduce(InitialState, new SetValue(valueToSet));
+        var newState = _sut.Reduce(InitialState, new SetValue(valueToSet));
 
         // Assert
         newState.Should().Be(valueToSet);

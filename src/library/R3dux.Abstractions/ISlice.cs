@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace R3dux.Abstractions;
+namespace R3dux;
 
 /// <summary>
 /// Represents a state slice with basic state management capabilities.

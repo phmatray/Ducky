@@ -4,7 +4,7 @@
 
 using System.Collections.Immutable;
 
-namespace R3dux.Abstractions;
+namespace R3dux;
 
 /// <summary>
 /// Represents the root state of the application, managing slice states.

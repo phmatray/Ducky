@@ -5,6 +5,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using R3;
 
 namespace R3dux;
 
@@ -40,7 +41,7 @@ public abstract partial record SliceReducers<TState>
     public virtual string GetKey()
     {
         // get type of the inheriting class
-        string typeName = GetType().Name;
+        var typeName = GetType().Name;
 
         // the key should not end with "Reducers" or "Reducer"
         if (typeName.EndsWith("Reducers", StringComparison.InvariantCulture))
@@ -61,7 +62,9 @@ public abstract partial record SliceReducers<TState>
 
     /// <inheritdoc />
     public virtual Type GetStateType()
-        => typeof(TState);
+    {
+        return typeof(TState);
+    }
 
     /// <inheritdoc />
     public virtual object GetState()
@@ -72,12 +75,9 @@ public abstract partial record SliceReducers<TState>
             _isInitialized = true;
         }
 
-        if (_state.Value is null)
-        {
-            throw new R3duxException("State is null.");
-        }
-
-        return _state.Value;
+        return _state.Value is null
+            ? throw new R3duxException("State is null.")
+            : _state.Value;
     }
 
     /// <inheritdoc />

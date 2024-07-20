@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="R3" />
+    <ProjectReference Include="..\R3dux.Abstractions\R3dux.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

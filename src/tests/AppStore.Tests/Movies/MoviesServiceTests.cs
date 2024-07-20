@@ -68,7 +68,7 @@ public class MoviesServiceTests
         const int pageSize = 2;
         var exceptionsThrown = false;
 
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             try
             {

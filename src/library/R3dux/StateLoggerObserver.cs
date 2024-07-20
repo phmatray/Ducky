@@ -5,6 +5,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using R3;
 
 namespace R3dux;
 
@@ -79,7 +80,7 @@ public sealed class StateLoggerObserver<TState>
     private static string GetActionType(IAction action)
     {
         // if the action object has a property named "TypeKey", return its value
-        return action.GetType().GetProperty(nameof(Fsa.TypeKey)) is { } typeKeyProperty
+        return action.GetType().GetProperty(nameof(IKeyedAction.TypeKey)) is { } typeKeyProperty
             ? typeKeyProperty.GetValue(action)?.ToString() ?? GetActionName()
             : GetActionName();
 

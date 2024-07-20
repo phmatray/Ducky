@@ -4,6 +4,7 @@
 
 using Demo.Website2.Components;
 using Demo.Website2.Features.JsonColoring;
+using Demo.Website2.Features.JsonColoring.Services;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);

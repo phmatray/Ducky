@@ -2,17 +2,15 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace R3dux.Normalization;
+namespace R3dux;
 
 /// <summary>
-/// Represents an entity with an identifier.
+/// Defines a contract for an action with a `type` key.
 /// </summary>
-/// <typeparam name="TKey">The type of the entity's key.</typeparam>
-public interface IEntity<out TKey>
-    where TKey : notnull
+public interface IKeyedAction : IAction
 {
     /// <summary>
-    /// Gets the identifier of the entity.
+    /// Gets the `type` of an action identifies to the consumer the nature of the action that has occurred.
     /// </summary>
-    TKey Id { get; }
+    string TypeKey { get; }
 }

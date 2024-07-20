@@ -26,12 +26,9 @@ public class StoreTests
         // Arrange
         var dispatcher = _sut.Dispatcher;
 
-        // Act
-        dispatcher.ActionStream.Subscribe(action =>
-        {
-            // Assert
-            action.Should().BeOfType<StoreInitialized>();
-        });
+        // Act & Assert
+        dispatcher.ActionStream.Subscribe(
+            action => action.Should().BeOfType<StoreInitialized>());
 
         dispatcher.Dispatch(new StoreInitialized());
     }

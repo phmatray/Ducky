@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace Demo.Website2.Features.JsonColoring;
+namespace Demo.Website2.Features.JsonColoring.Helpers;
 
 /// <summary>
 /// Provides methods to generate HTML span elements with colors for JSON formatting.
