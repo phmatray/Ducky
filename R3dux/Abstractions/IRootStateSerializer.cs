@@ -11,6 +11,14 @@ public interface IRootStateSerializer
     /// <param name="rootState">The <see cref="RootState"/> to serialize.</param>
     /// <returns>The JSON string representation of the state.</returns>
     string Serialize(RootState rootState);
+    
+    /// <summary>
+    /// Serializes the slice state associated with the specified key to a JSON string.
+    /// </summary
+    /// <param name="rootState">The <see cref="RootState"/> to serialize.</param>
+    /// <param name="key">The key of the slice state to serialize.</param>
+    /// <returns>The JSON string representation of the slice state.</returns>
+    string Serialize(RootState rootState, string key);
 
     /// <summary>
     /// Deserializes a <see cref="RootState"/> from a JSON string.

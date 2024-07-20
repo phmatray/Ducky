@@ -25,6 +25,13 @@ public sealed record RootState
     /// </summary>
     public ImmutableSortedDictionary<string, object> GetStateDictionary()
         => _state;
+    
+    /// <summary>
+    /// Gets the keys of the state.
+    /// </summary>
+    /// <returns>The keys of the state.</returns>
+    public ImmutableSortedSet<string> GetKeys()
+        => _state.Keys.ToImmutableSortedSet();
 
     /// <summary>
     /// Gets the slice state associated with the specified key.

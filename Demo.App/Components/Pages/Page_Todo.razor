@@ -85,7 +85,7 @@
             <MudListItem @key="todo.Id">
               <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                 <MudIconButton Icon="@Icons.Material.Filled.CheckBox" OnClick="() => ToggleTodoItem(todo.Id)"/>
-                <MudText>@todo.Title</MudText>
+                <MudText Style="text-decoration: line-through;">@todo.Title</MudText>
                 <MudSpacer/>
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => DeleteTodoItem(todo.Id)">Delete</MudButton>
               </MudStack>

@@ -30,6 +30,21 @@ public sealed class RootStateSerializer : IRootStateSerializer
     }
 
     /// <inheritdoc />
+    public string Serialize(RootState rootState, string key)
+    {
+        ArgumentNullException.ThrowIfNull(rootState);
+        ArgumentNullException.ThrowIfNull(key);
+        
+        var stateDictionary = rootState.GetStateDictionary();
+        var typedDictionary = stateDictionary.ToDictionary(
+            kvp => kvp.Key,
+            kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value }
+        );
+        
+        return JsonSerializer.Serialize(typedDictionary[key], Options);
+    }
+
+    /// <inheritdoc />
     public RootState Deserialize(string json)
     {
         ArgumentNullException.ThrowIfNull(json);

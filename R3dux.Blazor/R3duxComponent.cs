@@ -15,12 +15,16 @@ public abstract class R3duxComponent<TState>
     
     [Inject]
     public required ILogger<R3duxComponent<object>> Logger { get; set; }
-
-    protected Observable<TState> StateObservable
+    
+    protected Observable<RootState> RootStateObservable
         => Store
             .RootStateObservable
-            .Select(state => state.GetSliceState<TState>())
             .DistinctUntilChanged();
+
+    protected Observable<TState> StateObservable
+        => typeof(TState) == typeof(RootState)
+            ? RootStateObservable.Cast<RootState, TState>()
+            : RootStateObservable.Select(state => state.GetSliceState<TState>());
 
     protected TState State
         => StateObservable.FirstSync();

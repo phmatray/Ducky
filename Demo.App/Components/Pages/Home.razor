@@ -1,32 +1,29 @@
 ﻿@page "/"
-@inject IStore Store
+@inherits R3duxComponent<RootState>
 @inject IRootStateSerializer RootStateSerializer
 
 <PageTitle>R3dux</PageTitle>
 
 <MudGrid>
   <MudItem xs="12">
-    <MudText Typo="Typo.h3">Serialized State</MudText>
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">System</MudText>
+      <MudText Typo="Typo.h3">Serialized State</MudText>
+      <MudText Typo="Typo.body1">
+        The current state of the application is serialized below.<br/>
+        This is useful for debugging and understanding the current state of the application.
+      </MudText>
+    </MudStack>
   </MudItem>
-  
-  @if (_rootStateSerialized is not null)
-  {
-    <MudItem xs="12">
-      <MudPaper Class="pa-4 overflow-auto">
-        <JsonMarkup Data="@_rootStateSerialized"/>
-      </MudPaper>
-    </MudItem>
-  }
+
+  <MudItem xs="12">
+    <MudExpansionPanels MultiExpansion="true">
+      @foreach (var key in State.GetKeys())
+      {
+        <MudExpansionPanel Text="@key" Style="overflow: hidden;">
+          <JsonMarkup Data="@RootStateSerializer.Serialize(State, key)"/>
+        </MudExpansionPanel>
+      }
+    </MudExpansionPanels>
+  </MudItem>
 </MudGrid>
-
-@code
-{
-  private string? _rootStateSerialized;
-
-  /// <inheritdoc />
-  protected override void OnInitialized()
-  {
-    var rootState = Store.RootStateObservable.FirstSync();
-    _rootStateSerialized = RootStateSerializer.Serialize(rootState);
-  }
-}
