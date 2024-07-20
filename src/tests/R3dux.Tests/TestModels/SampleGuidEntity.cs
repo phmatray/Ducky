@@ -7,7 +7,8 @@ namespace R3dux.Tests.TestModels;
 /// <summary>
 /// Represents a sample entity with an Guid identifier.
 /// </summary>
-internal record SampleGuidEntity : IEntity<Guid>
+internal sealed record SampleGuidEntity
+    : IEntity<Guid>
 {
     public SampleGuidEntity()
     {

@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace R3dux.Blazor.Router;
+namespace R3dux.Blazor.Router.Actions;
 
 /// <summary>
 /// An action dispatched when the router cancels navigation.

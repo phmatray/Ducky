@@ -7,9 +7,9 @@ namespace AppStore.Tests.Counter;
 public sealed class CounterEffectsTests : IDisposable
 {
     private readonly FakeTimeProvider _timeProvider = new();
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
     private readonly Subject<IAction> _actionsSubject = new();
-    private readonly Subject<RootState> _rootStateSubject = new();
+    private readonly Subject<IRootState> _rootStateSubject = new();
     private IAction? _actualAction;
 
     public CounterEffectsTests()

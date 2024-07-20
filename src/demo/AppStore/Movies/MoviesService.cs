@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AppStore;
+namespace AppStore.Movies;
 
 public interface IMoviesService
 {
@@ -34,7 +34,7 @@ public class MoviesService : IMoviesService
         // Ensure the start index is within the range of the total number of movies.
         if (startIndex >= totalMovies)
         {
-            return new GetMoviesResponse(ImmutableArray<Movie>.Empty, totalMovies);
+            return new GetMoviesResponse([], totalMovies);
         }
 
         // Calculate the number of movies to return on the current page.

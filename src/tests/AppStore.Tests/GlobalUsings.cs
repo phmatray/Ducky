@@ -3,10 +3,19 @@
 // See the LICENSE file in the project root for full license information.
 
 global using System.Collections.Immutable;
+global using AppStore.Counter;
+global using AppStore.Layout;
+global using AppStore.Message;
+global using AppStore.Movies;
+global using AppStore.Notifications;
+global using AppStore.Products;
+global using AppStore.Timer;
+global using AppStore.Todos;
 global using FluentAssertions;
 global using Microsoft.Extensions.Time.Testing;
 global using Moq;
 global using R3;
 
 global using R3dux;
+global using R3dux.Abstractions;
 global using R3dux.Exceptions;

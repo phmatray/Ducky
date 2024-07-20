@@ -3,8 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using Demo.Website2.Components.Shared;
+using Demo.Website2.Features.Feedback.Actions;
 
-namespace Demo.Website2.Features.Feedback;
+namespace Demo.Website2.Features.Feedback.Effects;
 
 /// <summary>
 /// Effect that handles the OpenAboutDialog action.
@@ -15,7 +16,7 @@ public class OpenAboutDialogEffect(IDialogService dialog) : Effect
 {
     /// <inheritdoc />
     public override Observable<IAction> Handle(
-        Observable<IAction> actions, Observable<RootState> rootState)
+        Observable<IAction> actions, Observable<IRootState> rootState)
     {
         var options = new DialogOptions { CloseOnEscapeKey = true };
 

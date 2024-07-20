@@ -65,7 +65,7 @@ public class JsonColorizer : IJsonColorizer
         sb.Indent();
         var properties = element.EnumerateObject().ToArray();
 
-        for (int i = 0; i < properties.Length; i++)
+        for (var i = 0; i < properties.Length; i++)
         {
             var property = properties[i];
             sb.AppendIndentation();
@@ -92,7 +92,7 @@ public class JsonColorizer : IJsonColorizer
             sb.Append(SpanOpenBracket() + BreakLine);
             sb.Indent();
 
-            for (int i = 0; i < items.Length; i++)
+            for (var i = 0; i < items.Length; i++)
             {
                 var item = items[i];
                 ProcessElement(item, sb, true);

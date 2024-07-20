@@ -4,4 +4,4 @@
 
 namespace R3dux.Tests.TestModels;
 
-internal record TestActionWithParameter(string Name) : IAction;
+internal sealed record TestActionWithParameter(string Name) : IAction;

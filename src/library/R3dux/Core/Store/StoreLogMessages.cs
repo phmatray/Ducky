@@ -13,14 +13,14 @@ internal static partial class StoreLogMessages
         Level = LogLevel.Information,
         Message = "Store initialized")]
     public static partial void StoreInitialized(
-        this ILogger<Store> logger);
+        this ILogger<IStore> logger);
 
     [LoggerMessage(
         EventId = 1001,
         Level = LogLevel.Debug,
         Message = "Slice \"{SliceKey}\" added")]
     public static partial void SliceAdded(
-        this ILogger<Store> logger,
+        this ILogger<IStore> logger,
         string sliceKey);
 
     [LoggerMessage(
@@ -28,7 +28,7 @@ internal static partial class StoreLogMessages
         Level = LogLevel.Debug,
         Message = "Effect [{EffectKey}] from Assembly [{AssemblyQualifiedName}] added")]
     public static partial void EffectAdded(
-        this ILogger<Store> logger,
+        this ILogger<IStore> logger,
         string effectKey,
         string assemblyQualifiedName);
 
@@ -37,5 +37,5 @@ internal static partial class StoreLogMessages
         Level = LogLevel.Information,
         Message = "Disposing store")]
     public static partial void DisposingStore(
-        this ILogger<Store> logger);
+        this ILogger<IStore> logger);
 }

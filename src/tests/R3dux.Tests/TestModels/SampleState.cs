@@ -7,7 +7,7 @@ namespace R3dux.Tests.TestModels;
 /// <summary>
 /// Represents a sample normalized state for collections.
 /// </summary>
-internal record SampleState
+internal sealed record SampleState
     : NormalizedState<Guid, SampleGuidEntity, SampleState>
 {
     // No additional implementation needed for the tests

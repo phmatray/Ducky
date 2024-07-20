@@ -12,4 +12,8 @@
     <PackageReference Include="Scrutor" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\R3dux.Abstractions\R3dux.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

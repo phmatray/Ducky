@@ -31,7 +31,7 @@ public static class CustomOperators
     /// <returns>An observable sequence of StateActionPair.</returns>
     public static Observable<StateActionPair<TState, TAction>> WithSliceState<TState, TAction>(
         this Observable<TAction> source,
-        Observable<RootState> rootStateObs,
+        Observable<IRootState> rootStateObs,
         string? sliceKey = null)
         where TAction : IAction
         where TState : notnull

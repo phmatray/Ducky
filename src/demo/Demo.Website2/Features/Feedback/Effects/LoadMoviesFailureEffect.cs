@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace Demo.Website2.Features.Feedback;
+namespace Demo.Website2.Features.Feedback.Effects;
 
 /// <summary>
 /// Effect that handles the LoadMoviesFailure action.
@@ -13,7 +13,7 @@ public class LoadMoviesFailureEffect(ISnackbar snackbar) : Effect
 {
     /// <inheritdoc />
     public override Observable<IAction> Handle(
-        Observable<IAction> actions, Observable<RootState> rootState)
+        Observable<IAction> actions, Observable<IRootState> rootState)
     {
         return actions
             .OfType<IAction, LoadMoviesFailure>()

@@ -1,5 +1,4 @@
 @page "/counter"
-@using AppStore
 @inherits R3duxComponent<int>
 
 <PageTitle>R3dux - Counter</PageTitle>
@@ -13,7 +12,7 @@
         Creates an interactive counter using the R3dux state management library for predictable state handling,<br/>
         featuring increment, decrement, and reset buttons to manage the counter state.
       </MudText>
-      <MudList T="string">
+      <MudList T="string" Dense>
         <Goal Condition="() => State > 15" ConditionKey="counter-exceeds-15">
           The counter exceeds 15 (an effect will be triggered to reset the counter to 10 after 3 seconds.)
         </Goal>

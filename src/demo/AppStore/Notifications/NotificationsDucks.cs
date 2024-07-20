@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AppStore;
+namespace AppStore.Notifications;
 
 #region State
 
@@ -12,29 +12,35 @@ public record NotificationsState
 
     // Selectors
     public ImmutableList<Notification> SelectUnreadNotifications()
-        =>
-        [
-            ..Notifications
-                .Where(n => !n.IsRead)
-                .Reverse()
-        ];
+    {
+        return Notifications
+            .Where(n => !n.IsRead)
+            .Reverse()
+            .ToImmutableList();
+    }
 
     public bool SelectHasUnreadNotifications()
-        => !SelectUnreadNotifications().IsEmpty;
+    {
+        return !SelectUnreadNotifications().IsEmpty;
+    }
 
     public int SelectUnreadNotificationCount()
-        => SelectUnreadNotifications().Count;
+    {
+        return SelectUnreadNotifications().Count;
+    }
 
     public ImmutableList<Notification> SelectNotificationsBySeverity(
         NotificationSeverity severity)
-        =>
-        [
-            ..SelectUnreadNotifications()
-                .Where(n => n.Severity == severity)
-        ];
+    {
+        return SelectUnreadNotifications()
+            .Where(n => n.Severity == severity)
+            .ToImmutableList();
+    }
 
     public ImmutableList<Notification> SelectErrorNotifications()
-        => SelectNotificationsBySeverity(NotificationSeverity.Error);
+    {
+        return SelectNotificationsBySeverity(NotificationSeverity.Error);
+    }
 }
 
 #endregion
@@ -72,11 +78,14 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
 
     private static NotificationsState ReduceAddNotification(
         NotificationsState state, AddNotification action)
-        => new() { Notifications = state.Notifications.Add(action.Notification) };
+    {
+        return new NotificationsState { Notifications = state.Notifications.Add(action.Notification) };
+    }
 
     private static NotificationsState ReduceMarkNotificationAsRead(
         NotificationsState state, MarkNotificationAsRead action)
-        => new()
+    {
+        return new NotificationsState
         {
             Notifications = state.Notifications
                 .Select(n => n.Id == action.NotificationId
@@ -84,6 +93,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
                     : n)
                 .ToImmutableList()
         };
+    }
 }
 
 #endregion

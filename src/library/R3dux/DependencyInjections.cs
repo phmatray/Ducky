@@ -66,7 +66,6 @@ public static class DependencyInjections
 
         // Add Store services
         services.AddSingleton<IDispatcher, Dispatcher>();
-        services.AddSingleton<IStoreFactory, StoreFactory>();
         services.AddSingleton<IRootStateSerializer, RootStateSerializer>();
 
         // Scan and register all Slices an Effects
@@ -76,13 +75,12 @@ public static class DependencyInjections
         // Add Store
         services.AddScoped<IStore, Store>(sp =>
         {
-            var storeFactory = sp.GetRequiredService<IStoreFactory>();
             var dispatcher = sp.GetRequiredService<IDispatcher>();
             var logger = sp.GetRequiredService<ILogger<Store>>();
             var slices = sp.GetServices<ISlice>().ToArray();
             var effects = sp.GetServices<IEffect>().ToArray();
 
-            return storeFactory.CreateStore(dispatcher, logger, slices, effects);
+            return StoreFactory.CreateStore(dispatcher, logger, slices, effects);
         });
 
         return services;

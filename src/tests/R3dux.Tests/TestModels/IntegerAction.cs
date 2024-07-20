@@ -4,4 +4,4 @@
 
 namespace R3dux.Tests.TestModels;
 
-internal record IntegerAction(int Value) : IAction;
+internal sealed record IntegerAction(int Value) : IAction;

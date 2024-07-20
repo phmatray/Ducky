@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AppStore;
+namespace AppStore.Products;
 
 #region State
 
@@ -36,16 +36,24 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
 
     // Memoized Selectors
     public ImmutableList<Product> SelectElectronics()
-        => _selectElectronics(this);
+    {
+        return _selectElectronics(this);
+    }
 
     public ImmutableList<Product> SelectClothing()
-        => _selectClothing(this);
+    {
+        return _selectClothing(this);
+    }
 
     public decimal SelectTotalPriceOfElectronics()
-        => _selectTotalPriceOfElectronics(this);
+    {
+        return _selectTotalPriceOfElectronics(this);
+    }
 
     public decimal SelectTotalPriceOfClothing()
-        => _selectTotalPriceOfClothing(this);
+    {
+        return _selectTotalPriceOfClothing(this);
+    }
 }
 
 #endregion
@@ -94,7 +102,8 @@ public record ProductsReducers : SliceReducers<ProductState>
     }
 
     public override ProductState GetInitialState()
-        => ProductState.Create([
+    {
+        return ProductState.Create([
             new Product(SampleIds.Id1, "iPhone 12", 799.99m, "Electronics"),
             new Product(SampleIds.Id2, "MacBook Pro", 1299.99m, "Electronics"),
             new Product(SampleIds.Id3, "Nike Air Max", 129, "Clothing"),
@@ -102,6 +111,7 @@ public record ProductsReducers : SliceReducers<ProductState>
             new Product(SampleIds.Id5, "Samsung Galaxy S21", 699.99m, "Electronics"),
             new Product(SampleIds.Id6, "Bag Louis Vuitton", 1999.99m, "Clothing")
         ]);
+    }
 }
 
 #endregion

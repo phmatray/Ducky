@@ -1,5 +1,4 @@
 @page "/products"
-@using AppStore
 @inherits R3duxComponent<ProductState>
 
 <PageTitle>R3dux - Product Catalog</PageTitle>
@@ -118,7 +117,7 @@
 @code {
 
   private string _newProductName = string.Empty;
-  private decimal _newProductPrice = 0;
+  private decimal _newProductPrice;
   private string _newProductCategory = "Electronics";
   
   private ImmutableList<Product> Electronics => State.SelectElectronics();

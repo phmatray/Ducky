@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AppStore;
+namespace AppStore.Counter;
 
 #region Actions
 
@@ -42,7 +42,7 @@ public class IncrementEffect : Effect
 {
     public override Observable<IAction> Handle(
         Observable<IAction> actions,
-        Observable<RootState> rootState)
+        Observable<IRootState> rootState)
     {
         // if the Value is greater than 15, then reset the counter
         return actions

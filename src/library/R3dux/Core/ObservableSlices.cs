@@ -10,7 +10,7 @@ namespace R3dux;
 public sealed class ObservableSlices : IDisposable
 {
     private readonly ObservableDictionary<string, ISlice> _slices = [];
-    private readonly ReactiveProperty<RootState> _rootState;
+    private readonly ReactiveProperty<IRootState> _rootState;
     private readonly object _lock = new();
 
     /// <summary>
@@ -19,7 +19,7 @@ public sealed class ObservableSlices : IDisposable
     public ObservableSlices()
     {
         // Create the root state observable
-        _rootState = new ReactiveProperty<RootState>(CreateRootState());
+        _rootState = new ReactiveProperty<IRootState>(CreateRootState());
 
         // Create the slice observables
         var sliceAdded = _slices
@@ -38,14 +38,14 @@ public sealed class ObservableSlices : IDisposable
         sliceAdded
             .Merge(sliceRemoved)
             .Merge(sliceReplaced)
-            .Select(_ => CreateRootState())
+            .Select(_ => CreateRootState() as IRootState)
             .Subscribe(_rootState.AsObserver());
     }
 
     /// <summary>
     /// Gets an observable that emits the root state whenever a slice is added, removed, or replaced.
     /// </summary>
-    public Observable<RootState> RootStateObservable
+    public Observable<IRootState> RootStateObservable
         => _rootState.AsObservable();
 
     /// <summary>

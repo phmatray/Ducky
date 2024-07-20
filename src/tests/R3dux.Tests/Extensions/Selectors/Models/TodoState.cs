@@ -6,7 +6,7 @@ using R3dux.Selectors;
 
 namespace R3dux.Tests.Extensions.Selectors;
 
-internal record TodoState : NormalizedState<Guid, TodoItem, TodoState>
+internal sealed record TodoState : NormalizedState<Guid, TodoItem, TodoState>
 {
     private readonly Func<TodoState, ImmutableList<TodoItem>> _selectCompletedTodos;
     private readonly Func<TodoState, int> _selectCompletedTodosCount;

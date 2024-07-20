@@ -2,7 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text.Json;
 using static Demo.Website2.Features.JsonColoring.HtmlSpanHelper;
 
 namespace Demo.Website2.Features.JsonColoring;
@@ -66,7 +65,7 @@ public class JsonColorizer : IJsonColorizer
         sb.Indent();
 
         var properties = element.EnumerateObject().ToArray();
-        for (int i = 0; i < properties.Length; i++)
+        for (var i = 0; i < properties.Length; i++)
         {
             var property = properties[i];
             sb.AppendIndentation();
@@ -94,7 +93,7 @@ public class JsonColorizer : IJsonColorizer
             sb.Append(BreakLine);
             sb.Indent();
 
-            for (int i = 0; i < items.Length; i++)
+            for (var i = 0; i < items.Length; i++)
             {
                 var item = items[i];
                 ProcessElement(item, sb, true);

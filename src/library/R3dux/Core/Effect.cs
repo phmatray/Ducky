@@ -29,5 +29,5 @@ public abstract class Effect : IEffect
     /// <inheritdoc />
     public abstract Observable<IAction> Handle(
         Observable<IAction> actions,
-        Observable<RootState> rootState);
+        Observable<IRootState> rootState);
 }

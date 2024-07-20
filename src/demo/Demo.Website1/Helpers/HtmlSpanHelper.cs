@@ -27,7 +27,9 @@ public static class HtmlSpanHelper
     /// <param name="color">The color of the text.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string Span(string text, string color)
-        => $"<span style='color: {color};'>{text}</span>";
+    {
+        return $"<span style='color: {color};'>{text}</span>";
+    }
 
     /// <summary>
     /// Generates an HTML span element for a JSON string value.
@@ -35,7 +37,9 @@ public static class HtmlSpanHelper
     /// <param name="text">The JSON string value.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonString(string text)
-        => SpanQuote() + Span(text, ColorString) + SpanQuote();
+    {
+        return SpanQuote() + Span(text, ColorString) + SpanQuote();
+    }
 
     /// <summary>
     /// Generates an HTML span element for a JSON number value.
@@ -43,7 +47,9 @@ public static class HtmlSpanHelper
     /// <param name="text">The JSON number value.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonNumber(string text)
-        => Span(text, ColorNumber);
+    {
+        return Span(text, ColorNumber);
+    }
 
     /// <summary>
     /// Generates an HTML span element for a JSON boolean value.
@@ -51,49 +57,63 @@ public static class HtmlSpanHelper
     /// <param name="text">The JSON boolean value.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonBool(string text)
-        => Span(text, ColorBool);
+    {
+        return Span(text, ColorBool);
+    }
 
     /// <summary>
     /// Generates an HTML span element for a JSON null value.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonNull()
-        => Span("null", ColorNull);
+    {
+        return Span("null", ColorNull);
+    }
 
     /// <summary>
     /// Generates an HTML span element for an open brace.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanOpenBrace()
-        => Span("{", ColorBraces);
+    {
+        return Span("{", ColorBraces);
+    }
 
     /// <summary>
     /// Generates an HTML span element for a close brace.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanCloseBrace()
-        => Span("}", ColorBraces);
+    {
+        return Span("}", ColorBraces);
+    }
 
     /// <summary>
     /// Generates an HTML span element for a close brace.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanOpenBracket()
-        => Span("[", ColorBrackets);
+    {
+        return Span("[", ColorBrackets);
+    }
 
     /// <summary>
     /// Generates an HTML span element for a close bracket.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanCloseBracket()
-        => Span("]", ColorBrackets);
+    {
+        return Span("]", ColorBrackets);
+    }
 
     /// <summary>
     /// Generates an HTML span element for a quote.
     /// </summary>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanQuote()
-        => Span("&quot;", ColorQuote);
+    {
+        return Span("&quot;", ColorQuote);
+    }
 
     /// <summary>
     /// Generates an HTML span element for a JSON property name.
@@ -101,5 +121,7 @@ public static class HtmlSpanHelper
     /// <param name="name">The JSON property name.</param>
     /// <returns>An HTML span element as a string.</returns>
     public static string SpanJsonPropertyName(string name)
-        => SpanQuote() + Span(name, ColorPropertyName) + SpanQuote();
+    {
+        return SpanQuote() + Span(name, ColorPropertyName) + SpanQuote();
+    }
 }

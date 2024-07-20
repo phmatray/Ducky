@@ -12,7 +12,7 @@ namespace R3dux;
 public sealed class Store
     : IStore, IDisposable
 {
-    private readonly ILogger<Store> _logger;
+    private readonly ILogger<IStore> _logger;
     private readonly CompositeDisposable _stateUpdateSubscriptions = [];
     private readonly CompositeDisposable _sliceSubscriptions = [];
     private readonly CompositeDisposable _effectSubscriptions = [];
@@ -24,7 +24,7 @@ public sealed class Store
     /// </summary>
     /// <param name="dispatcher">The dispatcher used to dispatch actions to the store.</param>
     /// <param name="logger">The logger used to log store events.</param>
-    public Store(IDispatcher dispatcher, ILogger<Store> logger)
+    public Store(IDispatcher dispatcher, ILogger<IStore> logger)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(logger);
@@ -41,7 +41,7 @@ public sealed class Store
     public IDispatcher Dispatcher { get; }
 
     /// <inheritdoc/>
-    public Observable<RootState> RootStateObservable
+    public Observable<IRootState> RootStateObservable
         => _slices.RootStateObservable;
 
     /// <inheritdoc/>

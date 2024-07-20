@@ -4,7 +4,7 @@
 
 namespace R3dux.Tests.TestModels;
 
-internal record TodoItem(
+internal sealed record TodoItem(
     Guid Id,
     string Title,
     bool IsCompleted = false)

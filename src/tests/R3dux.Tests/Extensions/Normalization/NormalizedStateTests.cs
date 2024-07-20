@@ -101,7 +101,7 @@ public class NormalizedStateTests
         var allIds = state.AllIds;
 
         // Assert
-        allIds.Should().Contain(new[] { entity1.Id, entity2.Id });
+        allIds.Should().Contain([entity1.Id, entity2.Id]);
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class NormalizedStateTests
         var entities = state.SelectImmutableList();
 
         // Assert
-        entities.Should().Contain(new[] { entity1, entity2 });
+        entities.Should().Contain([entity1, entity2]);
     }
 
     [Fact]

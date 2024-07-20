@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AppStore;
+namespace AppStore.Movies;
 
 #region State
 
@@ -116,7 +116,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
 {
     public override Observable<IAction> Handle(
         Observable<IAction> actions,
-        Observable<RootState> rootState)
+        Observable<IRootState> rootState)
     {
         // return actions
         //     .FilterActions<LoadMovies>()

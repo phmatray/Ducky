@@ -8,16 +8,16 @@
 namespace R3dux.Tests.TestModels;
 
 // Actions
-public record TestIncrementAction : IAction;
+public sealed record TestIncrementAction : IAction;
 
-public record TestDecrementAction : IAction;
+public sealed record TestDecrementAction : IAction;
 
-public record TestResetAction : IAction;
+public sealed record TestResetAction : IAction;
 
-public record TestSetValueAction(int Value) : IAction;
+public sealed record TestSetValueAction(int Value) : IAction;
 
 // Reducers
-public record TestCounterReducers : SliceReducers<int>
+public sealed record TestCounterReducers : SliceReducers<int>
 {
     public TestCounterReducers()
     {
@@ -34,11 +34,11 @@ public record TestCounterReducers : SliceReducers<int>
 }
 
 // Effects
-public class TestIncrementEffect : Effect
+public sealed class TestIncrementEffect : Effect
 {
     public override Observable<IAction> Handle(
         Observable<IAction> actions,
-        Observable<RootState> rootState)
+        Observable<IRootState> rootState)
     {
         // if the Value is greater than 15, then reset the counter
         return actions

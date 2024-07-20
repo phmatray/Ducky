@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AppStore;
+namespace AppStore.Todos;
 
 #region State
 
@@ -11,22 +11,34 @@ public record TodoState
 {
     // Selectors
     public ImmutableList<TodoItem> SelectCompletedTodos()
-        => SelectImmutableList(todo => todo.IsCompleted);
+    {
+        return SelectImmutableList(todo => todo.IsCompleted);
+    }
 
     public int SelectCompletedTodosCount()
-        => SelectCompletedTodos().Count;
+    {
+        return SelectCompletedTodos().Count;
+    }
 
     public bool SelectHasCompletedTodos()
-        => !SelectCompletedTodos().IsEmpty;
+    {
+        return !SelectCompletedTodos().IsEmpty;
+    }
 
     public ImmutableList<TodoItem> SelectActiveTodos()
-        => SelectImmutableList(todo => !todo.IsCompleted);
+    {
+        return SelectImmutableList(todo => !todo.IsCompleted);
+    }
 
     public int SelectActiveTodosCount()
-        => SelectActiveTodos().Count;
+    {
+        return SelectActiveTodos().Count;
+    }
 
     public bool SelectHasActiveTodos()
-        => !SelectActiveTodos().IsEmpty;
+    {
+        return !SelectActiveTodos().IsEmpty;
+    }
 }
 
 #endregion
@@ -102,22 +114,30 @@ public record TodoReducers : SliceReducers<TodoState>
     }
 
     public override TodoState GetInitialState()
-        => TodoState.Create([
+    {
+        return TodoState.Create([
             new TodoItem(SampleIds.Id1, "Learn Blazor", true),
             new TodoItem(SampleIds.Id2, "Learn Redux"),
             new TodoItem(SampleIds.Id3, "Learn Reactive Programming"),
             new TodoItem(SampleIds.Id4, "Create a Todo App", true),
             new TodoItem(SampleIds.Id5, "Publish a NuGet package")
         ]);
+    }
 
     private static TodoState MapCreateTodo(TodoState state, CreateTodo action)
-        => state.SetOne(new TodoItem(action.Payload.Title));
+    {
+        return state.SetOne(new TodoItem(action.Payload.Title));
+    }
 
     private static TodoState MapToggleTodo(TodoState state, ToggleTodo action)
-        => state.UpdateOne(action.Payload.Id, todo => todo.IsCompleted = !todo.IsCompleted);
+    {
+        return state.UpdateOne(action.Payload.Id, todo => todo.IsCompleted = !todo.IsCompleted);
+    }
 
     private static TodoState MapDeleteTodo(TodoState state, DeleteTodo action)
-        => state.RemoveOne(action.Payload.Id);
+    {
+        return state.RemoveOne(action.Payload.Id);
+    }
 }
 
 #endregion

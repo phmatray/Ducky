@@ -7,16 +7,16 @@ namespace AppStore.Tests.Timer;
 public sealed class TimerEffectsTests : IDisposable
 {
     private readonly FakeTimeProvider _timeProvider = new();
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
     private readonly Subject<IAction> _actionsSubject = new();
-    private readonly Subject<RootState> _rootStateSubject = new();
+    private readonly Subject<IRootState> _rootStateSubject = new();
     private readonly List<IAction> _actualActions = [];
 
     public TimerEffectsTests()
     {
         new StartTimerEffect { TimeProvider = _timeProvider }
             .Handle(_actionsSubject, _rootStateSubject)
-            .Subscribe(action => _actualActions.Add(action))
+            .Subscribe(_actualActions.Add)
             .AddTo(_disposables);
     }
 

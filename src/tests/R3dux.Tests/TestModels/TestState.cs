@@ -4,7 +4,7 @@
 
 namespace R3dux.Tests.TestModels;
 
-internal class TestState
+internal sealed class TestState
 {
     public int Value { get; set; }
 }

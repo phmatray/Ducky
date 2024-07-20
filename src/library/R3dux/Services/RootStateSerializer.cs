@@ -19,7 +19,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
     };
 
     /// <inheritdoc />
-    public string Serialize(RootState rootState)
+    public string Serialize(IRootState rootState)
     {
         ArgumentNullException.ThrowIfNull(rootState);
 
@@ -32,7 +32,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
     }
 
     /// <inheritdoc />
-    public string Serialize(RootState rootState, string key)
+    public string Serialize(IRootState rootState, string key)
     {
         ArgumentNullException.ThrowIfNull(rootState);
         ArgumentNullException.ThrowIfNull(key);
@@ -46,7 +46,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
     }
 
     /// <inheritdoc />
-    public RootState Deserialize(string json)
+    public IRootState Deserialize(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
 
@@ -81,7 +81,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
     }
 
     /// <inheritdoc />
-    public void SaveToFile(RootState rootState, string filePath)
+    public void SaveToFile(IRootState rootState, string filePath)
     {
         ArgumentNullException.ThrowIfNull(rootState);
         ArgumentNullException.ThrowIfNull(filePath);
@@ -90,7 +90,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
     }
 
     /// <inheritdoc />
-    public RootState LoadFromFile(string filePath)
+    public IRootState LoadFromFile(string filePath)
     {
         ArgumentNullException.ThrowIfNull(filePath);
 

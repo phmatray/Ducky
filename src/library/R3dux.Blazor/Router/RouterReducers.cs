@@ -11,6 +11,9 @@ namespace R3dux.Blazor.Router;
 /// </summary>
 public record RouterStoreState
 {
+    /// <summary>
+    /// Gets or init the current route.
+    /// </summary>
     public required string Url { get; init; }
 }
 
@@ -18,6 +21,9 @@ public record RouterStoreState
 
 #region Reducers
 
+/// <summary>
+/// The router store reducers.
+/// </summary>
 public class RouterReducers;
 
 #endregion

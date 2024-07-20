@@ -2,7 +2,9 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace R3dux;
+using R3;
+
+namespace R3dux.Abstractions;
 
 /// <summary>
 /// Represents a store that manages application state and handles actions.
@@ -17,7 +19,7 @@ public interface IStore
     /// <summary>
     /// Gets an observable stream of the root state of the application.
     /// </summary>
-    Observable<RootState> RootStateObservable { get; }
+    Observable<IRootState> RootStateObservable { get; }
 
     /// <summary>
     /// Adds a single slice to the store.

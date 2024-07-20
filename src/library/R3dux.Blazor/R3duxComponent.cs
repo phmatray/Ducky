@@ -30,7 +30,7 @@ public abstract class R3duxComponent<TState>
     /// <summary>
     /// Gets an observable stream of the root state of the application.
     /// </summary>
-    protected Observable<RootState> RootStateObservable
+    protected Observable<IRootState> RootStateObservable
         => Store
             .RootStateObservable
             .DistinctUntilChanged();
@@ -39,8 +39,8 @@ public abstract class R3duxComponent<TState>
     /// Gets an observable stream of the state managed by this component.
     /// </summary>
     protected Observable<TState> StateObservable
-        => typeof(TState) == typeof(RootState)
-            ? RootStateObservable.Cast<RootState, TState>()
+        => typeof(TState) == typeof(IRootState)
+            ? RootStateObservable.Cast<IRootState, TState>()
             : RootStateObservable.Select(state => state.GetSliceState<TState>());
 
     /// <summary>

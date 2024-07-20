@@ -8,12 +8,11 @@ internal static class Factories
 {
     public static Store CreateTestCounterStore(IEffect[]? effects = null)
     {
-        var storeFactory = new StoreFactory();
         var dispatcher = new Dispatcher();
         var logger = new Logger<Store>(new LoggerFactory());
         TestCounterReducers counterReducers = new();
 
-        return storeFactory.CreateStore(dispatcher, logger, [counterReducers], effects ?? []);
+        return StoreFactory.CreateStore(dispatcher, logger, [counterReducers], effects ?? []);
     }
 
     public static RootState CreateTestRootState()

@@ -5,4 +5,5 @@
 global using System.Collections.Immutable;
 global using ObservableCollections;
 global using R3;
+global using R3dux.Abstractions;
 global using R3dux.Exceptions;

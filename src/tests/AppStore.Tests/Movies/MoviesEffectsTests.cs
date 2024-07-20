@@ -8,7 +8,7 @@ public sealed class MoviesEffectsTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = [];
     private readonly Subject<IAction> _actionsSubject = new();
-    private readonly Subject<RootState> _rootStateSubject = new();
+    private readonly Subject<IRootState> _rootStateSubject = new();
     private readonly List<IAction> _actualActions = [];
     private readonly Mock<IMoviesService> _moviesServiceMock = new();
 

@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AppStore;
+namespace AppStore.Timer;
 
 #region State
 
@@ -14,7 +14,10 @@ public record TimerState
 
     // Selectors
     public string SelectAngle()
-        => $"{(Time % 60) * 6}deg";
+    {
+        var time = Time % 60;
+        return $"{time * 6}deg";
+    }
 }
 
 #endregion
@@ -69,7 +72,7 @@ public class StartTimerEffect : Effect
 {
     public override Observable<IAction> Handle(
         Observable<IAction> actions,
-        Observable<RootState> rootState)
+        Observable<IRootState> rootState)
     {
         return actions
             .FilterActions<StartTimer>()

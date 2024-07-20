@@ -5,3 +5,4 @@
 global using Microsoft.AspNetCore.Components;
 global using Microsoft.Extensions.Logging;
 global using R3;
+global using R3dux.Abstractions;

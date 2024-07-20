@@ -7,7 +7,7 @@ namespace R3dux;
 /// <summary>
 /// Represents the root state of the application, managing slice states.
 /// </summary>
-public sealed record RootState
+public sealed record RootState : IRootState
 {
     private readonly ImmutableSortedDictionary<string, object> _state;
 
@@ -21,30 +21,19 @@ public sealed record RootState
         _state = state;
     }
 
-    /// <summary>
-    /// Gets the underlying state dictionary for serialization purposes.
-    /// </summary>
-    /// <returns>The state dictionary.</returns>
+    /// <inheritdoc/>
     public ImmutableSortedDictionary<string, object> GetStateDictionary()
     {
         return _state;
     }
 
-    /// <summary>
-    /// Gets the keys of the state.
-    /// </summary>
-    /// <returns>The keys of the state.</returns>
+    /// <inheritdoc/>
     public ImmutableSortedSet<string> GetKeys()
     {
         return _state.Keys.ToImmutableSortedSet();
     }
 
-    /// <summary>
-    /// Gets the slice state associated with the specified key.
-    /// </summary>
-    /// <typeparam name="TState">The type of the state to select.</typeparam>
-    /// <param name="key">The key of the state to select.</param>
-    /// <returns>The state associated with the specified key.</returns>
+    /// <inheritdoc/>
     /// <exception cref="R3duxException">Thrown when the state is not of the expected type.</exception>
     public TState GetSliceState<TState>(string key)
         where TState : notnull
@@ -59,11 +48,7 @@ public sealed record RootState
         throw new R3duxException($"State with key '{key}' is not of type '{typeof(TState).Name}'.");
     }
 
-    /// <summary>
-    /// Gets the slice state of the specified type.
-    /// </summary>
-    /// <typeparam name="TState">The type of the state to select.</typeparam>
-    /// <returns>The state of the specified type.</returns>
+    /// <inheritdoc/>
     /// <exception cref="R3duxException">Thrown when the state is not found.</exception>
     public TState GetSliceState<TState>()
         where TState : notnull
@@ -80,11 +65,7 @@ public sealed record RootState
         throw new R3duxException($"State of type '{typeof(TState).Name}' not found.");
     }
 
-    /// <summary>
-    /// Determines whether the state contains an element with the specified key.
-    /// </summary>
-    /// <param name="key">The key to locate in the state.</param>
-    /// <returns><c>true</c> if the state contains an element with the key; otherwise, <c>false</c>.</returns>
+    /// <inheritdoc/>
     public bool ContainsKey(string key)
     {
         return _state.ContainsKey(key);

@@ -6,7 +6,7 @@ namespace AppStore.Tests.Movies;
 
 public class MoviesServiceTests
 {
-    private readonly IMoviesService _moviesService = new MoviesService();
+    private readonly MoviesService _moviesService = new();
 
     [Fact]
     public async Task GetMoviesAsync_ShouldReturnMovies_WhenPageExists()
