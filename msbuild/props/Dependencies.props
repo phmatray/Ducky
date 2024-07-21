@@ -67,7 +67,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
 
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="8.6.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="8.7.0" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
 
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />

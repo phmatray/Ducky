@@ -39,7 +39,7 @@ public abstract class R3duxComponent<TState>
     /// Gets an observable stream of the state managed by this component.
     /// </summary>
     protected Observable<TState> StateObservable
-        => typeof(TState) == typeof(IRootState)
+        => typeof(TState) == typeof(RootState)
             ? RootStateObservable.Cast<IRootState, TState>()
             : RootStateObservable.Select(state => state.GetSliceState<TState>());
 

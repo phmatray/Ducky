@@ -12,7 +12,7 @@
         Creates an interactive todo list using the R3dux state management library for predictable state handling,<br/>
         featuring functionality to add, toggle, and remove todo items.
       </MudText>
-      <MudListItem T="string">
+      <MudListItem T="string" Dense="true">
         <Goal Condition="() => State.SelectActiveTodosCount() >= 5" ConditionKey="todo-active-exceed-5">
           The number of active todos is 5 or more.
         </Goal>
@@ -127,9 +127,13 @@
   }
 
   private void ToggleTodoItem(Guid id)
-    => Dispatch(new ToggleTodo(id));
+  {
+    Dispatch(new ToggleTodo(id));
+  }
 
   private void DeleteTodoItem(Guid id)
-    => Dispatch(new DeleteTodo(id));
+  {
+    Dispatch(new DeleteTodo(id));
+  }
 
 }

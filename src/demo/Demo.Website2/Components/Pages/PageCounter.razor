@@ -12,7 +12,7 @@
         Creates an interactive counter using the R3dux state management library for predictable state handling,<br/>
         featuring increment, decrement, and reset buttons to manage the counter state.
       </MudText>
-      <MudList T="string" Dense>
+      <MudList T="string" Dense="true">
         <Goal Condition="() => State > 15" ConditionKey="counter-exceeds-15">
           The counter exceeds 15 (an effect will be triggered to reset the counter to 10 after 3 seconds.)
         </Goal>
@@ -59,12 +59,18 @@
     => State > 15;
 
   private void Increment()
-    => Dispatch(new Increment(Amount));
+  {
+    Dispatch(new Increment(Amount));
+  }
 
   private void Decrement()
-    => Dispatch(new Decrement(Amount));
+  {
+    Dispatch(new Decrement(Amount));
+  }
 
   private void Reset()
-    => Dispatch(new Reset());
+  {
+    Dispatch(new Reset());
+  }
 
 }

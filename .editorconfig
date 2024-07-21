@@ -15,6 +15,10 @@ indent_size = 4
 [project.json]
 indent_size = 2
 
+# Razor files
+[*.razor]
+indent_size = 2
+
 # C# files
 [*.cs]
 # New line preferences

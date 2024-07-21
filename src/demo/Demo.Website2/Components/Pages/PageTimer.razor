@@ -12,7 +12,7 @@
         Creates an interactive timer using the R3dux state management library for predictable state handling,<br/>
         featuring start, stop, and reset functionality.
       </MudText>
-      <MudListItem T="string">
+      <MudListItem T="string" Dense="true">
         <Goal Condition="() => State.Time >= 10" ConditionKey="timer-exceeds-10">
           The timer exceeds 10 seconds.
         </Goal>
@@ -24,7 +24,7 @@
     <MudButtonGroup Variant="Variant.Outlined">
       <MudButton Variant="Variant.Outlined" OnClick="StartTimer" Disabled="IsRunning">Start</MudButton>
       <MudButton Variant="Variant.Outlined" OnClick="StopTimer" Disabled="!IsRunning">Stop</MudButton>
-      <MudButton Variant="Variant.Outlined" OnClick="ResetTimer">Reset</MudButton>
+      <MudButton Variant="Variant.Outlined" OnClick="ResetTimer" Disabled="State.Time == 0">Reset</MudButton>
     </MudButtonGroup>
   </MudItem>
 
@@ -61,9 +61,13 @@
   }
 
   private void StartTimer()
-    => Dispatch(new StartTimer());
+  {
+    Dispatch(new StartTimer());
+  }
 
   private void StopTimer()
-    => Dispatch(new StopTimer());
+  {
+    Dispatch(new StopTimer());
+  }
 
 }

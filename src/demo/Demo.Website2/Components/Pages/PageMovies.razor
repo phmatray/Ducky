@@ -12,7 +12,7 @@
         Creates a simple movie example using the R3dux state management library for predictable state handling,<br/>
         featuring loading state and error handling for displaying movies.
       </MudText>
-      <MudListItem T="string">
+      <MudListItem T="string" Dense="true">
         <Goal Condition="() => State.SelectMovieCount() > 0" ConditionKey="movies-exist">
           Movies loaded successfully.
         </Goal>
@@ -79,7 +79,9 @@
       <MudPagination
         SelectedChanged="SetCurrentPage"
         Variant="Variant.Filled"
-        Count="@TotalPages"/>
+        Count="@TotalPages"
+        ShowFirstButton="true"
+        ShowLastButton="true"/>
     </MudStack>
   </MudItem>
 </MudGrid>
@@ -107,7 +109,9 @@
   }
   
   private void LoadMovies()
-    => Dispatch(new LoadMovies());
+  {
+    Dispatch(new LoadMovies());
+  }
 
   private void SetCurrentPage(int page)
   {
