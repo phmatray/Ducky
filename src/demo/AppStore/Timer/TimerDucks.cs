@@ -40,16 +40,16 @@ public record TimerReducers : SliceReducers<TimerState>
 {
     public TimerReducers()
     {
-        Map<StartTimer>((state, _)
+        On<StartTimer>((state, _)
             => state with { IsRunning = true });
 
-        Map<StopTimer>((state, _)
+        On<StopTimer>((state, _)
             => state with { IsRunning = false });
 
-        Map<ResetTimer>((_, _)
+        On<ResetTimer>((_, _)
             => new TimerState());
 
-        Map<Tick>((state, _)
+        On<Tick>((state, _)
             => state with { Time = state.Time + 1 });
     }
 

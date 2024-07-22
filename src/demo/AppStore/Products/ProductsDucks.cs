@@ -94,10 +94,10 @@ public record ProductsReducers : SliceReducers<ProductState>
 {
     public ProductsReducers()
     {
-        Map<AddProduct>((state, action)
+        On<AddProduct>((state, action)
             => state.SetOne(action.Payload.Product));
 
-        Map<RemoveProduct>((state, action)
+        On<RemoveProduct>((state, action)
             => state.RemoveOne(action.Payload.ProductId));
     }
 

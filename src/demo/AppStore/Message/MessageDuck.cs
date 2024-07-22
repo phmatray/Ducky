@@ -40,9 +40,9 @@ public record MessageReducers : SliceReducers<MessageState>
 {
     public MessageReducers()
     {
-        Map<SetMessage>((_, action) => new MessageState { Message = action.Message });
-        Map<AppendMessage>((state, action) => new MessageState { Message = state.Message + action.Message });
-        Map<ClearMessage>(() => new MessageState { Message = string.Empty });
+        On<SetMessage>((_, action) => new MessageState { Message = action.Message });
+        On<AppendMessage>((state, action) => new MessageState { Message = state.Message + action.Message });
+        On<ClearMessage>(() => new MessageState { Message = string.Empty });
     }
 
     public override MessageState GetInitialState()

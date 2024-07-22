@@ -63,10 +63,10 @@ public record MoviesReducers : SliceReducers<MoviesState>
 {
     public MoviesReducers()
     {
-        Map<LoadMovies>((state, _)
+        On<LoadMovies>((state, _)
             => state with { IsLoading = true, ErrorMessage = null });
 
-        Map<LoadMoviesSuccess>((state, action)
+        On<LoadMoviesSuccess>((state, action)
             => state with
             {
                 Movies = action.Movies,
@@ -78,7 +78,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
                 }
             });
 
-        Map<LoadMoviesFailure>((state, action)
+        On<LoadMoviesFailure>((state, action)
             => state with
             {
                 Movies = ImmutableDictionary<int, Movie>.Empty,
@@ -86,7 +86,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
                 IsLoading = false
             });
 
-        Map<SetCurrentPage>((state, action)
+        On<SetCurrentPage>((state, action)
             => state with { Pagination = state.Pagination with { CurrentPage = action.CurrentPage } });
     }
 

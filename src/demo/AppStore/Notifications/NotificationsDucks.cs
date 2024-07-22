@@ -61,9 +61,9 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
 {
     public NotificationsReducers()
     {
-        Map<AddNotification>(ReduceAddNotification);
-        Map<MarkNotificationAsRead>(ReduceMarkNotificationAsRead);
-        Map<MarkAllNotificationsAsRead>(ReduceMarkAllNotificationsAsRead);
+        On<AddNotification>(ReduceAddNotification);
+        On<MarkNotificationAsRead>(ReduceMarkNotificationAsRead);
+        On<MarkAllNotificationsAsRead>(ReduceMarkAllNotificationsAsRead);
     }
 
     public override NotificationsState GetInitialState()

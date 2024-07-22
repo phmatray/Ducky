@@ -45,16 +45,16 @@ public record LayoutReducers : SliceReducers<LayoutState>
 {
     public LayoutReducers()
     {
-        Map<SetTitle>((state, action)
+        On<SetTitle>((state, action)
             => state with { Title = action.Title });
 
-        Map<ToggleDarkMode>((state, _)
+        On<ToggleDarkMode>((state, _)
             => state with { IsDarkMode = !state.IsDarkMode });
 
-        Map<ToggleDrawer>((state, _)
+        On<ToggleDrawer>((state, _)
             => state with { IsDrawerOpen = !state.IsDrawerOpen });
 
-        Map<ToggleNotifications>((state, _)
+        On<ToggleNotifications>((state, _)
             => state with { IsNotificationOpen = !state.IsNotificationOpen });
     }
 

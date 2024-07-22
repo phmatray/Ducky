@@ -21,10 +21,10 @@ public sealed record TestCounterReducers : SliceReducers<int>
 {
     public TestCounterReducers()
     {
-        Map<TestIncrementAction>((state, _) => state + 1);
-        Map<TestDecrementAction>((state, _) => state - 1);
-        Map<TestResetAction>((_, _) => GetInitialState());
-        Map<TestSetValueAction>((_, action) => action.Value);
+        On<TestIncrementAction>((state, _) => state + 1);
+        On<TestDecrementAction>((state, _) => state - 1);
+        On<TestResetAction>((_, _) => GetInitialState());
+        On<TestSetValueAction>((_, action) => action.Value);
     }
 
     public override int GetInitialState()

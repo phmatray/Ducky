@@ -108,9 +108,9 @@ public record TodoReducers : SliceReducers<TodoState>
 {
     public TodoReducers()
     {
-        Map<CreateTodo>(MapCreateTodo);
-        Map<ToggleTodo>(MapToggleTodo);
-        Map<DeleteTodo>(MapDeleteTodo);
+        On<CreateTodo>(ReduceCreateTodo);
+        On<ToggleTodo>(ReduceToggleTodo);
+        On<DeleteTodo>(ReduceDeleteTodo);
     }
 
     public override TodoState GetInitialState()
@@ -124,17 +124,17 @@ public record TodoReducers : SliceReducers<TodoState>
         ]);
     }
 
-    private static TodoState MapCreateTodo(TodoState state, CreateTodo action)
+    private static TodoState ReduceCreateTodo(TodoState state, CreateTodo action)
     {
         return state.SetOne(new TodoItem(action.Payload.Title));
     }
 
-    private static TodoState MapToggleTodo(TodoState state, ToggleTodo action)
+    private static TodoState ReduceToggleTodo(TodoState state, ToggleTodo action)
     {
         return state.UpdateOne(action.Payload.Id, todo => todo.IsCompleted = !todo.IsCompleted);
     }
 
-    private static TodoState MapDeleteTodo(TodoState state, DeleteTodo action)
+    private static TodoState ReduceDeleteTodo(TodoState state, DeleteTodo action)
     {
         return state.RemoveOne(action.Payload.Id);
     }

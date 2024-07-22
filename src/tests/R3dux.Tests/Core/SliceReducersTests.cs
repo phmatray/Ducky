@@ -13,7 +13,7 @@ public sealed class SliceReducersTests : IDisposable
     public void Map_Should_AddReducer()
     {
         // Act
-        _sut.Map<IntegerAction>((state, action) => state + action.Value);
+        _sut.On<IntegerAction>((state, action) => state + action.Value);
 
         // Assert
         _sut.Reducers.Should().ContainKey(typeof(IntegerAction));
@@ -23,7 +23,7 @@ public sealed class SliceReducersTests : IDisposable
     public void Reduce_Should_ApplyReducer()
     {
         // Arrange
-        _sut.Map<IntegerAction>((state, action) => state + action.Value);
+        _sut.On<IntegerAction>((state, action) => state + action.Value);
         var initialState = 0;
         var action = new IntegerAction(5);
 
@@ -38,7 +38,7 @@ public sealed class SliceReducersTests : IDisposable
     public void Reduce_Should_ApplyReducer_WithInterface()
     {
         // Arrange
-        _sut.Map<IntegerAction>((state, action) => state + action.Value);
+        _sut.On<IntegerAction>((state, action) => state + action.Value);
         const int initialState = 0;
         IAction action = new IntegerAction(5);
 

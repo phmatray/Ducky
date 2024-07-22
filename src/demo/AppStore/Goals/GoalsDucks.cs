@@ -31,7 +31,7 @@ public record GoalsReducers : SliceReducers<GoalState>
 {
     public GoalsReducers()
     {
-        Map<SetGoalMet>(ReduceSetGoalMet);
+        On<SetGoalMet>(ReduceSetGoalMet);
     }
 
     public override GoalState GetInitialState()
