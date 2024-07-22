@@ -51,6 +51,8 @@ public record AddNotification(Notification Notification) : IAction;
 
 public record MarkNotificationAsRead(Guid NotificationId) : IAction;
 
+public record MarkAllNotificationsAsRead : IAction;
+
 #endregion
 
 #region Reducers
@@ -61,6 +63,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
     {
         Map<AddNotification>(ReduceAddNotification);
         Map<MarkNotificationAsRead>(ReduceMarkNotificationAsRead);
+        Map<MarkAllNotificationsAsRead>(ReduceMarkAllNotificationsAsRead);
     }
 
     public override NotificationsState GetInitialState()
@@ -91,6 +94,17 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
                 .Select(n => n.Id == action.NotificationId
                     ? n with { IsRead = true }
                     : n)
+                .ToImmutableList()
+        };
+    }
+
+    private static NotificationsState ReduceMarkAllNotificationsAsRead(
+        NotificationsState state, MarkAllNotificationsAsRead action)
+    {
+        return new NotificationsState
+        {
+            Notifications = state.Notifications
+                .Select(n => n with { IsRead = true })
                 .ToImmutableList()
         };
     }

@@ -5,6 +5,7 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Srpa.ApiClient\Srpa.ApiClient.csproj" />
     <ProjectReference Include="..\..\library\R3dux\R3dux.csproj" />
     <ProjectReference Include="..\..\library\R3dux.FluxStandardActions\R3dux.FluxStandardActions.csproj" />
     <ProjectReference Include="..\..\library\R3dux.Normalization\R3dux.Normalization.csproj" />

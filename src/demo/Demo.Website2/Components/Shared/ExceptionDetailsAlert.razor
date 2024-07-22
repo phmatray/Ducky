@@ -1,6 +1,7 @@
 @inherits R3duxComponent<AppStore.Layout.LayoutState>
 
 <MudAlert
+  id="@Notification.Id"
   Severity="@Notification.Severity.ToMudSeverity()"
   CloseIconClicked="() => MarkNotificationAsRead(Notification.Id)">
   <MudStack Spacing="0" StretchItems="StretchItems.All">

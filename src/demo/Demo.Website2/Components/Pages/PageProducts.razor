@@ -12,14 +12,14 @@
         This page demonstrates a product catalog using the R3dux state management library for predictable state handling.<br/>
         It features functionality to add and remove products, and calculates the total price of products by category efficiently using memoized selectors.
       </MudText>
-      <MudListItem T="string" Dense="true">
+      <MudList T="string" Dense="true">
         <Goal Condition="() => State.SelectTotalPriceOfElectronics() > 10000" ConditionKey="products-electronics-exceeds-100">
           The total price of electronics exceeds $10000.
         </Goal>
         <Goal Condition="() => State.SelectTotalPriceOfClothing() > 5000" ConditionKey="products-clothing-exceeds-50">
           The total price of clothing exceeds $5000.
         </Goal>
-      </MudListItem>
+      </MudList>
     </MudStack>
   </MudItem>
 

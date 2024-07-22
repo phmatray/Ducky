@@ -12,11 +12,11 @@
         Creates a simple movie example using the R3dux state management library for predictable state handling,<br/>
         featuring loading state and error handling for displaying movies.
       </MudText>
-      <MudListItem T="string" Dense="true">
+      <MudList T="string" Dense="true">
         <Goal Condition="() => State.SelectMovieCount() > 0" ConditionKey="movies-exist">
           Movies loaded successfully.
         </Goal>
-      </MudListItem>
+      </MudList>
     </MudStack>
   </MudItem>
 

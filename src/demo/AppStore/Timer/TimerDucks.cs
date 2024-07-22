@@ -75,11 +75,11 @@ public class StartTimerEffect : Effect
         Observable<IRootState> rootState)
     {
         return actions
-            .FilterActions<StartTimer>()
+            .OfType<StartTimer>()
             .SwitchSelect(_ => Observable
                 .Interval(TimeSpan.FromSeconds(1), TimeProvider)
                 .Select(_ => new Tick())
-                .TakeUntil(actions.FilterActions<StopTimer>())
+                .TakeUntil(actions.OfType<StopTimer>())
                 .Cast<Tick, IAction>());
     }
 }

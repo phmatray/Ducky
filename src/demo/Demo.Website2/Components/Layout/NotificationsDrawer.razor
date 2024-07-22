@@ -1,4 +1,5 @@
 @inherits R3duxComponent<NotificationsState>
+@inject NavigationManager NavigationManager
 
 <MudDrawer
   Open="@IsOpen"
@@ -6,16 +7,29 @@
   ClipMode="DrawerClipMode.Always"
   Width="420px"
   Elevation="2">
-  <MudDrawerHeader>
-    <MudText Typo="Typo.h6">Notifications</MudText>
-  </MudDrawerHeader>
-  @if (HasUnreadNotifications)
-  {
-    <MudList T="Notification" Dense>
+  
+  <MudStack Spacing="0">
+    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="pa-4" Style="width: 100%">
+      <MudText Typo="Typo.h6">Notifications</MudText>
+      <MudTooltip Text="Mark all as read" Placement="Placement.Left" Arrow>
+        <MudIconButton
+          Icon="@Icons.Material.Filled.MarkChatRead"
+          Color="Color.Default"
+          Size="Size.Small"
+          OnClick="MarkAllNotificationsAsRead"/>
+      </MudTooltip>
+    </MudStack>
+    <MudDivider Class="mb-2"/>
+  </MudStack>
+
+  <MudList T="Notification" Dense>
+
+    @if (HasUnreadNotifications)
+    {
       @foreach (var notification in UnreadNotifications)
       {
         <MudListItem>
-          <MudAlert 
+          <MudAlert
             Severity="@notification.Severity.ToMudSeverity()"
             Variant="Variant.Outlined"
             ShowCloseIcon
@@ -25,21 +39,32 @@
               <MudText Typo="Typo.caption">@notification.Timestamp.Humanize()</MudText>
               @if (notification is ExceptionNotification)
               {
-                <MudButton Variant="Variant.Outlined" Class="mt-2">Show Details</MudButton>
+                <MudButton
+                  Variant="Variant.Outlined"
+                  Class="mt-2"
+                  OnClick="() => GoToErrorDetails(notification.Id)">
+                  Show Details
+                </MudButton>
               }
             </MudStack>
           </MudAlert>
         </MudListItem>
       }
-    </MudList>
-  }
-  else
-  {
-    <MudStack Row Class="ml-6">
-      <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" />
-      <MudText>There are no unread notifications.</MudText>
-    </MudStack>
-  }
+    }
+    else
+    {
+      <MudListItem>
+        <MudAlert 
+          Severity="Severity.Normal"
+          Variant="Variant.Outlined">
+          <MudStack Spacing="0">
+            <MudText>There are no unread notifications.</MudText>
+            <MudText Typo="Typo.caption">You're all caught up!</MudText>
+          </MudStack>
+        </MudAlert>
+      </MudListItem>
+    }
+  </MudList>
 </MudDrawer>
 
 @code {
@@ -54,6 +79,18 @@
     => State.SelectHasUnreadNotifications();
   
   private void MarkNotificationAsRead(Guid id)
-    => Dispatch(new MarkNotificationAsRead(id));
+  {
+    Dispatch(new MarkNotificationAsRead(id));
+  }
+
+  private void MarkAllNotificationsAsRead()
+  {
+    Dispatch(new MarkAllNotificationsAsRead());
+  }
   
+  private void GoToErrorDetails(Guid id)
+  {
+    NavigationManager.NavigateTo($"/errors#{id}");
+  }
+
 }

@@ -119,7 +119,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         Observable<IRootState> rootState)
     {
         // return actions
-        //     .FilterActions<LoadMovies>()
+        //     .OfType<LoadMovies>()
         //     .LogMessage("Loading movies...")
         //     .InvokeService(
         //         action => moviesService.GetMoviesAsync(action.PageNumber, action.PageSize),
@@ -130,7 +130,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         // THE SAME CODE CAN BE WRITTEN WITHOUT THE EXTENSION METHODS
         // ============================================================
         // return actions
-        //     .OfType<object, LoadMovies>()
+        //     .OfType<IAction, LoadMovies>()
         //     .Do(_ => Console.WriteLine("Loading movies..."))
         //     .SelectMany(action => moviesService
         //         .GetMoviesAsync()
@@ -142,13 +142,19 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
         // ============================================================
         return actions
-            .OfType<IAction, LoadMovies>()
+            .OfType<LoadMovies>()
             .Do(_ => Console.WriteLine("Loading movies..."))
             .WithSliceState<MoviesState, LoadMovies>(rootState)
             .SelectAwait(async (pair, ct) =>
             {
                 try
                 {
+                    // 1/3 chance of failing
+                    if (Random.Shared.Next(3) == 0)
+                    {
+                        throw new MovieException("Failed to load movies");
+                    }
+
                     var (state, action) = pair;
                     var currentPage = state.Pagination.CurrentPage;
                     var response = await moviesService.GetMoviesAsync(currentPage, action.PageSize, ct);

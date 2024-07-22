@@ -85,7 +85,7 @@ public class AppTheme : MudTheme
             ActionDisabledBackground = "#605f6d4d",
             LinesDefault = "#33323e",
             TableLines = "#33323e",
-            Divider = "#44475a", // Current Line
+            Divider = "#6272a4", // Comment
             OverlayLight = "#44475a80", // Current Line @ 50%
         };
     }

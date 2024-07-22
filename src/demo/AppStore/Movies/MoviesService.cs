@@ -21,12 +21,6 @@ public class MoviesService : IMoviesService
     {
         await Task.Delay(1000, ct);
 
-        // 1/3 chance of failing
-        if (Random.Shared.Next(3) == 0)
-        {
-            throw new MovieException("Failed to load movies");
-        }
-
         // Calculate the total number of movies and the start index for the requested page.
         var totalMovies = MoviesExamples.Movies.Length;
         var startIndex = (pageNumber - 1) * pageSize;

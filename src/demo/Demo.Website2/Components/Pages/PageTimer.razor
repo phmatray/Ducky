@@ -12,11 +12,14 @@
         Creates an interactive timer using the R3dux state management library for predictable state handling,<br/>
         featuring start, stop, and reset functionality.
       </MudText>
-      <MudListItem T="string" Dense="true">
+      <MudList T="string" Dense="true">
+        <Goal Condition="() => State.Time >= 5" ConditionKey="timer-exceeds-5">
+          The timer exceeds 5 seconds.
+        </Goal>
         <Goal Condition="() => State.Time >= 10" ConditionKey="timer-exceeds-10">
           The timer exceeds 10 seconds.
         </Goal>
-      </MudListItem>
+      </MudList>
     </MudStack>
   </MudItem>
 
