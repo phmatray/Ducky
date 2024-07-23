@@ -4,6 +4,7 @@
 
 using Demo.Website1.Components;
 using Demo.Website1.Helpers;
+using R3dux.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;

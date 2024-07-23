@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.Logging;
+
 namespace R3dux.Blazor;
 
 internal static partial class R3duxBlazorLogMessages

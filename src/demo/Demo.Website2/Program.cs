@@ -6,6 +6,7 @@ using Demo.Website2.Components;
 using Demo.Website2.Features.JsonColoring;
 using Demo.Website2.Features.JsonColoring.Services;
 using MudBlazor.Services;
+using R3dux.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;

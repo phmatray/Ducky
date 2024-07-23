@@ -67,6 +67,7 @@ public sealed class StateLoggerObserver<TState>
         var actionName = GetActionType(action);
         Console.WriteLine();
         Console.WriteLine($"action {actionName} @ {timestamp} (in {elapsedMilliseconds:F2} ms)");
+        Console.WriteLine($"  type       → {prevState?.GetType()}");
         Console.WriteLine($"  prev state → {GetObjectDetails(prevState)}");
         Console.WriteLine($"  action     → {actionName} {GetObjectDetails(action)}");
         Console.WriteLine($"  next state → {GetObjectDetails(newState)}");
