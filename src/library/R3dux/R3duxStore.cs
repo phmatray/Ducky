@@ -10,10 +10,10 @@ namespace R3dux;
 /// <summary>
 /// Represents a store that manages application state and handles actions.
 /// </summary>
-public sealed class Store
-    : IStore, IDisposable
+public sealed class R3duxStore
+    : Observable<IRootState>, IStore, IDisposable
 {
-    private readonly ILogger<IStore> _logger;
+    private readonly ILogger<R3duxStore> _logger;
     private readonly CompositeDisposable _stateUpdateSubscriptions = [];
     private readonly CompositeDisposable _sliceSubscriptions = [];
     private readonly CompositeDisposable _effectSubscriptions = [];
@@ -21,11 +21,11 @@ public sealed class Store
     private bool _isDisposed;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Store"/> class.
+    /// Initializes a new instance of the <see cref="R3duxStore"/> class.
     /// </summary>
     /// <param name="dispatcher">The dispatcher used to dispatch actions to the store.</param>
     /// <param name="logger">The logger used to log store events.</param>
-    public Store(IDispatcher dispatcher, ILogger<IStore> logger)
+    public R3duxStore(IDispatcher dispatcher, ILogger<R3duxStore> logger)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(logger);
@@ -43,7 +43,7 @@ public sealed class Store
 
     /// <inheritdoc/>
     public Observable<IRootState> RootStateObservable
-        => _slices.RootStateObservable;
+        => _slices.RootStateObservable.DistinctUntilChanged();
 
     /// <inheritdoc/>
     public void AddSlice(ISlice slice)
@@ -115,5 +115,11 @@ public sealed class Store
 
             _isDisposed = true;
         }
+    }
+
+    /// <inheritdoc/>
+    protected override IDisposable SubscribeCore(Observer<IRootState> observer)
+    {
+        return _slices.RootStateObservable.Subscribe(observer);
     }
 }

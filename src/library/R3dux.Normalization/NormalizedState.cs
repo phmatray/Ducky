@@ -109,12 +109,9 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        if (key is string keyString)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(keyString);
-        }
-
-        return CreateWith(ById.Remove(key));
+        return key is string
+            ? throw new R3duxException("The key cannot be empty.")
+            : CreateWith(ById.Remove(key));
     }
 
     /// <inheritdoc />
@@ -231,12 +228,9 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        if (key is string keyString)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(keyString);
-        }
-
-        return ById.ContainsKey(key);
+        return key is string
+            ? throw new R3duxException("The key cannot be empty.")
+            : ById.ContainsKey(key);
     }
 
     /// <summary>

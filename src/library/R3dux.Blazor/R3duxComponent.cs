@@ -19,7 +19,7 @@ public abstract class R3duxComponent<TState>
     /// Gets or sets the store that manages the application state.
     /// </summary>
     [Inject]
-    public required IStore Store { get; set; }
+    public required R3duxStore Store { get; set; }
 
     /// <summary>
     /// Gets or sets the logger used for logging information.
@@ -28,20 +28,10 @@ public abstract class R3duxComponent<TState>
     public required ILogger<R3duxComponent<object>> Logger { get; set; }
 
     /// <summary>
-    /// Gets an observable stream of the root state of the application.
+    /// Gets the name of the component.
     /// </summary>
-    protected Observable<IRootState> RootStateObservable
-        => Store
-            .RootStateObservable
-            .DistinctUntilChanged();
-
-    /// <summary>
-    /// Gets an observable stream of the state managed by this component.
-    /// </summary>
-    protected Observable<TState> StateObservable
-        => typeof(TState) == typeof(RootState)
-            ? RootStateObservable.Cast<IRootState, TState>()
-            : RootStateObservable.Select(state => state.GetSliceState<TState>());
+    protected string ComponentName
+        => GetType().Name;
 
     /// <summary>
     /// Gets the current state of the component.
@@ -57,10 +47,15 @@ public abstract class R3duxComponent<TState>
     }
 
     /// <summary>
-    /// Gets the name of the component.
+    /// Gets an observable stream of the state managed by this component.
     /// </summary>
-    protected string ComponentName
-        => GetType().Name;
+    private Observable<TState> StateObservable
+        => typeof(TState) == typeof(RootState)
+            ? Store.RootStateObservable
+                .Cast<IRootState, TState>()
+            : Store.RootStateObservable
+                .Select(state => state.GetSliceState<TState>())
+                .DistinctUntilChanged();
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

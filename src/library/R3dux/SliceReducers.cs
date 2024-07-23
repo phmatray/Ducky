@@ -95,12 +95,6 @@ public abstract partial record SliceReducers<TState>
             return;
         }
 
-        // First update the state...
-        _state.OnNext(updatedState);
-
-        // ...then notify subscribers that the state has been updated.
-        _stateUpdated.OnNext(Unit.Default);
-
         var stateChange = new StateChange<TState>(
             action,
             prevState,
@@ -108,6 +102,12 @@ public abstract partial record SliceReducers<TState>
             stopwatch.Elapsed.TotalMilliseconds);
 
         _stateLoggerObserver.OnNext(stateChange);
+
+        // First update the state...
+        _state.OnNext(updatedState);
+
+        // ...then notify subscribers that the state has been updated.
+        _stateUpdated.OnNext(Unit.Default);
     }
 
     /// <summary>

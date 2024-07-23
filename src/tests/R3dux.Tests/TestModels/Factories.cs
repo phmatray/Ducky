@@ -6,10 +6,10 @@ namespace R3dux.Tests.TestModels;
 
 internal static class Factories
 {
-    public static Store CreateTestCounterStore(IEffect[]? effects = null)
+    public static R3duxStore CreateTestCounterStore(IEffect[]? effects = null)
     {
         var dispatcher = new Dispatcher();
-        var logger = new Logger<Store>(new LoggerFactory());
+        var logger = new Logger<R3duxStore>(new LoggerFactory());
         TestCounterReducers counterReducers = new();
 
         return StoreFactory.CreateStore(dispatcher, logger, [counterReducers], effects ?? []);

@@ -74,10 +74,10 @@ public static class DependencyInjections
         services.ScanAndRegister<IEffect>(options.Assemblies);
 
         // Add Store
-        services.AddScoped<IStore, Store>(sp =>
+        services.AddScoped<R3duxStore>(sp =>
         {
             var dispatcher = sp.GetRequiredService<IDispatcher>();
-            var logger = sp.GetRequiredService<ILogger<Store>>();
+            var logger = sp.GetRequiredService<ILogger<R3duxStore>>();
             var slices = sp.GetServices<ISlice>().ToArray();
             var effects = sp.GetServices<IEffect>().ToArray();
 

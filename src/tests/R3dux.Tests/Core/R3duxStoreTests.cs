@@ -4,9 +4,9 @@
 
 namespace R3dux.Tests.Core;
 
-public class StoreTests
+public class R3duxStoreTests
 {
-    private readonly Store _sut = Factories.CreateTestCounterStore();
+    private readonly R3duxStore _sut = Factories.CreateTestCounterStore();
 
     [Fact]
     public void Store_Should_Initialize_With_Default_State()

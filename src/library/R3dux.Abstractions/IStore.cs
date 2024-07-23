@@ -9,7 +9,7 @@ namespace R3dux;
 /// <summary>
 /// Represents a store that manages application state and handles actions.
 /// </summary>
-public interface IStore
+internal interface IStore
 {
     /// <summary>
     /// Gets the dispatcher used to dispatch actions to the store.

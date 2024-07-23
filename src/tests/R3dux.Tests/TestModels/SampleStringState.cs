@@ -5,10 +5,10 @@
 namespace R3dux.Tests.TestModels;
 
 /// <summary>
-/// Represents a sample normalized state for collections.
+/// Represents a sample normalized state for collections with string key.
 /// </summary>
-internal sealed record SampleState
-    : NormalizedState<Guid, SampleGuidEntity, SampleState>
+internal sealed record SampleStringState
+    : NormalizedState<string, SampleStringEntity, SampleStringState>
 {
     // No additional implementation needed for the tests
 }

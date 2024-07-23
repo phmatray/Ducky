@@ -12,7 +12,7 @@ public class NormalizedStateTests
         // Arrange
         var id = Guid.NewGuid();
         var entity = new SampleGuidEntity { Id = id, Name = "Test Entity" };
-        var state = new SampleState().SetOne(entity);
+        var state = new SampleGuidState().SetOne(entity);
 
         // Act
         var result = state[id];
@@ -25,7 +25,7 @@ public class NormalizedStateTests
     public void Indexer_ShouldThrowException_WhenEntityDoesNotExist()
     {
         // Arrange
-        var state = new SampleState();
+        var state = new SampleGuidState();
 
         // Act
         Action act = () => _ = state[Guid.NewGuid()];
@@ -39,7 +39,7 @@ public class NormalizedStateTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        var state = new SampleState().SetOne(new SampleGuidEntity { Id = id, Name = "Test Entity" });
+        var state = new SampleGuidState().SetOne(new SampleGuidEntity { Id = id, Name = "Test Entity" });
 
         // Act
         var containsKey = state.ContainsKey(id);
@@ -52,7 +52,7 @@ public class NormalizedStateTests
     public void ContainsKey_ShouldReturnFalse_WhenEntityDoesNotExist()
     {
         // Arrange
-        var state = new SampleState();
+        var state = new SampleGuidState();
 
         // Act
         var containsKey = state.ContainsKey(Guid.NewGuid());
@@ -62,12 +62,25 @@ public class NormalizedStateTests
     }
 
     [Fact]
+    public void ContainsKey_ShouldThrowException_WhenKeyIsEmpty()
+    {
+        // Arrange
+        var state = new SampleStringState();
+
+        // Act
+        Action act = () => state.ContainsKey(string.Empty);
+
+        // Assert
+        act.Should().Throw<R3duxException>().WithMessage("The key cannot be empty.");
+    }
+
+    [Fact]
     public void GetByKey_ShouldReturnEntity_WhenEntityExists()
     {
         // Arrange
         var id = Guid.NewGuid();
         var entity = new SampleGuidEntity { Id = id, Name = "Test Entity" };
-        var state = new SampleState().SetOne(entity);
+        var state = new SampleGuidState().SetOne(entity);
 
         // Act
         var result = state.GetByKey(id);
@@ -80,7 +93,7 @@ public class NormalizedStateTests
     public void GetByKey_ShouldThrowException_WhenEntityDoesNotExist()
     {
         // Arrange
-        var state = new SampleState();
+        var state = new SampleGuidState();
 
         // Act
         Action act = () => state.GetByKey(Guid.NewGuid());
@@ -95,7 +108,7 @@ public class NormalizedStateTests
         // Arrange
         var entity1 = new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Entity 1" };
         var entity2 = new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Entity 2" };
-        var state = new SampleState().SetMany([entity1, entity2]);
+        var state = new SampleGuidState().SetMany([entity1, entity2]);
 
         // Act
         var allIds = state.AllIds;
@@ -110,7 +123,7 @@ public class NormalizedStateTests
         // Arrange
         var entity1 = new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Entity 1" };
         var entity2 = new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Entity 2" };
-        var state = new SampleState().SetMany([entity1, entity2]);
+        var state = new SampleGuidState().SetMany([entity1, entity2]);
 
         // Act
         var entities = state.SelectImmutableList();
@@ -123,7 +136,7 @@ public class NormalizedStateTests
     public void SelectImmutableList_ShouldReturnEntitiesMatchingPredicate()
     {
         // Arrange
-        var state = new SampleState().SetMany([
+        var state = new SampleGuidState().SetMany([
             new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Entity 1" },
             new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Entity 2" },
             new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Test Subject" }
@@ -142,8 +155,8 @@ public class NormalizedStateTests
         // Arrange
         var entity1 = new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Entity 1" };
         var entity2 = new SampleGuidEntity { Id = Guid.NewGuid(), Name = "Entity 2" };
-        var state1 = new SampleState().SetOne(entity1);
-        var state2 = new SampleState().SetOne(entity2);
+        var state1 = new SampleGuidState().SetOne(entity1);
+        var state2 = new SampleGuidState().SetOne(entity2);
 
         // Act
         var mergedState = state1.Merge(state2.ById);
@@ -161,8 +174,8 @@ public class NormalizedStateTests
         var id = Guid.NewGuid();
         var entity1 = new SampleGuidEntity { Id = id, Name = "Entity 1" };
         var entity2 = new SampleGuidEntity { Id = id, Name = "Entity 2" };
-        var state1 = new SampleState().SetOne(entity1);
-        var state2 = new SampleState().SetOne(entity2);
+        var state1 = new SampleGuidState().SetOne(entity1);
+        var state2 = new SampleGuidState().SetOne(entity2);
 
         // Act
         var mergedState = state1.Merge(state2.ById, MergeStrategy.Overwrite);
@@ -179,8 +192,8 @@ public class NormalizedStateTests
         var id = Guid.NewGuid();
         var entity1 = new SampleGuidEntity { Id = id, Name = "Entity 1" };
         var entity2 = new SampleGuidEntity { Id = id, Name = "Entity 2" };
-        var state1 = new SampleState().SetOne(entity1);
-        var state2 = new SampleState().SetOne(entity2);
+        var state1 = new SampleGuidState().SetOne(entity1);
+        var state2 = new SampleGuidState().SetOne(entity2);
 
         // Act
         Action act = () => state1.Merge(state2.ById);
@@ -198,7 +211,7 @@ public class NormalizedStateTests
         var entities = ImmutableList.Create(entity1, entity2);
 
         // Act
-        var state = SampleState.Create(entities);
+        var state = SampleGuidState.Create(entities);
 
         // Assert
         state.ById.Should().ContainKeys(entity1.Id, entity2.Id);
@@ -210,7 +223,7 @@ public class NormalizedStateTests
     public void AddOne_ShouldAddEntity()
     {
         // Arrange
-        var state = new SampleState();
+        var state = new SampleGuidState();
         var entity = CreateEntity(Guid.NewGuid(), "Test Entity");
 
         // Act
@@ -225,7 +238,7 @@ public class NormalizedStateTests
     public void AddMany_ShouldAddEntities()
     {
         // Arrange
-        var state = new SampleState();
+        var state = new SampleGuidState();
         var entities = new List<SampleGuidEntity>
         {
             CreateEntity(Guid.NewGuid(), "Entity 1"),
@@ -243,7 +256,7 @@ public class NormalizedStateTests
     public void SetAll_ShouldReplaceEntities()
     {
         // Arrange
-        var state = new SampleState();
+        var state = new SampleGuidState();
         var entities = new List<SampleGuidEntity>
         {
             CreateEntity(Guid.NewGuid(), "Entity 1"),
@@ -261,7 +274,7 @@ public class NormalizedStateTests
     public void SetOne_ShouldReplaceEntity()
     {
         // Arrange
-        var state = new SampleState();
+        var state = new SampleGuidState();
         var entity = CreateEntity(Guid.NewGuid(), "Test Entity");
 
         // Act
@@ -276,7 +289,7 @@ public class NormalizedStateTests
     public void SetMany_ShouldReplaceEntities()
     {
         // Arrange
-        var state = new SampleState();
+        var state = new SampleGuidState();
         var entities = new List<SampleGuidEntity>
         {
             CreateEntity(Guid.NewGuid(), "Entity 1"),
@@ -295,13 +308,26 @@ public class NormalizedStateTests
     {
         // Arrange
         var entity = CreateEntity(Guid.NewGuid(), "Test Entity");
-        var state = new SampleState().AddOne(entity);
+        var state = new SampleGuidState().AddOne(entity);
 
         // Act
         var newState = state.RemoveOne(entity.Id);
 
         // Assert
         newState.ById.Should().NotContainKey(entity.Id);
+    }
+
+    [Fact]
+    public void RemoveOne_WithEmptyStringKey_ShouldThrowException()
+    {
+        // Arrange
+        var state = new SampleStringState();
+
+        // Act
+        Action act = () => state.RemoveOne(string.Empty);
+
+        // Assert
+        act.Should().Throw<R3duxException>().WithMessage("The key cannot be empty.");
     }
 
     [Fact]
@@ -313,7 +339,7 @@ public class NormalizedStateTests
             CreateEntity(Guid.NewGuid(), "Entity 1"),
             CreateEntity(Guid.NewGuid(), "Entity 2")
         };
-        var state = new SampleState().AddMany(entities);
+        var state = new SampleGuidState().AddMany(entities);
 
         // Act
         var newState = state.RemoveMany(entities.Select(e => e.Id));
@@ -331,7 +357,7 @@ public class NormalizedStateTests
             CreateEntity(Guid.NewGuid(), "Entity 1"),
             CreateEntity(Guid.NewGuid(), "Entity 2")
         };
-        var state = new SampleState().AddMany(entities);
+        var state = new SampleGuidState().AddMany(entities);
 
         // Act
         var newState = state.RemoveMany(e => e.Name.Contains("Entity"));
@@ -349,7 +375,7 @@ public class NormalizedStateTests
             CreateEntity(Guid.NewGuid(), "Entity 1"),
             CreateEntity(Guid.NewGuid(), "Entity 2")
         };
-        var state = new SampleState().AddMany(entities);
+        var state = new SampleGuidState().AddMany(entities);
 
         // Act
         var newState = state.RemoveAll();
@@ -363,10 +389,24 @@ public class NormalizedStateTests
     {
         // Arrange
         var entity = CreateEntity(Guid.NewGuid(), "Test Entity");
-        var state = new SampleState().AddOne(entity);
+        var state = new SampleGuidState().AddOne(entity);
 
         // Act
         var newState = state.UpdateOne(entity.Id, e => e.Name = "Updated Entity");
+
+        // Assert
+        newState[entity.Id].Name.Should().Be("Updated Entity");
+    }
+
+    [Fact]
+    public void UpdateOne_WithFunc_ShouldUpdateEntity()
+    {
+        // Arrange
+        var entity = CreateEntity(Guid.NewGuid(), "Test Entity");
+        var state = new SampleGuidState().AddOne(entity);
+
+        // Act
+        var newState = state.UpdateOne(entity.Id, e => new SampleGuidEntity(e.Id, "Updated Entity"));
 
         // Assert
         newState[entity.Id].Name.Should().Be("Updated Entity");
@@ -381,10 +421,28 @@ public class NormalizedStateTests
             CreateEntity(Guid.NewGuid(), "Entity 1"),
             CreateEntity(Guid.NewGuid(), "Entity 2")
         };
-        var state = new SampleState().AddMany(entities);
+        var state = new SampleGuidState().AddMany(entities);
 
         // Act
         var newState = state.UpdateMany(entities.Select(e => e.Id), e => e.Name = "Updated Entity");
+
+        // Assert
+        newState.ById.Values.Should().AllSatisfy(e => e.Name.Should().Be("Updated Entity"));
+    }
+
+    [Fact]
+    public void UpdateMany_WithFunc_ShouldUpdateEntities()
+    {
+        // Arrange
+        var entities = new List<SampleGuidEntity>
+        {
+            CreateEntity(Guid.NewGuid(), "Entity 1"),
+            CreateEntity(Guid.NewGuid(), "Entity 2")
+        };
+        var state = new SampleGuidState().AddMany(entities);
+
+        // Act
+        var newState = state.UpdateMany(entities.Select(e => e.Id), e => new SampleGuidEntity(e.Id, "Updated Entity"));
 
         // Assert
         newState.ById.Values.Should().AllSatisfy(e => e.Name.Should().Be("Updated Entity"));
@@ -395,7 +453,7 @@ public class NormalizedStateTests
     {
         // Arrange
         var entity = CreateEntity(Guid.NewGuid(), "Test Entity");
-        var state = new SampleState();
+        var state = new SampleGuidState();
 
         // Act
         var newState = state.UpsertOne(entity);
@@ -413,7 +471,7 @@ public class NormalizedStateTests
             CreateEntity(Guid.NewGuid(), "Entity 1"),
             CreateEntity(Guid.NewGuid(), "Entity 2")
         };
-        var state = new SampleState();
+        var state = new SampleGuidState();
 
         // Act
         var newState = state.UpsertMany(entities);
@@ -427,7 +485,7 @@ public class NormalizedStateTests
     {
         // Arrange
         var entity = CreateEntity(Guid.NewGuid(), "Test Entity");
-        var state = new SampleState().AddOne(entity);
+        var state = new SampleGuidState().AddOne(entity);
 
         // Act
         var newState = state.MapOne(entity.Id, e => new SampleGuidEntity(e.Id, "Mapped Entity"));
@@ -445,7 +503,7 @@ public class NormalizedStateTests
             CreateEntity(Guid.NewGuid(), "Entity 1"),
             CreateEntity(Guid.NewGuid(), "Entity 2")
         };
-        var state = new SampleState().AddMany(entities);
+        var state = new SampleGuidState().AddMany(entities);
 
         // Act
         var newState = state.Map(e => new SampleGuidEntity(e.Id, "Mapped Entity"));
