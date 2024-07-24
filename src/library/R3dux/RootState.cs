@@ -42,12 +42,9 @@ public sealed record RootState : IRootState
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        if (_state.TryGetValue(key, out var value) && value is TState state)
-        {
-            return state;
-        }
-
-        throw new R3duxException($"State with key '{key}' is not of type '{typeof(TState).Name}'.");
+        return _state.TryGetValue(key, out var value) && value is TState state
+            ? state
+            : throw new R3duxException($"State with key '{key}' is not of type '{typeof(TState).Name}'.");
     }
 
     /// <inheritdoc/>

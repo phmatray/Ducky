@@ -13,7 +13,7 @@ namespace R3dux;
 public sealed class R3duxStore
     : Observable<IRootState>, IStore, IDisposable
 {
-    private static readonly ILogger<R3duxStore> _logger
+    private static readonly ILogger<R3duxStore>? _logger
         = LoggerProvider.CreateLogger<R3duxStore>();
 
     private readonly CompositeDisposable _stateUpdateSubscriptions = [];
@@ -33,7 +33,7 @@ public sealed class R3duxStore
         Dispatcher = dispatcher;
         Dispatcher.Dispatch(new StoreInitialized());
 
-        _logger.StoreInitialized();
+        _logger?.StoreInitialized();
     }
 
     /// <inheritdoc/>
@@ -61,7 +61,7 @@ public sealed class R3duxStore
             .Subscribe(_ => _slices.ReplaceSlice(slice.GetKey(), slice))
             .AddTo(_stateUpdateSubscriptions);
 
-        _logger.SliceAdded(slice.GetKey());
+        _logger?.SliceAdded(slice.GetKey());
     }
 
     /// <inheritdoc/>
@@ -85,7 +85,7 @@ public sealed class R3duxStore
             .Subscribe(Dispatcher.Dispatch)
             .AddTo(_effectSubscriptions);
 
-        _logger.EffectAdded(effect.GetKey(), effect.GetAssemblyName());
+        _logger?.EffectAdded(effect.GetKey(), effect.GetAssemblyName());
     }
 
     /// <inheritdoc/>
@@ -104,7 +104,7 @@ public sealed class R3duxStore
     {
         if (!_isDisposed)
         {
-            _logger.DisposingStore();
+            _logger?.DisposingStore();
 
             _stateUpdateSubscriptions.Dispose();
             _sliceSubscriptions.Dispose();

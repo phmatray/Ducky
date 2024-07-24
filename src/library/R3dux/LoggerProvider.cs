@@ -27,10 +27,8 @@ public static class LoggerProvider
     /// </summary>
     /// <typeparam name="T">The type for which a logger is to be created.</typeparam>
     /// <returns>A logger instance for the specified type.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the logger factory has not been configured.</exception>
-    public static ILogger<T> CreateLogger<T>()
+    public static ILogger<T>? CreateLogger<T>()
     {
-        return _loggerFactory?.CreateLogger<T>()
-               ?? throw new InvalidOperationException("LoggerFactory is not configured.");
+        return _loggerFactory?.CreateLogger<T>();
     }
 }
