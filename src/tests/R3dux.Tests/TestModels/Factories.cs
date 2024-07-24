@@ -2,8 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Moq;
-
 namespace R3dux.Tests.TestModels;
 
 internal static class Factories
@@ -11,10 +9,10 @@ internal static class Factories
     public static R3duxStore CreateTestCounterStore(IEffect[]? effects = null)
     {
         var dispatcher = new Dispatcher();
-        var mockLogger = new Mock<ILogger<R3duxStore>>();
-        var logger = mockLogger.Object;
+        var loggerFactory = LoggerFactory.Create(Configure);
+        LoggerProvider.Configure(loggerFactory);
         TestCounterReducers counterReducers = new();
-        return StoreFactory.CreateStore(dispatcher, logger, [counterReducers], effects ?? []);
+        return StoreFactory.CreateStore(dispatcher, [counterReducers], effects ?? []);
     }
 
     public static RootState CreateTestRootState()
@@ -26,5 +24,9 @@ internal static class Factories
             .Add(testKey, initialState);
 
         return new RootState(dictionary);
+    }
+
+    private static void Configure(ILoggingBuilder obj)
+    {
     }
 }

@@ -26,7 +26,6 @@ public sealed class R3duxStore
     /// Initializes a new instance of the <see cref="R3duxStore"/> class.
     /// </summary>
     /// <param name="dispatcher">The dispatcher used to dispatch actions to the store.</param>
-    /// <param name="logger">The logger used to log store events.</param>
     public R3duxStore(IDispatcher dispatcher)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
