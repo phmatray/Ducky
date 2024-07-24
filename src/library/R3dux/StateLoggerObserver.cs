@@ -5,6 +5,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using R3;
 
 namespace R3dux;
@@ -16,11 +17,15 @@ namespace R3dux;
 public sealed class StateLoggerObserver<TState>
     : Observer<StateChange<TState>>
 {
+    private static readonly ILogger<StateLoggerObserver<TState>> _logger
+        = LoggerProvider.CreateLogger<StateLoggerObserver<TState>>();
+
     // ReSharper disable once StaticMemberInGenericType
     private static readonly JsonSerializerOptions _serializerOptions = new()
     {
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNamingPolicy = JsonNamingPolicy.KebabCaseLower,
     };
 
     /// <summary>
@@ -29,11 +34,7 @@ public sealed class StateLoggerObserver<TState>
     /// <param name="value">The state change notification.</param>
     protected override void OnNextCore(StateChange<TState> value)
     {
-        LogStateChange(
-            value.Action,
-            value.PreviousState,
-            value.NewState,
-            value.ElapsedMilliseconds);
+        LogStateChange(value);
     }
 
     /// <summary>
@@ -42,7 +43,7 @@ public sealed class StateLoggerObserver<TState>
     /// <param name="result">The result of the state change stream.</param>
     protected override void OnCompletedCore(Result result)
     {
-        Console.WriteLine("State change observation completed.");
+        _logger.StateChangeObservationCompleted();
     }
 
     /// <summary>
@@ -51,26 +52,25 @@ public sealed class StateLoggerObserver<TState>
     /// <param name="error">The error encountered.</param>
     protected override void OnErrorResumeCore(Exception error)
     {
-        Console.WriteLine($"State change observation error: {error.Message}");
+        _logger.StateChangeObservationError();
     }
 
     /// <summary>
-    /// Logs the details of a state change.
+    /// Logs the state change.
     /// </summary>
-    /// <param name="action">The action causing the state change.</param>
-    /// <param name="prevState">The previous state before the change.</param>
-    /// <param name="newState">The new state after the change.</param>
-    /// <param name="elapsedMilliseconds">The time taken for the state change in milliseconds.</param>
-    private static void LogStateChange(IAction action, TState prevState, TState newState, double elapsedMilliseconds)
+    /// <param name="action">The action that caused the state change.</param>
+    private static void LogStateChange(StateChange<TState> action)
     {
         var timestamp = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
-        var actionName = GetActionType(action);
-        Console.WriteLine();
-        Console.WriteLine($"action {actionName} @ {timestamp} (in {elapsedMilliseconds:F2} ms)");
-        Console.WriteLine($"  type       → {prevState?.GetType()}");
-        Console.WriteLine($"  prev state → {GetObjectDetails(prevState)}");
-        Console.WriteLine($"  action     → {actionName} {GetObjectDetails(action)}");
-        Console.WriteLine($"  next state → {GetObjectDetails(newState)}");
+        var actionName = GetActionType(action.Action);
+        var sliceType = action.PreviousState?.GetType().ToString() ?? "Unknown";
+        var duration = string.Format(CultureInfo.InvariantCulture, "{0:F2}", action.ElapsedMilliseconds);
+        var prevStateDetails = GetObjectDetails(action.PreviousState);
+        var actionDetails = GetObjectDetails(action.Action);
+        var nextStateDetails = GetObjectDetails(action.NewState);
+
+        _logger.LogStateChange(
+            actionName, timestamp, duration, sliceType, prevStateDetails, actionDetails, nextStateDetails);
     }
 
     /// <summary>

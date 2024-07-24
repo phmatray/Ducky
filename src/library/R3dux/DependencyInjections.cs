@@ -35,11 +35,14 @@ public static class DependencyInjections
         services.AddScoped<R3duxStore>(sp =>
         {
             var dispatcher = sp.GetRequiredService<IDispatcher>();
-            var logger = sp.GetRequiredService<ILogger<R3duxStore>>();
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             var slices = sp.GetServices<ISlice>().ToArray();
             var effects = sp.GetServices<IEffect>().ToArray();
 
-            return StoreFactory.CreateStore(dispatcher, logger, slices, effects);
+            // Configure the logger provider
+            LoggerProvider.Configure(loggerFactory);
+
+            return StoreFactory.CreateStore(dispatcher, slices, effects);
         });
 
         return services;

@@ -13,7 +13,9 @@ namespace R3dux;
 public sealed class R3duxStore
     : Observable<IRootState>, IStore, IDisposable
 {
-    private readonly ILogger<R3duxStore> _logger;
+    private static readonly ILogger<R3duxStore> _logger
+        = LoggerProvider.CreateLogger<R3duxStore>();
+
     private readonly CompositeDisposable _stateUpdateSubscriptions = [];
     private readonly CompositeDisposable _sliceSubscriptions = [];
     private readonly CompositeDisposable _effectSubscriptions = [];
@@ -25,12 +27,9 @@ public sealed class R3duxStore
     /// </summary>
     /// <param name="dispatcher">The dispatcher used to dispatch actions to the store.</param>
     /// <param name="logger">The logger used to log store events.</param>
-    public R3duxStore(IDispatcher dispatcher, ILogger<R3duxStore> logger)
+    public R3duxStore(IDispatcher dispatcher)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _logger = logger;
 
         Dispatcher = dispatcher;
         Dispatcher.Dispatch(new StoreInitialized());

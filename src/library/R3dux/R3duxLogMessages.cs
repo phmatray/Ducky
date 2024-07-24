@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace R3dux;
 
-internal static partial class StoreLogMessages
+internal static partial class R3duxLogMessages
 {
     [LoggerMessage(
         EventId = 1000,
@@ -38,4 +38,39 @@ internal static partial class StoreLogMessages
         Message = "Disposing store")]
     public static partial void DisposingStore(
         this ILogger<R3duxStore> logger);
+
+    [LoggerMessage(
+        EventId = 1004,
+        Level = LogLevel.Debug,
+        Message = "State change observation completed")]
+    public static partial void StateChangeObservationCompleted(
+        this ILogger logger);
+
+    [LoggerMessage(
+        EventId = 1005,
+        Level = LogLevel.Error,
+        Message = "State change observation error")]
+    public static partial void StateChangeObservationError(
+        this ILogger logger);
+
+    [LoggerMessage(
+        EventId = 1006,
+        Level = LogLevel.Information,
+        Message =
+            """
+            [{ActionName}] action triggered at {Timestamp} took {Duration} ms
+              type       → {SliceType}
+              prev state → {PrevState}
+              action     → {ActionName} {Action}
+              next state → {NextState}
+            """)]
+    public static partial void LogStateChange(
+        this ILogger logger,
+        string actionName,
+        string timestamp,
+        string duration,
+        string sliceType,
+        string prevState,
+        string action,
+        string nextState);
 }

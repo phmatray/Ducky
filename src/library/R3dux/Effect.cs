@@ -29,7 +29,10 @@ public abstract class Effect : IEffect
     }
 
     /// <inheritdoc />
-    public abstract Observable<IAction> Handle(
+    public virtual Observable<IAction> Handle(
         Observable<IAction> actions,
-        Observable<IRootState> rootState);
+        Observable<IRootState> rootState)
+    {
+        return Observable.Empty<IAction>();
+    }
 }
