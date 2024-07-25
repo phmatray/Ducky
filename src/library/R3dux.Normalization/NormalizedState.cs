@@ -66,7 +66,9 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <returns>An immutable list of entities that match the predicate.</returns>
     public ImmutableList<TEntity> SelectImmutableList(Func<TEntity, bool> predicate)
     {
-        return ById.Values.Where(predicate).ToImmutableList();
+        return ById.Values
+            .Where(predicate)
+            .ToImmutableList();
     }
 
     /// <inheritdoc />

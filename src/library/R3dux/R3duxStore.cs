@@ -11,11 +11,12 @@ namespace R3dux;
 /// Represents a store that manages application state and handles actions.
 /// </summary>
 public sealed class R3duxStore
-    : Observable<IRootState>, IStore, IDisposable
+    : IStore, IDisposable
 {
     private static readonly ILogger<R3duxStore>? _logger
         = LoggerProvider.CreateLogger<R3duxStore>();
 
+    private readonly IDispatcher _dispatcher;
     private readonly CompositeDisposable _stateUpdateSubscriptions = [];
     private readonly CompositeDisposable _sliceSubscriptions = [];
     private readonly CompositeDisposable _effectSubscriptions = [];
@@ -30,14 +31,11 @@ public sealed class R3duxStore
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
 
-        Dispatcher = dispatcher;
-        Dispatcher.Dispatch(new StoreInitialized());
+        _dispatcher = dispatcher;
+        _dispatcher.Dispatch(new StoreInitialized());
 
         _logger?.StoreInitialized();
     }
-
-    /// <inheritdoc/>
-    public IDispatcher Dispatcher { get; }
 
     /// <inheritdoc/>
     public Observable<IRootState> RootStateObservable
@@ -52,7 +50,7 @@ public sealed class R3duxStore
         _slices.AddSlice(slice);
 
         // Subscribe the slice to the dispatcher's action stream
-        Dispatcher.ActionStream
+        _dispatcher.ActionStream
             .Subscribe(slice.OnDispatch)
             .AddTo(_sliceSubscriptions);
 
@@ -81,8 +79,8 @@ public sealed class R3duxStore
         ArgumentNullException.ThrowIfNull(effect);
 
         effect
-            .Handle(Dispatcher.ActionStream, RootStateObservable)
-            .Subscribe(Dispatcher.Dispatch)
+            .Handle(_dispatcher.ActionStream, RootStateObservable)
+            .Subscribe(_dispatcher.Dispatch)
             .AddTo(_effectSubscriptions);
 
         _logger?.EffectAdded(effect.GetKey(), effect.GetAssemblyName());
@@ -113,11 +111,5 @@ public sealed class R3duxStore
 
             _isDisposed = true;
         }
-    }
-
-    /// <inheritdoc/>
-    protected override IDisposable SubscribeCore(Observer<IRootState> observer)
-    {
-        return _slices.RootStateObservable.Subscribe(observer);
     }
 }

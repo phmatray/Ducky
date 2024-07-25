@@ -116,7 +116,7 @@
   private void SetCurrentPage(int page)
   {
     Dispatch(new SetCurrentPage(page));
-    LoadMovies();
+    Dispatch(new LoadMovies());
   }
 
 }

@@ -12,11 +12,6 @@ namespace R3dux;
 internal interface IStore
 {
     /// <summary>
-    /// Gets the dispatcher used to dispatch actions to the store.
-    /// </summary>
-    IDispatcher Dispatcher { get; }
-
-    /// <summary>
     /// Gets an observable stream of the root state of the application.
     /// </summary>
     Observable<IRootState> RootStateObservable { get; }

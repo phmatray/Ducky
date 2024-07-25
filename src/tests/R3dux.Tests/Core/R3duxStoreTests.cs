@@ -21,19 +21,6 @@ public class R3duxStoreTests
     }
 
     [Fact]
-    public void Store_Should_Dispatch_StoreInitialized_Action_On_Initialization()
-    {
-        // Arrange
-        var dispatcher = _sut.Dispatcher;
-
-        // Act & Assert
-        dispatcher.ActionStream.Subscribe(
-            action => action.Should().BeOfType<StoreInitialized>());
-
-        dispatcher.Dispatch(new StoreInitialized());
-    }
-
-    [Fact]
     public void Store_Should_Add_Slice_And_Propagate_State_Changes()
     {
         // Arrange

@@ -26,6 +26,12 @@ public abstract class R3duxComponent<TState>
     public required R3duxStore Store { get; set; }
 
     /// <summary>
+    /// Gets or sets the dispatcher used to dispatch actions to the store.
+    /// </summary>
+    [Inject]
+    public required IDispatcher Dispatcher { get; set; }
+
+    /// <summary>
     /// Gets or sets the logger used for logging information.
     /// </summary>
     [Inject]
@@ -125,7 +131,7 @@ public abstract class R3duxComponent<TState>
     /// <param name="action">The action to dispatch.</param>
     protected void Dispatch(IAction action)
     {
-        Store.Dispatcher.Dispatch(action);
+        Dispatcher.Dispatch(action);
     }
 
     private void OnNext(TState state)
