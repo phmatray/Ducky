@@ -14,7 +14,7 @@ internal interface IStore
     /// <summary>
     /// Gets an observable stream of the root state of the application.
     /// </summary>
-    Observable<IRootState> RootStateObservable { get; }
+    ReadOnlyReactiveProperty<IRootState> RootStateObservable { get; }
 
     /// <summary>
     /// Adds a single slice to the store.

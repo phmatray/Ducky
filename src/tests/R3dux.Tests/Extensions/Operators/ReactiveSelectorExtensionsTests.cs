@@ -15,7 +15,7 @@ public class ReactiveSelectorExtensionsTests
         var input = _sourceArray.ToObservable();
 
         // Act
-        var result = await input.SwitchSelect((Func<int, Observable<string>>)Selector).ToArrayAsync();
+        var result = await input.SwitchSelect(Selector).ToArrayAsync();
 
         // Assert
         result.Should().BeEquivalentTo(
@@ -36,7 +36,7 @@ public class ReactiveSelectorExtensionsTests
         var input = _sourceArray.ToObservable();
 
         // Act
-        var result = await input.ConcatSelect((Func<int, Observable<string>>)Selector).ToArrayAsync();
+        var result = await input.ConcatSelect(Selector).ToArrayAsync();
 
         // Assert
         result.Should().BeEquivalentTo(
@@ -54,7 +54,7 @@ public class ReactiveSelectorExtensionsTests
         var input = _sourceArray.ToObservable();
 
         // Act
-        var result = await input.MergeSelect((Func<int, Observable<string>>)Selector).ToArrayAsync();
+        var result = await input.MergeSelect(Selector).ToArrayAsync();
 
         // Assert
         result.Should().BeEquivalentTo(

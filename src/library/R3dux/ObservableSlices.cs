@@ -13,9 +13,9 @@ namespace R3dux;
 /// </summary>
 public sealed class ObservableSlices : IDisposable
 {
+    private readonly CompositeDisposable _subscriptions = [];
     private readonly ObservableDictionary<string, ISlice> _slices = [];
     private readonly ReactiveProperty<IRootState> _rootState;
-    private readonly object _lock = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ObservableSlices"/> class.
@@ -25,32 +25,20 @@ public sealed class ObservableSlices : IDisposable
         // Create the root state observable
         _rootState = new ReactiveProperty<IRootState>(CreateRootState());
 
-        // Create the slice observables
-        var sliceAdded = _slices
-            .ObserveAdd()
-            .Select(ev => ev.Value.Value);
-
-        var sliceRemoved = _slices
-            .ObserveRemove()
-            .Select(ev => ev.Value.Value);
-
-        var sliceReplaced = _slices
-            .ObserveReplace()
-            .Select(ev => ev.NewValue.Value);
-
         // Create the RootStateObservable
-        sliceAdded
-            .Merge(sliceRemoved)
-            .Merge(sliceReplaced)
+        _slices.ObserveAdd().Select(ev => ev.Value)
+            .Merge(_slices.ObserveRemove().Select(ev => ev.Value))
+            .Merge(_slices.ObserveReplace().Select(ev => ev.NewValue))
             .Select(_ => CreateRootState() as IRootState)
-            .Subscribe(_rootState.AsObserver());
+            .Subscribe(_rootState.AsObserver())
+            .AddTo(_subscriptions);
     }
 
     /// <summary>
     /// Gets an observable that emits the root state whenever a slice is added, removed, or replaced.
     /// </summary>
-    public Observable<IRootState> RootStateObservable
-        => _rootState.AsObservable();
+    public ReadOnlyReactiveProperty<IRootState> RootStateObservable
+        => _rootState.ToReadOnlyReactiveProperty();
 
     /// <summary>
     /// Adds a new slice with the specified key and data.
@@ -60,49 +48,19 @@ public sealed class ObservableSlices : IDisposable
     {
         ArgumentNullException.ThrowIfNull(slice);
 
-        lock (_lock)
-        {
-            _slices[slice.GetKey()] = slice;
-        }
-    }
+        _slices[slice.GetKey()] = slice;
 
-    /// <summary>
-    /// Removes the slice with the specified key.
-    /// </summary>
-    /// <param name="key">The key of the slice to remove.</param>
-    public void RemoveSlice(string key)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(key);
-
-        lock (_lock)
-        {
-            if (_slices.ContainsKey(key))
-            {
-                _slices.Remove(key);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Replaces the slice with the specified key.
-    /// </summary>
-    /// <param name="key">The key of the slice to replace.</param>
-    /// <param name="slice">The new slice to add.</param>
-    public void ReplaceSlice(string key, ISlice slice)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        ArgumentNullException.ThrowIfNull(slice);
-
-        lock (_lock)
-        {
-            _slices[key] = slice;
-        }
+        slice.StateUpdated
+            .Subscribe(_ => UpdateRootState())
+            .AddTo(_subscriptions);
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
         _rootState.Dispose();
+        _subscriptions.Dispose();
+        _slices.Clear();
     }
 
     /// <summary>
@@ -111,13 +69,18 @@ public sealed class ObservableSlices : IDisposable
     /// <returns>A new <see cref="RootState"/> object.</returns>
     private RootState CreateRootState()
     {
-        lock (_lock)
-        {
-            var state = _slices.ToImmutableSortedDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value.GetState());
+        var state = _slices.ToImmutableSortedDictionary(
+            kvp => kvp.Key,
+            kvp => kvp.Value.GetState());
 
-            return new RootState(state);
-        }
+        return new RootState(state);
+    }
+
+    /// <summary>
+    /// Updates the root state.
+    /// </summary>
+    private void UpdateRootState()
+    {
+        _rootState.OnNext(CreateRootState());
     }
 }

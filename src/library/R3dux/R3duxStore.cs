@@ -17,9 +17,7 @@ public sealed class R3duxStore
         = LoggerProvider.CreateLogger<R3duxStore>();
 
     private readonly IDispatcher _dispatcher;
-    private readonly CompositeDisposable _stateUpdateSubscriptions = [];
-    private readonly CompositeDisposable _sliceSubscriptions = [];
-    private readonly CompositeDisposable _effectSubscriptions = [];
+    private readonly CompositeDisposable _subscriptions = [];
     private readonly ObservableSlices _slices = new();
     private bool _isDisposed;
 
@@ -38,8 +36,8 @@ public sealed class R3duxStore
     }
 
     /// <inheritdoc/>
-    public Observable<IRootState> RootStateObservable
-        => _slices.RootStateObservable.DistinctUntilChanged();
+    public ReadOnlyReactiveProperty<IRootState> RootStateObservable
+        => _slices.RootStateObservable;
 
     /// <inheritdoc/>
     public void AddSlice(ISlice slice)
@@ -52,12 +50,7 @@ public sealed class R3duxStore
         // Subscribe the slice to the dispatcher's action stream
         _dispatcher.ActionStream
             .Subscribe(slice.OnDispatch)
-            .AddTo(_sliceSubscriptions);
-
-        // Update the root state when a slice state is updated
-        slice.StateUpdated
-            .Subscribe(_ => _slices.ReplaceSlice(slice.GetKey(), slice))
-            .AddTo(_stateUpdateSubscriptions);
+            .AddTo(_subscriptions);
 
         _logger?.SliceAdded(slice.GetKey());
     }
@@ -81,7 +74,7 @@ public sealed class R3duxStore
         effect
             .Handle(_dispatcher.ActionStream, RootStateObservable)
             .Subscribe(_dispatcher.Dispatch)
-            .AddTo(_effectSubscriptions);
+            .AddTo(_subscriptions);
 
         _logger?.EffectAdded(effect.GetKey(), effect.GetAssemblyName());
     }
@@ -104,9 +97,7 @@ public sealed class R3duxStore
         {
             _logger?.DisposingStore();
 
-            _stateUpdateSubscriptions.Dispose();
-            _sliceSubscriptions.Dispose();
-            _effectSubscriptions.Dispose();
+            _subscriptions.Dispose();
             _slices.Dispose();
 
             _isDisposed = true;
