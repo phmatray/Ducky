@@ -25,20 +25,22 @@ public sealed class ObservableSlices : IDisposable
         // Create the root state observable
         _rootState = new ReactiveProperty<IRootState>(CreateRootState());
 
-        // Create the RootStateObservable
+        // Subscribe to slice changes
         _slices.ObserveAdd().Select(ev => ev.Value)
             .Merge(_slices.ObserveRemove().Select(ev => ev.Value))
             .Merge(_slices.ObserveReplace().Select(ev => ev.NewValue))
             .Select(_ => CreateRootState() as IRootState)
             .Subscribe(_rootState.AsObserver())
             .AddTo(_subscriptions);
+
+        // Create the RootStateObservable
+        RootStateObservable = _rootState.ToReadOnlyReactiveProperty();
     }
 
     /// <summary>
     /// Gets an observable that emits the root state whenever a slice is added, removed, or replaced.
     /// </summary>
-    public ReadOnlyReactiveProperty<IRootState> RootStateObservable
-        => _rootState.ToReadOnlyReactiveProperty();
+    public ReadOnlyReactiveProperty<IRootState> RootStateObservable { get; }
 
     /// <summary>
     /// Adds a new slice with the specified key and data.
