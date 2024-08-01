@@ -1,5 +1,6 @@
 @page "/movies"
 @inherits R3duxComponent<MoviesState>
+@inject NavigationManager Navigation
 
 <PageTitle>R3dux - Movies</PageTitle>
 
@@ -66,7 +67,14 @@
             <td>@movie.Director</td>
             <td>@movie.Year</td>
             <td>@movie.Duration</td>
-            <td><MudRating SelectedValue="@movie.Score" ReadOnly/></td>
+            <td>
+              <MudStack Row AlignItems="AlignItems.Baseline">
+                <MudRating SelectedValue="@movie.Score" ReadOnly/>
+                <MudIconButton 
+                  Icon="@Icons.Material.Filled.Info"
+                  OnClick="() => GoToMovieDetails(movie.Id)"/>
+              </MudStack>
+            </td>
           </tr>
         }
         </tbody>
@@ -87,6 +95,8 @@
 </MudGrid>
 
 @code {
+  
+  // TODO: Master/Detail view with selected movie details.
   
   private ImmutableDictionary<int, Movie> Movies
     => State.SelectMoviesByYear();
@@ -117,6 +127,11 @@
   {
     Dispatch(new SetCurrentPage(page));
     Dispatch(new LoadMovies());
+  }
+  
+  private void GoToMovieDetails(int movieId)
+  {
+    Navigation.NavigateTo($"/movies/{movieId}");
   }
 
 }

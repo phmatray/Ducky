@@ -1,0 +1,74 @@
+@page "/movies/{movieId:int}"
+@inherits R3duxComponent<MoviesState>
+
+<PageTitle>R3dux - Movie Details</PageTitle>
+
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Movie Details</MudText>
+    </MudStack>
+  </MudItem>
+  
+  <MudItem xs="12">
+    @if (SelectedMovie == null)
+    {
+      <MudText>No movie selected.</MudText>
+    }
+    else
+    {
+      <MudPaper Class="pa-4">
+        <MudStack>
+          <MudText Typo="Typo.h5">@SelectedMovie.Title</MudText>
+
+          <MudStack Row AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h6">Year</MudText>
+            <MudText>@SelectedMovie.Year</MudText>
+            <MudDivider Vertical/>
+            <MudText Typo="Typo.h6">Duration</MudText>
+            <MudText>@SelectedMovie.Duration</MudText>
+            <MudDivider Vertical/>
+            <MudText Typo="Typo.h6">IMDb</MudText>
+            <MudText>@SelectedMovie.Imdb</MudText>
+            <MudDivider Vertical/>
+            <MudText Typo="Typo.h6">Metascore</MudText>
+            <MudChip T="int">@SelectedMovie.Metascore</MudChip>
+          </MudStack>
+
+          <MudText>@SelectedMovie.Description</MudText>
+          
+          <MudSimpleTable Elevation="0">
+            <tr>
+              <td><MudText Typo="Typo.h6">Director</MudText></td>
+              <td><MudChip T="string">@SelectedMovie.Director</MudChip></td>
+            </tr>
+            <tr>
+              <td><MudText Typo="Typo.h6">Actors</MudText></td>
+              <td>
+                <MudStack Row>
+                  @foreach (var actor in SelectedMovie.Actors)
+                  {
+                    <MudChip T="string">@actor</MudChip>
+                  }
+                </MudStack>
+              </td>
+            </tr>
+          </MudSimpleTable>
+
+        </MudStack>
+          
+      </MudPaper>
+    }
+  </MudItem>
+</MudGrid>
+
+@code {
+  
+  [Parameter] 
+  public int MovieId { get; set; }
+  
+  private Movie? SelectedMovie
+    => State.SelectMovieById(MovieId);
+  
+}
