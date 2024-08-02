@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 namespace AppStore.Message;
 
 #region State
@@ -19,6 +21,11 @@ public record MessageState
     public string SelectMessageInReverse()
     {
         return new string(Message.Reverse().ToArray());
+    }
+
+    public string SelectMessageInUpperCase()
+    {
+        return Message.ToUpper(CultureInfo.InvariantCulture);
     }
 }
 

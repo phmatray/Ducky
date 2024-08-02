@@ -1,0 +1,19 @@
+
+M:R3dux.CustomOperators.OfType``1(R3.Observable{R3dux.IAction})|CustomOperators.OfType_TAction_(thisObservable_IAction_).md|OfType<TAction>(this Observable<IAction>)
+M:R3dux.CustomOperators.WithSliceState``2(R3.Observable{``1},R3.Observable{R3dux.IRootState},System.String)|CustomOperators.WithSliceState_TState,TAction_(thisObservable_TAction_,Observable_IRootState_,string).md|WithSliceState<TState,TAction>(this Observable<TAction>, Observable<IRootState>, string)
+M:R3dux.CustomOperators.SelectAction``2(R3.Observable{``0},System.Func{``0,``1})|CustomOperators.SelectAction_TSource,TResult_(thisObservable_TSource_,Func_TSource,TResult_).md|SelectAction<TSource,TResult>(this Observable<TSource>, Func<TSource,TResult>)
+M:R3dux.CustomOperators.CatchAction``1(R3.Observable{``0},System.Func{System.Exception,``0})|CustomOperators.CatchAction_TSource_(thisObservable_TSource_,Func_Exception,TSource_).md|CatchAction<TSource>(this Observable<TSource>, Func<Exception,TSource>)
+M:R3dux.CustomOperators.InvokeService``2(R3.Observable{``0},System.Func{``0,System.Threading.Tasks.ValueTask{``1}},System.Func{``1,R3dux.IAction},System.Func{System.Exception,R3dux.IAction})|CustomOperators.InvokeService_TAction,TResult_(thisObservable_TAction_,Func_TAction,ValueTask_TResult__,Func_TResult,IAction_,Func_Exception,IAction_).md|InvokeService<TAction,TResult>(this Observable<TAction>, Func<TAction,ValueTask<TResult>>, Func<TResult,IAction>, Func<Exception,IAction>)
+M:R3dux.CustomOperators.LogMessage``1(R3.Observable{``0},System.String)|CustomOperators.LogMessage_TSource_(thisObservable_TSource_,string).md|LogMessage<TSource>(this Observable<TSource>, string)
+N:R3dux|R3dux.Operators.md#R3dux|R3dux
+T:R3dux.CustomOperators|CustomOperators.md|CustomOperators
+M:R3dux.ObservableExtensions.FirstSync``1(R3.Observable{``0})|ObservableExtensions.FirstSync_T_(thisObservable_T_).md|FirstSync<T>(this Observable<T>)
+T:R3dux.ObservableExtensions|ObservableExtensions.md|ObservableExtensions
+M:R3dux.ReactiveSelectorExtensions.SwitchSelect``2(R3.Observable{``0},System.Func{``0,R3.Observable{``1}})|ReactiveSelectorExtensions.SwitchSelect_TInput,TOutput_(thisObservable_TInput_,Func_TInput,Observable_TOutput__).md|SwitchSelect<TInput,TOutput>(this Observable<TInput>, Func<TInput,Observable<TOutput>>)
+M:R3dux.ReactiveSelectorExtensions.ConcatSelect``2(R3.Observable{``0},System.Func{``0,R3.Observable{``1}})|ReactiveSelectorExtensions.ConcatSelect_TInput,TOutput_(thisObservable_TInput_,Func_TInput,Observable_TOutput__).md|ConcatSelect<TInput,TOutput>(this Observable<TInput>, Func<TInput,Observable<TOutput>>)
+M:R3dux.ReactiveSelectorExtensions.MergeSelect``2(R3.Observable{``0},System.Func{``0,R3.Observable{``1}})|ReactiveSelectorExtensions.MergeSelect_TInput,TOutput_(thisObservable_TInput_,Func_TInput,Observable_TOutput__).md|MergeSelect<TInput,TOutput>(this Observable<TInput>, Func<TInput,Observable<TOutput>>)
+T:R3dux.ReactiveSelectorExtensions|ReactiveSelectorExtensions.md|ReactiveSelectorExtensions
+P:R3dux.StateActionPair`2.State|StateActionPair_TState,TAction_.State.md|State
+P:R3dux.StateActionPair`2.Action|StateActionPair_TState,TAction_.Action.md|Action
+M:R3dux.StateActionPair`2.#ctor(`0,`1)|StateActionPair_TState,TAction_.StateActionPair(TState,TAction).md|StateActionPair(TState, TAction)
+T:R3dux.StateActionPair`2|StateActionPair_TState,TAction_.md|StateActionPair<TState,TAction>

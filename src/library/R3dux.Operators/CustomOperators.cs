@@ -99,6 +99,7 @@ public static class CustomOperators
         Func<TResult, IAction> successSelector,
         Func<Exception, IAction> errorSelector)
     {
+        // TODO: Fix the CatchAction with a SwitchSelect
         return source.SelectMany(action
             => serviceCall(action)
                 .ToObservable()

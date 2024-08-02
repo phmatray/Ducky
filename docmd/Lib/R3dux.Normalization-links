@@ -1,0 +1,52 @@
+
+P:R3dux.IEntity`1.Id|IEntity_TKey_.Id.md|Id
+N:R3dux|R3dux.Normalization.md#R3dux|R3dux
+T:R3dux.IEntity`1|IEntity_TKey_.md|IEntity<TKey>
+M:R3dux.INormalizedStateCollectionMethods`3.AddOne(`1)|INormalizedStateCollectionMethods_TKey,TEntity,TState_.AddOne(TEntity).md|AddOne(TEntity)
+M:R3dux.INormalizedStateCollectionMethods`3.AddMany(System.Collections.Generic.IEnumerable{`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.AddMany(IEnumerable_TEntity_).md|AddMany(IEnumerable<TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.SetAll(System.Collections.Generic.IEnumerable{`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.SetAll(IEnumerable_TEntity_).md|SetAll(IEnumerable<TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.SetOne(`1)|INormalizedStateCollectionMethods_TKey,TEntity,TState_.SetOne(TEntity).md|SetOne(TEntity)
+M:R3dux.INormalizedStateCollectionMethods`3.SetMany(System.Collections.Generic.IEnumerable{`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.SetMany(IEnumerable_TEntity_).md|SetMany(IEnumerable<TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.RemoveOne(`0)|INormalizedStateCollectionMethods_TKey,TEntity,TState_.RemoveOne(TKey).md|RemoveOne(TKey)
+M:R3dux.INormalizedStateCollectionMethods`3.RemoveMany(System.Collections.Generic.IEnumerable{`0})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.RemoveMany(IEnumerable_TKey_).md|RemoveMany(IEnumerable<TKey>)
+M:R3dux.INormalizedStateCollectionMethods`3.RemoveMany(System.Func{`1,System.Boolean})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.RemoveMany(Func_TEntity,bool_).md|RemoveMany(Func<TEntity,bool>)
+M:R3dux.INormalizedStateCollectionMethods`3.RemoveAll|INormalizedStateCollectionMethods_TKey,TEntity,TState_.RemoveAll().md|RemoveAll()
+M:R3dux.INormalizedStateCollectionMethods`3.UpdateOne(`0,System.Action{`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.UpdateOne(TKey,Action_TEntity_).md|UpdateOne(TKey, Action<TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.UpdateOne(`0,System.Func{`1,`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.UpdateOne(TKey,Func_TEntity,TEntity_).md|UpdateOne(TKey, Func<TEntity,TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.UpdateMany(System.Collections.Generic.IEnumerable{`0},System.Action{`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.UpdateMany(IEnumerable_TKey_,Action_TEntity_).md|UpdateMany(IEnumerable<TKey>, Action<TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.UpdateMany(System.Collections.Generic.IEnumerable{`0},System.Func{`1,`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.UpdateMany(IEnumerable_TKey_,Func_TEntity,TEntity_).md|UpdateMany(IEnumerable<TKey>, Func<TEntity,TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.UpsertOne(`1)|INormalizedStateCollectionMethods_TKey,TEntity,TState_.UpsertOne(TEntity).md|UpsertOne(TEntity)
+M:R3dux.INormalizedStateCollectionMethods`3.UpsertMany(System.Collections.Generic.IEnumerable{`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.UpsertMany(IEnumerable_TEntity_).md|UpsertMany(IEnumerable<TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.MapOne(`0,System.Func{`1,`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.MapOne(TKey,Func_TEntity,TEntity_).md|MapOne(TKey, Func<TEntity,TEntity>)
+M:R3dux.INormalizedStateCollectionMethods`3.Map(System.Func{`1,`1})|INormalizedStateCollectionMethods_TKey,TEntity,TState_.Map(Func_TEntity,TEntity_).md|Map(Func<TEntity,TEntity>)
+T:R3dux.INormalizedStateCollectionMethods`3|INormalizedStateCollectionMethods_TKey,TEntity,TState_.md|INormalizedStateCollectionMethods<TKey,TEntity,TState>
+F:R3dux.MergeStrategy.FailIfDuplicate|MergeStrategy.md#R3dux.MergeStrategy.FailIfDuplicate|FailIfDuplicate
+F:R3dux.MergeStrategy.Overwrite|MergeStrategy.md#R3dux.MergeStrategy.Overwrite|Overwrite
+T:R3dux.MergeStrategy|MergeStrategy.md|MergeStrategy
+P:R3dux.NormalizedState`3.ById|NormalizedState_TKey,TEntity,TState_.ById.md|ById
+P:R3dux.NormalizedState`3.AllIds|NormalizedState_TKey,TEntity,TState_.AllIds.md|AllIds
+P:R3dux.NormalizedState`3.Item(`0)|NormalizedState_TKey,TEntity,TState_.this[TKey].md|this[TKey]
+M:R3dux.NormalizedState`3.Create(System.Collections.Immutable.ImmutableList{`1})|NormalizedState_TKey,TEntity,TState_.Create(ImmutableList_TEntity_).md|Create(ImmutableList<TEntity>)
+M:R3dux.NormalizedState`3.SelectImmutableList|NormalizedState_TKey,TEntity,TState_.SelectImmutableList().md|SelectImmutableList()
+M:R3dux.NormalizedState`3.SelectImmutableList(System.Func{`1,System.Boolean})|NormalizedState_TKey,TEntity,TState_.SelectImmutableList(Func_TEntity,bool_).md|SelectImmutableList(Func<TEntity,bool>)
+M:R3dux.NormalizedState`3.AddOne(`1)|NormalizedState_TKey,TEntity,TState_.AddOne(TEntity).md|AddOne(TEntity)
+M:R3dux.NormalizedState`3.AddMany(System.Collections.Generic.IEnumerable{`1})|NormalizedState_TKey,TEntity,TState_.AddMany(IEnumerable_TEntity_).md|AddMany(IEnumerable<TEntity>)
+M:R3dux.NormalizedState`3.SetAll(System.Collections.Generic.IEnumerable{`1})|NormalizedState_TKey,TEntity,TState_.SetAll(IEnumerable_TEntity_).md|SetAll(IEnumerable<TEntity>)
+M:R3dux.NormalizedState`3.SetOne(`1)|NormalizedState_TKey,TEntity,TState_.SetOne(TEntity).md|SetOne(TEntity)
+M:R3dux.NormalizedState`3.SetMany(System.Collections.Generic.IEnumerable{`1})|NormalizedState_TKey,TEntity,TState_.SetMany(IEnumerable_TEntity_).md|SetMany(IEnumerable<TEntity>)
+M:R3dux.NormalizedState`3.RemoveOne(`0)|NormalizedState_TKey,TEntity,TState_.RemoveOne(TKey).md|RemoveOne(TKey)
+M:R3dux.NormalizedState`3.RemoveMany(System.Collections.Generic.IEnumerable{`0})|NormalizedState_TKey,TEntity,TState_.RemoveMany(IEnumerable_TKey_).md|RemoveMany(IEnumerable<TKey>)
+M:R3dux.NormalizedState`3.RemoveMany(System.Func{`1,System.Boolean})|NormalizedState_TKey,TEntity,TState_.RemoveMany(Func_TEntity,bool_).md|RemoveMany(Func<TEntity,bool>)
+M:R3dux.NormalizedState`3.RemoveAll|NormalizedState_TKey,TEntity,TState_.RemoveAll().md|RemoveAll()
+M:R3dux.NormalizedState`3.UpdateOne(`0,System.Action{`1})|NormalizedState_TKey,TEntity,TState_.UpdateOne(TKey,Action_TEntity_).md|UpdateOne(TKey, Action<TEntity>)
+M:R3dux.NormalizedState`3.UpdateOne(`0,System.Func{`1,`1})|NormalizedState_TKey,TEntity,TState_.UpdateOne(TKey,Func_TEntity,TEntity_).md|UpdateOne(TKey, Func<TEntity,TEntity>)
+M:R3dux.NormalizedState`3.UpdateMany(System.Collections.Generic.IEnumerable{`0},System.Action{`1})|NormalizedState_TKey,TEntity,TState_.UpdateMany(IEnumerable_TKey_,Action_TEntity_).md|UpdateMany(IEnumerable<TKey>, Action<TEntity>)
+M:R3dux.NormalizedState`3.UpdateMany(System.Collections.Generic.IEnumerable{`0},System.Func{`1,`1})|NormalizedState_TKey,TEntity,TState_.UpdateMany(IEnumerable_TKey_,Func_TEntity,TEntity_).md|UpdateMany(IEnumerable<TKey>, Func<TEntity,TEntity>)
+M:R3dux.NormalizedState`3.UpsertOne(`1)|NormalizedState_TKey,TEntity,TState_.UpsertOne(TEntity).md|UpsertOne(TEntity)
+M:R3dux.NormalizedState`3.UpsertMany(System.Collections.Generic.IEnumerable{`1})|NormalizedState_TKey,TEntity,TState_.UpsertMany(IEnumerable_TEntity_).md|UpsertMany(IEnumerable<TEntity>)
+M:R3dux.NormalizedState`3.MapOne(`0,System.Func{`1,`1})|NormalizedState_TKey,TEntity,TState_.MapOne(TKey,Func_TEntity,TEntity_).md|MapOne(TKey, Func<TEntity,TEntity>)
+M:R3dux.NormalizedState`3.Map(System.Func{`1,`1})|NormalizedState_TKey,TEntity,TState_.Map(Func_TEntity,TEntity_).md|Map(Func<TEntity,TEntity>)
+M:R3dux.NormalizedState`3.ContainsKey(`0)|NormalizedState_TKey,TEntity,TState_.ContainsKey(TKey).md|ContainsKey(TKey)
+M:R3dux.NormalizedState`3.GetByKey(`0)|NormalizedState_TKey,TEntity,TState_.GetByKey(TKey).md|GetByKey(TKey)
+M:R3dux.NormalizedState`3.Merge(System.Collections.Immutable.ImmutableDictionary{`0,`1},R3dux.MergeStrategy)|NormalizedState_TKey,TEntity,TState_.Merge(ImmutableDictionary_TKey,TEntity_,MergeStrategy).md|Merge(ImmutableDictionary<TKey,TEntity>, MergeStrategy)
+T:R3dux.NormalizedState`3|NormalizedState_TKey,TEntity,TState_.md|NormalizedState<TKey,TEntity,TState>

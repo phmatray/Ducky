@@ -39,7 +39,7 @@ public sealed class MoviesEffectsTests : IDisposable
             .ReturnsAsync(new GetMoviesResponse(immutableMovies, movies.Count));
 
         // Act
-        _actionsSubject.OnNext(new LoadMovies(1, 10));
+        _actionsSubject.OnNext(new LoadMovies());
         await Task.Delay(100); // Ensure the async call completes
 
         // Assert
@@ -59,7 +59,7 @@ public sealed class MoviesEffectsTests : IDisposable
             .ThrowsAsync(new MovieException(exceptionMessage));
 
         // Act
-        _actionsSubject.OnNext(new LoadMovies(1, 10));
+        _actionsSubject.OnNext(new LoadMovies());
         await Task.Delay(100); // Ensure the async call completes
 
         // Assert
