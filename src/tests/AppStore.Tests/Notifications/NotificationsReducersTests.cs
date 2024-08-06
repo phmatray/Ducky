@@ -62,7 +62,7 @@ public sealed class NotificationsReducersTests : IDisposable
         var reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(2);
+        reducers.Should().HaveCount(3);
     }
 
     [Fact]
