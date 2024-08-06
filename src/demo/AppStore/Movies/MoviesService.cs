@@ -21,8 +21,8 @@ public class MoviesService : IMoviesService
     {
         await Task.Delay(1000, ct);
 
-        // 1/3 chance of failing
-        if (Random.Shared.Next(3) == 0)
+        // Error on page 3
+        if (pageNumber == 3)
         {
             throw new MovieException("Failed to load movies");
         }
