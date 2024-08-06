@@ -21,8 +21,8 @@
     <PackageVersion Include="MudBlazor" Version="7.5.0" />
     <PackageVersion Include="ObservableCollections" Version="2.1.3" />
     <PackageVersion Include="ObservableCollections.R3" Version="2.1.3" />
-    <PackageVersion Include="R3" Version="1.2.2" />
-    <PackageVersion Include="R3Extensions.Blazor" Version="1.2.2" />
+    <PackageVersion Include="R3" Version="1.2.3" />
+    <PackageVersion Include="R3Extensions.Blazor" Version="1.2.3" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.12.4" />
     <PackageVersion Include="Scrutor" Version="4.2.2" />
     <PackageVersion Include="Snapshooter.Xunit" Version="0.14.1" />
