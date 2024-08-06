@@ -1,0 +1,44 @@
+
+N:R3dux|R3dux.Abstractions.md#R3dux|R3dux
+T:R3dux.IAction|IAction.md|IAction
+P:R3dux.IDispatcher.ActionStream|IDispatcher.ActionStream.md|ActionStream
+M:R3dux.IDispatcher.Dispatch(R3dux.IAction)|IDispatcher.Dispatch(IAction).md|Dispatch(IAction)
+T:R3dux.IDispatcher|IDispatcher.md|IDispatcher
+M:R3dux.IEffect.GetKey|IEffect.GetKey().md|GetKey()
+M:R3dux.IEffect.GetAssemblyName|IEffect.GetAssemblyName().md|GetAssemblyName()
+M:R3dux.IEffect.Handle(R3.Observable{R3dux.IAction},R3.Observable{R3dux.IRootState})|IEffect.Handle(Observable_IAction_,Observable_IRootState_).md|Handle(Observable<IAction>, Observable<IRootState>)
+T:R3dux.IEffect|IEffect.md|IEffect
+P:R3dux.IKeyedAction.TypeKey|IKeyedAction.TypeKey.md|TypeKey
+T:R3dux.IKeyedAction|IKeyedAction.md|IKeyedAction
+M:R3dux.IRootState.GetStateDictionary|IRootState.GetStateDictionary().md|GetStateDictionary()
+M:R3dux.IRootState.GetKeys|IRootState.GetKeys().md|GetKeys()
+M:R3dux.IRootState.GetSliceState``1(System.String)|IRootState.GetSliceState_TState_(string).md|GetSliceState<TState>(string)
+M:R3dux.IRootState.GetSliceState``1|IRootState.GetSliceState_TState_().md|GetSliceState<TState>()
+M:R3dux.IRootState.ContainsKey(System.String)|IRootState.ContainsKey(string).md|ContainsKey(string)
+T:R3dux.IRootState|IRootState.md|IRootState
+M:R3dux.IRootStateSerializer.Serialize(R3dux.IRootState)|IRootStateSerializer.Serialize(IRootState).md|Serialize(IRootState)
+M:R3dux.IRootStateSerializer.Serialize(R3dux.IRootState,System.String)|IRootStateSerializer.Serialize(IRootState,string).md|Serialize(IRootState, string)
+M:R3dux.IRootStateSerializer.Deserialize(System.String)|IRootStateSerializer.Deserialize(string).md|Deserialize(string)
+M:R3dux.IRootStateSerializer.SaveToFile(R3dux.IRootState,System.String)|IRootStateSerializer.SaveToFile(IRootState,string).md|SaveToFile(IRootState, string)
+M:R3dux.IRootStateSerializer.LoadFromFile(System.String)|IRootStateSerializer.LoadFromFile(string).md|LoadFromFile(string)
+T:R3dux.IRootStateSerializer|IRootStateSerializer.md|IRootStateSerializer
+P:R3dux.ISlice.StateUpdated|ISlice.StateUpdated.md|StateUpdated
+M:R3dux.ISlice.GetKey|ISlice.GetKey().md|GetKey()
+M:R3dux.ISlice.GetStateType|ISlice.GetStateType().md|GetStateType()
+M:R3dux.ISlice.GetState|ISlice.GetState().md|GetState()
+M:R3dux.ISlice.OnDispatch(R3dux.IAction)|ISlice.OnDispatch(IAction).md|OnDispatch(IAction)
+T:R3dux.ISlice|ISlice.md|ISlice
+P:R3dux.ISlice`1.State|ISlice_TState_.State.md|State
+P:R3dux.ISlice`1.Reducers|ISlice_TState_.Reducers.md|Reducers
+T:R3dux.ISlice`1|ISlice_TState_.md|ISlice<TState>
+T:R3dux.IState|IState.md|IState
+P:R3dux.IStore.RootStateObservable|IStore.RootStateObservable.md|RootStateObservable
+M:R3dux.IStore.AddSlice(R3dux.ISlice)|IStore.AddSlice(ISlice).md|AddSlice(ISlice)
+M:R3dux.IStore.AddSlices(R3dux.ISlice[])|IStore.AddSlices(ISlice[]).md|AddSlices(ISlice[])
+M:R3dux.IStore.AddEffect(R3dux.IEffect)|IStore.AddEffect(IEffect).md|AddEffect(IEffect)
+M:R3dux.IStore.AddEffects(R3dux.IEffect[])|IStore.AddEffects(IEffect[]).md|AddEffects(IEffect[])
+T:R3dux.IStore|IStore.md|IStore
+M:R3dux.R3duxException.#ctor|R3duxException.R3duxException().md|R3duxException()
+M:R3dux.R3duxException.#ctor(System.String)|R3duxException.R3duxException(string).md|R3duxException(string)
+M:R3dux.R3duxException.#ctor(System.String,System.Exception)|R3duxException.R3duxException(string,Exception).md|R3duxException(string, Exception)
+T:R3dux.R3duxException|R3duxException.md|R3duxException

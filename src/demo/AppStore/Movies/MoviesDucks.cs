@@ -35,6 +35,11 @@ public record MoviesState
         return Movies.Count;
     }
 
+    public Movie? SelectMovieById(int id)
+    {
+        return Movies.GetValueOrDefault(id);
+    }
+
     public ImmutableDictionary<int, Movie> SelectMoviesByYear()
     {
         return Movies
@@ -47,7 +52,7 @@ public record MoviesState
 
 #region Actions
 
-public record LoadMovies(int PageNumber = 1, int PageSize = 5) : IAction;
+public record LoadMovies : IAction;
 
 public record LoadMoviesSuccess(ImmutableDictionary<int, Movie> Movies, int TotalItems) : IAction;
 
@@ -118,14 +123,24 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         Observable<IAction> actions,
         Observable<IRootState> rootState)
     {
-        // return actions
-        //     .OfType<LoadMovies>()
-        //     .LogMessage("Loading movies...")
-        //     .InvokeService(
-        //         action => moviesService.GetMoviesAsync(action.PageNumber, action.PageSize),
-        //         movies => new LoadMoviesSuccess(movies),
-        //         ex => new LoadMoviesFailure(ex.Message))
-        //     .LogMessage("Movies loaded.");
+        // public override Observable<IAction> Handle(
+        //     Observable<IAction> actions,
+        //     Observable<IRootState> rootState)
+        // {
+        //     return actions
+        //         .OfType<LoadMovies>()
+        //         .LogMessage("Loading movies...")
+        //         .InvokeService(
+        //             action =>
+        //             {
+        //                 throw new NotImplementedException();
+        //                 return moviesService.GetMoviesAsync(action.PageNumber, 5);
+        //             },
+        //             response => new LoadMoviesSuccess(
+        //                 response.Movies.ToImmutableDictionary(movie => movie.Id),
+        //                 response.TotalItems),
+        //             ex => new LoadMoviesFailure(ex))
+        //         .LogMessage("Movies loaded.");
 
         // THE SAME CODE CAN BE WRITTEN WITHOUT THE EXTENSION METHODS
         // ============================================================
@@ -149,15 +164,10 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
             {
                 try
                 {
-                    // 1/3 chance of failing
-                    if (Random.Shared.Next(3) == 0)
-                    {
-                        throw new MovieException("Failed to load movies");
-                    }
-
+                    const int pageSize = 5;
                     var (state, action) = pair;
                     var currentPage = state.Pagination.CurrentPage;
-                    var response = await moviesService.GetMoviesAsync(currentPage, action.PageSize, ct);
+                    var response = await moviesService.GetMoviesAsync(currentPage, pageSize, ct);
                     var dictionary = response.Movies.ToImmutableDictionary(movie => movie.Id);
                     return new LoadMoviesSuccess(dictionary, response.TotalItems) as IAction;
                 }

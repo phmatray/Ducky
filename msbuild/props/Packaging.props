@@ -1,0 +1,23 @@
+<Project>
+  <!-- Packaging -->
+  <PropertyGroup Label="Package Information">
+    <EnablePackageValidation>true</EnablePackageValidation>
+
+    <Description>
+      R3dux is a state management library designed for Blazor applications, inspired by the Redux pattern commonly
+      used in JavaScript applications. It provides a predictable state container for .NET, ensuring that the
+      application state is managed in a clear, consistent, and centralized manner.
+    </Description>
+    <Authors>Philippe Matray</Authors>
+    <Copyright>Atypical Consulting SRL</Copyright>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/phmatray/r3dux</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/phmatray/r3dux</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/phmatray/R3dux/releases</PackageReleaseNotes>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageTags>blazor, redux, state management, state container, .NET, C#</PackageTags>
+  </PropertyGroup>
+</Project>

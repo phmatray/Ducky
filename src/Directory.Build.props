@@ -3,6 +3,7 @@
   <Import Project="../msbuild/props/Dependencies.props"/>
   <Import Project="../msbuild/props/CodeAnalysis.props"/>
   <Import Project="../msbuild/props/ContinuousIntegration.props"/>
+  <Import Project="../msbuild/props/Packaging.props"/>
   <Import Project="../msbuild/props/SourceLink.props"/>
   <Import Project="../msbuild/props/FileInclusion.props"/>
 </Project>

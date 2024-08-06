@@ -7,17 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\library\R3dux.FluxStandardActions\R3dux.FluxStandardActions.csproj" />
     <ProjectReference Include="..\..\library\R3dux.Normalization\R3dux.Normalization.csproj" />
     <ProjectReference Include="..\..\library\R3dux.Operators\R3dux.Operators.csproj" />
     <ProjectReference Include="..\..\library\R3dux.Selectors\R3dux.Selectors.csproj" />
     <ProjectReference Include="..\..\library\R3dux\R3dux.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Microsoft.Extensions.Logging">
-      <HintPath>..\..\..\..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\8.0.7\Microsoft.Extensions.Logging.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
