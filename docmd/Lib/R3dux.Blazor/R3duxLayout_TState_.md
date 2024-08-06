@@ -22,7 +22,3 @@ Inheritance [System.Object](https://docs.microsoft.com/en-us/dotnet/api/System.O
 | Properties | |
 | :--- | :--- |
 | [Body](R3duxLayout_TState_.Body.md 'R3dux.Blazor.R3duxLayout<TState>.Body') | Gets or sets the content to be rendered inside the layout. |
-
-| Methods | |
-| :--- | :--- |
-| [SetParametersAsync(ParameterView)](R3duxLayout_TState_.SetParametersAsync(ParameterView).md 'R3dux.Blazor.R3duxLayout<TState>.SetParametersAsync(Microsoft.AspNetCore.Components.ParameterView)') | Sets parameters supplied by the component's parent in the render tree. |

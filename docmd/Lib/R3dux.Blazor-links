@@ -12,11 +12,9 @@ P:R3dux.Blazor.R3duxComponent`1.StateObservable|R3duxComponent_TState_.StateObse
 M:R3dux.Blazor.R3duxComponent`1.Dispose|R3duxComponent_TState_.Dispose().md|Dispose()
 M:R3dux.Blazor.R3duxComponent`1.Dispose(System.Boolean)|R3duxComponent_TState_.Dispose(bool).md|Dispose(bool)
 M:R3dux.Blazor.R3duxComponent`1.OnAfterSubscribed|R3duxComponent_TState_.OnAfterSubscribed().md|OnAfterSubscribed()
-M:R3dux.Blazor.R3duxComponent`1.OnInitialized|R3duxComponent_TState_.OnInitialized().md|OnInitialized()
 M:R3dux.Blazor.R3duxComponent`1.Dispatch(R3dux.IAction)|R3duxComponent_TState_.Dispatch(IAction).md|Dispatch(IAction)
 T:R3dux.Blazor.R3duxComponent`1|R3duxComponent_TState_.md|R3duxComponent<TState>
 P:R3dux.Blazor.R3duxLayout`1.Body|R3duxLayout_TState_.Body.md|Body
-M:R3dux.Blazor.R3duxLayout`1.SetParametersAsync(Microsoft.AspNetCore.Components.ParameterView)|R3duxLayout_TState_.SetParametersAsync(ParameterView).md|SetParametersAsync(ParameterView)
 T:R3dux.Blazor.R3duxLayout`1|R3duxLayout_TState_.md|R3duxLayout<TState>
 P:R3dux.Blazor.Router.RouterStoreState.Url|RouterStoreState.Url.md|Url
 N:R3dux.Blazor.Router|R3dux.Blazor.md#R3dux.Blazor.Router|R3dux.Blazor.Router
