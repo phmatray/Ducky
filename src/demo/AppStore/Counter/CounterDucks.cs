@@ -4,6 +4,12 @@
 
 namespace AppStore.Counter;
 
+#region State
+
+public record CounterState(int Value);
+
+#endregion
+
 #region Actions
 
 public record Increment(int Amount = 1) : IAction;
@@ -18,19 +24,19 @@ public record SetValue(int Value) : IAction;
 
 #region Reducers
 
-public record CounterReducers : SliceReducers<int>
+public record CounterReducers : SliceReducers<CounterState>
 {
     public CounterReducers()
     {
-        On<Increment>((state, action) => state + action.Amount);
-        On<Decrement>((state, action) => state - action.Amount);
+        On<Increment>((state, action) => new CounterState(state.Value + action.Amount));
+        On<Decrement>((state, action) => new CounterState(state.Value - action.Amount));
         On<Reset>(GetInitialState);
-        On<SetValue>((_, action) => action.Value);
+        On<SetValue>((_, action) => new CounterState(action.Value));
     }
 
-    public override int GetInitialState()
+    public override CounterState GetInitialState()
     {
-        return 10;
+        return new CounterState(10);
     }
 }
 

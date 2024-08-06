@@ -1,10 +1,10 @@
 @page "/counter"
-@inherits R3duxComponent<int>
+@inherits R3duxComponent<CounterState>
 
 <PageTitle>R3dux - Counter</PageTitle>
 <hgroup>
   <p class="chapter">Example</p>
-  <h1>Counter <strong>@State</strong></h1>
+  <h1>Counter <strong>@State.Value</strong></h1>
   <p>
     Creates an interactive counter using the R3dux state management library for predictable state handling,
     featuring increment, decrement, and reset buttons to manage the counter state.
@@ -16,17 +16,17 @@
 </hgroup>
 
 <article>
-  @if(State > 15)
+  @if(State.Value > 15)
   {
     <progress></progress>
   }
   else
   {
-    <progress value="@State" max="15"></progress>
+    <progress value="@State.Value" max="15"></progress>
   }
   <footer>
     <div role="group">
-      <button @onclick="Decrement" disabled="@(State <= 0)">Decrement</button>
+      <button @onclick="Decrement" disabled="@(State.Value <= 0)">Decrement</button>
       <button @onclick="Reset">Reset Counter</button>
       <button @onclick="Increment">Increment</button>
     </div>

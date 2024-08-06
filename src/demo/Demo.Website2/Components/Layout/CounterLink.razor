@@ -1,8 +1,8 @@
-@inherits R3duxComponent<int>
+@inherits R3duxComponent<CounterState>
 
 <MudNavLink
   Href="counter"
   Match="NavLinkMatch.Prefix"
   Icon="@Icons.Material.Filled.Add">
-  Counter = @State
+  Counter = @State.Value
 </MudNavLink>

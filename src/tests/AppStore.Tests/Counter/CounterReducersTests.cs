@@ -7,8 +7,8 @@ namespace AppStore.Tests.Counter;
 public sealed class CounterReducersTests : IDisposable
 {
     private const string Key = "counter";
-    private const int InitialState = 10;
 
+    private readonly CounterState _initialState = new(10);
     private readonly CounterReducers _sut = new();
 
     private bool _disposed;
@@ -20,7 +20,7 @@ public sealed class CounterReducersTests : IDisposable
         var initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Should().Be(InitialState);
+        initialState.Should().Be(_initialState);
     }
 
     [Fact]
@@ -57,8 +57,8 @@ public sealed class CounterReducersTests : IDisposable
     public void Increment_ShouldIncreaseStateByOne()
     {
         // Arrange
-        const int initialState = 0;
-        const int expectedState = 1;
+        var initialState = new CounterState(0);
+        var expectedState = new CounterState(1);
 
         // Act
         var newState = _sut.Reduce(initialState, new Increment());
@@ -71,8 +71,8 @@ public sealed class CounterReducersTests : IDisposable
     public void Decrement_ShouldDecreaseStateByOne()
     {
         // Arrange
-        const int initialState = 1;
-        const int expectedState = 0;
+        var initialState = new CounterState(1);
+        var expectedState = new CounterState(0);
 
         // Act
         var newState = _sut.Reduce(initialState, new Decrement());
@@ -85,13 +85,13 @@ public sealed class CounterReducersTests : IDisposable
     public void Reset_ShouldSetStateToInitialState()
     {
         // Arrange
-        const int state = 20;
+        var state = new CounterState(42);
 
         // Act
         var newState = _sut.Reduce(state, new Reset());
 
         // Assert
-        newState.Should().Be(InitialState);
+        newState.Should().Be(_initialState);
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public sealed class CounterReducersTests : IDisposable
         const int valueToSet = 42;
 
         // Act
-        var newState = _sut.Reduce(InitialState, new SetValue(valueToSet));
+        var newState = _sut.Reduce(_initialState, new SetValue(valueToSet));
 
         // Assert
         newState.Should().Be(valueToSet);

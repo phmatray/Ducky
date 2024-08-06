@@ -1,5 +1,5 @@
 @page "/counter"
-@inherits R3duxComponent<int>
+@inherits R3duxComponent<CounterState>
 
 <PageTitle>R3dux - Counter</PageTitle>
 
@@ -13,10 +13,10 @@
         featuring increment, decrement, and reset buttons to manage the counter state.
       </MudText>
       <MudList T="string" Dense="true">
-        <Goal Condition="() => State > 15" ConditionKey="counter-exceeds-15">
+        <Goal Condition="() => IsEffectTriggered" ConditionKey="counter-exceeds-15">
           The counter exceeds 15 (an effect will be triggered to reset the counter to 10 after 3 seconds.)
         </Goal>
-        <Goal Condition="() => State <= 0" ConditionKey="counter-reaches-zero">
+        <Goal Condition="() => IsDisabled" ConditionKey="counter-reaches-zero">
           The counter reaches zero (the decrement button will be disabled.)
         </Goal>
       </MudList>
@@ -50,13 +50,13 @@
   private int Amount { get; set; } = 2;
 
   private int CounterValue
-    => State;
+    => State.Value;
   
   private bool IsDisabled
-    => State <= 0;
+    => State.Value <= 0;
   
   private bool IsEffectTriggered
-    => State > 15;
+    => State.Value > 15;
 
   private void Increment()
   {

@@ -165,8 +165,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
                 try
                 {
                     const int pageSize = 5;
-                    var (state, action) = pair;
-                    var currentPage = state.Pagination.CurrentPage;
+                    var currentPage = pair.State.Pagination.CurrentPage;
                     var response = await moviesService.GetMoviesAsync(currentPage, pageSize, ct);
                     var dictionary = response.Movies.ToImmutableDictionary(movie => movie.Id);
                     return new LoadMoviesSuccess(dictionary, response.TotalItems) as IAction;
