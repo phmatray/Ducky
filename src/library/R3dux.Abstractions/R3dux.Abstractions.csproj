@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>R3dux</RootNamespace>
+    <RootNamespace>R3dux.Abstractions</RootNamespace>
   </PropertyGroup>
 
   <Import Project="../../../msbuild/props/Documentation.props"/>

@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace R3dux;
+namespace R3dux.Extensions.Operators;
 
 /// <summary>
 /// Provides extension methods for working with observables.

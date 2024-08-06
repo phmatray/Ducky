@@ -3,8 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using R3;
+using R3dux.Abstractions;
 
-namespace R3dux;
+namespace R3dux.Extensions.Operators;
 
 /// <summary>
 /// Provides custom operators for working with observable sequences in the R3dux application.

@@ -5,6 +5,7 @@
 using System.Collections.Immutable;
 using ObservableCollections;
 using R3;
+using R3dux.Abstractions;
 
 namespace R3dux;
 

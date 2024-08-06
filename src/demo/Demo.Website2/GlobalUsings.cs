@@ -11,3 +11,4 @@ global using Demo.Website2.Features.JsonColoring.Helpers;
 global using MudBlazor;
 global using R3;
 global using R3dux;
+global using R3dux.Abstractions;

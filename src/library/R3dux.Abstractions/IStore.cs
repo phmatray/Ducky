@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace R3dux;
+namespace R3dux.Abstractions;
 
 /// <summary>
 /// Represents a store that manages application state and handles actions.

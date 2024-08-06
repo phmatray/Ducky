@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace R3dux;
+namespace R3dux.Abstractions;
 
 /// <summary>
 /// Represents an effect that handles a stream of actions and interacts with the store's state.

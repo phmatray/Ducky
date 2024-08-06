@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace R3dux;
+namespace R3dux.Abstractions;
 
 /// <summary>
 /// Defines the contract for a dispatcher that can dispatch actions and provide an observable stream of dispatched actions.

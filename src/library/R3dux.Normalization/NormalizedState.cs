@@ -3,8 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
+using R3dux.Abstractions;
 
-namespace R3dux;
+namespace R3dux.Extensions.Normalization;
 
 /// <summary>
 /// Represents a normalized state for collections.

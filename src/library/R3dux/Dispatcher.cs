@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using R3;
+using R3dux.Abstractions;
 
 namespace R3dux;
 

@@ -2,7 +2,9 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace R3dux;
+using R3dux.Abstractions;
+
+namespace R3dux.Extensions.FluxStandardActions;
 
 /// <summary>
 /// A Flux Standard action without payload or metadata properties.
