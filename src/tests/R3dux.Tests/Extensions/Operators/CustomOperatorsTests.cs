@@ -26,8 +26,8 @@ public sealed class CustomOperatorsTests : IDisposable
         source.OnNext(new OtherAction());
 
         // Assert
-        actions.Should().HaveCount(1);
-        actions.First().Should().BeOfType<TestAction>();
+        actions.Should().ContainSingle();
+        actions[0].Should().BeOfType<TestAction>();
     }
 
     [Fact]

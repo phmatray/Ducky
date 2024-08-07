@@ -81,15 +81,12 @@ public class JsonColorizer : IJsonColorizer
 
     private void ProcessArray(JsonElement element, IndentedStringBuilder sb)
     {
+        sb.Append(SpanOpenBracket());
+
         var items = element.EnumerateArray().ToArray();
-        if (items.Length == 0)
+        if (items.Length != 0)
         {
-            sb.Append(SpanOpenBracket());
-            sb.Append(SpanCloseBracket());
-        }
-        else
-        {
-            sb.Append(SpanOpenBracket() + BreakLine);
+            sb.Append(BreakLine);
             sb.Indent();
 
             for (var i = 0; i < items.Length; i++)
@@ -101,7 +98,8 @@ public class JsonColorizer : IJsonColorizer
 
             sb.Unindent();
             sb.AppendIndentation();
-            sb.Append(SpanCloseBracket());
         }
+
+        sb.Append(SpanCloseBracket());
     }
 }

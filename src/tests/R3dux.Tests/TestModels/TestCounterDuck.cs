@@ -2,8 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-#pragma warning disable SA1402
-#pragma warning disable SA1649
+#pragma warning disable SA1402, SA1649
 
 namespace R3dux.Tests.TestModels;
 
@@ -50,5 +49,4 @@ public sealed class TestIncrementEffect : Effect
     }
 }
 
-#pragma warning restore SA1402
-#pragma warning restore SA1649
+#pragma warning restore SA1402, SA1649
