@@ -77,7 +77,7 @@ public sealed class NotificationsReducersTests : IDisposable
 
         // Assert
         state.Notifications.Should().HaveCount(4);
-        state.Notifications[3].Should().Be(notification);
+        state.Notifications.Should().HaveElementAt(3, notification);
     }
 
     [Fact]

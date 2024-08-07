@@ -14,7 +14,7 @@ public record RouterStoreState
     /// <summary>
     /// Gets or init the current route.
     /// </summary>
-    public required string Url { get; init; }
+    public required Uri Url { get; init; }
 }
 
 #endregion
