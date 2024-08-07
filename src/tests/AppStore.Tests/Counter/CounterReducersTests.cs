@@ -40,7 +40,7 @@ public sealed class CounterReducersTests : IDisposable
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(int));
+        stateType.Should().Be(typeof(CounterState));
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public sealed class CounterReducersTests : IDisposable
         var newState = _sut.Reduce(_initialState, new SetValue(valueToSet));
 
         // Assert
-        newState.Should().Be(valueToSet);
+        newState.Value.Should().Be(valueToSet);
     }
 
     public void Dispose()
