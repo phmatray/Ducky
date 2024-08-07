@@ -85,7 +85,7 @@ public sealed class MoviesReducersTests : IDisposable
         var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Length));
 
         // Assert
-        newState.Movies.Should().BeEquivalentTo(movies);
+        newState.Movies.Values.Should().BeEquivalentTo(movies);
         newState.IsLoading.Should().BeFalse();
         newState.ErrorMessage.Should().BeNull();
     }

@@ -17,9 +17,7 @@ public static class MoviesExamples
         Metascore = 82,
         Description = "The history of the United States from the 1950s to the '70s unfolds from the perspective of an Alabama man with an IQ of 75, who yearns to be reunited with his childhood sweetheart.",
         Director = "Robert Zemeckis",
-        Actors = ["Tom Hanks", "Robin Wright", "Gary Sinise"],
-
-        // Poster = "https://www.imdb.com/title/tt0109830/?ref_=ls_i_1"
+        Actors = ["Tom Hanks", "Robin Wright", "Gary Sinise"]
     };
 
     public static readonly Movie Movie02 = new()
