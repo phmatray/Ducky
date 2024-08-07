@@ -54,7 +54,7 @@ public record MoviesState
 
 public record LoadMovies : IAction;
 
-public record LoadMoviesSuccess(ImmutableDictionary<int, Movie> Movies, int TotalItems) : IAction;
+public record LoadMoviesSuccess(ImmutableArray<Movie> Movies, int TotalItems) : IAction;
 
 public record LoadMoviesFailure(Exception Error) : IAction;
 
@@ -74,7 +74,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
         On<LoadMoviesSuccess>((state, action)
             => state with
             {
-                Movies = action.Movies,
+                Movies = action.Movies.ToImmutableDictionary(movie => movie.Id),
                 IsLoading = false,
                 Pagination = state.Pagination with
                 {
@@ -123,59 +123,37 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         Observable<IAction> actions,
         Observable<IRootState> rootState)
     {
-        // public override Observable<IAction> Handle(
-        //     Observable<IAction> actions,
-        //     Observable<IRootState> rootState)
-        // {
-        //     return actions
-        //         .OfType<LoadMovies>()
-        //         .LogMessage("Loading movies...")
-        //         .InvokeService(
-        //             action =>
-        //             {
-        //                 throw new NotImplementedException();
-        //                 return moviesService.GetMoviesAsync(action.PageNumber, 5);
-        //             },
-        //             response => new LoadMoviesSuccess(
-        //                 response.Movies.ToImmutableDictionary(movie => movie.Id),
-        //                 response.TotalItems),
-        //             ex => new LoadMoviesFailure(ex))
-        //         .LogMessage("Movies loaded.");
+        return actions
+            .OfType<LoadMovies>()
+            .LogMessage("Loading movies...")
+            .WithSliceState<MoviesState, LoadMovies>(rootState)
+            .InvokeService(
+                pair => moviesService.GetMoviesAsync(pair.State.Pagination.CurrentPage, 5),
+                response => new LoadMoviesSuccess(response.Movies, response.TotalItems),
+                ex => new LoadMoviesFailure(ex))
+            .LogMessage("Movies loaded.");
 
-        // THE SAME CODE CAN BE WRITTEN WITHOUT THE EXTENSION METHODS
+        // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
         // ============================================================
         // return actions
         //     .OfType<IAction, LoadMovies>()
         //     .Do(_ => Console.WriteLine("Loading movies..."))
-        //     .SelectMany(action => moviesService
-        //         .GetMoviesAsync()
-        //         .ToObservable()
-        //         .Select(movies => (object)new LoadMoviesSuccess(movies))
-        //         .Do(_ => Console.WriteLine("Movies loaded."))
-        //         .Catch<object, Exception>(ex => Observable.Return<object>(new LoadMoviesFailure(ex.Message))));
-
-        // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
-        // ============================================================
-        return actions
-            .OfType<LoadMovies>()
-            .Do(_ => Console.WriteLine("Loading movies..."))
-            .WithSliceState<MoviesState, LoadMovies>(rootState)
-            .SelectAwait(async (pair, ct) =>
-            {
-                try
-                {
-                    const int pageSize = 5;
-                    var state = pair.State;
-                    var currentPage = state.Pagination.CurrentPage;
-                    var response = await moviesService.GetMoviesAsync(currentPage, pageSize, ct);
-                    var dictionary = response.Movies.ToImmutableDictionary(movie => movie.Id);
-                    return new LoadMoviesSuccess(dictionary, response.TotalItems) as IAction;
-                }
-                catch (Exception ex)
-                {
-                    return new LoadMoviesFailure(ex);
-                }
-            });
+        //     .WithSliceState<MoviesState, LoadMovies>(rootState)
+        //     .SelectAwait(async (pair, ct) =>
+        //     {
+        //         try
+        //         {
+        //             const int pageSize = 5;
+        //             var state = pair.State;
+        //             var currentPage = state.Pagination.CurrentPage;
+        //             var response = await moviesService.GetMoviesAsync(currentPage, pageSize, ct);
+        //             return new LoadMoviesSuccess(response.Movies, response.TotalItems) as IAction;
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             return new LoadMoviesFailure(ex);
+        //         }
+        //     });
     }
 }
 

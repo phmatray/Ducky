@@ -28,6 +28,6 @@ public class LoadMoviesSuccessEffect(ISnackbar snackbar) : Effect
 
     private static string GetSnackBarMessage(LoadMoviesSuccess action)
     {
-        return $"Loaded {action.Movies.Count} movies from the server.";
+        return $"Loaded {action.Movies.Length} movies from the server.";
     }
 }

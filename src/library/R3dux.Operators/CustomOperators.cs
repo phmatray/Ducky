@@ -100,12 +100,18 @@ public static class CustomOperators
         Func<TResult, IAction> successSelector,
         Func<Exception, IAction> errorSelector)
     {
-        // TODO: Fix the CatchAction with a SwitchSelect
-        return source.SelectMany(action
-            => serviceCall(action)
-                .ToObservable()
-                .Select(successSelector)
-                .CatchAction(errorSelector));
+        return source.SelectAwait(async (action, ct) =>
+        {
+            try
+            {
+                var result = await serviceCall(action);
+                return successSelector(result);
+            }
+            catch (Exception ex)
+            {
+                return errorSelector(ex);
+            }
+        });
     }
 
     /// <summary>

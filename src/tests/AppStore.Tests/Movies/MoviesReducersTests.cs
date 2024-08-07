@@ -79,11 +79,10 @@ public sealed class MoviesReducersTests : IDisposable
     public void LoadMoviesSuccess_ShouldSetMoviesAndIsLoadingToFalse()
     {
         // Arrange
-        var movies = ImmutableDictionary<int, Movie>.Empty
-            .Add(1, MoviesExamples.Movies[0]);
+        ImmutableArray<Movie> movies = [MoviesExamples.Movies[0]];
 
         // Act
-        var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Count));
+        var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Length));
 
         // Assert
         newState.Movies.Should().BeEquivalentTo(movies);
