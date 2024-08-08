@@ -42,6 +42,16 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": ".attachments/one-way-data-flow.png",
+      "output": {
+        "resource": {
+          "relative_path": ".attachments/one-way-data-flow.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": ".attachments/templates-custom.png",
       "output": {
         "resource": {
@@ -115,6 +125,16 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "_site/.attachments/one-way-data-flow.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/.attachments/one-way-data-flow.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "_site/.attachments/templates-custom.png",
       "output": {
         "resource": {
@@ -174,21 +194,71 @@
       "version": ""
     },
     {
-      "type": "Resource",
-      "source_relative_path": "_site/images/one-way-data-flow.png",
+      "type": "Conceptual",
+      "source_relative_path": "general/README.md",
       "output": {
-        "resource": {
-          "relative_path": "_site/images/one-way-data-flow.png"
+        ".html": {
+          "relative_path": "general/README.html"
         }
       },
       "version": ""
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "general/README.md",
+      "source_relative_path": "general/about-docs/README.md",
       "output": {
         ".html": {
-          "relative_path": "general/README.html"
+          "relative_path": "general/about-docs/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/about-docs/copy-code-button.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/about-docs/copy-code-button.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/about-docs/customize-look-and-feel.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/about-docs/customize-look-and-feel.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/about-docs/deploy-docfx-azure-website.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/about-docs/deploy-docfx-azure-website.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/about-docs/using-mermaid.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/about-docs/using-mermaid.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/advanced-topics/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/advanced-topics/index.html"
         }
       },
       "version": ""
@@ -215,6 +285,66 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "general/core-concepts/actions.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/core-concepts/actions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/core-concepts/effects.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/core-concepts/effects.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/core-concepts/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/core-concepts/index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/core-concepts/reducers.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/core-concepts/reducers.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/core-concepts/selectors.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/core-concepts/selectors.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/core-concepts/state-management.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/core-concepts/state-management.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "general/getting-started/README.md",
       "output": {
         ".html": {
@@ -225,40 +355,30 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "general/getting-started/copy-code-button.md",
+      "source_relative_path": "general/getting-started/app-settings.md",
       "output": {
         ".html": {
-          "relative_path": "general/getting-started/copy-code-button.html"
+          "relative_path": "general/getting-started/app-settings.html"
         }
       },
       "version": ""
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "general/getting-started/customize-look-and-feel.md",
+      "source_relative_path": "general/getting-started/get-started.md",
       "output": {
         ".html": {
-          "relative_path": "general/getting-started/customize-look-and-feel.html"
+          "relative_path": "general/getting-started/get-started.html"
         }
       },
       "version": ""
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "general/getting-started/deploy-docfx-azure-website.md",
+      "source_relative_path": "general/getting-started/installation.md",
       "output": {
         ".html": {
-          "relative_path": "general/getting-started/deploy-docfx-azure-website.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Conceptual",
-      "source_relative_path": "general/getting-started/using-mermaid.md",
-      "output": {
-        ".html": {
-          "relative_path": "general/getting-started/using-mermaid.html"
+          "relative_path": "general/getting-started/installation.html"
         }
       },
       "version": ""
@@ -285,40 +405,70 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "general/r3dux/app-settings.md",
+      "source_relative_path": "general/guides/creating-and-dispatching-actions.md",
       "output": {
         ".html": {
-          "relative_path": "general/r3dux/app-settings.html"
+          "relative_path": "general/guides/creating-and-dispatching-actions.html"
         }
       },
       "version": ""
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "general/r3dux/get-started.md",
+      "source_relative_path": "general/guides/index.md",
       "output": {
         ".html": {
-          "relative_path": "general/r3dux/get-started.html"
+          "relative_path": "general/guides/index.html"
         }
       },
       "version": ""
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "general/r3dux/index.md",
+      "source_relative_path": "general/introduction/README.md",
       "output": {
         ".html": {
-          "relative_path": "general/r3dux/index.html"
+          "relative_path": "general/introduction/README.html"
         }
       },
       "version": ""
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "general/r3dux/overview-and-concepts.md",
+      "source_relative_path": "general/introduction/key-features.md",
       "output": {
         ".html": {
-          "relative_path": "general/r3dux/overview-and-concepts.html"
+          "relative_path": "general/introduction/key-features.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/introduction/license-information.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/introduction/license-information.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/introduction/overview.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/introduction/overview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/introduction/philosophy-and-goals.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/introduction/philosophy-and-goals.html"
         }
       },
       "version": ""
@@ -382,16 +532,6 @@
       "output": {
         "resource": {
           "relative_path": "images/logo.png"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/one-way-data-flow.png",
-      "output": {
-        "resource": {
-          "relative_path": "images/one-way-data-flow.png"
         }
       },
       "version": ""

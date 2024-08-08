@@ -1,4 +1,4 @@
-# R3dux Overview and Concepts
+# Overview
 
 > What you will learn
 > * What R3dux is and why you might want to use it
@@ -48,7 +48,7 @@ This is a small example of **"one-way data flow"**:
 * When something happens (such as a user clicking a button), the state is updated based on what occurred
 * The UI re-renders based on the new state
 
-![one-way-data-flow.png](one-way-data-flow.png)
+![one-way-data-flow.png](../../.attachments/one-way-data-flow.png)
 
 However, the simplicity can break down when we have multiple components that need to share and use the same state, especially if those components are located in different parts of the application. Sometimes this can be solved by ["using cascading values and cascading parameterslifting state up"](https://chrissainty.com/understanding-cascading-values-and-cascading-parameters/) to parent components, but that doesn't always help.
 

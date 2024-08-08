@@ -8,9 +8,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Getting started | R3dux Documentation </title>
+      <title>Overview | R3dux Documentation </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Getting started | R3dux Documentation ">
+      <meta name="title" content="Overview | R3dux Documentation ">
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
       <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
@@ -81,30 +81,55 @@
         <div class="article row grid-right">
           <div class="col-md-10">
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="getting-started">Getting started</h1>
+<h1 id="overview">Overview</h1>
 
-<table>
-<thead>
-<tr>
-<th>Page</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="get-started.html">Get Started</a></td>
-<td>Step-by-step guide to install R3dux.</td>
-</tr>
-<tr>
-<td><a href="installation.html">Installation</a></td>
-<td>Create a simple R3dux application from scratch.</td>
-</tr>
-<tr>
-<td><a href="app-settings.html">AppSettings</a></td>
-<td>Configure application settings such as logging levels and allowed hosts.</td>
-</tr>
-</tbody>
-</table>
+<blockquote>
+<p>What you will learn</p>
+<ul>
+<li>What R3dux is and why you might want to use it</li>
+<li>Key R3dux terms and concepts</li>
+<li>How data flows through a R3dux app</li>
+</ul>
+</blockquote>
+<h2 id="introduction">Introduction</h2>
+<h2 id="r3dux-terms-and-concepts">R3dux Terms and Concepts</h2>
+<p>Before we dive into some actual code, let's talk about some of the terms and concepts you'll need to know to use R3dux.</p>
+<h3 id="state-management">State Management</h3>
+<p>Let's start by looking at a small Blazor counter component. It tracks a number in component state, and increments the number when a button is clicked:</p>
+<pre><code class="lang-C#">&lt;!-- View: the UI definition --&gt;
+&lt;div&gt;
+    Value: @counter &lt;button onClick=&quot;Increment&quot;&gt;Increment&lt;/button&gt;
+&lt;/div&gt;
+
+@code {
+    // State: a counter value
+    private int counter = 0;
+    
+    // Action: code that causes an update to the state when something happens
+    private void Increment()
+    {
+        counter = counter + 1;
+    }
+}
+</code></pre>
+<p>It is a self-contained app with the following parts:</p>
+<ul>
+<li>The <strong>state</strong>, the source of truth that drives our app;</li>
+<li>The <strong>view</strong>, a declarative description of the UI based on the current state</li>
+<li>The <strong>actions</strong>, the events that occur in the app based on user input, and trigger updates in the state</li>
+</ul>
+<p>This is a small example of <strong>&quot;one-way data flow&quot;</strong>:</p>
+<ul>
+<li>State describes the condition of the app at a specific point in time</li>
+<li>The UI is rendered based on that state</li>
+<li>When something happens (such as a user clicking a button), the state is updated based on what occurred</li>
+<li>The UI re-renders based on the new state</li>
+</ul>
+<p><img src="../../.attachments/one-way-data-flow.png" alt="one-way-data-flow.png"></p>
+<p>However, the simplicity can break down when we have multiple components that need to share and use the same state, especially if those components are located in different parts of the application. Sometimes this can be solved by <a href="https://chrissainty.com/understanding-cascading-values-and-cascading-parameters/">&quot;using cascading values and cascading parameterslifting state up&quot;</a> to parent components, but that doesn't always help.</p>
+<p>One way to solve this is to extract the shared state from the components, and put it into a centralized location outside the component tree. With this, our component tree becomes a big &quot;view&quot;, and any component can access the state or trigger actions, no matter where they are in the tree!</p>
+<p>By defining and separating the concepts involved in state management and enforcing rules that maintain independence between views and states, we give our code more structure and maintainability.</p>
+<p>This is the basic idea behind R3dux: a single centralized place to contain the global state in your application, and specific patterns to follow when updating that state to make the code predictable.</p>
 
 </article>
           </div>
@@ -114,7 +139,7 @@
               <div class="contribution">
                 <ul class="nav">
                   <li>
-                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/getting-started/README.md/#L1" class="contribution-link">Edit this page</a>
+                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/introduction/overview.md/#L1" class="contribution-link">Edit this page</a>
                   </li>
                 </ul>
               </div>

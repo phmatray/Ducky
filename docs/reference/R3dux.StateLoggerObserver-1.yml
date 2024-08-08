@@ -72,7 +72,7 @@ items:
       repo: https://github.com/phmatray/R3dux.git
     id: OnNextCore
     path: ../src/library/R3dux/StateLoggerObserver.cs
-    startLine: 35
+    startLine: 36
   assemblies:
   - R3dux
   namespace: R3dux
@@ -108,7 +108,7 @@ items:
       repo: https://github.com/phmatray/R3dux.git
     id: OnCompletedCore
     path: ../src/library/R3dux/StateLoggerObserver.cs
-    startLine: 44
+    startLine: 45
   assemblies:
   - R3dux
   namespace: R3dux
@@ -143,7 +143,7 @@ items:
       repo: https://github.com/phmatray/R3dux.git
     id: OnErrorResumeCore
     path: ../src/library/R3dux/StateLoggerObserver.cs
-    startLine: 53
+    startLine: 54
   assemblies:
   - R3dux
   namespace: R3dux

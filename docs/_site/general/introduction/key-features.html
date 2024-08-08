@@ -8,9 +8,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Getting started | R3dux Documentation </title>
+      <title>Key Features | R3dux Documentation </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Getting started | R3dux Documentation ">
+      <meta name="title" content="Key Features | R3dux Documentation ">
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
       <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
@@ -81,30 +81,73 @@
         <div class="article row grid-right">
           <div class="col-md-10">
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="getting-started">Getting started</h1>
+<h1 id="key-features">Key Features</h1>
 
-<table>
-<thead>
-<tr>
-<th>Page</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="get-started.html">Get Started</a></td>
-<td>Step-by-step guide to install R3dux.</td>
-</tr>
-<tr>
-<td><a href="installation.html">Installation</a></td>
-<td>Create a simple R3dux application from scratch.</td>
-</tr>
-<tr>
-<td><a href="app-settings.html">AppSettings</a></td>
-<td>Configure application settings such as logging levels and allowed hosts.</td>
-</tr>
-</tbody>
-</table>
+<p>R3dux is a powerful state management library designed to simplify and enhance the development of .NET applications. Here are some of the key features that make R3dux an excellent choice for managing application state:</p>
+<h2 id="immutable-state-management">Immutable State Management</h2>
+<p>R3dux enforces immutable state management, ensuring that state changes are predictable and trackable. This immutability guarantees that the state is never modified directly but always through actions and reducers, making debugging and testing more straightforward.</p>
+<h3 id="benefits">Benefits:</h3>
+<ul>
+<li>Predictable state changes</li>
+<li>Easier debugging and testing</li>
+<li>Prevention of accidental state mutations</li>
+</ul>
+<h2 id="actions">Actions</h2>
+<p>Actions in R3dux are simple objects that describe a state change. They are the only way to send data to the store, ensuring a clear and consistent way to update the state.</p>
+<h3 id="features">Features:</h3>
+<ul>
+<li>Clear and explicit state changes</li>
+<li>Easy to track and log actions</li>
+<li>Supports asynchronous operations through effects</li>
+</ul>
+<h2 id="reducers">Reducers</h2>
+<p>Reducers are pure functions that take the current state and an action, and return a new state. They are responsible for handling state transitions in a predictable manner.</p>
+<h3 id="features-1">Features:</h3>
+<ul>
+<li>Pure functions ensure consistency</li>
+<li>Easily testable</li>
+<li>Supports composition for managing complex state trees</li>
+</ul>
+<h2 id="effects">Effects</h2>
+<p>Effects handle side effects in R3dux, such as asynchronous API calls, logging, and other operations that interact with the outside world. They listen for specific actions and can dispatch new actions based on the outcome.</p>
+<h3 id="features-2">Features:</h3>
+<ul>
+<li>Clean separation of side effects from state logic</li>
+<li>Supports asynchronous operations</li>
+<li>Simplifies handling of complex side effects</li>
+</ul>
+<h2 id="selectors">Selectors</h2>
+<p>Selectors are functions that derive and memoize state. They allow you to compute derived state efficiently, ensuring that your components re-render only when necessary.</p>
+<h3 id="features-3">Features:</h3>
+<ul>
+<li>Efficient state derivation</li>
+<li>Memoization for performance optimization</li>
+<li>Composable and reusable</li>
+</ul>
+<h2 id="type-safety">Type Safety</h2>
+<p>R3dux leverages the strong typing system of .NET to provide type safety throughout your application. This ensures that your actions, reducers, and state are type-checked, reducing runtime errors and improving code quality.</p>
+<h3 id="features-4">Features:</h3>
+<ul>
+<li>Strongly typed actions and state</li>
+<li>Compile-time type checking</li>
+<li>Reduced runtime errors</li>
+</ul>
+<h2 id="performance-optimization">Performance Optimization</h2>
+<p>R3dux is designed with performance in mind. It supports memoization, efficient state updates, and minimizes unnecessary re-renders, ensuring that your application remains responsive and performant.</p>
+<h3 id="features-5">Features:</h3>
+<ul>
+<li>Memoized selectors</li>
+<li>Efficient state updates</li>
+<li>Minimized re-renders</li>
+</ul>
+<h2 id="easy-integration">Easy Integration</h2>
+<p>R3dux is designed to integrate seamlessly with other libraries and frameworks. Whether you are using it in a Blazor application, an ASP.NET Core project, or any other .NET application, R3dux can be easily integrated to manage your application state.</p>
+<h3 id="features-6">Features:</h3>
+<ul>
+<li>Seamless integration with .NET applications</li>
+<li>Compatible with Blazor, ASP.NET Core, and more</li>
+<li>Flexible and adaptable to different architectures</li>
+</ul>
 
 </article>
           </div>
@@ -114,7 +157,7 @@
               <div class="contribution">
                 <ul class="nav">
                   <li>
-                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/getting-started/README.md/#L1" class="contribution-link">Edit this page</a>
+                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/introduction/key-features.md/#L1" class="contribution-link">Edit this page</a>
                   </li>
                 </ul>
               </div>

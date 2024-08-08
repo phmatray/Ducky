@@ -8,9 +8,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>R3dux | R3dux Documentation </title>
+      <title>Philosophy and Goals | R3dux Documentation </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="R3dux | R3dux Documentation ">
+      <meta name="title" content="Philosophy and Goals | R3dux Documentation ">
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
       <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
@@ -81,12 +81,52 @@
         <div class="article row grid-right">
           <div class="col-md-10">
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="r3dux">R3dux</h1>
+<h1 id="philosophy-and-goals">Philosophy and Goals</h1>
 
+<p>R3dux is built with a clear philosophy and a set of goals aimed at providing a robust, predictable, and flexible state management solution for .NET applications. Understanding the core philosophy and goals behind R3dux can help you make the most of this library and align your development practices with its design principles.</p>
+<h2 id="philosophy">Philosophy</h2>
+<h3 id="predictability">Predictability</h3>
+<p>One of the core tenets of R3dux is to ensure that state changes are predictable. By using a clear, unidirectional data flow and enforcing immutable state updates, R3dux makes it easy to understand how and why the state changes in your application.</p>
 <ul>
-<li><a href="get-started.html">Get Started</a></li>
-<li><a href="app-settings.html">AppSettings</a></li>
-<li><a href="overview-and-concepts.html">R3dux Overview and Concepts</a></li>
+<li><strong>Unidirectional Data Flow</strong>: Actions describe what happens, reducers dictate how the state changes, and the updated state is then reflected in your application.</li>
+<li><strong>Immutability</strong>: State is never mutated directly. Instead, new state objects are created for each update, making it easy to track changes and maintain history.</li>
+</ul>
+<h3 id="simplicity">Simplicity</h3>
+<p>R3dux aims to keep the complexity of state management low, even in large and complex applications. The library provides a straightforward API that developers can easily learn and use, without compromising on the power and flexibility needed for advanced use cases.</p>
+<ul>
+<li><strong>Clear API</strong>: A concise and intuitive API helps in reducing the learning curve and boosts productivity.</li>
+<li><strong>Minimal Boilerplate</strong>: R3dux minimizes the amount of boilerplate code required to manage state, allowing developers to focus on building features rather than wiring up the state management.</li>
+</ul>
+<h3 id="flexibility">Flexibility</h3>
+<p>R3dux is designed to be flexible and adaptable to various application architectures and requirements. Whether you're building a small application or a large-scale enterprise solution, R3dux can be tailored to fit your needs.</p>
+<ul>
+<li><strong>Modular Architecture</strong>: The modular design allows you to use only the parts of the library you need, making it lightweight and efficient.</li>
+<li><strong>Compatibility</strong>: R3dux integrates seamlessly with different .NET applications, including Blazor and ASP.NET Core, and can be used alongside other libraries and frameworks.</li>
+</ul>
+<h2 id="goals">Goals</h2>
+<h3 id="robust-state-management">Robust State Management</h3>
+<p>R3dux aims to provide a robust solution for managing application state. It ensures that your application's state is always consistent and that state transitions are well-defined and predictable.</p>
+<ul>
+<li><strong>Consistency</strong>: Ensures that the state remains consistent and accurate across the application.</li>
+<li><strong>Error Handling</strong>: Provides mechanisms for handling errors gracefully, ensuring that your application can recover from unexpected situations.</li>
+</ul>
+<h3 id="high-performance">High Performance</h3>
+<p>Performance is a key goal for R3dux. The library is designed to be efficient in terms of both memory usage and execution speed, ensuring that your application remains responsive even as it scales.</p>
+<ul>
+<li><strong>Efficient State Updates</strong>: Uses immutable data structures and memoization to optimize state updates and reduce unnecessary re-renders.</li>
+<li><strong>Scalability</strong>: Designed to handle large state trees and complex state management scenarios without sacrificing performance.</li>
+</ul>
+<h3 id="strong-typing">Strong Typing</h3>
+<p>Leveraging the strong typing system of .NET, R3dux aims to provide type safety throughout your application. This reduces runtime errors and enhances code quality.</p>
+<ul>
+<li><strong>Type Safety</strong>: Ensures that actions, reducers, and state are type-checked at compile time, reducing the likelihood of errors.</li>
+<li><strong>Enhanced Developer Experience</strong>: Type safety improves the developer experience by providing better tooling support and reducing the need for extensive runtime checks.</li>
+</ul>
+<h3 id="ease-of-use">Ease of Use</h3>
+<p>R3dux is built with the developer experience in mind. It provides a simple and intuitive API that makes it easy to manage state, handle side effects, and integrate with other parts of your application.</p>
+<ul>
+<li><strong>Developer Productivity</strong>: Helps developers be more productive by providing clear guidelines and reducing boilerplate code.</li>
+<li><strong>Comprehensive Documentation</strong>: Offers thorough documentation and examples to help developers get started quickly and effectively.</li>
 </ul>
 
 </article>
@@ -97,7 +137,7 @@
               <div class="contribution">
                 <ul class="nav">
                   <li>
-                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/r3dux/index.md/#L1" class="contribution-link">Edit this page</a>
+                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/introduction/philosophy-and-goals.md/#L1" class="contribution-link">Edit this page</a>
                   </li>
                 </ul>
               </div>
