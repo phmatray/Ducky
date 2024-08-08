@@ -1,0 +1,113 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Blazor.Router.Actions
+  commentId: N:R3dux.Blazor.Router.Actions
+  id: R3dux.Blazor.Router.Actions
+  children:
+  - R3dux.Blazor.Router.Actions.RouterCancelAction
+  - R3dux.Blazor.Router.Actions.RouterErrorAction
+  - R3dux.Blazor.Router.Actions.RouterNavigatedAction
+  - R3dux.Blazor.Router.Actions.RouterNavigationAction
+  - R3dux.Blazor.Router.Actions.RouterRequestAction
+  - R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload
+  langs:
+  - csharp
+  - vb
+  name: R3dux.Blazor.Router.Actions
+  nameWithType: R3dux.Blazor.Router.Actions
+  fullName: R3dux.Blazor.Router.Actions
+  type: Namespace
+  assemblies:
+  - R3dux.Blazor
+references:
+- uid: R3dux.Blazor.Router.Actions.RouterCancelAction
+  commentId: T:R3dux.Blazor.Router.Actions.RouterCancelAction
+  href: R3dux.Blazor.Router.Actions.RouterCancelAction.html
+  name: RouterCancelAction
+  nameWithType: RouterCancelAction
+  fullName: R3dux.Blazor.Router.Actions.RouterCancelAction
+- uid: R3dux.Blazor.Router.Actions.RouterErrorAction
+  commentId: T:R3dux.Blazor.Router.Actions.RouterErrorAction
+  href: R3dux.Blazor.Router.Actions.RouterErrorAction.html
+  name: RouterErrorAction
+  nameWithType: RouterErrorAction
+  fullName: R3dux.Blazor.Router.Actions.RouterErrorAction
+- uid: R3dux.Blazor.Router.Actions.RouterNavigatedAction
+  commentId: T:R3dux.Blazor.Router.Actions.RouterNavigatedAction
+  href: R3dux.Blazor.Router.Actions.RouterNavigatedAction.html
+  name: RouterNavigatedAction
+  nameWithType: RouterNavigatedAction
+  fullName: R3dux.Blazor.Router.Actions.RouterNavigatedAction
+- uid: R3dux.Blazor.Router.Actions.RouterNavigationAction
+  commentId: T:R3dux.Blazor.Router.Actions.RouterNavigationAction
+  href: R3dux.Blazor.Router.Actions.RouterNavigationAction.html
+  name: RouterNavigationAction
+  nameWithType: RouterNavigationAction
+  fullName: R3dux.Blazor.Router.Actions.RouterNavigationAction
+- uid: R3dux.Blazor.Router.Actions.RouterRequestAction
+  commentId: T:R3dux.Blazor.Router.Actions.RouterRequestAction
+  href: R3dux.Blazor.Router.Actions.RouterRequestAction.html
+  name: RouterRequestAction
+  nameWithType: RouterRequestAction
+  fullName: R3dux.Blazor.Router.Actions.RouterRequestAction
+- uid: R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload
+  commentId: T:R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload
+  parent: R3dux.Blazor.Router.Actions
+  href: R3dux.Blazor.Router.Actions.RouterRequestAction.html
+  name: RouterRequestAction.ActionPayload
+  nameWithType: RouterRequestAction.ActionPayload
+  fullName: R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload
+  spec.csharp:
+  - uid: R3dux.Blazor.Router.Actions.RouterRequestAction
+    name: RouterRequestAction
+    href: R3dux.Blazor.Router.Actions.RouterRequestAction.html
+  - name: .
+  - uid: R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload
+    name: ActionPayload
+    href: R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload.html
+  spec.vb:
+  - uid: R3dux.Blazor.Router.Actions.RouterRequestAction
+    name: RouterRequestAction
+    href: R3dux.Blazor.Router.Actions.RouterRequestAction.html
+  - name: .
+  - uid: R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload
+    name: ActionPayload
+    href: R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload.html
+- uid: R3dux.Blazor.Router.Actions
+  commentId: N:R3dux.Blazor.Router.Actions
+  href: R3dux.html
+  name: R3dux.Blazor.Router.Actions
+  nameWithType: R3dux.Blazor.Router.Actions
+  fullName: R3dux.Blazor.Router.Actions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Blazor
+    name: Blazor
+    href: R3dux.Blazor.html
+  - name: .
+  - uid: R3dux.Blazor.Router
+    name: Router
+    href: R3dux.Blazor.Router.html
+  - name: .
+  - uid: R3dux.Blazor.Router.Actions
+    name: Actions
+    href: R3dux.Blazor.Router.Actions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Blazor
+    name: Blazor
+    href: R3dux.Blazor.html
+  - name: .
+  - uid: R3dux.Blazor.Router
+    name: Router
+    href: R3dux.Blazor.Router.html
+  - name: .
+  - uid: R3dux.Blazor.Router.Actions
+    name: Actions
+    href: R3dux.Blazor.Router.Actions.html

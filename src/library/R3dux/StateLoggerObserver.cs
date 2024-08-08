@@ -19,7 +19,8 @@ public sealed class StateLoggerObserver<TState>
     : Observer<StateChange<TState>>
 {
     private static readonly ILogger<StateLoggerObserver<TState>> _logger
-        = LoggerProvider.CreateLogger<StateLoggerObserver<TState>>();
+        = LoggerProvider.CreateLogger<StateLoggerObserver<TState>>()
+          ?? throw new InvalidOperationException("Logger not found.");
 
     // ReSharper disable once StaticMemberInGenericType
     private static readonly JsonSerializerOptions _serializerOptions = new()

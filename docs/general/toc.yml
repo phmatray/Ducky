@@ -1,0 +1,52 @@
+# This is an automatically generated file
+items:
+- name: General Documentation
+  href: README.md
+- name: Architecture decisions
+  href: architecture-decisions/README.md
+  items:
+  - name: Architecture Decisions
+    href: architecture-decisions/README.md
+  - name: Decision Log
+    href: architecture-decisions/decision-log.md
+- name: Getting started
+  href: getting-started/README.md
+  items:
+  - name: Using DocFx and Companion Tools to generate a Documentation website
+    href: getting-started/README.md
+  - name: Deploy the DocFx Documentation website to an Azure Website automatically
+    href: getting-started/deploy-docfx-azure-website.md
+  - name: Using Mermaid
+    href: getting-started/using-mermaid.md
+  - name: Copy code button
+    href: getting-started/copy-code-button.md
+  - name: Customize the Look and Feel
+    href: getting-started/customize-look-and-feel.md
+- name: Guidelines
+  href: guidelines/README.md
+  items:
+  - name: Guidelines
+    href: guidelines/README.md
+  - name: Documentation guidelines
+    href: guidelines/docs-guidelines.md
+- name: R3dux
+  href: r3dux/index.md
+  items:
+  - name: R3dux
+    href: r3dux/index.md
+  - name: Get Started
+    href: r3dux/get-started.md
+  - name: AppSettings
+    href: r3dux/app-settings.md
+  - name: R3dux Overview and Concepts
+    href: r3dux/overview-and-concepts.md
+- name: Templates
+  href: templates/README.md
+  items:
+  - name: Templates
+    href: templates/README.md
+- name: Working agreements
+  href: working-agreements/README.md
+  items:
+  - name: Working Agreements
+    href: working-agreements/README.md

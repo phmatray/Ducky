@@ -1,0 +1,220 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Abstractions.IDispatcher
+  commentId: T:R3dux.Abstractions.IDispatcher
+  id: IDispatcher
+  parent: R3dux.Abstractions
+  children:
+  - R3dux.Abstractions.IDispatcher.ActionStream
+  - R3dux.Abstractions.IDispatcher.Dispatch(R3dux.Abstractions.IAction)
+  langs:
+  - csharp
+  - vb
+  name: IDispatcher
+  nameWithType: IDispatcher
+  fullName: R3dux.Abstractions.IDispatcher
+  type: Interface
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IDispatcher.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: IDispatcher
+    path: ../src/library/R3dux.Abstractions/IDispatcher.cs
+    startLine: 11
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Defines the contract for a dispatcher that can dispatch actions and provide an observable stream of dispatched actions.
+  example: []
+  syntax:
+    content: public interface IDispatcher
+    content.vb: Public Interface IDispatcher
+- uid: R3dux.Abstractions.IDispatcher.ActionStream
+  commentId: P:R3dux.Abstractions.IDispatcher.ActionStream
+  id: ActionStream
+  parent: R3dux.Abstractions.IDispatcher
+  langs:
+  - csharp
+  - vb
+  name: ActionStream
+  nameWithType: IDispatcher.ActionStream
+  fullName: R3dux.Abstractions.IDispatcher.ActionStream
+  type: Property
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IDispatcher.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: ActionStream
+    path: ../src/library/R3dux.Abstractions/IDispatcher.cs
+    startLine: 16
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Gets an observable stream of dispatched actions.
+  example: []
+  syntax:
+    content: Observable<IAction> ActionStream { get; }
+    parameters: []
+    return:
+      type: R3.Observable{R3dux.Abstractions.IAction}
+    content.vb: ReadOnly Property ActionStream As Observable(Of IAction)
+  overload: R3dux.Abstractions.IDispatcher.ActionStream*
+- uid: R3dux.Abstractions.IDispatcher.Dispatch(R3dux.Abstractions.IAction)
+  commentId: M:R3dux.Abstractions.IDispatcher.Dispatch(R3dux.Abstractions.IAction)
+  id: Dispatch(R3dux.Abstractions.IAction)
+  parent: R3dux.Abstractions.IDispatcher
+  langs:
+  - csharp
+  - vb
+  name: Dispatch(IAction)
+  nameWithType: IDispatcher.Dispatch(IAction)
+  fullName: R3dux.Abstractions.IDispatcher.Dispatch(R3dux.Abstractions.IAction)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IDispatcher.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Dispatch
+    path: ../src/library/R3dux.Abstractions/IDispatcher.cs
+    startLine: 24
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Dispatches the specified action.
+  example: []
+  syntax:
+    content: void Dispatch(IAction action)
+    parameters:
+    - id: action
+      type: R3dux.Abstractions.IAction
+      description: The action to dispatch.
+    content.vb: Sub Dispatch(action As IAction)
+  overload: R3dux.Abstractions.IDispatcher.Dispatch*
+  exceptions:
+  - type: System.ArgumentNullException
+    commentId: T:System.ArgumentNullException
+    description: Thrown when the <code class="paramref">action</code> is null.
+  - type: System.ObjectDisposedException
+    commentId: T:System.ObjectDisposedException
+    description: Thrown when the dispatcher has been disposed.
+references:
+- uid: R3dux.Abstractions
+  commentId: N:R3dux.Abstractions
+  href: R3dux.html
+  name: R3dux.Abstractions
+  nameWithType: R3dux.Abstractions
+  fullName: R3dux.Abstractions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+- uid: R3dux.Abstractions.IDispatcher.ActionStream*
+  commentId: Overload:R3dux.Abstractions.IDispatcher.ActionStream
+  href: R3dux.Abstractions.IDispatcher.html#R3dux_Abstractions_IDispatcher_ActionStream
+  name: ActionStream
+  nameWithType: IDispatcher.ActionStream
+  fullName: R3dux.Abstractions.IDispatcher.ActionStream
+- uid: R3.Observable{R3dux.Abstractions.IAction}
+  commentId: T:R3.Observable{R3dux.Abstractions.IAction}
+  parent: R3
+  definition: R3.Observable`1
+  href: R3dux.Abstractions.IAction.html
+  name: Observable<IAction>
+  nameWithType: Observable<IAction>
+  fullName: R3.Observable<R3dux.Abstractions.IAction>
+  nameWithType.vb: Observable(Of IAction)
+  fullName.vb: R3.Observable(Of R3dux.Abstractions.IAction)
+  name.vb: Observable(Of IAction)
+  spec.csharp:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - uid: R3dux.Abstractions.IAction
+    name: IAction
+    href: R3dux.Abstractions.IAction.html
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3dux.Abstractions.IAction
+    name: IAction
+    href: R3dux.Abstractions.IAction.html
+  - name: )
+- uid: R3.Observable`1
+  commentId: T:R3.Observable`1
+  isExternal: true
+  name: Observable<T>
+  nameWithType: Observable<T>
+  fullName: R3.Observable<T>
+  nameWithType.vb: Observable(Of T)
+  fullName.vb: R3.Observable(Of T)
+  name.vb: Observable(Of T)
+  spec.csharp:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: R3
+  commentId: N:R3
+  isExternal: true
+  name: R3
+  nameWithType: R3
+  fullName: R3
+- uid: System.ArgumentNullException
+  commentId: T:System.ArgumentNullException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentnullexception
+  name: ArgumentNullException
+  nameWithType: ArgumentNullException
+  fullName: System.ArgumentNullException
+- uid: System.ObjectDisposedException
+  commentId: T:System.ObjectDisposedException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.objectdisposedexception
+  name: ObjectDisposedException
+  nameWithType: ObjectDisposedException
+  fullName: System.ObjectDisposedException
+- uid: R3dux.Abstractions.IDispatcher.Dispatch*
+  commentId: Overload:R3dux.Abstractions.IDispatcher.Dispatch
+  href: R3dux.Abstractions.IDispatcher.html#R3dux_Abstractions_IDispatcher_Dispatch_R3dux_Abstractions_IAction_
+  name: Dispatch
+  nameWithType: IDispatcher.Dispatch
+  fullName: R3dux.Abstractions.IDispatcher.Dispatch
+- uid: R3dux.Abstractions.IAction
+  commentId: T:R3dux.Abstractions.IAction
+  parent: R3dux.Abstractions
+  href: R3dux.Abstractions.IAction.html
+  name: IAction
+  nameWithType: IAction
+  fullName: R3dux.Abstractions.IAction

@@ -1,0 +1,350 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Abstractions.ISlice
+  commentId: T:R3dux.Abstractions.ISlice
+  id: ISlice
+  parent: R3dux.Abstractions
+  children:
+  - R3dux.Abstractions.ISlice.GetKey
+  - R3dux.Abstractions.ISlice.GetState
+  - R3dux.Abstractions.ISlice.GetStateType
+  - R3dux.Abstractions.ISlice.OnDispatch(R3dux.Abstractions.IAction)
+  - R3dux.Abstractions.ISlice.StateUpdated
+  langs:
+  - csharp
+  - vb
+  name: ISlice
+  nameWithType: ISlice
+  fullName: R3dux.Abstractions.ISlice
+  type: Interface
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/ISlice.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: ISlice
+    path: ../src/library/R3dux.Abstractions/ISlice.cs
+    startLine: 11
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Represents a state slice with basic state management capabilities.
+  example: []
+  syntax:
+    content: public interface ISlice
+    content.vb: Public Interface ISlice
+- uid: R3dux.Abstractions.ISlice.StateUpdated
+  commentId: P:R3dux.Abstractions.ISlice.StateUpdated
+  id: StateUpdated
+  parent: R3dux.Abstractions.ISlice
+  langs:
+  - csharp
+  - vb
+  name: StateUpdated
+  nameWithType: ISlice.StateUpdated
+  fullName: R3dux.Abstractions.ISlice.StateUpdated
+  type: Property
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/ISlice.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: StateUpdated
+    path: ../src/library/R3dux.Abstractions/ISlice.cs
+    startLine: 17
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Gets an observable sequence that produces a notification when the state is updated.
+  example: []
+  syntax:
+    content: Observable<Unit> StateUpdated { get; }
+    parameters: []
+    return:
+      type: R3.Observable{R3.Unit}
+      description: The observable sequence of state updates.
+    content.vb: ReadOnly Property StateUpdated As Observable(Of Unit)
+  overload: R3dux.Abstractions.ISlice.StateUpdated*
+- uid: R3dux.Abstractions.ISlice.GetKey
+  commentId: M:R3dux.Abstractions.ISlice.GetKey
+  id: GetKey
+  parent: R3dux.Abstractions.ISlice
+  langs:
+  - csharp
+  - vb
+  name: GetKey()
+  nameWithType: ISlice.GetKey()
+  fullName: R3dux.Abstractions.ISlice.GetKey()
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/ISlice.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: GetKey
+    path: ../src/library/R3dux.Abstractions/ISlice.cs
+    startLine: 23
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Gets the unique key for this state slice.
+  example: []
+  syntax:
+    content: string GetKey()
+    return:
+      type: System.String
+      description: The unique key as a string.
+    content.vb: Function GetKey() As String
+  overload: R3dux.Abstractions.ISlice.GetKey*
+- uid: R3dux.Abstractions.ISlice.GetStateType
+  commentId: M:R3dux.Abstractions.ISlice.GetStateType
+  id: GetStateType
+  parent: R3dux.Abstractions.ISlice
+  langs:
+  - csharp
+  - vb
+  name: GetStateType()
+  nameWithType: ISlice.GetStateType()
+  fullName: R3dux.Abstractions.ISlice.GetStateType()
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/ISlice.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: GetStateType
+    path: ../src/library/R3dux.Abstractions/ISlice.cs
+    startLine: 29
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Gets the type of the state managed by this slice.
+  example: []
+  syntax:
+    content: Type GetStateType()
+    return:
+      type: System.Type
+      description: The type of the state.
+    content.vb: Function GetStateType() As Type
+  overload: R3dux.Abstractions.ISlice.GetStateType*
+- uid: R3dux.Abstractions.ISlice.GetState
+  commentId: M:R3dux.Abstractions.ISlice.GetState
+  id: GetState
+  parent: R3dux.Abstractions.ISlice
+  langs:
+  - csharp
+  - vb
+  name: GetState()
+  nameWithType: ISlice.GetState()
+  fullName: R3dux.Abstractions.ISlice.GetState()
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/ISlice.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: GetState
+    path: ../src/library/R3dux.Abstractions/ISlice.cs
+    startLine: 35
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Gets the current state of this slice.
+  example: []
+  syntax:
+    content: object GetState()
+    return:
+      type: System.Object
+      description: The current state as an object.
+    content.vb: Function GetState() As Object
+  overload: R3dux.Abstractions.ISlice.GetState*
+- uid: R3dux.Abstractions.ISlice.OnDispatch(R3dux.Abstractions.IAction)
+  commentId: M:R3dux.Abstractions.ISlice.OnDispatch(R3dux.Abstractions.IAction)
+  id: OnDispatch(R3dux.Abstractions.IAction)
+  parent: R3dux.Abstractions.ISlice
+  langs:
+  - csharp
+  - vb
+  name: OnDispatch(IAction)
+  nameWithType: ISlice.OnDispatch(IAction)
+  fullName: R3dux.Abstractions.ISlice.OnDispatch(R3dux.Abstractions.IAction)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/ISlice.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: OnDispatch
+    path: ../src/library/R3dux.Abstractions/ISlice.cs
+    startLine: 41
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Handles the dispatch of an action.
+  example: []
+  syntax:
+    content: void OnDispatch(IAction action)
+    parameters:
+    - id: action
+      type: R3dux.Abstractions.IAction
+      description: The action to be dispatched.
+    content.vb: Sub OnDispatch(action As IAction)
+  overload: R3dux.Abstractions.ISlice.OnDispatch*
+references:
+- uid: R3dux.Abstractions
+  commentId: N:R3dux.Abstractions
+  href: R3dux.html
+  name: R3dux.Abstractions
+  nameWithType: R3dux.Abstractions
+  fullName: R3dux.Abstractions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+- uid: R3dux.Abstractions.ISlice.StateUpdated*
+  commentId: Overload:R3dux.Abstractions.ISlice.StateUpdated
+  href: R3dux.Abstractions.ISlice.html#R3dux_Abstractions_ISlice_StateUpdated
+  name: StateUpdated
+  nameWithType: ISlice.StateUpdated
+  fullName: R3dux.Abstractions.ISlice.StateUpdated
+- uid: R3.Observable{R3.Unit}
+  commentId: T:R3.Observable{R3.Unit}
+  parent: R3
+  definition: R3.Observable`1
+  name: Observable<Unit>
+  nameWithType: Observable<Unit>
+  fullName: R3.Observable<R3.Unit>
+  nameWithType.vb: Observable(Of Unit)
+  fullName.vb: R3.Observable(Of R3.Unit)
+  name.vb: Observable(Of Unit)
+  spec.csharp:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - uid: R3.Unit
+    name: Unit
+    isExternal: true
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3.Unit
+    name: Unit
+    isExternal: true
+  - name: )
+- uid: R3.Observable`1
+  commentId: T:R3.Observable`1
+  isExternal: true
+  name: Observable<T>
+  nameWithType: Observable<T>
+  fullName: R3.Observable<T>
+  nameWithType.vb: Observable(Of T)
+  fullName.vb: R3.Observable(Of T)
+  name.vb: Observable(Of T)
+  spec.csharp:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: R3
+  commentId: N:R3
+  isExternal: true
+  name: R3
+  nameWithType: R3
+  fullName: R3
+- uid: R3dux.Abstractions.ISlice.GetKey*
+  commentId: Overload:R3dux.Abstractions.ISlice.GetKey
+  href: R3dux.Abstractions.ISlice.html#R3dux_Abstractions_ISlice_GetKey
+  name: GetKey
+  nameWithType: ISlice.GetKey
+  fullName: R3dux.Abstractions.ISlice.GetKey
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: R3dux.Abstractions.ISlice.GetStateType*
+  commentId: Overload:R3dux.Abstractions.ISlice.GetStateType
+  href: R3dux.Abstractions.ISlice.html#R3dux_Abstractions_ISlice_GetStateType
+  name: GetStateType
+  nameWithType: ISlice.GetStateType
+  fullName: R3dux.Abstractions.ISlice.GetStateType
+- uid: System.Type
+  commentId: T:System.Type
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.type
+  name: Type
+  nameWithType: Type
+  fullName: System.Type
+- uid: R3dux.Abstractions.ISlice.GetState*
+  commentId: Overload:R3dux.Abstractions.ISlice.GetState
+  href: R3dux.Abstractions.ISlice.html#R3dux_Abstractions_ISlice_GetState
+  name: GetState
+  nameWithType: ISlice.GetState
+  fullName: R3dux.Abstractions.ISlice.GetState
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: R3dux.Abstractions.ISlice.OnDispatch*
+  commentId: Overload:R3dux.Abstractions.ISlice.OnDispatch
+  href: R3dux.Abstractions.ISlice.html#R3dux_Abstractions_ISlice_OnDispatch_R3dux_Abstractions_IAction_
+  name: OnDispatch
+  nameWithType: ISlice.OnDispatch
+  fullName: R3dux.Abstractions.ISlice.OnDispatch
+- uid: R3dux.Abstractions.IAction
+  commentId: T:R3dux.Abstractions.IAction
+  parent: R3dux.Abstractions
+  href: R3dux.Abstractions.IAction.html
+  name: IAction
+  nameWithType: IAction
+  fullName: R3dux.Abstractions.IAction

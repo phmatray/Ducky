@@ -1,0 +1,69 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Extensions.Operators
+  commentId: N:R3dux.Extensions.Operators
+  id: R3dux.Extensions.Operators
+  children:
+  - R3dux.Extensions.Operators.CustomOperators
+  - R3dux.Extensions.Operators.ObservableExtensions
+  - R3dux.Extensions.Operators.ReactiveSelectorExtensions
+  - R3dux.Extensions.Operators.StateActionPair`2
+  langs:
+  - csharp
+  - vb
+  name: R3dux.Extensions.Operators
+  nameWithType: R3dux.Extensions.Operators
+  fullName: R3dux.Extensions.Operators
+  type: Namespace
+  assemblies:
+  - R3dux.Operators
+references:
+- uid: R3dux.Extensions.Operators.CustomOperators
+  commentId: T:R3dux.Extensions.Operators.CustomOperators
+  href: R3dux.Extensions.Operators.CustomOperators.html
+  name: CustomOperators
+  nameWithType: CustomOperators
+  fullName: R3dux.Extensions.Operators.CustomOperators
+- uid: R3dux.Extensions.Operators.ObservableExtensions
+  commentId: T:R3dux.Extensions.Operators.ObservableExtensions
+  href: R3dux.Extensions.Operators.ObservableExtensions.html
+  name: ObservableExtensions
+  nameWithType: ObservableExtensions
+  fullName: R3dux.Extensions.Operators.ObservableExtensions
+- uid: R3dux.Extensions.Operators.ReactiveSelectorExtensions
+  commentId: T:R3dux.Extensions.Operators.ReactiveSelectorExtensions
+  href: R3dux.Extensions.Operators.ReactiveSelectorExtensions.html
+  name: ReactiveSelectorExtensions
+  nameWithType: ReactiveSelectorExtensions
+  fullName: R3dux.Extensions.Operators.ReactiveSelectorExtensions
+- uid: R3dux.Extensions.Operators.StateActionPair`2
+  commentId: T:R3dux.Extensions.Operators.StateActionPair`2
+  href: R3dux.Extensions.Operators.StateActionPair-2.html
+  name: StateActionPair<TState, TAction>
+  nameWithType: StateActionPair<TState, TAction>
+  fullName: R3dux.Extensions.Operators.StateActionPair<TState, TAction>
+  nameWithType.vb: StateActionPair(Of TState, TAction)
+  fullName.vb: R3dux.Extensions.Operators.StateActionPair(Of TState, TAction)
+  name.vb: StateActionPair(Of TState, TAction)
+  spec.csharp:
+  - uid: R3dux.Extensions.Operators.StateActionPair`2
+    name: StateActionPair
+    href: R3dux.Extensions.Operators.StateActionPair-2.html
+  - name: <
+  - name: TState
+  - name: ','
+  - name: " "
+  - name: TAction
+  - name: '>'
+  spec.vb:
+  - uid: R3dux.Extensions.Operators.StateActionPair`2
+    name: StateActionPair
+    href: R3dux.Extensions.Operators.StateActionPair-2.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TState
+  - name: ','
+  - name: " "
+  - name: TAction
+  - name: )

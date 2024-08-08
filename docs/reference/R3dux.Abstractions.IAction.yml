@@ -1,0 +1,53 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Abstractions.IAction
+  commentId: T:R3dux.Abstractions.IAction
+  id: IAction
+  parent: R3dux.Abstractions
+  children: []
+  langs:
+  - csharp
+  - vb
+  name: IAction
+  nameWithType: IAction
+  fullName: R3dux.Abstractions.IAction
+  type: Interface
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IAction.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: IAction
+    path: ../src/library/R3dux.Abstractions/IAction.cs
+    startLine: 9
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Defines a contract for an action.
+  example: []
+  syntax:
+    content: public interface IAction
+    content.vb: Public Interface IAction
+references:
+- uid: R3dux.Abstractions
+  commentId: N:R3dux.Abstractions
+  href: R3dux.html
+  name: R3dux.Abstractions
+  nameWithType: R3dux.Abstractions
+  fullName: R3dux.Abstractions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html

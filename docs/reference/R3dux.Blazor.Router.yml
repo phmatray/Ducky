@@ -1,0 +1,30 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Blazor.Router
+  commentId: N:R3dux.Blazor.Router
+  id: R3dux.Blazor.Router
+  children:
+  - R3dux.Blazor.Router.RouterReducers
+  - R3dux.Blazor.Router.RouterStoreState
+  langs:
+  - csharp
+  - vb
+  name: R3dux.Blazor.Router
+  nameWithType: R3dux.Blazor.Router
+  fullName: R3dux.Blazor.Router
+  type: Namespace
+  assemblies:
+  - R3dux.Blazor
+references:
+- uid: R3dux.Blazor.Router.RouterStoreState
+  commentId: T:R3dux.Blazor.Router.RouterStoreState
+  href: R3dux.Blazor.Router.RouterStoreState.html
+  name: RouterStoreState
+  nameWithType: RouterStoreState
+  fullName: R3dux.Blazor.Router.RouterStoreState
+- uid: R3dux.Blazor.Router.RouterReducers
+  commentId: T:R3dux.Blazor.Router.RouterReducers
+  href: R3dux.Blazor.Router.RouterReducers.html
+  name: RouterReducers
+  nameWithType: RouterReducers
+  fullName: R3dux.Blazor.Router.RouterReducers

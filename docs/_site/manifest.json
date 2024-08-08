@@ -1,0 +1,1104 @@
+{
+  "source_base_path": "/Users/philippe/repo/github/R3dux/docs",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      }
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": ".attachments/SampleDocFxWebsite.png",
+      "output": {
+        "resource": {
+          "relative_path": ".attachments/SampleDocFxWebsite.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": ".attachments/copy-code-button-copied.png",
+      "output": {
+        "resource": {
+          "relative_path": ".attachments/copy-code-button-copied.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": ".attachments/copy-code-button.png",
+      "output": {
+        "resource": {
+          "relative_path": ".attachments/copy-code-button.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": ".attachments/templates-custom.png",
+      "output": {
+        "resource": {
+          "relative_path": ".attachments/templates-custom.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": ".attachments/templates-standard.png",
+      "output": {
+        "resource": {
+          "relative_path": ".attachments/templates-standard.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": ".attachments/website-logo.png",
+      "output": {
+        "resource": {
+          "relative_path": ".attachments/website-logo.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": ".docfx/x-cross/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": ".docfx/x-cross/toc.html"
+        },
+        ".json": {
+          "relative_path": ".docfx/x-cross/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/.attachments/SampleDocFxWebsite.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/.attachments/SampleDocFxWebsite.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/.attachments/copy-code-button-copied.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/.attachments/copy-code-button-copied.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/.attachments/copy-code-button.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/.attachments/copy-code-button.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/.attachments/templates-custom.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/.attachments/templates-custom.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/.attachments/templates-standard.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/.attachments/templates-standard.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/.attachments/website-logo.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/.attachments/website-logo.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/images/favicon.ico",
+      "output": {
+        "resource": {
+          "relative_path": "_site/images/favicon.ico"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/images/logo - Copy.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/images/logo - Copy.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/images/logo.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/images/logo.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "_site/images/one-way-data-flow.png",
+      "output": {
+        "resource": {
+          "relative_path": "_site/images/one-way-data-flow.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/architecture-decisions/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/architecture-decisions/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/architecture-decisions/decision-log.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/architecture-decisions/decision-log.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/getting-started/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/getting-started/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/getting-started/copy-code-button.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/getting-started/copy-code-button.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/getting-started/customize-look-and-feel.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/getting-started/customize-look-and-feel.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/getting-started/deploy-docfx-azure-website.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/getting-started/deploy-docfx-azure-website.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/getting-started/using-mermaid.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/getting-started/using-mermaid.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/guidelines/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/guidelines/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/guidelines/docs-guidelines.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/guidelines/docs-guidelines.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/r3dux/app-settings.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/r3dux/app-settings.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/r3dux/get-started.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/r3dux/get-started.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/r3dux/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/r3dux/index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/r3dux/overview-and-concepts.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/r3dux/overview-and-concepts.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/templates/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/templates/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "general/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "general/toc.html"
+        },
+        ".json": {
+          "relative_path": "general/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "general/working-agreements/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "general/working-agreements/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/favicon.ico",
+      "output": {
+        "resource": {
+          "relative_path": "images/favicon.ico"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/logo - Copy.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/logo - Copy.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/logo.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/logo.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/one-way-data-flow.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/one-way-data-flow.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.IAction.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.IAction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.IDispatcher.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.IDispatcher.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.IEffect.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.IEffect.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.IKeyedAction.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.IKeyedAction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.IRootState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.IRootState.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.IRootStateSerializer.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.IRootStateSerializer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.ISlice-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.ISlice-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.ISlice.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.ISlice.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.IState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.IState.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.R3duxException.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.R3duxException.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Abstractions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Abstractions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.DependencyInjections.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.DependencyInjections.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.R3duxComponent-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.R3duxComponent-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.R3duxLayout-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.R3duxLayout-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.Actions.RouterCancelAction.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.Actions.RouterCancelAction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.Actions.RouterErrorAction.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.Actions.RouterErrorAction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.Actions.RouterNavigatedAction.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.Actions.RouterNavigatedAction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.Actions.RouterNavigationAction.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.Actions.RouterNavigationAction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.Actions.RouterRequestAction.ActionPayload.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.Actions.RouterRequestAction.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.Actions.RouterRequestAction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.Actions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.Actions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.RouterReducers.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.RouterReducers.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.RouterStoreState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.RouterStoreState.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.Router.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.Router.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Blazor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Blazor.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.DependencyInjections.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.DependencyInjections.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Dispatcher.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Dispatcher.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Effect.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Effect.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.ActionMeta.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.ActionMeta.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.Fsa-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.Fsa-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.Fsa-2.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.Fsa-2.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.Fsa.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.Fsa.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.FsaError-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.FsaError-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.FsaError.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.FsaError.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.FsaMeta-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.FsaMeta-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.IFsaMeta-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.IFsaMeta-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.IFsaPayload-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.IFsaPayload-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.FluxStandardActions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.FluxStandardActions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Normalization.IEntity-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Normalization.IEntity-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Normalization.INormalizedStateCollectionMethods-3.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Normalization.INormalizedStateCollectionMethods-3.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Normalization.MergeStrategy.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Normalization.MergeStrategy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Normalization.NormalizedState-3.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Normalization.NormalizedState-3.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Normalization.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Normalization.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Operators.CustomOperators.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Operators.CustomOperators.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Operators.ObservableExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Operators.ObservableExtensions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Operators.ReactiveSelectorExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Operators.ReactiveSelectorExtensions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Operators.StateActionPair-2.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Operators.StateActionPair-2.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Operators.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Operators.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Selectors.MemoizedSelector.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Selectors.MemoizedSelector.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.Extensions.Selectors.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.Extensions.Selectors.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.LoggerProvider.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.LoggerProvider.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.ObservableSlices.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.ObservableSlices.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.R3duxOptions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.R3duxOptions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.R3duxStore.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.R3duxStore.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.RootState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.RootState.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.RootStateSerializer.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.RootStateSerializer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.SliceReducers-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.SliceReducers-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.StateChange-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.StateChange-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.StateLoggerObserver-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.StateLoggerObserver-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.StoreFactory.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.StoreFactory.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.StoreInitialized.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.StoreInitialized.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "reference/R3dux.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/R3dux.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "reference/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reference/toc.html"
+        },
+        ".json": {
+          "relative_path": "reference/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "services/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "services/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "services/SampleService/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "services/SampleService/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "services/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "services/toc.html"
+        },
+        ".json": {
+          "relative_path": "services/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "web.config",
+      "output": {
+        "resource": {
+          "relative_path": "web.config"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}

@@ -1,0 +1,543 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.ObservableSlices
+  commentId: T:R3dux.ObservableSlices
+  id: ObservableSlices
+  parent: R3dux
+  children:
+  - R3dux.ObservableSlices.#ctor
+  - R3dux.ObservableSlices.AddSlice(R3dux.Abstractions.ISlice)
+  - R3dux.ObservableSlices.Dispose
+  - R3dux.ObservableSlices.RootStateObservable
+  langs:
+  - csharp
+  - vb
+  name: ObservableSlices
+  nameWithType: ObservableSlices
+  fullName: R3dux.ObservableSlices
+  type: Class
+  source:
+    remote:
+      path: src/library/R3dux/ObservableSlices.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: ObservableSlices
+    path: ../src/library/R3dux/ObservableSlices.cs
+    startLine: 14
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Manages a collection of observable slices and provides an observable root state.
+  example: []
+  syntax:
+    content: 'public sealed class ObservableSlices : IDisposable'
+    content.vb: Public NotInheritable Class ObservableSlices Implements IDisposable
+  inheritance:
+  - System.Object
+  implements:
+  - System.IDisposable
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: R3dux.ObservableSlices.#ctor
+  commentId: M:R3dux.ObservableSlices.#ctor
+  id: '#ctor'
+  parent: R3dux.ObservableSlices
+  langs:
+  - csharp
+  - vb
+  name: ObservableSlices()
+  nameWithType: ObservableSlices.ObservableSlices()
+  fullName: R3dux.ObservableSlices.ObservableSlices()
+  type: Constructor
+  source:
+    remote:
+      path: src/library/R3dux/ObservableSlices.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: .ctor
+    path: ../src/library/R3dux/ObservableSlices.cs
+    startLine: 23
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Initializes a new instance of the <xref href="R3dux.ObservableSlices" data-throw-if-not-resolved="false"></xref> class.
+  example: []
+  syntax:
+    content: public ObservableSlices()
+    content.vb: Public Sub New()
+  overload: R3dux.ObservableSlices.#ctor*
+  nameWithType.vb: ObservableSlices.New()
+  fullName.vb: R3dux.ObservableSlices.New()
+  name.vb: New()
+- uid: R3dux.ObservableSlices.RootStateObservable
+  commentId: P:R3dux.ObservableSlices.RootStateObservable
+  id: RootStateObservable
+  parent: R3dux.ObservableSlices
+  langs:
+  - csharp
+  - vb
+  name: RootStateObservable
+  nameWithType: ObservableSlices.RootStateObservable
+  fullName: R3dux.ObservableSlices.RootStateObservable
+  type: Property
+  source:
+    remote:
+      path: src/library/R3dux/ObservableSlices.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: RootStateObservable
+    path: ../src/library/R3dux/ObservableSlices.cs
+    startLine: 43
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Gets an observable that emits the root state whenever a slice is added, removed, or replaced.
+  example: []
+  syntax:
+    content: public ReadOnlyReactiveProperty<IRootState> RootStateObservable { get; }
+    parameters: []
+    return:
+      type: R3.ReadOnlyReactiveProperty{R3dux.Abstractions.IRootState}
+    content.vb: Public ReadOnly Property RootStateObservable As ReadOnlyReactiveProperty(Of IRootState)
+  overload: R3dux.ObservableSlices.RootStateObservable*
+- uid: R3dux.ObservableSlices.AddSlice(R3dux.Abstractions.ISlice)
+  commentId: M:R3dux.ObservableSlices.AddSlice(R3dux.Abstractions.ISlice)
+  id: AddSlice(R3dux.Abstractions.ISlice)
+  parent: R3dux.ObservableSlices
+  langs:
+  - csharp
+  - vb
+  name: AddSlice(ISlice)
+  nameWithType: ObservableSlices.AddSlice(ISlice)
+  fullName: R3dux.ObservableSlices.AddSlice(R3dux.Abstractions.ISlice)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/ObservableSlices.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: AddSlice
+    path: ../src/library/R3dux/ObservableSlices.cs
+    startLine: 49
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Adds a new slice with the specified key and data.
+  example: []
+  syntax:
+    content: public void AddSlice(ISlice slice)
+    parameters:
+    - id: slice
+      type: R3dux.Abstractions.ISlice
+      description: The slice to add.
+    content.vb: Public Sub AddSlice(slice As ISlice)
+  overload: R3dux.ObservableSlices.AddSlice*
+- uid: R3dux.ObservableSlices.Dispose
+  commentId: M:R3dux.ObservableSlices.Dispose
+  id: Dispose
+  parent: R3dux.ObservableSlices
+  langs:
+  - csharp
+  - vb
+  name: Dispose()
+  nameWithType: ObservableSlices.Dispose()
+  fullName: R3dux.ObservableSlices.Dispose()
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/ObservableSlices.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Dispose
+    path: ../src/library/R3dux/ObservableSlices.cs
+    startLine: 61
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+  example: []
+  syntax:
+    content: public void Dispose()
+    content.vb: Public Sub Dispose()
+  overload: R3dux.ObservableSlices.Dispose*
+  implements:
+  - System.IDisposable.Dispose
+references:
+- uid: R3dux
+  commentId: N:R3dux
+  href: R3dux.html
+  name: R3dux
+  nameWithType: R3dux
+  fullName: R3dux
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.IDisposable
+  commentId: T:System.IDisposable
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.idisposable
+  name: IDisposable
+  nameWithType: IDisposable
+  fullName: System.IDisposable
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: R3dux.ObservableSlices
+  commentId: T:R3dux.ObservableSlices
+  href: R3dux.ObservableSlices.html
+  name: ObservableSlices
+  nameWithType: ObservableSlices
+  fullName: R3dux.ObservableSlices
+- uid: R3dux.ObservableSlices.#ctor*
+  commentId: Overload:R3dux.ObservableSlices.#ctor
+  href: R3dux.ObservableSlices.html#R3dux_ObservableSlices__ctor
+  name: ObservableSlices
+  nameWithType: ObservableSlices.ObservableSlices
+  fullName: R3dux.ObservableSlices.ObservableSlices
+  nameWithType.vb: ObservableSlices.New
+  fullName.vb: R3dux.ObservableSlices.New
+  name.vb: New
+- uid: R3dux.ObservableSlices.RootStateObservable*
+  commentId: Overload:R3dux.ObservableSlices.RootStateObservable
+  href: R3dux.ObservableSlices.html#R3dux_ObservableSlices_RootStateObservable
+  name: RootStateObservable
+  nameWithType: ObservableSlices.RootStateObservable
+  fullName: R3dux.ObservableSlices.RootStateObservable
+- uid: R3.ReadOnlyReactiveProperty{R3dux.Abstractions.IRootState}
+  commentId: T:R3.ReadOnlyReactiveProperty{R3dux.Abstractions.IRootState}
+  parent: R3
+  definition: R3.ReadOnlyReactiveProperty`1
+  href: R3dux.Abstractions.IRootState.html
+  name: ReadOnlyReactiveProperty<IRootState>
+  nameWithType: ReadOnlyReactiveProperty<IRootState>
+  fullName: R3.ReadOnlyReactiveProperty<R3dux.Abstractions.IRootState>
+  nameWithType.vb: ReadOnlyReactiveProperty(Of IRootState)
+  fullName.vb: R3.ReadOnlyReactiveProperty(Of R3dux.Abstractions.IRootState)
+  name.vb: ReadOnlyReactiveProperty(Of IRootState)
+  spec.csharp:
+  - uid: R3.ReadOnlyReactiveProperty`1
+    name: ReadOnlyReactiveProperty
+    isExternal: true
+  - name: <
+  - uid: R3dux.Abstractions.IRootState
+    name: IRootState
+    href: R3dux.Abstractions.IRootState.html
+  - name: '>'
+  spec.vb:
+  - uid: R3.ReadOnlyReactiveProperty`1
+    name: ReadOnlyReactiveProperty
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3dux.Abstractions.IRootState
+    name: IRootState
+    href: R3dux.Abstractions.IRootState.html
+  - name: )
+- uid: R3.ReadOnlyReactiveProperty`1
+  commentId: T:R3.ReadOnlyReactiveProperty`1
+  isExternal: true
+  name: ReadOnlyReactiveProperty<T>
+  nameWithType: ReadOnlyReactiveProperty<T>
+  fullName: R3.ReadOnlyReactiveProperty<T>
+  nameWithType.vb: ReadOnlyReactiveProperty(Of T)
+  fullName.vb: R3.ReadOnlyReactiveProperty(Of T)
+  name.vb: ReadOnlyReactiveProperty(Of T)
+  spec.csharp:
+  - uid: R3.ReadOnlyReactiveProperty`1
+    name: ReadOnlyReactiveProperty
+    isExternal: true
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: R3.ReadOnlyReactiveProperty`1
+    name: ReadOnlyReactiveProperty
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: R3
+  commentId: N:R3
+  isExternal: true
+  name: R3
+  nameWithType: R3
+  fullName: R3
+- uid: R3dux.ObservableSlices.AddSlice*
+  commentId: Overload:R3dux.ObservableSlices.AddSlice
+  href: R3dux.ObservableSlices.html#R3dux_ObservableSlices_AddSlice_R3dux_Abstractions_ISlice_
+  name: AddSlice
+  nameWithType: ObservableSlices.AddSlice
+  fullName: R3dux.ObservableSlices.AddSlice
+- uid: R3dux.Abstractions.ISlice
+  commentId: T:R3dux.Abstractions.ISlice
+  parent: R3dux.Abstractions
+  href: R3dux.Abstractions.ISlice.html
+  name: ISlice
+  nameWithType: ISlice
+  fullName: R3dux.Abstractions.ISlice
+- uid: R3dux.Abstractions
+  commentId: N:R3dux.Abstractions
+  href: R3dux.html
+  name: R3dux.Abstractions
+  nameWithType: R3dux.Abstractions
+  fullName: R3dux.Abstractions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+- uid: R3dux.ObservableSlices.Dispose*
+  commentId: Overload:R3dux.ObservableSlices.Dispose
+  href: R3dux.ObservableSlices.html#R3dux_ObservableSlices_Dispose
+  name: Dispose
+  nameWithType: ObservableSlices.Dispose
+  fullName: R3dux.ObservableSlices.Dispose
+- uid: System.IDisposable.Dispose
+  commentId: M:System.IDisposable.Dispose
+  parent: System.IDisposable
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  name: Dispose()
+  nameWithType: IDisposable.Dispose()
+  fullName: System.IDisposable.Dispose()
+  spec.csharp:
+  - uid: System.IDisposable.Dispose
+    name: Dispose
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.IDisposable.Dispose
+    name: Dispose
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  - name: (
+  - name: )

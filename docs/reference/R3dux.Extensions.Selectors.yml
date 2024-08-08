@@ -1,0 +1,23 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Extensions.Selectors
+  commentId: N:R3dux.Extensions.Selectors
+  id: R3dux.Extensions.Selectors
+  children:
+  - R3dux.Extensions.Selectors.MemoizedSelector
+  langs:
+  - csharp
+  - vb
+  name: R3dux.Extensions.Selectors
+  nameWithType: R3dux.Extensions.Selectors
+  fullName: R3dux.Extensions.Selectors
+  type: Namespace
+  assemblies:
+  - R3dux.Selectors
+references:
+- uid: R3dux.Extensions.Selectors.MemoizedSelector
+  commentId: T:R3dux.Extensions.Selectors.MemoizedSelector
+  href: R3dux.Extensions.Selectors.MemoizedSelector.html
+  name: MemoizedSelector
+  nameWithType: MemoizedSelector
+  fullName: R3dux.Extensions.Selectors.MemoizedSelector

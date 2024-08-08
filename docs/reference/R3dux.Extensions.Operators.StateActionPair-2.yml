@@ -1,0 +1,549 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Extensions.Operators.StateActionPair`2
+  commentId: T:R3dux.Extensions.Operators.StateActionPair`2
+  id: StateActionPair`2
+  parent: R3dux.Extensions.Operators
+  children:
+  - R3dux.Extensions.Operators.StateActionPair`2.#ctor(`0,`1)
+  - R3dux.Extensions.Operators.StateActionPair`2.Action
+  - R3dux.Extensions.Operators.StateActionPair`2.State
+  langs:
+  - csharp
+  - vb
+  name: StateActionPair<TState, TAction>
+  nameWithType: StateActionPair<TState, TAction>
+  fullName: R3dux.Extensions.Operators.StateActionPair<TState, TAction>
+  type: Class
+  source:
+    remote:
+      path: src/library/R3dux.Operators/StateActionPair.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: StateActionPair
+    path: ../src/library/R3dux.Operators/StateActionPair.cs
+    startLine: 15
+  assemblies:
+  - R3dux.Operators
+  namespace: R3dux.Extensions.Operators
+  summary: Represents a pair of state and action.
+  example: []
+  syntax:
+    content: 'public sealed record StateActionPair<TState, TAction> : IEquatable<StateActionPair<TState, TAction>> where TAction : IAction'
+    typeParameters:
+    - id: TState
+      description: The type of the state.
+    - id: TAction
+      description: The type of the action, which must implement <xref href="R3dux.Abstractions.IAction" data-throw-if-not-resolved="false"></xref>.
+    content.vb: Public NotInheritable Class StateActionPair(Of TState, TAction As IAction) Implements IEquatable(Of StateActionPair(Of TState, TAction))
+  inheritance:
+  - System.Object
+  implements:
+  - System.IEquatable{R3dux.Extensions.Operators.StateActionPair`2}
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+  nameWithType.vb: StateActionPair(Of TState, TAction)
+  fullName.vb: R3dux.Extensions.Operators.StateActionPair(Of TState, TAction)
+  name.vb: StateActionPair(Of TState, TAction)
+- uid: R3dux.Extensions.Operators.StateActionPair`2.#ctor(`0,`1)
+  commentId: M:R3dux.Extensions.Operators.StateActionPair`2.#ctor(`0,`1)
+  id: '#ctor(`0,`1)'
+  parent: R3dux.Extensions.Operators.StateActionPair`2
+  langs:
+  - csharp
+  - vb
+  name: StateActionPair(TState, TAction)
+  nameWithType: StateActionPair<TState, TAction>.StateActionPair(TState, TAction)
+  fullName: R3dux.Extensions.Operators.StateActionPair<TState, TAction>.StateActionPair(TState, TAction)
+  type: Constructor
+  source:
+    remote:
+      path: src/library/R3dux.Operators/StateActionPair.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: .ctor
+    path: ../src/library/R3dux.Operators/StateActionPair.cs
+    startLine: 15
+  assemblies:
+  - R3dux.Operators
+  namespace: R3dux.Extensions.Operators
+  summary: Represents a pair of state and action.
+  example: []
+  syntax:
+    content: public StateActionPair(TState State, TAction Action)
+    parameters:
+    - id: State
+      type: '{TState}'
+      description: The current state.
+    - id: Action
+      type: '{TAction}'
+      description: The action to be performed.
+    content.vb: Public Sub New(State As TState, Action As TAction)
+  overload: R3dux.Extensions.Operators.StateActionPair`2.#ctor*
+  nameWithType.vb: StateActionPair(Of TState, TAction).New(TState, TAction)
+  fullName.vb: R3dux.Extensions.Operators.StateActionPair(Of TState, TAction).New(TState, TAction)
+  name.vb: New(TState, TAction)
+- uid: R3dux.Extensions.Operators.StateActionPair`2.State
+  commentId: P:R3dux.Extensions.Operators.StateActionPair`2.State
+  id: State
+  parent: R3dux.Extensions.Operators.StateActionPair`2
+  langs:
+  - csharp
+  - vb
+  name: State
+  nameWithType: StateActionPair<TState, TAction>.State
+  fullName: R3dux.Extensions.Operators.StateActionPair<TState, TAction>.State
+  type: Property
+  source:
+    remote:
+      path: src/library/R3dux.Operators/StateActionPair.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: State
+    path: ../src/library/R3dux.Operators/StateActionPair.cs
+    startLine: 15
+  assemblies:
+  - R3dux.Operators
+  namespace: R3dux.Extensions.Operators
+  summary: The current state.
+  example: []
+  syntax:
+    content: public TState State { get; init; }
+    parameters: []
+    return:
+      type: '{TState}'
+    content.vb: Public Property State As TState
+  overload: R3dux.Extensions.Operators.StateActionPair`2.State*
+  nameWithType.vb: StateActionPair(Of TState, TAction).State
+  fullName.vb: R3dux.Extensions.Operators.StateActionPair(Of TState, TAction).State
+- uid: R3dux.Extensions.Operators.StateActionPair`2.Action
+  commentId: P:R3dux.Extensions.Operators.StateActionPair`2.Action
+  id: Action
+  parent: R3dux.Extensions.Operators.StateActionPair`2
+  langs:
+  - csharp
+  - vb
+  name: Action
+  nameWithType: StateActionPair<TState, TAction>.Action
+  fullName: R3dux.Extensions.Operators.StateActionPair<TState, TAction>.Action
+  type: Property
+  source:
+    remote:
+      path: src/library/R3dux.Operators/StateActionPair.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Action
+    path: ../src/library/R3dux.Operators/StateActionPair.cs
+    startLine: 15
+  assemblies:
+  - R3dux.Operators
+  namespace: R3dux.Extensions.Operators
+  summary: The action to be performed.
+  example: []
+  syntax:
+    content: public TAction Action { get; init; }
+    parameters: []
+    return:
+      type: '{TAction}'
+    content.vb: Public Property Action As TAction
+  overload: R3dux.Extensions.Operators.StateActionPair`2.Action*
+  nameWithType.vb: StateActionPair(Of TState, TAction).Action
+  fullName.vb: R3dux.Extensions.Operators.StateActionPair(Of TState, TAction).Action
+references:
+- uid: R3dux.Abstractions.IAction
+  commentId: T:R3dux.Abstractions.IAction
+  parent: R3dux.Abstractions
+  href: R3dux.Abstractions.IAction.html
+  name: IAction
+  nameWithType: IAction
+  fullName: R3dux.Abstractions.IAction
+- uid: R3dux.Extensions.Operators
+  commentId: N:R3dux.Extensions.Operators
+  href: R3dux.html
+  name: R3dux.Extensions.Operators
+  nameWithType: R3dux.Extensions.Operators
+  fullName: R3dux.Extensions.Operators
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Extensions
+    name: Extensions
+    href: R3dux.Extensions.html
+  - name: .
+  - uid: R3dux.Extensions.Operators
+    name: Operators
+    href: R3dux.Extensions.Operators.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Extensions
+    name: Extensions
+    href: R3dux.Extensions.html
+  - name: .
+  - uid: R3dux.Extensions.Operators
+    name: Operators
+    href: R3dux.Extensions.Operators.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.IEquatable{R3dux.Extensions.Operators.StateActionPair`2}
+  commentId: T:System.IEquatable{R3dux.Extensions.Operators.StateActionPair`2}
+  parent: System
+  definition: System.IEquatable`1
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<StateActionPair<TState, TAction>>
+  nameWithType: IEquatable<StateActionPair<TState, TAction>>
+  fullName: System.IEquatable<R3dux.Extensions.Operators.StateActionPair<TState, TAction>>
+  nameWithType.vb: IEquatable(Of StateActionPair(Of TState, TAction))
+  fullName.vb: System.IEquatable(Of R3dux.Extensions.Operators.StateActionPair(Of TState, TAction))
+  name.vb: IEquatable(Of StateActionPair(Of TState, TAction))
+  spec.csharp:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - uid: R3dux.Extensions.Operators.StateActionPair`2
+    name: StateActionPair
+    href: R3dux.Extensions.Operators.StateActionPair-2.html
+  - name: <
+  - name: TState
+  - name: ','
+  - name: " "
+  - name: TAction
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3dux.Extensions.Operators.StateActionPair`2
+    name: StateActionPair
+    href: R3dux.Extensions.Operators.StateActionPair-2.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TState
+  - name: ','
+  - name: " "
+  - name: TAction
+  - name: )
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: R3dux.Abstractions
+  commentId: N:R3dux.Abstractions
+  href: R3dux.html
+  name: R3dux.Abstractions
+  nameWithType: R3dux.Abstractions
+  fullName: R3dux.Abstractions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: System.IEquatable`1
+  commentId: T:System.IEquatable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<T>
+  nameWithType: IEquatable<T>
+  fullName: System.IEquatable<T>
+  nameWithType.vb: IEquatable(Of T)
+  fullName.vb: System.IEquatable(Of T)
+  name.vb: IEquatable(Of T)
+  spec.csharp:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: R3dux.Extensions.Operators.StateActionPair`2.#ctor*
+  commentId: Overload:R3dux.Extensions.Operators.StateActionPair`2.#ctor
+  href: R3dux.Extensions.Operators.StateActionPair-2.html#R3dux_Extensions_Operators_StateActionPair_2__ctor__0__1_
+  name: StateActionPair
+  nameWithType: StateActionPair<TState, TAction>.StateActionPair
+  fullName: R3dux.Extensions.Operators.StateActionPair<TState, TAction>.StateActionPair
+  nameWithType.vb: StateActionPair(Of TState, TAction).New
+  fullName.vb: R3dux.Extensions.Operators.StateActionPair(Of TState, TAction).New
+  name.vb: New
+- uid: '{TState}'
+  commentId: '!:TState'
+  definition: TState
+  name: TState
+  nameWithType: TState
+  fullName: TState
+- uid: '{TAction}'
+  commentId: '!:TAction'
+  definition: TAction
+  name: TAction
+  nameWithType: TAction
+  fullName: TAction
+- uid: TState
+  name: TState
+  nameWithType: TState
+  fullName: TState
+- uid: TAction
+  name: TAction
+  nameWithType: TAction
+  fullName: TAction
+- uid: R3dux.Extensions.Operators.StateActionPair`2.State*
+  commentId: Overload:R3dux.Extensions.Operators.StateActionPair`2.State
+  href: R3dux.Extensions.Operators.StateActionPair-2.html#R3dux_Extensions_Operators_StateActionPair_2_State
+  name: State
+  nameWithType: StateActionPair<TState, TAction>.State
+  fullName: R3dux.Extensions.Operators.StateActionPair<TState, TAction>.State
+  nameWithType.vb: StateActionPair(Of TState, TAction).State
+  fullName.vb: R3dux.Extensions.Operators.StateActionPair(Of TState, TAction).State
+- uid: R3dux.Extensions.Operators.StateActionPair`2.Action*
+  commentId: Overload:R3dux.Extensions.Operators.StateActionPair`2.Action
+  href: R3dux.Extensions.Operators.StateActionPair-2.html#R3dux_Extensions_Operators_StateActionPair_2_Action
+  name: Action
+  nameWithType: StateActionPair<TState, TAction>.Action
+  fullName: R3dux.Extensions.Operators.StateActionPair<TState, TAction>.Action
+  nameWithType.vb: StateActionPair(Of TState, TAction).Action
+  fullName.vb: R3dux.Extensions.Operators.StateActionPair(Of TState, TAction).Action

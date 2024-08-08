@@ -2,9 +2,8 @@
 
   <PropertyGroup>
     <RootNamespace>R3dux.Extensions.Normalization</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
-  <Import Project="../../../msbuild/props/Documentation.props"/>
 
   <ItemGroup>
     <ProjectReference Include="..\R3dux.Abstractions\R3dux.Abstractions.csproj" />

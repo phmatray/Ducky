@@ -2,9 +2,8 @@
 
   <PropertyGroup>
     <RootNamespace>R3dux.Extensions.Operators</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
-  <Import Project="../../../msbuild/props/Documentation.props"/>
 
   <ItemGroup>
     <PackageReference Include="R3" />

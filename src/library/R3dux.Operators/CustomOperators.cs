@@ -38,8 +38,8 @@ public static class CustomOperators
         this Observable<TAction> source,
         Observable<IRootState> rootStateObs,
         string? sliceKey = null)
-        where TAction : IAction
         where TState : notnull
+        where TAction : IAction
     {
         return source.WithLatestFrom(
             rootStateObs,

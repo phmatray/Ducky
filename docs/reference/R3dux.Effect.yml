@@ -1,0 +1,696 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Effect
+  commentId: T:R3dux.Effect
+  id: Effect
+  parent: R3dux
+  children:
+  - R3dux.Effect.GetAssemblyName
+  - R3dux.Effect.GetKey
+  - R3dux.Effect.Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+  - R3dux.Effect.TimeProvider
+  langs:
+  - csharp
+  - vb
+  name: Effect
+  nameWithType: Effect
+  fullName: R3dux.Effect
+  type: Class
+  source:
+    remote:
+      path: src/library/R3dux/Effect.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Effect
+    path: ../src/library/R3dux/Effect.cs
+    startLine: 10
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Supports all classes in the .NET class hierarchy and provides low-level services to derived classes. This is the ultimate base class of all .NET classes; it is the root of the type hierarchy.
+  example: []
+  syntax:
+    content: 'public abstract class Effect : IEffect'
+    content.vb: Public MustInherit Class Effect Implements IEffect
+  inheritance:
+  - System.Object
+  implements:
+  - R3dux.Abstractions.IEffect
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: R3dux.Effect.TimeProvider
+  commentId: P:R3dux.Effect.TimeProvider
+  id: TimeProvider
+  parent: R3dux.Effect
+  langs:
+  - csharp
+  - vb
+  name: TimeProvider
+  nameWithType: Effect.TimeProvider
+  fullName: R3dux.Effect.TimeProvider
+  type: Property
+  source:
+    remote:
+      path: src/library/R3dux/Effect.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: TimeProvider
+    path: ../src/library/R3dux/Effect.cs
+    startLine: 15
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Gets or init the time provider used to provide the current time.
+  example: []
+  syntax:
+    content: public TimeProvider TimeProvider { get; init; }
+    parameters: []
+    return:
+      type: System.TimeProvider
+    content.vb: Public Property TimeProvider As TimeProvider
+  overload: R3dux.Effect.TimeProvider*
+- uid: R3dux.Effect.GetKey
+  commentId: M:R3dux.Effect.GetKey
+  id: GetKey
+  parent: R3dux.Effect
+  langs:
+  - csharp
+  - vb
+  name: GetKey()
+  nameWithType: Effect.GetKey()
+  fullName: R3dux.Effect.GetKey()
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/Effect.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: GetKey
+    path: ../src/library/R3dux/Effect.cs
+    startLine: 18
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Gets the key that identifies the effect.
+  example: []
+  syntax:
+    content: public string GetKey()
+    return:
+      type: System.String
+      description: The key that identifies the effect.
+    content.vb: Public Function GetKey() As String
+  overload: R3dux.Effect.GetKey*
+  implements:
+  - R3dux.Abstractions.IEffect.GetKey
+- uid: R3dux.Effect.GetAssemblyName
+  commentId: M:R3dux.Effect.GetAssemblyName
+  id: GetAssemblyName
+  parent: R3dux.Effect
+  langs:
+  - csharp
+  - vb
+  name: GetAssemblyName()
+  nameWithType: Effect.GetAssemblyName()
+  fullName: R3dux.Effect.GetAssemblyName()
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/Effect.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: GetAssemblyName
+    path: ../src/library/R3dux/Effect.cs
+    startLine: 24
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Gets the assembly-qualified name of the effect.
+  example: []
+  syntax:
+    content: public string GetAssemblyName()
+    return:
+      type: System.String
+      description: The assembly-qualified name of the effect.
+    content.vb: Public Function GetAssemblyName() As String
+  overload: R3dux.Effect.GetAssemblyName*
+  implements:
+  - R3dux.Abstractions.IEffect.GetAssemblyName
+- uid: R3dux.Effect.Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+  commentId: M:R3dux.Effect.Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+  id: Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+  parent: R3dux.Effect
+  langs:
+  - csharp
+  - vb
+  name: Handle(Observable<IAction>, Observable<IRootState>)
+  nameWithType: Effect.Handle(Observable<IAction>, Observable<IRootState>)
+  fullName: R3dux.Effect.Handle(R3.Observable<R3dux.Abstractions.IAction>, R3.Observable<R3dux.Abstractions.IRootState>)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/Effect.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Handle
+    path: ../src/library/R3dux/Effect.cs
+    startLine: 32
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Handles a stream of actions and produces a stream of resulting actions.
+  example: []
+  syntax:
+    content: public virtual Observable<IAction> Handle(Observable<IAction> actions, Observable<IRootState> rootState)
+    parameters:
+    - id: actions
+      type: R3.Observable{R3dux.Abstractions.IAction}
+      description: The source observable sequence of actions.
+    - id: rootState
+      type: R3.Observable{R3dux.Abstractions.IRootState}
+      description: The source observable sequence of the root state.
+    return:
+      type: R3.Observable{R3dux.Abstractions.IAction}
+      description: An observable sequence of resulting actions.
+    content.vb: Public Overridable Function Handle(actions As Observable(Of IAction), rootState As Observable(Of IRootState)) As Observable(Of IAction)
+  overload: R3dux.Effect.Handle*
+  implements:
+  - R3dux.Abstractions.IEffect.Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+  nameWithType.vb: Effect.Handle(Observable(Of IAction), Observable(Of IRootState))
+  fullName.vb: R3dux.Effect.Handle(R3.Observable(Of R3dux.Abstractions.IAction), R3.Observable(Of R3dux.Abstractions.IRootState))
+  name.vb: Handle(Observable(Of IAction), Observable(Of IRootState))
+references:
+- uid: R3dux
+  commentId: N:R3dux
+  href: R3dux.html
+  name: R3dux
+  nameWithType: R3dux
+  fullName: R3dux
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: R3dux.Abstractions.IEffect
+  commentId: T:R3dux.Abstractions.IEffect
+  parent: R3dux.Abstractions
+  href: R3dux.Abstractions.IEffect.html
+  name: IEffect
+  nameWithType: IEffect
+  fullName: R3dux.Abstractions.IEffect
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: R3dux.Abstractions
+  commentId: N:R3dux.Abstractions
+  href: R3dux.html
+  name: R3dux.Abstractions
+  nameWithType: R3dux.Abstractions
+  fullName: R3dux.Abstractions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+- uid: R3dux.Effect.TimeProvider*
+  commentId: Overload:R3dux.Effect.TimeProvider
+  href: R3dux.Effect.html#R3dux_Effect_TimeProvider
+  name: TimeProvider
+  nameWithType: Effect.TimeProvider
+  fullName: R3dux.Effect.TimeProvider
+- uid: System.TimeProvider
+  commentId: T:System.TimeProvider
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.timeprovider
+  name: TimeProvider
+  nameWithType: TimeProvider
+  fullName: System.TimeProvider
+- uid: R3dux.Effect.GetKey*
+  commentId: Overload:R3dux.Effect.GetKey
+  href: R3dux.Effect.html#R3dux_Effect_GetKey
+  name: GetKey
+  nameWithType: Effect.GetKey
+  fullName: R3dux.Effect.GetKey
+- uid: R3dux.Abstractions.IEffect.GetKey
+  commentId: M:R3dux.Abstractions.IEffect.GetKey
+  parent: R3dux.Abstractions.IEffect
+  href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_GetKey
+  name: GetKey()
+  nameWithType: IEffect.GetKey()
+  fullName: R3dux.Abstractions.IEffect.GetKey()
+  spec.csharp:
+  - uid: R3dux.Abstractions.IEffect.GetKey
+    name: GetKey
+    href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_GetKey
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: R3dux.Abstractions.IEffect.GetKey
+    name: GetKey
+    href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_GetKey
+  - name: (
+  - name: )
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: R3dux.Effect.GetAssemblyName*
+  commentId: Overload:R3dux.Effect.GetAssemblyName
+  href: R3dux.Effect.html#R3dux_Effect_GetAssemblyName
+  name: GetAssemblyName
+  nameWithType: Effect.GetAssemblyName
+  fullName: R3dux.Effect.GetAssemblyName
+- uid: R3dux.Abstractions.IEffect.GetAssemblyName
+  commentId: M:R3dux.Abstractions.IEffect.GetAssemblyName
+  parent: R3dux.Abstractions.IEffect
+  href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_GetAssemblyName
+  name: GetAssemblyName()
+  nameWithType: IEffect.GetAssemblyName()
+  fullName: R3dux.Abstractions.IEffect.GetAssemblyName()
+  spec.csharp:
+  - uid: R3dux.Abstractions.IEffect.GetAssemblyName
+    name: GetAssemblyName
+    href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_GetAssemblyName
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: R3dux.Abstractions.IEffect.GetAssemblyName
+    name: GetAssemblyName
+    href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_GetAssemblyName
+  - name: (
+  - name: )
+- uid: R3dux.Effect.Handle*
+  commentId: Overload:R3dux.Effect.Handle
+  href: R3dux.Effect.html#R3dux_Effect_Handle_R3_Observable_R3dux_Abstractions_IAction__R3_Observable_R3dux_Abstractions_IRootState__
+  name: Handle
+  nameWithType: Effect.Handle
+  fullName: R3dux.Effect.Handle
+- uid: R3dux.Abstractions.IEffect.Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+  commentId: M:R3dux.Abstractions.IEffect.Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+  parent: R3dux.Abstractions.IEffect
+  isExternal: true
+  href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_Handle_R3_Observable_R3dux_Abstractions_IAction__R3_Observable_R3dux_Abstractions_IRootState__
+  name: Handle(Observable<IAction>, Observable<IRootState>)
+  nameWithType: IEffect.Handle(Observable<IAction>, Observable<IRootState>)
+  fullName: R3dux.Abstractions.IEffect.Handle(R3.Observable<R3dux.Abstractions.IAction>, R3.Observable<R3dux.Abstractions.IRootState>)
+  nameWithType.vb: IEffect.Handle(Observable(Of IAction), Observable(Of IRootState))
+  fullName.vb: R3dux.Abstractions.IEffect.Handle(R3.Observable(Of R3dux.Abstractions.IAction), R3.Observable(Of R3dux.Abstractions.IRootState))
+  name.vb: Handle(Observable(Of IAction), Observable(Of IRootState))
+  spec.csharp:
+  - uid: R3dux.Abstractions.IEffect.Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+    name: Handle
+    href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_Handle_R3_Observable_R3dux_Abstractions_IAction__R3_Observable_R3dux_Abstractions_IRootState__
+  - name: (
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - uid: R3dux.Abstractions.IAction
+    name: IAction
+    href: R3dux.Abstractions.IAction.html
+  - name: '>'
+  - name: ','
+  - name: " "
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - uid: R3dux.Abstractions.IRootState
+    name: IRootState
+    href: R3dux.Abstractions.IRootState.html
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: R3dux.Abstractions.IEffect.Handle(R3.Observable{R3dux.Abstractions.IAction},R3.Observable{R3dux.Abstractions.IRootState})
+    name: Handle
+    href: R3dux.Abstractions.IEffect.html#R3dux_Abstractions_IEffect_Handle_R3_Observable_R3dux_Abstractions_IAction__R3_Observable_R3dux_Abstractions_IRootState__
+  - name: (
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3dux.Abstractions.IAction
+    name: IAction
+    href: R3dux.Abstractions.IAction.html
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3dux.Abstractions.IRootState
+    name: IRootState
+    href: R3dux.Abstractions.IRootState.html
+  - name: )
+  - name: )
+- uid: R3.Observable{R3dux.Abstractions.IAction}
+  commentId: T:R3.Observable{R3dux.Abstractions.IAction}
+  parent: R3
+  definition: R3.Observable`1
+  href: R3dux.Abstractions.IAction.html
+  name: Observable<IAction>
+  nameWithType: Observable<IAction>
+  fullName: R3.Observable<R3dux.Abstractions.IAction>
+  nameWithType.vb: Observable(Of IAction)
+  fullName.vb: R3.Observable(Of R3dux.Abstractions.IAction)
+  name.vb: Observable(Of IAction)
+  spec.csharp:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - uid: R3dux.Abstractions.IAction
+    name: IAction
+    href: R3dux.Abstractions.IAction.html
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3dux.Abstractions.IAction
+    name: IAction
+    href: R3dux.Abstractions.IAction.html
+  - name: )
+- uid: R3.Observable{R3dux.Abstractions.IRootState}
+  commentId: T:R3.Observable{R3dux.Abstractions.IRootState}
+  parent: R3
+  definition: R3.Observable`1
+  href: R3dux.Abstractions.IRootState.html
+  name: Observable<IRootState>
+  nameWithType: Observable<IRootState>
+  fullName: R3.Observable<R3dux.Abstractions.IRootState>
+  nameWithType.vb: Observable(Of IRootState)
+  fullName.vb: R3.Observable(Of R3dux.Abstractions.IRootState)
+  name.vb: Observable(Of IRootState)
+  spec.csharp:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - uid: R3dux.Abstractions.IRootState
+    name: IRootState
+    href: R3dux.Abstractions.IRootState.html
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3dux.Abstractions.IRootState
+    name: IRootState
+    href: R3dux.Abstractions.IRootState.html
+  - name: )
+- uid: R3.Observable`1
+  commentId: T:R3.Observable`1
+  isExternal: true
+  name: Observable<T>
+  nameWithType: Observable<T>
+  fullName: R3.Observable<T>
+  nameWithType.vb: Observable(Of T)
+  fullName.vb: R3.Observable(Of T)
+  name.vb: Observable(Of T)
+  spec.csharp:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observable`1
+    name: Observable
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: R3
+  commentId: N:R3
+  isExternal: true
+  name: R3
+  nameWithType: R3
+  fullName: R3

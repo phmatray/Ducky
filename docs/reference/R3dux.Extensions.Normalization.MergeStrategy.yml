@@ -1,0 +1,126 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Extensions.Normalization.MergeStrategy
+  commentId: T:R3dux.Extensions.Normalization.MergeStrategy
+  id: MergeStrategy
+  parent: R3dux.Extensions.Normalization
+  children:
+  - R3dux.Extensions.Normalization.MergeStrategy.FailIfDuplicate
+  - R3dux.Extensions.Normalization.MergeStrategy.Overwrite
+  langs:
+  - csharp
+  - vb
+  name: MergeStrategy
+  nameWithType: MergeStrategy
+  fullName: R3dux.Extensions.Normalization.MergeStrategy
+  type: Enum
+  source:
+    remote:
+      path: src/library/R3dux.Normalization/MergeStrategy.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: MergeStrategy
+    path: ../src/library/R3dux.Normalization/MergeStrategy.cs
+    startLine: 9
+  assemblies:
+  - R3dux.Normalization
+  namespace: R3dux.Extensions.Normalization
+  summary: Defines strategies for merging entities into the state.
+  example: []
+  syntax:
+    content: public enum MergeStrategy
+    content.vb: Public Enum MergeStrategy
+- uid: R3dux.Extensions.Normalization.MergeStrategy.FailIfDuplicate
+  commentId: F:R3dux.Extensions.Normalization.MergeStrategy.FailIfDuplicate
+  id: FailIfDuplicate
+  parent: R3dux.Extensions.Normalization.MergeStrategy
+  langs:
+  - csharp
+  - vb
+  name: FailIfDuplicate
+  nameWithType: MergeStrategy.FailIfDuplicate
+  fullName: R3dux.Extensions.Normalization.MergeStrategy.FailIfDuplicate
+  type: Field
+  source:
+    remote:
+      path: src/library/R3dux.Normalization/MergeStrategy.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: FailIfDuplicate
+    path: ../src/library/R3dux.Normalization/MergeStrategy.cs
+    startLine: 14
+  assemblies:
+  - R3dux.Normalization
+  namespace: R3dux.Extensions.Normalization
+  summary: Fail if a duplicate entity is found during the merge.
+  example: []
+  syntax:
+    content: FailIfDuplicate = 0
+    return:
+      type: R3dux.Extensions.Normalization.MergeStrategy
+- uid: R3dux.Extensions.Normalization.MergeStrategy.Overwrite
+  commentId: F:R3dux.Extensions.Normalization.MergeStrategy.Overwrite
+  id: Overwrite
+  parent: R3dux.Extensions.Normalization.MergeStrategy
+  langs:
+  - csharp
+  - vb
+  name: Overwrite
+  nameWithType: MergeStrategy.Overwrite
+  fullName: R3dux.Extensions.Normalization.MergeStrategy.Overwrite
+  type: Field
+  source:
+    remote:
+      path: src/library/R3dux.Normalization/MergeStrategy.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Overwrite
+    path: ../src/library/R3dux.Normalization/MergeStrategy.cs
+    startLine: 19
+  assemblies:
+  - R3dux.Normalization
+  namespace: R3dux.Extensions.Normalization
+  summary: Overwrite existing entities with the same key during the merge.
+  example: []
+  syntax:
+    content: Overwrite = 1
+    return:
+      type: R3dux.Extensions.Normalization.MergeStrategy
+references:
+- uid: R3dux.Extensions.Normalization
+  commentId: N:R3dux.Extensions.Normalization
+  href: R3dux.html
+  name: R3dux.Extensions.Normalization
+  nameWithType: R3dux.Extensions.Normalization
+  fullName: R3dux.Extensions.Normalization
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Extensions
+    name: Extensions
+    href: R3dux.Extensions.html
+  - name: .
+  - uid: R3dux.Extensions.Normalization
+    name: Normalization
+    href: R3dux.Extensions.Normalization.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Extensions
+    name: Extensions
+    href: R3dux.Extensions.html
+  - name: .
+  - uid: R3dux.Extensions.Normalization
+    name: Normalization
+    href: R3dux.Extensions.Normalization.html
+- uid: R3dux.Extensions.Normalization.MergeStrategy
+  commentId: T:R3dux.Extensions.Normalization.MergeStrategy
+  parent: R3dux.Extensions.Normalization
+  href: R3dux.Extensions.Normalization.MergeStrategy.html
+  name: MergeStrategy
+  nameWithType: MergeStrategy
+  fullName: R3dux.Extensions.Normalization.MergeStrategy

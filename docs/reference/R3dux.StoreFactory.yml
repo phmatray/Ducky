@@ -1,0 +1,413 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.StoreFactory
+  commentId: T:R3dux.StoreFactory
+  id: StoreFactory
+  parent: R3dux
+  children:
+  - R3dux.StoreFactory.CreateStore(R3dux.Abstractions.IDispatcher,R3dux.Abstractions.ISlice[],R3dux.Abstractions.IEffect[])
+  langs:
+  - csharp
+  - vb
+  name: StoreFactory
+  nameWithType: StoreFactory
+  fullName: R3dux.StoreFactory
+  type: Class
+  source:
+    remote:
+      path: src/library/R3dux/StoreFactory.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: StoreFactory
+    path: ../src/library/R3dux/StoreFactory.cs
+    startLine: 11
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Factory for creating instances of <xref href="R3dux.R3duxStore" data-throw-if-not-resolved="false"></xref>.
+  example: []
+  syntax:
+    content: public static class StoreFactory
+    content.vb: Public Module StoreFactory
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: R3dux.StoreFactory.CreateStore(R3dux.Abstractions.IDispatcher,R3dux.Abstractions.ISlice[],R3dux.Abstractions.IEffect[])
+  commentId: M:R3dux.StoreFactory.CreateStore(R3dux.Abstractions.IDispatcher,R3dux.Abstractions.ISlice[],R3dux.Abstractions.IEffect[])
+  id: CreateStore(R3dux.Abstractions.IDispatcher,R3dux.Abstractions.ISlice[],R3dux.Abstractions.IEffect[])
+  parent: R3dux.StoreFactory
+  langs:
+  - csharp
+  - vb
+  name: CreateStore(IDispatcher, ISlice[], IEffect[])
+  nameWithType: StoreFactory.CreateStore(IDispatcher, ISlice[], IEffect[])
+  fullName: R3dux.StoreFactory.CreateStore(R3dux.Abstractions.IDispatcher, R3dux.Abstractions.ISlice[], R3dux.Abstractions.IEffect[])
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/StoreFactory.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: CreateStore
+    path: ../src/library/R3dux/StoreFactory.cs
+    startLine: 20
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Creates a new instance of <xref href="R3dux.R3duxStore" data-throw-if-not-resolved="false"></xref>.
+  example: []
+  syntax:
+    content: public static R3duxStore CreateStore(IDispatcher dispatcher, ISlice[] slices, IEffect[] effects)
+    parameters:
+    - id: dispatcher
+      type: R3dux.Abstractions.IDispatcher
+      description: The dispatcher to be used by the store.
+    - id: slices
+      type: R3dux.Abstractions.ISlice[]
+      description: The collection of slices to be added to the store.
+    - id: effects
+      type: R3dux.Abstractions.IEffect[]
+      description: The collection of effects to be added to the store.
+    return:
+      type: R3dux.R3duxStore
+      description: A new instance of <xref href="R3dux.R3duxStore" data-throw-if-not-resolved="false"></xref>.
+    content.vb: Public Shared Function CreateStore(dispatcher As IDispatcher, slices As ISlice(), effects As IEffect()) As R3duxStore
+  overload: R3dux.StoreFactory.CreateStore*
+  nameWithType.vb: StoreFactory.CreateStore(IDispatcher, ISlice(), IEffect())
+  fullName.vb: R3dux.StoreFactory.CreateStore(R3dux.Abstractions.IDispatcher, R3dux.Abstractions.ISlice(), R3dux.Abstractions.IEffect())
+  name.vb: CreateStore(IDispatcher, ISlice(), IEffect())
+references:
+- uid: R3dux.R3duxStore
+  commentId: T:R3dux.R3duxStore
+  parent: R3dux
+  href: R3dux.R3duxStore.html
+  name: R3duxStore
+  nameWithType: R3duxStore
+  fullName: R3dux.R3duxStore
+- uid: R3dux
+  commentId: N:R3dux
+  href: R3dux.html
+  name: R3dux
+  nameWithType: R3dux
+  fullName: R3dux
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: R3dux.StoreFactory.CreateStore*
+  commentId: Overload:R3dux.StoreFactory.CreateStore
+  href: R3dux.StoreFactory.html#R3dux_StoreFactory_CreateStore_R3dux_Abstractions_IDispatcher_R3dux_Abstractions_ISlice___R3dux_Abstractions_IEffect___
+  name: CreateStore
+  nameWithType: StoreFactory.CreateStore
+  fullName: R3dux.StoreFactory.CreateStore
+- uid: R3dux.Abstractions.IDispatcher
+  commentId: T:R3dux.Abstractions.IDispatcher
+  parent: R3dux.Abstractions
+  href: R3dux.Abstractions.IDispatcher.html
+  name: IDispatcher
+  nameWithType: IDispatcher
+  fullName: R3dux.Abstractions.IDispatcher
+- uid: R3dux.Abstractions.ISlice[]
+  isExternal: true
+  href: R3dux.Abstractions.ISlice.html
+  name: ISlice[]
+  nameWithType: ISlice[]
+  fullName: R3dux.Abstractions.ISlice[]
+  nameWithType.vb: ISlice()
+  fullName.vb: R3dux.Abstractions.ISlice()
+  name.vb: ISlice()
+  spec.csharp:
+  - uid: R3dux.Abstractions.ISlice
+    name: ISlice
+    href: R3dux.Abstractions.ISlice.html
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: R3dux.Abstractions.ISlice
+    name: ISlice
+    href: R3dux.Abstractions.ISlice.html
+  - name: (
+  - name: )
+- uid: R3dux.Abstractions.IEffect[]
+  isExternal: true
+  href: R3dux.Abstractions.IEffect.html
+  name: IEffect[]
+  nameWithType: IEffect[]
+  fullName: R3dux.Abstractions.IEffect[]
+  nameWithType.vb: IEffect()
+  fullName.vb: R3dux.Abstractions.IEffect()
+  name.vb: IEffect()
+  spec.csharp:
+  - uid: R3dux.Abstractions.IEffect
+    name: IEffect
+    href: R3dux.Abstractions.IEffect.html
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: R3dux.Abstractions.IEffect
+    name: IEffect
+    href: R3dux.Abstractions.IEffect.html
+  - name: (
+  - name: )
+- uid: R3dux.Abstractions
+  commentId: N:R3dux.Abstractions
+  href: R3dux.html
+  name: R3dux.Abstractions
+  nameWithType: R3dux.Abstractions
+  fullName: R3dux.Abstractions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html

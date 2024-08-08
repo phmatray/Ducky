@@ -1,0 +1,119 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Extensions.FluxStandardActions.IFsaMeta`1
+  commentId: T:R3dux.Extensions.FluxStandardActions.IFsaMeta`1
+  id: IFsaMeta`1
+  parent: R3dux.Extensions.FluxStandardActions
+  children:
+  - R3dux.Extensions.FluxStandardActions.IFsaMeta`1.Meta
+  langs:
+  - csharp
+  - vb
+  name: IFsaMeta<TMeta>
+  nameWithType: IFsaMeta<TMeta>
+  fullName: R3dux.Extensions.FluxStandardActions.IFsaMeta<TMeta>
+  type: Interface
+  source:
+    remote:
+      path: src/library/R3dux.FluxStandardActions/IFsaMeta.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: IFsaMeta
+    path: ../src/library/R3dux.FluxStandardActions/IFsaMeta.cs
+    startLine: 10
+  assemblies:
+  - R3dux.FluxStandardActions
+  namespace: R3dux.Extensions.FluxStandardActions
+  summary: Represents an action with a metadata property.
+  example: []
+  syntax:
+    content: public interface IFsaMeta<TMeta>
+    typeParameters:
+    - id: TMeta
+      description: The type of the metadata.
+    content.vb: Public Interface IFsaMeta(Of TMeta)
+  nameWithType.vb: IFsaMeta(Of TMeta)
+  fullName.vb: R3dux.Extensions.FluxStandardActions.IFsaMeta(Of TMeta)
+  name.vb: IFsaMeta(Of TMeta)
+- uid: R3dux.Extensions.FluxStandardActions.IFsaMeta`1.Meta
+  commentId: P:R3dux.Extensions.FluxStandardActions.IFsaMeta`1.Meta
+  id: Meta
+  parent: R3dux.Extensions.FluxStandardActions.IFsaMeta`1
+  langs:
+  - csharp
+  - vb
+  name: Meta
+  nameWithType: IFsaMeta<TMeta>.Meta
+  fullName: R3dux.Extensions.FluxStandardActions.IFsaMeta<TMeta>.Meta
+  type: Property
+  source:
+    remote:
+      path: src/library/R3dux.FluxStandardActions/IFsaMeta.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Meta
+    path: ../src/library/R3dux.FluxStandardActions/IFsaMeta.cs
+    startLine: 15
+  assemblies:
+  - R3dux.FluxStandardActions
+  namespace: R3dux.Extensions.FluxStandardActions
+  summary: Gets the optional `meta` property MAY be any type of value.
+  example: []
+  syntax:
+    content: TMeta Meta { get; init; }
+    parameters: []
+    return:
+      type: '{TMeta}'
+    content.vb: Property Meta As TMeta
+  overload: R3dux.Extensions.FluxStandardActions.IFsaMeta`1.Meta*
+  nameWithType.vb: IFsaMeta(Of TMeta).Meta
+  fullName.vb: R3dux.Extensions.FluxStandardActions.IFsaMeta(Of TMeta).Meta
+references:
+- uid: R3dux.Extensions.FluxStandardActions
+  commentId: N:R3dux.Extensions.FluxStandardActions
+  href: R3dux.html
+  name: R3dux.Extensions.FluxStandardActions
+  nameWithType: R3dux.Extensions.FluxStandardActions
+  fullName: R3dux.Extensions.FluxStandardActions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Extensions
+    name: Extensions
+    href: R3dux.Extensions.html
+  - name: .
+  - uid: R3dux.Extensions.FluxStandardActions
+    name: FluxStandardActions
+    href: R3dux.Extensions.FluxStandardActions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Extensions
+    name: Extensions
+    href: R3dux.Extensions.html
+  - name: .
+  - uid: R3dux.Extensions.FluxStandardActions
+    name: FluxStandardActions
+    href: R3dux.Extensions.FluxStandardActions.html
+- uid: R3dux.Extensions.FluxStandardActions.IFsaMeta`1.Meta*
+  commentId: Overload:R3dux.Extensions.FluxStandardActions.IFsaMeta`1.Meta
+  href: R3dux.Extensions.FluxStandardActions.IFsaMeta-1.html#R3dux_Extensions_FluxStandardActions_IFsaMeta_1_Meta
+  name: Meta
+  nameWithType: IFsaMeta<TMeta>.Meta
+  fullName: R3dux.Extensions.FluxStandardActions.IFsaMeta<TMeta>.Meta
+  nameWithType.vb: IFsaMeta(Of TMeta).Meta
+  fullName.vb: R3dux.Extensions.FluxStandardActions.IFsaMeta(Of TMeta).Meta
+- uid: '{TMeta}'
+  commentId: '!:TMeta'
+  definition: TMeta
+  name: TMeta
+  nameWithType: TMeta
+  fullName: TMeta
+- uid: TMeta
+  name: TMeta
+  nameWithType: TMeta
+  fullName: TMeta

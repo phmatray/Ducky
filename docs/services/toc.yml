@@ -1,0 +1,9 @@
+# This is an automatically generated file
+items:
+- name: Services
+  href: README.md
+- name: SampleService
+  href: SampleService/README.md
+  items:
+  - name: Sample Service
+    href: SampleService/README.md

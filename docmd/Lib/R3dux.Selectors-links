@@ -1,6 +1,0 @@
-
-M:R3dux.MemoizedSelector.Create``2(System.Func{``0,``1},System.Func{``0,System.Object}[])|MemoizedSelector.Create_TState,TResult_(Func_TState,TResult_,Func_TState,object_[]).md|Create<TState,TResult>(Func<TState,TResult>, Func<TState,object>[])
-M:R3dux.MemoizedSelector.Compose``3(System.Func{``0,``1},System.Func{``1,``2},System.Func{``0,System.Object}[])|MemoizedSelector.Compose_TState,TIntermediate,TResult_(Func_TState,TIntermediate_,Func_TIntermediate,TResult_,Func_TState,object_[]).md|Compose<TState,TIntermediate,TResult>(Func<TState,TIntermediate>, Func<TIntermediate,TResult>, Func<TState,object>[])
-M:R3dux.MemoizedSelector.AreDependenciesEqual(System.Object[],System.Object[])|MemoizedSelector.AreDependenciesEqual(object[],object[]).md|AreDependenciesEqual(object[], object[])
-N:R3dux|R3dux.Selectors.md#R3dux|R3dux
-T:R3dux.MemoizedSelector|MemoizedSelector.md|MemoizedSelector

@@ -1,0 +1,297 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Abstractions.IRootStateSerializer
+  commentId: T:R3dux.Abstractions.IRootStateSerializer
+  id: IRootStateSerializer
+  parent: R3dux.Abstractions
+  children:
+  - R3dux.Abstractions.IRootStateSerializer.Deserialize(System.String)
+  - R3dux.Abstractions.IRootStateSerializer.LoadFromFile(System.String)
+  - R3dux.Abstractions.IRootStateSerializer.SaveToFile(R3dux.Abstractions.IRootState,System.String)
+  - R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState)
+  - R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState,System.String)
+  langs:
+  - csharp
+  - vb
+  name: IRootStateSerializer
+  nameWithType: IRootStateSerializer
+  fullName: R3dux.Abstractions.IRootStateSerializer
+  type: Interface
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: IRootStateSerializer
+    path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
+    startLine: 9
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Provides methods for serializing and deserializing <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> instances.
+  example: []
+  syntax:
+    content: public interface IRootStateSerializer
+    content.vb: Public Interface IRootStateSerializer
+- uid: R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState)
+  commentId: M:R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState)
+  id: Serialize(R3dux.Abstractions.IRootState)
+  parent: R3dux.Abstractions.IRootStateSerializer
+  langs:
+  - csharp
+  - vb
+  name: Serialize(IRootState)
+  nameWithType: IRootStateSerializer.Serialize(IRootState)
+  fullName: R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Serialize
+    path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
+    startLine: 16
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Serializes the specified <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> to a JSON string.
+  example: []
+  syntax:
+    content: string Serialize(IRootState rootState)
+    parameters:
+    - id: rootState
+      type: R3dux.Abstractions.IRootState
+      description: The <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> to serialize.
+    return:
+      type: System.String
+      description: The JSON string representation of the state.
+    content.vb: Function Serialize(rootState As IRootState) As String
+  overload: R3dux.Abstractions.IRootStateSerializer.Serialize*
+- uid: R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState,System.String)
+  commentId: M:R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState,System.String)
+  id: Serialize(R3dux.Abstractions.IRootState,System.String)
+  parent: R3dux.Abstractions.IRootStateSerializer
+  langs:
+  - csharp
+  - vb
+  name: Serialize(IRootState, string)
+  nameWithType: IRootStateSerializer.Serialize(IRootState, string)
+  fullName: R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState, string)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Serialize
+    path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
+    startLine: 24
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Serializes the slice state associated with the specified key to a JSON string.
+  example: []
+  syntax:
+    content: string Serialize(IRootState rootState, string key)
+    parameters:
+    - id: rootState
+      type: R3dux.Abstractions.IRootState
+      description: The <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> to serialize.
+    - id: key
+      type: System.String
+      description: The key of the slice state to serialize.
+    return:
+      type: System.String
+      description: The JSON string representation of the slice state.
+    content.vb: Function Serialize(rootState As IRootState, key As String) As String
+  overload: R3dux.Abstractions.IRootStateSerializer.Serialize*
+  nameWithType.vb: IRootStateSerializer.Serialize(IRootState, String)
+  fullName.vb: R3dux.Abstractions.IRootStateSerializer.Serialize(R3dux.Abstractions.IRootState, String)
+  name.vb: Serialize(IRootState, String)
+- uid: R3dux.Abstractions.IRootStateSerializer.Deserialize(System.String)
+  commentId: M:R3dux.Abstractions.IRootStateSerializer.Deserialize(System.String)
+  id: Deserialize(System.String)
+  parent: R3dux.Abstractions.IRootStateSerializer
+  langs:
+  - csharp
+  - vb
+  name: Deserialize(string)
+  nameWithType: IRootStateSerializer.Deserialize(string)
+  fullName: R3dux.Abstractions.IRootStateSerializer.Deserialize(string)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: Deserialize
+    path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
+    startLine: 31
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Deserializes a <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> from a JSON string.
+  example: []
+  syntax:
+    content: IRootState Deserialize(string json)
+    parameters:
+    - id: json
+      type: System.String
+      description: The JSON string representation of the state.
+    return:
+      type: R3dux.Abstractions.IRootState
+      description: A new instance of <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> with the deserialized state.
+    content.vb: Function Deserialize(json As String) As IRootState
+  overload: R3dux.Abstractions.IRootStateSerializer.Deserialize*
+  nameWithType.vb: IRootStateSerializer.Deserialize(String)
+  fullName.vb: R3dux.Abstractions.IRootStateSerializer.Deserialize(String)
+  name.vb: Deserialize(String)
+- uid: R3dux.Abstractions.IRootStateSerializer.SaveToFile(R3dux.Abstractions.IRootState,System.String)
+  commentId: M:R3dux.Abstractions.IRootStateSerializer.SaveToFile(R3dux.Abstractions.IRootState,System.String)
+  id: SaveToFile(R3dux.Abstractions.IRootState,System.String)
+  parent: R3dux.Abstractions.IRootStateSerializer
+  langs:
+  - csharp
+  - vb
+  name: SaveToFile(IRootState, string)
+  nameWithType: IRootStateSerializer.SaveToFile(IRootState, string)
+  fullName: R3dux.Abstractions.IRootStateSerializer.SaveToFile(R3dux.Abstractions.IRootState, string)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: SaveToFile
+    path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
+    startLine: 38
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Saves the specified <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> to a file.
+  example: []
+  syntax:
+    content: void SaveToFile(IRootState rootState, string filePath)
+    parameters:
+    - id: rootState
+      type: R3dux.Abstractions.IRootState
+      description: The <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> to save.
+    - id: filePath
+      type: System.String
+      description: The path of the file to save the state to.
+    content.vb: Sub SaveToFile(rootState As IRootState, filePath As String)
+  overload: R3dux.Abstractions.IRootStateSerializer.SaveToFile*
+  nameWithType.vb: IRootStateSerializer.SaveToFile(IRootState, String)
+  fullName.vb: R3dux.Abstractions.IRootStateSerializer.SaveToFile(R3dux.Abstractions.IRootState, String)
+  name.vb: SaveToFile(IRootState, String)
+- uid: R3dux.Abstractions.IRootStateSerializer.LoadFromFile(System.String)
+  commentId: M:R3dux.Abstractions.IRootStateSerializer.LoadFromFile(System.String)
+  id: LoadFromFile(System.String)
+  parent: R3dux.Abstractions.IRootStateSerializer
+  langs:
+  - csharp
+  - vb
+  name: LoadFromFile(string)
+  nameWithType: IRootStateSerializer.LoadFromFile(string)
+  fullName: R3dux.Abstractions.IRootStateSerializer.LoadFromFile(string)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: LoadFromFile
+    path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
+    startLine: 45
+  assemblies:
+  - R3dux.Abstractions
+  namespace: R3dux.Abstractions
+  summary: Loads a <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> from a file.
+  example: []
+  syntax:
+    content: IRootState LoadFromFile(string filePath)
+    parameters:
+    - id: filePath
+      type: System.String
+      description: The path of the file to load the state from.
+    return:
+      type: R3dux.Abstractions.IRootState
+      description: A new instance of <xref href="R3dux.Abstractions.IRootState" data-throw-if-not-resolved="false"></xref> with the loaded state.
+    content.vb: Function LoadFromFile(filePath As String) As IRootState
+  overload: R3dux.Abstractions.IRootStateSerializer.LoadFromFile*
+  nameWithType.vb: IRootStateSerializer.LoadFromFile(String)
+  fullName.vb: R3dux.Abstractions.IRootStateSerializer.LoadFromFile(String)
+  name.vb: LoadFromFile(String)
+references:
+- uid: R3dux.Abstractions.IRootState
+  commentId: T:R3dux.Abstractions.IRootState
+  parent: R3dux.Abstractions
+  href: R3dux.Abstractions.IRootState.html
+  name: IRootState
+  nameWithType: IRootState
+  fullName: R3dux.Abstractions.IRootState
+- uid: R3dux.Abstractions
+  commentId: N:R3dux.Abstractions
+  href: R3dux.html
+  name: R3dux.Abstractions
+  nameWithType: R3dux.Abstractions
+  fullName: R3dux.Abstractions
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Abstractions
+    name: Abstractions
+    href: R3dux.Abstractions.html
+- uid: R3dux.Abstractions.IRootStateSerializer.Serialize*
+  commentId: Overload:R3dux.Abstractions.IRootStateSerializer.Serialize
+  href: R3dux.Abstractions.IRootStateSerializer.html#R3dux_Abstractions_IRootStateSerializer_Serialize_R3dux_Abstractions_IRootState_
+  name: Serialize
+  nameWithType: IRootStateSerializer.Serialize
+  fullName: R3dux.Abstractions.IRootStateSerializer.Serialize
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: R3dux.Abstractions.IRootStateSerializer.Deserialize*
+  commentId: Overload:R3dux.Abstractions.IRootStateSerializer.Deserialize
+  href: R3dux.Abstractions.IRootStateSerializer.html#R3dux_Abstractions_IRootStateSerializer_Deserialize_System_String_
+  name: Deserialize
+  nameWithType: IRootStateSerializer.Deserialize
+  fullName: R3dux.Abstractions.IRootStateSerializer.Deserialize
+- uid: R3dux.Abstractions.IRootStateSerializer.SaveToFile*
+  commentId: Overload:R3dux.Abstractions.IRootStateSerializer.SaveToFile
+  href: R3dux.Abstractions.IRootStateSerializer.html#R3dux_Abstractions_IRootStateSerializer_SaveToFile_R3dux_Abstractions_IRootState_System_String_
+  name: SaveToFile
+  nameWithType: IRootStateSerializer.SaveToFile
+  fullName: R3dux.Abstractions.IRootStateSerializer.SaveToFile
+- uid: R3dux.Abstractions.IRootStateSerializer.LoadFromFile*
+  commentId: Overload:R3dux.Abstractions.IRootStateSerializer.LoadFromFile
+  href: R3dux.Abstractions.IRootStateSerializer.html#R3dux_Abstractions_IRootStateSerializer_LoadFromFile_System_String_
+  name: LoadFromFile
+  nameWithType: IRootStateSerializer.LoadFromFile
+  fullName: R3dux.Abstractions.IRootStateSerializer.LoadFromFile

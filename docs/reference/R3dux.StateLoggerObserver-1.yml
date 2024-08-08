@@ -1,0 +1,951 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.StateLoggerObserver`1
+  commentId: T:R3dux.StateLoggerObserver`1
+  id: StateLoggerObserver`1
+  parent: R3dux
+  children:
+  - R3dux.StateLoggerObserver`1.OnCompletedCore(R3.Result)
+  - R3dux.StateLoggerObserver`1.OnErrorResumeCore(System.Exception)
+  - R3dux.StateLoggerObserver`1.OnNextCore(R3dux.StateChange{`0})
+  langs:
+  - csharp
+  - vb
+  name: StateLoggerObserver<TState>
+  nameWithType: StateLoggerObserver<TState>
+  fullName: R3dux.StateLoggerObserver<TState>
+  type: Class
+  source:
+    remote:
+      path: src/library/R3dux/StateLoggerObserver.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: StateLoggerObserver
+    path: ../src/library/R3dux/StateLoggerObserver.cs
+    startLine: 17
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Provides logging functionalities for state changes.
+  example: []
+  syntax:
+    content: 'public sealed class StateLoggerObserver<TState> : Observer<StateChange<TState>>, IDisposable'
+    typeParameters:
+    - id: TState
+      description: The type of the state.
+    content.vb: Public NotInheritable Class StateLoggerObserver(Of TState) Inherits Observer(Of StateChange(Of TState)) Implements IDisposable
+  inheritance:
+  - System.Object
+  - R3.Observer{R3dux.StateChange{{TState}}}
+  implements:
+  - System.IDisposable
+  inheritedMembers:
+  - R3.Observer{R3dux.StateChange{{TState}}}.OnNext(R3dux.StateChange{{TState}})
+  - R3.Observer{R3dux.StateChange{{TState}}}.OnErrorResume(System.Exception)
+  - R3.Observer{R3dux.StateChange{{TState}}}.OnCompleted(R3.Result)
+  - R3.Observer{R3dux.StateChange{{TState}}}.Dispose
+  - R3.Observer{R3dux.StateChange{{TState}}}.IsDisposed
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+  nameWithType.vb: StateLoggerObserver(Of TState)
+  fullName.vb: R3dux.StateLoggerObserver(Of TState)
+  name.vb: StateLoggerObserver(Of TState)
+- uid: R3dux.StateLoggerObserver`1.OnNextCore(R3dux.StateChange{`0})
+  commentId: M:R3dux.StateLoggerObserver`1.OnNextCore(R3dux.StateChange{`0})
+  id: OnNextCore(R3dux.StateChange{`0})
+  parent: R3dux.StateLoggerObserver`1
+  langs:
+  - csharp
+  - vb
+  name: OnNextCore(StateChange<TState>)
+  nameWithType: StateLoggerObserver<TState>.OnNextCore(StateChange<TState>)
+  fullName: R3dux.StateLoggerObserver<TState>.OnNextCore(R3dux.StateChange<TState>)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/StateLoggerObserver.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: OnNextCore
+    path: ../src/library/R3dux/StateLoggerObserver.cs
+    startLine: 35
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Handles the reception of a state change notification.
+  example: []
+  syntax:
+    content: protected override void OnNextCore(StateChange<TState> value)
+    parameters:
+    - id: value
+      type: R3dux.StateChange{{TState}}
+      description: The state change notification.
+    content.vb: Protected Overrides Sub OnNextCore(value As StateChange(Of TState))
+  overridden: R3.Observer{R3dux.StateChange{{TState}}}.OnNextCore(R3dux.StateChange{{TState}})
+  overload: R3dux.StateLoggerObserver`1.OnNextCore*
+  nameWithType.vb: StateLoggerObserver(Of TState).OnNextCore(StateChange(Of TState))
+  fullName.vb: R3dux.StateLoggerObserver(Of TState).OnNextCore(R3dux.StateChange(Of TState))
+  name.vb: OnNextCore(StateChange(Of TState))
+- uid: R3dux.StateLoggerObserver`1.OnCompletedCore(R3.Result)
+  commentId: M:R3dux.StateLoggerObserver`1.OnCompletedCore(R3.Result)
+  id: OnCompletedCore(R3.Result)
+  parent: R3dux.StateLoggerObserver`1
+  langs:
+  - csharp
+  - vb
+  name: OnCompletedCore(Result)
+  nameWithType: StateLoggerObserver<TState>.OnCompletedCore(Result)
+  fullName: R3dux.StateLoggerObserver<TState>.OnCompletedCore(R3.Result)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/StateLoggerObserver.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: OnCompletedCore
+    path: ../src/library/R3dux/StateLoggerObserver.cs
+    startLine: 44
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Handles the completion of the state change stream.
+  example: []
+  syntax:
+    content: protected override void OnCompletedCore(Result result)
+    parameters:
+    - id: result
+      type: R3.Result
+      description: The result of the state change stream.
+    content.vb: Protected Overrides Sub OnCompletedCore(result As Result)
+  overridden: R3.Observer{R3dux.StateChange{{TState}}}.OnCompletedCore(R3.Result)
+  overload: R3dux.StateLoggerObserver`1.OnCompletedCore*
+  nameWithType.vb: StateLoggerObserver(Of TState).OnCompletedCore(Result)
+  fullName.vb: R3dux.StateLoggerObserver(Of TState).OnCompletedCore(R3.Result)
+- uid: R3dux.StateLoggerObserver`1.OnErrorResumeCore(System.Exception)
+  commentId: M:R3dux.StateLoggerObserver`1.OnErrorResumeCore(System.Exception)
+  id: OnErrorResumeCore(System.Exception)
+  parent: R3dux.StateLoggerObserver`1
+  langs:
+  - csharp
+  - vb
+  name: OnErrorResumeCore(Exception)
+  nameWithType: StateLoggerObserver<TState>.OnErrorResumeCore(Exception)
+  fullName: R3dux.StateLoggerObserver<TState>.OnErrorResumeCore(System.Exception)
+  type: Method
+  source:
+    remote:
+      path: src/library/R3dux/StateLoggerObserver.cs
+      branch: features/documentation
+      repo: https://github.com/phmatray/R3dux.git
+    id: OnErrorResumeCore
+    path: ../src/library/R3dux/StateLoggerObserver.cs
+    startLine: 53
+  assemblies:
+  - R3dux
+  namespace: R3dux
+  summary: Handles an error in the state change stream.
+  example: []
+  syntax:
+    content: protected override void OnErrorResumeCore(Exception error)
+    parameters:
+    - id: error
+      type: System.Exception
+      description: The error encountered.
+    content.vb: Protected Overrides Sub OnErrorResumeCore([error] As Exception)
+  overridden: R3.Observer{R3dux.StateChange{{TState}}}.OnErrorResumeCore(System.Exception)
+  overload: R3dux.StateLoggerObserver`1.OnErrorResumeCore*
+  nameWithType.vb: StateLoggerObserver(Of TState).OnErrorResumeCore(Exception)
+  fullName.vb: R3dux.StateLoggerObserver(Of TState).OnErrorResumeCore(System.Exception)
+references:
+- uid: R3dux
+  commentId: N:R3dux
+  href: R3dux.html
+  name: R3dux
+  nameWithType: R3dux
+  fullName: R3dux
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: R3.Observer{R3dux.StateChange{{TState}}}
+  commentId: T:R3.Observer{R3dux.StateChange{`0}}
+  parent: R3
+  definition: R3.Observer`1
+  href: R3dux.StateChange-1.html
+  name: Observer<StateChange<TState>>
+  nameWithType: Observer<StateChange<TState>>
+  fullName: R3.Observer<R3dux.StateChange<TState>>
+  nameWithType.vb: Observer(Of StateChange(Of TState))
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState))
+  name.vb: Observer(Of StateChange(Of TState))
+  spec.csharp:
+  - uid: R3.Observer`1
+    name: Observer
+    isExternal: true
+  - name: <
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: <
+  - name: TState
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observer`1
+    name: Observer
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TState
+  - name: )
+  - name: )
+- uid: System.IDisposable
+  commentId: T:System.IDisposable
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.idisposable
+  name: IDisposable
+  nameWithType: IDisposable
+  fullName: System.IDisposable
+- uid: R3.Observer{R3dux.StateChange{{TState}}}.OnNext(R3dux.StateChange{{TState}})
+  commentId: M:R3.Observer{R3dux.StateChange{`0}}.OnNext(R3dux.StateChange{`0})
+  parent: R3.Observer{R3dux.StateChange{{TState}}}
+  definition: R3.Observer`1.OnNext(`0)
+  href: R3dux.StateChange-1.html
+  name: OnNext(StateChange<TState>)
+  nameWithType: Observer<StateChange<TState>>.OnNext(StateChange<TState>)
+  fullName: R3.Observer<R3dux.StateChange<TState>>.OnNext(R3dux.StateChange<TState>)
+  nameWithType.vb: Observer(Of StateChange(Of TState)).OnNext(StateChange(Of TState))
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState)).OnNext(R3dux.StateChange(Of TState))
+  name.vb: OnNext(StateChange(Of TState))
+  spec.csharp:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnNext(R3dux.StateChange{`0})
+    name: OnNext
+    isExternal: true
+  - name: (
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: <
+  - name: TState
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnNext(R3dux.StateChange{`0})
+    name: OnNext
+    isExternal: true
+  - name: (
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TState
+  - name: )
+  - name: )
+- uid: R3.Observer{R3dux.StateChange{{TState}}}.OnErrorResume(System.Exception)
+  commentId: M:R3.Observer{R3dux.StateChange{`0}}.OnErrorResume(System.Exception)
+  parent: R3.Observer{R3dux.StateChange{{TState}}}
+  definition: R3.Observer`1.OnErrorResume(System.Exception)
+  href: https://learn.microsoft.com/dotnet/api/system.exception
+  name: OnErrorResume(Exception)
+  nameWithType: Observer<StateChange<TState>>.OnErrorResume(Exception)
+  fullName: R3.Observer<R3dux.StateChange<TState>>.OnErrorResume(System.Exception)
+  nameWithType.vb: Observer(Of StateChange(Of TState)).OnErrorResume(Exception)
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState)).OnErrorResume(System.Exception)
+  spec.csharp:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnErrorResume(System.Exception)
+    name: OnErrorResume
+    isExternal: true
+  - name: (
+  - uid: System.Exception
+    name: Exception
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.exception
+  - name: )
+  spec.vb:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnErrorResume(System.Exception)
+    name: OnErrorResume
+    isExternal: true
+  - name: (
+  - uid: System.Exception
+    name: Exception
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.exception
+  - name: )
+- uid: R3.Observer{R3dux.StateChange{{TState}}}.OnCompleted(R3.Result)
+  commentId: M:R3.Observer{R3dux.StateChange{`0}}.OnCompleted(R3.Result)
+  parent: R3.Observer{R3dux.StateChange{{TState}}}
+  definition: R3.Observer`1.OnCompleted(R3.Result)
+  name: OnCompleted(Result)
+  nameWithType: Observer<StateChange<TState>>.OnCompleted(Result)
+  fullName: R3.Observer<R3dux.StateChange<TState>>.OnCompleted(R3.Result)
+  nameWithType.vb: Observer(Of StateChange(Of TState)).OnCompleted(Result)
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState)).OnCompleted(R3.Result)
+  spec.csharp:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnCompleted(R3.Result)
+    name: OnCompleted
+    isExternal: true
+  - name: (
+  - uid: R3.Result
+    name: Result
+    isExternal: true
+  - name: )
+  spec.vb:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnCompleted(R3.Result)
+    name: OnCompleted
+    isExternal: true
+  - name: (
+  - uid: R3.Result
+    name: Result
+    isExternal: true
+  - name: )
+- uid: R3.Observer{R3dux.StateChange{{TState}}}.Dispose
+  commentId: M:R3.Observer{R3dux.StateChange{`0}}.Dispose
+  parent: R3.Observer{R3dux.StateChange{{TState}}}
+  definition: R3.Observer`1.Dispose
+  name: Dispose()
+  nameWithType: Observer<StateChange<TState>>.Dispose()
+  fullName: R3.Observer<R3dux.StateChange<TState>>.Dispose()
+  nameWithType.vb: Observer(Of StateChange(Of TState)).Dispose()
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState)).Dispose()
+  spec.csharp:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.Dispose
+    name: Dispose
+    isExternal: true
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.Dispose
+    name: Dispose
+    isExternal: true
+  - name: (
+  - name: )
+- uid: R3.Observer{R3dux.StateChange{{TState}}}.IsDisposed
+  commentId: P:R3.Observer{R3dux.StateChange{`0}}.IsDisposed
+  parent: R3.Observer{R3dux.StateChange{{TState}}}
+  definition: R3.Observer`1.IsDisposed
+  name: IsDisposed
+  nameWithType: Observer<StateChange<TState>>.IsDisposed
+  fullName: R3.Observer<R3dux.StateChange<TState>>.IsDisposed
+  nameWithType.vb: Observer(Of StateChange(Of TState)).IsDisposed
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState)).IsDisposed
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: R3.Observer`1
+  commentId: T:R3.Observer`1
+  isExternal: true
+  name: Observer<T>
+  nameWithType: Observer<T>
+  fullName: R3.Observer<T>
+  nameWithType.vb: Observer(Of T)
+  fullName.vb: R3.Observer(Of T)
+  name.vb: Observer(Of T)
+  spec.csharp:
+  - uid: R3.Observer`1
+    name: Observer
+    isExternal: true
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: R3.Observer`1
+    name: Observer
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: R3
+  commentId: N:R3
+  isExternal: true
+  name: R3
+  nameWithType: R3
+  fullName: R3
+- uid: R3.Observer`1.OnNext(`0)
+  commentId: M:R3.Observer`1.OnNext(`0)
+  isExternal: true
+  name: OnNext(T)
+  nameWithType: Observer<T>.OnNext(T)
+  fullName: R3.Observer<T>.OnNext(T)
+  nameWithType.vb: Observer(Of T).OnNext(T)
+  fullName.vb: R3.Observer(Of T).OnNext(T)
+  spec.csharp:
+  - uid: R3.Observer`1.OnNext(`0)
+    name: OnNext
+    isExternal: true
+  - name: (
+  - name: T
+  - name: )
+  spec.vb:
+  - uid: R3.Observer`1.OnNext(`0)
+    name: OnNext
+    isExternal: true
+  - name: (
+  - name: T
+  - name: )
+- uid: R3.Observer`1.OnErrorResume(System.Exception)
+  commentId: M:R3.Observer`1.OnErrorResume(System.Exception)
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.exception
+  name: OnErrorResume(Exception)
+  nameWithType: Observer<T>.OnErrorResume(Exception)
+  fullName: R3.Observer<T>.OnErrorResume(System.Exception)
+  nameWithType.vb: Observer(Of T).OnErrorResume(Exception)
+  fullName.vb: R3.Observer(Of T).OnErrorResume(System.Exception)
+  spec.csharp:
+  - uid: R3.Observer`1.OnErrorResume(System.Exception)
+    name: OnErrorResume
+    isExternal: true
+  - name: (
+  - uid: System.Exception
+    name: Exception
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.exception
+  - name: )
+  spec.vb:
+  - uid: R3.Observer`1.OnErrorResume(System.Exception)
+    name: OnErrorResume
+    isExternal: true
+  - name: (
+  - uid: System.Exception
+    name: Exception
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.exception
+  - name: )
+- uid: R3.Observer`1.OnCompleted(R3.Result)
+  commentId: M:R3.Observer`1.OnCompleted(R3.Result)
+  isExternal: true
+  name: OnCompleted(Result)
+  nameWithType: Observer<T>.OnCompleted(Result)
+  fullName: R3.Observer<T>.OnCompleted(R3.Result)
+  nameWithType.vb: Observer(Of T).OnCompleted(Result)
+  fullName.vb: R3.Observer(Of T).OnCompleted(R3.Result)
+  spec.csharp:
+  - uid: R3.Observer`1.OnCompleted(R3.Result)
+    name: OnCompleted
+    isExternal: true
+  - name: (
+  - uid: R3.Result
+    name: Result
+    isExternal: true
+  - name: )
+  spec.vb:
+  - uid: R3.Observer`1.OnCompleted(R3.Result)
+    name: OnCompleted
+    isExternal: true
+  - name: (
+  - uid: R3.Result
+    name: Result
+    isExternal: true
+  - name: )
+- uid: R3.Observer`1.Dispose
+  commentId: M:R3.Observer`1.Dispose
+  isExternal: true
+  name: Dispose()
+  nameWithType: Observer<T>.Dispose()
+  fullName: R3.Observer<T>.Dispose()
+  nameWithType.vb: Observer(Of T).Dispose()
+  fullName.vb: R3.Observer(Of T).Dispose()
+  spec.csharp:
+  - uid: R3.Observer`1.Dispose
+    name: Dispose
+    isExternal: true
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: R3.Observer`1.Dispose
+    name: Dispose
+    isExternal: true
+  - name: (
+  - name: )
+- uid: R3.Observer`1.IsDisposed
+  commentId: P:R3.Observer`1.IsDisposed
+  isExternal: true
+  name: IsDisposed
+  nameWithType: Observer<T>.IsDisposed
+  fullName: R3.Observer<T>.IsDisposed
+  nameWithType.vb: Observer(Of T).IsDisposed
+  fullName.vb: R3.Observer(Of T).IsDisposed
+- uid: R3.Observer{R3dux.StateChange{{TState}}}.OnNextCore(R3dux.StateChange{{TState}})
+  commentId: M:R3.Observer{R3dux.StateChange{`0}}.OnNextCore(R3dux.StateChange{`0})
+  parent: R3.Observer{R3dux.StateChange{{TState}}}
+  definition: R3.Observer`1.OnNextCore(`0)
+  href: R3dux.StateChange-1.html
+  name: OnNextCore(StateChange<TState>)
+  nameWithType: Observer<StateChange<TState>>.OnNextCore(StateChange<TState>)
+  fullName: R3.Observer<R3dux.StateChange<TState>>.OnNextCore(R3dux.StateChange<TState>)
+  nameWithType.vb: Observer(Of StateChange(Of TState)).OnNextCore(StateChange(Of TState))
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState)).OnNextCore(R3dux.StateChange(Of TState))
+  name.vb: OnNextCore(StateChange(Of TState))
+  spec.csharp:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnNextCore(R3dux.StateChange{`0})
+    name: OnNextCore
+    isExternal: true
+  - name: (
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: <
+  - name: TState
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnNextCore(R3dux.StateChange{`0})
+    name: OnNextCore
+    isExternal: true
+  - name: (
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TState
+  - name: )
+  - name: )
+- uid: R3dux.StateLoggerObserver`1.OnNextCore*
+  commentId: Overload:R3dux.StateLoggerObserver`1.OnNextCore
+  href: R3dux.StateLoggerObserver-1.html#R3dux_StateLoggerObserver_1_OnNextCore_R3dux_StateChange__0__
+  name: OnNextCore
+  nameWithType: StateLoggerObserver<TState>.OnNextCore
+  fullName: R3dux.StateLoggerObserver<TState>.OnNextCore
+  nameWithType.vb: StateLoggerObserver(Of TState).OnNextCore
+  fullName.vb: R3dux.StateLoggerObserver(Of TState).OnNextCore
+- uid: R3dux.StateChange{{TState}}
+  commentId: T:R3dux.StateChange{`0}
+  parent: R3dux
+  definition: R3dux.StateChange`1
+  href: R3dux.StateChange-1.html
+  name: StateChange<TState>
+  nameWithType: StateChange<TState>
+  fullName: R3dux.StateChange<TState>
+  nameWithType.vb: StateChange(Of TState)
+  fullName.vb: R3dux.StateChange(Of TState)
+  name.vb: StateChange(Of TState)
+  spec.csharp:
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: <
+  - name: TState
+  - name: '>'
+  spec.vb:
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TState
+  - name: )
+- uid: R3.Observer`1.OnNextCore(`0)
+  commentId: M:R3.Observer`1.OnNextCore(`0)
+  isExternal: true
+  name: OnNextCore(T)
+  nameWithType: Observer<T>.OnNextCore(T)
+  fullName: R3.Observer<T>.OnNextCore(T)
+  nameWithType.vb: Observer(Of T).OnNextCore(T)
+  fullName.vb: R3.Observer(Of T).OnNextCore(T)
+  spec.csharp:
+  - uid: R3.Observer`1.OnNextCore(`0)
+    name: OnNextCore
+    isExternal: true
+  - name: (
+  - name: T
+  - name: )
+  spec.vb:
+  - uid: R3.Observer`1.OnNextCore(`0)
+    name: OnNextCore
+    isExternal: true
+  - name: (
+  - name: T
+  - name: )
+- uid: R3dux.StateChange`1
+  commentId: T:R3dux.StateChange`1
+  href: R3dux.StateChange-1.html
+  name: StateChange<TState>
+  nameWithType: StateChange<TState>
+  fullName: R3dux.StateChange<TState>
+  nameWithType.vb: StateChange(Of TState)
+  fullName.vb: R3dux.StateChange(Of TState)
+  name.vb: StateChange(Of TState)
+  spec.csharp:
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: <
+  - name: TState
+  - name: '>'
+  spec.vb:
+  - uid: R3dux.StateChange`1
+    name: StateChange
+    href: R3dux.StateChange-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TState
+  - name: )
+- uid: R3.Observer{R3dux.StateChange{{TState}}}.OnCompletedCore(R3.Result)
+  commentId: M:R3.Observer{R3dux.StateChange{`0}}.OnCompletedCore(R3.Result)
+  parent: R3.Observer{R3dux.StateChange{{TState}}}
+  definition: R3.Observer`1.OnCompletedCore(R3.Result)
+  name: OnCompletedCore(Result)
+  nameWithType: Observer<StateChange<TState>>.OnCompletedCore(Result)
+  fullName: R3.Observer<R3dux.StateChange<TState>>.OnCompletedCore(R3.Result)
+  nameWithType.vb: Observer(Of StateChange(Of TState)).OnCompletedCore(Result)
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState)).OnCompletedCore(R3.Result)
+  spec.csharp:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnCompletedCore(R3.Result)
+    name: OnCompletedCore
+    isExternal: true
+  - name: (
+  - uid: R3.Result
+    name: Result
+    isExternal: true
+  - name: )
+  spec.vb:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnCompletedCore(R3.Result)
+    name: OnCompletedCore
+    isExternal: true
+  - name: (
+  - uid: R3.Result
+    name: Result
+    isExternal: true
+  - name: )
+- uid: R3dux.StateLoggerObserver`1.OnCompletedCore*
+  commentId: Overload:R3dux.StateLoggerObserver`1.OnCompletedCore
+  href: R3dux.StateLoggerObserver-1.html#R3dux_StateLoggerObserver_1_OnCompletedCore_R3_Result_
+  name: OnCompletedCore
+  nameWithType: StateLoggerObserver<TState>.OnCompletedCore
+  fullName: R3dux.StateLoggerObserver<TState>.OnCompletedCore
+  nameWithType.vb: StateLoggerObserver(Of TState).OnCompletedCore
+  fullName.vb: R3dux.StateLoggerObserver(Of TState).OnCompletedCore
+- uid: R3.Result
+  commentId: T:R3.Result
+  parent: R3
+  isExternal: true
+  name: Result
+  nameWithType: Result
+  fullName: R3.Result
+- uid: R3.Observer`1.OnCompletedCore(R3.Result)
+  commentId: M:R3.Observer`1.OnCompletedCore(R3.Result)
+  isExternal: true
+  name: OnCompletedCore(Result)
+  nameWithType: Observer<T>.OnCompletedCore(Result)
+  fullName: R3.Observer<T>.OnCompletedCore(R3.Result)
+  nameWithType.vb: Observer(Of T).OnCompletedCore(Result)
+  fullName.vb: R3.Observer(Of T).OnCompletedCore(R3.Result)
+  spec.csharp:
+  - uid: R3.Observer`1.OnCompletedCore(R3.Result)
+    name: OnCompletedCore
+    isExternal: true
+  - name: (
+  - uid: R3.Result
+    name: Result
+    isExternal: true
+  - name: )
+  spec.vb:
+  - uid: R3.Observer`1.OnCompletedCore(R3.Result)
+    name: OnCompletedCore
+    isExternal: true
+  - name: (
+  - uid: R3.Result
+    name: Result
+    isExternal: true
+  - name: )
+- uid: R3.Observer{R3dux.StateChange{{TState}}}.OnErrorResumeCore(System.Exception)
+  commentId: M:R3.Observer{R3dux.StateChange{`0}}.OnErrorResumeCore(System.Exception)
+  parent: R3.Observer{R3dux.StateChange{{TState}}}
+  definition: R3.Observer`1.OnErrorResumeCore(System.Exception)
+  href: https://learn.microsoft.com/dotnet/api/system.exception
+  name: OnErrorResumeCore(Exception)
+  nameWithType: Observer<StateChange<TState>>.OnErrorResumeCore(Exception)
+  fullName: R3.Observer<R3dux.StateChange<TState>>.OnErrorResumeCore(System.Exception)
+  nameWithType.vb: Observer(Of StateChange(Of TState)).OnErrorResumeCore(Exception)
+  fullName.vb: R3.Observer(Of R3dux.StateChange(Of TState)).OnErrorResumeCore(System.Exception)
+  spec.csharp:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnErrorResumeCore(System.Exception)
+    name: OnErrorResumeCore
+    isExternal: true
+  - name: (
+  - uid: System.Exception
+    name: Exception
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.exception
+  - name: )
+  spec.vb:
+  - uid: R3.Observer{R3dux.StateChange{`0}}.OnErrorResumeCore(System.Exception)
+    name: OnErrorResumeCore
+    isExternal: true
+  - name: (
+  - uid: System.Exception
+    name: Exception
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.exception
+  - name: )
+- uid: R3dux.StateLoggerObserver`1.OnErrorResumeCore*
+  commentId: Overload:R3dux.StateLoggerObserver`1.OnErrorResumeCore
+  href: R3dux.StateLoggerObserver-1.html#R3dux_StateLoggerObserver_1_OnErrorResumeCore_System_Exception_
+  name: OnErrorResumeCore
+  nameWithType: StateLoggerObserver<TState>.OnErrorResumeCore
+  fullName: R3dux.StateLoggerObserver<TState>.OnErrorResumeCore
+  nameWithType.vb: StateLoggerObserver(Of TState).OnErrorResumeCore
+  fullName.vb: R3dux.StateLoggerObserver(Of TState).OnErrorResumeCore
+- uid: System.Exception
+  commentId: T:System.Exception
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.exception
+  name: Exception
+  nameWithType: Exception
+  fullName: System.Exception
+- uid: R3.Observer`1.OnErrorResumeCore(System.Exception)
+  commentId: M:R3.Observer`1.OnErrorResumeCore(System.Exception)
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.exception
+  name: OnErrorResumeCore(Exception)
+  nameWithType: Observer<T>.OnErrorResumeCore(Exception)
+  fullName: R3.Observer<T>.OnErrorResumeCore(System.Exception)
+  nameWithType.vb: Observer(Of T).OnErrorResumeCore(Exception)
+  fullName.vb: R3.Observer(Of T).OnErrorResumeCore(System.Exception)
+  spec.csharp:
+  - uid: R3.Observer`1.OnErrorResumeCore(System.Exception)
+    name: OnErrorResumeCore
+    isExternal: true
+  - name: (
+  - uid: System.Exception
+    name: Exception
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.exception
+  - name: )
+  spec.vb:
+  - uid: R3.Observer`1.OnErrorResumeCore(System.Exception)
+    name: OnErrorResumeCore
+    isExternal: true
+  - name: (
+  - uid: System.Exception
+    name: Exception
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.exception
+  - name: )

@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
+    <RootNamespace>R3dux.Blazor</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>SA1124;SA1402;SA1600;SA1649</NoWarn>
   </PropertyGroup>
-
-  <Import Project="../../../msbuild/props/Documentation.props"/>
 
   <ItemGroup>
     <SupportedPlatform Include="browser"/>

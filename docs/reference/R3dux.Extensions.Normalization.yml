@@ -1,0 +1,156 @@
+### YamlMime:ManagedReference
+items:
+- uid: R3dux.Extensions.Normalization
+  commentId: N:R3dux.Extensions.Normalization
+  id: R3dux.Extensions.Normalization
+  children:
+  - R3dux.Extensions.Normalization.IEntity`1
+  - R3dux.Extensions.Normalization.INormalizedStateCollectionMethods`3
+  - R3dux.Extensions.Normalization.MergeStrategy
+  - R3dux.Extensions.Normalization.NormalizedState`3
+  langs:
+  - csharp
+  - vb
+  name: R3dux.Extensions.Normalization
+  nameWithType: R3dux.Extensions.Normalization
+  fullName: R3dux.Extensions.Normalization
+  type: Namespace
+  assemblies:
+  - R3dux.Normalization
+references:
+- uid: R3dux.Extensions.Normalization.IEntity`1
+  commentId: T:R3dux.Extensions.Normalization.IEntity`1
+  href: R3dux.Extensions.Normalization.IEntity-1.html
+  name: IEntity<TKey>
+  nameWithType: IEntity<TKey>
+  fullName: R3dux.Extensions.Normalization.IEntity<TKey>
+  nameWithType.vb: IEntity(Of TKey)
+  fullName.vb: R3dux.Extensions.Normalization.IEntity(Of TKey)
+  name.vb: IEntity(Of TKey)
+  spec.csharp:
+  - uid: R3dux.Extensions.Normalization.IEntity`1
+    name: IEntity
+    href: R3dux.Extensions.Normalization.IEntity-1.html
+  - name: <
+  - name: TKey
+  - name: '>'
+  spec.vb:
+  - uid: R3dux.Extensions.Normalization.IEntity`1
+    name: IEntity
+    href: R3dux.Extensions.Normalization.IEntity-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TKey
+  - name: )
+- uid: R3dux.Extensions.Normalization.INormalizedStateCollectionMethods`3
+  commentId: T:R3dux.Extensions.Normalization.INormalizedStateCollectionMethods`3
+  href: R3dux.Extensions.Normalization.INormalizedStateCollectionMethods-3.html
+  name: INormalizedStateCollectionMethods<TKey, TEntity, TState>
+  nameWithType: INormalizedStateCollectionMethods<TKey, TEntity, TState>
+  fullName: R3dux.Extensions.Normalization.INormalizedStateCollectionMethods<TKey, TEntity, TState>
+  nameWithType.vb: INormalizedStateCollectionMethods(Of TKey, TEntity, TState)
+  fullName.vb: R3dux.Extensions.Normalization.INormalizedStateCollectionMethods(Of TKey, TEntity, TState)
+  name.vb: INormalizedStateCollectionMethods(Of TKey, TEntity, TState)
+  spec.csharp:
+  - uid: R3dux.Extensions.Normalization.INormalizedStateCollectionMethods`3
+    name: INormalizedStateCollectionMethods
+    href: R3dux.Extensions.Normalization.INormalizedStateCollectionMethods-3.html
+  - name: <
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TEntity
+  - name: ','
+  - name: " "
+  - name: TState
+  - name: '>'
+  spec.vb:
+  - uid: R3dux.Extensions.Normalization.INormalizedStateCollectionMethods`3
+    name: INormalizedStateCollectionMethods
+    href: R3dux.Extensions.Normalization.INormalizedStateCollectionMethods-3.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TEntity
+  - name: ','
+  - name: " "
+  - name: TState
+  - name: )
+- uid: R3dux.Extensions.Normalization.MergeStrategy
+  commentId: T:R3dux.Extensions.Normalization.MergeStrategy
+  parent: R3dux.Extensions.Normalization
+  href: R3dux.Extensions.Normalization.MergeStrategy.html
+  name: MergeStrategy
+  nameWithType: MergeStrategy
+  fullName: R3dux.Extensions.Normalization.MergeStrategy
+- uid: R3dux.Extensions.Normalization.NormalizedState`3
+  commentId: T:R3dux.Extensions.Normalization.NormalizedState`3
+  href: R3dux.Extensions.Normalization.NormalizedState-3.html
+  name: NormalizedState<TKey, TEntity, TState>
+  nameWithType: NormalizedState<TKey, TEntity, TState>
+  fullName: R3dux.Extensions.Normalization.NormalizedState<TKey, TEntity, TState>
+  nameWithType.vb: NormalizedState(Of TKey, TEntity, TState)
+  fullName.vb: R3dux.Extensions.Normalization.NormalizedState(Of TKey, TEntity, TState)
+  name.vb: NormalizedState(Of TKey, TEntity, TState)
+  spec.csharp:
+  - uid: R3dux.Extensions.Normalization.NormalizedState`3
+    name: NormalizedState
+    href: R3dux.Extensions.Normalization.NormalizedState-3.html
+  - name: <
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TEntity
+  - name: ','
+  - name: " "
+  - name: TState
+  - name: '>'
+  spec.vb:
+  - uid: R3dux.Extensions.Normalization.NormalizedState`3
+    name: NormalizedState
+    href: R3dux.Extensions.Normalization.NormalizedState-3.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TEntity
+  - name: ','
+  - name: " "
+  - name: TState
+  - name: )
+- uid: R3dux.Extensions.Normalization
+  commentId: N:R3dux.Extensions.Normalization
+  href: R3dux.html
+  name: R3dux.Extensions.Normalization
+  nameWithType: R3dux.Extensions.Normalization
+  fullName: R3dux.Extensions.Normalization
+  spec.csharp:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Extensions
+    name: Extensions
+    href: R3dux.Extensions.html
+  - name: .
+  - uid: R3dux.Extensions.Normalization
+    name: Normalization
+    href: R3dux.Extensions.Normalization.html
+  spec.vb:
+  - uid: R3dux
+    name: R3dux
+    href: R3dux.html
+  - name: .
+  - uid: R3dux.Extensions
+    name: Extensions
+    href: R3dux.Extensions.html
+  - name: .
+  - uid: R3dux.Extensions.Normalization
+    name: Normalization
+    href: R3dux.Extensions.Normalization.html
