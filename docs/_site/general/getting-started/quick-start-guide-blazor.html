@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  <!-- Standard head.tmpl.partial from 'default' template. v2.63.1
+   When you have rendering issues, check if this is the latest version
+   with 'docfx template export default -o <path-to-a-local-folder>' -->
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Quick Start Guide for Blazor | R3dux Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Quick Start Guide for Blazor | R3dux Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <!-- Added support for copy code button. Together with script in scripts.tmpl.partial -->
+      <link rel="stylesheet" href="../../styles/copy-code-button.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    <meta property="docfx:newtab" content="true">
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="R3dux Documentation">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="quick-start-guide-for-blazor">Quick Start Guide for Blazor</h1>
+
+<p>This guide will help you set up R3dux in a Blazor application. By following these steps, you'll integrate R3dux for state management and implement a simple counter example.</p>
+<h2 id="create-project--install-r3dux">Create Project &amp; Install R3dux</h2>
+<h3 id="1-create-a-new-blazor-project">1. Create a New Blazor Project</h3>
+<p>First, create a new Blazor WebAssembly project using the .NET CLI:</p>
+<pre><code class="lang-bash">dotnet new blazorwasm -o BlazorApp
+cd BlazorApp
+</code></pre>
+<h3 id="2-install-r3dux-and-r3duxblazor">2. Install R3dux and R3dux.Blazor</h3>
+<p>Next, install R3dux and the R3dux.Blazor package using the .NET CLI:</p>
+<pre><code class="lang-bash">dotnet add package R3dux
+dotnet add package R3dux.Blazor
+</code></pre>
+<h2 id="prepare-startup">Prepare Startup</h2>
+<p>To configure R3dux in your Blazor application, you'll need to update your <code>Program.cs</code> file.</p>
+<h3 id="1-configure-r3dux-in-programcs">1. Configure R3dux in <code>Program.cs</code></h3>
+<p>Open the <code>Program.cs</code> file and add the R3dux services to the Blazor service container.</p>
+<h4 id="basic-configuration">Basic Configuration</h4>
+<p>If your slices are automatically discoverable, you can use the basic configuration:</p>
+<pre><code class="lang-csharp">using R3dux.Blazor;
+
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add&lt;App&gt;(&quot;#app&quot;);
+
+// Add R3dux with automatic assembly scanning
+builder.Services.AddR3dux(builder.Configuration);
+
+await builder.Build().RunAsync();
+</code></pre>
+<h4 id="advanced-configuration">Advanced Configuration</h4>
+<p>If you want more control, for example, specifying which assemblies to scan for slices, use the following configuration:</p>
+<pre><code class="lang-csharp">using R3dux.Blazor;
+
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add&lt;App&gt;(&quot;#app&quot;);
+
+// Add R3dux with specific assemblies
+builder.Services.AddR3dux(options =&gt;
+{
+    options.Assemblies = new[] { typeof(CounterSlice).Assembly };
+});
+
+await builder.Build().RunAsync();
+</code></pre>
+<h2 id="implement-a-counter-example">Implement a Counter Example</h2>
+<p>Now that R3dux is set up, let’s implement a simple counter example in your Blazor application.</p>
+<h3 id="1-define-actions">1. Define Actions</h3>
+<p>Create a new file called <code>CounterActions.cs</code> in the <code>Shared</code> folder:</p>
+<pre><code class="lang-csharp">public record Increment : IAction;
+public record Decrement : IAction;
+</code></pre>
+<h3 id="2-define-reducers">2. Define Reducers</h3>
+<p>Create a new file called <code>CounterReducers.cs</code> in the <code>Shared</code> folder:</p>
+<pre><code class="lang-csharp">public class CounterReducers : SliceReducers&lt;int&gt;
+{
+    public CounterReducers()
+    {
+        On&lt;Increment&gt;((state, _) =&gt; state + 1);
+        On&lt;Decrement&gt;((state, _) =&gt; state - 1);
+    }
+
+    public override int GetInitialState()
+    {
+        return 0;
+    }
+}
+</code></pre>
+<h3 id="3-update-the-counter-component">3. Update the Counter Component</h3>
+<p>Now, let's modify the default <code>Counter.razor</code> component to use R3dux.</p>
+<h4 id="update-counterrazor">Update <code>Counter.razor</code></h4>
+<p>Replace the contents of the <code>Counter.razor</code> component with the following:</p>
+<pre><code class="lang-razor">@page &quot;/counter&quot;
+@inherits R3duxComponent&lt;int&gt;
+
+&lt;h3&gt;Counter&lt;/h3&gt;
+
+&lt;p&gt;Current count: @State&lt;/p&gt;
+
+&lt;button class=&quot;btn btn-primary&quot; @onclick=&quot;Increment&quot;&gt;Increment&lt;/button&gt;
+&lt;button class=&quot;btn btn-secondary&quot; @onclick=&quot;Decrement&quot;&gt;Decrement&lt;/button&gt;
+
+@code {
+    private void Increment()
+    {
+        Dispatch(new Increment());
+    }
+
+    private void Decrement()
+    {
+        Dispatch(new Decrement());
+    }
+}
+</code></pre>
+<h3 id="4-run-your-blazor-application">4. Run Your Blazor Application</h3>
+<p>You can now run your Blazor application using the following command:</p>
+<pre><code class="lang-bash">dotnet run
+</code></pre>
+<h3 id="5-view-the-counter-component">5. View the Counter Component</h3>
+<p>Navigate to <code>/counter</code> in your web browser. You should see a counter that increments and decrements as you click the respective buttons.</p>
+<h3 id="understanding-the-example">Understanding the Example</h3>
+<ul>
+<li><strong>Actions</strong>: The <code>Increment</code> and <code>Decrement</code> actions are simple records that describe state changes.</li>
+<li><strong>Reducers</strong>: The <code>CounterReducers</code> class defines how the state changes in response to the dispatched actions.</li>
+<li><strong>R3duxComponent</strong>: The <code>Counter.razor</code> component inherits from <code>R3duxComponent&lt;int&gt;</code>, automatically binding the state to the component.</li>
+<li><strong>Dispatch</strong>: The <code>Dispatch</code> method is used to send actions to the store, triggering state updates.</li>
+</ul>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/getting-started/quick-start-guide-blazor.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- Standard scripts.tmpl.partial from 'default' template. v2.63.1
+     When you have rendering issues, check if this is the latest version
+     with 'docfx template export default -o <path-to-a-local-folder>' -->
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+
+    <!-- Added support for copy code button. Together with script in scripts.tmpl.partial -->
+    <script type="text/javascript" src="../../styles/copy-code-button.js"></script>
+
+    <!-- Support for diagrams (Mermaid). See https://mermaid.js.org/intro/n00b-gettingStarted.html -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>  </body>
+</html>

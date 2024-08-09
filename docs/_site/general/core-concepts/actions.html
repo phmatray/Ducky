@@ -83,6 +83,107 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="actions">Actions</h1>
 
+<p>Actions in R3dux are a fundamental part of the state management process. They serve as the only means by which the global state can be modified, ensuring that all state changes are predictable, traceable, and consistent across the application.</p>
+<h2 id="what-are-actions">What are Actions?</h2>
+<p>Actions are simple objects that describe a change that should occur in the state. An action typically contains a <code>type</code> that indicates the nature of the action, and optionally, some data (payload) that provides additional information needed to perform the state update.</p>
+<h3 id="key-characteristics-of-actions">Key Characteristics of Actions</h3>
+<ol>
+<li><strong>Intent Declaration</strong>: Actions declare the intent to change the state. They do not execute the change themselves but serve as a signal to the store that a change should be made.</li>
+<li><strong>Plain Objects</strong>: Actions in R3dux are typically simple objects or records that implement the <code>IAction</code> interface. This simplicity ensures that actions are easy to create, dispatch, and test.</li>
+<li><strong>Immutable</strong>: Actions should be immutable, meaning once they are created, their properties should not be modified. This immutability aligns with the overall philosophy of predictable and traceable state management.</li>
+</ol>
+<h2 id="defining-actions">Defining Actions</h2>
+<p>Defining actions in R3dux is straightforward. You simply create a class or record that implements the <code>IAction</code> interface. Here’s an example:</p>
+<pre><code class="lang-csharp">public record Increment(int Amount = 1) : IAction;
+public record Decrement(int Amount = 1) : IAction;
+</code></pre>
+<h3 id="action-types">Action Types</h3>
+<p>Each action should have a distinct type that identifies what kind of state change it represents. In C#, when using records or classes for actions, the class or record name typically serves as the action type implicitly.</p>
+<h4 id="example">Example:</h4>
+<pre><code class="lang-csharp">public record SetUserName(string UserName) : IAction;
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The <code>SetUserName</code> action contains a single property, <code>UserName</code>, which is the payload needed to update the state.</li>
+<li>The action implicitly has a type, which is the name of the record (<code>SetUserName</code>).</li>
+</ul>
+<h2 id="dispatching-actions">Dispatching Actions</h2>
+<p>Once actions are defined, they are dispatched to the store to initiate a state change. Dispatching an action involves passing it to the store, which then uses reducers to update the state accordingly.</p>
+<h3 id="example-of-dispatching-an-action">Example of Dispatching an Action</h3>
+<p>Consider a Blazor component that needs to update the user's name in the global state:</p>
+<pre><code class="lang-razor">@code {
+    private void UpdateUserName()
+    {
+        Dispatch(new SetUserName(&quot;John Doe&quot;));
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The <code>SetUserName</code> action is dispatched with the payload <code>&quot;John Doe&quot;</code>.</li>
+<li>The store processes this action, and the state is updated with the new user name.</li>
+</ul>
+<h2 id="handling-actions-in-reducers">Handling Actions in Reducers</h2>
+<p>Actions by themselves do not modify the state. Instead, they are handled by reducers, which are responsible for interpreting the action and determining how the state should change in response.</p>
+<h3 id="example-of-handling-actions-in-reducers">Example of Handling Actions in Reducers</h3>
+<pre><code class="lang-csharp">public class UserReducers : SliceReducers&lt;UserState&gt;
+{
+    public UserReducers()
+    {
+        On&lt;SetUserName&gt;((state, action) =&gt; state with { UserName = action.UserName });
+    }
+
+    public override UserState GetInitialState()
+    {
+        return new UserState { UserName = &quot;Anonymous&quot; };
+    }
+}
+</code></pre>
+<p>In this reducer:</p>
+<ul>
+<li>The <code>On&lt;SetUserName&gt;</code> method maps the <code>SetUserName</code> action to a state change that updates the <code>UserName</code> property.</li>
+<li>The new state is created immutably using the <code>with</code> keyword.</li>
+</ul>
+<h2 id="action-payloads">Action Payloads</h2>
+<p>Actions often carry additional data necessary to perform a state update. This data is known as the action's payload. The payload is passed to reducers along with the current state, allowing the reducer to create a new state based on the information provided.</p>
+<h3 id="example-of-an-action-with-payload">Example of an Action with Payload</h3>
+<pre><code class="lang-csharp">public record AddProduct(string ProductName, decimal Price) : IAction;
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The <code>AddProduct</code> action contains two pieces of information: <code>ProductName</code> and <code>Price</code>.</li>
+<li>When this action is dispatched, the reducer will use this data to update the state, typically by adding a new product to a list in the state.</li>
+</ul>
+<h2 id="actions-and-asynchronous-operations">Actions and Asynchronous Operations</h2>
+<p>While actions themselves are typically synchronous, they can be dispatched from asynchronous operations. This is often handled through <strong>Effects</strong> in R3dux, where actions are dispatched based on the result of an asynchronous operation such as an API call.</p>
+<h3 id="example-1">Example:</h3>
+<pre><code class="lang-csharp">public class LoadProductsEffect : Effect
+{
+    public override Observable&lt;IAction&gt; Handle(
+        Observable&lt;IAction&gt; actions,
+        Observable&lt;IRootState&gt; rootState)
+    {
+        return actions
+            .OfType&lt;LoadProducts&gt;()
+            .InvokeService(
+                async () =&gt; await productService.GetProductsAsync(),
+                products =&gt; new LoadProductsSuccess(products),
+                ex =&gt; new LoadProductsFailure(ex));
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The <code>LoadProducts</code> action is dispatched to trigger the loading of products.</li>
+<li>Depending on the outcome of the service call, either <code>LoadProductsSuccess</code> or <code>LoadProductsFailure</code> is dispatched.</li>
+</ul>
+<h2 id="best-practices-for-actions">Best Practices for Actions</h2>
+<ul>
+<li><strong>Keep Actions Simple</strong>: Actions should be simple and focused. They should contain only the information necessary to describe the state change.</li>
+<li><strong>Use Meaningful Names</strong>: Name your actions clearly to reflect their purpose. This makes your code more readable and easier to maintain.</li>
+<li><strong>Leverage Immutability</strong>: Ensure that actions are immutable to maintain consistency and predictability in state management.</li>
+<li><strong>Document Your Actions</strong>: Clearly document what each action does, especially in large applications where many actions may exist.</li>
+</ul>
 
 </article>
           </div>

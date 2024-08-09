@@ -83,6 +83,86 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="state-management">State Management</h1>
 
+<p>Global state in R3dux provides a powerful mechanism for managing application-wide data in a predictable and maintainable way. By centralizing your state and handling all changes through actions and reducers, you can build applications that are easier to understand, debug, and scale.</p>
+<p>State management is a crucial aspect of modern application development, especially as applications grow in complexity. R3dux makes it simple to implement global state management in your .NET applications, ensuring that your application state is consistent, predictable, and easily accessible from any part of your application.</p>
+<h2 id="what-is-global-state">What is Global State?</h2>
+<p>Global state refers to a single, centralized state that holds the entire application's data. Unlike local state, which is confined to individual components or modules, global state is accessible throughout the application. This allows different parts of your application to share data and stay synchronized.</p>
+<h3 id="key-characteristics-of-global-state">Key Characteristics of Global State</h3>
+<ol>
+<li><strong>Single Source of Truth</strong>: The global state serves as the single source of truth for your application. All components and services that need to read or modify state must interact with this centralized store.</li>
+<li><strong>Accessibility</strong>: Global state is accessible from any part of your application. This means that data can be easily shared between different components, pages, or services, ensuring consistency across your application.</li>
+<li><strong>Predictability</strong>: By managing all state changes through a centralized mechanism (such as actions and reducers), global state makes it easier to track, debug, and predict how state evolves over time.</li>
+</ol>
+<h2 id="how-global-state-works-in-r3dux">How Global State Works in R3dux</h2>
+<p>In R3dux, global state is managed using a centralized store. This store holds the entire application state and is responsible for updating the state in response to actions.</p>
+<h3 id="components-of-state-management-in-r3dux">Components of State Management in R3dux</h3>
+<ol>
+<li><strong>Store</strong>: The store is the core of the R3dux state management system. It holds the global state and provides methods to access the state, dispatch actions, and subscribe to state changes.</li>
+<li><strong>Actions</strong>: Actions are simple objects that describe the type of change that should occur in the state. They are dispatched to the store to trigger state updates.</li>
+<li><strong>Reducers</strong>: Reducers are pure functions that take the current state and an action, and return a new state. They define how the state should change in response to each action.</li>
+<li><strong>Selectors</strong>: Selectors are functions that allow you to retrieve specific pieces of the global state. They are used to encapsulate and optimize access to the state.</li>
+</ol>
+<h3 id="example-of-global-state-in-action">Example of Global State in Action</h3>
+<p>Let's consider a simple example of global state management using R3dux in a Blazor application.</p>
+<h4 id="defining-the-global-state">Defining the Global State</h4>
+<p>Suppose we have a counter application. The global state could be as simple as an integer representing the current count:</p>
+<pre><code class="lang-csharp">public class CounterReducers : SliceReducers&lt;int&gt;
+{
+    public CounterReducers()
+    {
+        On&lt;Increment&gt;((state, _) =&gt; state + 1);
+        On&lt;Decrement&gt;((state, _) =&gt; state - 1);
+    }
+
+    public override int GetInitialState()
+    {
+        return 0;
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The global state is represented by an integer.</li>
+<li>The <code>Increment</code> and <code>Decrement</code> actions are used to modify the state.</li>
+</ul>
+<h4 id="accessing-and-modifying-global-state">Accessing and Modifying Global State</h4>
+<p>In a Blazor component, you can access and modify the global state through R3dux as follows:</p>
+<pre><code class="lang-html">@page &quot;/counter&quot;
+@inherits R3duxComponent&lt;int&gt;
+
+&lt;h3&gt;Counter&lt;/h3&gt;
+
+&lt;p&gt;Current count: @State&lt;/p&gt;
+
+&lt;button class=&quot;btn btn-primary&quot; @onclick=&quot;Increment&quot;&gt;Increment&lt;/button&gt;
+&lt;button class=&quot;btn btn-secondary&quot; @onclick=&quot;Decrement&quot;&gt;Decrement&lt;/button&gt;
+
+@code {
+    private void Increment()
+    {
+        Dispatch(new Increment());
+    }
+
+    private void Decrement()
+    {
+        Dispatch(new Decrement());
+    }
+}
+</code></pre>
+<p>In this Blazor component:</p>
+<ul>
+<li>The global state is automatically injected into the component via <code>R3duxComponent&lt;int&gt;</code>.</li>
+<li>The <code>State</code> property reflects the current global state (i.e., the counter value).</li>
+<li>The <code>Dispatch</code> method is used to modify the state by dispatching actions.</li>
+</ul>
+<h3 id="benefits-of-using-global-state">Benefits of Using Global State</h3>
+<ul>
+<li><strong>Consistency</strong>: Since all components read from and write to the same state, it's easy to maintain consistency across your application.</li>
+<li><strong>Debugging</strong>: Centralized state management simplifies the process of tracking down bugs and understanding how state changes over time.</li>
+<li><strong>Scalability</strong>: As your application grows, managing state through a global store can help you avoid the pitfalls of prop drilling and other common state management issues.</li>
+</ul>
+<h3 id="when-to-use-global-state">When to Use Global State</h3>
+<p>Global state is particularly useful in applications where multiple components need to share and synchronize data. However, it's essential to balance the use of global state with local state, which is more appropriate for managing component-specific data.</p>
 
 </article>
           </div>

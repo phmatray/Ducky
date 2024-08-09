@@ -83,6 +83,151 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="effects">Effects</h1>
 
+<p>In R3dux, effects are a powerful tool for handling side effects—operations that interact with the outside world or involve asynchronous logic. Effects listen to the stream of actions dispatched to the store and can dispatch new actions based on the outcome of those operations, such as API calls, logging, or timers.</p>
+<h2 id="what-are-effects">What are Effects?</h2>
+<p>Effects are responsible for managing side effects in your application. Unlike reducers, which handle pure state transformations, effects are used to perform operations that have side effects, such as:</p>
+<ul>
+<li>Making asynchronous API calls.</li>
+<li>Dispatching notifications.</li>
+<li>Handling time-based events (like timers).</li>
+<li>Interacting with services outside of your state management logic.</li>
+</ul>
+<h3 id="key-characteristics-of-effects">Key Characteristics of Effects</h3>
+<ol>
+<li><strong>Asynchronous Operations</strong>: Effects can handle asynchronous operations such as API calls, allowing your application to interact with external services or data sources.</li>
+<li><strong>Dispatching New Actions</strong>: Based on the outcome of the side effect, effects can dispatch new actions to update the state.</li>
+<li><strong>Separation of Concerns</strong>: Effects keep side effects separate from reducers, ensuring that state transformations remain pure and predictable.</li>
+</ol>
+<h2 id="defining-effects">Defining Effects</h2>
+<p>In R3dux, you define an effect by extending the <code>Effect</code> class and overriding the <code>Handle</code> method. The <code>Handle</code> method takes two parameters:</p>
+<ul>
+<li><code>Observable&lt;IAction&gt; actions</code>: The stream of actions dispatched to the store.</li>
+<li><code>Observable&lt;IRootState&gt; rootState</code>: The observable stream of the current state.</li>
+</ul>
+<h3 id="example-loading-movies-with-an-api-call">Example: Loading Movies with an API Call</h3>
+<p>Here’s an example of an effect that handles loading movies from an external API:</p>
+<pre><code class="lang-csharp">public class LoadMoviesEffect : Effect
+{
+    private readonly IMoviesService _moviesService;
+
+    public LoadMoviesEffect(IMoviesService moviesService)
+    {
+        _moviesService = moviesService;
+    }
+
+    public override Observable&lt;IAction&gt; Handle(
+        Observable&lt;IAction&gt; actions,
+        Observable&lt;IRootState&gt; rootState)
+    {
+        return actions
+            .OfType&lt;LoadMovies&gt;()
+            .LogMessage(&quot;Loading movies...&quot;)
+            .WithSliceState&lt;MoviesState, LoadMovies&gt;(rootState)
+            .InvokeService(
+                pair =&gt; _moviesService.GetMoviesAsync(pair.State.Pagination.CurrentPage, 5),
+                response =&gt; new LoadMoviesSuccess(response.Movies, response.TotalItems),
+                ex =&gt; new LoadMoviesFailure(ex))
+            .LogMessage(&quot;Movies loaded.&quot;);
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The <code>LoadMoviesEffect</code> listens for the <code>LoadMovies</code> action.</li>
+<li>It logs the action, retrieves the current state slice, and invokes the <code>GetMoviesAsync</code> method from <code>IMoviesService</code>.</li>
+<li>Based on the API response, it dispatches either <code>LoadMoviesSuccess</code> or <code>LoadMoviesFailure</code> actions.</li>
+</ul>
+<h3 id="example-displaying-notifications-after-a-successful-load">Example: Displaying Notifications After a Successful Load</h3>
+<p>This example demonstrates how to use an effect to display a success notification after movies are successfully loaded:</p>
+<pre><code class="lang-csharp">public class LoadMoviesSuccessEffect : Effect
+{
+    private readonly ISnackbar _snackbar;
+
+    public LoadMoviesSuccessEffect(ISnackbar snackbar)
+    {
+        _snackbar = snackbar;
+    }
+
+    public override Observable&lt;IAction&gt; Handle(
+        Observable&lt;IAction&gt; actions, Observable&lt;IRootState&gt; rootState)
+    {
+        return actions
+            .OfType&lt;IAction, LoadMoviesSuccess&gt;()
+            .Select(GetSnackBarMessage)
+            .Do(message =&gt; _snackbar.Add(message, Severity.Success))
+            .Select(message =&gt;
+            {
+                var notification = new SuccessNotification(message);
+                return (IAction)new AddNotification(notification);
+            });
+    }
+
+    private static string GetSnackBarMessage(LoadMoviesSuccess action)
+    {
+        return $&quot;Loaded {action.Movies.Length} movies from the server.&quot;;
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The <code>LoadMoviesSuccessEffect</code> listens for the <code>LoadMoviesSuccess</code> action.</li>
+<li>It generates a success message and displays it using the <code>ISnackbar</code> service.</li>
+<li>After displaying the notification, it dispatches a new <code>AddNotification</code> action.</li>
+</ul>
+<h3 id="example-handling-timers">Example: Handling Timers</h3>
+<p>Effects are also useful for handling time-based operations, such as starting and stopping timers. Here's an example of an effect that handles a timer:</p>
+<pre><code class="lang-csharp">public class StartTimerEffect : Effect
+{
+    public override Observable&lt;IAction&gt; Handle(
+        Observable&lt;IAction&gt; actions,
+        Observable&lt;IRootState&gt; rootState)
+    {
+        return actions
+            .OfType&lt;StartTimer&gt;()
+            .SwitchSelect(_ =&gt; Observable
+                .Interval(TimeSpan.FromSeconds(1), TimeProvider)
+                .Select(_ =&gt; new Tick())
+                .TakeUntil(actions.OfType&lt;StopTimer&gt;())
+                .Cast&lt;Tick, IAction&gt;());
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The <code>StartTimerEffect</code> listens for the <code>StartTimer</code> action.</li>
+<li>It starts a timer that dispatches a <code>Tick</code> action every second.</li>
+<li>The timer stops when a <code>StopTimer</code> action is dispatched.</li>
+</ul>
+<h2 id="custom-operators-in-effects">Custom Operators in Effects</h2>
+<p>R3dux provides several custom operators to simplify common patterns in effects, such as filtering actions, invoking services, and handling errors.</p>
+<h3 id="key-operators">Key Operators</h3>
+<ul>
+<li><strong>OfType</strong>: Filters actions of a specific type.</li>
+<li><strong>WithSliceState</strong>: Combines actions with the corresponding slice of the state.</li>
+<li><strong>InvokeService</strong>: Handles calling external services and dispatching success or error actions based on the outcome.</li>
+</ul>
+<h3 id="example-using-custom-operators">Example: Using Custom Operators</h3>
+<pre><code class="lang-csharp">public override Observable&lt;IAction&gt; Handle(
+    Observable&lt;IAction&gt; actions,
+    Observable&lt;IRootState&gt; rootState)
+{
+    return actions
+        .OfType&lt;LoadMovies&gt;()
+        .WithSliceState&lt;MoviesState, LoadMovies&gt;(rootState)
+        .InvokeService(
+            pair =&gt; _moviesService.GetMoviesAsync(pair.State.Pagination.CurrentPage, 5),
+            response =&gt; new LoadMoviesSuccess(response.Movies, response.TotalItems),
+            ex =&gt; new LoadMoviesFailure(ex));
+}
+</code></pre>
+<p>This code demonstrates how custom operators streamline the process of handling actions, accessing state, and performing service calls.</p>
+<h2 id="best-practices-for-writing-effects">Best Practices for Writing Effects</h2>
+<ul>
+<li><strong>Keep Effects Focused</strong>: Each effect should handle a specific side effect, such as an API call or a timer. This makes effects easier to manage and test.</li>
+<li><strong>Use Custom Operators</strong>: Leverage R3dux’s custom operators to simplify your effect logic and make it more readable.</li>
+<li><strong>Handle Errors Gracefully</strong>: Always handle potential errors in your effects by dispatching appropriate failure actions.</li>
+<li><strong>Avoid Side Effects in Reducers</strong>: Use effects, not reducers, for handling side effects. Reducers should remain pure and only manage state transformations.</li>
+</ul>
 
 </article>
           </div>

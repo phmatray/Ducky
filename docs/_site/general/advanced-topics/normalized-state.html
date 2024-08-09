@@ -1,0 +1,381 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  <!-- Standard head.tmpl.partial from 'default' template. v2.63.1
+   When you have rendering issues, check if this is the latest version
+   with 'docfx template export default -o <path-to-a-local-folder>' -->
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Normalized State | R3dux Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Normalized State | R3dux Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <!-- Added support for copy code button. Together with script in scripts.tmpl.partial -->
+      <link rel="stylesheet" href="../../styles/copy-code-button.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    <meta property="docfx:newtab" content="true">
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="R3dux Documentation">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="normalized-state">Normalized State</h1>
+
+<p>Managing complex state structures efficiently is a common challenge in modern applications. R3dux addresses this challenge with <strong>NormalizedState</strong>—a powerful abstraction that simplifies the handling of collections of entities. By normalizing your state, you ensure that your application’s data is easy to manage, query, and update, all while maintaining the benefits of immutability.</p>
+<h2 id="what-is-normalizedstate">What is NormalizedState?</h2>
+<p><code>NormalizedState</code> is a specialized record in R3dux designed to manage collections of entities in a normalized form. It organizes entities in an immutable dictionary keyed by a unique identifier, streamlining operations such as querying, updating, and deleting entities. This structure not only prevents data duplication but also makes relationships between entities more straightforward to handle.</p>
+<h3 id="key-characteristics">Key Characteristics</h3>
+<ol>
+<li><strong>Normalization</strong>: Entities are stored in an <code>ImmutableDictionary</code>, indexed by a unique key (e.g., <code>Guid</code>, <code>int</code>). This eliminates redundancy and simplifies the management of related entities.</li>
+<li><strong>Immutability</strong>: All operations on the state return a new instance, ensuring that state changes are predictable, traceable, and free from side effects.</li>
+<li><strong>Comprehensive API</strong>: <code>NormalizedState</code> provides a rich set of methods for common operations, making it easier to manipulate collections of entities in a consistent and predictable way.</li>
+</ol>
+<h2 id="defining-a-normalized-state">Defining a Normalized State</h2>
+<p>To define a normalized state, extend the <code>NormalizedState&lt;TKey, TEntity, TState&gt;</code> record. This approach centralizes the management of your entities and provides built-in methods for common tasks.</p>
+<h3 id="example-defining-a-todo-state">Example: Defining a Todo State</h3>
+<p>Consider a todo application where each todo item has a unique identifier. Here's how you would define a normalized state for managing todos:</p>
+<pre><code class="lang-csharp">public record TodoState : NormalizedState&lt;Guid, TodoItem, TodoState&gt;
+{
+    // Selectors for retrieving specific subsets of todos
+
+    public ImmutableList&lt;TodoItem&gt; SelectCompletedTodos()
+    {
+        return SelectImmutableList(todo =&gt; todo.IsCompleted);
+    }
+
+    public int SelectCompletedTodosCount()
+    {
+        return SelectCompletedTodos().Count;
+    }
+
+    public bool SelectHasCompletedTodos()
+    {
+        return !SelectCompletedTodos().IsEmpty;
+    }
+
+    public ImmutableList&lt;TodoItem&gt; SelectActiveTodos()
+    {
+        return SelectImmutableList(todo =&gt; !todo.IsCompleted);
+    }
+
+    public int SelectActiveTodosCount()
+    {
+        return SelectActiveTodos().Count();
+    }
+
+    public bool SelectHasActiveTodos()
+    {
+        return !SelectActiveTodos().IsEmpty;
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li><strong>TodoState</strong> inherits from <code>NormalizedState&lt;Guid, TodoItem, TodoState&gt;</code>, managing a collection of <code>TodoItem</code> entities.</li>
+<li>Selectors are defined to encapsulate logic for querying the state, such as retrieving completed or active todos.</li>
+</ul>
+<h2 id="core-methods-of-normalizedstate">Core Methods of NormalizedState</h2>
+<p>The <code>NormalizedState</code> record provides a comprehensive API for managing collections of entities. These methods ensure that all state changes are performed immutably and consistently.</p>
+<h3 id="entity-management-methods">Entity Management Methods</h3>
+<p>Here’s an overview of the key methods available in <code>NormalizedState</code>:</p>
+<ul>
+<li><p><strong>Create</strong>: Initializes a new state with a collection of entities.</p>
+<pre><code class="lang-csharp">public static TState Create(ImmutableList&lt;TEntity&gt; entities)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var initialState = TodoState.Create(initialTodos);
+</code></pre>
+</li>
+<li><p><strong>AddOne</strong>: Adds a single entity to the state.</p>
+<pre><code class="lang-csharp">public TState AddOne(TEntity entity)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var newState = state.AddOne(new TodoItem(Guid.NewGuid(), &quot;New Task&quot;));
+</code></pre>
+</li>
+<li><p><strong>AddMany</strong>: Adds multiple entities to the state.</p>
+<pre><code class="lang-csharp">public TState AddMany(IEnumerable&lt;TEntity&gt; entities)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var newState = state.AddMany(newListOfTodos);
+</code></pre>
+</li>
+<li><p><strong>SetOne</strong>: Replaces or adds a single entity.</p>
+<pre><code class="lang-csharp">public TState SetOne(TEntity entity)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var updatedState = state.SetOne(updatedTodo);
+</code></pre>
+</li>
+<li><p><strong>SetMany</strong>: Replaces or adds multiple entities.</p>
+<pre><code class="lang-csharp">public TState SetMany(IEnumerable&lt;TEntity&gt; entities)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var updatedState = state.SetMany(updatedTodos);
+</code></pre>
+</li>
+<li><p><strong>RemoveOne</strong>: Removes an entity by its key.</p>
+<pre><code class="lang-csharp">public TState RemoveOne(TKey key)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var newState = state.RemoveOne(todoId);
+</code></pre>
+</li>
+<li><p><strong>RemoveMany</strong>: Removes multiple entities by their keys.</p>
+<pre><code class="lang-csharp">public TState RemoveMany(IEnumerable&lt;TKey&gt; keys)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var newState = state.RemoveMany(todoIds);
+</code></pre>
+</li>
+<li><p><strong>UpdateOne</strong>: Updates a single entity using an action or function.</p>
+<pre><code class="lang-csharp">public TState UpdateOne(TKey key, Action&lt;TEntity&gt; update)
+public TState UpdateOne(TKey key, Func&lt;TEntity, TEntity&gt; update)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var updatedState = state.UpdateOne(todoId, todo =&gt; todo.MarkAsCompleted());
+</code></pre>
+</li>
+<li><p><strong>UpdateMany</strong>: Updates multiple entities using an action or function.</p>
+<pre><code class="lang-csharp">public TState UpdateMany(IEnumerable&lt;TKey&gt; keys, Action&lt;TEntity&gt; update)
+public TState UpdateMany(IEnumerable&lt;TKey&gt; keys, Func&lt;TEntity, TEntity&gt; update)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var updatedState = state.UpdateMany(todoIds, todo =&gt; todo.MarkAsCompleted());
+</code></pre>
+</li>
+<li><p><strong>UpsertOne</strong>: Updates or inserts a single entity.</p>
+<pre><code class="lang-csharp">public TState UpsertOne(TEntity entity)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var newState = state.UpsertOne(newTodoItem);
+</code></pre>
+</li>
+<li><p><strong>UpsertMany</strong>: Updates or inserts multiple entities.</p>
+<pre><code class="lang-csharp">public TState UpsertMany(IEnumerable&lt;TEntity&gt; entities)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var newState = state.UpsertMany(todoItems);
+</code></pre>
+</li>
+<li><p><strong>MapOne</strong>: Transforms a single entity by applying a function.</p>
+<pre><code class="lang-csharp">public TState MapOne(TKey key, Func&lt;TEntity, TEntity&gt; map)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var mappedState = state.MapOne(todoId, todo =&gt; todo.WithPriority(&quot;High&quot;));
+</code></pre>
+</li>
+<li><p><strong>Map</strong>: Transforms all entities in the state.</p>
+<pre><code class="lang-csharp">public TState Map(Func&lt;TEntity, TEntity&gt; map)
+</code></pre>
+<p>Example:</p>
+<pre><code class="lang-csharp">var mappedState = state.Map(todo =&gt; todo.WithCategory(&quot;Work&quot;));
+</code></pre>
+</li>
+</ul>
+<h3 id="example-adding-updating-and-removing-entities">Example: Adding, Updating, and Removing Entities</h3>
+<pre><code class="lang-csharp">// Adding a new todo item
+var newState = state.AddOne(new TodoItem(Guid.NewGuid(), &quot;New Task&quot;));
+
+// Updating an existing todo item
+newState = newState.UpdateOne(todoId, todo =&gt; todo.MarkAsCompleted());
+
+// Removing a todo item
+newState = newState.RemoveOne(todoId);
+</code></pre>
+<h2 id="advanced-operations-with-normalizedstate">Advanced Operations with NormalizedState</h2>
+<h3 id="merging-entities">Merging Entities</h3>
+<p>When you need to merge a set of entities into the state, you can use the <code>Merge</code> method. This method allows for different merge strategies, such as overwriting existing entities or failing if duplicates are found.</p>
+<pre><code class="lang-csharp">var mergedState = state.Merge(newEntitiesDictionary, MergeStrategy.Overwrite);
+</code></pre>
+<ul>
+<li><strong>MergeStrategy.FailIfDuplicate</strong>: Ensures that no duplicates are merged into the state.</li>
+<li><strong>MergeStrategy.Overwrite</strong>: Overwrites any existing entities with the new ones.</li>
+</ul>
+<h3 id="querying-entities">Querying Entities</h3>
+<p>Entities stored in a <code>NormalizedState</code> are indexed by their keys, making it easy to query them efficiently. You can retrieve an entity directly by its key using the indexer.</p>
+<pre><code class="lang-csharp">var todo = state[todoId];
+</code></pre>
+<h3 id="filtering-with-selectors">Filtering with Selectors</h3>
+<p>Selectors allow you to define reusable queries that filter or transform the state. This keeps your components clean and focused on rendering UI rather than managing data.</p>
+<pre><code class="lang-csharp">public ImmutableList&lt;TodoItem&gt; SelectCompletedTodos()
+{
+    return SelectImmutableList(todo =&gt; todo.IsCompleted);
+}
+</code></pre>
+<h2 id="understanding-the-serialized-state">Understanding the Serialized State</h2>
+<p>When the state is serialized (for example, for debugging, logging, or persistence purposes), <code>NormalizedState</code> organizes your data in a structured way that highlights the benefits of normalization. Here’s how the state is typically represented in JSON:</p>
+<pre><code class="lang-json">{
+  &quot;type&quot;: &quot;AppStore.Todos.TodoState, AppStore, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null&quot;,
+  &quot;value&quot;: {
+    &quot;by-id&quot;: {
+      &quot;00000000-0000-0000-0000-111111111111&quot;: {
+        &quot;id&quot;: &quot;00000000-0000-0000-0000-111111111111&quot;,
+        &quot;title&quot;: &quot;Learn Blazor&quot;,
+        &quot;is-completed&quot;: true
+      },
+      &quot;00000000-0000-0000-0000-222222222222&quot;: {
+        &quot;id&quot;: &quot;00000000-0000-0000-0000-222222222222&quot;,
+        &quot;title&quot;: &quot;Learn Redux&quot;,
+        &quot;is-completed&quot;: false
+      },
+      &quot;00000000-0000-0000-0000-333333333333&quot;: {
+        &quot;id&quot;: &quot;00000000-0000-0000-0000-333333333333&quot;,
+        &quot;title&quot;: &quot;Learn Reactive Programming&quot;,
+        &quot;is-completed&quot;: false
+      },
+      &quot;00000000-0000-0000-0000-444444444444&quot;: {
+        &quot;id&quot;: &quot;00000000-0000-0000-0000-444444444444&quot;,
+        &quot;title&quot;: &quot;Create a Todo App&quot;,
+        &quot;is-completed&quot;: true
+      },
+      &quot;00000000-0000-0000-0000-555555555555&quot;: {
+        &quot;id&quot;: &quot;00000000-0000-0000-0000-555555555555&quot;,
+        &quot;title&quot;: &quot;Publish a NuGet package&quot;,
+        &quot;is-completed&quot;: false
+      }
+    },
+    &quot;all-ids&quot;: [
+      &quot;00000000-0000-0000-0000-111111111111&quot;,
+      &quot;00000000-0000-0000-0000-222222222222&quot;,
+      &quot;00000000-0000-0000-0000-333333333333&quot;,
+      &quot;00000000-0000-0000-0000-444444444444&quot;,
+      &quot;00000000-0000-0000-0000-555555555555&quot;
+    ]
+  }
+}
+</code></pre>
+<h4 id="breakdown-of-the-serialized-structure">Breakdown of the Serialized Structure</h4>
+<ol>
+<li><strong><code>type</code></strong>: This field indicates the fully qualified name of the state type, including the assembly information. It tells the system how to deserialize this state back into its original type.</li>
+<li><strong><code>by-id</code></strong>: This dictionary holds the entities indexed by their unique keys. Each key corresponds to an entity's ID, and the value is the entity itself, represented as a JSON object.</li>
+<li><strong><code>all-ids</code></strong>: This array lists all the keys (IDs) of the entities stored in the state. It preserves the order of the entities as they were added, which can be useful for displaying items in a particular order.</li>
+</ol>
+<h4 id="advantages-of-the-serialized-format">Advantages of the Serialized Format</h4>
+<ul>
+<li><strong>Efficiency</strong>: By storing entities in a dictionary, operations like lookups, updates, and deletions are very efficient.</li>
+<li><strong>Clarity</strong>: The separation between the <code>by-id</code> dictionary and the <code>all-ids</code> list provides a clear distinction between the entities themselves and their ordering, making it easier to understand and manipulate the state.</li>
+<li><strong>Consistency</strong>: When rehydrating (deserializing) the state, the structure ensures that all entities are restored accurately, maintaining the relationships and order as intended.</li>
+</ul>
+<p>This structured approach not only makes the state more manageable within your application but also ensures that any serialized data is robust, easy to inspect, and straightforward to restore.</p>
+<h2 id="best-practices-for-using-normalizedstate">Best Practices for Using NormalizedState</h2>
+<ul>
+<li><strong>Embrace Immutability</strong>: Always use the provided methods to modify the state. This ensures that all changes are made immutably, which is crucial for maintaining predictable state transitions.</li>
+<li><strong>Utilize Selectors</strong>: Encapsulate querying logic within selectors. This not only simplifies your components but also promotes reuse across your application.</li>
+<li><strong>Carefully Choose Merge Strategies</strong>: When merging entities, choose the appropriate strategy to avoid unintentional overwrites or errors due to duplicates.</li>
+<li><strong>Encapsulate Common Operations</strong>: Define common operations (such as adding, updating, or removing entities) within your state class. This promotes consistency and reduces the risk of errors.</li>
+</ul>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/advanced-topics/normalized-state.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- Standard scripts.tmpl.partial from 'default' template. v2.63.1
+     When you have rendering issues, check if this is the latest version
+     with 'docfx template export default -o <path-to-a-local-folder>' -->
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+
+    <!-- Added support for copy code button. Together with script in scripts.tmpl.partial -->
+    <script type="text/javascript" src="../../styles/copy-code-button.js"></script>
+
+    <!-- Support for diagrams (Mermaid). See https://mermaid.js.org/intro/n00b-gettingStarted.html -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>  </body>
+</html>

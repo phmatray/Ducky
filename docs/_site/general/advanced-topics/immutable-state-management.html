@@ -1,0 +1,224 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  <!-- Standard head.tmpl.partial from 'default' template. v2.63.1
+   When you have rendering issues, check if this is the latest version
+   with 'docfx template export default -o <path-to-a-local-folder>' -->
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Immutable State Management | R3dux Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Immutable State Management | R3dux Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <!-- Added support for copy code button. Together with script in scripts.tmpl.partial -->
+      <link rel="stylesheet" href="../../styles/copy-code-button.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    <meta property="docfx:newtab" content="true">
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="R3dux Documentation">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="immutable-state-management">Immutable State Management</h1>
+
+<p>Immutability is a core principle in modern state management, and it plays a crucial role in ensuring that your application remains predictable, easy to debug, and scalable. In R3dux, immutability is enforced across all state transformations, making it an essential concept to understand deeply.</p>
+<h2 id="what-is-immutability">What is Immutability?</h2>
+<p>Immutability means that once an object is created, it cannot be modified. Any change to an immutable object results in the creation of a new object rather than altering the existing one. In the context of state management, immutability ensures that state changes are explicit, traceable, and predictable.</p>
+<h3 id="key-characteristics-of-immutability">Key Characteristics of Immutability</h3>
+<ol>
+<li><strong>No Side Effects</strong>: Since immutable objects cannot be changed, they prevent unintended side effects, making your code more reliable and easier to reason about.</li>
+<li><strong>State Integrity</strong>: Immutability guarantees that previous states remain unchanged, preserving the integrity of your state history, which is essential for debugging and time-travel debugging.</li>
+<li><strong>Thread Safety</strong>: Immutable objects are inherently thread-safe, as they do not require locks or other synchronization mechanisms to protect shared state.</li>
+</ol>
+<h2 id="what-are-the-benefits-of-immutability">What are the Benefits of Immutability?</h2>
+<p>Immutability offers several advantages that can significantly enhance the quality and performance of your applications:</p>
+<h3 id="1-increased-performance">1. <strong>Increased Performance</strong></h3>
+<p>Although it may seem counterintuitive, immutability can lead to increased performance in many scenarios. Techniques like structural sharing allow immutable data structures to reuse parts of themselves, reducing the need to copy entire structures when changes occur. This results in efficient memory usage and faster state updates.</p>
+<h3 id="2-simpler-programming">2. <strong>Simpler Programming</strong></h3>
+<p>Immutable data structures simplify programming because they eliminate a whole class of bugs related to unexpected changes in state. When data cannot change, reasoning about the flow of data and the effects of operations becomes more straightforward. This leads to cleaner, more maintainable code.</p>
+<h3 id="3-easier-debugging">3. <strong>Easier Debugging</strong></h3>
+<p>With immutability, debugging becomes easier because you can rely on the fact that previous states remain unchanged. This stability allows you to examine the history of state changes without worrying about past states being altered, enabling powerful debugging techniques such as time-travel debugging.</p>
+<h2 id="immutability-in-action-counterstate-example">Immutability in Action: CounterState Example</h2>
+<p>To illustrate how immutability works in practice, let's take a look at a simple example using <code>CounterState</code>.</p>
+<h3 id="example-immutable-counter-state">Example: Immutable Counter State</h3>
+<p>Here’s how you would define and manage an immutable counter state:</p>
+<pre><code class="lang-csharp">public record CounterState(int Value);
+
+public record CounterReducers : SliceReducers&lt;CounterState&gt;
+{
+    public CounterReducers()
+    {
+        On&lt;Increment&gt;((state, action) =&gt; new CounterState(state.Value + action.Amount));
+        On&lt;Decrement&gt;((state, action) =&gt; new CounterState(state.Value - action.Amount));
+        On&lt;Reset&gt;(GetInitialState);
+        On&lt;SetValue&gt;((_, action) =&gt; new CounterState(action.Value));
+    }
+
+    public override CounterState GetInitialState()
+    {
+        return new CounterState(10);
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li><strong>CounterState</strong> is defined as an immutable record, where each change results in a new instance.</li>
+<li>The reducers (<code>On&lt;Increment&gt;</code>, <code>On&lt;Decrement&gt;</code>, etc.) return new instances of <code>CounterState</code> instead of modifying the existing state.</li>
+</ul>
+<h3 id="example-updating-counter-state-immutably">Example: Updating Counter State Immutably</h3>
+<pre><code class="lang-csharp">var newState = state with { Value = state.Value + 1 };
+</code></pre>
+<ul>
+<li><strong>State Update</strong>: The <code>with</code> expression creates a new <code>CounterState</code> with an updated value, leaving the original state untouched.</li>
+</ul>
+<h2 id="why-is-immutability-required-by-r3dux">Why is Immutability Required by R3dux?</h2>
+<p>Immutability is not just a best practice in R3dux; it is a fundamental requirement. Here’s why:</p>
+<h3 id="1-ensures-predictability">1. <strong>Ensures Predictability</strong></h3>
+<p>R3dux is designed around the principle that state should only change in predictable, controlled ways. Immutability enforces this by ensuring that every state change is a deliberate act that results in a new state object. This predictability is crucial for building reliable, bug-free applications.</p>
+<h3 id="2-supports-advanced-debugging-techniques">2. <strong>Supports Advanced Debugging Techniques</strong></h3>
+<p>Immutability allows for powerful debugging tools, such as time-travel debugging, where you can move forward and backward through the state changes. This capability is only possible if previous states remain intact and unaltered.</p>
+<h3 id="3-facilitates-undoredo-functionality">3. <strong>Facilitates Undo/Redo Functionality</strong></h3>
+<p>Immutability simplifies the implementation of undo/redo functionality by preserving the history of state changes. Since past states are not modified, you can easily revert to a previous state or reapply changes without concern for unintended side effects.</p>
+<h3 id="4-improves-application-performance">4. <strong>Improves Application Performance</strong></h3>
+<p>Through structural sharing, immutability in R3dux is optimized to avoid the performance pitfalls often associated with copying large amounts of data. By reusing unchanged parts of the state, R3dux ensures that your application remains responsive even as the complexity of the state grows.</p>
+<h3 id="5-enforces-best-practices">5. <strong>Enforces Best Practices</strong></h3>
+<p>By requiring immutability, R3dux enforces best practices in state management, guiding developers towards writing more maintainable, robust, and scalable code. This enforcement helps prevent a wide range of bugs that stem from unintended state mutations.</p>
+<h2 id="immutability-in-complex-scenarios-todostate-example">Immutability in Complex Scenarios: TodoState Example</h2>
+<p>For more complex state structures, like managing a collection of todo items, immutability is handled through normalized state management:</p>
+<pre><code class="lang-csharp">public record TodoState : NormalizedState&lt;Guid, TodoItem, TodoState&gt;
+{
+    // Selectors and other methods...
+
+    public override TodoState SetOne(TodoItem entity)
+    {
+        return this with { ById = ById.SetItem(entity.Id, entity) };
+    }
+
+    public override TodoState RemoveOne(Guid key)
+    {
+        return this with { ById = ById.Remove(key) };
+    }
+}
+</code></pre>
+<p>In this more complex example:</p>
+<ul>
+<li>The state changes are still handled immutably, with each operation (e.g., <code>SetOne</code>, <code>RemoveOne</code>) returning a new state.</li>
+<li>The <code>with</code> keyword is used to create a new state based on the current state, with only the necessary modifications applied.</li>
+</ul>
+<h2 id="conclusion-immutability-is-essential">Conclusion: Immutability is Essential</h2>
+<p>Immutability is a cornerstone of reliable, predictable state management in R3dux. By enforcing immutability, R3dux ensures that your application’s state transitions are clear, traceable, and free from unintended side effects. This not only makes your application easier to develop and debug but also lays the foundation for scalable, maintainable code that can grow with your application’s needs.</p>
+<p>Embracing immutability in your R3dux applications will lead to better performance, simpler code, and more robust applications that are easier to maintain and extend.</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/advanced-topics/immutable-state-management.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- Standard scripts.tmpl.partial from 'default' template. v2.63.1
+     When you have rendering issues, check if this is the latest version
+     with 'docfx template export default -o <path-to-a-local-folder>' -->
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+
+    <!-- Added support for copy code button. Together with script in scripts.tmpl.partial -->
+    <script type="text/javascript" src="../../styles/copy-code-button.js"></script>
+
+    <!-- Support for diagrams (Mermaid). See https://mermaid.js.org/intro/n00b-gettingStarted.html -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>  </body>
+</html>

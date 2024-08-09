@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  <!-- Standard head.tmpl.partial from 'default' template. v2.63.1
+   When you have rendering issues, check if this is the latest version
+   with 'docfx template export default -o <path-to-a-local-folder>' -->
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Quick Start Guide | R3dux Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Quick Start Guide | R3dux Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <!-- Added support for copy code button. Together with script in scripts.tmpl.partial -->
+      <link rel="stylesheet" href="../../styles/copy-code-button.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    <meta property="docfx:newtab" content="true">
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="R3dux Documentation">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="quick-start-guide">Quick Start Guide</h1>
+
+<p>Welcome to the R3dux Quick Start Guide! This guide will help you get up and running with R3dux in your .NET application. By the end of this guide, you'll have a basic understanding of how to set up a project with R3dux and implement a simple state management example.</p>
+<h2 id="setting-up-your-first-project">Setting Up Your First Project</h2>
+<h3 id="1-create-a-new-net-project">1. Create a New .NET Project</h3>
+<p>To get started, you'll need to create a new .NET project. You can create a console application, a Blazor application, or any other type of .NET project where you want to manage state using R3dux.</p>
+<h4 id="using-the-net-cli">Using the .NET CLI</h4>
+<p>Open your terminal or command prompt and run the following commands to create a new .NET console application:</p>
+<pre><code class="lang-bash">dotnet new console -n R3duxDemo
+cd R3duxDemo
+</code></pre>
+<p>This creates a new directory called <code>R3duxDemo</code> containing a basic .NET console application.</p>
+<h3 id="2-install-r3dux">2. Install R3dux</h3>
+<p>Next, you need to install R3dux via NuGet.</p>
+<h4 id="using-the-net-cli-1">Using the .NET CLI</h4>
+<p>Run the following command to install R3dux:</p>
+<pre><code class="lang-bash">dotnet add package R3dux
+</code></pre>
+<h3 id="3-set-up-your-project-for-r3dux">3. Set Up Your Project for R3dux</h3>
+<p>In your project, you'll need to define actions, reducers, and optionally effects. For this quick start, we'll keep it simple and create a counter example.</p>
+<h4 id="define-actions">Define Actions</h4>
+<p>Create a new file called <code>CounterActions.cs</code>:</p>
+<pre><code class="lang-csharp">public record Increment : IAction;
+public record Decrement : IAction;
+</code></pre>
+<h4 id="define-reducers">Define Reducers</h4>
+<p>Create a new file called <code>CounterReducers.cs</code>:</p>
+<pre><code class="lang-csharp">public class CounterReducers : SliceReducers&lt;int&gt;
+{
+    public CounterReducers()
+    {
+        On&lt;Increment&gt;((state, _) =&gt; state + 1);
+        On&lt;Decrement&gt;((state, _) =&gt; state - 1);
+    }
+
+    public override int GetInitialState()
+    {
+        return 0;
+    }
+}
+</code></pre>
+<h4 id="set-up-the-store">Set Up the Store</h4>
+<p>In your <code>Program.cs</code> file (or equivalent entry point), set up the R3dux store:</p>
+<pre><code class="lang-csharp">using R3dux;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var store = new Store(new CounterReducers());
+
+        store.Dispatch(new Increment());
+        Console.WriteLine($&quot;Counter: {store.GetState&lt;int&gt;()}&quot;);
+
+        store.Dispatch(new Increment());
+        Console.WriteLine($&quot;Counter: {store.GetState&lt;int&gt;()}&quot;);
+
+        store.Dispatch(new Decrement());
+        Console.WriteLine($&quot;Counter: {store.GetState&lt;int&gt;()}&quot;);
+    }
+}
+</code></pre>
+<h2 id="basic-usage-example">Basic Usage Example</h2>
+<p>Now that your project is set up, let's go over the basic usage of R3dux by running the counter example.</p>
+<h3 id="1-run-the-application">1. Run the Application</h3>
+<p>You can run your application by executing the following command in your terminal:</p>
+<pre><code class="lang-bash">dotnet run
+</code></pre>
+<h3 id="2-observe-the-output">2. Observe the Output</h3>
+<p>After running the application, you should see the following output:</p>
+<pre><code class="lang-bash">Counter: 1
+Counter: 2
+Counter: 1
+</code></pre>
+<h3 id="3-understanding-the-example">3. Understanding the Example</h3>
+<ul>
+<li><strong>Actions</strong>: <code>Increment</code> and <code>Decrement</code> are simple actions that describe state changes. These are dispatched to the store to trigger state updates.</li>
+<li><strong>Reducers</strong>: The <code>CounterReducers</code> class defines how the state should change in response to each action. The <code>On</code> method maps actions to state changes.</li>
+<li><strong>Store</strong>: The <code>Store</code> class manages the application state. You can dispatch actions to the store and retrieve the current state using <code>GetState</code>.</li>
+</ul>
+<p>This example demonstrates how to set up a simple counter using R3dux. The state is managed in a predictable and immutable way, and actions are the only way to modify the state.</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/phmatray/R3dux/blob/features/documentation/docs/general/getting-started/quick-start-guide.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- Standard scripts.tmpl.partial from 'default' template. v2.63.1
+     When you have rendering issues, check if this is the latest version
+     with 'docfx template export default -o <path-to-a-local-folder>' -->
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+
+    <!-- Added support for copy code button. Together with script in scripts.tmpl.partial -->
+    <script type="text/javascript" src="../../styles/copy-code-button.js"></script>
+
+    <!-- Support for diagrams (Mermaid). See https://mermaid.js.org/intro/n00b-gettingStarted.html -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>  </body>
+</html>
