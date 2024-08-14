@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Formatting.Compact" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.Seq" />
   </ItemGroup>
