@@ -7,9 +7,13 @@ using Demo.Website2.Features.JsonColoring;
 using Demo.Website2.Features.JsonColoring.Services;
 using MudBlazor.Services;
 using R3dux.Blazor;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
+
+builder.Host.UseSerilog((context, loggerConfig)
+    => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
 services.AddRazorComponents()
