@@ -11,7 +11,7 @@ var services = builder.Services;
 
 // Add services to the container.
 services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(options => options.DetailedErrors = true);
 
 // Add front services
 services.AddScoped<IJsonColorizer, JsonColorizer>();

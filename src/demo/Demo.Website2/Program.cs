@@ -17,7 +17,7 @@ builder.Host.UseSerilog((context, loggerConfig)
 
 // Add services to the container.
 services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(options => options.DetailedErrors = true);
 
 // Add front services
 services.AddMudServices(config =>
