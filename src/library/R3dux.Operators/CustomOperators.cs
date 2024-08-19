@@ -100,7 +100,7 @@ public static class CustomOperators
         Func<TResult, IAction> successSelector,
         Func<Exception, IAction> errorSelector)
     {
-        return source.SelectAwait(async (action, ct) =>
+        return source.SelectAwait(async (action, _) =>
         {
             try
             {

@@ -66,9 +66,9 @@
 @code {
   
   [Parameter] 
-  public int MovieId { get; set; }
+  public required int Id { get; set; }
   
   private Movie? SelectedMovie
-    => State.SelectMovieById(MovieId);
+    => State.SelectMovieById(Id);
   
 }
