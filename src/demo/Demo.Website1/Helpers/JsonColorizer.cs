@@ -20,7 +20,7 @@ public class JsonColorizer : IJsonColorizer
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
         using var document = JsonDocument.Parse(json);
-        var sb = new IndentedStringBuilder(0);
+        var sb = new IndentedStringBuilder();
         ProcessElement(document.RootElement, sb);
         return sb.ToString();
     }

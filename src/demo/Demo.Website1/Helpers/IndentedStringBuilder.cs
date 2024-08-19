@@ -9,11 +9,19 @@ namespace Demo.Website1.Helpers;
 /// <summary>
 /// Provides a helper class to build indented strings using a <see cref="StringBuilder"/>.
 /// </summary>
-/// <param name="indentLevel">The initial indentation level.</param>
-/// <param name="indentSize">The number of spaces per indentation level. Default is 2.</param>
-public sealed class IndentedStringBuilder(int indentLevel, int indentSize = 2)
+public sealed class IndentedStringBuilder
 {
     private readonly StringBuilder _sb = new();
+
+    /// <summary>
+    /// Gets the current indentation level.
+    /// </summary>
+    public int IndentLevel { get; private set; }
+
+    /// <summary>
+    /// Gets the number of spaces per indentation level.
+    /// </summary>
+    public int IndentSize { get; } = 2;
 
     /// <summary>
     /// Appends the specified string value to the current string.
@@ -31,7 +39,7 @@ public sealed class IndentedStringBuilder(int indentLevel, int indentSize = 2)
     /// <param name="value">The string to append.</param>
     public void AppendLine(string value)
     {
-        _sb.AppendLine(new string(' ', indentLevel * indentSize) + value);
+        _sb.AppendLine(new string(' ', IndentLevel * IndentLevel) + value);
     }
 
     /// <summary>
@@ -39,7 +47,7 @@ public sealed class IndentedStringBuilder(int indentLevel, int indentSize = 2)
     /// </summary>
     public void AppendIndentation()
     {
-        _sb.Append(new string(' ', indentLevel * indentSize));
+        _sb.Append(new string(' ', IndentLevel * IndentLevel));
     }
 
     /// <summary>
@@ -47,7 +55,7 @@ public sealed class IndentedStringBuilder(int indentLevel, int indentSize = 2)
     /// </summary>
     public void Indent()
     {
-        indentLevel++;
+        IndentLevel++;
     }
 
     /// <summary>
@@ -55,9 +63,9 @@ public sealed class IndentedStringBuilder(int indentLevel, int indentSize = 2)
     /// </summary>
     public void Unindent()
     {
-        if (indentLevel > 0)
+        if (IndentLevel > 0)
         {
-            indentLevel--;
+            IndentLevel--;
         }
     }
 
