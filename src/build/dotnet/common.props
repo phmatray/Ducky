@@ -4,7 +4,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!--<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/CodeAnalysis.ruleset</CodeAnalysisRuleSet>-->
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>

@@ -1,6 +1,8 @@
 <Project>
   <!-- Code Analysis -->
   <PropertyGroup>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/code-analysis.ruleset</CodeAnalysisRuleSet>
+    
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisLevel>8.0-recommended</AnalysisLevel>
