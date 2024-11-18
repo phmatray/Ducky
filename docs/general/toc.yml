@@ -110,8 +110,8 @@ items:
     href: best-practices/README.md
   - name: Structuring Your Application
     href: best-practices/structuring-your-application.md
-  - name: Testing Your R3dux Code
-    href: best-practices/testing-your-r3dux-code.md
+  - name: Testing Your Ducky Code
+    href: best-practices/testing-your-ducky-code.md
   - name: Handling Large State Trees
     href: best-practices/handling-large-state-trees.md
   - name: Debugging and Logging

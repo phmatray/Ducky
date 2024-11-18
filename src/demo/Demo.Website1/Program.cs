@@ -4,7 +4,7 @@
 
 using Demo.Website1.Components;
 using Demo.Website1.Helpers;
-using R3dux.Blazor;
+using Ducky.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -20,7 +20,7 @@ services.AddScoped<IJsonColorizer, JsonColorizer>();
 services.AddTransient<IMoviesService, MoviesService>();
 
 // Add RxStore
-services.AddR3dux(builder.Configuration);
+services.AddDucky(builder.Configuration);
 
 var app = builder.Build();
 

@@ -1,12 +1,12 @@
 # Installation
 
-This page will guide you through the process of installing R3dux in your .NET applications. Follow the steps below to get started quickly and easily.
+This page will guide you through the process of installing Ducky in your .NET applications. Follow the steps below to get started quickly and easily.
 
 ## Prerequisites
 
-Before you install R3dux, ensure that you have the following prerequisites:
+Before you install Ducky, ensure that you have the following prerequisites:
 
-1. **.NET SDK**: R3dux requires .NET SDK version 8.0 or later. You can download and install the .NET SDK from the official [.NET website](https://dotnet.microsoft.com/download).
+1. **.NET SDK**: Ducky requires .NET SDK version 8.0 or later. You can download and install the .NET SDK from the official [.NET website](https://dotnet.microsoft.com/download).
 
     ```bash
     dotnet --version
@@ -18,17 +18,17 @@ Before you install R3dux, ensure that you have the following prerequisites:
 
 ## Installing via NuGet
 
-R3dux is available as a NuGet package. You can install it using the NuGet Package Manager in Visual Studio, the .NET CLI, or the Package Manager Console.
+Ducky is available as a NuGet package. You can install it using the NuGet Package Manager in Visual Studio, the .NET CLI, or the Package Manager Console.
 
 ### Using the .NET CLI
 
 1. Open a terminal or command prompt.
 2. Navigate to your project directory.
-3. Run the following command to install R3dux:
+3. Run the following command to install Ducky:
 
     ```bash
-    dotnet add package R3dux
-    dotnet add package R3dux.Blazor
+    dotnet add package Ducky
+    dotnet add package Ducky.Blazor
     ```
 
 ### Using the Package Manager Console in Visual Studio
@@ -38,29 +38,29 @@ R3dux is available as a NuGet package. You can install it using the NuGet Packag
 3. Run the following command in the Package Manager Console:
 
     ```powershell
-    Install-Package R3dux
-    Install-Package R3dux.Blazor
+    Install-Package Ducky
+    Install-Package Ducky.Blazor
     ```
 
 ### Using the NuGet Package Manager in Visual Studio
 
 1. Open your solution in Visual Studio.
 2. Right-click on your project in the **Solution Explorer** and select **Manage NuGet Packages**.
-3. In the **NuGet Package Manager**, search for "R3dux".
-4. Select the R3dux package from the list and click **Install**.
+3. In the **NuGet Package Manager**, search for "Ducky".
+4. Select the Ducky package from the list and click **Install**.
 
 ## Verifying the Installation
 
-To verify that R3dux is installed correctly, you can check your project's dependencies:
+To verify that Ducky is installed correctly, you can check your project's dependencies:
 
 1. Open your project file (e.g., `.csproj`).
-2. Ensure that there is a reference to R3dux:
+2. Ensure that there is a reference to Ducky:
 
     ```xml
     <ItemGroup>
-      <PackageReference Include="R3dux" Version="1.0.0" />
-      <PackageReference Include="R3dux.Blazor" Version="1.0.0" />
+      <PackageReference Include="Ducky" Version="1.0.0" />
+      <PackageReference Include="Ducky.Blazor" Version="1.0.0" />
     </ItemGroup>
     ```
 
-Once you have completed these steps, R3dux should be installed and ready to use in your project. You can now start integrating R3dux into your .NET applications to manage state effectively.
+Once you have completed these steps, Ducky should be installed and ready to use in your project. You can now start integrating Ducky into your .NET applications to manage state effectively.

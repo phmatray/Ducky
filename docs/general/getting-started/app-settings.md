@@ -1,8 +1,8 @@
 # AppSettings
 
-The `appsettings.json` file in an ASP.NET Core application is used to configure application settings such as logging levels, allowed hosts, and custom configuration sections. Here is an example of a typical `appsettings.json` file used by the R3dux framework:
+The `appsettings.json` file in an ASP.NET Core application is used to configure application settings such as logging levels, allowed hosts, and custom configuration sections. Here is an example of a typical `appsettings.json` file used by the Ducky framework:
 
-R3dux uses the `appsettings.json` configuration to set up and register services.
+Ducky uses the `appsettings.json` configuration to set up and register services.
 
 ```json
 {
@@ -10,12 +10,12 @@ R3dux uses the `appsettings.json` configuration to set up and register services.
     "LogLevel": {
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning",
-      "R3dux": "Debug",
-      "R3dux.Blazor": "Debug"
+      "Ducky": "Debug",
+      "Ducky.Blazor": "Debug"
     }
   },
   "AllowedHosts": "*",
-  "R3dux": {
+  "Ducky": {
     "AssemblyNames": [
       "Demo.App", // Your website
       "Demo.AppStore" // If you have your Store in another assembly
@@ -30,14 +30,14 @@ R3dux uses the `appsettings.json` configuration to set up and register services.
 
 The `Logging` section configures the logging levels for different parts of the application. The `LogLevel` subsection specifies the minimum log level for different logging categories.
 
-- `R3dux` and `R3dux.Blazor`: The logging levels specifically for the R3dux framework and Blazor components.
+- `Ducky` and `Ducky.Blazor`: The logging levels specifically for the Ducky framework and Blazor components.
 
 ### AllowedHosts
 
 The `AllowedHosts` setting specifies the hosts that are allowed to access the application. The wildcard `*` allows any host.
 
-### R3dux
+### Ducky
 
-The `R3dux` section contains custom settings specific to the R3dux framework:
+The `Ducky` section contains custom settings specific to the Ducky framework:
 
-- `AssemblyNames`: An array of assembly names that the R3dux framework will scan for slices and effects. This allows the framework to dynamically discover and register services.
+- `AssemblyNames`: An array of assembly names that the Ducky framework will scan for slices and effects. This allows the framework to dynamically discover and register services.

@@ -1,8 +1,8 @@
 # Quick Start Guide for Blazor
 
-This guide will help you set up R3dux in a Blazor application. By following these steps, you'll integrate R3dux for state management and implement a simple counter example.
+This guide will help you set up Ducky in a Blazor application. By following these steps, you'll integrate Ducky for state management and implement a simple counter example.
 
-## Create Project & Install R3dux
+## Create Project & Install Ducky
 
 ### 1. Create a New Blazor Project
 
@@ -13,35 +13,35 @@ dotnet new blazorwasm -o BlazorApp
 cd BlazorApp
 ```
 
-### 2. Install R3dux and R3dux.Blazor
+### 2. Install Ducky and Ducky.Blazor
 
-Next, install R3dux and the R3dux.Blazor package using the .NET CLI:
+Next, install Ducky and the Ducky.Blazor package using the .NET CLI:
 
 ```bash
-dotnet add package R3dux
-dotnet add package R3dux.Blazor
+dotnet add package Ducky
+dotnet add package Ducky.Blazor
 ```
 
 ## Prepare Startup
 
-To configure R3dux in your Blazor application, you'll need to update your `Program.cs` file.
+To configure Ducky in your Blazor application, you'll need to update your `Program.cs` file.
 
-### 1. Configure R3dux in `Program.cs`
+### 1. Configure Ducky in `Program.cs`
 
-Open the `Program.cs` file and add the R3dux services to the Blazor service container.
+Open the `Program.cs` file and add the Ducky services to the Blazor service container.
 
 #### Basic Configuration
 
 If your slices are automatically discoverable, you can use the basic configuration:
 
 ```csharp
-using R3dux.Blazor;
+using Ducky.Blazor;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 
-// Add R3dux with automatic assembly scanning
-builder.Services.AddR3dux(builder.Configuration);
+// Add Ducky with automatic assembly scanning
+builder.Services.AddDucky(builder.Configuration);
 
 await builder.Build().RunAsync();
 ```
@@ -51,13 +51,13 @@ await builder.Build().RunAsync();
 If you want more control, for example, specifying which assemblies to scan for slices, use the following configuration:
 
 ```csharp
-using R3dux.Blazor;
+using Ducky.Blazor;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 
-// Add R3dux with specific assemblies
-builder.Services.AddR3dux(options =>
+// Add Ducky with specific assemblies
+builder.Services.AddDucky(options =>
 {
     options.Assemblies = new[] { typeof(CounterSlice).Assembly };
 });
@@ -67,7 +67,7 @@ await builder.Build().RunAsync();
 
 ## Implement a Counter Example
 
-Now that R3dux is set up, let’s implement a simple counter example in your Blazor application.
+Now that Ducky is set up, let’s implement a simple counter example in your Blazor application.
 
 ### 1. Define Actions
 
@@ -100,7 +100,7 @@ public class CounterReducers : SliceReducers<int>
 
 ### 3. Update the Counter Component
 
-Now, let's modify the default `Counter.razor` component to use R3dux.
+Now, let's modify the default `Counter.razor` component to use Ducky.
 
 #### Update `Counter.razor`
 
@@ -108,7 +108,7 @@ Replace the contents of the `Counter.razor` component with the following:
 
 ```razor
 @page "/counter"
-@inherits R3duxComponent<int>
+@inherits DuckyComponent<int>
 
 <h3>Counter</h3>
 
@@ -146,5 +146,5 @@ Navigate to `/counter` in your web browser. You should see a counter that increm
 
 - **Actions**: The `Increment` and `Decrement` actions are simple records that describe state changes.
 - **Reducers**: The `CounterReducers` class defines how the state changes in response to the dispatched actions.
-- **R3duxComponent**: The `Counter.razor` component inherits from `R3duxComponent<int>`, automatically binding the state to the component.
+- **DuckyComponent**: The `Counter.razor` component inherits from `DuckyComponent<int>`, automatically binding the state to the component.
 - **Dispatch**: The `Dispatch` method is used to send actions to the store, triggering state updates.

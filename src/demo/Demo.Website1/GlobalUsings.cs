@@ -3,4 +3,4 @@
 // See the LICENSE file in the project root for full license information.
 
 global using AppStore.Movies;
-global using R3dux;
+global using Ducky;

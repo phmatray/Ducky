@@ -5,8 +5,8 @@
 using Demo.Website2.Components;
 using Demo.Website2.Features.JsonColoring;
 using Demo.Website2.Features.JsonColoring.Services;
+using Ducky.Blazor;
 using MudBlazor.Services;
-using R3dux.Blazor;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,7 +32,7 @@ services.AddScoped<IJsonColorizer, JsonColorizer>();
 services.AddTransient<IMoviesService, MoviesService>();
 
 // Add RxStore
-services.AddR3dux(builder.Configuration);
+services.AddDucky(builder.Configuration);
 
 var app = builder.Build();
 

@@ -11,8 +11,8 @@ public sealed class LayoutReducersTests : IDisposable
     private readonly LayoutReducers _sut = new();
     private readonly LayoutState _initialState = new()
     {
-        Title = "R3dux",
-        Version = "v1.0.0",
+        Title = "Ducky",
+        Version = DuckyVersioning.GetVersion().ToString(),
         IsDarkMode = true,
         IsDrawerOpen = true,
         IsNotificationOpen = false
@@ -80,11 +80,14 @@ public sealed class LayoutReducersTests : IDisposable
     [Fact]
     public void SelectFullTitle_ShouldReturnCorrectFullTitle()
     {
+        // Arrange
+        var version = DuckyVersioning.GetVersion();
+
         // Act
         var fullTitle = _initialState.SelectFullTitle();
 
         // Assert
-        fullTitle.Should().Be("R3dux - v1.0.0");
+        fullTitle.Should().Be($"Ducky - {version}");
     }
 
     public void Dispose()

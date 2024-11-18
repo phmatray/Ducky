@@ -1,8 +1,8 @@
 @page "/movies"
-@inherits R3duxComponent<MoviesState>
+@inherits DuckyComponent<MoviesState>
 @inject NavigationManager Navigation
 
-<PageTitle>R3dux - Movies</PageTitle>
+<PageTitle>Ducky - Movies</PageTitle>
 
 <MudGrid>
   <MudItem xs="12">
@@ -10,7 +10,7 @@
       <MudText Typo="Typo.subtitle1">Example</MudText>
       <MudText Typo="Typo.h3">Movies</MudText>
       <MudText Typo="Typo.body1">
-        Creates a simple movie example using the R3dux state management library for predictable state handling,<br/>
+        Creates a simple movie example using the Ducky state management library for predictable state handling,<br/>
         featuring loading state and error handling for displaying movies.
       </MudText>
       <MudList T="string" Dense="true">

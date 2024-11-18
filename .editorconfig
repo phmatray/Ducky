@@ -166,6 +166,7 @@ csharp_space_between_square_brackets = false
 dotnet_diagnostic.AvoidAsyncVoid.severity = suggestion
 dotnet_diagnostic.IDE0161.severity = error # Namespace declaration preferences
 dotnet_diagnostic.IDE0320.severity = none # Make anonymous function static
+dotnet_diagnostic.IDE0008.severity = none # Use explicit type
 
 # C++ Files
 [*.{cpp,h,in}]

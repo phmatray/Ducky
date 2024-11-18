@@ -87,7 +87,7 @@ public sealed record DeleteTodo
     : Fsa<DeleteTodo.ActionPayload, ActionMeta>
 {
     // Action creators are represented as constructors.
-    // You can also use the ActionMeta.Create() method from R3dux to create a timestamp.
+    // You can also use the ActionMeta.Create() method from Ducky to create a timestamp.
     public DeleteTodo(Guid id)
         : base(new ActionPayload(id), ActionMeta.Create())
     {

@@ -14,7 +14,7 @@ public sealed class NotificationsReducersTests : IDisposable
     {
         Notifications =
         [
-            new SuccessNotification("Welcome to R3dux!"),
+            new SuccessNotification("Welcome to Ducky!"),
             new WarningNotification("This is a warning."),
             new ErrorNotification("This is an error.")
         ]
@@ -30,7 +30,7 @@ public sealed class NotificationsReducersTests : IDisposable
 
         // Assert
         initialState.Notifications.Should().HaveCount(3);
-        initialState.Notifications[0].Message.Should().Be("Welcome to R3dux!");
+        initialState.Notifications[0].Message.Should().Be("Welcome to Ducky!");
         initialState.Notifications[1].Message.Should().Be("This is a warning.");
         initialState.Notifications[2].Message.Should().Be("This is an error.");
     }

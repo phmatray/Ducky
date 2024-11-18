@@ -1,6 +1,6 @@
 # FAQ
 
-This section provides answers to common questions and issues that you may encounter while using R3dux.
+This section provides answers to common questions and issues that you may encounter while using Ducky.
 
 | Page                                    | Description                         |
 |-----------------------------------------|-------------------------------------|

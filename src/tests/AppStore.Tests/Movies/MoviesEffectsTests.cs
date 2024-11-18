@@ -63,7 +63,7 @@ public sealed class MoviesEffectsTests : IDisposable
         await Task.Delay(100); // Ensure the async call completes
 
         // Assert
-        _actualActions.Should().HaveCount(1); // One for failure
+        _actualActions.Should().ContainSingle(); // One for failure
         _actualActions[0].Should().BeOfType<LoadMoviesFailure>()
             .Which.Error.Message.Should().Be(exceptionMessage);
     }

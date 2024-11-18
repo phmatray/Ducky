@@ -1,17 +1,17 @@
 # Overview
 
 > What you will learn
-> * What R3dux is and why you might want to use it
-> * Key R3dux terms and concepts
-> * How data flows through a R3dux app
+> * What Ducky is and why you might want to use it
+> * Key Ducky terms and concepts
+> * How data flows through a Ducky app
 
 ## Introduction
 
 
 
-## R3dux Terms and Concepts
+## Ducky Terms and Concepts
 
-Before we dive into some actual code, let's talk about some of the terms and concepts you'll need to know to use R3dux.
+Before we dive into some actual code, let's talk about some of the terms and concepts you'll need to know to use Ducky.
 
 ### State Management
 
@@ -56,4 +56,4 @@ One way to solve this is to extract the shared state from the components, and pu
 
 By defining and separating the concepts involved in state management and enforcing rules that maintain independence between views and states, we give our code more structure and maintainability.
 
-This is the basic idea behind R3dux: a single centralized place to contain the global state in your application, and specific patterns to follow when updating that state to make the code predictable.
+This is the basic idea behind Ducky: a single centralized place to contain the global state in your application, and specific patterns to follow when updating that state to make the code predictable.

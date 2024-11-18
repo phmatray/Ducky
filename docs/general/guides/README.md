@@ -1,6 +1,6 @@
 # Guides
 
-Guides provide detailed instructions on how to use R3dux to build applications. They cover various topics such as creating actions, writing reducers, handling side effects, using selectors, and more.
+Guides provide detailed instructions on how to use Ducky to build applications. They cover various topics such as creating actions, writing reducers, handling side effects, using selectors, and more.
 
 | Page                                                                        | Description                                         |
 |-----------------------------------------------------------------------------|-----------------------------------------------------|
