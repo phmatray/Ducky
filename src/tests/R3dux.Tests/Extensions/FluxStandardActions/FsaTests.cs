@@ -12,7 +12,7 @@ public class FsaTests
     public void CreateTodo_ShouldInitializeCorrectly()
     {
         // Arrange
-        var title = "Learn Blazor";
+        const string title = "Learn Blazor";
 
         // Act
         var action = new TestCreateTodo(title);
