@@ -33,6 +33,11 @@ partial class Build : NukeBuild
     [GitVersion]
     readonly GitVersion GitVersion;
     
+    const string MainBranch = "main";
+    const string DevelopBranch = "develop";
+    const string ReleaseBranchPrefix = "release";
+    const string HotfixBranchPrefix = "hotfix";
+    
     Target Version => _ => _
         .Executes(() =>
         {
