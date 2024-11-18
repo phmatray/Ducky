@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <RootNamespace></RootNamespace>
     <NoWarn>CS0649;CS0169;CA1050;CA1822;CA2211;IDE1006</NoWarn>
     <NukeRootDirectory>..</NukeRootDirectory>
@@ -13,21 +13,12 @@
 
   <ItemGroup>
     <PackageReference Include="Nuke.Common" Version="8.1.4" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageDownload Include="docfx.console" Version="[2.59.4]" />
     <PackageDownload Include="GitVersion.Tool" Version="[6.0.5]" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="..\.nuke\temp\build.log" />
-    <None Remove="..\.nuke\temp\build.2024-11-18_14-50-15.log" />
-    <None Remove="..\.nuke\temp\build.2024-11-18_15-27-56.log" />
-    <None Remove="..\.nuke\temp\build.2024-11-18_15-29-07.log" />
-    <None Remove="..\.nuke\temp\build.2024-11-18_15-32-58.log" />
-    <None Remove="..\.nuke\temp\build.2024-11-18_15-34-10.log" />
-    <None Remove="..\.nuke\temp\build.2024-11-18_15-36-27.log" />
   </ItemGroup>
 
   <ItemGroup>

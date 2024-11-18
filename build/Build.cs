@@ -8,6 +8,7 @@ using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Discord;
+using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Utilities;
 using Nuke.Common.Utilities.Collections;
@@ -29,6 +30,9 @@ partial class Build : NukeBuild
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    
+    [Solution(SuppressBuildProjectCheck = true)]
+    readonly Solution Solution;
 
     [GitVersion]
     readonly GitVersion GitVersion;
@@ -38,44 +42,66 @@ partial class Build : NukeBuild
     const string ReleaseBranchPrefix = "release";
     const string HotfixBranchPrefix = "hotfix";
     
+    AbsolutePath SourceDirectory => RootDirectory / "src";
+    
+    AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
+    
     Target Version => _ => _
         .Executes(() =>
         {
             Log.Information("GitVersion = {Value}", GitVersion.MajorMinorPatch);
         });
     
-    AbsolutePath SourceDirectory => RootDirectory / "src";
-    
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
         {
+            // Clean projects directories
             var directories = SourceDirectory
-                .GlobDirectories("*/**/bin", "*/**/obj");
+                .GlobDirectories("**/bin", "**/obj");
             
             foreach (var directory in directories)
             {
                 Log.Information("Cleaning {Value}", directory);
                 directory.DeleteDirectory();
             }
+            
+            // Clean Artifacts directory
+            ArtifactsDirectory.CreateOrCleanDirectory();
         });
 
     Target Restore => _ => _
         .Executes(() =>
         {
-            
+            Log.Information("Restoring NuGet packages");
+            DotNetTasks.DotNetRestore(s => s.SetProjectFile(Solution));
+            Log.Information("NuGet packages restored successfully");
         });
 
     Target Compile => _ => _
         .DependsOn(Restore)
         .Executes(() =>
         {
+            Log.Information("Building solution {Solution} with configuration {Configuration}", Solution, Configuration);
+            DotNetTasks.DotNetBuild(s => s
+                .SetProjectFile(Solution)
+                .SetConfiguration(Configuration)
+                .EnableNoRestore()
+                .SetDeterministic(true));
+            Log.Information("Solution built successfully");
         });
     
     Target UnitTests => _ => _
         .DependsOn(Compile)
         .Executes(() =>
         {
+            Log.Information("Running unit tests");
+            DotNetTasks.DotNetTest(s => s
+                .SetProjectFile(Solution)
+                .SetConfiguration(Configuration)
+                .EnableNoBuild()
+                .EnableNoRestore());
+            Log.Information("Unit tests passed successfully");
         });
     
     Target IntegrationTests => _ => _
@@ -100,6 +126,24 @@ partial class Build : NukeBuild
         .DependsOn(Compile)
         .Executes(() =>
         {
+            Log.Information("Packing NuGet packages for projects starting with 'Ducky'");
+            var projectsToPack = Solution.AllProjects
+                .Where(p => p.Name.StartsWith("Ducky"));
+
+            foreach (var project in projectsToPack)
+            {
+                Log.Information("Packing project {ProjectName}", project.Name);
+                DotNetTasks.DotNetPack(s => s
+                    .SetProject(project)
+                    .SetConfiguration(Configuration)
+                    .SetOutputDirectory(ArtifactsDirectory)
+                    .EnableNoBuild()
+                    .EnableNoRestore()
+                    .SetIncludeSymbols(true)
+                    .SetIncludeSource(true)
+                    .SetSymbolPackageFormat(DotNetSymbolPackageFormat.snupkg));
+                Log.Information("Project {ProjectName} packed successfully", project.Name);
+            }
         });
     
     Target Publish => _ => _
@@ -115,7 +159,7 @@ partial class Build : NukeBuild
 
     Target AnnounceDiscord => _ => _
         .DependsOn(Publish)
-        .Executes(async () =>
+        .Executes(() =>
         {
             // await SendDiscordMessageAsync(_ => _
             //         .SetContent("@everyone")
