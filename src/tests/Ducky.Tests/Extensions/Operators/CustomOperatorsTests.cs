@@ -17,7 +17,7 @@ public sealed class CustomOperatorsTests : IDisposable
         var actions = new List<IAction>();
 
         source.AsObservable()
-            .OfType<TestAction>()
+            .OfActionType<TestAction>()
             .Subscribe(actions.Add)
             .AddTo(_disposables);
 

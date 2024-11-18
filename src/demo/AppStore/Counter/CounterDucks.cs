@@ -52,7 +52,7 @@ public class IncrementEffect : Effect
     {
         // if the Value is greater than 15, then reset the counter
         return actions
-            .OfType<Increment>()
+            .OfActionType<Increment>()
             .WithSliceState<CounterState, Increment>(rootState)
             .Where(pair => pair.State.Value > 15)
             .Delay(TimeSpan.FromSeconds(3), TimeProvider)

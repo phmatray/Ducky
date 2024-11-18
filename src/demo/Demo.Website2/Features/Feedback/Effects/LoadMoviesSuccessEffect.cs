@@ -16,13 +16,13 @@ public class LoadMoviesSuccessEffect(ISnackbar snackbar) : Effect
         Observable<IAction> actions, Observable<IRootState> rootState)
     {
         return actions
-            .OfType<IAction, LoadMoviesSuccess>()
+            .OfActionType<LoadMoviesSuccess>()
             .Select(GetSnackBarMessage)
             .Do(message => snackbar.Add(message, Severity.Success))
-            .Select(message =>
+            .Select(IAction (message) =>
             {
                 var notification = new SuccessNotification(message);
-                return (IAction)new AddNotification(notification);
+                return new AddNotification(notification);
             });
     }
 

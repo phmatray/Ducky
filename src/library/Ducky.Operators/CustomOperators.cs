@@ -17,7 +17,7 @@ public static class CustomOperators
     /// <typeparam name="TAction">The type of elements to filter.</typeparam>
     /// <param name="source">The source observable sequence.</param>
     /// <returns>An observable sequence that contains elements from the input sequence of type TAction.</returns>
-    public static Observable<TAction> OfType<TAction>(
+    public static Observable<TAction> OfActionType<TAction>(
         this Observable<IAction> source)
         where TAction : IAction
     {

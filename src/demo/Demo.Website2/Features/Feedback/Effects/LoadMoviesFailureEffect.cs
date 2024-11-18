@@ -16,12 +16,12 @@ public class LoadMoviesFailureEffect(ISnackbar snackbar) : Effect
         Observable<IAction> actions, Observable<IRootState> rootState)
     {
         return actions
-            .OfType<IAction, LoadMoviesFailure>()
+            .OfActionType<LoadMoviesFailure>()
             .Do(action => snackbar.Add(action.Error.Message, Severity.Error))
-            .Select(action =>
+            .Select(IAction (action) =>
             {
                 var notification = new ExceptionNotification(action.Error);
-                return (IAction)new AddNotification(notification);
+                return new AddNotification(notification);
             });
     }
 }

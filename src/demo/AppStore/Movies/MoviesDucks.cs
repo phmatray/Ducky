@@ -124,7 +124,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : Effect
         Observable<IRootState> rootState)
     {
         return actions
-            .OfType<LoadMovies>()
+            .OfActionType<LoadMovies>()
             .LogMessage("Loading movies...")
             .WithSliceState<MoviesState, LoadMovies>(rootState)
             .InvokeService(

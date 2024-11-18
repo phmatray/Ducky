@@ -41,7 +41,7 @@ public sealed class TestIncrementEffect : Effect
     {
         // if the Value is greater than 15, then reset the counter
         return actions
-            .OfType<TestIncrementAction>()
+            .OfActionType<TestIncrementAction>()
             .WithSliceState<int, TestIncrementAction>(rootState)
             .Where(pair => pair.State > 15)
             .Delay(TimeSpan.FromSeconds(3))

@@ -21,8 +21,8 @@ public class OpenAboutDialogEffect(IDialogService dialog) : Effect
         var options = new DialogOptions { CloseOnEscapeKey = true };
 
         return actions
-            .OfType<IAction, OpenAboutDialog>()
+            .OfActionType<OpenAboutDialog>()
             .Do(_ => dialog.ShowAsync<AboutDialog>(null, options))
-            .Select(_ => (IAction)new NoOp());
+            .Select(IAction (_) => new NoOp());
     }
 }
