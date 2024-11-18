@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace Ducky.Extensions.Operators;
+namespace Ducky;
 
 /// <summary>
 /// Provides extension methods for observable sequences.

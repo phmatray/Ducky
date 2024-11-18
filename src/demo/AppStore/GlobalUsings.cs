@@ -5,9 +5,4 @@
 global using System.Collections.Immutable;
 global using System.Globalization;
 global using Ducky;
-global using Ducky.Abstractions;
-global using Ducky.Extensions.FluxStandardActions;
-global using Ducky.Extensions.Normalization;
-global using Ducky.Extensions.Operators;
-global using Ducky.Extensions.Selectors;
 global using R3;

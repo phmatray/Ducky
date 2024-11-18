@@ -2,10 +2,9 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Abstractions;
 using R3;
 
-namespace Ducky.Extensions.Operators;
+namespace Ducky;
 
 /// <summary>
 /// Provides custom operators for working with observable sequences in the Ducky application.

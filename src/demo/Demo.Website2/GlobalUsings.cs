@@ -8,6 +8,5 @@ global using AppStore.Movies;
 global using AppStore.Notifications;
 global using Demo.Website2.Features.JsonColoring.Helpers;
 global using Ducky;
-global using Ducky.Abstractions;
 global using MudBlazor;
 global using R3;

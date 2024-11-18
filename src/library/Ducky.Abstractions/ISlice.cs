@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace Ducky.Abstractions;
+namespace Ducky;
 
 /// <summary>
 /// Represents a state slice with basic state management capabilities.

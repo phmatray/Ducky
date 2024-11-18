@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace Ducky.Abstractions;
+namespace Ducky;
 
 /// <summary>
 /// Represents a store that manages application state and handles actions.

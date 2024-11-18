@@ -3,11 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 global using System.Collections.Immutable;
-global using Ducky.Abstractions;
-global using Ducky.Extensions.FluxStandardActions;
-global using Ducky.Extensions.Normalization;
-global using Ducky.Extensions.Operators;
-global using Ducky.Extensions.Selectors;
 global using Ducky.Tests.TestModels;
 global using FluentAssertions;
 global using Microsoft.Extensions.Logging;

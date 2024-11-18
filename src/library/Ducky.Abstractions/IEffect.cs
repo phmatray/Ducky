@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace Ducky.Abstractions;
+namespace Ducky;
 
 /// <summary>
 /// Represents an effect that handles a stream of actions and interacts with the store's state.

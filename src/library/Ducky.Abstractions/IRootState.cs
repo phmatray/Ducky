@@ -4,7 +4,7 @@
 
 using System.Collections.Immutable;
 
-namespace Ducky.Abstractions;
+namespace Ducky;
 
 /// <summary>
 /// Represents the root state of the application, managing slice states.

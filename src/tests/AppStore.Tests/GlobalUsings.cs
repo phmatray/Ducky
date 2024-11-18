@@ -12,7 +12,6 @@ global using AppStore.Products;
 global using AppStore.Timer;
 global using AppStore.Todos;
 global using Ducky;
-global using Ducky.Abstractions;
 global using FluentAssertions;
 global using Microsoft.Extensions.Time.Testing;
 global using Moq;

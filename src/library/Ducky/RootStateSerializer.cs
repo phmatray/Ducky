@@ -4,7 +4,6 @@
 
 using System.Collections.Immutable;
 using System.Text.Json;
-using Ducky.Abstractions;
 
 namespace Ducky;
 
