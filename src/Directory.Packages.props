@@ -26,7 +26,6 @@
     <PackageVersion Include="ObservableCollections.R3" Version="3.3.2" />
     <PackageVersion Include="R3" Version="1.2.9" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.12.9" />
-    <PackageVersion Include="Scrutor" Version="5.0.2" />
     <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageVersion Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />

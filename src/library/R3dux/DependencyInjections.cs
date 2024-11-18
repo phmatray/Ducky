@@ -4,6 +4,7 @@
 
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using R3dux.Abstractions;
 
@@ -58,10 +59,15 @@ public static class DependencyInjections
         this IServiceCollection services,
         Assembly[] assemblies)
     {
-        services.Scan(scan => scan
-            .FromAssemblies(assemblies)
-            .AddClasses(classes => classes.AssignableTo(typeof(T)))
-            .AsImplementedInterfaces()
-            .WithScopedLifetime());
+        foreach (var assembly in assemblies)
+        {
+            var serviceDescriptors = assembly.DefinedTypes
+                .Where(type => type is { IsAbstract: false, IsInterface: false })
+                .Where(type => typeof(T).IsAssignableFrom(type))
+                .Select(type => ServiceDescriptor.Scoped(typeof(T), type))
+                .ToArray();
+
+            services.TryAddEnumerable(serviceDescriptors);
+        }
     }
 }
