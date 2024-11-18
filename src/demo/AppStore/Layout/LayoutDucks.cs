@@ -63,7 +63,7 @@ public record LayoutReducers : SliceReducers<LayoutState>
         return new LayoutState
         {
             Title = "R3dux",
-            Version = "v1.0.0",
+            Version = R3duxVersioning.GetVersion().ToString(),
             IsDarkMode = true,
             IsDrawerOpen = true,
             IsNotificationOpen = false

@@ -25,7 +25,6 @@
   <!-- These dependencies are used in both production and test projects -->
   <ItemGroup>
     <PackageReference Include="DotNet.ReproducibleBuilds" PrivateAssets="all"/>
-    <PackageReference Include="MinVer" PrivateAssets="all"/>
   </ItemGroup>
 
   <!-- Library-Specific Dependencies -->

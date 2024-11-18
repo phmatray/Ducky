@@ -12,7 +12,7 @@ public sealed class LayoutReducersTests : IDisposable
     private readonly LayoutState _initialState = new()
     {
         Title = "R3dux",
-        Version = "v1.0.0",
+        Version = R3duxVersioning.GetVersion().ToString(),
         IsDarkMode = true,
         IsDrawerOpen = true,
         IsNotificationOpen = false
@@ -80,11 +80,14 @@ public sealed class LayoutReducersTests : IDisposable
     [Fact]
     public void SelectFullTitle_ShouldReturnCorrectFullTitle()
     {
+        // Arrange
+        var version = R3duxVersioning.GetVersion();
+
         // Act
         var fullTitle = _initialState.SelectFullTitle();
 
         // Assert
-        fullTitle.Should().Be("R3dux - v1.0.0");
+        fullTitle.Should().Be($"R3dux - {version}");
     }
 
     public void Dispose()
