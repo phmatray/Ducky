@@ -1,6 +1,6 @@
 # Immutable State Management
 
-Immutability is a core principle in modern state management, and it plays a crucial role in ensuring that your application remains predictable, easy to debug, and scalable. In R3dux, immutability is enforced across all state transformations, making it an essential concept to understand deeply.
+Immutability is a core principle in modern state management, and it plays a crucial role in ensuring that your application remains predictable, easy to debug, and scalable. In Ducky, immutability is enforced across all state transformations, making it an essential concept to understand deeply.
 
 ## What is Immutability?
 
@@ -68,13 +68,13 @@ var newState = state with { Value = state.Value + 1 };
 
 - **State Update**: The `with` expression creates a new `CounterState` with an updated value, leaving the original state untouched.
 
-## Why is Immutability Required by R3dux?
+## Why is Immutability Required by Ducky?
 
-Immutability is not just a best practice in R3dux; it is a fundamental requirement. Here’s why:
+Immutability is not just a best practice in Ducky; it is a fundamental requirement. Here’s why:
 
 ### 1. **Ensures Predictability**
 
-R3dux is designed around the principle that state should only change in predictable, controlled ways. Immutability enforces this by ensuring that every state change is a deliberate act that results in a new state object. This predictability is crucial for building reliable, bug-free applications.
+Ducky is designed around the principle that state should only change in predictable, controlled ways. Immutability enforces this by ensuring that every state change is a deliberate act that results in a new state object. This predictability is crucial for building reliable, bug-free applications.
 
 ### 2. **Supports Advanced Debugging Techniques**
 
@@ -86,11 +86,11 @@ Immutability simplifies the implementation of undo/redo functionality by preserv
 
 ### 4. **Improves Application Performance**
 
-Through structural sharing, immutability in R3dux is optimized to avoid the performance pitfalls often associated with copying large amounts of data. By reusing unchanged parts of the state, R3dux ensures that your application remains responsive even as the complexity of the state grows.
+Through structural sharing, immutability in Ducky is optimized to avoid the performance pitfalls often associated with copying large amounts of data. By reusing unchanged parts of the state, Ducky ensures that your application remains responsive even as the complexity of the state grows.
 
 ### 5. **Enforces Best Practices**
 
-By requiring immutability, R3dux enforces best practices in state management, guiding developers towards writing more maintainable, robust, and scalable code. This enforcement helps prevent a wide range of bugs that stem from unintended state mutations.
+By requiring immutability, Ducky enforces best practices in state management, guiding developers towards writing more maintainable, robust, and scalable code. This enforcement helps prevent a wide range of bugs that stem from unintended state mutations.
 
 ## Immutability in Complex Scenarios: TodoState Example
 
@@ -119,6 +119,6 @@ In this more complex example:
 
 ## Conclusion: Immutability is Essential
 
-Immutability is a cornerstone of reliable, predictable state management in R3dux. By enforcing immutability, R3dux ensures that your application’s state transitions are clear, traceable, and free from unintended side effects. This not only makes your application easier to develop and debug but also lays the foundation for scalable, maintainable code that can grow with your application’s needs.
+Immutability is a cornerstone of reliable, predictable state management in Ducky. By enforcing immutability, Ducky ensures that your application’s state transitions are clear, traceable, and free from unintended side effects. This not only makes your application easier to develop and debug but also lays the foundation for scalable, maintainable code that can grow with your application’s needs.
 
-Embracing immutability in your R3dux applications will lead to better performance, simpler code, and more robust applications that are easier to maintain and extend.
+Embracing immutability in your Ducky applications will lead to better performance, simpler code, and more robust applications that are easier to maintain and extend.

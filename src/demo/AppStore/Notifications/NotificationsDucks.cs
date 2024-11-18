@@ -72,7 +72,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
         {
             Notifications =
             [
-                new SuccessNotification("Welcome to R3dux!"),
+                new SuccessNotification("Welcome to Ducky!"),
                 new WarningNotification("This is a warning."),
                 new ErrorNotification("This is an error.")
             ]

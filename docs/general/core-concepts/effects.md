@@ -1,6 +1,6 @@
 # Effects
 
-In R3dux, effects are a powerful tool for handling side effects—operations that interact with the outside world or involve asynchronous logic. Effects listen to the stream of actions dispatched to the store and can dispatch new actions based on the outcome of those operations, such as API calls, logging, or timers.
+In Ducky, effects are a powerful tool for handling side effects—operations that interact with the outside world or involve asynchronous logic. Effects listen to the stream of actions dispatched to the store and can dispatch new actions based on the outcome of those operations, such as API calls, logging, or timers.
 
 ## What are Effects?
 
@@ -18,7 +18,7 @@ Effects are responsible for managing side effects in your application. Unlike re
 
 ## Defining Effects
 
-In R3dux, you define an effect by extending the `Effect` class and overriding the `Handle` method. The `Handle` method takes two parameters:
+In Ducky, you define an effect by extending the `Effect` class and overriding the `Handle` method. The `Handle` method takes two parameters:
 - `Observable<IAction> actions`: The stream of actions dispatched to the store.
 - `Observable<IRootState> rootState`: The observable stream of the current state.
 
@@ -127,7 +127,7 @@ In this example:
 
 ## Custom Operators in Effects
 
-R3dux provides several custom operators to simplify common patterns in effects, such as filtering actions, invoking services, and handling errors.
+Ducky provides several custom operators to simplify common patterns in effects, such as filtering actions, invoking services, and handling errors.
 
 ### Key Operators
 
@@ -157,6 +157,6 @@ This code demonstrates how custom operators streamline the process of handling a
 ## Best Practices for Writing Effects
 
 - **Keep Effects Focused**: Each effect should handle a specific side effect, such as an API call or a timer. This makes effects easier to manage and test.
-- **Use Custom Operators**: Leverage R3dux’s custom operators to simplify your effect logic and make it more readable.
+- **Use Custom Operators**: Leverage Ducky’s custom operators to simplify your effect logic and make it more readable.
 - **Handle Errors Gracefully**: Always handle potential errors in your effects by dispatching appropriate failure actions.
 - **Avoid Side Effects in Reducers**: Use effects, not reducers, for handling side effects. Reducers should remain pure and only manage state transformations.

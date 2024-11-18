@@ -1,8 +1,8 @@
 # State Management
 
-Global state in R3dux provides a powerful mechanism for managing application-wide data in a predictable and maintainable way. By centralizing your state and handling all changes through actions and reducers, you can build applications that are easier to understand, debug, and scale.
+Global state in Ducky provides a powerful mechanism for managing application-wide data in a predictable and maintainable way. By centralizing your state and handling all changes through actions and reducers, you can build applications that are easier to understand, debug, and scale.
 
-State management is a crucial aspect of modern application development, especially as applications grow in complexity. R3dux makes it simple to implement global state management in your .NET applications, ensuring that your application state is consistent, predictable, and easily accessible from any part of your application.
+State management is a crucial aspect of modern application development, especially as applications grow in complexity. Ducky makes it simple to implement global state management in your .NET applications, ensuring that your application state is consistent, predictable, and easily accessible from any part of your application.
 
 ## What is Global State?
 
@@ -14,20 +14,20 @@ Global state refers to a single, centralized state that holds the entire applica
 2. **Accessibility**: Global state is accessible from any part of your application. This means that data can be easily shared between different components, pages, or services, ensuring consistency across your application.
 3. **Predictability**: By managing all state changes through a centralized mechanism (such as actions and reducers), global state makes it easier to track, debug, and predict how state evolves over time.
 
-## How Global State Works in R3dux
+## How Global State Works in Ducky
 
-In R3dux, global state is managed using a centralized store. This store holds the entire application state and is responsible for updating the state in response to actions.
+In Ducky, global state is managed using a centralized store. This store holds the entire application state and is responsible for updating the state in response to actions.
 
-### Components of State Management in R3dux
+### Components of State Management in Ducky
 
-1. **Store**: The store is the core of the R3dux state management system. It holds the global state and provides methods to access the state, dispatch actions, and subscribe to state changes.
+1. **Store**: The store is the core of the Ducky state management system. It holds the global state and provides methods to access the state, dispatch actions, and subscribe to state changes.
 2. **Actions**: Actions are simple objects that describe the type of change that should occur in the state. They are dispatched to the store to trigger state updates.
 3. **Reducers**: Reducers are pure functions that take the current state and an action, and return a new state. They define how the state should change in response to each action.
 4. **Selectors**: Selectors are functions that allow you to retrieve specific pieces of the global state. They are used to encapsulate and optimize access to the state.
 
 ### Example of Global State in Action
 
-Let's consider a simple example of global state management using R3dux in a Blazor application.
+Let's consider a simple example of global state management using Ducky in a Blazor application.
 
 #### Defining the Global State
 
@@ -55,11 +55,11 @@ In this example:
 
 #### Accessing and Modifying Global State
 
-In a Blazor component, you can access and modify the global state through R3dux as follows:
+In a Blazor component, you can access and modify the global state through Ducky as follows:
 
 ```html
 @page "/counter"
-@inherits R3duxComponent<int>
+@inherits DuckyComponent<int>
 
 <h3>Counter</h3>
 
@@ -82,7 +82,7 @@ In a Blazor component, you can access and modify the global state through R3dux 
 ```
 
 In this Blazor component:
-- The global state is automatically injected into the component via `R3duxComponent<int>`.
+- The global state is automatically injected into the component via `DuckyComponent<int>`.
 - The `State` property reflects the current global state (i.e., the counter value).
 - The `Dispatch` method is used to modify the state by dispatching actions.
 

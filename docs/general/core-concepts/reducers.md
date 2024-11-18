@@ -1,10 +1,10 @@
 # Reducers
 
-Reducers are a core concept in R3dux's state management system. They are pure functions that take the current state and an action, and return a new state. Reducers are responsible for determining how the global state should change in response to a given action.
+Reducers are a core concept in Ducky's state management system. They are pure functions that take the current state and an action, and return a new state. Reducers are responsible for determining how the global state should change in response to a given action.
 
 ## What are Reducers?
 
-Reducers in R3dux are pure functions that dictate how the state of your application should change in response to actions. A reducer takes the current state and an action as inputs and returns a new state as output. This approach ensures that state transitions are predictable and traceable.
+Reducers in Ducky are pure functions that dictate how the state of your application should change in response to actions. A reducer takes the current state and an action as inputs and returns a new state as output. This approach ensures that state transitions are predictable and traceable.
 
 ### Key Characteristics of Reducers
 
@@ -14,7 +14,7 @@ Reducers in R3dux are pure functions that dictate how the state of your applicat
 
 ## Defining Reducers
 
-In R3dux, reducers are defined by extending the `SliceReducers<TState>` class, where `TState` represents the type of the state slice that the reducer manages. Within a reducer, you map actions to the state changes they should produce.
+In Ducky, reducers are defined by extending the `SliceReducers<TState>` class, where `TState` represents the type of the state slice that the reducer manages. Within a reducer, you map actions to the state changes they should produce.
 
 ### Example of a Simple Reducer
 
@@ -69,22 +69,22 @@ In this example:
 - The `SetUserAge` action updates the `Age` property of the state.
 - The `state with { ... }` syntax ensures that the state is updated immutably.
 
-## State Composition in R3dux
+## State Composition in Ducky
 
-In R3dux, the global state is automatically composed from the individual slice states managed by each reducer. This means that you don't need to manually combine reducers; instead, R3dux handles this composition behind the scenes.
+In Ducky, the global state is automatically composed from the individual slice states managed by each reducer. This means that you don't need to manually combine reducers; instead, Ducky handles this composition behind the scenes.
 
 ### Example: Root State Composition
 
-Each slice reducer manages its own piece of the global state. For example, a `UserReducers` might manage the `UserState`, while a `CounterReducers` manages the `CounterState`. R3dux automatically combines these slices into the root state.
+Each slice reducer manages its own piece of the global state. For example, a `UserReducers` might manage the `UserState`, while a `CounterReducers` manages the `CounterState`. Ducky automatically combines these slices into the root state.
 
 ```csharp
 public class RootState : IRootState
 {
-    // RootState is automatically composed by R3dux from the individual slice states.
+    // RootState is automatically composed by Ducky from the individual slice states.
 }
 ```
 
-When you register reducers in R3dux, they automatically contribute to the overall application state, which R3dux manages as a `RootState` object.
+When you register reducers in Ducky, they automatically contribute to the overall application state, which Ducky manages as a `RootState` object.
 
 ## Refactoring Reducers with Extracted Methods
 

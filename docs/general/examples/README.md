@@ -1,6 +1,6 @@
 # Examples
 
-The `examples` directory contains a collection of example applications that demonstrate various features and use cases of R3dux. Each example includes a detailed explanation of the application's functionality, code snippets, and instructions on how to run the example locally.
+The `examples` directory contains a collection of example applications that demonstrate various features and use cases of Ducky. Each example includes a detailed explanation of the application's functionality, code snippets, and instructions on how to run the example locally.
 
 | Page                                                      | Description                                       |
 |-----------------------------------------------------------|---------------------------------------------------|

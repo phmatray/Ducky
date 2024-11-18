@@ -1,6 +1,6 @@
 # Selectors
 
-Selectors in R3dux are functions that allow you to extract and compute derived data from the global state. They encapsulate the logic for retrieving specific pieces of data and can be used to optimize performance by minimizing unnecessary recalculations.
+Selectors in Ducky are functions that allow you to extract and compute derived data from the global state. They encapsulate the logic for retrieving specific pieces of data and can be used to optimize performance by minimizing unnecessary recalculations.
 
 ## What are Selectors?
 
@@ -62,7 +62,7 @@ In this example:
 
 ## Advanced Selectors
 
-As your application grows, you might need more advanced selectors that can handle complex queries or derived data. R3dux allows you to create **memoized selectors** that cache their results and recalculate only when the relevant parts of the state have changed.
+As your application grows, you might need more advanced selectors that can handle complex queries or derived data. Ducky allows you to create **memoized selectors** that cache their results and recalculate only when the relevant parts of the state have changed.
 
 ### Example: Advanced Selectors with Memoization
 
@@ -135,9 +135,9 @@ Here’s an example of a Blazor component that uses selectors to manage a Todo l
 
 ```html
 @page "/todo"
-@inherits R3duxComponent<TodoState>
+@inherits DuckyComponent<TodoState>
 
-<PageTitle>R3dux - Todo List</PageTitle>
+<PageTitle>Ducky - Todo List</PageTitle>
 
 <MudGrid>
   <MudItem xs="12">
@@ -145,7 +145,7 @@ Here’s an example of a Blazor component that uses selectors to manage a Todo l
       <MudText Typo="Typo.subtitle1">Example</MudText>
       <MudText Typo="Typo.h3">Todo List</MudText>
       <MudText Typo="Typo.body1">
-        Manage your todos effectively with R3dux, featuring functionality to add, toggle, and remove todo items.
+        Manage your todos effectively with Ducky, featuring functionality to add, toggle, and remove todo items.
       </MudText>
     </MudStack>
   </MudItem>

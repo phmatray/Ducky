@@ -1,6 +1,6 @@
 # Changelog
 
-This document provides a summary of the changes in each version of R3dux.
+This document provides a summary of the changes in each version of Ducky.
 
 | Page                                  | Description                  |
 |---------------------------------------|------------------------------|

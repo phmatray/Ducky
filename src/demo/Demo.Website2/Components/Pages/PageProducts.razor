@@ -1,7 +1,7 @@
 @page "/products"
-@inherits R3duxComponent<ProductState>
+@inherits DuckyComponent<ProductState>
 
-<PageTitle>R3dux - Product Catalog</PageTitle>
+<PageTitle>Ducky - Product Catalog</PageTitle>
 
 <MudGrid>
   <MudItem xs="12">
@@ -9,7 +9,7 @@
       <MudText Typo="Typo.subtitle1">Example</MudText>
       <MudText Typo="Typo.h3">Product Catalog</MudText>
       <MudText Typo="Typo.body1">
-        This page demonstrates a product catalog using the R3dux state management library for predictable state handling.<br/>
+        This page demonstrates a product catalog using the Ducky state management library for predictable state handling.<br/>
         It features functionality to add and remove products, and calculates the total price of products by category efficiently using memoized selectors.
       </MudText>
       <MudList T="string" Dense="true">

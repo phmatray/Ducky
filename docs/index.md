@@ -1,6 +1,6 @@
-# R3dux Documentation
+# Ducky Documentation
 
-This is the landing page of the R3dux Documentation website. You can add specific links that are important to provide direct access.
+This is the landing page of the Ducky Documentation website. You can add specific links that are important to provide direct access.
 
 > [!TIP]
 > Try not to duplicate the links on the top of the page, unless it really makes sense.

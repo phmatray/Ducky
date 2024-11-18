@@ -1,6 +1,6 @@
 # Actions
 
-Actions in R3dux are a fundamental part of the state management process. They serve as the only means by which the global state can be modified, ensuring that all state changes are predictable, traceable, and consistent across the application.
+Actions in Ducky are a fundamental part of the state management process. They serve as the only means by which the global state can be modified, ensuring that all state changes are predictable, traceable, and consistent across the application.
 
 ## What are Actions?
 
@@ -9,12 +9,12 @@ Actions are simple objects that describe a change that should occur in the state
 ### Key Characteristics of Actions
 
 1. **Intent Declaration**: Actions declare the intent to change the state. They do not execute the change themselves but serve as a signal to the store that a change should be made.
-2. **Plain Objects**: Actions in R3dux are typically simple objects or records that implement the `IAction` interface. This simplicity ensures that actions are easy to create, dispatch, and test.
+2. **Plain Objects**: Actions in Ducky are typically simple objects or records that implement the `IAction` interface. This simplicity ensures that actions are easy to create, dispatch, and test.
 3. **Immutable**: Actions should be immutable, meaning once they are created, their properties should not be modified. This immutability aligns with the overall philosophy of predictable and traceable state management.
 
 ## Defining Actions
 
-Defining actions in R3dux is straightforward. You simply create a class or record that implements the `IAction` interface. Here’s an example:
+Defining actions in Ducky is straightforward. You simply create a class or record that implements the `IAction` interface. Here’s an example:
 
 ```csharp
 public record Increment(int Amount = 1) : IAction;
@@ -97,7 +97,7 @@ In this example:
 
 ## Actions and Asynchronous Operations
 
-While actions themselves are typically synchronous, they can be dispatched from asynchronous operations. This is often handled through **Effects** in R3dux, where actions are dispatched based on the result of an asynchronous operation such as an API call.
+While actions themselves are typically synchronous, they can be dispatched from asynchronous operations. This is often handled through **Effects** in Ducky, where actions are dispatched based on the result of an asynchronous operation such as an API call.
 
 ### Example:
 

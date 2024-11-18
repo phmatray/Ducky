@@ -1,6 +1,6 @@
 # Core concepts
 
-In this section, we will cover the core concepts of R3dux, including state management, actions, reducers, effects, and selectors. Understanding these concepts is essential for building applications with R3dux.
+In this section, we will cover the core concepts of Ducky, including state management, actions, reducers, effects, and selectors. Understanding these concepts is essential for building applications with Ducky.
 
 | Page                                      | Description                                       |
 |-------------------------------------------|---------------------------------------------------|

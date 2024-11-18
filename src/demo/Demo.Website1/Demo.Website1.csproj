@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AppStore\AppStore.csproj" />
-    <ProjectReference Include="..\..\library\R3dux.Blazor\R3dux.Blazor.csproj" />
+    <ProjectReference Include="..\..\library\Ducky.Blazor\Ducky.Blazor.csproj" />
   </ItemGroup>
 
 </Project>

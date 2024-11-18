@@ -20,4 +20,18 @@
     <PackageDownload Include="GitVersion.Tool" Version="[6.0.5]" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="..\.nuke\temp\build.log" />
+    <None Remove="..\.nuke\temp\build.2024-11-18_14-50-15.log" />
+    <None Remove="..\.nuke\temp\build.2024-11-18_15-27-56.log" />
+    <None Remove="..\.nuke\temp\build.2024-11-18_15-29-07.log" />
+    <None Remove="..\.nuke\temp\build.2024-11-18_15-32-58.log" />
+    <None Remove="..\.nuke\temp\build.2024-11-18_15-34-10.log" />
+    <None Remove="..\.nuke\temp\build.2024-11-18_15-36-27.log" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="logs\" />
+  </ItemGroup>
+
 </Project>

@@ -1,10 +1,10 @@
 # Normalized State
 
-Managing complex state structures efficiently is a common challenge in modern applications. R3dux addresses this challenge with **NormalizedState**—a powerful abstraction that simplifies the handling of collections of entities. By normalizing your state, you ensure that your application’s data is easy to manage, query, and update, all while maintaining the benefits of immutability.
+Managing complex state structures efficiently is a common challenge in modern applications. Ducky addresses this challenge with **NormalizedState**—a powerful abstraction that simplifies the handling of collections of entities. By normalizing your state, you ensure that your application’s data is easy to manage, query, and update, all while maintaining the benefits of immutability.
 
 ## What is NormalizedState?
 
-`NormalizedState` is a specialized record in R3dux designed to manage collections of entities in a normalized form. It organizes entities in an immutable dictionary keyed by a unique identifier, streamlining operations such as querying, updating, and deleting entities. This structure not only prevents data duplication but also makes relationships between entities more straightforward to handle.
+`NormalizedState` is a specialized record in Ducky designed to manage collections of entities in a normalized form. It organizes entities in an immutable dictionary keyed by a unique identifier, streamlining operations such as querying, updating, and deleting entities. This structure not only prevents data duplication but also makes relationships between entities more straightforward to handle.
 
 ### Key Characteristics
 
