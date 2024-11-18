@@ -47,7 +47,7 @@ public sealed class TodoReducersTests : IDisposable
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(TodoState));
+        stateType.Should().Be<TodoState>();
     }
 
     [Fact]

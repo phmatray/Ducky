@@ -52,7 +52,7 @@ public sealed class NotificationsReducersTests : IDisposable
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(NotificationsState));
+        stateType.Should().Be<NotificationsState>();
     }
 
     [Fact]

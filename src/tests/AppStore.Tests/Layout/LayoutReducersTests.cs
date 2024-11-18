@@ -51,7 +51,7 @@ public sealed class LayoutReducersTests : IDisposable
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(LayoutState));
+        stateType.Should().Be<LayoutState>();
     }
 
     [Fact]

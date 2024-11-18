@@ -51,7 +51,7 @@ public sealed class MoviesReducersTests : IDisposable
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(MoviesState));
+        stateType.Should().Be<MoviesState>();
     }
 
     [Fact]

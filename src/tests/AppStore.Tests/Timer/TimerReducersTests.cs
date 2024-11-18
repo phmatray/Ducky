@@ -40,7 +40,7 @@ public sealed class TimerReducersTests : IDisposable
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(TimerState));
+        stateType.Should().Be<TimerState>();
     }
 
     [Fact]

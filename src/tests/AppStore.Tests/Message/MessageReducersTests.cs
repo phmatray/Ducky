@@ -43,7 +43,7 @@ public sealed class MessageReducersTests : IDisposable
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(MessageState));
+        stateType.Should().Be<MessageState>();
     }
 
     [Fact]

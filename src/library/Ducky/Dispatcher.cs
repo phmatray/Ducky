@@ -12,7 +12,12 @@ namespace Ducky;
 public sealed class Dispatcher
     : IDispatcher, IDisposable
 {
+#if NET9_0_OR_GREATER
+    private readonly Lock _syncRoot = new();
+#else
     private readonly object _syncRoot = new();
+#endif
+
     private readonly Queue<IAction> _queuedActions = new();
     private readonly Subject<IAction> _actionSubject = new();
     private volatile bool _isDequeuing;

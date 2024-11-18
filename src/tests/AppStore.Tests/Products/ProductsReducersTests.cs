@@ -47,7 +47,7 @@ public sealed class ProductsReducersTests : IDisposable
         var stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be(typeof(ProductState));
+        stateType.Should().Be<ProductState>();
     }
 
     [Fact]

@@ -5,7 +5,7 @@
     
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <AnalysisLevel>8.0-recommended</AnalysisLevel>
+    <AnalysisLevel>9.0-recommended</AnalysisLevel>
     <AnalysisModeDesign>All</AnalysisModeDesign>
     <AnalysisModeDocumentation>All</AnalysisModeDocumentation>
     <AnalysisModeGlobalization>All</AnalysisModeGlobalization>
