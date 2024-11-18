@@ -18,7 +18,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/StateActionPair.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: StateActionPair
     path: ../src/library/R3dux.Operators/StateActionPair.cs
@@ -64,7 +64,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/StateActionPair.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux.Operators/StateActionPair.cs
@@ -102,7 +102,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/StateActionPair.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: State
     path: ../src/library/R3dux.Operators/StateActionPair.cs
@@ -135,7 +135,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/StateActionPair.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Action
     path: ../src/library/R3dux.Operators/StateActionPair.cs

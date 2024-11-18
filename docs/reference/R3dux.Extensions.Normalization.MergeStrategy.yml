@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/MergeStrategy.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: MergeStrategy
     path: ../src/library/R3dux.Normalization/MergeStrategy.cs
@@ -44,7 +44,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/MergeStrategy.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: FailIfDuplicate
     path: ../src/library/R3dux.Normalization/MergeStrategy.cs
@@ -72,7 +72,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/MergeStrategy.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Overwrite
     path: ../src/library/R3dux.Normalization/MergeStrategy.cs

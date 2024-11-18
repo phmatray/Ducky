@@ -20,7 +20,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: IRootState
     path: ../src/library/R3dux.Abstractions/IRootState.cs
@@ -47,7 +47,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetStateDictionary
     path: ../src/library/R3dux.Abstractions/IRootState.cs
@@ -78,7 +78,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetKeys
     path: ../src/library/R3dux.Abstractions/IRootState.cs
@@ -109,7 +109,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetSliceState
     path: ../src/library/R3dux.Abstractions/IRootState.cs
@@ -150,7 +150,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetSliceState
     path: ../src/library/R3dux.Abstractions/IRootState.cs
@@ -187,7 +187,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ContainsKey
     path: ../src/library/R3dux.Abstractions/IRootState.cs

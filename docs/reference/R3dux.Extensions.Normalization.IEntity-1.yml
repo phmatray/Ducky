@@ -16,7 +16,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/IEntity.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: IEntity
     path: ../src/library/R3dux.Normalization/IEntity.cs
@@ -49,7 +49,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/IEntity.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Id
     path: ../src/library/R3dux.Normalization/IEntity.cs

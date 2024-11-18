@@ -19,7 +19,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Effect.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Effect
     path: ../src/library/R3dux/Effect.cs
@@ -58,7 +58,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Effect.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: TimeProvider
     path: ../src/library/R3dux/Effect.cs
@@ -89,7 +89,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Effect.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetKey
     path: ../src/library/R3dux/Effect.cs
@@ -122,7 +122,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Effect.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetAssemblyName
     path: ../src/library/R3dux/Effect.cs
@@ -155,7 +155,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Effect.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Handle
     path: ../src/library/R3dux/Effect.cs

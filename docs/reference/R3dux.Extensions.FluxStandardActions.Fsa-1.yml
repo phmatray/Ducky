@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/Fsa{TPayload}.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Fsa
     path: ../src/library/R3dux.FluxStandardActions/Fsa{TPayload}.cs
@@ -71,7 +71,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/Fsa{TPayload}.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux.FluxStandardActions/Fsa{TPayload}.cs
@@ -106,7 +106,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/Fsa{TPayload}.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Payload
     path: ../src/library/R3dux.FluxStandardActions/Fsa{TPayload}.cs

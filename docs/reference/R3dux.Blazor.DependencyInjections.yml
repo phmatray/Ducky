@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/DependencyInjections.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: DependencyInjections
     path: ../src/library/R3dux.Blazor/DependencyInjections.cs
@@ -55,7 +55,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/DependencyInjections.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: AddR3dux
     path: ../src/library/R3dux.Blazor/DependencyInjections.cs
@@ -100,7 +100,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/DependencyInjections.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: AddR3dux
     path: ../src/library/R3dux.Blazor/DependencyInjections.cs

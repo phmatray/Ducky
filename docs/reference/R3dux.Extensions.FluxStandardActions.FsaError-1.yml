@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/FsaError{TMeta}.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: FsaError
     path: ../src/library/R3dux.FluxStandardActions/FsaError{TMeta}.cs
@@ -73,7 +73,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/FsaError{TMeta}.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux.FluxStandardActions/FsaError{TMeta}.cs
@@ -109,7 +109,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/FsaError{TMeta}.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Meta
     path: ../src/library/R3dux.FluxStandardActions/FsaError{TMeta}.cs

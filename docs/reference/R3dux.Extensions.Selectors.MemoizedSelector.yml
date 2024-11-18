@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Selectors/MemoizedSelector.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: MemoizedSelector
     path: ../src/library/R3dux.Selectors/MemoizedSelector.cs
@@ -57,7 +57,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Selectors/MemoizedSelector.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Create
     path: ../src/library/R3dux.Selectors/MemoizedSelector.cs
@@ -103,7 +103,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Selectors/MemoizedSelector.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Compose
     path: ../src/library/R3dux.Selectors/MemoizedSelector.cs

@@ -25,7 +25,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: R3duxComponent
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -88,7 +88,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Store
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -131,7 +131,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispatcher
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -174,7 +174,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Logger
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -217,7 +217,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ComponentName
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -250,7 +250,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: State
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -283,7 +283,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispose
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -315,7 +315,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispose
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -350,7 +350,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: OnAfterSubscribed
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -383,7 +383,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: OnInitialized
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs
@@ -417,7 +417,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxComponent.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispatch
     path: ../src/library/R3dux.Blazor/R3duxComponent.cs

@@ -19,7 +19,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/ObservableSlices.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ObservableSlices
     path: ../src/library/R3dux/ObservableSlices.cs
@@ -57,7 +57,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/ObservableSlices.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux/ObservableSlices.cs
@@ -88,7 +88,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/ObservableSlices.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RootStateObservable
     path: ../src/library/R3dux/ObservableSlices.cs
@@ -119,7 +119,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/ObservableSlices.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: AddSlice
     path: ../src/library/R3dux/ObservableSlices.cs
@@ -151,7 +151,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/ObservableSlices.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispose
     path: ../src/library/R3dux/ObservableSlices.cs

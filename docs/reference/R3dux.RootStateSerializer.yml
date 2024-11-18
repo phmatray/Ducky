@@ -20,7 +20,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RootStateSerializer
     path: ../src/library/R3dux/RootStateSerializer.cs
@@ -58,7 +58,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Serialize
     path: ../src/library/R3dux/RootStateSerializer.cs
@@ -95,7 +95,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Serialize
     path: ../src/library/R3dux/RootStateSerializer.cs
@@ -138,7 +138,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Deserialize
     path: ../src/library/R3dux/RootStateSerializer.cs
@@ -178,7 +178,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SaveToFile
     path: ../src/library/R3dux/RootStateSerializer.cs
@@ -218,7 +218,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: LoadFromFile
     path: ../src/library/R3dux/RootStateSerializer.cs

@@ -20,7 +20,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/StateChange.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: StateChange
     path: ../src/library/R3dux/StateChange.cs
@@ -64,7 +64,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/StateChange.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux/StateChange.cs
@@ -108,7 +108,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/StateChange.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Action
     path: ../src/library/R3dux/StateChange.cs
@@ -141,7 +141,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/StateChange.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: PreviousState
     path: ../src/library/R3dux/StateChange.cs
@@ -174,7 +174,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/StateChange.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: NewState
     path: ../src/library/R3dux/StateChange.cs
@@ -207,7 +207,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/StateChange.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ElapsedMilliseconds
     path: ../src/library/R3dux/StateChange.cs

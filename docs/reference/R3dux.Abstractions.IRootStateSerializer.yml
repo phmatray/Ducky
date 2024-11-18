@@ -20,7 +20,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: IRootStateSerializer
     path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
@@ -47,7 +47,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Serialize
     path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
@@ -82,7 +82,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Serialize
     path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
@@ -123,7 +123,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Deserialize
     path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
@@ -161,7 +161,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SaveToFile
     path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs
@@ -199,7 +199,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IRootStateSerializer.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: LoadFromFile
     path: ../src/library/R3dux.Abstractions/IRootStateSerializer.cs

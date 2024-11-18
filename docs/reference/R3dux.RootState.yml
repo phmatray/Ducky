@@ -21,7 +21,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RootState
     path: ../src/library/R3dux/RootState.cs
@@ -60,7 +60,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux/RootState.cs
@@ -95,7 +95,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetStateDictionary
     path: ../src/library/R3dux/RootState.cs
@@ -128,7 +128,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetKeys
     path: ../src/library/R3dux/RootState.cs
@@ -161,7 +161,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetSliceState
     path: ../src/library/R3dux/RootState.cs
@@ -208,7 +208,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetSliceState
     path: ../src/library/R3dux/RootState.cs
@@ -251,7 +251,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/RootState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ContainsKey
     path: ../src/library/R3dux/RootState.cs

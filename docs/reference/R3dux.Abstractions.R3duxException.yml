@@ -18,7 +18,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/R3duxException.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: R3duxException
     path: ../src/library/R3dux.Abstractions/R3duxException.cs
@@ -68,7 +68,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/R3duxException.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux.Abstractions/R3duxException.cs
@@ -99,7 +99,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/R3duxException.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux.Abstractions/R3duxException.cs
@@ -134,7 +134,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/R3duxException.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: .ctor
     path: ../src/library/R3dux.Abstractions/R3duxException.cs

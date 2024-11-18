@@ -16,7 +16,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/IFsaPayload.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: IFsaPayload
     path: ../src/library/R3dux.FluxStandardActions/IFsaPayload.cs
@@ -49,7 +49,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/IFsaPayload.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Payload
     path: ../src/library/R3dux.FluxStandardActions/IFsaPayload.cs

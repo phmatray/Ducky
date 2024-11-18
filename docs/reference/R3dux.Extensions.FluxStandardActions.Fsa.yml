@@ -16,7 +16,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/Fsa.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Fsa
     path: ../src/library/R3dux.FluxStandardActions/Fsa.cs
@@ -65,7 +65,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.FluxStandardActions/Fsa.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: TypeKey
     path: ../src/library/R3dux.FluxStandardActions/Fsa.cs

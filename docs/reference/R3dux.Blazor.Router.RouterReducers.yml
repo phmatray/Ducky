@@ -15,7 +15,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/Router/RouterReducers.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RouterReducers
     path: ../src/library/R3dux.Blazor/Router/RouterReducers.cs

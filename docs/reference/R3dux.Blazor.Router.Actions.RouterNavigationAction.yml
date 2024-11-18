@@ -16,7 +16,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/Router/Actions/RouterNavigationAction.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RouterNavigationAction
     path: ../src/library/R3dux.Blazor/Router/Actions/RouterNavigationAction.cs
@@ -58,7 +58,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/Router/Actions/RouterNavigationAction.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: TypeKey
     path: ../src/library/R3dux.Blazor/Router/Actions/RouterNavigationAction.cs

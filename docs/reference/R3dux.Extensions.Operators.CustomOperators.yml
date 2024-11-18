@@ -21,7 +21,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/CustomOperators.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: CustomOperators
     path: ../src/library/R3dux.Operators/CustomOperators.cs
@@ -59,7 +59,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/CustomOperators.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: OfType
     path: ../src/library/R3dux.Operators/CustomOperators.cs
@@ -101,7 +101,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/CustomOperators.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: WithSliceState
     path: ../src/library/R3dux.Operators/CustomOperators.cs
@@ -151,7 +151,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/CustomOperators.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SelectAction
     path: ../src/library/R3dux.Operators/CustomOperators.cs
@@ -198,7 +198,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/CustomOperators.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: CatchAction
     path: ../src/library/R3dux.Operators/CustomOperators.cs
@@ -243,7 +243,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/CustomOperators.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: InvokeService
     path: ../src/library/R3dux.Operators/CustomOperators.cs
@@ -296,7 +296,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/CustomOperators.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: LogMessage
     path: ../src/library/R3dux.Operators/CustomOperators.cs

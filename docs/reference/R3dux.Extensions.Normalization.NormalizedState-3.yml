@@ -41,7 +41,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: NormalizedState
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -91,7 +91,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ById
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -124,7 +124,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: AllIds
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -157,7 +157,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: this[]
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -195,7 +195,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Create
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -233,7 +233,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SelectImmutableList
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -266,7 +266,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SelectImmutableList
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -304,7 +304,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: AddOne
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -347,7 +347,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: AddMany
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -391,7 +391,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SetAll
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -435,7 +435,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SetOne
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -478,7 +478,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SetMany
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -522,7 +522,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RemoveOne
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -565,7 +565,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RemoveMany
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -609,7 +609,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RemoveMany
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -653,7 +653,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: RemoveAll
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -688,7 +688,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: UpdateOne
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -735,7 +735,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: UpdateOne
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -782,7 +782,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: UpdateMany
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -829,7 +829,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: UpdateMany
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -876,7 +876,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: UpsertOne
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -919,7 +919,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: UpsertMany
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -963,7 +963,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: MapOne
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -1010,7 +1010,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Map
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -1054,7 +1054,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ContainsKey
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -1091,7 +1091,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetByKey
     path: ../src/library/R3dux.Normalization/NormalizedState.cs
@@ -1132,7 +1132,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Normalization/NormalizedState.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Merge
     path: ../src/library/R3dux.Normalization/NormalizedState.cs

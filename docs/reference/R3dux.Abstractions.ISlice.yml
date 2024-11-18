@@ -20,7 +20,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/ISlice.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ISlice
     path: ../src/library/R3dux.Abstractions/ISlice.cs
@@ -47,7 +47,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/ISlice.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: StateUpdated
     path: ../src/library/R3dux.Abstractions/ISlice.cs
@@ -79,7 +79,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/ISlice.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetKey
     path: ../src/library/R3dux.Abstractions/ISlice.cs
@@ -110,7 +110,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/ISlice.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetStateType
     path: ../src/library/R3dux.Abstractions/ISlice.cs
@@ -141,7 +141,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/ISlice.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: GetState
     path: ../src/library/R3dux.Abstractions/ISlice.cs
@@ -172,7 +172,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/ISlice.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: OnDispatch
     path: ../src/library/R3dux.Abstractions/ISlice.cs

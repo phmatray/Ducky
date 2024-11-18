@@ -3,7 +3,7 @@
   <PropertyGroup>
     <RootNamespace>R3dux.Blazor</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>SA1124;SA1402;SA1600;SA1649</NoWarn>
+    <NoWarn>SA1124;SA1402;SA1600;SA1649;IDE0160</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,8 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="R3" />
-    <PackageReference Include="R3Extensions.Blazor" />
   </ItemGroup>
 
   <ItemGroup>

@@ -18,7 +18,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Dispatcher.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispatcher
     path: ../src/library/R3dux/Dispatcher.cs
@@ -57,7 +57,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Dispatcher.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ActionStream
     path: ../src/library/R3dux/Dispatcher.cs
@@ -90,7 +90,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Dispatcher.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispatch
     path: ../src/library/R3dux/Dispatcher.cs
@@ -131,7 +131,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/Dispatcher.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispose
     path: ../src/library/R3dux/Dispatcher.cs

@@ -16,7 +16,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/ObservableExtensions.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ObservableExtensions
     path: ../src/library/R3dux.Operators/ObservableExtensions.cs
@@ -54,7 +54,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Operators/ObservableExtensions.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: FirstSync
     path: ../src/library/R3dux.Operators/ObservableExtensions.cs

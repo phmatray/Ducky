@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxLayout.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: R3duxLayout
     path: ../src/library/R3dux.Blazor/R3duxLayout.cs
@@ -88,7 +88,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxLayout.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Body
     path: ../src/library/R3dux.Blazor/R3duxLayout.cs
@@ -131,7 +131,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Blazor/R3duxLayout.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: SetParametersAsync
     path: ../src/library/R3dux.Blazor/R3duxLayout.cs

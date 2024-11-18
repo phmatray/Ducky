@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/LoggerProvider.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: LoggerProvider
     path: ../src/library/R3dux/LoggerProvider.cs
@@ -54,7 +54,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/LoggerProvider.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Configure
     path: ../src/library/R3dux/LoggerProvider.cs
@@ -86,7 +86,7 @@ items:
   source:
     remote:
       path: src/library/R3dux/LoggerProvider.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: CreateLogger
     path: ../src/library/R3dux/LoggerProvider.cs

@@ -31,7 +31,7 @@ public static class DependencyInjections
         configureOptions?.Invoke(options);
 
         // Add Reactive Extensions for Blazor
-        services.AddBlazorR3();
+        services.AddScoped<TimeProvider, SynchronizationContextTimeProvider>();
 
         return services.AddR3duxCore(options);
     }
@@ -49,9 +49,6 @@ public static class DependencyInjections
         // Configure options
         R3duxOptions options = new();
         configureOptions?.Invoke(options);
-
-        // Add Reactive Extensions for Blazor
-        services.AddBlazorR3();
 
         return services.AddR3duxCore(options);
     }

@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IDispatcher.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: IDispatcher
     path: ../src/library/R3dux.Abstractions/IDispatcher.cs
@@ -44,7 +44,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IDispatcher.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: ActionStream
     path: ../src/library/R3dux.Abstractions/IDispatcher.cs
@@ -75,7 +75,7 @@ items:
   source:
     remote:
       path: src/library/R3dux.Abstractions/IDispatcher.cs
-      branch: features/documentation
+      branch: features/crud
       repo: https://github.com/phmatray/R3dux.git
     id: Dispatch
     path: ../src/library/R3dux.Abstractions/IDispatcher.cs
