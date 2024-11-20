@@ -13,8 +13,8 @@ public sealed class CustomOperatorsTests : IDisposable
     public void FilterActions_Should_FilterByType()
     {
         // Arrange
-        var source = new Subject<IAction>();
-        var actions = new List<IAction>();
+        Subject<IAction> source = new();
+        List<IAction> actions = [];
 
         source.AsObservable()
             .OfActionType<TestAction>()
@@ -34,8 +34,8 @@ public sealed class CustomOperatorsTests : IDisposable
     public void SelectAction_Should_TransformAndCast()
     {
         // Arrange
-        var source = new Subject<int>();
-        var actions = new List<IAction>();
+        Subject<int> source = new();
+        List<IAction> actions = [];
 
         source.AsObservable()
             .SelectAction<int, TestAction>(_ => new TestAction())
@@ -82,14 +82,16 @@ public sealed class CustomOperatorsTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _disposables.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _disposables.Dispose();
+        }
+
+        _disposed = true;
     }
 }

@@ -16,7 +16,7 @@ public sealed class DispatcherTests : IDisposable
     public void Dispatch_Should_EnqueueAction()
     {
         // Arrange
-        var action = new TestActionWithParameter("Test");
+        TestActionWithParameter action = new("Test");
 
         // Act
         _sut.Dispatch(action);
@@ -29,7 +29,7 @@ public sealed class DispatcherTests : IDisposable
     public void ActionStream_Should_EmitDispatchedActions()
     {
         // Arrange
-        var emittedActions = new List<object>();
+        List<object> emittedActions = [];
         _sut.ActionStream.Subscribe(emittedActions.Add);
 
         // Act
@@ -55,7 +55,7 @@ public sealed class DispatcherTests : IDisposable
     {
         // Verifies that actions dispatched concurrently are still emitted in the order they were enqueued.
         // Arrange
-        var emittedActions = new List<object>();
+        List<object> emittedActions = [];
         _sut.ActionStream.Subscribe(emittedActions.Add);
 
         // Act
@@ -73,8 +73,8 @@ public sealed class DispatcherTests : IDisposable
     {
         // Tests that unsubscribing from the ActionStream stops receiving further actions.
         // Arrange
-        var emittedActions = new List<object>();
-        var subscription = _sut.ActionStream.Subscribe(emittedActions.Add);
+        List<object> emittedActions = [];
+        IDisposable subscription = _sut.ActionStream.Subscribe(emittedActions.Add);
 
         // Act
         _sut.Dispatch(_action1);
@@ -147,14 +147,16 @@ public sealed class DispatcherTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

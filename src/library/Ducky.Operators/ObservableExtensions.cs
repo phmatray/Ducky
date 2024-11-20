@@ -19,7 +19,7 @@ public static class ObservableExtensions
     /// <returns>The first element of the observable sequence.</returns>
     public static T FirstSync<T>(this Observable<T> observable)
     {
-        var stateAsync = observable.FirstAsync();
+        Task<T> stateAsync = observable.FirstAsync();
         stateAsync.Wait();
         return stateAsync.Result;
     }

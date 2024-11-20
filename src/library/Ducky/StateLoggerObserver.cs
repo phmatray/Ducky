@@ -14,19 +14,18 @@ namespace Ducky;
 /// Provides logging functionalities for state changes.
 /// </summary>
 /// <typeparam name="TState">The type of the state.</typeparam>
-public sealed class StateLoggerObserver<TState>
-    : Observer<StateChange<TState>>
+public sealed class StateLoggerObserver<TState> : Observer<StateChange<TState>>
 {
-    private static readonly ILogger<StateLoggerObserver<TState>> _logger
-        = LoggerProvider.CreateLogger<StateLoggerObserver<TState>>()
-          ?? throw new InvalidOperationException("Logger not found.");
+    private static readonly ILogger<StateLoggerObserver<TState>> Logger =
+        LoggerProvider.CreateLogger<StateLoggerObserver<TState>>()
+            ?? throw new InvalidOperationException("Logger not found.");
 
     // ReSharper disable once StaticMemberInGenericType
-    private static readonly JsonSerializerOptions _serializerOptions = new()
+    private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        PropertyNamingPolicy = JsonNamingPolicy.KebabCaseLower,
+        PropertyNamingPolicy = JsonNamingPolicy.KebabCaseLower
     };
 
     /// <summary>
@@ -44,7 +43,7 @@ public sealed class StateLoggerObserver<TState>
     /// <param name="result">The result of the state change stream.</param>
     protected override void OnCompletedCore(Result result)
     {
-        _logger.StateChangeObservationCompleted();
+        Logger.StateChangeObservationCompleted();
     }
 
     /// <summary>
@@ -53,7 +52,7 @@ public sealed class StateLoggerObserver<TState>
     /// <param name="error">The error encountered.</param>
     protected override void OnErrorResumeCore(Exception error)
     {
-        _logger.StateChangeObservationError();
+        Logger.StateChangeObservationError();
     }
 
     /// <summary>
@@ -62,15 +61,15 @@ public sealed class StateLoggerObserver<TState>
     /// <param name="action">The action that caused the state change.</param>
     private static void LogStateChange(StateChange<TState> action)
     {
-        var timestamp = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
-        var actionName = GetActionType(action.Action);
-        var sliceType = action.PreviousState?.GetType().ToString() ?? "Unknown";
-        var duration = string.Format(CultureInfo.InvariantCulture, "{0:F2}", action.ElapsedMilliseconds);
-        var prevStateDetails = GetObjectDetails(action.PreviousState);
-        var actionDetails = GetObjectDetails(action.Action);
-        var nextStateDetails = GetObjectDetails(action.NewState);
+        string timestamp = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+        string actionName = GetActionType(action.Action);
+        string sliceType = action.PreviousState?.GetType().ToString() ?? "Unknown";
+        string duration = string.Format(CultureInfo.InvariantCulture, "{0:F2}", action.ElapsedMilliseconds);
+        string prevStateDetails = GetObjectDetails(action.PreviousState);
+        string actionDetails = GetObjectDetails(action.Action);
+        string nextStateDetails = GetObjectDetails(action.NewState);
 
-        _logger.LogStateChange(
+        Logger.LogStateChange(
             actionName, timestamp, duration, sliceType, prevStateDetails, actionDetails, nextStateDetails);
     }
 
@@ -82,7 +81,7 @@ public sealed class StateLoggerObserver<TState>
     private static string GetActionType(IAction action)
     {
         // if the action object has a property named "TypeKey", return its value
-        return action.GetType().GetProperty(nameof(IKeyedAction.TypeKey)) is { } typeKeyProperty
+        return (action.GetType().GetProperty(nameof(IKeyedAction.TypeKey)) is { } typeKeyProperty)
             ? typeKeyProperty.GetValue(action)?.ToString() ?? GetActionName()
             : GetActionName();
 
@@ -107,7 +106,7 @@ public sealed class StateLoggerObserver<TState>
         try
         {
             return JsonSerializer
-                .Serialize(obj, _serializerOptions)
+                .Serialize(obj, SerializerOptions)
                 .Replace(Environment.NewLine, $"{Environment.NewLine}  ");
         }
         catch (Exception ex)

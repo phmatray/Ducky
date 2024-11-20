@@ -18,7 +18,7 @@ public record MessageState
 
     public string SelectMessageInReverse()
     {
-        return new string(Message.Reverse().ToArray());
+        return string.Concat(Message.Reverse());
     }
 
     public string SelectMessageInUpperCase()
@@ -45,17 +45,14 @@ public record MessageReducers : SliceReducers<MessageState>
 {
     public MessageReducers()
     {
-        On<SetMessage>((_, action) => new MessageState { Message = action.Message });
-        On<AppendMessage>((state, action) => new MessageState { Message = state.Message + action.Message });
-        On<ClearMessage>(() => new MessageState { Message = string.Empty });
+        On<SetMessage>((_, action) => new() { Message = action.Message });
+        On<AppendMessage>((state, action) => new() { Message = state.Message + action.Message });
+        On<ClearMessage>(() => new() { Message = string.Empty });
     }
 
     public override MessageState GetInitialState()
     {
-        return new MessageState
-        {
-            Message = "Hello, Blazor!"
-        };
+        return new() { Message = "Hello, Blazor!" };
     }
 }
 

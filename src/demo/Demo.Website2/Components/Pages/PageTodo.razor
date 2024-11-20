@@ -102,7 +102,7 @@
 
   private string _newTodo = string.Empty;
   
-  private ImmutableList<TodoItem> ActiveTodos
+  private ImmutableArray<TodoItem> ActiveTodos
     => State.SelectActiveTodos();
 
   private int ActiveTodosCount
@@ -111,7 +111,7 @@
   private bool HasActiveTodos
     => State.SelectHasActiveTodos();
   
-  private ImmutableList<TodoItem> CompletedTodos
+  private ImmutableArray<TodoItem> CompletedTodos
     => State.SelectCompletedTodos();
   
   private int CompletedTodosCount

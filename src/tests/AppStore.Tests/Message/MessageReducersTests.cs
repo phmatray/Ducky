@@ -9,10 +9,7 @@ public sealed class MessageReducersTests : IDisposable
     private const string Key = "message";
 
     private readonly MessageReducers _sut = new();
-    private readonly MessageState _initialState = new()
-    {
-        Message = "Hello, Blazor!"
-    };
+    private readonly MessageState _initialState = new() { Message = "Hello, Blazor!" };
 
     private bool _disposed;
 
@@ -20,7 +17,7 @@ public sealed class MessageReducersTests : IDisposable
     public void MessageReducers_Should_Return_Initial_State()
     {
         // Act
-        var initialState = _sut.GetInitialState();
+        MessageState initialState = _sut.GetInitialState();
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
@@ -30,7 +27,7 @@ public sealed class MessageReducersTests : IDisposable
     public void MessageReducers_Should_Return_Key()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
@@ -40,7 +37,7 @@ public sealed class MessageReducersTests : IDisposable
     public void MessageReducers_Should_Return_Correct_State_Type()
     {
         // Act
-        var stateType = _sut.GetStateType();
+        Type stateType = _sut.GetStateType();
 
         // Assert
         stateType.Should().Be<MessageState>();
@@ -50,7 +47,7 @@ public sealed class MessageReducersTests : IDisposable
     public void MessageReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<MessageState, IAction, MessageState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(3);
@@ -63,7 +60,7 @@ public sealed class MessageReducersTests : IDisposable
         const string newMessage = "New Message";
 
         // Act
-        var newState = _sut.Reduce(_initialState, new SetMessage(newMessage));
+        MessageState newState = _sut.Reduce(_initialState, new SetMessage(newMessage));
 
         // Assert
         newState.Message.Should().Be(newMessage);
@@ -73,10 +70,10 @@ public sealed class MessageReducersTests : IDisposable
     public void SelectMessageLength_ShouldReturnCorrectLength()
     {
         // Arrange
-        var state = new MessageState { Message = "Hello" };
+        MessageState state = new() { Message = "Hello" };
 
         // Act
-        var messageLength = state.SelectMessageLength();
+        int messageLength = state.SelectMessageLength();
 
         // Assert
         messageLength.Should().Be(5);
@@ -86,10 +83,10 @@ public sealed class MessageReducersTests : IDisposable
     public void SelectMessageInReverse_ShouldReturnMessageInReverse()
     {
         // Arrange
-        var state = new MessageState { Message = "Hello" };
+        MessageState state = new() { Message = "Hello" };
 
         // Act
-        var reversedMessage = state.SelectMessageInReverse();
+        string reversedMessage = state.SelectMessageInReverse();
 
         // Assert
         reversedMessage.Should().Be("olleH");
@@ -102,14 +99,16 @@ public sealed class MessageReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

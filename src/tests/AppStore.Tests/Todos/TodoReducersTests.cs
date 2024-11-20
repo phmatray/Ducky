@@ -24,7 +24,7 @@ public sealed class TodoReducersTests : IDisposable
     public void TodoReducers_Should_Return_Initial_State()
     {
         // Act
-        var initialState = _sut.GetInitialState();
+        TodoState initialState = _sut.GetInitialState();
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
@@ -34,7 +34,7 @@ public sealed class TodoReducersTests : IDisposable
     public void TodoReducers_Should_Return_Key()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
@@ -44,7 +44,7 @@ public sealed class TodoReducersTests : IDisposable
     public void TodoReducers_Should_Return_Correct_State_Type()
     {
         // Act
-        var stateType = _sut.GetStateType();
+        Type stateType = _sut.GetStateType();
 
         // Assert
         stateType.Should().Be<TodoState>();
@@ -54,7 +54,7 @@ public sealed class TodoReducersTests : IDisposable
     public void TodoReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<TodoState, IAction, TodoState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(3);
@@ -64,25 +64,25 @@ public sealed class TodoReducersTests : IDisposable
     public void CreateTodo_ShouldAddNewTodoItem()
     {
         // Arrange
-        var state = TodoState.Create([]);
+        TodoState state = TodoState.Create([]);
         const string newTitle = "New Todo";
 
         // Act
-        var newState = _sut.Reduce(state, new CreateTodo(newTitle));
+        TodoState newState = _sut.Reduce(state, new CreateTodo(newTitle));
 
         // Assert
-        newState.SelectImmutableList().Should().ContainSingle(todo => todo.Title == newTitle && !todo.IsCompleted);
+        newState.SelectImmutableArray().Should().ContainSingle(todo => todo.Title == newTitle && !todo.IsCompleted);
     }
 
     [Fact]
     public void ToggleTodo_ShouldToggleIsCompleted()
     {
         // Arrange
-        var todoItem = new TodoItem("Sample Todo");
-        var state = TodoState.Create([todoItem]);
+        TodoItem todoItem = new("Sample Todo");
+        TodoState state = TodoState.Create([todoItem]);
 
         // Act
-        var newState = _sut.Reduce(state, new ToggleTodo(todoItem.Id));
+        TodoState newState = _sut.Reduce(state, new ToggleTodo(todoItem.Id));
 
         // Assert
         newState[todoItem.Id].IsCompleted.Should().BeTrue();
@@ -92,26 +92,26 @@ public sealed class TodoReducersTests : IDisposable
     public void DeleteTodo_ShouldRemoveTodoItem()
     {
         // Arrange
-        var todoItem = new TodoItem("Sample Todo");
-        var state = TodoState.Create([todoItem]);
+        TodoItem todoItem = new("Sample Todo");
+        TodoState state = TodoState.Create([todoItem]);
 
         // Act
-        var newState = _sut.Reduce(state, new DeleteTodo(todoItem.Id));
+        TodoState newState = _sut.Reduce(state, new DeleteTodo(todoItem.Id));
 
         // Assert
-        newState.SelectImmutableList().Should().NotContain(todo => todo.Id == todoItem.Id);
+        newState.SelectImmutableArray().Should().NotContain(todo => todo.Id == todoItem.Id);
     }
 
     [Fact]
     public void SelectActiveTodos_ShouldReturnOnlyActiveTodos()
     {
         // Arrange
-        var activeTodo = new TodoItem("Active Todo");
-        var completedTodo = new TodoItem("Completed Todo", true);
-        var state = TodoState.Create([activeTodo, completedTodo]);
+        TodoItem activeTodo = new("Active Todo");
+        TodoItem completedTodo = new("Completed Todo", true);
+        TodoState state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
-        var activeTodos = state.SelectActiveTodos();
+        ImmutableArray<TodoItem> activeTodos = state.SelectActiveTodos();
 
         // Assert
         activeTodos.Should().ContainSingle(todo => todo.Id == activeTodo.Id);
@@ -122,12 +122,12 @@ public sealed class TodoReducersTests : IDisposable
     public void SelectActiveTodosCount_ShouldReturnCorrectCount()
     {
         // Arrange
-        var activeTodo = new TodoItem("Active Todo");
-        var completedTodo = new TodoItem("Completed Todo", true);
-        var state = TodoState.Create([activeTodo, completedTodo]);
+        TodoItem activeTodo = new("Active Todo");
+        TodoItem completedTodo = new("Completed Todo", true);
+        TodoState state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
-        var activeTodosCount = state.SelectActiveTodosCount();
+        int activeTodosCount = state.SelectActiveTodosCount();
 
         // Assert
         activeTodosCount.Should().Be(1);
@@ -137,12 +137,12 @@ public sealed class TodoReducersTests : IDisposable
     public void SelectCompletedTodos_ShouldReturnOnlyCompletedTodos()
     {
         // Arrange
-        var activeTodo = new TodoItem("Active Todo");
-        var completedTodo = new TodoItem("Completed Todo", true);
-        var state = TodoState.Create([activeTodo, completedTodo]);
+        TodoItem activeTodo = new("Active Todo");
+        TodoItem completedTodo = new("Completed Todo", true);
+        TodoState state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
-        var completedTodos = state.SelectCompletedTodos();
+        ImmutableArray<TodoItem> completedTodos = state.SelectCompletedTodos();
 
         // Assert
         completedTodos.Should().ContainSingle(todo => todo.Id == completedTodo.Id);
@@ -153,12 +153,12 @@ public sealed class TodoReducersTests : IDisposable
     public void SelectCompletedTodosCount_ShouldReturnCorrectCount()
     {
         // Arrange
-        var activeTodo = new TodoItem("Active Todo");
-        var completedTodo = new TodoItem("Completed Todo", true);
-        var state = TodoState.Create([activeTodo, completedTodo]);
+        TodoItem activeTodo = new("Active Todo");
+        TodoItem completedTodo = new("Completed Todo", true);
+        TodoState state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
-        var completedTodosCount = state.SelectCompletedTodosCount();
+        int completedTodosCount = state.SelectCompletedTodosCount();
 
         // Assert
         completedTodosCount.Should().Be(1);
@@ -171,14 +171,16 @@ public sealed class TodoReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

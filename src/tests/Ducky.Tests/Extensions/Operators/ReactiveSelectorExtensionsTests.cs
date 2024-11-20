@@ -2,20 +2,26 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Ducky.Tests.Extensions.Operators;
 
+[SuppressMessage("Roslynator", "RCS1046:Asynchronous method name should end with \'Async\'")]
 public class ReactiveSelectorExtensionsTests
 {
-    private static readonly int[] _sourceArray = [1, 2, 3];
+    private static readonly int[] SourceArray = [1, 2, 3];
 
     [Fact]
     public async Task SwitchSelect_ShouldSwitchToLatestObservable()
     {
         // Arrange
-        var input = _sourceArray.ToObservable();
+        Observable<int> input = SourceArray.ToObservable();
 
         // Act
-        var result = await input.SwitchSelect(Selector).ToArrayAsync();
+        string[] result = await input
+            .SwitchSelect(Selector)
+            .ToArrayAsync()
+            .ConfigureAwait(true);
 
         // Assert
         result.Should().BeEquivalentTo(
@@ -33,10 +39,13 @@ public class ReactiveSelectorExtensionsTests
     public async Task ConcatSelect_ShouldConcatAllObservableSequences()
     {
         // Arrange
-        var input = _sourceArray.ToObservable();
+        Observable<int> input = SourceArray.ToObservable();
 
         // Act
-        var result = await input.ConcatSelect(Selector).ToArrayAsync();
+        string[] result = await input
+            .ConcatSelect(Selector)
+            .ToArrayAsync()
+            .ConfigureAwait(true);
 
         // Assert
         result.Should().BeEquivalentTo(
@@ -51,10 +60,13 @@ public class ReactiveSelectorExtensionsTests
     public async Task MergeSelect_ShouldMergeAllObservableSequences()
     {
         // Arrange
-        var input = _sourceArray.ToObservable();
+        Observable<int> input = SourceArray.ToObservable();
 
         // Act
-        var result = await input.MergeSelect(Selector).ToArrayAsync();
+        string[] result = await input
+            .MergeSelect(Selector)
+            .ToArrayAsync()
+            .ConfigureAwait(true);
 
         // Assert
         result.Should().BeEquivalentTo(

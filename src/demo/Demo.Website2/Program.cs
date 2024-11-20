@@ -9,8 +9,8 @@ using Ducky.Blazor;
 using MudBlazor.Services;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
-var services = builder.Services;
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+IServiceCollection services = builder.Services;
 
 builder.Host.UseSerilog((context, loggerConfig)
     => loggerConfig.ReadFrom.Configuration(context.Configuration));
@@ -20,11 +20,12 @@ services.AddRazorComponents()
     .AddInteractiveServerComponents(options => options.DetailedErrors = true);
 
 // Add front services
-services.AddMudServices(config =>
-{
-    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
-    config.SnackbarConfiguration.ShowCloseIcon = true;
-});
+services.AddMudServices(
+    config =>
+    {
+        config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
+        config.SnackbarConfiguration.ShowCloseIcon = true;
+    });
 
 services.AddScoped<IJsonColorizer, JsonColorizer>();
 
@@ -34,7 +35,7 @@ services.AddTransient<IMoviesService, MoviesService>();
 // Add RxStore
 services.AddDucky(builder.Configuration);
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

@@ -17,7 +17,7 @@ public sealed class CounterReducersTests : IDisposable
     public void CounterReducers_Should_Return_Initial_State()
     {
         // Act
-        var initialState = _sut.GetInitialState();
+        CounterState initialState = _sut.GetInitialState();
 
         // Assert
         initialState.Should().Be(_initialState);
@@ -27,7 +27,7 @@ public sealed class CounterReducersTests : IDisposable
     public void CounterReducers_Should_Return_Key()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
@@ -37,7 +37,7 @@ public sealed class CounterReducersTests : IDisposable
     public void CounterReducers_Should_Return_Correct_State_Type()
     {
         // Act
-        var stateType = _sut.GetStateType();
+        Type stateType = _sut.GetStateType();
 
         // Assert
         stateType.Should().Be<CounterState>();
@@ -47,7 +47,7 @@ public sealed class CounterReducersTests : IDisposable
     public void CounterReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<CounterState, IAction, CounterState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);
@@ -57,11 +57,11 @@ public sealed class CounterReducersTests : IDisposable
     public void Increment_ShouldIncreaseStateByOne()
     {
         // Arrange
-        var initialState = new CounterState(0);
-        var expectedState = new CounterState(1);
+        CounterState initialState = new(0);
+        CounterState expectedState = new(1);
 
         // Act
-        var newState = _sut.Reduce(initialState, new Increment());
+        CounterState newState = _sut.Reduce(initialState, new Increment());
 
         // Assert
         newState.Should().Be(expectedState);
@@ -71,11 +71,11 @@ public sealed class CounterReducersTests : IDisposable
     public void Decrement_ShouldDecreaseStateByOne()
     {
         // Arrange
-        var initialState = new CounterState(1);
-        var expectedState = new CounterState(0);
+        CounterState initialState = new(1);
+        CounterState expectedState = new(0);
 
         // Act
-        var newState = _sut.Reduce(initialState, new Decrement());
+        CounterState newState = _sut.Reduce(initialState, new Decrement());
 
         // Assert
         newState.Should().Be(expectedState);
@@ -85,10 +85,10 @@ public sealed class CounterReducersTests : IDisposable
     public void Reset_ShouldSetStateToInitialState()
     {
         // Arrange
-        var state = new CounterState(42);
+        CounterState state = new(42);
 
         // Act
-        var newState = _sut.Reduce(state, new Reset());
+        CounterState newState = _sut.Reduce(state, new Reset());
 
         // Assert
         newState.Should().Be(_initialState);
@@ -101,7 +101,7 @@ public sealed class CounterReducersTests : IDisposable
         const int valueToSet = 42;
 
         // Act
-        var newState = _sut.Reduce(_initialState, new SetValue(valueToSet));
+        CounterState newState = _sut.Reduce(_initialState, new SetValue(valueToSet));
 
         // Assert
         newState.Value.Should().Be(valueToSet);
@@ -114,14 +114,16 @@ public sealed class CounterReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

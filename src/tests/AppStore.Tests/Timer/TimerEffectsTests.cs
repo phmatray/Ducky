@@ -61,12 +61,11 @@ public sealed class TimerEffectsTests : IDisposable
 
     private void SetupRootState()
     {
-        var dictionary = new Dictionary<string, object>
-        {
-            { "timer", 0 }
-        };
+        ImmutableSortedDictionary<string, object> dictionary = ImmutableSortedDictionary
+            .Create<string, object>()
+            .Add("timer", 0);
 
-        var rootState = new RootState(dictionary.ToImmutableSortedDictionary());
+        RootState rootState = new(dictionary);
         _rootStateSubject.OnNext(rootState);
     }
 }

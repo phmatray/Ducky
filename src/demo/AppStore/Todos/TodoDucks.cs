@@ -10,14 +10,14 @@ public record TodoState
     : NormalizedState<Guid, TodoItem, TodoState>
 {
     // Selectors
-    public ImmutableList<TodoItem> SelectCompletedTodos()
+    public ImmutableArray<TodoItem> SelectCompletedTodos()
     {
-        return SelectImmutableList(todo => todo.IsCompleted);
+        return SelectImmutableArray(todo => todo.IsCompleted);
     }
 
     public int SelectCompletedTodosCount()
     {
-        return SelectCompletedTodos().Count;
+        return SelectCompletedTodos().Length;
     }
 
     public bool SelectHasCompletedTodos()
@@ -25,14 +25,14 @@ public record TodoState
         return !SelectCompletedTodos().IsEmpty;
     }
 
-    public ImmutableList<TodoItem> SelectActiveTodos()
+    public ImmutableArray<TodoItem> SelectActiveTodos()
     {
-        return SelectImmutableList(todo => !todo.IsCompleted);
+        return SelectImmutableArray(todo => !todo.IsCompleted);
     }
 
     public int SelectActiveTodosCount()
     {
-        return SelectActiveTodos().Count;
+        return SelectActiveTodos().Length;
     }
 
     public bool SelectHasActiveTodos()
@@ -68,7 +68,7 @@ public sealed record ToggleTodo
     : Fsa<ToggleTodo.ActionPayload, ToggleTodo.ActionMeta>
 {
     // Action creators are represented as constructors.
-    public ToggleTodo(Guid id)
+    public ToggleTodo(in Guid id)
         : base(new ActionPayload(id), new ActionMeta(DateTime.UtcNow))
     {
     }
@@ -88,7 +88,7 @@ public sealed record DeleteTodo
 {
     // Action creators are represented as constructors.
     // You can also use the ActionMeta.Create() method from Ducky to create a timestamp.
-    public DeleteTodo(Guid id)
+    public DeleteTodo(in Guid id)
         : base(new ActionPayload(id), ActionMeta.Create())
     {
     }

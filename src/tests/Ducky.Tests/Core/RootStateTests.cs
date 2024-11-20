@@ -25,7 +25,7 @@ public class RootStateTests
     public void ContainsKey_Should_Return_False_If_Key_Does_Not_Exist()
     {
         // Act
-        var result = _sut.ContainsKey(NonExistingKey);
+        bool result = _sut.ContainsKey(NonExistingKey);
 
         // Assert
         result.Should().BeFalse();

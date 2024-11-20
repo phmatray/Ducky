@@ -44,7 +44,7 @@ public static class CustomOperators
             rootStateObs,
             (action, rootState) =>
             {
-                var sliceState = sliceKey is null
+                TState sliceState = (sliceKey is null)
                     ? rootState.GetSliceState<TState>()
                     : rootState.GetSliceState<TState>(sliceKey);
 
@@ -103,7 +103,7 @@ public static class CustomOperators
         {
             try
             {
-                var result = await serviceCall(action);
+                TResult result = await serviceCall(action).ConfigureAwait(false);
                 return successSelector(result);
             }
             catch (Exception ex)

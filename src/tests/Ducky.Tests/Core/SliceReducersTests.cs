@@ -25,10 +25,10 @@ public sealed class SliceReducersTests : IDisposable
         // Arrange
         _sut.On<IntegerAction>((state, action) => state + action.Value);
         const int initialState = 0;
-        var action = new IntegerAction(5);
+        IntegerAction action = new(5);
 
         // Act
-        var newState = _sut.Reduce(initialState, action);
+        int newState = _sut.Reduce(initialState, action);
 
         // Assert
         newState.Should().Be(5);
@@ -43,7 +43,7 @@ public sealed class SliceReducersTests : IDisposable
         IAction action = new IntegerAction(5);
 
         // Act
-        var newState = _sut.Reduce(initialState, action);
+        int newState = _sut.Reduce(initialState, action);
 
         // Assert
         newState.Should().Be(5);
@@ -54,10 +54,10 @@ public sealed class SliceReducersTests : IDisposable
     {
         // Arrange
         const int initialState = 0;
-        var action = new IntegerAction(5);
+        IntegerAction action = new(5);
 
         // Act
-        var newState = _sut.Reduce(initialState, action);
+        int newState = _sut.Reduce(initialState, action);
 
         // Assert
         newState.Should().Be(initialState);
@@ -77,7 +77,7 @@ public sealed class SliceReducersTests : IDisposable
     public void GetKey_Should_ReturnTypeName_Transformed()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be("test-counter");
@@ -87,7 +87,7 @@ public sealed class SliceReducersTests : IDisposable
     public void GetState_Should_Initialize_With_Default_State()
     {
         // Act
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(10);
@@ -98,7 +98,7 @@ public sealed class SliceReducersTests : IDisposable
     {
         // Act
         _sut.OnDispatch(new TestIncrementAction());
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(11);
@@ -109,7 +109,7 @@ public sealed class SliceReducersTests : IDisposable
     {
         // Act
         _sut.OnDispatch(new TestDecrementAction());
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(9);
@@ -122,7 +122,7 @@ public sealed class SliceReducersTests : IDisposable
         _sut.OnDispatch(new TestIncrementAction());
         _sut.OnDispatch(new TestIncrementAction());
         _sut.OnDispatch(new TestResetAction());
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(10);
@@ -133,7 +133,7 @@ public sealed class SliceReducersTests : IDisposable
     {
         // Act
         _sut.OnDispatch(new TestSetValueAction(20));
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(20);
@@ -157,9 +157,9 @@ public sealed class SliceReducersTests : IDisposable
     public void SliceReducers_Should_Not_Change_State_For_Unknown_Action()
     {
         // Act
-        var initialState = _sut.GetState();
+        object initialState = _sut.GetState();
         _sut.OnDispatch(new UnknownAction());
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(initialState);
@@ -172,14 +172,16 @@ public sealed class SliceReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

@@ -6,7 +6,7 @@ namespace Ducky.Tests.Extensions.FluxStandardActions.Models;
 
 public sealed record TestToggleTodo : Fsa<TestToggleTodo.ActionPayload, TestToggleTodo.ActionMeta>
 {
-    public TestToggleTodo(Guid id)
+    public TestToggleTodo(in Guid id)
         : base(new ActionPayload(id), new ActionMeta(DateTime.UtcNow))
     {
     }

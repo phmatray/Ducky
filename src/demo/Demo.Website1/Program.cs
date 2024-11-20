@@ -6,8 +6,8 @@ using Demo.Website1.Components;
 using Demo.Website1.Helpers;
 using Ducky.Blazor;
 
-var builder = WebApplication.CreateBuilder(args);
-var services = builder.Services;
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+IServiceCollection services = builder.Services;
 
 // Add services to the container.
 services.AddRazorComponents()
@@ -22,7 +22,7 @@ services.AddTransient<IMoviesService, MoviesService>();
 // Add RxStore
 services.AddDucky(builder.Configuration);
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

@@ -60,7 +60,7 @@ public record LayoutReducers : SliceReducers<LayoutState>
 
     public override LayoutState GetInitialState()
     {
-        return new LayoutState
+        return new()
         {
             Title = "Ducky",
             Version = DuckyVersioning.GetVersion().ToString(),

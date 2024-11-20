@@ -6,23 +6,23 @@ namespace Ducky.Tests.Extensions.Selectors.Models;
 
 internal sealed record TodoState : NormalizedState<Guid, TodoItem, TodoState>
 {
-    private readonly Func<TodoState, ImmutableList<TodoItem>> _selectCompletedTodos;
+    private readonly Func<TodoState, ImmutableArray<TodoItem>> _selectCompletedTodos;
     private readonly Func<TodoState, int> _selectCompletedTodosCount;
     private readonly Func<TodoState, bool> _selectHasCompletedTodos;
 
-    private readonly Func<TodoState, ImmutableList<TodoItem>> _selectActiveTodos;
+    private readonly Func<TodoState, ImmutableArray<TodoItem>> _selectActiveTodos;
     private readonly Func<TodoState, int> _selectActiveTodosCount;
     private readonly Func<TodoState, bool> _selectHasActiveTodos;
 
     public TodoState()
     {
-        _selectCompletedTodos = MemoizedSelector.Create<TodoState, ImmutableList<TodoItem>>(
-            state => state.SelectImmutableList(todo => todo.IsCompleted),
+        _selectCompletedTodos = MemoizedSelector.Create<TodoState, ImmutableArray<TodoItem>>(
+            state => state.SelectImmutableArray(todo => todo.IsCompleted),
             state => state.ById);
 
         _selectCompletedTodosCount = MemoizedSelector.Compose(
             _selectCompletedTodos,
-            todos => todos.Count,
+            todos => todos.Length,
             state => state.ById);
 
         _selectHasCompletedTodos = MemoizedSelector.Compose(
@@ -30,13 +30,13 @@ internal sealed record TodoState : NormalizedState<Guid, TodoItem, TodoState>
             todos => !todos.IsEmpty,
             state => state.ById);
 
-        _selectActiveTodos = MemoizedSelector.Create<TodoState, ImmutableList<TodoItem>>(
-            state => state.SelectImmutableList(todo => !todo.IsCompleted),
+        _selectActiveTodos = MemoizedSelector.Create<TodoState, ImmutableArray<TodoItem>>(
+            state => state.SelectImmutableArray(todo => !todo.IsCompleted),
             state => state.ById);
 
         _selectActiveTodosCount = MemoizedSelector.Compose(
             _selectActiveTodos,
-            todos => todos.Count,
+            todos => todos.Length,
             state => state.ById);
 
         _selectHasActiveTodos = MemoizedSelector.Compose(
@@ -46,7 +46,7 @@ internal sealed record TodoState : NormalizedState<Guid, TodoItem, TodoState>
     }
 
     // Memoized Selectors
-    public ImmutableList<TodoItem> SelectCompletedTodos()
+    public ImmutableArray<TodoItem> SelectCompletedTodos()
     {
         return _selectCompletedTodos(this);
     }
@@ -61,7 +61,7 @@ internal sealed record TodoState : NormalizedState<Guid, TodoItem, TodoState>
         return _selectHasCompletedTodos(this);
     }
 
-    public ImmutableList<TodoItem> SelectActiveTodos()
+    public ImmutableArray<TodoItem> SelectActiveTodos()
     {
         return _selectActiveTodos(this);
     }

@@ -24,8 +24,8 @@ public abstract class Effect : IEffect
     public string GetAssemblyName()
     {
         return GetType().Assembly.GetName().Name
-               ?? GetType().AssemblyQualifiedName
-               ?? throw new DuckyException("AssemblyQualifiedName is null.");
+            ?? GetType().AssemblyQualifiedName
+            ?? throw new DuckyException("AssemblyQualifiedName is null.");
     }
 
     /// <inheritdoc />

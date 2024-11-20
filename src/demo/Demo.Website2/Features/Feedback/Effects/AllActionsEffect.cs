@@ -4,18 +4,18 @@
 
 namespace Demo.Website2.Features.Feedback.Effects;
 
-// TODO: Fix this
 
-// /// <summary>
-// /// Effect that handles all actions.
-// /// </summary>
-// public class AllActionsEffect : Effect
-// {
-//     /// <inheritdoc />
-//     public override Observable<IAction> Handle(
-//         Observable<IAction> actions, Observable<IRootState> rootState)
-//     {
-//         return actions
-//             .Do(action => Console.WriteLine($"Action: {action}"));
-//     }
-// }
+/// <summary>
+/// Effect that handles all actions.
+/// </summary>
+public class AllActionsEffect : Effect
+{
+    // TODO: Fix this
+    // /// <inheritdoc />
+    // public override Observable<IAction> Handle(
+    //     Observable<IAction> actions, Observable<IRootState> rootState)
+    // {
+    //     return actions
+    //         .Do(action => Console.WriteLine($"Action: {action}"));
+    // }
+}

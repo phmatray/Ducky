@@ -4,6 +4,7 @@
 
 namespace AppStore.Tests.Movies;
 
+[SuppressMessage("Roslynator", "RCS1046:Asynchronous method name should end with \'Async\'")]
 public sealed class MoviesEffectsTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = [];
@@ -33,19 +34,18 @@ public sealed class MoviesEffectsTests : IDisposable
         // Arrange
         SetupRootState();
         List<Movie> movies = [MoviesExamples.Movies[0], MoviesExamples.Movies[1]];
-        var immutableMovies = ImmutableArray.CreateRange(movies);
+        ImmutableArray<Movie> immutableMovies = [..movies];
         _moviesServiceMock
             .Setup(service => service.GetMoviesAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None))
             .ReturnsAsync(new GetMoviesResponse(immutableMovies, movies.Count));
 
         // Act
         _actionsSubject.OnNext(new LoadMovies());
-        await Task.Delay(100); // Ensure the async call completes
+        await Task.Delay(100).ConfigureAwait(true); // Ensure the async call completes
 
         // Assert
         _actualActions.Should().HaveCount(1);
-        _actualActions[0].Should().BeOfType<LoadMoviesSuccess>()
-            .Which.Movies.Should().BeEquivalentTo(movies);
+        _actualActions[0].Should().BeOfType<LoadMoviesSuccess>().Which.Movies.Should().BeEquivalentTo(movies);
     }
 
     [Fact]
@@ -60,22 +60,20 @@ public sealed class MoviesEffectsTests : IDisposable
 
         // Act
         _actionsSubject.OnNext(new LoadMovies());
-        await Task.Delay(100); // Ensure the async call completes
+        await Task.Delay(100).ConfigureAwait(true); // Ensure the async call completes
 
         // Assert
         _actualActions.Should().ContainSingle(); // One for failure
-        _actualActions[0].Should().BeOfType<LoadMoviesFailure>()
-            .Which.Error.Message.Should().Be(exceptionMessage);
+        _actualActions[0].Should().BeOfType<LoadMoviesFailure>().Which.Error.Message.Should().Be(exceptionMessage);
     }
 
     private void SetupRootState()
     {
-        var dictionary = new Dictionary<string, object>
-        {
-            { "movies", new List<Movie>() }
-        };
+        ImmutableSortedDictionary<string, object> dictionary = ImmutableSortedDictionary
+            .Create<string, object>()
+            .Add("movies", new List<Movie>());
 
-        var rootState = new RootState(dictionary.ToImmutableSortedDictionary());
+        RootState rootState = new(dictionary);
         _rootStateSubject.OnNext(rootState);
     }
 }

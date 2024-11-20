@@ -12,8 +12,7 @@ namespace Ducky.Blazor;
 /// A base component class for Ducky components that manages state and dispatches actions.
 /// </summary>
 /// <typeparam name="TState">The type of the state managed by this component.</typeparam>
-public abstract class DuckyComponent<TState>
-    : ComponentBase, IDisposable
+public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
     where TState : notnull
 {
     private IDisposable? _subscription;
@@ -50,7 +49,7 @@ public abstract class DuckyComponent<TState>
     {
         get
         {
-            var stateAsync = StateObservable.FirstAsync();
+            Task<TState> stateAsync = StateObservable.FirstAsync();
             stateAsync.Wait();
             return stateAsync.Result;
         }
@@ -60,7 +59,7 @@ public abstract class DuckyComponent<TState>
     /// Gets an observable stream of the state managed by this component.
     /// </summary>
     private Observable<TState> StateObservable
-        => typeof(TState) == typeof(RootState)
+        => (typeof(TState) == typeof(RootState))
             ? Store.RootStateObservable
                 .Cast<IRootState, TState>()
             : Store.RootStateObservable
@@ -83,17 +82,19 @@ public abstract class DuckyComponent<TState>
     /// <param name="disposing">If true, the method has been called directly or indirectly by a user's code. Managed and unmanaged resources can be disposed. If false, the method has been called by the runtime from inside the finalizer and only unmanaged resources can be disposed.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                // Dispose managed resources.
-                _subscription?.Dispose();
-            }
-
-            // Note disposing has been done.
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            // Dispose managed resources.
+            _subscription?.Dispose();
+        }
+
+        // Note disposing has been done.
+        _disposed = true;
     }
 
     /// <summary>
@@ -111,7 +112,7 @@ public abstract class DuckyComponent<TState>
 
         base.OnInitialized();
 
-        if (_subscription == null)
+        if (_subscription is null)
         {
             Logger.SubscribingToStateObservable(ComponentName);
             _subscription = StateObservable.Subscribe(OnNext);

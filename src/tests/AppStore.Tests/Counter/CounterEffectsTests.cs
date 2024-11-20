@@ -57,9 +57,12 @@ public sealed class CounterEffectsTests : IDisposable
 
     private void SetupRootState(int counterValue)
     {
-        var dictionary = new Dictionary<string, object> { { "counter", counterValue } };
+        ImmutableSortedDictionary<string, object> dictionary = ImmutableSortedDictionary
+            .Create<string, object>()
+            .Add("counter", counterValue);
 
-        var rootState = new RootState(dictionary.ToImmutableSortedDictionary());
+        RootState rootState = new(dictionary);
+
         _rootStateSubject.OnNext(rootState);
     }
 }

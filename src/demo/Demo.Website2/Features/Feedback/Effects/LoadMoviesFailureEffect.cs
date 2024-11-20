@@ -20,7 +20,7 @@ public class LoadMoviesFailureEffect(ISnackbar snackbar) : Effect
             .Do(action => snackbar.Add(action.Error.Message, Severity.Error))
             .Select(IAction (action) =>
             {
-                var notification = new ExceptionNotification(action.Error);
+                ExceptionNotification notification = new(action.Error);
                 return new AddNotification(notification);
             });
     }

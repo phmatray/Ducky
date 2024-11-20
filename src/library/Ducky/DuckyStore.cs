@@ -10,11 +10,10 @@ namespace Ducky;
 /// <summary>
 /// Represents a store that manages application state and handles actions.
 /// </summary>
-public sealed class DuckyStore
-    : IStore, IDisposable
+public sealed class DuckyStore : IStore, IDisposable
 {
-    private static readonly ILogger<DuckyStore>? _logger
-        = LoggerProvider.CreateLogger<DuckyStore>();
+    private static readonly ILogger<DuckyStore>? Logger =
+        LoggerProvider.CreateLogger<DuckyStore>();
 
     private readonly IDispatcher _dispatcher;
     private readonly CompositeDisposable _subscriptions = [];
@@ -32,7 +31,7 @@ public sealed class DuckyStore
         _dispatcher = dispatcher;
         _dispatcher.Dispatch(new StoreInitialized());
 
-        _logger?.StoreInitialized();
+        Logger?.StoreInitialized();
     }
 
     /// <inheritdoc/>
@@ -52,7 +51,7 @@ public sealed class DuckyStore
             .Subscribe(slice.OnDispatch)
             .AddTo(_subscriptions);
 
-        _logger?.SliceAdded(slice.GetKey());
+        Logger?.SliceAdded(slice.GetKey());
     }
 
     /// <inheritdoc/>
@@ -60,7 +59,7 @@ public sealed class DuckyStore
     {
         ArgumentNullException.ThrowIfNull(slices);
 
-        foreach (var slice in slices)
+        foreach (ISlice slice in slices)
         {
             AddSlice(slice);
         }
@@ -76,7 +75,7 @@ public sealed class DuckyStore
             .Subscribe(_dispatcher.Dispatch)
             .AddTo(_subscriptions);
 
-        _logger?.EffectAdded(effect.GetKey(), effect.GetAssemblyName());
+        Logger?.EffectAdded(effect.GetKey(), effect.GetAssemblyName());
     }
 
     /// <inheritdoc/>
@@ -84,7 +83,7 @@ public sealed class DuckyStore
     {
         ArgumentNullException.ThrowIfNull(effects);
 
-        foreach (var effect in effects)
+        foreach (IEffect effect in effects)
         {
             AddEffect(effect);
         }
@@ -93,14 +92,16 @@ public sealed class DuckyStore
     /// <inheritdoc/>
     public void Dispose()
     {
-        if (!_isDisposed)
+        if (_isDisposed)
         {
-            _logger?.DisposingStore();
-
-            _subscriptions.Dispose();
-            _slices.Dispose();
-
-            _isDisposed = true;
+            return;
         }
+
+        Logger?.DisposingStore();
+
+        _subscriptions.Dispose();
+        _slices.Dispose();
+
+        _isDisposed = true;
     }
 }

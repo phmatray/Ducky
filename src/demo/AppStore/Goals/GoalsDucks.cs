@@ -13,7 +13,7 @@ public record GoalState
     // Selectors
     public bool SelectIsGoalMet(string goalKey)
     {
-        return Goals.TryGetValue(goalKey, out var isMet) && isMet;
+        return Goals.TryGetValue(goalKey, out bool isMet) && isMet;
     }
 }
 
@@ -36,18 +36,12 @@ public record GoalsReducers : SliceReducers<GoalState>
 
     public override GoalState GetInitialState()
     {
-        return new GoalState
-        {
-            Goals = ImmutableSortedDictionary<string, bool>.Empty
-        };
+        return new() { Goals = ImmutableSortedDictionary<string, bool>.Empty };
     }
 
     private static GoalState ReduceSetGoalMet(GoalState state, SetGoalMet action)
     {
-        return new GoalState
-        {
-            Goals = state.Goals.SetItem(action.GoalKey, true)
-        };
+        return new() { Goals = state.Goals.SetItem(action.GoalKey, true) };
     }
 }
 

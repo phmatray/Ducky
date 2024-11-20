@@ -12,8 +12,8 @@ public class DuckyStoreTests
     public void Store_Should_Initialize_With_Default_State()
     {
         // Act
-        var observable = _sut.RootStateObservable;
-        var rootState = observable.FirstSync();
+        ReadOnlyReactiveProperty<IRootState> observable = _sut.RootStateObservable;
+        IRootState rootState = observable.FirstSync();
 
         // Assert
         rootState.Should().NotBeNull();
@@ -24,15 +24,15 @@ public class DuckyStoreTests
     public void Store_Should_Add_Slice_And_Propagate_State_Changes()
     {
         // Arrange
-        var counterSlice = new TestCounterReducers();
-        var sliceStateObs = _sut.RootStateObservable
+        TestCounterReducers counterSlice = new();
+        Observable<int> sliceStateObs = _sut.RootStateObservable
             .Select(state => state.GetSliceState<int>("test-counter"));
 
         _sut.AddSlice(counterSlice);
 
         // Act
         counterSlice.OnDispatch(new TestIncrementAction());
-        var updatedState = sliceStateObs.FirstSync();
+        int updatedState = sliceStateObs.FirstSync();
 
         // Assert
         updatedState.Should().Be(11);

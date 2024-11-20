@@ -28,7 +28,7 @@ public class RootStateSerializerTests
     public void Serialize_Should_Work_Correctly()
     {
         // Act
-        var json = _sut.Serialize(_rootState);
+        string json = _sut.Serialize(_rootState);
 
         // Assert
         json.Should().BeEquivalentTo(JsonString);
@@ -38,7 +38,7 @@ public class RootStateSerializerTests
     public void Deserialize_Should_Work_Correctly()
     {
         // Act
-        var deserializedState = _sut.Deserialize(JsonString);
+        IRootState deserializedState = _sut.Deserialize(JsonString);
 
         // Assert
         deserializedState.ContainsKey(Key).Should().BeTrue();
@@ -49,8 +49,8 @@ public class RootStateSerializerTests
     public void SerializeAndDeserialize_Should_Work_Correctly()
     {
         // Act
-        var json = _sut.Serialize(_rootState);
-        var deserializedState = _sut.Deserialize(json);
+        string json = _sut.Serialize(_rootState);
+        IRootState deserializedState = _sut.Deserialize(json);
 
         // Assert
         deserializedState.ContainsKey(Key).Should().BeTrue();
@@ -61,13 +61,13 @@ public class RootStateSerializerTests
     public void SaveAndLoadState_Should_Persist_State_Correctly()
     {
         // Arrange
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         try
         {
             // Act
             _sut.SaveToFile(_rootState, filePath);
-            var loadedState = _sut.LoadFromFile(filePath);
+            IRootState loadedState = _sut.LoadFromFile(filePath);
 
             // Assert
             loadedState.ContainsKey(Key).Should().BeTrue();
