@@ -9,6 +9,7 @@ public sealed class MoviesReducersTests : IDisposable
     private const string Key = "movies";
 
     private readonly MoviesReducers _sut = new();
+
     private readonly MoviesState _initialState = new()
     {
         Movies = ImmutableDictionary<int, Movie>.Empty,

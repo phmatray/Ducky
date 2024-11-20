@@ -24,10 +24,10 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     public ImmutableDictionary<TKey, TEntity> ById { get; init; } = ImmutableDictionary<TKey, TEntity>.Empty;
 
     /// <summary>
-    /// Gets the list of entity IDs.
+    /// Gets the array of entity IDs.
     /// </summary>
-    public ImmutableList<TKey> AllIds
-        => ById.Keys.ToImmutableList();
+    public ImmutableArray<TKey> AllIds
+        => [..ById.Keys];
 
     /// <summary>
     /// Indexer to get an entity by its key.
@@ -42,7 +42,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// </summary>
     /// <param name="entities">The entities to create the state with.</param>
     /// <returns>A new state with the entities.</returns>
-    public static TState Create(ImmutableList<TEntity> entities)
+    public static TState Create(in ImmutableArray<TEntity> entities)
     {
         return new() { ById = entities.ToImmutableDictionary(entity => entity.Id) };
     }
@@ -50,22 +50,20 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <summary>
     /// Selects entities.
     /// </summary>
-    /// <returns>An immutable list of entities.</returns>
-    public ImmutableList<TEntity> SelectImmutableList()
+    /// <returns>An immutable array of entities.</returns>
+    public ImmutableArray<TEntity> SelectImmutableArray()
     {
-        return ById.Values.ToImmutableList();
+        return [..ById.Values];
     }
 
     /// <summary>
     /// Selects entities based on a predicate.
     /// </summary>
     /// <param name="predicate">The predicate to filter entities.</param>
-    /// <returns>An immutable list of entities that match the predicate.</returns>
-    public ImmutableList<TEntity> SelectImmutableList(Func<TEntity, bool> predicate)
+    /// <returns>An immutable array of entities that match the predicate.</returns>
+    public ImmutableArray<TEntity> SelectImmutableArray(Func<TEntity, bool> predicate)
     {
-        return ById.Values
-            .Where(predicate)
-            .ToImmutableList();
+        return [..ById.Values.Where(predicate)];
     }
 
     /// <inheritdoc />
@@ -76,14 +74,14 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     }
 
     /// <inheritdoc />
-    public TState AddMany(IEnumerable<TEntity> entities)
+    public TState AddMany(params IEnumerable<TEntity> entities)
     {
         ArgumentNullException.ThrowIfNull(entities);
         return CreateWith(ById.AddRange(entities.ToImmutableDictionary(entity => entity.Id)));
     }
 
     /// <inheritdoc />
-    public TState SetAll(IEnumerable<TEntity> entities)
+    public TState SetAll(params IEnumerable<TEntity> entities)
     {
         ArgumentNullException.ThrowIfNull(entities);
         return CreateWith(entities.ToImmutableDictionary(entity => entity.Id));
@@ -97,7 +95,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     }
 
     /// <inheritdoc />
-    public TState SetMany(IEnumerable<TEntity> entities)
+    public TState SetMany(params IEnumerable<TEntity> entities)
     {
         ArgumentNullException.ThrowIfNull(entities);
         return CreateWith(ById.SetItems(entities.ToImmutableDictionary(entity => entity.Id)));
@@ -114,7 +112,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     }
 
     /// <inheritdoc />
-    public TState RemoveMany(IEnumerable<TKey> keys)
+    public TState RemoveMany(params IEnumerable<TKey> keys)
     {
         ArgumentNullException.ThrowIfNull(keys);
         return CreateWith(ById.RemoveRange(keys));
@@ -197,7 +195,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     }
 
     /// <inheritdoc />
-    public TState UpsertMany(IEnumerable<TEntity> entities)
+    public TState UpsertMany(params IEnumerable<TEntity> entities)
     {
         ArgumentNullException.ThrowIfNull(entities);
         return CreateWith(ById.AddRange(entities.ToImmutableDictionary(entity => entity.Id)));

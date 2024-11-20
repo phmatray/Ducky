@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 global using System.Collections.Immutable;
+global using System.Diagnostics.CodeAnalysis;
 global using AppStore.Counter;
 global using AppStore.Layout;
 global using AppStore.Message;

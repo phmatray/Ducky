@@ -4,6 +4,7 @@
 
 namespace AppStore.Tests.Movies;
 
+[SuppressMessage("Roslynator", "RCS1046:Asynchronous method name should end with \'Async\'")]
 public sealed class MoviesEffectsTests : IDisposable
 {
     private readonly CompositeDisposable _disposables = [];
@@ -68,12 +69,11 @@ public sealed class MoviesEffectsTests : IDisposable
 
     private void SetupRootState()
     {
-        var dictionary = new Dictionary<string, object>
-        {
-            { "movies", new List<Movie>() }
-        };
+        ImmutableSortedDictionary<string, object> dictionary = ImmutableSortedDictionary
+            .Create<string, object>()
+            .Add("movies", new List<Movie>());
 
-        RootState rootState = new(dictionary.ToImmutableSortedDictionary());
+        RootState rootState = new(dictionary);
         _rootStateSubject.OnNext(rootState);
     }
 }

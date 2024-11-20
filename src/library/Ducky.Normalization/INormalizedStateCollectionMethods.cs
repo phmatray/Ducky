@@ -29,7 +29,7 @@ public interface INormalizedStateCollectionMethods<in TKey, TEntity, out TState>
     /// <param name="entities">The entities to add.</param>
     /// <returns>The new state with the entities added.</returns>
     /// <exception cref="ArgumentNullException">The entities collection must not be null.</exception>
-    TState AddMany(IEnumerable<TEntity> entities);
+    TState AddMany(params IEnumerable<TEntity> entities);
 
     /// <summary>
     /// Replaces the current collection with the provided collection.
@@ -37,7 +37,7 @@ public interface INormalizedStateCollectionMethods<in TKey, TEntity, out TState>
     /// <param name="entities">The entities to set.</param>
     /// <returns>The new state with the entities set.</returns>
     /// <exception cref="ArgumentNullException">The entities collection must not be null.</exception>
-    TState SetAll(IEnumerable<TEntity> entities);
+    TState SetAll(params IEnumerable<TEntity> entities);
 
     /// <summary>
     /// Adds or replaces one entity in the collection.
@@ -53,7 +53,7 @@ public interface INormalizedStateCollectionMethods<in TKey, TEntity, out TState>
     /// <param name="entities">The entities to set.</param>
     /// <returns>The new state with the entities set.</returns>
     /// <exception cref="ArgumentNullException">The entities collection must not be null.</exception>
-    TState SetMany(IEnumerable<TEntity> entities);
+    TState SetMany(params IEnumerable<TEntity> entities);
 
     /// <summary>
     /// Removes one entity from the collection.
@@ -69,7 +69,7 @@ public interface INormalizedStateCollectionMethods<in TKey, TEntity, out TState>
     /// <param name="keys">The keys of the entities to remove.</param>
     /// <returns>The new state with the entities removed.</returns>
     /// <exception cref="ArgumentNullException">The keys collection must not be null.</exception>
-    TState RemoveMany(IEnumerable<TKey> keys);
+    TState RemoveMany(params IEnumerable<TKey> keys);
 
     /// <summary>
     /// Removes multiple entities from the collection by a predicate.
@@ -135,7 +135,7 @@ public interface INormalizedStateCollectionMethods<in TKey, TEntity, out TState>
     /// <param name="entities">The entities to upsert.</param>
     /// <returns>The new state with the entities upserted.</returns>
     /// <exception cref="ArgumentNullException">The entities collection must not be null.</exception>
-    TState UpsertMany(IEnumerable<TEntity> entities);
+    TState UpsertMany(params IEnumerable<TEntity> entities);
 
     /// <summary>
     /// Updates one entity in the collection by defining a map function.

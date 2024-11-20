@@ -52,10 +52,7 @@ public record MessageReducers : SliceReducers<MessageState>
 
     public override MessageState GetInitialState()
     {
-        return new()
-        {
-            Message = "Hello, Blazor!"
-        };
+        return new() { Message = "Hello, Blazor!" };
     }
 }
 

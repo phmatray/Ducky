@@ -8,19 +8,19 @@ namespace AppStore.Products;
 
 public record ProductState : NormalizedState<Guid, Product, ProductState>
 {
-    private readonly Func<ProductState, ImmutableList<Product>> _selectElectronics;
-    private readonly Func<ProductState, ImmutableList<Product>> _selectClothing;
+    private readonly Func<ProductState, ImmutableArray<Product>> _selectElectronics;
+    private readonly Func<ProductState, ImmutableArray<Product>> _selectClothing;
     private readonly Func<ProductState, decimal> _selectTotalPriceOfElectronics;
     private readonly Func<ProductState, decimal> _selectTotalPriceOfClothing;
 
     public ProductState()
     {
-        _selectElectronics = MemoizedSelector.Create<ProductState, ImmutableList<Product>>(
-            state => state.SelectImmutableList(product => product.Category == "Electronics"),
+        _selectElectronics = MemoizedSelector.Create<ProductState, ImmutableArray<Product>>(
+            state => state.SelectImmutableArray(product => product.Category == "Electronics"),
             state => state.ById);
 
-        _selectClothing = MemoizedSelector.Create<ProductState, ImmutableList<Product>>(
-            state => state.SelectImmutableList(product => product.Category == "Clothing"),
+        _selectClothing = MemoizedSelector.Create<ProductState, ImmutableArray<Product>>(
+            state => state.SelectImmutableArray(product => product.Category == "Clothing"),
             state => state.ById);
 
         _selectTotalPriceOfElectronics = MemoizedSelector.Compose(
@@ -35,12 +35,12 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
     }
 
     // Memoized Selectors
-    public ImmutableList<Product> SelectElectronics()
+    public ImmutableArray<Product> SelectElectronics()
     {
         return _selectElectronics(this);
     }
 
-    public ImmutableList<Product> SelectClothing()
+    public ImmutableArray<Product> SelectClothing()
     {
         return _selectClothing(this);
     }

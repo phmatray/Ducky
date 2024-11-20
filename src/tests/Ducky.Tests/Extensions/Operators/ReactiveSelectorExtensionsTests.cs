@@ -2,8 +2,11 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Ducky.Tests.Extensions.Operators;
 
+[SuppressMessage("Roslynator", "RCS1046:Asynchronous method name should end with \'Async\'")]
 public class ReactiveSelectorExtensionsTests
 {
     private static readonly int[] SourceArray = [1, 2, 3];

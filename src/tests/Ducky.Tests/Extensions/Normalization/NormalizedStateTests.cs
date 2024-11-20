@@ -111,14 +111,14 @@ public class NormalizedStateTests
         SampleGuidState state = new SampleGuidState().SetMany([entity1, entity2]);
 
         // Act
-        ImmutableList<Guid> allIds = state.AllIds;
+        ImmutableArray<Guid> allIds = state.AllIds;
 
         // Assert
         allIds.Should().Contain([entity1.Id, entity2.Id]);
     }
 
     [Fact]
-    public void SelectImmutableList_ShouldReturnAllEntities()
+    public void SelectImmutableArray_ShouldReturnAllEntities()
     {
         // Arrange
         SampleGuidEntity entity1 = new() { Id = Guid.NewGuid(), Name = "Entity 1" };
@@ -126,14 +126,14 @@ public class NormalizedStateTests
         SampleGuidState state = new SampleGuidState().SetMany([entity1, entity2]);
 
         // Act
-        ImmutableList<SampleGuidEntity> entities = state.SelectImmutableList();
+        ImmutableArray<SampleGuidEntity> entities = state.SelectImmutableArray();
 
         // Assert
         entities.Should().Contain([entity1, entity2]);
     }
 
     [Fact]
-    public void SelectImmutableList_ShouldReturnEntitiesMatchingPredicate()
+    public void SelectImmutableArray_ShouldReturnEntitiesMatchingPredicate()
     {
         // Arrange
         SampleGuidState state = new SampleGuidState().SetMany([
@@ -143,7 +143,7 @@ public class NormalizedStateTests
         ]);
 
         // Act
-        ImmutableList<SampleGuidEntity> result = state.SelectImmutableList(e => e.Name.Contains("Entity"));
+        ImmutableArray<SampleGuidEntity> result = state.SelectImmutableArray(e => e.Name.Contains("Entity"));
 
         // Assert
         result.Should().HaveCount(2);
@@ -208,7 +208,7 @@ public class NormalizedStateTests
         // Arrange
         SampleGuidEntity entity1 = new() { Id = Guid.NewGuid(), Name = "Entity 1" };
         SampleGuidEntity entity2 = new() { Id = Guid.NewGuid(), Name = "Entity 2" };
-        ImmutableList<SampleGuidEntity> entities = ImmutableList.Create(entity1, entity2);
+        ImmutableArray<SampleGuidEntity> entities = [entity1, entity2];
 
         // Act
         SampleGuidState state = SampleGuidState.Create(entities);

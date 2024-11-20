@@ -164,7 +164,7 @@ dotnet_diagnostic.rcs0011.severity = warning
 # Options: roslynator_blank_line_between_single_line_accessors
 
 # Add blank line between single-line declarations
-dotnet_diagnostic.rcs0012.severity = warning
+dotnet_diagnostic.rcs0012.severity = none
 
 # Add blank line between single-line declarations of different kind
 dotnet_diagnostic.rcs0013.severity = warning
@@ -373,7 +373,7 @@ dotnet_diagnostic.rcs1044.severity = error
 dotnet_diagnostic.rcs1046.severity = warning
 
 # Non-asynchronous method name should not end with 'Async'
-dotnet_diagnostic.rcs1047.severity = suggestion
+dotnet_diagnostic.rcs1047.severity = warning
 
 # Use lambda expression instead of anonymous method
 dotnet_diagnostic.rcs1048.severity = suggestion
@@ -448,13 +448,13 @@ dotnet_diagnostic.rcs1080.severity = warning
 dotnet_diagnostic.rcs1081.severity = warning
 
 # Use coalesce expression instead of conditional expression
-dotnet_diagnostic.rcs1084.severity = suggestion
+dotnet_diagnostic.rcs1084.severity = warning
 
 # Use auto-implemented property
 dotnet_diagnostic.rcs1085.severity = suggestion
 
 # Use --/++ operator instead of assignment
-dotnet_diagnostic.rcs1089.severity = suggestion
+dotnet_diagnostic.rcs1089.severity = warning
 
 # Add/remove 'ConfigureAwait(false)' call
 dotnet_diagnostic.rcs1090.severity = warning

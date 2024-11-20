@@ -9,6 +9,7 @@ public sealed class LayoutReducersTests : IDisposable
     private const string Key = "layout";
 
     private readonly LayoutReducers _sut = new();
+
     private readonly LayoutState _initialState = new()
     {
         Title = "Ducky",

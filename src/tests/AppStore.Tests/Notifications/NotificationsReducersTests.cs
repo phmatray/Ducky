@@ -12,12 +12,12 @@ public sealed class NotificationsReducersTests : IDisposable
 
     private readonly NotificationsState _initialState = new()
     {
-        Notifications =
-        [
+        Notifications = new ImmutableArray<Notification>
+        {
             new SuccessNotification("Welcome to Ducky!"),
             new WarningNotification("This is a warning."),
             new ErrorNotification("This is an error.")
-        ]
+        }
     };
 
     private bool _disposed;

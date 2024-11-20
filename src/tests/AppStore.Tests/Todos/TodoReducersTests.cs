@@ -71,7 +71,7 @@ public sealed class TodoReducersTests : IDisposable
         TodoState newState = _sut.Reduce(state, new CreateTodo(newTitle));
 
         // Assert
-        newState.SelectImmutableList().Should().ContainSingle(todo => todo.Title == newTitle && !todo.IsCompleted);
+        newState.SelectImmutableArray().Should().ContainSingle(todo => todo.Title == newTitle && !todo.IsCompleted);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public sealed class TodoReducersTests : IDisposable
         TodoState newState = _sut.Reduce(state, new DeleteTodo(todoItem.Id));
 
         // Assert
-        newState.SelectImmutableList().Should().NotContain(todo => todo.Id == todoItem.Id);
+        newState.SelectImmutableArray().Should().NotContain(todo => todo.Id == todoItem.Id);
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public sealed class TodoReducersTests : IDisposable
         TodoState state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
-        ImmutableList<TodoItem> activeTodos = state.SelectActiveTodos();
+        ImmutableArray<TodoItem> activeTodos = state.SelectActiveTodos();
 
         // Assert
         activeTodos.Should().ContainSingle(todo => todo.Id == activeTodo.Id);
@@ -142,7 +142,7 @@ public sealed class TodoReducersTests : IDisposable
         TodoState state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
-        ImmutableList<TodoItem> completedTodos = state.SelectCompletedTodos();
+        ImmutableArray<TodoItem> completedTodos = state.SelectCompletedTodos();
 
         // Assert
         completedTodos.Should().ContainSingle(todo => todo.Id == completedTodo.Id);

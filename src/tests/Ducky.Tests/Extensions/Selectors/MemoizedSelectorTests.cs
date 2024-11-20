@@ -72,7 +72,7 @@ public class MemoizedSelectorTests
         result1.Should().Be(10);
         result2.Should().Be(20);
         result3.Should().Be(10);
-        callCount.Should().Be(2, "because the selector function should only be called once for each unique input, and cached results should be used");
+        callCount.Should().Be(2, "because the selector function should be called for each unique input with cached results");
         return;
 
         int Selector(int x)
@@ -103,7 +103,7 @@ public class MemoizedSelectorTests
         int Selector(TodoState s)
         {
             callCount++;
-            return s.SelectCompletedTodos().Count;
+            return s.SelectCompletedTodos().Length;
         }
     }
 
@@ -130,7 +130,7 @@ public class MemoizedSelectorTests
         int Selector(TodoState s)
         {
             callCount++;
-            return s.SelectCompletedTodos().Count;
+            return s.SelectCompletedTodos().Length;
         }
     }
 
@@ -140,13 +140,13 @@ public class MemoizedSelectorTests
         // Arrange
         TodoState state = new();
 
-        Func<TodoState, ImmutableList<TodoItem>> selector1 = MemoizedSelector.Create<TodoState, ImmutableList<TodoItem>>(
-            s => s.SelectImmutableList(todo => todo.IsCompleted),
+        Func<TodoState, ImmutableArray<TodoItem>> selector1 = MemoizedSelector.Create<TodoState, ImmutableArray<TodoItem>>(
+            s => s.SelectImmutableArray(todo => todo.IsCompleted),
             s => s.ById);
 
         Func<TodoState, int> selector2 = MemoizedSelector.Compose(
             selector1,
-            todos => todos.Count,
+            todos => todos.Length,
             s => s.ById);
 
         // Act

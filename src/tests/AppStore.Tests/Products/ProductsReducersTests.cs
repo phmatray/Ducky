@@ -9,6 +9,7 @@ public sealed class ProductsReducersTests : IDisposable
     private const string Key = "products";
 
     private readonly ProductsReducers _sut = new();
+
     private readonly ProductState _initialState = ProductState.Create([
         new Product(SampleIds.Id1, "iPhone 12", 799.99m, "Electronics"),
         new Product(SampleIds.Id2, "MacBook Pro", 1299.99m, "Electronics"),
@@ -71,8 +72,8 @@ public sealed class ProductsReducersTests : IDisposable
         ProductState state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.SelectImmutableList().Should().HaveCount(7);
-        state.SelectImmutableList().Should().Contain(product);
+        state.SelectImmutableArray().Should().HaveCount(7);
+        state.SelectImmutableArray().Should().Contain(product);
     }
 
     [Fact]
@@ -85,15 +86,15 @@ public sealed class ProductsReducersTests : IDisposable
         ProductState state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.SelectImmutableList().Should().HaveCount(5);
-        state.SelectImmutableList().Should().NotContain(product => product.Id == SampleIds.Id1);
+        state.SelectImmutableArray().Should().HaveCount(5);
+        state.SelectImmutableArray().Should().NotContain(product => product.Id == SampleIds.Id1);
     }
 
     [Fact]
     public void SelectElectronics_Should_Return_Electronics()
     {
         // Act
-        ImmutableList<Product> electronics = _sut.GetInitialState().SelectElectronics();
+        ImmutableArray<Product> electronics = _sut.GetInitialState().SelectElectronics();
 
         // Assert
         electronics.Should().HaveCount(3);
@@ -104,7 +105,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void SelectClothing_Should_Return_Clothing()
     {
         // Act
-        ImmutableList<Product>? clothing = _sut.GetInitialState().SelectClothing();
+        ImmutableArray<Product> clothing = _sut.GetInitialState().SelectClothing();
 
         // Assert
         clothing.Should().HaveCount(3);

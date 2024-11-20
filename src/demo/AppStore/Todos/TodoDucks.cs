@@ -10,14 +10,14 @@ public record TodoState
     : NormalizedState<Guid, TodoItem, TodoState>
 {
     // Selectors
-    public ImmutableList<TodoItem> SelectCompletedTodos()
+    public ImmutableArray<TodoItem> SelectCompletedTodos()
     {
-        return SelectImmutableList(todo => todo.IsCompleted);
+        return SelectImmutableArray(todo => todo.IsCompleted);
     }
 
     public int SelectCompletedTodosCount()
     {
-        return SelectCompletedTodos().Count;
+        return SelectCompletedTodos().Length;
     }
 
     public bool SelectHasCompletedTodos()
@@ -25,14 +25,14 @@ public record TodoState
         return !SelectCompletedTodos().IsEmpty;
     }
 
-    public ImmutableList<TodoItem> SelectActiveTodos()
+    public ImmutableArray<TodoItem> SelectActiveTodos()
     {
-        return SelectImmutableList(todo => !todo.IsCompleted);
+        return SelectImmutableArray(todo => !todo.IsCompleted);
     }
 
     public int SelectActiveTodosCount()
     {
-        return SelectActiveTodos().Count;
+        return SelectActiveTodos().Length;
     }
 
     public bool SelectHasActiveTodos()

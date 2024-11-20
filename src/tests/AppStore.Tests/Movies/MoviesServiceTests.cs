@@ -4,6 +4,7 @@
 
 namespace AppStore.Tests.Movies;
 
+[SuppressMessage("Roslynator", "RCS1046:Asynchronous method name should end with \'Async\'")]
 public class MoviesServiceTests
 {
     private readonly MoviesService _moviesService = new();
