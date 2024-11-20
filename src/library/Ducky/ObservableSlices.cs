@@ -71,7 +71,7 @@ public sealed class ObservableSlices : IDisposable
     /// <returns>A new <see cref="RootState"/> object.</returns>
     private RootState CreateRootState()
     {
-        var state = _slices.ToImmutableSortedDictionary(
+        ImmutableSortedDictionary<string, object> state = _slices.ToImmutableSortedDictionary(
             kvp => kvp.Key,
             kvp => kvp.Value.GetState());
 

@@ -58,7 +58,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void MovieReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<MoviesState, IAction, MoviesState>>? reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);
@@ -136,7 +136,7 @@ public sealed class MoviesReducersTests : IDisposable
         };
 
         // Act
-        var sortedMovies = state.SelectMoviesByYear().Values;
+        IEnumerable<Movie>? sortedMovies = state.SelectMoviesByYear().Values;
 
         // Assert
         sortedMovies.Should().BeInDescendingOrder(movie => movie.Year);

@@ -54,7 +54,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void ProductsReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<ProductState, IAction, ProductState>>? reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(2);
@@ -93,7 +93,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void SelectElectronics_Should_Return_Electronics()
     {
         // Act
-        var electronics = _sut.GetInitialState().SelectElectronics();
+        ImmutableList<Product>? electronics = _sut.GetInitialState().SelectElectronics();
 
         // Assert
         electronics.Should().HaveCount(3);
@@ -104,7 +104,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void SelectClothing_Should_Return_Clothing()
     {
         // Act
-        var clothing = _sut.GetInitialState().SelectClothing();
+        ImmutableList<Product>? clothing = _sut.GetInitialState().SelectClothing();
 
         // Assert
         clothing.Should().HaveCount(3);

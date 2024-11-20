@@ -24,7 +24,7 @@ public sealed class LayoutReducersTests : IDisposable
     public void LayoutReducers_Should_Return_Initial_State()
     {
         // Act
-        var initialState = _sut.GetInitialState();
+        LayoutState initialState = _sut.GetInitialState();
 
         // Assert
         initialState.Title.Should().BeEquivalentTo(_initialState.Title);
@@ -38,7 +38,7 @@ public sealed class LayoutReducersTests : IDisposable
     public void LayoutReducers_Should_Return_Key()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
@@ -48,7 +48,7 @@ public sealed class LayoutReducersTests : IDisposable
     public void LayoutReducers_Should_Return_Correct_State_Type()
     {
         // Act
-        var stateType = _sut.GetStateType();
+        Type stateType = _sut.GetStateType();
 
         // Assert
         stateType.Should().Be<LayoutState>();
@@ -58,7 +58,7 @@ public sealed class LayoutReducersTests : IDisposable
     public void LayoutReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<LayoutState, IAction, LayoutState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);
@@ -71,7 +71,7 @@ public sealed class LayoutReducersTests : IDisposable
         const string newTitle = "New Title";
 
         // Act
-        var newState = _sut.Reduce(_initialState, new SetTitle(newTitle));
+        LayoutState newState = _sut.Reduce(_initialState, new SetTitle(newTitle));
 
         // Assert
         newState.Title.Should().Be(newTitle);
@@ -81,10 +81,10 @@ public sealed class LayoutReducersTests : IDisposable
     public void SelectFullTitle_ShouldReturnCorrectFullTitle()
     {
         // Arrange
-        var version = DuckyVersioning.GetVersion();
+        Version version = DuckyVersioning.GetVersion();
 
         // Act
-        var fullTitle = _initialState.SelectFullTitle();
+        string fullTitle = _initialState.SelectFullTitle();
 
         // Assert
         fullTitle.Should().Be($"Ducky - {version}");
@@ -97,14 +97,16 @@ public sealed class LayoutReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

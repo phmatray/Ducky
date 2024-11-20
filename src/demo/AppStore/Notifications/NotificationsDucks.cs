@@ -91,7 +91,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
         return new NotificationsState
         {
             Notifications = state.Notifications
-                .Select(n => n.Id == action.NotificationId
+                .Select(n => (n.Id == action.NotificationId)
                     ? n with { IsRead = true }
                     : n)
                 .ToImmutableList()

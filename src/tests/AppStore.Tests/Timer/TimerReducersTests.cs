@@ -47,7 +47,7 @@ public sealed class TimerReducersTests : IDisposable
     public void TimerReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<TimerState, IAction, TimerState>>? reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);

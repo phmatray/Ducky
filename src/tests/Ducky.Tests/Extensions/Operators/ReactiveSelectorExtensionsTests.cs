@@ -6,13 +6,13 @@ namespace Ducky.Tests.Extensions.Operators;
 
 public class ReactiveSelectorExtensionsTests
 {
-    private static readonly int[] _sourceArray = [1, 2, 3];
+    private static readonly int[] SourceArray = [1, 2, 3];
 
     [Fact]
     public async Task SwitchSelect_ShouldSwitchToLatestObservable()
     {
         // Arrange
-        var input = _sourceArray.ToObservable();
+        var input = SourceArray.ToObservable();
 
         // Act
         var result = await input.SwitchSelect(Selector).ToArrayAsync();
@@ -33,7 +33,7 @@ public class ReactiveSelectorExtensionsTests
     public async Task ConcatSelect_ShouldConcatAllObservableSequences()
     {
         // Arrange
-        var input = _sourceArray.ToObservable();
+        var input = SourceArray.ToObservable();
 
         // Act
         var result = await input.ConcatSelect(Selector).ToArrayAsync();
@@ -51,7 +51,7 @@ public class ReactiveSelectorExtensionsTests
     public async Task MergeSelect_ShouldMergeAllObservableSequences()
     {
         // Arrange
-        var input = _sourceArray.ToObservable();
+        var input = SourceArray.ToObservable();
 
         // Act
         var result = await input.MergeSelect(Selector).ToArrayAsync();

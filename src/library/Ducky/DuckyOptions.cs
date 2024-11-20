@@ -24,8 +24,7 @@ public class DuckyOptions
 
     private static Assembly[] GetDefaultAssemblies()
     {
-        var entryAssembly =
-            Assembly.GetEntryAssembly()
+        Assembly entryAssembly = Assembly.GetEntryAssembly()
             ?? throw new InvalidOperationException("Unable to determine the entry assembly.");
 
         return [entryAssembly];
@@ -33,7 +32,7 @@ public class DuckyOptions
 
     private Assembly[] GetAssemblies()
     {
-        return AssemblyNames.Length == 0
+        return (AssemblyNames.Length == 0)
             ? GetDefaultAssemblies()
             : AssemblyNames.Select(Assembly.Load).ToArray();
     }

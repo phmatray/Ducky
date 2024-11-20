@@ -19,8 +19,8 @@ public static class DuckyVersioning
     /// <returns>The version of the Ducky library.</returns>
     public static Version GetVersion()
     {
-        var assembly = Assembly.GetExecutingAssembly();
-        var assemblyVersion = assembly.GetName().Version ?? new Version(DefaultVersion);
+        Assembly assembly = Assembly.GetExecutingAssembly();
+        Version assemblyVersion = assembly.GetName().Version ?? new Version(DefaultVersion);
         return assemblyVersion;
     }
 }

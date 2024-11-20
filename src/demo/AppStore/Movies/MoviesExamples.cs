@@ -2,8 +2,11 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace AppStore.Movies;
 
+[SuppressMessage("Roslynator", "RCS0056:A line is too long")]
 public static class MoviesExamples
 {
     public static readonly Movie Movie01 = new()

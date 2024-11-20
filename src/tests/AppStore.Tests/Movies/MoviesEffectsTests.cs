@@ -33,7 +33,7 @@ public sealed class MoviesEffectsTests : IDisposable
         // Arrange
         SetupRootState();
         List<Movie> movies = [MoviesExamples.Movies[0], MoviesExamples.Movies[1]];
-        var immutableMovies = ImmutableArray.CreateRange(movies);
+        ImmutableArray<Movie> immutableMovies = ImmutableArray.CreateRange(movies);
         _moviesServiceMock
             .Setup(service => service.GetMoviesAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None))
             .ReturnsAsync(new GetMoviesResponse(immutableMovies, movies.Count));
@@ -44,8 +44,7 @@ public sealed class MoviesEffectsTests : IDisposable
 
         // Assert
         _actualActions.Should().HaveCount(1);
-        _actualActions[0].Should().BeOfType<LoadMoviesSuccess>()
-            .Which.Movies.Should().BeEquivalentTo(movies);
+        _actualActions[0].Should().BeOfType<LoadMoviesSuccess>().Which.Movies.Should().BeEquivalentTo(movies);
     }
 
     [Fact]
@@ -64,8 +63,7 @@ public sealed class MoviesEffectsTests : IDisposable
 
         // Assert
         _actualActions.Should().ContainSingle(); // One for failure
-        _actualActions[0].Should().BeOfType<LoadMoviesFailure>()
-            .Which.Error.Message.Should().Be(exceptionMessage);
+        _actualActions[0].Should().BeOfType<LoadMoviesFailure>().Which.Error.Message.Should().Be(exceptionMessage);
     }
 
     private void SetupRootState()
@@ -75,7 +73,7 @@ public sealed class MoviesEffectsTests : IDisposable
             { "movies", new List<Movie>() }
         };
 
-        var rootState = new RootState(dictionary.ToImmutableSortedDictionary());
+        RootState rootState = new(dictionary.ToImmutableSortedDictionary());
         _rootStateSubject.OnNext(rootState);
     }
 }

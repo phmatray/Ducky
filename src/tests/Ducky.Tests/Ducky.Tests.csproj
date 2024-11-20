@@ -3,7 +3,6 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <NoWarn>IDE0005;SA0001;SA1600;CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

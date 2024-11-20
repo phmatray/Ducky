@@ -12,11 +12,11 @@ namespace Ducky;
 /// </summary>
 public sealed class RootStateSerializer : IRootStateSerializer
 {
-    private static readonly JsonSerializerOptions _options = new()
+    private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.KebabCaseLower,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
     /// <inheritdoc />
@@ -24,12 +24,12 @@ public sealed class RootStateSerializer : IRootStateSerializer
     {
         ArgumentNullException.ThrowIfNull(rootState);
 
-        var stateDictionary = rootState.GetStateDictionary();
+        ImmutableSortedDictionary<string, object> stateDictionary = rootState.GetStateDictionary();
         var typedDictionary = stateDictionary.ToDictionary(
             kvp => kvp.Key,
             kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value });
 
-        return JsonSerializer.Serialize(typedDictionary, _options);
+        return JsonSerializer.Serialize(typedDictionary, Options);
     }
 
     /// <inheritdoc />
@@ -38,12 +38,12 @@ public sealed class RootStateSerializer : IRootStateSerializer
         ArgumentNullException.ThrowIfNull(rootState);
         ArgumentNullException.ThrowIfNull(key);
 
-        var stateDictionary = rootState.GetStateDictionary();
+        ImmutableSortedDictionary<string, object> stateDictionary = rootState.GetStateDictionary();
         var typedDictionary = stateDictionary.ToDictionary(
             kvp => kvp.Key,
             kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value });
 
-        return JsonSerializer.Serialize(typedDictionary[key], _options);
+        return JsonSerializer.Serialize(typedDictionary[key], Options);
     }
 
     /// <inheritdoc />
@@ -51,28 +51,23 @@ public sealed class RootStateSerializer : IRootStateSerializer
     {
         ArgumentNullException.ThrowIfNull(json);
 
-        var typedDictionary =
-            JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(json, _options)
-            ?? [];
+        Dictionary<string, Dictionary<string, object>> typedDictionary =
+            JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(json, Options) ?? [];
 
-        var state = new Dictionary<string, object>();
+        Dictionary<string, object> state = [];
 
-        foreach (var kvp in typedDictionary)
+        foreach (KeyValuePair<string, Dictionary<string, object>> kvp in typedDictionary)
         {
-            var typeName =
-                kvp.Value["type"].ToString()
+            string typeName = kvp.Value["type"].ToString()
                 ?? throw new InvalidOperationException("Type not found.");
 
-            var type =
-                Type.GetType(typeName)
+            Type type = Type.GetType(typeName)
                 ?? throw new InvalidOperationException($"Type '{typeName}' not found.");
 
-            var valueJson =
-                kvp.Value["value"].ToString()
+            string valueJson = kvp.Value["value"].ToString()
                 ?? throw new InvalidOperationException("Value not found.");
 
-            var value =
-                JsonSerializer.Deserialize(valueJson, type, _options)
+            object value = JsonSerializer.Deserialize(valueJson, type, Options)
                 ?? throw new InvalidOperationException("Value not deserialized.");
 
             state[kvp.Key] = value;
@@ -100,7 +95,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
             throw new FileNotFoundException($"The file '{filePath}' does not exist.");
         }
 
-        var json = File.ReadAllText(filePath);
+        string json = File.ReadAllText(filePath);
         return Deserialize(json);
     }
 }

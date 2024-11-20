@@ -23,19 +23,19 @@ public static class MemoizedSelector
         params Func<TState, object>[] dependencies)
         where TState : notnull
     {
-        var cache = new Dictionary<TState, (TResult Result, object[] Dependencies)>();
+        Dictionary<TState, (TResult Result, object[] Dependencies)> cache = [];
 
         return state =>
         {
-            var currentDependencies = Array.ConvertAll(dependencies, dep => dep(state));
+            object[] currentDependencies = Array.ConvertAll(dependencies, dep => dep(state));
 
-            if (cache.TryGetValue(state, out var cacheEntry) &&
-                AreDependenciesEqual(cacheEntry.Dependencies, currentDependencies))
+            if (cache.TryGetValue(state, out (TResult Result, object[] Dependencies) cacheEntry)
+                && AreDependenciesEqual(cacheEntry.Dependencies, currentDependencies))
             {
                 return cacheEntry.Result;
             }
 
-            var result = selector(state);
+            TResult result = selector(state);
             cache[state] = (result, currentDependencies);
             return result;
         };
@@ -57,7 +57,7 @@ public static class MemoizedSelector
         params Func<TState, object>[] dependencies)
         where TState : notnull
     {
-        var memoizedIntermediate = Create(intermediateSelector, dependencies);
+        Func<TState, TIntermediate> memoizedIntermediate = Create(intermediateSelector, dependencies);
         return Create(state => finalSelector(memoizedIntermediate(state)), dependencies);
     }
 
@@ -70,6 +70,6 @@ public static class MemoizedSelector
     private static bool AreDependenciesEqual(object[] oldDeps, object[] newDeps)
     {
         return oldDeps.Length == newDeps.Length
-               && !oldDeps.Where((t, i) => !Equals(t, newDeps[i])).Any();
+            && !oldDeps.Where((t, i) => !Equals(t, newDeps[i])).Any();
     }
 }

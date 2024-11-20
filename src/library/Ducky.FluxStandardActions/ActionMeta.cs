@@ -16,6 +16,6 @@ public sealed record ActionMeta(DateTime TimeStamp)
     /// <returns>A new instance of the <see cref="ActionMeta"/> record.</returns>
     public static ActionMeta Create()
     {
-        return new ActionMeta(DateTime.UtcNow);
+        return new(DateTime.UtcNow);
     }
 }

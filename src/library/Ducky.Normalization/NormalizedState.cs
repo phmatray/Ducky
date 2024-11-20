@@ -44,10 +44,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <returns>A new state with the entities.</returns>
     public static TState Create(ImmutableList<TEntity> entities)
     {
-        return new TState
-        {
-            ById = entities.ToImmutableDictionary(entity => entity.Id)
-        };
+        return new() { ById = entities.ToImmutableDictionary(entity => entity.Id) };
     }
 
     /// <summary>
@@ -111,7 +108,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        return key is string
+        return (key is string)
             ? throw new DuckyException("The key cannot be empty.")
             : CreateWith(ById.Remove(key));
     }
@@ -142,7 +139,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(update);
 
-        var entity = GetByKey(key);
+        TEntity entity = GetByKey(key);
         update(entity);
         return CreateWith(ById.SetItem(key, entity));
     }
@@ -153,7 +150,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(update);
 
-        var entity = GetByKey(key);
+        TEntity entity = GetByKey(key);
         entity = update(entity);
         return CreateWith(ById.SetItem(key, entity));
     }
@@ -164,10 +161,10 @@ public abstract record NormalizedState<TKey, TEntity, TState>
         ArgumentNullException.ThrowIfNull(keys);
         ArgumentNullException.ThrowIfNull(update);
 
-        var byId = ById;
-        foreach (var key in keys)
+        ImmutableDictionary<TKey, TEntity> byId = ById;
+        foreach (TKey key in keys)
         {
-            var entity = GetByKey(key);
+            TEntity entity = GetByKey(key);
             update(entity);
             byId = byId.SetItem(key, entity);
         }
@@ -181,10 +178,10 @@ public abstract record NormalizedState<TKey, TEntity, TState>
         ArgumentNullException.ThrowIfNull(keys);
         ArgumentNullException.ThrowIfNull(update);
 
-        var byId = ById;
-        foreach (var key in keys)
+        ImmutableDictionary<TKey, TEntity> byId = ById;
+        foreach (TKey key in keys)
         {
-            var entity = GetByKey(key);
+            TEntity entity = GetByKey(key);
             entity = update(entity);
             byId = byId.SetItem(key, entity);
         }
@@ -230,7 +227,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        return key is string
+        return (key is string)
             ? throw new DuckyException("The key cannot be empty.")
             : ById.ContainsKey(key);
     }
@@ -245,7 +242,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        return ById.TryGetValue(key, out var value)
+        return (ById.TryGetValue(key, out TEntity? value))
             ? value
             : throw new DuckyException("The entity does not exist.");
     }
@@ -263,7 +260,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(entities);
 
-        var byId = strategy switch
+        ImmutableDictionary<TKey, TEntity> byId = strategy switch
         {
             MergeStrategy.FailIfDuplicate => MergeFailIfDuplicate(entities),
             MergeStrategy.Overwrite => ById.SetItems(entities),
@@ -275,7 +272,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
 
     private ImmutableDictionary<TKey, TEntity> MergeFailIfDuplicate(ImmutableDictionary<TKey, TEntity> entities)
     {
-        foreach (var kvp in entities.Where(kvp => ById.ContainsKey(kvp.Key)))
+        foreach (KeyValuePair<TKey, TEntity> kvp in entities.Where(kvp => ById.ContainsKey(kvp.Key)))
         {
             throw new DuckyException($"Duplicate entity with key '{kvp.Key}' found during merge.");
         }
@@ -286,6 +283,6 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     private TState CreateWith(ImmutableDictionary<TKey, TEntity> byId)
     {
         return this with { ById = byId } as TState
-               ?? throw new DuckyException("The state must be of type TState.");
+            ?? throw new DuckyException("The state must be of type TState.");
     }
 }

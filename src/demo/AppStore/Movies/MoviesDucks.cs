@@ -97,7 +97,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
 
     public override MoviesState GetInitialState()
     {
-        return new MoviesState
+        return new()
         {
             Movies = ImmutableDictionary<int, Movie>.Empty,
             IsLoading = false,

@@ -15,7 +15,7 @@ public class FsaTests
         const string title = "Learn Blazor";
 
         // Act
-        var action = new TestCreateTodo(title);
+        TestCreateTodo action = new(title);
 
         // Assert
         action.Payload.Title.Should().Be(title);
@@ -27,10 +27,10 @@ public class FsaTests
     public void ToggleTodo_ShouldInitializeCorrectly()
     {
         // Arrange
-        var id = Guid.NewGuid();
+        Guid id = Guid.NewGuid();
 
         // Act
-        var action = new TestToggleTodo(id);
+        TestToggleTodo action = new(id);
 
         // Assert
         action.Payload.Id.Should().Be(id);
@@ -42,10 +42,10 @@ public class FsaTests
     public void DeleteTodo_ShouldInitializeCorrectly()
     {
         // Arrange
-        var id = Guid.NewGuid();
+        Guid id = Guid.NewGuid();
 
         // Act
-        var action = new TestDeleteTodo(id);
+        TestDeleteTodo action = new(id);
 
         // Assert
         action.Payload.Id.Should().Be(id);
@@ -57,10 +57,10 @@ public class FsaTests
     public void FsaError_ShouldInitializeCorrectly()
     {
         // Arrange
-        var exception = new TestException();
+        TestException exception = new();
 
         // Act
-        var action = new TestFsaError(exception);
+        TestFsaError action = new(exception);
 
         // Assert
         action.Payload.Should().Be(exception);
@@ -72,11 +72,11 @@ public class FsaTests
     public void FsaError_WithMeta_ShouldInitializeCorrectly()
     {
         // Arrange
-        var exception = new TestException();
+        TestException exception = new();
         var meta = new { Info = "Some metadata" };
 
         // Act
-        var action = new TestFsaErrorWithMeta<object>(exception, meta);
+        TestFsaErrorWithMeta<object> action = new(exception, meta);
 
         // Assert
         action.Payload.Should().Be(exception);

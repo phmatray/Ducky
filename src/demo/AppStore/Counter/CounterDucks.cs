@@ -28,15 +28,15 @@ public record CounterReducers : SliceReducers<CounterState>
 {
     public CounterReducers()
     {
-        On<Increment>((state, action) => new CounterState(state.Value + action.Amount));
-        On<Decrement>((state, action) => new CounterState(state.Value - action.Amount));
+        On<Increment>((state, action) => new(state.Value + action.Amount));
+        On<Decrement>((state, action) => new(state.Value - action.Amount));
         On<Reset>(GetInitialState);
-        On<SetValue>((_, action) => new CounterState(action.Value));
+        On<SetValue>((_, action) => new(action.Value));
     }
 
     public override CounterState GetInitialState()
     {
-        return new CounterState(10);
+        return new(10);
     }
 }
 

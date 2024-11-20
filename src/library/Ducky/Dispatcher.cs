@@ -9,8 +9,7 @@ namespace Ducky;
 /// <summary>
 /// A dispatcher that queues and dispatches actions, providing an observable stream of dispatched actions.
 /// </summary>
-public sealed class Dispatcher
-    : IDispatcher, IDisposable
+public sealed class Dispatcher : IDispatcher, IDisposable
 {
 #if NET9_0_OR_GREATER
     private readonly Lock _syncRoot = new();
@@ -18,7 +17,7 @@ public sealed class Dispatcher
     private readonly object _syncRoot = new();
 #endif
 
-    private readonly Queue<IAction> _queuedActions = new();
+    private readonly Queue<IAction> _queuedActions = [];
     private readonly Subject<IAction> _actionSubject = new();
     private volatile bool _isDequeuing;
     private bool _disposed;

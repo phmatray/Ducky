@@ -41,7 +41,7 @@ public abstract partial record SliceReducers<TState>
     public virtual string GetKey()
     {
         // get type of the inheriting class
-        var typeName = GetType().Name;
+        string typeName = GetType().Name;
 
         // the key should not end with "Reducers" or "Reducer"
         if (typeName.EndsWith("Reducers", StringComparison.InvariantCulture))
@@ -75,7 +75,7 @@ public abstract partial record SliceReducers<TState>
             _isInitialized = true;
         }
 
-        return _state.Value is null
+        return (_state.Value is null)
             ? throw new DuckyException("State is null.")
             : _state.Value;
     }
@@ -85,9 +85,9 @@ public abstract partial record SliceReducers<TState>
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        var stopwatch = Stopwatch.StartNew();
+        Stopwatch stopwatch = Stopwatch.StartNew();
         var prevState = (TState)GetState();
-        var updatedState = Reduce(prevState, action);
+        TState updatedState = Reduce(prevState, action);
         stopwatch.Stop();
 
         if (prevState?.Equals(updatedState) == true)
@@ -95,7 +95,7 @@ public abstract partial record SliceReducers<TState>
             return;
         }
 
-        var stateChange = new StateChange<TState>(
+        StateChange<TState> stateChange = new(
             action,
             prevState,
             updatedState,
@@ -156,7 +156,7 @@ public abstract partial record SliceReducers<TState>
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return Reducers.TryGetValue(action.GetType(), out var reducer)
+        return (Reducers.TryGetValue(action.GetType(), out Func<TState, IAction, TState>? reducer))
             ? reducer(state, action)
             : state;
     }
@@ -186,19 +186,21 @@ public abstract partial record SliceReducers<TState>
     /// <param name="disposing">If true, the method has been called directly or indirectly by a user's code. Managed and unmanaged resources can be disposed. If false, the method has been called by the runtime from inside the finalizer and only unmanaged resources can be disposed.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                // Dispose managed resources.
-                _state.Dispose();
-                _stateUpdated.Dispose();
-                _stateLoggerObserver.Dispose();
-            }
-
-            // Note disposing has been done.
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            // Dispose managed resources.
+            _state.Dispose();
+            _stateUpdated.Dispose();
+            _stateLoggerObserver.Dispose();
+        }
+
+        // Note disposing has been done.
+        _disposed = true;
     }
 
     [GeneratedRegex("([a-z])([A-Z])", RegexOptions.Compiled)]

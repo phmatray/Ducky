@@ -45,7 +45,7 @@ public class MoviesServiceTests
         const int pageSize = 2;
 
         // Act
-        var act = async () =>
+        Func<Task>? act = async () =>
         {
             using var cts = new CancellationTokenSource();
             await cts.CancelAsync();

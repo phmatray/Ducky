@@ -35,10 +35,10 @@ public static class DependencyInjections
         // Add Store
         services.AddScoped<DuckyStore>(sp =>
         {
-            var dispatcher = sp.GetRequiredService<IDispatcher>();
-            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            var slices = sp.GetServices<ISlice>().ToArray();
-            var effects = sp.GetServices<IEffect>().ToArray();
+            IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
+            ILoggerFactory loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            ISlice[] slices = sp.GetServices<ISlice>().ToArray();
+            IEffect[] effects = sp.GetServices<IEffect>().ToArray();
 
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
@@ -58,9 +58,9 @@ public static class DependencyInjections
         this IServiceCollection services,
         Assembly[] assemblies)
     {
-        foreach (var assembly in assemblies)
+        foreach (Assembly assembly in assemblies)
         {
-            var serviceDescriptors = assembly.DefinedTypes
+            ServiceDescriptor[] serviceDescriptors = assembly.DefinedTypes
                 .Where(type => type is { IsAbstract: false, IsInterface: false })
                 .Where(type => typeof(T).IsAssignableFrom(type))
                 .Select(type => ServiceDescriptor.Scoped(typeof(T), type))

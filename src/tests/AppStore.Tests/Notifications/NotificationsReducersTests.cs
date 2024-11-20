@@ -59,7 +59,7 @@ public sealed class NotificationsReducersTests : IDisposable
     public void NotificationsReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<NotificationsState, IAction, NotificationsState>>? reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(3);

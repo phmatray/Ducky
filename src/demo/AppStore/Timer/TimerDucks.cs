@@ -15,7 +15,7 @@ public record TimerState
     // Selectors
     public string SelectAngle()
     {
-        var time = Time % 60;
+        int time = Time % 60;
         return $"{time * 6}deg";
     }
 }
@@ -55,7 +55,7 @@ public record TimerReducers : SliceReducers<TimerState>
 
     public override TimerState GetInitialState()
     {
-        return new TimerState
+        return new()
         {
             Time = 0,
             IsRunning = false

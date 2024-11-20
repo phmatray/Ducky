@@ -11,8 +11,7 @@ namespace Ducky.Blazor;
 /// A base layout class for Ducky components that manages state and dispatches actions.
 /// </summary>
 /// <typeparam name="TState">The type of the state managed by this component.</typeparam>
-public abstract class DuckyLayout<TState>
-    : DuckyComponent<TState>
+public abstract class DuckyLayout<TState> : DuckyComponent<TState>
     where TState : notnull
 {
     /// <summary>

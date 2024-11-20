@@ -19,7 +19,7 @@ public class MoviesService : IMoviesService
         int pageSize = 5,
         CancellationToken ct = default)
     {
-        await Task.Delay(1000, ct);
+        await Task.Delay(1000, ct).ConfigureAwait(false);
 
         // Error on page 3
         if (pageNumber == 3)
@@ -28,8 +28,8 @@ public class MoviesService : IMoviesService
         }
 
         // Calculate the total number of movies and the start index for the requested page.
-        var totalMovies = MoviesExamples.Movies.Length;
-        var startIndex = (pageNumber - 1) * pageSize;
+        int totalMovies = MoviesExamples.Movies.Length;
+        int startIndex = (pageNumber - 1) * pageSize;
 
         // Ensure the start index is within the range of the total number of movies.
         if (startIndex >= totalMovies)
@@ -38,13 +38,14 @@ public class MoviesService : IMoviesService
         }
 
         // Calculate the number of movies to return on the current page.
-        var moviesToTake = Math.Min(pageSize, totalMovies - startIndex);
+        int moviesToTake = Math.Min(pageSize, totalMovies - startIndex);
 
         // Retrieve the paginated list of movies.
-        var paginatedMovies = MoviesExamples.Movies
-            .Skip(startIndex)
-            .Take(moviesToTake)
-            .ToImmutableArray();
+        ImmutableArray<Movie> paginatedMovies = [
+            ..MoviesExamples.Movies
+                .Skip(startIndex)
+                .Take(moviesToTake)
+        ];
 
         return new GetMoviesResponse(paginatedMovies, totalMovies);
     }

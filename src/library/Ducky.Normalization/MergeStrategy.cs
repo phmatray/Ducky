@@ -17,5 +17,5 @@ public enum MergeStrategy
     /// <summary>
     /// Overwrite existing entities with the same key during the merge.
     /// </summary>
-    Overwrite,
+    Overwrite
 }

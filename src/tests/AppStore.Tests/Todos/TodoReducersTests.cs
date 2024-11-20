@@ -54,7 +54,7 @@ public sealed class TodoReducersTests : IDisposable
     public void TodoReducers_Should_Return_Reducers()
     {
         // Act
-        var reducers = _sut.Reducers;
+        Dictionary<Type, Func<TodoState, IAction, TodoState>>? reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(3);
@@ -111,7 +111,7 @@ public sealed class TodoReducersTests : IDisposable
         var state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
-        var activeTodos = state.SelectActiveTodos();
+        ImmutableList<TodoItem>? activeTodos = state.SelectActiveTodos();
 
         // Assert
         activeTodos.Should().ContainSingle(todo => todo.Id == activeTodo.Id);
@@ -142,7 +142,7 @@ public sealed class TodoReducersTests : IDisposable
         var state = TodoState.Create([activeTodo, completedTodo]);
 
         // Act
-        var completedTodos = state.SelectCompletedTodos();
+        ImmutableList<TodoItem>? completedTodos = state.SelectCompletedTodos();
 
         // Assert
         completedTodos.Should().ContainSingle(todo => todo.Id == completedTodo.Id);

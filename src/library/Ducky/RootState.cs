@@ -42,7 +42,7 @@ public sealed record RootState : IRootState
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        return _state.TryGetValue(key, out var value) && value is TState state
+        return (_state.TryGetValue(key, out object? value) && value is TState state)
             ? state
             : throw new DuckyException($"State with key '{key}' is not of type '{typeof(TState).Name}'.");
     }
@@ -53,7 +53,7 @@ public sealed record RootState : IRootState
         where TState : notnull
     {
         // take the first state of the specified type
-        foreach (var value in _state.Values)
+        foreach (object value in _state.Values)
         {
             if (value is TState state)
             {

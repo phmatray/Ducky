@@ -21,7 +21,7 @@ public static class StoreFactory
         ISlice[] slices,
         IEffect[] effects)
     {
-        var store = new DuckyStore(dispatcher);
+        DuckyStore store = new(dispatcher);
 
         store.AddSlices(slices);
         store.AddEffects(effects);
