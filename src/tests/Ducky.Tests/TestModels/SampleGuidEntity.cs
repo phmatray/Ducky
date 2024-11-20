@@ -14,7 +14,7 @@ internal sealed record SampleGuidEntity
     {
     }
 
-    public SampleGuidEntity(Guid id, string name)
+    public SampleGuidEntity(in Guid id, string name)
     {
         Id = id;
         Name = name;

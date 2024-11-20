@@ -94,7 +94,7 @@ roslynator_null_check_style = pattern_matching
 roslynator_null_conditional_operator_new_line = before
 # Applicable to: rcs0059
 
-roslynator_object_creation_parentheses_style = include
+roslynator_object_creation_parentheses_style = omit
 # Applicable to: rcs1050
 
 roslynator_object_creation_type_style = implicit_when_type_is_obvious

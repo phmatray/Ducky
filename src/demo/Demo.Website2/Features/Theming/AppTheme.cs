@@ -26,7 +26,7 @@ public class AppTheme : MudTheme
     /// <returns>The icon for the dark/light mode button.</returns>
     public static string GetDarkLightModeButtonIcon(bool isDarkMode)
     {
-        return isDarkMode
+        return (isDarkMode)
             ? Icons.Material.Outlined.LightMode
             : Icons.Material.Outlined.DarkMode;
     }
@@ -37,14 +37,14 @@ public class AppTheme : MudTheme
     /// <returns>A light theme palette.</returns>
     public static PaletteLight CreatePaletteLight()
     {
-        return new PaletteLight
+        return new()
         {
             Black = "#110e2d",
             AppbarText = "#424242",
             AppbarBackground = "rgba(255,255,255,0.8)",
             DrawerBackground = "#ffffff",
             GrayLight = "#e8e8e8",
-            GrayLighter = "#f9f9f9",
+            GrayLighter = "#f9f9f9"
         };
     }
 
@@ -54,7 +54,7 @@ public class AppTheme : MudTheme
     /// <returns>A dark theme palette.</returns>
     public static PaletteDark CreatePaletteDark()
     {
-        return new PaletteDark
+        return new()
         {
             // Adapted from Dracula
             // https://github.com/dracula/dracula-theme
@@ -86,7 +86,7 @@ public class AppTheme : MudTheme
             LinesDefault = "#33323e",
             TableLines = "#33323e",
             Divider = "#6272a4", // Comment
-            OverlayLight = "#44475a80", // Current Line @ 50%
+            OverlayLight = "#44475a80" // Current Line @ 50%
         };
     }
 }

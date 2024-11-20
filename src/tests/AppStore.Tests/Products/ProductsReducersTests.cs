@@ -24,7 +24,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void ProductsReducers_Should_Return_Initial_State()
     {
         // Act
-        var initialState = _sut.GetInitialState();
+        ProductState initialState = _sut.GetInitialState();
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
@@ -34,7 +34,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void ProductsReducers_Should_Return_Key()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
@@ -44,7 +44,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void ProductsReducers_Should_Return_Correct_State_Type()
     {
         // Act
-        var stateType = _sut.GetStateType();
+        Type stateType = _sut.GetStateType();
 
         // Assert
         stateType.Should().Be<ProductState>();
@@ -54,7 +54,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void ProductsReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<ProductState, IAction, ProductState>>? reducers = _sut.Reducers;
+        Dictionary<Type, Func<ProductState, IAction, ProductState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(2);
@@ -64,11 +64,11 @@ public sealed class ProductsReducersTests : IDisposable
     public void AddProduct_ShouldAddNewProduct()
     {
         // Arrange
-        var product = new Product(SampleIds.Id7, "AirPods Pro", 249.99m, "Electronics");
-        var action = new AddProduct(product);
+        Product product = new(SampleIds.Id7, "AirPods Pro", 249.99m, "Electronics");
+        AddProduct action = new(product);
 
         // Act
-        var state = _sut.Reduce(_initialState, action);
+        ProductState state = _sut.Reduce(_initialState, action);
 
         // Assert
         state.SelectImmutableList().Should().HaveCount(7);
@@ -79,10 +79,10 @@ public sealed class ProductsReducersTests : IDisposable
     public void RemoveProduct_ShouldRemoveProduct()
     {
         // Arrange
-        var action = new RemoveProduct(SampleIds.Id1);
+        RemoveProduct action = new(SampleIds.Id1);
 
         // Act
-        var state = _sut.Reduce(_initialState, action);
+        ProductState state = _sut.Reduce(_initialState, action);
 
         // Assert
         state.SelectImmutableList().Should().HaveCount(5);
@@ -93,7 +93,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void SelectElectronics_Should_Return_Electronics()
     {
         // Act
-        ImmutableList<Product>? electronics = _sut.GetInitialState().SelectElectronics();
+        ImmutableList<Product> electronics = _sut.GetInitialState().SelectElectronics();
 
         // Assert
         electronics.Should().HaveCount(3);
@@ -115,7 +115,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void SelectTotalPriceOfElectronics_Should_Return_TotalPrice()
     {
         // Act
-        var totalPrice = _sut.GetInitialState().SelectTotalPriceOfElectronics();
+        decimal totalPrice = _sut.GetInitialState().SelectTotalPriceOfElectronics();
 
         // Assert
         totalPrice.Should().Be(2799.97m);
@@ -125,7 +125,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void SelectTotalPriceOfClothing_Should_Return_TotalPrice()
     {
         // Act
-        var totalPrice = _sut.GetInitialState().SelectTotalPriceOfClothing();
+        decimal totalPrice = _sut.GetInitialState().SelectTotalPriceOfClothing();
 
         // Assert
         totalPrice.Should().Be(2227.99m);
@@ -138,14 +138,16 @@ public sealed class ProductsReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

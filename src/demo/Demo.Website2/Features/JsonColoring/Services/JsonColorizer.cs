@@ -19,13 +19,13 @@ public class JsonColorizer : IJsonColorizer
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
         using var document = JsonDocument.Parse(json);
-        var sb = new IndentedStringBuilder();
+        IndentedStringBuilder sb = new();
         ProcessElement(document.RootElement, sb);
         return sb.ToString();
     }
 
     private void ProcessElement(
-        JsonElement element,
+        in JsonElement element,
         IndentedStringBuilder sb,
         bool inArray = false)
     {
@@ -37,41 +37,53 @@ public class JsonColorizer : IJsonColorizer
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
-                ProcessObject(element, sb);
-                break;
+                {
+                    ProcessObject(element, sb);
+                    break;
+                }
             case JsonValueKind.Array:
-                ProcessArray(element, sb);
-                break;
+                {
+                    ProcessArray(element, sb);
+                    break;
+                }
             case JsonValueKind.String:
-                sb.Append(SpanJsonString(element.GetString() ?? string.Empty));
-                break;
+                {
+                    sb.Append(SpanJsonString(element.GetString() ?? string.Empty));
+                    break;
+                }
             case JsonValueKind.Number:
-                sb.Append(SpanJsonNumber(element.GetRawText()));
-                break;
+                {
+                    sb.Append(SpanJsonNumber(element.GetRawText()));
+                    break;
+                }
             case JsonValueKind.True:
             case JsonValueKind.False:
-                sb.Append(SpanJsonBool(element.GetRawText()));
-                break;
+                {
+                    sb.Append(SpanJsonBool(element.GetRawText()));
+                    break;
+                }
             case JsonValueKind.Null:
-                sb.Append(SpanJsonNull());
-                break;
+                {
+                    sb.Append(SpanJsonNull());
+                    break;
+                }
         }
     }
 
-    private void ProcessObject(JsonElement element, IndentedStringBuilder sb)
+    private void ProcessObject(in JsonElement element, IndentedStringBuilder sb)
     {
         sb.Append(SpanOpenBrace());
         sb.Append(BreakLine);
         sb.Indent();
 
-        var properties = element.EnumerateObject().ToArray();
-        for (var i = 0; i < properties.Length; i++)
+        JsonProperty[] properties = element.EnumerateObject().ToArray();
+        for (int i = 0; i < properties.Length; i++)
         {
-            var property = properties[i];
+            JsonProperty property = properties[i];
             sb.AppendIndentation();
             sb.Append($"{SpanJsonPropertyName(property.Name)}: ");
             ProcessElement(property.Value, sb);
-            sb.Append(i < properties.Length - 1 ? $",{BreakLine}" : BreakLine);
+            sb.Append((i < properties.Length - 1) ? $",{BreakLine}" : BreakLine);
         }
 
         sb.Unindent();
@@ -79,21 +91,21 @@ public class JsonColorizer : IJsonColorizer
         sb.Append(SpanCloseBrace());
     }
 
-    private void ProcessArray(JsonElement element, IndentedStringBuilder sb)
+    private void ProcessArray(in JsonElement element, IndentedStringBuilder sb)
     {
         sb.Append(SpanOpenBracket());
 
-        var items = element.EnumerateArray().ToArray();
+        JsonElement[] items = element.EnumerateArray().ToArray();
         if (items.Length != 0)
         {
             sb.Append(BreakLine);
             sb.Indent();
 
-            for (var i = 0; i < items.Length; i++)
+            for (int i = 0; i < items.Length; i++)
             {
-                var item = items[i];
+                JsonElement item = items[i];
                 ProcessElement(item, sb, true);
-                sb.Append(i < items.Length - 1 ? $",{BreakLine}" : BreakLine);
+                sb.Append((i < items.Length - 1) ? $",{BreakLine}" : BreakLine);
             }
 
             sb.Unindent();

@@ -17,7 +17,7 @@ public sealed class TimerReducersTests : IDisposable
     public void TimerReducers_Should_Return_Initial_State()
     {
         // Act
-        var initialState = _sut.GetInitialState();
+        TimerState initialState = _sut.GetInitialState();
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
@@ -27,7 +27,7 @@ public sealed class TimerReducersTests : IDisposable
     public void TimerReducers_Should_Return_Key()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
@@ -37,7 +37,7 @@ public sealed class TimerReducersTests : IDisposable
     public void TimerReducers_Should_Return_Correct_State_Type()
     {
         // Act
-        var stateType = _sut.GetStateType();
+        Type stateType = _sut.GetStateType();
 
         // Assert
         stateType.Should().Be<TimerState>();
@@ -47,7 +47,7 @@ public sealed class TimerReducersTests : IDisposable
     public void TimerReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<TimerState, IAction, TimerState>>? reducers = _sut.Reducers;
+        Dictionary<Type, Func<TimerState, IAction, TimerState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);
@@ -57,7 +57,7 @@ public sealed class TimerReducersTests : IDisposable
     public void StartTimer_ShouldSetIsRunningToTrue()
     {
         // Act
-        var newState = _sut.Reduce(_initialState, new StartTimer());
+        TimerState newState = _sut.Reduce(_initialState, new StartTimer());
 
         // Assert
         newState.IsRunning.Should().BeTrue();
@@ -67,10 +67,10 @@ public sealed class TimerReducersTests : IDisposable
     public void StopTimer_ShouldSetIsRunningToFalse()
     {
         // Arrange
-        var state = _initialState with { IsRunning = true };
+        TimerState state = _initialState with { IsRunning = true };
 
         // Act
-        var newState = _sut.Reduce(state, new StopTimer());
+        TimerState newState = _sut.Reduce(state, new StopTimer());
 
         // Assert
         newState.IsRunning.Should().BeFalse();
@@ -80,10 +80,10 @@ public sealed class TimerReducersTests : IDisposable
     public void ResetTimer_ShouldResetState()
     {
         // Arrange
-        var state = new TimerState { Time = 5, IsRunning = true };
+        TimerState state = new() { Time = 5, IsRunning = true };
 
         // Act
-        var newState = _sut.Reduce(state, new ResetTimer());
+        TimerState newState = _sut.Reduce(state, new ResetTimer());
 
         // Assert
         newState.Time.Should().Be(0);
@@ -94,10 +94,10 @@ public sealed class TimerReducersTests : IDisposable
     public void Tick_ShouldIncrementTimeByOne()
     {
         // Arrange
-        var state = new TimerState { Time = 5, IsRunning = true };
+        TimerState state = new() { Time = 5, IsRunning = true };
 
         // Act
-        var newState = _sut.Reduce(state, new Tick());
+        TimerState newState = _sut.Reduce(state, new Tick());
 
         // Assert
         newState.Time.Should().Be(state.Time + 1);
@@ -110,14 +110,16 @@ public sealed class TimerReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

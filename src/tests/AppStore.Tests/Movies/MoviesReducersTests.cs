@@ -28,7 +28,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void MovieReducers_Should_Return_Initial_State()
     {
         // Act
-        var initialState = _sut.GetInitialState();
+        MoviesState initialState = _sut.GetInitialState();
 
         // Assert
         initialState.Should().BeEquivalentTo(_initialState);
@@ -38,7 +38,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void MovieReducers_Should_Return_Key()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
@@ -48,7 +48,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void MovieReducers_Should_Return_Correct_State_Type()
     {
         // Act
-        var stateType = _sut.GetStateType();
+        Type stateType = _sut.GetStateType();
 
         // Assert
         stateType.Should().Be<MoviesState>();
@@ -58,7 +58,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void MovieReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<MoviesState, IAction, MoviesState>>? reducers = _sut.Reducers;
+        Dictionary<Type, Func<MoviesState, IAction, MoviesState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);
@@ -68,7 +68,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void LoadMovies_ShouldSetIsLoadingToTrue()
     {
         // Act
-        var newState = _sut.Reduce(_initialState, new LoadMovies());
+        MoviesState newState = _sut.Reduce(_initialState, new LoadMovies());
 
         // Assert
         newState.IsLoading.Should().BeTrue();
@@ -82,7 +82,7 @@ public sealed class MoviesReducersTests : IDisposable
         ImmutableArray<Movie> movies = [MoviesExamples.Movies[0]];
 
         // Act
-        var newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Length));
+        MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Length));
 
         // Assert
         newState.Movies.Values.Should().BeEquivalentTo(movies);
@@ -98,7 +98,7 @@ public sealed class MoviesReducersTests : IDisposable
         DuckyException exception = new(errorMessage);
 
         // Act
-        var newState = _sut.Reduce(_initialState, new LoadMoviesFailure(exception));
+        MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesFailure(exception));
 
         // Assert
         newState.ErrorMessage.Should().Be(errorMessage);
@@ -110,7 +110,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void SelectMovieCount_ShouldReturnCorrectCount()
     {
         // Arrange
-        var state = _initialState with
+        MoviesState state = _initialState with
         {
             Movies = ImmutableDictionary<int, Movie>.Empty
                 .Add(1, MoviesExamples.Movies[0])
@@ -118,7 +118,7 @@ public sealed class MoviesReducersTests : IDisposable
         };
 
         // Act
-        var movieCount = state.SelectMovieCount();
+        int movieCount = state.SelectMovieCount();
 
         // Assert
         movieCount.Should().Be(2);
@@ -128,7 +128,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void SelectMoviesByYear_ShouldReturnMoviesSortedByYearDescending()
     {
         // Arrange
-        var state = _initialState with
+        MoviesState state = _initialState with
         {
             Movies = ImmutableDictionary<int, Movie>.Empty
                 .Add(1, MoviesExamples.Movies[0])
@@ -136,7 +136,7 @@ public sealed class MoviesReducersTests : IDisposable
         };
 
         // Act
-        IEnumerable<Movie>? sortedMovies = state.SelectMoviesByYear().Values;
+        IEnumerable<Movie> sortedMovies = state.SelectMoviesByYear().Values;
 
         // Assert
         sortedMovies.Should().BeInDescendingOrder(movie => movie.Year);
@@ -149,14 +149,16 @@ public sealed class MoviesReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

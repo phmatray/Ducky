@@ -61,12 +61,9 @@ public sealed class TimerEffectsTests : IDisposable
 
     private void SetupRootState()
     {
-        var dictionary = new Dictionary<string, object>
-        {
-            { "timer", 0 }
-        };
+        var dictionary = new Dictionary<string, object> { { "timer", 0 } };
 
-        var rootState = new RootState(dictionary.ToImmutableSortedDictionary());
+        RootState rootState = new(dictionary.ToImmutableSortedDictionary());
         _rootStateSubject.OnNext(rootState);
     }
 }

@@ -68,7 +68,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
 
     public override NotificationsState GetInitialState()
     {
-        return new NotificationsState
+        return new()
         {
             Notifications =
             [
@@ -82,13 +82,13 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
     private static NotificationsState ReduceAddNotification(
         NotificationsState state, AddNotification action)
     {
-        return new NotificationsState { Notifications = state.Notifications.Add(action.Notification) };
+        return new() { Notifications = state.Notifications.Add(action.Notification) };
     }
 
     private static NotificationsState ReduceMarkNotificationAsRead(
         NotificationsState state, MarkNotificationAsRead action)
     {
-        return new NotificationsState
+        return new()
         {
             Notifications = state.Notifications
                 .Select(n => (n.Id == action.NotificationId)
@@ -101,7 +101,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
     private static NotificationsState ReduceMarkAllNotificationsAsRead(
         NotificationsState state, MarkAllNotificationsAsRead action)
     {
-        return new NotificationsState
+        return new()
         {
             Notifications = state.Notifications
                 .Select(n => n with { IsRead = true })

@@ -26,7 +26,7 @@ public sealed class NotificationsReducersTests : IDisposable
     public void NotificationsReducers_Should_Return_Initial_State()
     {
         // Act
-        var initialState = _sut.GetInitialState();
+        NotificationsState initialState = _sut.GetInitialState();
 
         // Assert
         initialState.Notifications.Should().HaveCount(3);
@@ -39,7 +39,7 @@ public sealed class NotificationsReducersTests : IDisposable
     public void NotificationsReducers_Should_Return_Key()
     {
         // Act
-        var key = _sut.GetKey();
+        string key = _sut.GetKey();
 
         // Assert
         key.Should().Be(Key);
@@ -49,7 +49,7 @@ public sealed class NotificationsReducersTests : IDisposable
     public void NotificationsReducers_Should_Return_Correct_State_Type()
     {
         // Act
-        var stateType = _sut.GetStateType();
+        Type stateType = _sut.GetStateType();
 
         // Assert
         stateType.Should().Be<NotificationsState>();
@@ -59,7 +59,7 @@ public sealed class NotificationsReducersTests : IDisposable
     public void NotificationsReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<NotificationsState, IAction, NotificationsState>>? reducers = _sut.Reducers;
+        Dictionary<Type, Func<NotificationsState, IAction, NotificationsState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(3);
@@ -69,11 +69,11 @@ public sealed class NotificationsReducersTests : IDisposable
     public void AddNotification_Should_Add_Notification()
     {
         // Arrange
-        var notification = new InfoNotification("This is an info notification.");
-        var action = new AddNotification(notification);
+        InfoNotification notification = new("This is an info notification.");
+        AddNotification action = new(notification);
 
         // Act
-        var state = _sut.Reduce(_initialState, action);
+        NotificationsState state = _sut.Reduce(_initialState, action);
 
         // Assert
         state.Notifications.Should().HaveCount(4);
@@ -84,11 +84,11 @@ public sealed class NotificationsReducersTests : IDisposable
     public void MarkNotificationAsRead_Should_Mark_Notification_As_Read()
     {
         // Arrange
-        var notificationId = _initialState.Notifications[1].Id;
-        var action = new MarkNotificationAsRead(notificationId);
+        Guid notificationId = _initialState.Notifications[1].Id;
+        MarkNotificationAsRead action = new(notificationId);
 
         // Act
-        var state = _sut.Reduce(_initialState, action);
+        NotificationsState state = _sut.Reduce(_initialState, action);
 
         // Assert
         state.Notifications[1].IsRead.Should().BeTrue();
@@ -101,14 +101,16 @@ public sealed class NotificationsReducersTests : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _sut.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _sut.Dispose();
+        }
+
+        _disposed = true;
     }
 }

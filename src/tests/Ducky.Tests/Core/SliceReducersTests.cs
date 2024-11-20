@@ -109,7 +109,7 @@ public sealed class SliceReducersTests : IDisposable
     {
         // Act
         _sut.OnDispatch(new TestDecrementAction());
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(9);
@@ -122,7 +122,7 @@ public sealed class SliceReducersTests : IDisposable
         _sut.OnDispatch(new TestIncrementAction());
         _sut.OnDispatch(new TestIncrementAction());
         _sut.OnDispatch(new TestResetAction());
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(10);
@@ -133,7 +133,7 @@ public sealed class SliceReducersTests : IDisposable
     {
         // Act
         _sut.OnDispatch(new TestSetValueAction(20));
-        var state = _sut.GetState();
+        object state = _sut.GetState();
 
         // Assert
         state.Should().Be(20);

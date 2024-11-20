@@ -18,7 +18,7 @@ public class OpenAboutDialogEffect(IDialogService dialog) : Effect
     public override Observable<IAction> Handle(
         Observable<IAction> actions, Observable<IRootState> rootState)
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+        DialogOptions options = new() { CloseOnEscapeKey = true };
 
         return actions
             .OfActionType<OpenAboutDialog>()

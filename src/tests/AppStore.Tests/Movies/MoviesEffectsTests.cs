@@ -33,14 +33,14 @@ public sealed class MoviesEffectsTests : IDisposable
         // Arrange
         SetupRootState();
         List<Movie> movies = [MoviesExamples.Movies[0], MoviesExamples.Movies[1]];
-        ImmutableArray<Movie> immutableMovies = ImmutableArray.CreateRange(movies);
+        ImmutableArray<Movie> immutableMovies = [..movies];
         _moviesServiceMock
             .Setup(service => service.GetMoviesAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None))
             .ReturnsAsync(new GetMoviesResponse(immutableMovies, movies.Count));
 
         // Act
         _actionsSubject.OnNext(new LoadMovies());
-        await Task.Delay(100); // Ensure the async call completes
+        await Task.Delay(100).ConfigureAwait(true); // Ensure the async call completes
 
         // Assert
         _actualActions.Should().HaveCount(1);
@@ -59,7 +59,7 @@ public sealed class MoviesEffectsTests : IDisposable
 
         // Act
         _actionsSubject.OnNext(new LoadMovies());
-        await Task.Delay(100); // Ensure the async call completes
+        await Task.Delay(100).ConfigureAwait(true); // Ensure the async call completes
 
         // Assert
         _actualActions.Should().ContainSingle(); // One for failure

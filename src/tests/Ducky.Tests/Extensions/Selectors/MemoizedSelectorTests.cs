@@ -12,12 +12,12 @@ public class MemoizedSelectorTests
     public void Create_ShouldCacheResult_ForSameInput()
     {
         // Arrange
-        var callCount = 0;
-        var memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
+        int callCount = 0;
+        Func<int, int> memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
 
         // Act
-        var result1 = memoizedSelector(5);
-        var result2 = memoizedSelector(5);
+        int result1 = memoizedSelector(5);
+        int result2 = memoizedSelector(5);
 
         // Assert
         result1.Should().Be(10);
@@ -36,12 +36,12 @@ public class MemoizedSelectorTests
     public void Create_ShouldEvaluateSelector_ForDifferentInputs()
     {
         // Arrange
-        var callCount = 0;
-        var memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
+        int callCount = 0;
+        Func<int, int> memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
 
         // Act
-        var result1 = memoizedSelector(5);
-        var result2 = memoizedSelector(10);
+        int result1 = memoizedSelector(5);
+        int result2 = memoizedSelector(10);
 
         // Assert
         result1.Should().Be(10);
@@ -60,13 +60,13 @@ public class MemoizedSelectorTests
     public void Create_ShouldNotCacheResult_ForDifferentInputs()
     {
         // Arrange
-        var callCount = 0;
-        var memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
+        int callCount = 0;
+        Func<int, int> memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
 
         // Act
-        var result1 = memoizedSelector(5);
-        var result2 = memoizedSelector(10);
-        var result3 = memoizedSelector(5);
+        int result1 = memoizedSelector(5);
+        int result2 = memoizedSelector(10);
+        int result3 = memoizedSelector(5);
 
         // Assert
         result1.Should().Be(10);
@@ -86,13 +86,13 @@ public class MemoizedSelectorTests
     public void Create_ShouldCacheResult_WhenDependenciesUnchanged()
     {
         // Arrange
-        var callCount = 0;
-        var state = new TodoState();
-        var memoizedSelector = MemoizedSelector.Create((Func<TodoState, int>)Selector, s => s.ById);
+        int callCount = 0;
+        TodoState state = new();
+        Func<TodoState, int> memoizedSelector = MemoizedSelector.Create((Func<TodoState, int>)Selector, s => s.ById);
 
         // Act
-        var result1 = memoizedSelector(state);
-        var result2 = memoizedSelector(state);
+        int result1 = memoizedSelector(state);
+        int result2 = memoizedSelector(state);
 
         // Assert
         result1.Should().Be(0);
@@ -111,15 +111,15 @@ public class MemoizedSelectorTests
     public void Create_ShouldRecomputeResult_WhenDependenciesChange()
     {
         // Arrange
-        var callCount = 0;
-        var state = new TodoState();
+        int callCount = 0;
+        TodoState state = new();
         state = state.SetOne(new TodoItem(Guid.NewGuid(), "Test Todo", true));
-        var memoizedSelector = MemoizedSelector.Create((Func<TodoState, int>)Selector, s => s.ById);
+        Func<TodoState, int> memoizedSelector = MemoizedSelector.Create((Func<TodoState, int>)Selector, s => s.ById);
 
         // Act
-        var result1 = memoizedSelector(state);
+        int result1 = memoizedSelector(state);
         state = state.SetOne(new TodoItem(Guid.NewGuid(), "Another Todo", true));
-        var result2 = memoizedSelector(state);
+        int result2 = memoizedSelector(state);
 
         // Assert
         result1.Should().Be(1);
@@ -138,22 +138,22 @@ public class MemoizedSelectorTests
     public void Compose_ShouldCombineSelectors()
     {
         // Arrange
-        var state = new TodoState();
+        TodoState state = new();
 
-        var selector1 = MemoizedSelector.Create<TodoState, ImmutableList<TodoItem>>(
+        Func<TodoState, ImmutableList<TodoItem>> selector1 = MemoizedSelector.Create<TodoState, ImmutableList<TodoItem>>(
             s => s.SelectImmutableList(todo => todo.IsCompleted),
             s => s.ById);
 
-        var selector2 = MemoizedSelector.Compose(
+        Func<TodoState, int> selector2 = MemoizedSelector.Compose(
             selector1,
             todos => todos.Count,
             s => s.ById);
 
         // Act
-        var result1 = selector2(state);
+        int result1 = selector2(state);
 
         state = state.SetOne(new TodoItem(Guid.NewGuid(), "Test Todo", true));
-        var result2 = selector2(state);
+        int result2 = selector2(state);
 
         // Assert
         result1.Should().Be(0);

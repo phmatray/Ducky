@@ -76,7 +76,7 @@ public sealed record AddProduct
 public sealed record RemoveProduct
     : Fsa<RemoveProduct.ActionPayload, ActionMeta>
 {
-    public RemoveProduct(Guid productId)
+    public RemoveProduct(in Guid productId)
         : base(new ActionPayload(productId), ActionMeta.Create())
     {
     }

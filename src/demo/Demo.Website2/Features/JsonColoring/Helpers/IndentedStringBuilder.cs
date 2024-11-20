@@ -61,10 +61,12 @@ public sealed class IndentedStringBuilder
     /// </summary>
     public void Unindent()
     {
-        if (IndentLevel > 0)
+        if (IndentLevel <= 0)
         {
-            IndentLevel--;
+            return;
         }
+
+        IndentLevel--;
     }
 
     /// <summary>

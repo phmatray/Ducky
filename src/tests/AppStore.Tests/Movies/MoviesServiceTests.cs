@@ -16,7 +16,7 @@ public class MoviesServiceTests
         const int pageSize = 2;
 
         // Act
-        var result = await _moviesService.GetMoviesAsync(pageNumber, pageSize);
+        GetMoviesResponse result = await _moviesService.GetMoviesAsync(pageNumber, pageSize).ConfigureAwait(true);
 
         // Assert
         result.Movies.Should().HaveCount(pageSize);
@@ -31,7 +31,7 @@ public class MoviesServiceTests
         const int pageSize = 2;
 
         // Act
-        var result = await _moviesService.GetMoviesAsync(pageNumber, pageSize);
+        GetMoviesResponse result = await _moviesService.GetMoviesAsync(pageNumber, pageSize).ConfigureAwait(true);
 
         // Assert
         result.Movies.Should().BeEmpty();
@@ -45,14 +45,14 @@ public class MoviesServiceTests
         const int pageSize = 2;
 
         // Act
-        Func<Task>? act = async () =>
+        Func<Task> act = async () =>
         {
-            using var cts = new CancellationTokenSource();
-            await cts.CancelAsync();
-            await _moviesService.GetMoviesAsync(pageNumber, pageSize, cts.Token);
+            using CancellationTokenSource cts = new();
+            await cts.CancelAsync().ConfigureAwait(false);
+            await _moviesService.GetMoviesAsync(pageNumber, pageSize, cts.Token).ConfigureAwait(false);
         };
 
         // Assert
-        await act.Should().ThrowAsync<TaskCanceledException>();
+        await act.Should().ThrowAsync<TaskCanceledException>().ConfigureAwait(true);
     }
 }
