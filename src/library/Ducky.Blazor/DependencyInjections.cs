@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Blazored.LocalStorage;
+using Ducky.Blazor.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using R3;
@@ -29,6 +31,10 @@ public static class DependencyInjections
         DuckyOptions options = new();
         configuration.GetSection("Ducky").Bind(options); // Bind configuration section to DuckyOptions
         configureOptions?.Invoke(options);
+
+        // Add Persistence service
+        services.AddBlazoredLocalStorage();
+        services.AddScoped<Persistence>();
 
         // Add Reactive Extensions for Blazor
         services.AddScoped<TimeProvider, SynchronizationContextTimeProvider>();
