@@ -33,6 +33,12 @@ public abstract partial record SliceReducers<TState>
     public virtual Observable<Unit> StateUpdated => _stateUpdated;
 
     /// <summary>
+    /// Gets the initial state of the reducer.
+    /// </summary>
+    /// <returns>The initial state.</returns>
+    public abstract TState GetInitialState();
+
+    /// <summary>
     /// Gets a dictionary that holds the reducers mapped by the type of action.
     /// </summary>
     public Dictionary<Type, Func<TState, IAction, TState>> Reducers { get; } = [];
@@ -159,15 +165,6 @@ public abstract partial record SliceReducers<TState>
         return (Reducers.TryGetValue(action.GetType(), out Func<TState, IAction, TState>? reducer))
             ? reducer(state, action)
             : state;
-    }
-
-    /// <summary>
-    /// Gets the initial state of the reducer.
-    /// </summary>
-    /// <returns>The initial state.</returns>
-    public virtual TState GetInitialState()
-    {
-        return default!;
     }
 
     /// <summary>
