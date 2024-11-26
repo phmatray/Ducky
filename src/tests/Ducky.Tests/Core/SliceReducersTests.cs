@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Text.Json.Nodes;
+
 namespace Ducky.Tests.Core;
 
 public sealed class SliceReducersTests : IDisposable
@@ -91,6 +93,20 @@ public sealed class SliceReducersTests : IDisposable
 
         // Assert
         state.Should().Be(10);
+    }
+
+    [Fact]
+    public void GetJson_Should_Return_Json_Object()
+    {
+        // Act
+        JsonObject json = _sut.GetJson();
+
+        // Assert
+        json.Should().NotBeNull();
+        json.ContainsKey("key").Should().BeTrue();
+        json.ContainsKey("state").Should().BeTrue();
+        json["key"]!.GetValue<string>().Should().Be("test-counter");
+        json["state"]!.GetValue<int>().Should().Be(10);
     }
 
     [Fact]

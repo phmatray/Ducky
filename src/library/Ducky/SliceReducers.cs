@@ -4,6 +4,8 @@
 
 using System.Diagnostics;
 using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using R3;
 
@@ -31,6 +33,12 @@ public abstract partial record SliceReducers<TState>
 
     /// <inheritdoc />
     public virtual Observable<Unit> StateUpdated => _stateUpdated;
+
+    /// <summary>
+    /// Gets the initial state of the reducer.
+    /// </summary>
+    /// <returns>The initial state.</returns>
+    public abstract TState GetInitialState();
 
     /// <summary>
     /// Gets a dictionary that holds the reducers mapped by the type of action.
@@ -78,6 +86,21 @@ public abstract partial record SliceReducers<TState>
         return (_state.Value is null)
             ? throw new DuckyException("State is null.")
             : _state.Value;
+    }
+
+    /// <summary>
+    /// Converts the slice to a JSON object.
+    /// </summary>
+    /// <returns>The JSON object representing the slice.</returns>
+    public virtual JsonObject GetJson()
+    {
+        JsonObject json = new()
+        {
+            ["key"] = GetKey(),
+            ["state"] = JsonSerializer.SerializeToNode(GetState())
+        };
+
+        return json;
     }
 
     /// <inheritdoc />
@@ -159,15 +182,6 @@ public abstract partial record SliceReducers<TState>
         return (Reducers.TryGetValue(action.GetType(), out Func<TState, IAction, TState>? reducer))
             ? reducer(state, action)
             : state;
-    }
-
-    /// <summary>
-    /// Gets the initial state of the reducer.
-    /// </summary>
-    /// <returns>The initial state.</returns>
-    public virtual TState GetInitialState()
-    {
-        return default!;
     }
 
     /// <summary>
