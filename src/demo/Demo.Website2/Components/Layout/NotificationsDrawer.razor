@@ -72,7 +72,7 @@
   [Parameter, EditorRequired]
   public bool IsOpen { get; set; }
   
-  private ImmutableArray<Notification> UnreadNotifications
+  private ValueCollection<Notification> UnreadNotifications
     => State.SelectUnreadNotifications();
   
   private bool HasUnreadNotifications

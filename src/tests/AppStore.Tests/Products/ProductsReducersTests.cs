@@ -72,8 +72,8 @@ public sealed class ProductsReducersTests : IDisposable
         ProductState state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.SelectImmutableArray().Should().HaveCount(7);
-        state.SelectImmutableArray().Should().Contain(product);
+        state.SelectEntities().Should().HaveCount(7);
+        state.SelectEntities().Should().Contain(product);
     }
 
     [Fact]
@@ -86,15 +86,15 @@ public sealed class ProductsReducersTests : IDisposable
         ProductState state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.SelectImmutableArray().Should().HaveCount(5);
-        state.SelectImmutableArray().Should().NotContain(product => product.Id == SampleIds.Id1);
+        state.SelectEntities().Should().HaveCount(5);
+        state.SelectEntities().Should().NotContain(product => product.Id == SampleIds.Id1);
     }
 
     [Fact]
     public void SelectElectronics_Should_Return_Electronics()
     {
         // Act
-        ImmutableArray<Product> electronics = _sut.GetInitialState().SelectElectronics();
+        ValueCollection<Product> electronics = _sut.GetInitialState().SelectElectronics();
 
         // Assert
         electronics.Should().HaveCount(3);
@@ -105,7 +105,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void SelectClothing_Should_Return_Clothing()
     {
         // Act
-        ImmutableArray<Product> clothing = _sut.GetInitialState().SelectClothing();
+        ValueCollection<Product> clothing = _sut.GetInitialState().SelectClothing();
 
         // Assert
         clothing.Should().HaveCount(3);

@@ -28,7 +28,7 @@ public class MoviesService : IMoviesService
         }
 
         // Calculate the total number of movies and the start index for the requested page.
-        int totalMovies = MoviesExamples.Movies.Length;
+        int totalMovies = MoviesExamples.Movies.Count;
         int startIndex = (pageNumber - 1) * pageSize;
 
         // Ensure the start index is within the range of the total number of movies.
@@ -41,7 +41,7 @@ public class MoviesService : IMoviesService
         int moviesToTake = Math.Min(pageSize, totalMovies - startIndex);
 
         // Retrieve the paginated list of movies.
-        ImmutableArray<Movie> paginatedMovies = [
+        ValueCollection<Movie> paginatedMovies = [
             ..MoviesExamples.Movies
                 .Skip(startIndex)
                 .Take(moviesToTake)
@@ -52,5 +52,5 @@ public class MoviesService : IMoviesService
 }
 
 public record GetMoviesResponse(
-    ImmutableArray<Movie> Movies,
+    ValueCollection<Movie> Movies,
     int TotalItems);

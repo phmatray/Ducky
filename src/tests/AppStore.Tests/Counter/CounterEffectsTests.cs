@@ -14,6 +14,8 @@ public sealed class CounterEffectsTests : IDisposable
 
     public CounterEffectsTests()
     {
+        ObservableSystem.DefaultTimeProvider = _timeProvider;
+        
         new IncrementEffect { TimeProvider = _timeProvider }
             .Handle(_actionsSubject, _rootStateSubject)
             .Subscribe(action => _actualAction = action)

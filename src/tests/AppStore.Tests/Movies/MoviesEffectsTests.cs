@@ -34,7 +34,7 @@ public sealed class MoviesEffectsTests : IDisposable
         // Arrange
         SetupRootState();
         List<Movie> movies = [MoviesExamples.Movies[0], MoviesExamples.Movies[1]];
-        ImmutableArray<Movie> immutableMovies = [..movies];
+        ValueCollection<Movie> immutableMovies = [..movies];
         _moviesServiceMock
             .Setup(service => service.GetMoviesAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None))
             .ReturnsAsync(new GetMoviesResponse(immutableMovies, movies.Count));

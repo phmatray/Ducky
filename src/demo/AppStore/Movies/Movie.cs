@@ -24,7 +24,7 @@ public record Movie
 
     public required string Director { get; init; }
 
-    public ImmutableArray<string> Actors { get; init; } = [];
+    public ValueCollection<string> Actors { get; init; } = [];
 
     /// <summary>
     /// Gets the IMDb rating as a whole number from 0 to 5.

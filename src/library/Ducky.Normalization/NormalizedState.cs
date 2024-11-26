@@ -24,9 +24,9 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     public ImmutableDictionary<TKey, TEntity> ById { get; init; } = ImmutableDictionary<TKey, TEntity>.Empty;
 
     /// <summary>
-    /// Gets the array of entity IDs.
+    /// Gets the collection of entity IDs.
     /// </summary>
-    public ImmutableArray<TKey> AllIds
+    public ValueCollection<TKey> AllIds
         => [..ById.Keys];
 
     /// <summary>
@@ -42,7 +42,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// </summary>
     /// <param name="entities">The entities to create the state with.</param>
     /// <returns>A new state with the entities.</returns>
-    public static TState Create(in ImmutableArray<TEntity> entities)
+    public static TState Create(in ValueCollection<TEntity> entities)
     {
         return new() { ById = entities.ToImmutableDictionary(entity => entity.Id) };
     }
@@ -50,8 +50,8 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// <summary>
     /// Selects entities.
     /// </summary>
-    /// <returns>An immutable array of entities.</returns>
-    public ImmutableArray<TEntity> SelectImmutableArray()
+    /// <returns>A value collection of entities.</returns>
+    public ValueCollection<TEntity> SelectEntities()
     {
         return [..ById.Values];
     }
@@ -60,8 +60,8 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// Selects entities based on a predicate.
     /// </summary>
     /// <param name="predicate">The predicate to filter entities.</param>
-    /// <returns>An immutable array of entities that match the predicate.</returns>
-    public ImmutableArray<TEntity> SelectImmutableArray(Func<TEntity, bool> predicate)
+    /// <returns>A collection of entities that match the predicate.</returns>
+    public ValueCollection<TEntity> SelectEntities(Func<TEntity, bool> predicate)
     {
         return [..ById.Values.Where(predicate)];
     }

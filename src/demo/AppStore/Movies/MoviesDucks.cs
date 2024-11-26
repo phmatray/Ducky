@@ -54,7 +54,7 @@ public record MoviesState
 
 public record LoadMovies : IAction;
 
-public record LoadMoviesSuccess(ImmutableArray<Movie> Movies, int TotalItems) : IAction;
+public record LoadMoviesSuccess(ValueCollection<Movie> Movies, int TotalItems) : IAction;
 
 public record LoadMoviesFailure(Exception Error) : IAction;
 

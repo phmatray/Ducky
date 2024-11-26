@@ -8,10 +8,10 @@ namespace AppStore.Notifications;
 
 public record NotificationsState
 {
-    public required ImmutableArray<Notification> Notifications { get; init; }
+    public required ValueCollection<Notification> Notifications { get; init; }
 
     // Selectors
-    public ImmutableArray<Notification> SelectUnreadNotifications()
+    public ValueCollection<Notification> SelectUnreadNotifications()
     {
         return
         [
@@ -28,18 +28,18 @@ public record NotificationsState
 
     public int SelectUnreadNotificationCount()
     {
-        return SelectUnreadNotifications().Length;
+        return SelectUnreadNotifications().Count;
     }
 
-    public ImmutableArray<Notification> SelectNotificationsBySeverity(
+    public ValueCollection<Notification> SelectNotificationsBySeverity(
         NotificationSeverity severity)
     {
         return SelectUnreadNotifications()
             .Where(n => n.Severity == severity)
-            .ToImmutableArray();
+            .ToValueCollection();
     }
 
-    public ImmutableArray<Notification> SelectErrorNotifications()
+    public ValueCollection<Notification> SelectErrorNotifications()
     {
         return SelectNotificationsBySeverity(NotificationSeverity.Error);
     }
@@ -72,7 +72,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
     {
         return new()
         {
-            Notifications = new ImmutableArray<Notification>
+            Notifications = new ValueCollection<Notification>
             {
                 new SuccessNotification("Welcome to Ducky!"),
                 new WarningNotification("This is a warning."),
@@ -96,7 +96,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
                 .Select(n => (n.Id == action.NotificationId)
                     ? n with { IsRead = true }
                     : n)
-                .ToImmutableArray()
+                .ToValueCollection()
         };
     }
 
@@ -107,7 +107,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
         {
             Notifications = state.Notifications
                 .Select(n => n with { IsRead = true })
-                .ToImmutableArray()
+                .ToValueCollection()
         };
     }
 }
