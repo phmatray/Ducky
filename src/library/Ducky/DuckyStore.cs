@@ -55,7 +55,7 @@ public sealed class DuckyStore : IStore, IDisposable
     }
 
     /// <inheritdoc/>
-    public void AddSlices(params ISlice[] slices)
+    public void AddSlices(params IEnumerable<ISlice> slices)
     {
         ArgumentNullException.ThrowIfNull(slices);
 
@@ -70,22 +70,46 @@ public sealed class DuckyStore : IStore, IDisposable
     {
         ArgumentNullException.ThrowIfNull(effect);
 
-        effect
-            .Handle(_dispatcher.ActionStream, RootStateObservable)
-            .Subscribe(_dispatcher.Dispatch)
+        _dispatcher.ActionStream
+            .Where(effect.CanHandle)
+            .Subscribe(action => effect.HandleAsync(action, _dispatcher, RootStateObservable.CurrentValue))
             .AddTo(_subscriptions);
 
-        Logger?.EffectAdded(effect.GetKey(), effect.GetAssemblyName());
+        Logger?.Log(LogLevel.Information, $"Effect added: {effect.GetType().Name}");
     }
 
     /// <inheritdoc/>
-    public void AddEffects(params IEffect[] effects)
+    public void AddEffects(params IEnumerable<IEffect> effects)
     {
         ArgumentNullException.ThrowIfNull(effects);
 
         foreach (IEffect effect in effects)
         {
             AddEffect(effect);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void AddReactiveEffect(IReactiveEffect reactiveEffect)
+    {
+        ArgumentNullException.ThrowIfNull(reactiveEffect);
+
+        reactiveEffect
+            .Handle(_dispatcher.ActionStream, RootStateObservable)
+            .Subscribe(_dispatcher.Dispatch)
+            .AddTo(_subscriptions);
+
+        Logger?.EffectAdded(reactiveEffect.GetKey(), reactiveEffect.GetAssemblyName());
+    }
+
+    /// <inheritdoc/>
+    public void AddReactiveEffects(params IEnumerable<IReactiveEffect> reactiveEffects)
+    {
+        ArgumentNullException.ThrowIfNull(reactiveEffects);
+
+        foreach (IReactiveEffect reactiveEffect in reactiveEffects)
+        {
+            AddReactiveEffect(reactiveEffect);
         }
     }
 

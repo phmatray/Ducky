@@ -2,34 +2,26 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using R3;
-
 namespace Ducky;
 
 /// <summary>
-/// Represents an effect that handles a stream of actions and interacts with the store's state.
+/// Represents an effect that react to an action and dispatch new actions.
 /// </summary>
 public interface IEffect
 {
     /// <summary>
-    /// Gets the key that identifies the effect.
+    /// Handles the specified action and dispatches new actions.
     /// </summary>
-    /// <returns>The key that identifies the effect.</returns>
-    string GetKey();
+    /// <param name="action">The action to handle.</param>
+    /// <param name="dispatcher">The dispatcher to use to dispatch new actions.</param>
+    /// <param name="rootState"></param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task HandleAsync(object action, IDispatcher dispatcher, IRootState rootState);
 
     /// <summary>
-    /// Gets the assembly-qualified name of the effect.
+    /// Determines whether the effect can handle the specified action.
     /// </summary>
-    /// <returns>The assembly-qualified name of the effect.</returns>
-    string GetAssemblyName();
-
-    /// <summary>
-    /// Handles a stream of actions and produces a stream of resulting actions.
-    /// </summary>
-    /// <param name="actions">The source observable sequence of actions.</param>
-    /// <param name="rootState">The source observable sequence of the root state.</param>
-    /// <returns>An observable sequence of resulting actions.</returns>
-    Observable<IAction> Handle(
-        Observable<IAction> actions,
-        Observable<IRootState> rootState);
+    /// <param name="action">The action to check.</param>
+    /// <returns><c>true</c> if the effect can handle the action; otherwise, <c>false</c>.</returns>
+    bool CanHandle(object action);
 }

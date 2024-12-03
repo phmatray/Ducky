@@ -31,19 +31,21 @@ public static class DependencyInjections
         // Scan and register all Slices an Effects
         services.ScanAndRegister<ISlice>(options.Assemblies);
         services.ScanAndRegister<IEffect>(options.Assemblies);
+        services.ScanAndRegister<IReactiveEffect>(options.Assemblies);
 
         // Add Store
         services.AddScoped<DuckyStore>(sp =>
         {
             IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
             ILoggerFactory loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            ISlice[] slices = sp.GetServices<ISlice>().ToArray();
-            IEffect[] effects = sp.GetServices<IEffect>().ToArray();
+            IEnumerable<ISlice> slices = sp.GetServices<ISlice>();
+            IEnumerable<IEffect> effects = sp.GetServices<IEffect>();
+            IEnumerable<IReactiveEffect> reactiveEffects = sp.GetServices<IReactiveEffect>();
 
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
 
-            return StoreFactory.CreateStore(dispatcher, slices, effects);
+            return StoreFactory.CreateStore(dispatcher, slices, effects, reactiveEffects);
         });
 
         return services;
@@ -56,15 +58,14 @@ public static class DependencyInjections
     /// <param name="assemblies">The assemblies to scan for classes.</param>
     private static void ScanAndRegister<T>(
         this IServiceCollection services,
-        Assembly[] assemblies)
+        IEnumerable<Assembly> assemblies)
     {
         foreach (Assembly assembly in assemblies)
         {
-            ServiceDescriptor[] serviceDescriptors = assembly.DefinedTypes
+            IEnumerable<ServiceDescriptor> serviceDescriptors = assembly.DefinedTypes
                 .Where(type => type is { IsAbstract: false, IsInterface: false })
                 .Where(type => typeof(T).IsAssignableFrom(type))
-                .Select(type => ServiceDescriptor.Scoped(typeof(T), type))
-                .ToArray();
+                .Select(type => ServiceDescriptor.Scoped(typeof(T), type));
 
             services.TryAddEnumerable(serviceDescriptors);
         }

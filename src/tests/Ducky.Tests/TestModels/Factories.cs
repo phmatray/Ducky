@@ -6,13 +6,15 @@ namespace Ducky.Tests.TestModels;
 
 internal static class Factories
 {
-    public static DuckyStore CreateTestCounterStore(IEffect[]? effects = null)
+    public static DuckyStore CreateTestCounterStore(
+        IEffect[]? effects = null,
+        IReactiveEffect[]? reactiveEffects = null)
     {
         Dispatcher dispatcher = new();
         ILoggerFactory loggerFactory = LoggerFactory.Create(Configure);
         LoggerProvider.Configure(loggerFactory);
         TestCounterReducers counterReducers = new();
-        return StoreFactory.CreateStore(dispatcher, [counterReducers], effects ?? []);
+        return StoreFactory.CreateStore(dispatcher, [counterReducers], effects ?? [], reactiveEffects ?? []);
     }
 
     public static RootState CreateTestRootState()

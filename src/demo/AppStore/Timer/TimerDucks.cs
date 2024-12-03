@@ -68,7 +68,7 @@ public record TimerReducers : SliceReducers<TimerState>
 #region Effects
 
 // ReSharper disable once UnusedType.Global
-public class StartTimerEffect : Effect
+public class StartTimerEffect : ReactiveEffect
 {
     public override Observable<IAction> Handle(
         Observable<IAction> actions,

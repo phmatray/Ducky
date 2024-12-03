@@ -8,7 +8,7 @@ namespace Demo.Website2.Features.Feedback.Effects;
 /// <summary>
 /// Effect that handles all actions.
 /// </summary>
-public class AllActionsEffect : Effect
+public class AllActionsEffect : ReactiveEffect
 {
     // TODO: Fix this
     // /// <inheritdoc />

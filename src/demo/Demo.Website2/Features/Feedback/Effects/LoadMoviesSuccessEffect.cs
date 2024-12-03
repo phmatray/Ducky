@@ -9,7 +9,7 @@ namespace Demo.Website2.Features.Feedback.Effects;
 /// </summary>
 /// <param name="snackbar">The snackbar service.</param>
 // ReSharper disable once UnusedType.Global
-public class LoadMoviesSuccessEffect(ISnackbar snackbar) : Effect
+public class LoadMoviesSuccessEffect(ISnackbar snackbar) : ReactiveEffect
 {
     /// <inheritdoc />
     public override Observable<IAction> Handle(
