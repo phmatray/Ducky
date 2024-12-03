@@ -7,6 +7,7 @@ namespace AppStore.Tests.Movies;
 [SuppressMessage("Roslynator", "RCS1046:Asynchronous method name should end with \'Async\'")]
 public sealed class MoviesEffectsTests : IDisposable
 {
+    private readonly FakeTimeProvider _timeProvider = new();
     private readonly CompositeDisposable _disposables = [];
     private readonly Subject<IAction> _actionsSubject = new();
     private readonly Subject<IRootState> _rootStateSubject = new();
@@ -15,7 +16,7 @@ public sealed class MoviesEffectsTests : IDisposable
 
     public MoviesEffectsTests()
     {
-        new LoadMoviesEffect(_moviesServiceMock.Object)
+        new LoadMoviesEffect(_moviesServiceMock.Object) { TimeProvider = _timeProvider}
             .Handle(_actionsSubject, _rootStateSubject)
             .Subscribe(_actualActions.Add)
             .AddTo(_disposables);
@@ -29,7 +30,7 @@ public sealed class MoviesEffectsTests : IDisposable
     }
 
     [Fact]
-    public async Task LoadMoviesEffect_ShouldEmitLoadMoviesSuccess_WhenServiceCallSucceeds()
+    public void LoadMoviesEffect_ShouldEmitLoadMoviesSuccess_WhenServiceCallSucceeds()
     {
         // Arrange
         SetupRootState();
@@ -41,7 +42,7 @@ public sealed class MoviesEffectsTests : IDisposable
 
         // Act
         _actionsSubject.OnNext(new LoadMovies());
-        await Task.Delay(100).ConfigureAwait(true); // Ensure the async call completes
+        _timeProvider.Advance(TimeSpan.FromSeconds(1));
 
         // Assert
         _actualActions.Should().HaveCount(1);
@@ -49,7 +50,7 @@ public sealed class MoviesEffectsTests : IDisposable
     }
 
     [Fact]
-    public async Task LoadMoviesEffect_ShouldEmitLoadMoviesFailure_WhenServiceCallFails()
+    public void LoadMoviesEffect_ShouldEmitLoadMoviesFailure_WhenServiceCallFails()
     {
         // Arrange
         SetupRootState();
@@ -60,7 +61,7 @@ public sealed class MoviesEffectsTests : IDisposable
 
         // Act
         _actionsSubject.OnNext(new LoadMovies());
-        await Task.Delay(100).ConfigureAwait(true); // Ensure the async call completes
+        _timeProvider.Advance(TimeSpan.FromSeconds(1));
 
         // Assert
         _actualActions.Should().ContainSingle(); // One for failure
@@ -71,7 +72,20 @@ public sealed class MoviesEffectsTests : IDisposable
     {
         ImmutableSortedDictionary<string, object> dictionary = ImmutableSortedDictionary
             .Create<string, object>()
-            .Add("movies", new List<Movie>());
+            .Add(
+                "movies",
+                new MoviesState
+                {
+                    Movies = ImmutableDictionary<int, Movie>.Empty,
+                    IsLoading = false,
+                    ErrorMessage = null,
+                    Pagination = new Pagination
+                    {
+                        CurrentPage = 1,
+                        TotalPages = 1,
+                        TotalItems = 0
+                    }
+                });
 
         RootState rootState = new(dictionary);
         _rootStateSubject.OnNext(rootState);
