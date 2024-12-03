@@ -39,5 +39,5 @@ public interface ISlice
     /// Handles the dispatch of an action.
     /// </summary>
     /// <param name="action">The action to be dispatched.</param>
-    void OnDispatch(IAction action);
+    void OnDispatch(object action);
 }

@@ -29,10 +29,10 @@ public abstract class ReactiveEffect : IReactiveEffect
     }
 
     /// <inheritdoc />
-    public virtual Observable<IAction> Handle(
-        Observable<IAction> actions,
+    public virtual Observable<object> Handle(
+        Observable<object> actions,
         Observable<IRootState> rootState)
     {
-        return Observable.Empty<IAction>();
+        return Observable.Empty<object>();
     }
 }

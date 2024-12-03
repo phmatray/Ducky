@@ -12,14 +12,14 @@ namespace Demo.Website2.Features.Feedback.Effects;
 public class LoadMoviesSuccessEffect(ISnackbar snackbar) : ReactiveEffect
 {
     /// <inheritdoc />
-    public override Observable<IAction> Handle(
-        Observable<IAction> actions, Observable<IRootState> rootState)
+    public override Observable<object> Handle(
+        Observable<object> actions, Observable<IRootState> rootState)
     {
         return actions
             .OfActionType<LoadMoviesSuccess>()
             .Select(GetSnackBarMessage)
             .Do(message => snackbar.Add(message, Severity.Success))
-            .Select(IAction (message) =>
+            .Select(object (message) =>
             {
                 SuccessNotification notification = new(message);
                 return new AddNotification(notification);

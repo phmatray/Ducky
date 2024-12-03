@@ -130,7 +130,7 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
     /// Dispatches an action to the store.
     /// </summary>
     /// <param name="action">The action to dispatch.</param>
-    protected void Dispatch(IAction action)
+    protected void Dispatch(object action)
     {
         Dispatcher.Dispatch(action);
     }

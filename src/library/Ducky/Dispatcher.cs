@@ -17,20 +17,20 @@ public sealed class Dispatcher : IDispatcher, IDisposable
     private readonly object _syncRoot = new();
 #endif
 
-    private readonly Queue<IAction> _queuedActions = [];
-    private readonly Subject<IAction> _actionSubject = new();
+    private readonly Queue<object> _queuedActions = [];
+    private readonly Subject<object> _actionSubject = new();
     private volatile bool _isDequeuing;
     private bool _disposed;
 
     /// <inheritdoc />
-    public Observable<IAction> ActionStream
+    public Observable<object> ActionStream
         => _actionSubject.AsObservable();
 
     /// <inheritdoc />
-    public IAction? LastAction { get; private set; }
+    public object? LastAction { get; private set; }
 
     /// <inheritdoc />
-    public void Dispatch(IAction action)
+    public void Dispatch(object action)
     {
         if (_disposed)
         {
@@ -81,7 +81,7 @@ public sealed class Dispatcher : IDispatcher, IDisposable
 
         while (true)
         {
-            IAction dequeuedAction;
+            object dequeuedAction;
 
             lock (_syncRoot)
             {

@@ -7,4 +7,4 @@ namespace Demo.Website2.Features.Feedback.Actions;
 /// <summary>
 /// Action to open the About dialog.
 /// </summary>
-public record OpenAboutDialog : IAction;
+public record OpenAboutDialog;

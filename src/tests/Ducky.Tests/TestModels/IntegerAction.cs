@@ -4,4 +4,4 @@
 
 namespace Ducky.Tests.TestModels;
 
-internal sealed record IntegerAction(int Value) : IAction;
+internal sealed record IntegerAction(int Value);

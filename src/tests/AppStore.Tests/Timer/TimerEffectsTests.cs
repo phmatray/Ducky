@@ -8,9 +8,9 @@ public sealed class TimerEffectsTests : IDisposable
 {
     private readonly FakeTimeProvider _timeProvider = new();
     private readonly CompositeDisposable _disposables = [];
-    private readonly Subject<IAction> _actionsSubject = new();
+    private readonly Subject<object> _actionsSubject = new();
     private readonly Subject<IRootState> _rootStateSubject = new();
-    private readonly List<IAction> _actualActions = [];
+    private readonly List<object> _actualActions = [];
 
     public TimerEffectsTests()
     {

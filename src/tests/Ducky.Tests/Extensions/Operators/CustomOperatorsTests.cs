@@ -13,8 +13,8 @@ public sealed class CustomOperatorsTests : IDisposable
     public void FilterActions_Should_FilterByType()
     {
         // Arrange
-        Subject<IAction> source = new();
-        List<IAction> actions = [];
+        Subject<object> source = new();
+        List<object> actions = [];
 
         source.AsObservable()
             .OfActionType<TestAction>()
@@ -35,7 +35,7 @@ public sealed class CustomOperatorsTests : IDisposable
     {
         // Arrange
         Subject<int> source = new();
-        List<IAction> actions = [];
+        List<object> actions = [];
 
         source.AsObservable()
             .SelectAction<int, TestAction>(_ => new TestAction())

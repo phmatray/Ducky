@@ -43,7 +43,7 @@ public abstract partial record SliceReducers<TState>
     /// <summary>
     /// Gets a dictionary that holds the reducers mapped by the type of action.
     /// </summary>
-    public Dictionary<Type, Func<TState, IAction, TState>> Reducers { get; } = [];
+    public Dictionary<Type, Func<TState, object, TState>> Reducers { get; } = [];
 
     /// <inheritdoc />
     public virtual string GetKey()
@@ -104,7 +104,7 @@ public abstract partial record SliceReducers<TState>
     }
 
     /// <inheritdoc />
-    public void OnDispatch(IAction action)
+    public void OnDispatch(object action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -140,7 +140,6 @@ public abstract partial record SliceReducers<TState>
     /// <param name="reducer">The reducer function that takes the state and action and returns a new state.</param>
     /// <exception cref="ArgumentNullException">Thrown when the reducer is null.</exception>
     public void On<TAction>(Func<TState, TAction, TState> reducer)
-        where TAction : IAction
     {
         ArgumentNullException.ThrowIfNull(reducer);
         Reducers[typeof(TAction)] = (state, action) => reducer(state, (TAction)action);
@@ -175,11 +174,11 @@ public abstract partial record SliceReducers<TState>
     /// <param name="action">The action to apply to the state.</param>
     /// <returns>The new state after applying the reducer, or the original state if no reducer is found.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the action is null.</exception>
-    public TState Reduce(TState state, IAction action)
+    public TState Reduce(TState state, object action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return (Reducers.TryGetValue(action.GetType(), out Func<TState, IAction, TState>? reducer))
+        return (Reducers.TryGetValue(action.GetType(), out Func<TState, object, TState>? reducer))
             ? reducer(state, action)
             : state;
     }

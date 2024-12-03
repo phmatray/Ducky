@@ -49,11 +49,11 @@ public record NotificationsState
 
 #region Actions
 
-public record AddNotification(Notification Notification) : IAction;
+public record AddNotification(Notification Notification);
 
-public record MarkNotificationAsRead(Guid NotificationId) : IAction;
+public record MarkNotificationAsRead(Guid NotificationId);
 
-public record MarkAllNotificationsAsRead : IAction;
+public record MarkAllNotificationsAsRead;
 
 #endregion
 

@@ -42,7 +42,7 @@ public sealed class SliceReducersTests : IDisposable
         // Arrange
         _sut.On<IntegerAction>((state, action) => state + action.Value);
         const int initialState = 0;
-        IAction action = new IntegerAction(5);
+        object action = new IntegerAction(5);
 
         // Act
         int newState = _sut.Reduce(initialState, action);

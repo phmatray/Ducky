@@ -29,13 +29,13 @@ public record LayoutState
 
 #region Actions
 
-public record SetTitle(string Title) : IAction;
+public record SetTitle(string Title);
 
-public record ToggleDarkMode : IAction;
+public record ToggleDarkMode;
 
-public record ToggleDrawer : IAction;
+public record ToggleDrawer;
 
-public record ToggleNotifications : IAction;
+public record ToggleNotifications;
 
 #endregion
 

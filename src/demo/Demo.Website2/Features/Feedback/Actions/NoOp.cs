@@ -7,4 +7,4 @@ namespace Demo.Website2.Features.Feedback.Actions;
 /// <summary>
 /// Action that does nothing.
 /// </summary>
-public record NoOp : IAction;
+public record NoOp;

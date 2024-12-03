@@ -54,7 +54,7 @@ public sealed class TodoReducersTests : IDisposable
     public void TodoReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<TodoState, IAction, TodoState>> reducers = _sut.Reducers;
+        Dictionary<Type, Func<TodoState, object, TodoState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(3);

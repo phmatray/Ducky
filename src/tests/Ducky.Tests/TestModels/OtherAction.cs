@@ -4,4 +4,4 @@
 
 namespace Ducky.Tests.TestModels;
 
-internal sealed record OtherAction : IAction;
+internal sealed record OtherAction;

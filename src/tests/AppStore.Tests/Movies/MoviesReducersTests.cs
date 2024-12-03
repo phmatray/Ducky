@@ -59,7 +59,7 @@ public sealed class MoviesReducersTests : IDisposable
     public void MovieReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<MoviesState, IAction, MoviesState>> reducers = _sut.Reducers;
+        Dictionary<Type, Func<MoviesState, object, MoviesState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);

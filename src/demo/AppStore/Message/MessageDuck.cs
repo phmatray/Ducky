@@ -31,11 +31,11 @@ public record MessageState
 
 #region Actions
 
-public record SetMessage(string Message) : IAction;
+public record SetMessage(string Message);
 
-public record AppendMessage(string Message) : IAction;
+public record AppendMessage(string Message);
 
-public record ClearMessage : IAction;
+public record ClearMessage;
 
 #endregion
 

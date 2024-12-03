@@ -24,13 +24,13 @@ public record TimerState
 
 #region Actions
 
-public record StartTimer : IAction;
+public record StartTimer;
 
-public record StopTimer : IAction;
+public record StopTimer;
 
-public record ResetTimer : IAction;
+public record ResetTimer;
 
-public record Tick : IAction;
+public record Tick;
 
 #endregion
 
@@ -70,8 +70,8 @@ public record TimerReducers : SliceReducers<TimerState>
 // ReSharper disable once UnusedType.Global
 public class StartTimerEffect : ReactiveEffect
 {
-    public override Observable<IAction> Handle(
-        Observable<IAction> actions,
+    public override Observable<object> Handle(
+        Observable<object> actions,
         Observable<IRootState> rootState)
     {
         return actions
@@ -80,7 +80,7 @@ public class StartTimerEffect : ReactiveEffect
                 .Interval(TimeSpan.FromSeconds(1), TimeProvider)
                 .Select(_ => new Tick())
                 .TakeUntil(actions.OfActionType<StopTimer>())
-                .Cast<Tick, IAction>());
+                .Cast<Tick, object>());
     }
 }
 

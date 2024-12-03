@@ -55,7 +55,7 @@ public sealed class ProductsReducersTests : IDisposable
     public void ProductsReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<ProductState, IAction, ProductState>> reducers = _sut.Reducers;
+        Dictionary<Type, Func<ProductState, object, ProductState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(2);

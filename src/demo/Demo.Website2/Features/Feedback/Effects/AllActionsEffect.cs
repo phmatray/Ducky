@@ -4,7 +4,6 @@
 
 namespace Demo.Website2.Features.Feedback.Effects;
 
-
 /// <summary>
 /// Effect that handles all actions.
 /// </summary>
@@ -12,8 +11,8 @@ public class AllActionsEffect : ReactiveEffect
 {
     // TODO: Fix this
     // /// <inheritdoc />
-    // public override Observable<IAction> Handle(
-    //     Observable<IAction> actions, Observable<IRootState> rootState)
+    // public override Observable<object> Handle(
+    //     Observable<object> actions, Observable<IRootState> rootState)
     // {
     //     return actions
     //         .Do(action => Console.WriteLine($"Action: {action}"));

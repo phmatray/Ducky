@@ -14,12 +14,12 @@ public interface IDispatcher
     /// <summary>
     /// Gets an observable stream of dispatched actions.
     /// </summary>
-    Observable<IAction> ActionStream { get; }
+    Observable<object> ActionStream { get; }
 
     /// <summary>
     /// Gets the last action that was dispatched.
     /// </summary>
-    IAction? LastAction { get; }
+    object? LastAction { get; }
 
     /// <summary>
     /// Dispatches the specified action.
@@ -27,5 +27,5 @@ public interface IDispatcher
     /// <param name="action">The action to dispatch.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="action"/> is null.</exception>
     /// <exception cref="ObjectDisposedException">Thrown when the dispatcher has been disposed.</exception>
-    void Dispatch(IAction action);
+    void Dispatch(object action);
 }

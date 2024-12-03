@@ -47,7 +47,7 @@ public sealed class MessageReducersTests : IDisposable
     public void MessageReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<MessageState, IAction, MessageState>> reducers = _sut.Reducers;
+        Dictionary<Type, Func<MessageState, object, MessageState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(3);
