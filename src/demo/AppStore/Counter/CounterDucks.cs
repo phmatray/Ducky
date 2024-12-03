@@ -12,13 +12,13 @@ public record CounterState(int Value);
 
 #region Actions
 
-public record Increment(int Amount = 1) : IAction;
+public record Increment(int Amount = 1);
 
-public record Decrement(int Amount = 1) : IAction;
+public record Decrement(int Amount = 1);
 
-public record Reset : IAction;
+public record Reset;
 
-public record SetValue(int Value) : IAction;
+public record SetValue(int Value);
 
 #endregion
 
@@ -46,8 +46,8 @@ public record CounterReducers : SliceReducers<CounterState>
 
 // public class IncrementEffect : ReactiveEffect
 // {
-//     public override Observable<IAction> Handle(
-//         Observable<IAction> actions,
+//     public override Observable<object> Handle(
+//         Observable<object> actions,
 //         Observable<IRootState> rootState)
 //     {
 //         // if the Value is greater than 15, then reset the counter

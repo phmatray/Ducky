@@ -15,14 +15,14 @@ namespace Demo.Website2.Features.Feedback.Effects;
 public class OpenAboutDialogEffect(IDialogService dialog) : ReactiveEffect
 {
     /// <inheritdoc />
-    public override Observable<IAction> Handle(
-        Observable<IAction> actions, Observable<IRootState> rootState)
+    public override Observable<object> Handle(
+        Observable<object> actions, Observable<IRootState> rootState)
     {
         DialogOptions options = new() { CloseOnEscapeKey = true };
 
         return actions
             .OfActionType<OpenAboutDialog>()
             .Do(_ => dialog.ShowAsync<AboutDialog>(null, options))
-            .Select(IAction (_) => new NoOp());
+            .Select(object (_) => new NoOp());
     }
 }

@@ -52,13 +52,13 @@ public record MoviesState
 
 #region Actions
 
-public record LoadMovies : IAction;
+public record LoadMovies;
 
-public record LoadMoviesSuccess(ValueCollection<Movie> Movies, int TotalItems) : IAction;
+public record LoadMoviesSuccess(ValueCollection<Movie> Movies, int TotalItems);
 
-public record LoadMoviesFailure(Exception Error) : IAction;
+public record LoadMoviesFailure(Exception Error);
 
-public record SetCurrentPage(int CurrentPage) : IAction;
+public record SetCurrentPage(int CurrentPage);
 
 #endregion
 
@@ -119,8 +119,8 @@ public record MoviesReducers : SliceReducers<MoviesState>
 // ReSharper disable once UnusedType.Global
 public class LoadMoviesEffect(IMoviesService moviesService) : ReactiveEffect
 {
-    public override Observable<IAction> Handle(
-        Observable<IAction> actions,
+    public override Observable<object> Handle(
+        Observable<object> actions,
         Observable<IRootState> rootState)
     {
         return actions
@@ -136,7 +136,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : ReactiveEffect
         // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
         // ============================================================
         // return actions
-        //     .OfType<IAction, LoadMovies>()
+        //     .OfType<object, LoadMovies>()
         //     .Do(_ => Console.WriteLine("Loading movies..."))
         //     .WithSliceState<MoviesState, LoadMovies>(rootState)
         //     .SelectAwait(async (pair, ct) =>
@@ -144,10 +144,10 @@ public class LoadMoviesEffect(IMoviesService moviesService) : ReactiveEffect
         //         try
         //         {
         //             const int pageSize = 5;
-        //             var state = pair.State;
-        //             var currentPage = state.Pagination.CurrentPage;
-        //             var response = await moviesService.GetMoviesAsync(currentPage, pageSize, ct);
-        //             return new LoadMoviesSuccess(response.Movies, response.TotalItems) as IAction;
+        //             MoviesState state = pair.State;
+        //             int currentPage = state.Pagination.CurrentPage;
+        //             GetMoviesResponse response = await moviesService.GetMoviesAsync(currentPage, pageSize, ct);
+        //             return new LoadMoviesSuccess(response.Movies, response.TotalItems) as object;
         //         }
         //         catch (Exception ex)
         //         {

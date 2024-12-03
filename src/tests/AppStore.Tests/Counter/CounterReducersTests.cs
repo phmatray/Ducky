@@ -47,7 +47,7 @@ public sealed class CounterReducersTests : IDisposable
     public void CounterReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<CounterState, IAction, CounterState>> reducers = _sut.Reducers;
+        Dictionary<Type, Func<CounterState, object, CounterState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);

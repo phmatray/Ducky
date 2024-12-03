@@ -7,4 +7,4 @@ namespace Demo.Website2.Features.Feedback.Actions;
 /// <summary>
 /// Action dispatched after a successful or failed snackbar message.
 /// </summary>
-public record SnackBarAction : IAction;
+public record SnackBarAction;

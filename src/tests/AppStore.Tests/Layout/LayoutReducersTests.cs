@@ -59,7 +59,7 @@ public sealed class LayoutReducersTests : IDisposable
     public void LayoutReducers_Should_Return_Reducers()
     {
         // Act
-        Dictionary<Type, Func<LayoutState, IAction, LayoutState>> reducers = _sut.Reducers;
+        Dictionary<Type, Func<LayoutState, object, LayoutState>> reducers = _sut.Reducers;
 
         // Assert
         reducers.Should().HaveCount(4);

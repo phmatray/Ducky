@@ -7,7 +7,7 @@ namespace Ducky;
 /// <summary>
 /// Defines a contract for an action with a `type` key.
 /// </summary>
-public interface IKeyedAction : IAction
+public interface IKeyedAction
 {
     /// <summary>
     /// Gets the `type` of an action identifies to the consumer the nature of the action that has occurred.

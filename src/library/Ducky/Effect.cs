@@ -10,7 +10,7 @@ public abstract class Effect<TAction> : IEffect
     private IDispatcher? _dispatcher;
 
     /// <inheritdoc />
-    public IAction? LastAction { get; private set; }
+    public object? LastAction { get; private set; }
 
     /// <summary>
     /// Handles the specified action and dispatches new actions.
@@ -39,7 +39,7 @@ public abstract class Effect<TAction> : IEffect
     }
 
     /// <inheritdoc />
-    public void Dispatch(IAction action)
+    public void Dispatch(object action)
     {
         if (_dispatcher is null)
         {

@@ -18,10 +18,9 @@ public static class CustomOperators
     /// <param name="source">The source observable sequence.</param>
     /// <returns>An observable sequence that contains elements from the input sequence of type TAction.</returns>
     public static Observable<TAction> OfActionType<TAction>(
-        this Observable<IAction> source)
-        where TAction : IAction
+        this Observable<object> source)
     {
-        return source.OfType<IAction, TAction>();
+        return source.OfType<object, TAction>();
     }
 
     /// <summary>
@@ -38,7 +37,6 @@ public static class CustomOperators
         Observable<IRootState> rootStateObs,
         string? sliceKey = null)
         where TState : notnull
-        where TAction : IAction
     {
         return source.WithLatestFrom(
             rootStateObs,
@@ -53,20 +51,20 @@ public static class CustomOperators
     }
 
     /// <summary>
-    /// Projects each element of an observable sequence into a new form and casts it to IAction.
+    /// Projects each element of an observable sequence into a new form and casts it to an action.
     /// </summary>
     /// <typeparam name="TSource">The type of the source elements.</typeparam>
-    /// <typeparam name="TResult">The type of the result elements, which must implement IAction.</typeparam>
+    /// <typeparam name="TResult">The type of the result elements, which must be an action.</typeparam>
     /// <param name="source">The source observable sequence.</param>
     /// <param name="selector">A transform function to apply to each element.</param>
-    /// <returns>An observable sequence of IAction.</returns>
-    public static Observable<IAction> SelectAction<TSource, TResult>(
+    /// <returns>An observable sequence of actions.</returns>
+    public static Observable<object> SelectAction<TSource, TResult>(
         this Observable<TSource> source,
         Func<TSource, TResult> selector)
     {
         return source
             .Select(selector)
-            .Cast<TResult, IAction>();
+            .Cast<TResult, object>();
     }
 
     /// <summary>
@@ -93,11 +91,11 @@ public static class CustomOperators
     /// <param name="successSelector">A function that selects the success action based on the result.</param>
     /// <param name="errorSelector">A function that selects the error action based on the exception.</param>
     /// <returns>An observable sequence of actions resulting from the service call.</returns>
-    public static Observable<IAction> InvokeService<TAction, TResult>(
+    public static Observable<object> InvokeService<TAction, TResult>(
         this Observable<TAction> source,
         Func<TAction, ValueTask<TResult>> serviceCall,
-        Func<TResult, IAction> successSelector,
-        Func<Exception, IAction> errorSelector)
+        Func<TResult, object> successSelector,
+        Func<Exception, object> errorSelector)
     {
         return source.SelectAwait(async (action, _) =>
         {

@@ -13,7 +13,7 @@ namespace Ducky;
 /// <param name="NewState">The new state after the change.</param>
 /// <param name="ElapsedMilliseconds">The time taken for the state change in milliseconds.</param>
 public sealed record StateChange<TState>(
-    IAction Action,
+    object Action,
     TState PreviousState,
     TState NewState,
     double ElapsedMilliseconds);

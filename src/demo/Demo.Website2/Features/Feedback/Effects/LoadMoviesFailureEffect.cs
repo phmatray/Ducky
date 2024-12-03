@@ -12,13 +12,13 @@ namespace Demo.Website2.Features.Feedback.Effects;
 public class LoadMoviesFailureEffect(ISnackbar snackbar) : ReactiveEffect
 {
     /// <inheritdoc />
-    public override Observable<IAction> Handle(
-        Observable<IAction> actions, Observable<IRootState> rootState)
+    public override Observable<object> Handle(
+        Observable<object> actions, Observable<IRootState> rootState)
     {
         return actions
             .OfActionType<LoadMoviesFailure>()
             .Do(action => snackbar.Add(action.Error.Message, Severity.Error))
-            .Select(IAction (action) =>
+            .Select(object (action) =>
             {
                 ExceptionNotification notification = new(action.Error);
                 return new AddNotification(notification);

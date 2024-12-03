@@ -21,7 +21,7 @@ public record GoalState
 
 #region Actions
 
-public record SetGoalMet(string GoalKey) : IAction;
+public record SetGoalMet(string GoalKey);
 
 #endregion
 

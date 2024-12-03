@@ -78,7 +78,7 @@ public sealed class StateLoggerObserver<TState> : Observer<StateChange<TState>>
     /// </summary>
     /// <param name="action">The action.</param>
     /// <returns>The name of the action type.</returns>
-    private static string GetActionType(IAction action)
+    private static string GetActionType(object action)
     {
         // if the action object has a property named "TypeKey", return its value
         return (action.GetType().GetProperty(nameof(IKeyedAction.TypeKey)) is { } typeKeyProperty)

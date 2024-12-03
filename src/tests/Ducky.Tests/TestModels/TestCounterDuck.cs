@@ -7,13 +7,13 @@
 namespace Ducky.Tests.TestModels;
 
 // Actions
-public sealed record TestIncrementAction : IAction;
+public sealed record TestIncrementAction;
 
-public sealed record TestDecrementAction : IAction;
+public sealed record TestDecrementAction;
 
-public sealed record TestResetAction : IAction;
+public sealed record TestResetAction;
 
-public sealed record TestSetValueAction(int Value) : IAction;
+public sealed record TestSetValueAction(int Value);
 
 // Reducers
 public sealed record TestCounterReducers : SliceReducers<int>
@@ -35,8 +35,8 @@ public sealed record TestCounterReducers : SliceReducers<int>
 // Effects
 public sealed class TestIncrementEffect : ReactiveEffect
 {
-    public override Observable<IAction> Handle(
-        Observable<IAction> actions,
+    public override Observable<object> Handle(
+        Observable<object> actions,
         Observable<IRootState> rootState)
     {
         // if the Value is greater than 15, then reset the counter

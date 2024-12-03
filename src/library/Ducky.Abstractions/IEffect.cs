@@ -12,7 +12,7 @@ public interface IEffect
     /// <summary>
     /// Gets the last action that was dispatched.
     /// </summary>
-    IAction? LastAction { get; }
+    object? LastAction { get; }
 
     /// <summary>
     /// Handles the specified action and dispatches new actions.
@@ -41,5 +41,5 @@ public interface IEffect
     /// <param name="action">The action to dispatch.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="action"/> is null.</exception>
     /// <exception cref="ObjectDisposedException">Thrown when the dispatcher has been disposed.</exception>
-    void Dispatch(IAction action);
+    void Dispatch(object action);
 }
