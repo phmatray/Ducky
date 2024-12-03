@@ -14,7 +14,9 @@ public sealed class TimerEffectsTests : IDisposable
 
     public TimerEffectsTests()
     {
-        new StartTimerEffect { TimeProvider = _timeProvider }
+        ObservableSystem.DefaultTimeProvider = _timeProvider;
+
+        new StartTimerEffect()
             .Handle(_actionsSubject, _rootStateSubject)
             .Subscribe(_actualActions.Add)
             .AddTo(_disposables);

@@ -16,7 +16,9 @@ public sealed class MoviesEffectsTests : IDisposable
 
     public MoviesEffectsTests()
     {
-        new LoadMoviesEffect(_moviesServiceMock.Object) { TimeProvider = _timeProvider}
+        ObservableSystem.DefaultTimeProvider = _timeProvider;
+
+        new LoadMoviesEffect(_moviesServiceMock.Object)
             .Handle(_actionsSubject, _rootStateSubject)
             .Subscribe(_actualActions.Add)
             .AddTo(_disposables);
