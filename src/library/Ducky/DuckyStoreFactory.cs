@@ -7,7 +7,7 @@ namespace Ducky;
 /// <summary>
 /// Factory for creating instances of <see cref="DuckyStore"/>.
 /// </summary>
-public static class StoreFactory
+public static class DuckyStoreFactory
 {
     /// <summary>
     /// Creates a new instance of <see cref="DuckyStore"/>.

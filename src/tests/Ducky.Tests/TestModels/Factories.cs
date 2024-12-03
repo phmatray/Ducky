@@ -14,7 +14,7 @@ internal static class Factories
         ILoggerFactory loggerFactory = LoggerFactory.Create(Configure);
         LoggerProvider.Configure(loggerFactory);
         TestCounterReducers counterReducers = new();
-        return StoreFactory.CreateStore(dispatcher, [counterReducers], effects ?? [], reactiveEffects ?? []);
+        return DuckyStoreFactory.CreateStore(dispatcher, [counterReducers], effects ?? [], reactiveEffects ?? []);
     }
 
     public static RootState CreateTestRootState()

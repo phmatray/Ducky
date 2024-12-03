@@ -27,6 +27,9 @@ public sealed class Dispatcher : IDispatcher, IDisposable
         => _actionSubject.AsObservable();
 
     /// <inheritdoc />
+    public IAction? LastAction { get; private set; }
+
+    /// <inheritdoc />
     public void Dispatch(IAction action)
     {
         if (_disposed)
@@ -92,6 +95,8 @@ public sealed class Dispatcher : IDispatcher, IDisposable
             }
 
             _actionSubject.OnNext(dequeuedAction);
+
+            LastAction = dequeuedAction;
         }
     }
 }

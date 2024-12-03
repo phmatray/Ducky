@@ -70,9 +70,11 @@ public sealed class DuckyStore : IStore, IDisposable
     {
         ArgumentNullException.ThrowIfNull(effect);
 
+        effect.SetDispatcher(_dispatcher);
+
         _dispatcher.ActionStream
             .Where(effect.CanHandle)
-            .Subscribe(action => effect.HandleAsync(action, _dispatcher, RootStateObservable.CurrentValue))
+            .Subscribe(action => effect.HandleAsync(action, RootStateObservable.CurrentValue))
             .AddTo(_subscriptions);
 
         Logger?.Log(LogLevel.Information, $"Effect added: {effect.GetType().Name}");

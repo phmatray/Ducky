@@ -45,7 +45,7 @@ public static class DependencyInjections
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
 
-            return StoreFactory.CreateStore(dispatcher, slices, effects, reactiveEffects);
+            return DuckyStoreFactory.CreateStore(dispatcher, slices, effects, reactiveEffects);
         });
 
         return services;

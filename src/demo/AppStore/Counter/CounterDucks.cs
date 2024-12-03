@@ -60,17 +60,17 @@ public record CounterReducers : SliceReducers<CounterState>
 //     }
 // }
 
-public class ResetAfter3SecEffect : Effect<Increment>
+public class ResetCounterAfter3Sec : Effect<Increment>
 {
-    public override async Task HandleAsync(Increment action, IDispatcher dispatcher, IRootState rootState)
+    public override async Task HandleAsync(Increment action, IRootState rootState)
     {
         CounterState counterState = rootState.GetSliceState<CounterState>();
 
         // if the Value is greater than 15, then reset the counter
         if (counterState.Value > 15)
         {
-            await Task.Delay(TimeSpan.FromSeconds(3));
-            dispatcher.Dispatch(new Reset());
+            await Task.Delay(TimeSpan.FromSeconds(3), ObservableSystem.DefaultTimeProvider);
+            Dispatch(new Reset());
         }
 
         await Task.CompletedTask;

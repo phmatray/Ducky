@@ -17,6 +17,11 @@ public interface IDispatcher
     Observable<IAction> ActionStream { get; }
 
     /// <summary>
+    /// Gets the last action that was dispatched.
+    /// </summary>
+    IAction? LastAction { get; }
+
+    /// <summary>
     /// Dispatches the specified action.
     /// </summary>
     /// <param name="action">The action to dispatch.</param>
