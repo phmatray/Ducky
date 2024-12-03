@@ -12,7 +12,7 @@ namespace Demo.Website2.Features.Feedback.Effects;
 /// </summary>
 /// <param name="dialog">The dialog service.</param>
 // ReSharper disable once UnusedType.Global
-public class OpenAboutDialogEffect(IDialogService dialog) : Effect
+public class OpenAboutDialogEffect(IDialogService dialog) : ReactiveEffect
 {
     /// <inheritdoc />
     public override Observable<IAction> Handle(

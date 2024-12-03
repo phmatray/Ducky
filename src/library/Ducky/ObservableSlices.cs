@@ -29,7 +29,7 @@ public sealed class ObservableSlices : IDisposable
         _slices.ObserveAdd().Select(ev => ev.Value)
             .Merge(_slices.ObserveRemove().Select(ev => ev.Value))
             .Merge(_slices.ObserveReplace().Select(ev => ev.NewValue))
-            .Select(_ => CreateRootState() as IRootState)
+            .Select(IRootState (_) => CreateRootState())
             .Subscribe(_rootState.AsObserver())
             .AddTo(_subscriptions);
 

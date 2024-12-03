@@ -2,37 +2,51 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using R3;
-
 namespace Ducky;
 
 /// <inheritdoc />
-public abstract class Effect : IEffect
+public abstract class Effect<TAction> : IEffect
 {
+    private IDispatcher? _dispatcher;
+
+    /// <inheritdoc />
+    public IAction? LastAction { get; private set; }
+
     /// <summary>
-    /// Gets or init the time provider used to provide the current time.
+    /// Handles the specified action and dispatches new actions.
     /// </summary>
-    public TimeProvider TimeProvider { get; init; } = TimeProvider.System;
+    /// <param name="action">The action to handle.</param>
+    /// <param name="rootState">The current root state of the application.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public abstract Task HandleAsync(TAction action, IRootState rootState);
 
     /// <inheritdoc />
-    public string GetKey()
+    public Task HandleAsync(object action, IRootState rootState)
     {
-        return GetType().Name;
+        return HandleAsync((TAction)action, rootState);
     }
 
     /// <inheritdoc />
-    public string GetAssemblyName()
+    public bool CanHandle(object action)
     {
-        return GetType().Assembly.GetName().Name
-            ?? GetType().AssemblyQualifiedName
-            ?? throw new DuckyException("AssemblyQualifiedName is null.");
+        return action is TAction;
     }
 
     /// <inheritdoc />
-    public virtual Observable<IAction> Handle(
-        Observable<IAction> actions,
-        Observable<IRootState> rootState)
+    public void SetDispatcher(IDispatcher dispatcher)
     {
-        return Observable.Empty<IAction>();
+        _dispatcher = dispatcher;
+    }
+
+    /// <inheritdoc />
+    public void Dispatch(IAction action)
+    {
+        if (_dispatcher is null)
+        {
+            throw new InvalidOperationException("The dispatcher has not been set.");
+        }
+
+        _dispatcher.Dispatch(action);
+        LastAction = _dispatcher.LastAction;
     }
 }

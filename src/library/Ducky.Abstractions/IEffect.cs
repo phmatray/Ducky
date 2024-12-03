@@ -2,34 +2,44 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using R3;
-
 namespace Ducky;
 
 /// <summary>
-/// Represents an effect that handles a stream of actions and interacts with the store's state.
+/// Represents an effect that react to an action and dispatch new actions.
 /// </summary>
 public interface IEffect
 {
     /// <summary>
-    /// Gets the key that identifies the effect.
+    /// Gets the last action that was dispatched.
     /// </summary>
-    /// <returns>The key that identifies the effect.</returns>
-    string GetKey();
+    IAction? LastAction { get; }
 
     /// <summary>
-    /// Gets the assembly-qualified name of the effect.
+    /// Handles the specified action and dispatches new actions.
     /// </summary>
-    /// <returns>The assembly-qualified name of the effect.</returns>
-    string GetAssemblyName();
+    /// <param name="action">The action to handle.</param>
+    /// <param name="rootState"></param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task HandleAsync(object action, IRootState rootState);
 
     /// <summary>
-    /// Handles a stream of actions and produces a stream of resulting actions.
+    /// Determines whether the effect can handle the specified action.
     /// </summary>
-    /// <param name="actions">The source observable sequence of actions.</param>
-    /// <param name="rootState">The source observable sequence of the root state.</param>
-    /// <returns>An observable sequence of resulting actions.</returns>
-    Observable<IAction> Handle(
-        Observable<IAction> actions,
-        Observable<IRootState> rootState);
+    /// <param name="action">The action to check.</param>
+    /// <returns><c>true</c> if the effect can handle the action; otherwise, <c>false</c>.</returns>
+    bool CanHandle(object action);
+
+    /// <summary>
+    /// Sets the dispatcher used to dispatch new actions.
+    /// </summary>
+    /// <param name="dispatcher">The dispatcher to use.</param>
+    public void SetDispatcher(IDispatcher dispatcher);
+
+    /// <summary>
+    /// Dispatches the specified action.
+    /// </summary>
+    /// <param name="action">The action to dispatch.</param>
+    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="action"/> is null.</exception>
+    /// <exception cref="ObjectDisposedException">Thrown when the dispatcher has been disposed.</exception>
+    void Dispatch(IAction action);
 }

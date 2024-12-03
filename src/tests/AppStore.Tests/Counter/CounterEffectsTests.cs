@@ -4,67 +4,53 @@
 
 namespace AppStore.Tests.Counter;
 
-public sealed class CounterEffectsTests : IDisposable
+public sealed class CounterEffectsTests
 {
+    private readonly ResetCounterAfter3Sec _sut;
     private readonly FakeTimeProvider _timeProvider = new();
-    private readonly CompositeDisposable _disposables = [];
-    private readonly Subject<IAction> _actionsSubject = new();
-    private readonly Subject<IRootState> _rootStateSubject = new();
-    private IAction? _actualAction;
 
     public CounterEffectsTests()
     {
         ObservableSystem.DefaultTimeProvider = _timeProvider;
-        
-        new IncrementEffect { TimeProvider = _timeProvider }
-            .Handle(_actionsSubject, _rootStateSubject)
-            .Subscribe(action => _actualAction = action)
-            .AddTo(_disposables);
-    }
 
-    public void Dispose()
-    {
-        _disposables.Dispose();
-        _actionsSubject.Dispose();
-        _rootStateSubject.Dispose();
+        _sut = new ResetCounterAfter3Sec();
+        _sut.SetDispatcher(new Dispatcher());
     }
 
     [Fact]
     public void IncrementEffect_ShouldEmitResetAction_WhenValueGreaterThan15()
     {
         // Arrange
-        SetupRootState(16);
+        RootState rootState = GetRootState(16);
 
         // Act
-        _actionsSubject.OnNext(new Increment());
+        _ = _sut.HandleAsync(new Increment(), rootState);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
 
         // Assert
-        _actualAction.Should().BeOfType<Reset>();
+        _sut.LastAction.Should().BeOfType<Reset>();
     }
 
     [Fact]
     public void IncrementEffect_ShouldNotEmitResetAction_WhenValueIs15OrLess()
     {
         // Arrange
-        SetupRootState(15);
+        RootState rootState = GetRootState(15);
 
         // Act
-        _actionsSubject.OnNext(new Increment());
+        _ = _sut.HandleAsync(new Increment(), rootState);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
 
         // Assert
-        _actualAction.Should().BeNull();
+        _sut.LastAction.Should().BeNull();
     }
 
-    private void SetupRootState(int counterValue)
+    private static RootState GetRootState(int counterValue)
     {
         ImmutableSortedDictionary<string, object> dictionary = ImmutableSortedDictionary
             .Create<string, object>()
-            .Add("counter", counterValue);
+            .Add("counter", new CounterState(counterValue));
 
-        RootState rootState = new(dictionary);
-
-        _rootStateSubject.OnNext(rootState);
+        return new RootState(dictionary);
     }
 }

@@ -26,7 +26,7 @@ internal interface IStore
     /// Adds multiple slices to the store.
     /// </summary>
     /// <param name="slices">The slices to add.</param>
-    void AddSlices(params ISlice[] slices);
+    void AddSlices(params IEnumerable<ISlice> slices);
 
     /// <summary>
     /// Adds a single effect to the store.
@@ -38,5 +38,17 @@ internal interface IStore
     /// Adds multiple effects to the store.
     /// </summary>
     /// <param name="effects">The effects to add.</param>
-    void AddEffects(params IEffect[] effects);
+    void AddEffects(params IEnumerable<IEffect> effects);
+
+    /// <summary>
+    /// Adds a single reactive effect to the store.
+    /// </summary>
+    /// <param name="reactiveEffect">The reactive effect to add.</param>
+    void AddReactiveEffect(IReactiveEffect reactiveEffect);
+
+    /// <summary>
+    /// Adds multiple reactive effects to the store.
+    /// </summary>
+    /// <param name="reactiveEffects">The reactive effects to add.</param>
+    void AddReactiveEffects(params IEnumerable<IReactiveEffect> reactiveEffects);
 }

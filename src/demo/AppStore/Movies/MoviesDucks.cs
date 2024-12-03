@@ -117,7 +117,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
 #region Effects
 
 // ReSharper disable once UnusedType.Global
-public class LoadMoviesEffect(IMoviesService moviesService) : Effect
+public class LoadMoviesEffect(IMoviesService moviesService) : ReactiveEffect
 {
     public override Observable<IAction> Handle(
         Observable<IAction> actions,

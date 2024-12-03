@@ -33,7 +33,7 @@ public sealed record TestCounterReducers : SliceReducers<int>
 }
 
 // Effects
-public sealed class TestIncrementEffect : Effect
+public sealed class TestIncrementEffect : ReactiveEffect
 {
     public override Observable<IAction> Handle(
         Observable<IAction> actions,
