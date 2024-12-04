@@ -37,7 +37,7 @@ public sealed class SliceReducersTests : IDisposable
     }
 
     [Fact]
-    public void Reduce_Should_ApplyReducer_WithInterface()
+    public void Reduce_Should_ApplyReducer_WithObject()
     {
         // Arrange
         _sut.On<IntegerAction>((state, action) => state + action.Value);
