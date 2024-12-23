@@ -60,7 +60,7 @@ public record CounterReducers : SliceReducers<CounterState>
 //     }
 // }
 
-public class ResetCounterAfter3Sec : Effect<Increment>
+public class ResetCounterAfter3Sec : AsyncEffect<Increment>
 {
     public override async Task HandleAsync(Increment action, IRootState rootState)
     {

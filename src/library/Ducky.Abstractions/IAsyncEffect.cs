@@ -7,7 +7,7 @@ namespace Ducky;
 /// <summary>
 /// Represents an effect that react to an action and dispatch new actions.
 /// </summary>
-public interface IEffect
+public interface IAsyncEffect
 {
     /// <summary>
     /// Gets the last action that was dispatched.
@@ -18,7 +18,7 @@ public interface IEffect
     /// Handles the specified action and dispatches new actions.
     /// </summary>
     /// <param name="action">The action to handle.</param>
-    /// <param name="rootState"></param>
+    /// <param name="rootState">The root state of the application.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     Task HandleAsync(object action, IRootState rootState);
 

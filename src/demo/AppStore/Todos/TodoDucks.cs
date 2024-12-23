@@ -125,19 +125,13 @@ public record TodoReducers : SliceReducers<TodoState>
     }
 
     private static TodoState ReduceCreateTodo(TodoState state, CreateTodo action)
-    {
-        return state.SetOne(new TodoItem(action.Payload.Title));
-    }
+        => state.SetOne(new TodoItem(action.Payload.Title));
 
     private static TodoState ReduceToggleTodo(TodoState state, ToggleTodo action)
-    {
-        return state.UpdateOne(action.Payload.Id, todo => todo.IsCompleted = !todo.IsCompleted);
-    }
+        => state.UpdateOne(action.Payload.Id, todo => todo.IsCompleted = !todo.IsCompleted);
 
     private static TodoState ReduceDeleteTodo(TodoState state, DeleteTodo action)
-    {
-        return state.RemoveOne(action.Payload.Id);
-    }
+        => state.RemoveOne(action.Payload.Id);
 }
 
 #endregion

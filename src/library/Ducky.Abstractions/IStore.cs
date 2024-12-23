@@ -29,16 +29,16 @@ internal interface IStore
     void AddSlices(params IEnumerable<ISlice> slices);
 
     /// <summary>
-    /// Adds a single effect to the store.
+    /// Adds a single async effect to the store.
     /// </summary>
-    /// <param name="effect">The effect to add.</param>
-    void AddEffect(IEffect effect);
+    /// <param name="asyncEffect">The async effect to add.</param>
+    void AddAsyncEffect(IAsyncEffect asyncEffect);
 
     /// <summary>
-    /// Adds multiple effects to the store.
+    /// Adds multiple async effects to the store.
     /// </summary>
-    /// <param name="effects">The effects to add.</param>
-    void AddEffects(params IEnumerable<IEffect> effects);
+    /// <param name="asyncEffects">The async effects to add.</param>
+    void AddAsyncEffects(params IEnumerable<IAsyncEffect> asyncEffects);
 
     /// <summary>
     /// Adds a single reactive effect to the store.

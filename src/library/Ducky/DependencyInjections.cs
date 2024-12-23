@@ -15,7 +15,8 @@ namespace Ducky;
 public static class DependencyInjections
 {
     /// <summary>
-    /// Core method to add Ducky services to the specified <see cref="IServiceCollection"/>. This method registers the BlazorR3 services, dispatcher, slices, and effects.
+    /// Core method to add Ducky services to the specified <see cref="IServiceCollection"/>.
+    /// This method registers the BlazorR3 services, dispatcher, slices, and effects.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
     /// <param name="options">The configured <see cref="DuckyOptions"/>.</param>
@@ -30,7 +31,7 @@ public static class DependencyInjections
 
         // Scan and register all Slices an Effects
         services.ScanAndRegister<ISlice>(options.Assemblies);
-        services.ScanAndRegister<IEffect>(options.Assemblies);
+        services.ScanAndRegister<IAsyncEffect>(options.Assemblies);
         services.ScanAndRegister<IReactiveEffect>(options.Assemblies);
 
         // Add Store
@@ -39,13 +40,13 @@ public static class DependencyInjections
             IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
             ILoggerFactory loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             IEnumerable<ISlice> slices = sp.GetServices<ISlice>();
-            IEnumerable<IEffect> effects = sp.GetServices<IEffect>();
+            IEnumerable<IAsyncEffect> asyncEffects = sp.GetServices<IAsyncEffect>();
             IEnumerable<IReactiveEffect> reactiveEffects = sp.GetServices<IReactiveEffect>();
 
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
 
-            return DuckyStoreFactory.CreateStore(dispatcher, slices, effects, reactiveEffects);
+            return DuckyStoreFactory.CreateStore(dispatcher, slices, asyncEffects, reactiveEffects);
         });
 
         return services;

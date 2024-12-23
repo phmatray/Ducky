@@ -14,19 +14,19 @@ public static class DuckyStoreFactory
     /// </summary>
     /// <param name="dispatcher">The dispatcher to be used by the store.</param>
     /// <param name="slices">The collection of slices to be added to the store.</param>
-    /// <param name="effects">The collection of effects to be added to the store.</param>
+    /// <param name="asyncEffects">The collection of async effects to be added to the store.</param>
     /// <param name="reactiveEffects">The collection of reactive effects to be added to the store.</param>
     /// <returns>A new instance of <see cref="DuckyStore"/>.</returns>
     public static DuckyStore CreateStore(
         IDispatcher dispatcher,
         IEnumerable<ISlice> slices,
-        IEnumerable<IEffect> effects,
+        IEnumerable<IAsyncEffect> asyncEffects,
         IEnumerable<IReactiveEffect> reactiveEffects)
     {
         DuckyStore store = new(dispatcher);
 
         store.AddSlices(slices);
-        store.AddEffects(effects);
+        store.AddAsyncEffects(asyncEffects);
         store.AddReactiveEffects(reactiveEffects);
 
         return store;

@@ -5,7 +5,7 @@
 namespace Ducky;
 
 /// <inheritdoc />
-public abstract class Effect<TAction> : IEffect
+public abstract class AsyncEffect<TAction> : IAsyncEffect
 {
     private IDispatcher? _dispatcher;
 

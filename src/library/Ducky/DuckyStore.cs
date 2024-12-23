@@ -66,28 +66,28 @@ public sealed class DuckyStore : IStore, IDisposable
     }
 
     /// <inheritdoc/>
-    public void AddEffect(IEffect effect)
+    public void AddAsyncEffect(IAsyncEffect asyncEffect)
     {
-        ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(asyncEffect);
 
-        effect.SetDispatcher(_dispatcher);
+        asyncEffect.SetDispatcher(_dispatcher);
 
         _dispatcher.ActionStream
-            .Where(effect.CanHandle)
-            .Subscribe(action => effect.HandleAsync(action, RootStateObservable.CurrentValue))
+            .Where(asyncEffect.CanHandle)
+            .Subscribe(action => asyncEffect.HandleAsync(action, RootStateObservable.CurrentValue))
             .AddTo(_subscriptions);
 
-        Logger?.Log(LogLevel.Information, $"Effect added: {effect.GetType().Name}");
+        Logger?.Log(LogLevel.Information, $"Effect added: {asyncEffect.GetType().Name}");
     }
 
     /// <inheritdoc/>
-    public void AddEffects(params IEnumerable<IEffect> effects)
+    public void AddAsyncEffects(params IEnumerable<IAsyncEffect> asyncEffects)
     {
-        ArgumentNullException.ThrowIfNull(effects);
+        ArgumentNullException.ThrowIfNull(asyncEffects);
 
-        foreach (IEffect effect in effects)
+        foreach (IAsyncEffect effect in asyncEffects)
         {
-            AddEffect(effect);
+            AddAsyncEffect(effect);
         }
     }
 
