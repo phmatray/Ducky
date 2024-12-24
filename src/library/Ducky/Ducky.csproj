@@ -13,8 +13,4 @@
     <PackageReference Include="R3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Ducky.Abstractions\Ducky.Abstractions.csproj" />
-  </ItemGroup>
-
 </Project>

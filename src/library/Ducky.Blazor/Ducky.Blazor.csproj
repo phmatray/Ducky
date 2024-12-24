@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ducky.FluxStandardActions\Ducky.FluxStandardActions.csproj" />
     <ProjectReference Include="..\Ducky\Ducky.csproj" />
   </ItemGroup>
 

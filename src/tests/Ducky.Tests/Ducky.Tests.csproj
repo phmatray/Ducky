@@ -11,10 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\library\Ducky.FluxStandardActions\Ducky.FluxStandardActions.csproj" />
-    <ProjectReference Include="..\..\library\Ducky.Normalization\Ducky.Normalization.csproj" />
-    <ProjectReference Include="..\..\library\Ducky.Operators\Ducky.Operators.csproj" />
-    <ProjectReference Include="..\..\library\Ducky.Selectors\Ducky.Selectors.csproj" />
     <ProjectReference Include="..\..\library\Ducky\Ducky.csproj" />
   </ItemGroup>
 
