@@ -28,16 +28,23 @@ public record CounterReducers : SliceReducers<CounterState>
 {
     public CounterReducers()
     {
-        On<Increment>((state, action) => new(state.Value + action.Amount));
-        On<Decrement>((state, action) => new(state.Value - action.Amount));
+        On<Increment>(Reduce);
+        On<Decrement>(Reduce);
         On<Reset>(GetInitialState);
-        On<SetValue>((_, action) => new(action.Value));
+        On<SetValue>(Reduce);
     }
 
     public override CounterState GetInitialState()
-    {
-        return new(10);
-    }
+        => new(10);
+
+    private static CounterState Reduce(CounterState state, Increment action)
+        => new(state.Value + action.Amount);
+
+    private static CounterState Reduce(CounterState state, Decrement action)
+        => new(state.Value - action.Amount);
+
+    private static CounterState Reduce(CounterState _, SetValue action)
+        => new(action.Value);
 }
 
 #endregion

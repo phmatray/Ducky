@@ -14,10 +14,7 @@ public record TimerState
 
     // Selectors
     public string SelectAngle()
-    {
-        int time = Time % 60;
-        return $"{time * 6}deg";
-    }
+        => $"{Time % 60 * 6}deg";
 }
 
 #endregion
@@ -40,27 +37,30 @@ public record TimerReducers : SliceReducers<TimerState>
 {
     public TimerReducers()
     {
-        On<StartTimer>((state, _)
-            => state with { IsRunning = true });
-
-        On<StopTimer>((state, _)
-            => state with { IsRunning = false });
-
-        On<ResetTimer>((_, _)
-            => new TimerState());
-
-        On<Tick>((state, _)
-            => state with { Time = state.Time + 1 });
+        On<StartTimer>(Reduce);
+        On<StopTimer>(Reduce);
+        On<ResetTimer>(Reduce);
+        On<Tick>(Reduce);
     }
 
     public override TimerState GetInitialState()
-    {
-        return new()
+        => new()
         {
             Time = 0,
             IsRunning = false
         };
-    }
+
+    private static TimerState Reduce(TimerState state, StartTimer _)
+        => state with { IsRunning = true };
+
+    private static TimerState Reduce(TimerState state, StopTimer _)
+        => state with { IsRunning = false };
+
+    private static TimerState Reduce(TimerState timerState, ResetTimer resetTimer)
+        => new();
+
+    private static TimerState Reduce(TimerState state, Tick _)
+        => state with { Time = state.Time + 1 };
 }
 
 #endregion

@@ -31,21 +31,15 @@ public record MoviesState
     // to encapsulate the logic of selecting data from the state.
     // Each method should begin with the word "Select".
     public int SelectMovieCount()
-    {
-        return Movies.Count;
-    }
+        => Movies.Count;
 
     public Movie? SelectMovieById(int id)
-    {
-        return Movies.GetValueOrDefault(id);
-    }
+        => Movies.GetValueOrDefault(id);
 
     public ImmutableDictionary<int, Movie> SelectMoviesByYear()
-    {
-        return Movies
+        => Movies
             .OrderByDescending(pair => pair.Value.Year)
             .ToImmutableDictionary();
-    }
 }
 
 #endregion
@@ -68,36 +62,14 @@ public record MoviesReducers : SliceReducers<MoviesState>
 {
     public MoviesReducers()
     {
-        On<LoadMovies>((state, _)
-            => state with { IsLoading = true, ErrorMessage = null });
-
-        On<LoadMoviesSuccess>((state, action)
-            => state with
-            {
-                Movies = action.Movies.ToImmutableDictionary(movie => movie.Id),
-                IsLoading = false,
-                Pagination = state.Pagination with
-                {
-                    TotalItems = action.TotalItems,
-                    TotalPages = (int)Math.Ceiling(action.TotalItems / 5.0)
-                }
-            });
-
-        On<LoadMoviesFailure>((state, action)
-            => state with
-            {
-                Movies = ImmutableDictionary<int, Movie>.Empty,
-                ErrorMessage = action.Error.Message,
-                IsLoading = false
-            });
-
-        On<SetCurrentPage>((state, action)
-            => state with { Pagination = state.Pagination with { CurrentPage = action.CurrentPage } });
+        On<LoadMovies>(Reduce);
+        On<LoadMoviesSuccess>(Reduce);
+        On<LoadMoviesFailure>(Reduce);
+        On<SetCurrentPage>(Reduce);
     }
 
     public override MoviesState GetInitialState()
-    {
-        return new()
+        => new()
         {
             Movies = ImmutableDictionary<int, Movie>.Empty,
             IsLoading = false,
@@ -109,7 +81,42 @@ public record MoviesReducers : SliceReducers<MoviesState>
                 TotalItems = 0
             }
         };
-    }
+
+    private static MoviesState Reduce(MoviesState state, LoadMovies _)
+        => state with
+        {
+            IsLoading = true,
+            ErrorMessage = null
+        };
+
+    private static MoviesState Reduce(MoviesState state, LoadMoviesSuccess action)
+        => state with
+        {
+            Movies = action.Movies.ToImmutableDictionary(movie => movie.Id),
+            IsLoading = false,
+            Pagination = state.Pagination with
+            {
+                TotalItems = action.TotalItems,
+                TotalPages = (int)Math.Ceiling(action.TotalItems / 5.0)
+            }
+        };
+
+    private static MoviesState Reduce(MoviesState state, LoadMoviesFailure action)
+        => state with
+        {
+            Movies = ImmutableDictionary<int, Movie>.Empty,
+            ErrorMessage = action.Error.Message,
+            IsLoading = false
+        };
+
+    private static MoviesState Reduce(MoviesState state, SetCurrentPage action)
+        => state with
+        {
+            Pagination = state.Pagination with
+            {
+                CurrentPage = action.CurrentPage
+            }
+        };
 }
 
 #endregion

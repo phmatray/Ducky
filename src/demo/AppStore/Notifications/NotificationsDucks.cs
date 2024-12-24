@@ -12,37 +12,26 @@ public record NotificationsState
 
     // Selectors
     public ValueCollection<Notification> SelectUnreadNotifications()
-    {
-        return
+        =>
         [
             ..Notifications
                 .Where(n => !n.IsRead)
                 .Reverse()
         ];
-    }
 
     public bool SelectHasUnreadNotifications()
-    {
-        return !SelectUnreadNotifications().IsEmpty;
-    }
+        => !SelectUnreadNotifications().IsEmpty;
 
     public int SelectUnreadNotificationCount()
-    {
-        return SelectUnreadNotifications().Count;
-    }
+        => SelectUnreadNotifications().Count;
 
-    public ValueCollection<Notification> SelectNotificationsBySeverity(
-        NotificationSeverity severity)
-    {
-        return SelectUnreadNotifications()
+    public ValueCollection<Notification> SelectNotificationsBySeverity(NotificationSeverity severity)
+        => SelectUnreadNotifications()
             .Where(n => n.Severity == severity)
             .ToValueCollection();
-    }
 
     public ValueCollection<Notification> SelectErrorNotifications()
-    {
-        return SelectNotificationsBySeverity(NotificationSeverity.Error);
-    }
+        => SelectNotificationsBySeverity(NotificationSeverity.Error);
 }
 
 #endregion
@@ -63,14 +52,13 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
 {
     public NotificationsReducers()
     {
-        On<AddNotification>(ReduceAddNotification);
-        On<MarkNotificationAsRead>(ReduceMarkNotificationAsRead);
-        On<MarkAllNotificationsAsRead>(ReduceMarkAllNotificationsAsRead);
+        On<AddNotification>(Reduce);
+        On<MarkNotificationAsRead>(Reduce);
+        On<MarkAllNotificationsAsRead>(Reduce);
     }
 
     public override NotificationsState GetInitialState()
-    {
-        return new()
+        => new()
         {
             Notifications = new ValueCollection<Notification>
             {
@@ -79,18 +67,12 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
                 new ErrorNotification("This is an error.")
             }
         };
-    }
 
-    private static NotificationsState ReduceAddNotification(
-        NotificationsState state, AddNotification action)
-    {
-        return new() { Notifications = state.Notifications.Add(action.Notification) };
-    }
+    private static NotificationsState Reduce(NotificationsState state, AddNotification action)
+        => new() { Notifications = state.Notifications.Add(action.Notification) };
 
-    private static NotificationsState ReduceMarkNotificationAsRead(
-        NotificationsState state, MarkNotificationAsRead action)
-    {
-        return new()
+    private static NotificationsState Reduce(NotificationsState state, MarkNotificationAsRead action)
+        => new()
         {
             Notifications = state.Notifications
                 .Select(n => (n.Id == action.NotificationId)
@@ -98,18 +80,14 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
                     : n)
                 .ToValueCollection()
         };
-    }
 
-    private static NotificationsState ReduceMarkAllNotificationsAsRead(
-        NotificationsState state, MarkAllNotificationsAsRead action)
-    {
-        return new()
+    private static NotificationsState Reduce(NotificationsState state, MarkAllNotificationsAsRead action)
+        => new()
         {
             Notifications = state.Notifications
                 .Select(n => n with { IsRead = true })
                 .ToValueCollection()
         };
-    }
 }
 
 #endregion

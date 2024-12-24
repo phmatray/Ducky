@@ -12,19 +12,13 @@ public record MessageState
 
     // Selectors
     public int SelectMessageLength()
-    {
-        return Message.Length;
-    }
+        => Message.Length;
 
     public string SelectMessageInReverse()
-    {
-        return string.Concat(Message.Reverse());
-    }
+        => string.Concat(Message.Reverse());
 
     public string SelectMessageInUpperCase()
-    {
-        return Message.ToUpper(CultureInfo.InvariantCulture);
-    }
+        => Message.ToUpper(CultureInfo.InvariantCulture);
 }
 
 #endregion
@@ -45,15 +39,22 @@ public record MessageReducers : SliceReducers<MessageState>
 {
     public MessageReducers()
     {
-        On<SetMessage>((_, action) => new() { Message = action.Message });
-        On<AppendMessage>((state, action) => new() { Message = state.Message + action.Message });
-        On<ClearMessage>(() => new() { Message = string.Empty });
+        On<SetMessage>(Reduce);
+        On<AppendMessage>(Reduce);
+        On<ClearMessage>(Reduce);
     }
 
     public override MessageState GetInitialState()
-    {
-        return new() { Message = "Hello, Blazor!" };
-    }
+        => new() { Message = "Hello, Blazor!" };
+
+    private static MessageState Reduce(MessageState _, SetMessage action)
+        => new() { Message = action.Message };
+
+    private static MessageState Reduce(MessageState state, AppendMessage action)
+        => new() { Message = state.Message + action.Message };
+
+    private static MessageState Reduce(MessageState state, ClearMessage action)
+        => new() { Message = string.Empty };
 }
 
 #endregion

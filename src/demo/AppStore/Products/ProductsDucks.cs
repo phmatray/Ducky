@@ -36,24 +36,16 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
 
     // Memoized Selectors
     public ValueCollection<Product> SelectElectronics()
-    {
-        return _selectElectronics(this);
-    }
+        => _selectElectronics(this);
 
     public ValueCollection<Product> SelectClothing()
-    {
-        return _selectClothing(this);
-    }
+        => _selectClothing(this);
 
     public decimal SelectTotalPriceOfElectronics()
-    {
-        return _selectTotalPriceOfElectronics(this);
-    }
+        => _selectTotalPriceOfElectronics(this);
 
     public decimal SelectTotalPriceOfClothing()
-    {
-        return _selectTotalPriceOfClothing(this);
-    }
+        => _selectTotalPriceOfClothing(this);
 }
 
 #endregion
@@ -94,16 +86,12 @@ public record ProductsReducers : SliceReducers<ProductState>
 {
     public ProductsReducers()
     {
-        On<AddProduct>((state, action)
-            => state.SetOne(action.Payload.Product));
-
-        On<RemoveProduct>((state, action)
-            => state.RemoveOne(action.Payload.ProductId));
+        On<AddProduct>(Reduce);
+        On<RemoveProduct>(Reduce);
     }
 
     public override ProductState GetInitialState()
-    {
-        return ProductState.Create([
+        => ProductState.Create([
             new Product(SampleIds.Id1, "iPhone 12", 799.99m, "Electronics"),
             new Product(SampleIds.Id2, "MacBook Pro", 1299.99m, "Electronics"),
             new Product(SampleIds.Id3, "Nike Air Max", 129, "Clothing"),
@@ -111,7 +99,12 @@ public record ProductsReducers : SliceReducers<ProductState>
             new Product(SampleIds.Id5, "Samsung Galaxy S21", 699.99m, "Electronics"),
             new Product(SampleIds.Id6, "Bag Louis Vuitton", 1999.99m, "Clothing")
         ]);
-    }
+
+    private static ProductState Reduce(ProductState state, AddProduct action)
+        => state.SetOne(action.Payload.Product);
+
+    private static ProductState Reduce(ProductState state, RemoveProduct action)
+        => state.RemoveOne(action.Payload.ProductId);
 }
 
 #endregion

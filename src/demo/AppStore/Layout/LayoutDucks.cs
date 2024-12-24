@@ -20,9 +20,7 @@ public record LayoutState
 
     // Selectors
     public string SelectFullTitle()
-    {
-        return $"{Title} - {Version}";
-    }
+        => $"{Title} - {Version}";
 }
 
 #endregion
@@ -45,22 +43,14 @@ public record LayoutReducers : SliceReducers<LayoutState>
 {
     public LayoutReducers()
     {
-        On<SetTitle>((state, action)
-            => state with { Title = action.Title });
-
-        On<ToggleDarkMode>((state, _)
-            => state with { IsDarkMode = !state.IsDarkMode });
-
-        On<ToggleDrawer>((state, _)
-            => state with { IsDrawerOpen = !state.IsDrawerOpen });
-
-        On<ToggleNotifications>((state, _)
-            => state with { IsNotificationOpen = !state.IsNotificationOpen });
+        On<SetTitle>(Reduce);
+        On<ToggleDarkMode>(Reduce);
+        On<ToggleDrawer>(Reduce);
+        On<ToggleNotifications>(Reduce);
     }
 
     public override LayoutState GetInitialState()
-    {
-        return new()
+        => new()
         {
             Title = "Ducky",
             Version = DuckyVersioning.GetVersion().ToString(),
@@ -68,7 +58,18 @@ public record LayoutReducers : SliceReducers<LayoutState>
             IsDrawerOpen = true,
             IsNotificationOpen = false
         };
-    }
+
+    private static LayoutState Reduce(LayoutState state, SetTitle action)
+        => state with { Title = action.Title };
+
+    private static LayoutState Reduce(LayoutState state, ToggleDarkMode _)
+        => state with { IsDarkMode = !state.IsDarkMode };
+
+    private static LayoutState Reduce(LayoutState state, ToggleDrawer _)
+        => state with { IsDrawerOpen = !state.IsDrawerOpen };
+
+    private static LayoutState Reduce(LayoutState state, ToggleNotifications _)
+        => state with { IsNotificationOpen = !state.IsNotificationOpen };
 }
 
 #endregion

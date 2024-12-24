@@ -12,9 +12,7 @@ public record GoalState
 
     // Selectors
     public bool SelectIsGoalMet(string goalKey)
-    {
-        return Goals.TryGetValue(goalKey, out bool isMet) && isMet;
-    }
+        => Goals.TryGetValue(goalKey, out bool isMet) && isMet;
 }
 
 #endregion
@@ -31,18 +29,14 @@ public record GoalsReducers : SliceReducers<GoalState>
 {
     public GoalsReducers()
     {
-        On<SetGoalMet>(ReduceSetGoalMet);
+        On<SetGoalMet>(Reduce);
     }
 
     public override GoalState GetInitialState()
-    {
-        return new() { Goals = ImmutableSortedDictionary<string, bool>.Empty };
-    }
+        => new() { Goals = ImmutableSortedDictionary<string, bool>.Empty };
 
-    private static GoalState ReduceSetGoalMet(GoalState state, SetGoalMet action)
-    {
-        return new() { Goals = state.Goals.SetItem(action.GoalKey, true) };
-    }
+    private static GoalState Reduce(GoalState state, SetGoalMet action)
+        => new() { Goals = state.Goals.SetItem(action.GoalKey, true) };
 }
 
 #endregion

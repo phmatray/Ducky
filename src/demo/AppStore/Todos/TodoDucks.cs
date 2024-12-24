@@ -11,34 +11,22 @@ public record TodoState
 {
     // Selectors
     public ValueCollection<TodoItem> SelectCompletedTodos()
-    {
-        return SelectEntities(todo => todo.IsCompleted);
-    }
+        => SelectEntities(todo => todo.IsCompleted);
 
     public int SelectCompletedTodosCount()
-    {
-        return SelectCompletedTodos().Count;
-    }
+        => SelectCompletedTodos().Count;
 
     public bool SelectHasCompletedTodos()
-    {
-        return !SelectCompletedTodos().IsEmpty;
-    }
+        => !SelectCompletedTodos().IsEmpty;
 
     public ValueCollection<TodoItem> SelectActiveTodos()
-    {
-        return SelectEntities(todo => !todo.IsCompleted);
-    }
+        => SelectEntities(todo => !todo.IsCompleted);
 
     public int SelectActiveTodosCount()
-    {
-        return SelectActiveTodos().Count;
-    }
+        => SelectActiveTodos().Count;
 
     public bool SelectHasActiveTodos()
-    {
-        return !SelectActiveTodos().IsEmpty;
-    }
+        => !SelectActiveTodos().IsEmpty;
 }
 
 #endregion
@@ -108,29 +96,27 @@ public record TodoReducers : SliceReducers<TodoState>
 {
     public TodoReducers()
     {
-        On<CreateTodo>(ReduceCreateTodo);
-        On<ToggleTodo>(ReduceToggleTodo);
-        On<DeleteTodo>(ReduceDeleteTodo);
+        On<CreateTodo>(Reduce);
+        On<ToggleTodo>(Reduce);
+        On<DeleteTodo>(Reduce);
     }
 
     public override TodoState GetInitialState()
-    {
-        return TodoState.Create([
+        => TodoState.Create([
             new TodoItem(SampleIds.Id1, "Learn Blazor", true),
             new TodoItem(SampleIds.Id2, "Learn Redux"),
             new TodoItem(SampleIds.Id3, "Learn Reactive Programming"),
             new TodoItem(SampleIds.Id4, "Create a Todo App", true),
             new TodoItem(SampleIds.Id5, "Publish a NuGet package")
         ]);
-    }
 
-    private static TodoState ReduceCreateTodo(TodoState state, CreateTodo action)
+    private static TodoState Reduce(TodoState state, CreateTodo action)
         => state.SetOne(new TodoItem(action.Payload.Title));
 
-    private static TodoState ReduceToggleTodo(TodoState state, ToggleTodo action)
+    private static TodoState Reduce(TodoState state, ToggleTodo action)
         => state.UpdateOne(action.Payload.Id, todo => todo.IsCompleted = !todo.IsCompleted);
 
-    private static TodoState ReduceDeleteTodo(TodoState state, DeleteTodo action)
+    private static TodoState Reduce(TodoState state, DeleteTodo action)
         => state.RemoveOne(action.Payload.Id);
 }
 
