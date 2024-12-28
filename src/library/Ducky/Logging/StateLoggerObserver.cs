@@ -16,9 +16,10 @@ namespace Ducky;
 /// <typeparam name="TState">The type of the state.</typeparam>
 public sealed class StateLoggerObserver<TState> : Observer<StateChange<TState>>
 {
+    // Use NullLogger as a fallback if the LoggerProvider gives null.
     private static readonly ILogger<StateLoggerObserver<TState>> Logger =
         LoggerProvider.CreateLogger<StateLoggerObserver<TState>>()
-            ?? throw new InvalidOperationException("Logger not found.");
+            ?? new ConsoleFallbackLogger<StateLoggerObserver<TState>>();
 
     // ReSharper disable once StaticMemberInGenericType
     private static readonly JsonSerializerOptions SerializerOptions = new()
