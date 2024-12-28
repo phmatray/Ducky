@@ -34,9 +34,9 @@ namespace Demo.AppStore
     }
 
     // Actions
-    public record Increment(int Amount = 1) : IAction;
-    public record Decrement(int Amount = 1) : IAction;
-    public record Reset : IAction;
+    public record Increment(int Amount = 1);
+    public record Decrement(int Amount = 1);
+    public record Reset;
 
     // Reducers
     public record CounterReducers : SliceReducers<CounterState>
