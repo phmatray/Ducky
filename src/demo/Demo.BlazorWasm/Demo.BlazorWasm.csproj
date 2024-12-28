@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoWarn>$(NoWarn);RCS1090</NoWarn>
@@ -17,7 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\library\Ducky.Blazor\Ducky.Blazor.csproj" />
     <ProjectReference Include="..\..\library\Ducky\Ducky.csproj" />
-    <ProjectReference Include="..\AppStore\AppStore.csproj" />
   </ItemGroup>
 
 </Project>

@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\demo\AppStore\AppStore.csproj" />
+    <ProjectReference Include="..\..\demo\Demo.BlazorWasm\Demo.BlazorWasm.csproj" />
   </ItemGroup>
 
 </Project>

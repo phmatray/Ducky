@@ -4,7 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace AppStore.Movies;
+namespace Demo.BlazorWasm.AppStore;
 
 [SuppressMessage("Roslynator", "RCS0056:A line is too long")]
 public static class MoviesExamples

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Demo.BlazorWasm;
+using Demo.BlazorWasm.AppStore;
 using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
 using Ducky.Blazor;
@@ -28,6 +29,6 @@ services.AddScoped<IJsonColorizer, JsonColorizer>();
 services.AddTransient<IMoviesService, MoviesService>();
 
 // Add Ducky
-services.AddDucky(configuration, options => options.AssemblyNames = ["AppStore"]);
+services.AddDucky(configuration);
 
 await builder.Build().RunAsync();
