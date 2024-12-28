@@ -236,7 +236,7 @@ dotnet_diagnostic.rcs0042.severity = warning
 dotnet_diagnostic.rcs0044.severity = none
 
 # Use linefeed as new line
-dotnet_diagnostic.rcs0045.severity = warning
+dotnet_diagnostic.rcs0045.severity = none
 
 # Use spaces instead of tab
 dotnet_diagnostic.rcs0046.severity = warning
