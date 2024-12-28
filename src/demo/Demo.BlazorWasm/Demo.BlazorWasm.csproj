@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);RCS1090</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly"/>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer"/>
+    <PackageReference Include="Humanizer.Core" />
+    <PackageReference Include="MudBlazor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\library\Ducky.Blazor\Ducky.Blazor.csproj" />
+    <ProjectReference Include="..\..\library\Ducky\Ducky.csproj" />
+    <ProjectReference Include="..\AppStore\AppStore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Components\Layout\CounterLink.razor" />
+    <AdditionalFiles Include="Components\Layout\MainLayout.razor" />
+    <AdditionalFiles Include="Components\Layout\NavMenu.razor" />
+    <AdditionalFiles Include="Components\Layout\NotificationsBadge.razor" />
+    <AdditionalFiles Include="Components\Layout\NotificationsDrawer.razor" />
+    <AdditionalFiles Include="Components\Pages\Home.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Components\" />
+  </ItemGroup>
+
+</Project>

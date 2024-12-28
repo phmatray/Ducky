@@ -1,0 +1,34 @@
+﻿@page "/"
+@inherits DuckyComponent<RootState>
+@inject IRootStateSerializer RootStateSerializer
+
+<PageTitle>Ducky</PageTitle>
+
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">System</MudText>
+      <MudText Typo="Typo.h3">Serialized State</MudText>
+      <MudText Typo="Typo.body1">
+        The current state of the application is serialized below.<br/>
+        This is useful for debugging and understanding the current state of the application.
+      </MudText>
+      <MudText Typo="Typo.body1">
+        <b>What is a Serialized State?</b><br/>
+        Serialization is the process of converting the state of the application into a format that can be easily stored and transported.
+        This allows for easy inspection, debugging, and can be useful for persisting the state between sessions or transferring it across different parts of the application.
+      </MudText>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12">
+    <MudExpansionPanels MultiExpansion="true">
+      @foreach (var key in State.GetKeys())
+      {
+        <MudExpansionPanel Text="@key" Style="overflow: hidden;">
+          <JsonMarkup Data="@RootStateSerializer.Serialize(State, key)"/>
+        </MudExpansionPanel>
+      }
+    </MudExpansionPanels>
+  </MudItem>
+</MudGrid>

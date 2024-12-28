@@ -1,0 +1,76 @@
+@page "/counter"
+@inherits DuckyComponent<CounterState>
+
+<PageTitle>Ducky - Counter</PageTitle>
+
+<MudGrid>
+  <MudItem xs="12">
+    <MudStack>
+      <MudText Typo="Typo.subtitle1">Example</MudText>
+      <MudText Typo="Typo.h3">Counter <strong>@CounterValue</strong></MudText>
+      <MudText Typo="Typo.body1">
+        Creates an interactive counter using the Ducky state management library for predictable state handling,<br/>
+        featuring increment, decrement, and reset buttons to manage the counter state.
+      </MudText>
+      <MudList T="string" Dense="true">
+        <Goal Condition="() => IsEffectTriggered" ConditionKey="counter-exceeds-15">
+          The counter exceeds 15 (an effect will be triggered to reset the counter to 10 after 3 seconds.)
+        </Goal>
+        <Goal Condition="() => IsDisabled" ConditionKey="counter-reaches-zero">
+          The counter reaches zero (the decrement button will be disabled.)
+        </Goal>
+      </MudList>
+    </MudStack>
+  </MudItem>
+
+  <MudItem xs="12">
+    <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Start">
+      <MudNumericField @bind-Value="Amount" FullWidth="@false" Min="1" Max="10" Variant="Variant.Outlined"/>
+      <MudButtonGroup Variant="Variant.Outlined">
+        <MudButton OnClick="Decrement" Disabled="@IsDisabled">Decrement</MudButton>
+        <MudButton OnClick="Reset">Set to 10</MudButton>
+        <MudButton OnClick="Increment">Increment</MudButton>
+      </MudButtonGroup>
+    </MudStack>
+  </MudItem>
+  
+  <MudItem xs="12">
+    <MudProgressLinear
+      Color="Color.Primary"
+      Size="Size.Large"
+      Rounded
+      Indeterminate="@IsEffectTriggered"
+      Value="@CounterValue"
+      Max="15"/>
+  </MudItem>
+</MudGrid>
+
+@code {
+
+  private int Amount { get; set; } = 2;
+
+  private int CounterValue
+    => State.Value;
+  
+  private bool IsDisabled
+    => State.Value <= 0;
+  
+  private bool IsEffectTriggered
+    => State.Value > 15;
+
+  private void Increment()
+  {
+    Dispatch(new Increment(Amount));
+  }
+
+  private void Decrement()
+  {
+    Dispatch(new Decrement(Amount));
+  }
+
+  private void Reset()
+  {
+    Dispatch(new Reset());
+  }
+
+}
