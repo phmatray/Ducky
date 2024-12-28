@@ -4,18 +4,21 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoWarn>$(NoWarn);RCS1090</NoWarn>
+    <RunAOTCompilation>true</RunAOTCompilation>
+    <GHPages>true</GHPages>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly"/>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer"/>
-    <PackageReference Include="Humanizer.Core" />
-    <PackageReference Include="MudBlazor" />
+    <PackageReference Include="Humanizer.Core"/>
+    <PackageReference Include="MudBlazor"/>
+    <PackageReference Include="PublishSPAforGitHubPages.Build"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\library\Ducky.Blazor\Ducky.Blazor.csproj" />
-    <ProjectReference Include="..\..\library\Ducky\Ducky.csproj" />
+    <ProjectReference Include="..\..\library\Ducky.Blazor\Ducky.Blazor.csproj"/>
+    <ProjectReference Include="..\..\library\Ducky\Ducky.csproj"/>
   </ItemGroup>
 
 </Project>
