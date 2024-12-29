@@ -7,7 +7,8 @@ using Nuke.Common.CI.GitHubActions;
     OnPushBranchesIgnore = [MainBranch, $"{ReleaseBranchPrefix}/*"],
     OnPullRequestBranches = [DevelopBranch],
     InvokedTargets = [nameof(Tests), nameof(Pack)],
-    PublishArtifacts = false)]
+    PublishArtifacts = false,
+    AutoGenerate = false)]
 [GitHubActions(
     "macos-latest",
     GitHubActionsImage.MacOsLatest,
@@ -15,7 +16,8 @@ using Nuke.Common.CI.GitHubActions;
     OnPushBranchesIgnore = [MainBranch, $"{ReleaseBranchPrefix}/*"],
     OnPullRequestBranches = [DevelopBranch],
     InvokedTargets = [nameof(Tests), nameof(Pack)],
-    PublishArtifacts = false)]
+    PublishArtifacts = false,
+    AutoGenerate = false)]
 [GitHubActions(
     "ubuntu-latest",
     GitHubActionsImage.UbuntuLatest,
@@ -23,5 +25,6 @@ using Nuke.Common.CI.GitHubActions;
     OnPushBranchesIgnore = [MainBranch, $"{ReleaseBranchPrefix}/*"],
     OnPullRequestBranches = [DevelopBranch],
     InvokedTargets = [nameof(Tests), nameof(Pack)],
-    PublishArtifacts = false)]
+    PublishArtifacts = false,
+    AutoGenerate = false)]
 partial class Build;
