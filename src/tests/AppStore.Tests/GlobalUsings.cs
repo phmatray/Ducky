@@ -4,14 +4,6 @@
 
 global using System.Collections.Immutable;
 global using System.Diagnostics.CodeAnalysis;
-global using AppStore.Counter;
-global using AppStore.Layout;
-global using AppStore.Message;
-global using AppStore.Movies;
-global using AppStore.Notifications;
-global using AppStore.Products;
-global using AppStore.Timer;
-global using AppStore.Todos;
 global using Ducky;
 global using FluentAssertions;
 global using Microsoft.Extensions.Time.Testing;

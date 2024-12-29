@@ -69,8 +69,15 @@ partial class Build : NukeBuild
             // Clean Artifacts directory
             ArtifactsDirectory.CreateOrCleanDirectory();
         });
+    
+    Target InstallWorkloads => _ => _
+        .Executes(() =>
+        {
+            DotNetTasks.DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools", "wasm-tools-net8"));
+        });
 
     Target Restore => _ => _
+        .DependsOn(InstallWorkloads)
         .Executes(() =>
         {
             Log.Information("Restoring NuGet packages");
