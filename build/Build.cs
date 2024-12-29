@@ -73,7 +73,7 @@ partial class Build : NukeBuild
     Target InstallWorkloads => _ => _
         .Executes(() =>
         {
-            DotNetTasks.DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools"));
+            DotNetTasks.DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools", "wasm-tools-net8"));
         });
 
     Target Restore => _ => _
