@@ -24,14 +24,13 @@
     "ExecutableTarget": {
       "type": "string",
       "enum": [
-        "AnnounceDiscord",
         "Clean",
         "Compile",
-        "IntegrationTests",
         "Pack",
-        "Publish",
+        "PublishToGithub",
+        "PublishToGitHubPages",
+        "PublishToNuGet",
         "Restore",
-        "Tests",
         "UnitTests",
         "UpdateChangeLog",
         "UpdateDocumentation",
@@ -109,6 +108,10 @@
   "allOf": [
     {
       "properties": {
+        "ArtifactsType": {
+          "type": "string",
+          "description": "Artifacts Type"
+        },
         "Configuration": {
           "type": "string",
           "description": "Configuration to build - Default is 'Debug' (local) or 'Release' (server)",
@@ -117,9 +120,22 @@
             "Release"
           ]
         },
-        "DiscordWebhook": {
+        "Copyright": {
           "type": "string",
+          "description": "Copyright Details"
+        },
+        "ExcludedArtifactsType": {
+          "type": "string",
+          "description": "Excluded Artifacts Type"
+        },
+        "NuGetApiKey": {
+          "type": "string",
+          "description": "Nuget Api Key",
           "default": "Secrets must be entered via 'nuke :secrets [profile]'"
+        },
+        "NugetFeed": {
+          "type": "string",
+          "description": "Nuget Feed Url for Public Access of Pre Releases"
         },
         "Solution": {
           "type": "string",
