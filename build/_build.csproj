@@ -18,11 +18,17 @@
 
   <ItemGroup>
     <PackageDownload Include="docfx.console" Version="[2.59.4]" />
-    <PackageDownload Include="GitVersion.Tool" Version="[6.0.5]" />
+    <PackageDownload Include="GitVersion.Tool" Version="[6.1.0]" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="logs\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\CHANGELOG.md">
+      <Link>config\CHANGELOG.md</Link>
+    </Content>
   </ItemGroup>
 
 </Project>

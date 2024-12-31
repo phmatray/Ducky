@@ -1,4 +1,8 @@
 {
   "$schema": "build.schema.json",
-  "Solution": "Ducky.sln"
+  "Solution": "Ducky.sln",
+  "ArtifactsType": "*.nupkg",
+  "Copyright": "©Atypical Consulting SRL 2020-2024",
+  "ExcludedArtifactsType": "symbols.nupkg",
+  "NugetFeed": "https://api.nuget.org/v3/index.json"
 }
