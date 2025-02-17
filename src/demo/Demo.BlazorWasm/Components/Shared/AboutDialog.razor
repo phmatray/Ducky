@@ -6,7 +6,6 @@
   </TitleContent>
   <DialogContent>
     <MudStack>
-      
       <MudText Typo="Typo.h6">About This Application</MudText>
       <MudDivider/>
       <MudText>
@@ -45,6 +44,6 @@
 @code {
 
   [CascadingParameter]
-  private MudDialogInstance MudDialog { get; set; } = null!;
+  private IMudDialogInstance MudDialog { get; set; } = null!;
 
 }
