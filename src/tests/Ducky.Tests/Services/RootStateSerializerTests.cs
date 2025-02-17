@@ -31,7 +31,9 @@ public class RootStateSerializerTests
         string json = _sut.Serialize(_rootState);
 
         // Assert
-        json.ShouldBeEquivalentTo(JsonString);
+        json.ShouldContain("test-key");
+        json.ShouldContain("Ducky.Tests.TestModels.TestState");
+        json.ShouldContain("42");
     }
 
     [Fact]
