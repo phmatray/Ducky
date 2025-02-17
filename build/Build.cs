@@ -22,7 +22,6 @@ using Octokit;
 using Octokit.Internal;
 using Serilog;
 using static Nuke.Common.EnvironmentInfo;
-using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.Discord.DiscordTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
@@ -98,7 +97,7 @@ partial class Build : NukeBuild
         .Description("Logs the GitVersion")
         .Executes(() =>
         {
-            Log.Information("GitVersion = {Value}", GitVersion.MajorMinorPatch);
+            Log.Information("GitVersion = {Value}", GitVersion.NuGetVersionV2);
         });
     
     Target Clean => _ => _
