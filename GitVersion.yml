@@ -28,7 +28,6 @@ branches:
     pre-release-weight: 0
   main:
     mode: ContinuousDelivery
-    tag: ''
     increment: Patch
     prevent-increment-of-merged-branch-version: true
     track-merge-target: false
@@ -110,7 +109,6 @@ branches:
     pre-release-weight: 30000
   support:
     mode: ContinuousDelivery
-    tag: ''
     increment: Patch
     prevent-increment-of-merged-branch-version: true
     track-merge-target: false
