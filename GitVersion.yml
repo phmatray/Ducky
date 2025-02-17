@@ -16,7 +16,7 @@ commit-message-incrementing: Enabled
 branches:
   develop:
     mode: ContinuousDeployment
-    tag: alpha
+    pre-release-tag: alpha
     increment: Minor
     prevent-increment-of-merged-branch-version: false
     track-merge-target: true
@@ -41,7 +41,7 @@ branches:
     pre-release-weight: 55000
   release:
     mode: ContinuousDelivery
-    tag: beta
+    pre-release-tag: beta
     increment: None
     prevent-increment-of-merged-branch-version: true
     track-merge-target: false
@@ -57,7 +57,7 @@ branches:
     pre-release-weight: 30000
   feature:
     mode: ContinuousDelivery
-    tag: useBranchName
+    pre-release-tag: useBranchName
     increment: Inherit
     prevent-increment-of-merged-branch-version: false
     track-merge-target: false
@@ -75,7 +75,7 @@ branches:
     pre-release-weight: 30000
   pull-request:
     mode: ContinuousDelivery
-    tag: PullRequest
+    pre-release-tag: PullRequest
     increment: Inherit
     prevent-increment-of-merged-branch-version: false
     tag-number-pattern: '[/-](?<number>\d+)'
@@ -94,7 +94,7 @@ branches:
     pre-release-weight: 30000
   hotfix:
     mode: ContinuousDelivery
-    tag: beta
+    pre-release-tag: beta
     increment: Patch
     prevent-increment-of-merged-branch-version: false
     track-merge-target: false
