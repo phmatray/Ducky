@@ -30,7 +30,8 @@ public sealed class ProductsReducersTests : IDisposable
         ProductState initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Should().BeEquivalentTo(_initialState);
+        initialState.SelectEntities().Count.ShouldBe(6);
+        initialState.SelectEntities().ShouldBeEquivalentTo(_initialState.SelectEntities());
     }
 
     [Fact]
@@ -40,7 +41,7 @@ public sealed class ProductsReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be(Key);
+        key.ShouldBe(Key);
     }
 
     [Fact]
@@ -50,7 +51,7 @@ public sealed class ProductsReducersTests : IDisposable
         Type stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be<ProductState>();
+        stateType.FullName.ShouldBe(typeof(ProductState).FullName);
     }
 
     [Fact]
@@ -60,7 +61,7 @@ public sealed class ProductsReducersTests : IDisposable
         Dictionary<Type, Func<ProductState, object, ProductState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(2);
+        reducers.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -74,8 +75,8 @@ public sealed class ProductsReducersTests : IDisposable
         ProductState state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.SelectEntities().Should().HaveCount(7);
-        state.SelectEntities().Should().Contain(product);
+        state.SelectEntities().Count.ShouldBe(7);
+        state.SelectEntities().ShouldContain(product);
     }
 
     [Fact]
@@ -88,8 +89,8 @@ public sealed class ProductsReducersTests : IDisposable
         ProductState state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.SelectEntities().Should().HaveCount(5);
-        state.SelectEntities().Should().NotContain(product => product.Id == SampleIds.Id1);
+        state.SelectEntities().Count.ShouldBe(5);
+        state.SelectEntities().ShouldNotContain(product => product.Id == SampleIds.Id1);
     }
 
     [Fact]
@@ -99,8 +100,11 @@ public sealed class ProductsReducersTests : IDisposable
         ValueCollection<Product> electronics = _sut.GetInitialState().SelectElectronics();
 
         // Assert
-        electronics.Should().HaveCount(3);
-        electronics.Should().OnlyContain(product => product.Category == "Electronics");
+        electronics.Count.ShouldBe(3);
+        foreach (Product product in electronics)
+        {
+            product.Category.ShouldBe("Electronics");
+        }
     }
 
     [Fact]
@@ -110,8 +114,11 @@ public sealed class ProductsReducersTests : IDisposable
         ValueCollection<Product> clothing = _sut.GetInitialState().SelectClothing();
 
         // Assert
-        clothing.Should().HaveCount(3);
-        clothing.Should().OnlyContain(product => product.Category == "Clothing");
+        clothing.Count.ShouldBe(3);
+        foreach (Product product in clothing)
+        {
+            product.Category.ShouldBe("Clothing");
+        }
     }
 
     [Fact]
@@ -121,7 +128,7 @@ public sealed class ProductsReducersTests : IDisposable
         decimal totalPrice = _sut.GetInitialState().SelectTotalPriceOfElectronics();
 
         // Assert
-        totalPrice.Should().Be(2799.97m);
+        totalPrice.ShouldBe(2799.97m);
     }
 
     [Fact]
@@ -131,7 +138,7 @@ public sealed class ProductsReducersTests : IDisposable
         decimal totalPrice = _sut.GetInitialState().SelectTotalPriceOfClothing();
 
         // Assert
-        totalPrice.Should().Be(2227.99m);
+        totalPrice.ShouldBe(2227.99m);
     }
 
     public void Dispose()

@@ -34,7 +34,7 @@ public sealed class MoviesReducersTests : IDisposable
         MoviesState initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Should().BeEquivalentTo(_initialState);
+        initialState.ShouldBeEquivalentTo(_initialState);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class MoviesReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be(Key);
+        key.ShouldBe(Key);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class MoviesReducersTests : IDisposable
         Type stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be<MoviesState>();
+        stateType.FullName.ShouldBe(typeof(MoviesState).FullName);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class MoviesReducersTests : IDisposable
         Dictionary<Type, Func<MoviesState, object, MoviesState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(4);
+        reducers.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -74,8 +74,8 @@ public sealed class MoviesReducersTests : IDisposable
         MoviesState newState = _sut.Reduce(_initialState, new LoadMovies());
 
         // Assert
-        newState.IsLoading.Should().BeTrue();
-        newState.ErrorMessage.Should().BeNull();
+        newState.IsLoading.ShouldBeTrue();
+        newState.ErrorMessage.ShouldBeNull();
     }
 
     [Fact]
@@ -88,9 +88,9 @@ public sealed class MoviesReducersTests : IDisposable
         MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Count));
 
         // Assert
-        newState.Movies.Values.Should().BeEquivalentTo(movies);
-        newState.IsLoading.Should().BeFalse();
-        newState.ErrorMessage.Should().BeNull();
+        newState.Movies.ShouldBeEquivalentTo(movies.ToImmutableDictionary(movie => movie.Id));
+        newState.IsLoading.ShouldBeFalse();
+        newState.ErrorMessage.ShouldBeNull();
     }
 
     [Fact]
@@ -104,9 +104,9 @@ public sealed class MoviesReducersTests : IDisposable
         MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesFailure(exception));
 
         // Assert
-        newState.ErrorMessage.Should().Be(errorMessage);
-        newState.IsLoading.Should().BeFalse();
-        newState.Movies.Should().BeEmpty();
+        newState.ErrorMessage.ShouldBe(errorMessage);
+        newState.IsLoading.ShouldBeFalse();
+        newState.Movies.ShouldBeEmpty();
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public sealed class MoviesReducersTests : IDisposable
         int movieCount = state.SelectMovieCount();
 
         // Assert
-        movieCount.Should().Be(2);
+        movieCount.ShouldBe(2);
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public sealed class MoviesReducersTests : IDisposable
         IEnumerable<Movie> sortedMovies = state.SelectMoviesByYear().Values;
 
         // Assert
-        sortedMovies.Should().BeInDescendingOrder(movie => movie.Year);
+        sortedMovies.Select(movie => movie.Year).ShouldBeInOrder(SortDirection.Descending);
     }
 
     public void Dispose()

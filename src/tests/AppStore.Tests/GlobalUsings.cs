@@ -5,8 +5,8 @@
 global using System.Collections.Immutable;
 global using System.Diagnostics.CodeAnalysis;
 global using Ducky;
-global using FluentAssertions;
 global using Microsoft.Extensions.Time.Testing;
 global using Moq;
 global using R3;
+global using Shouldly;
 global using Xunit;

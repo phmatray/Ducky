@@ -17,8 +17,8 @@ public class RootStateTests
         Action act = () => _sut.GetSliceState<TestState>(NonExistingKey);
 
         // Assert
-        act.Should().Throw<DuckyException>()
-            .WithMessage($"State with key '{NonExistingKey}' is not of type 'TestState'.");
+        act.ShouldThrow<DuckyException>(
+            $"State with key '{NonExistingKey}' is not of type 'TestState'.");
     }
 
     [Fact]
@@ -28,6 +28,6 @@ public class RootStateTests
         bool result = _sut.ContainsKey(NonExistingKey);
 
         // Assert
-        result.Should().BeFalse();
+        result.ShouldBeFalse();
     }
 }

@@ -4,7 +4,7 @@
 
 global using System.Collections.Immutable;
 global using Ducky.Tests.TestModels;
-global using FluentAssertions;
 global using Microsoft.Extensions.Logging;
 global using R3;
+global using Shouldly;
 global using Xunit;

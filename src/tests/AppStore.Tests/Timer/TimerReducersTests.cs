@@ -22,7 +22,7 @@ public sealed class TimerReducersTests : IDisposable
         TimerState initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Should().BeEquivalentTo(_initialState);
+        initialState.ShouldBeEquivalentTo(_initialState);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public sealed class TimerReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be(Key);
+        key.ShouldBe(Key);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public sealed class TimerReducersTests : IDisposable
         Type stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be<TimerState>();
+        stateType.FullName.ShouldBe(typeof(TimerState).FullName);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public sealed class TimerReducersTests : IDisposable
         Dictionary<Type, Func<TimerState, object, TimerState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(4);
+        reducers.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class TimerReducersTests : IDisposable
         TimerState newState = _sut.Reduce(_initialState, new StartTimer());
 
         // Assert
-        newState.IsRunning.Should().BeTrue();
+        newState.IsRunning.ShouldBeTrue();
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class TimerReducersTests : IDisposable
         TimerState newState = _sut.Reduce(state, new StopTimer());
 
         // Assert
-        newState.IsRunning.Should().BeFalse();
+        newState.IsRunning.ShouldBeFalse();
     }
 
     [Fact]
@@ -88,8 +88,8 @@ public sealed class TimerReducersTests : IDisposable
         TimerState newState = _sut.Reduce(state, new ResetTimer());
 
         // Assert
-        newState.Time.Should().Be(0);
-        newState.IsRunning.Should().BeFalse();
+        newState.Time.ShouldBe(0);
+        newState.IsRunning.ShouldBeFalse();
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public sealed class TimerReducersTests : IDisposable
         TimerState newState = _sut.Reduce(state, new Tick());
 
         // Assert
-        newState.Time.Should().Be(state.Time + 1);
+        newState.Time.ShouldBe(state.Time + 1);
     }
 
     public void Dispose()

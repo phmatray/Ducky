@@ -31,10 +31,10 @@ public sealed class NotificationsReducersTests : IDisposable
         NotificationsState initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Notifications.Should().HaveCount(3);
-        initialState.Notifications[0].Message.Should().Be("Welcome to Ducky!");
-        initialState.Notifications[1].Message.Should().Be("This is a warning.");
-        initialState.Notifications[2].Message.Should().Be("This is an error.");
+        initialState.Notifications.Count.ShouldBe(3);
+        initialState.Notifications[0].Message.ShouldBe("Welcome to Ducky!");
+        initialState.Notifications[1].Message.ShouldBe("This is a warning.");
+        initialState.Notifications[2].Message.ShouldBe("This is an error.");
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class NotificationsReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be(Key);
+        key.ShouldBe(Key);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class NotificationsReducersTests : IDisposable
         Type stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be<NotificationsState>();
+        stateType.FullName.ShouldBe(typeof(NotificationsState).FullName);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class NotificationsReducersTests : IDisposable
         Dictionary<Type, Func<NotificationsState, object, NotificationsState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(3);
+        reducers.Count.ShouldBe(3);
     }
 
     [Fact]
@@ -78,8 +78,8 @@ public sealed class NotificationsReducersTests : IDisposable
         NotificationsState state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.Notifications.Should().HaveCount(4);
-        state.Notifications.Should().HaveElementAt(3, notification);
+        state.Notifications.Count.ShouldBe(4);
+        state.Notifications[3].Message.ShouldBe("This is an info notification.");
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public sealed class NotificationsReducersTests : IDisposable
         NotificationsState state = _sut.Reduce(_initialState, action);
 
         // Assert
-        state.Notifications[1].IsRead.Should().BeTrue();
+        state.Notifications[1].IsRead.ShouldBeTrue();
     }
 
     public void Dispose()

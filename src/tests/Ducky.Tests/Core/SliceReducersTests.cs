@@ -18,7 +18,7 @@ public sealed class SliceReducersTests : IDisposable
         _sut.On<IntegerAction>((state, action) => state + action.Value);
 
         // Assert
-        _sut.Reducers.Should().ContainKey(typeof(IntegerAction));
+        _sut.Reducers.ShouldContainKey(typeof(IntegerAction));
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public sealed class SliceReducersTests : IDisposable
         int newState = _sut.Reduce(initialState, action);
 
         // Assert
-        newState.Should().Be(5);
+        newState.ShouldBe(5);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public sealed class SliceReducersTests : IDisposable
         int newState = _sut.Reduce(initialState, action);
 
         // Assert
-        newState.Should().Be(5);
+        newState.ShouldBe(5);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class SliceReducersTests : IDisposable
         int newState = _sut.Reduce(initialState, action);
 
         // Assert
-        newState.Should().Be(initialState);
+        newState.ShouldBe(initialState);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public sealed class SliceReducersTests : IDisposable
         Action act = () => _sut.Reduce(0, null!);
 
         // Assert
-        act.Should().Throw<ArgumentNullException>();
+        act.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public sealed class SliceReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be("test-counter");
+        key.ShouldBe("test-counter");
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class SliceReducersTests : IDisposable
         object state = _sut.GetState();
 
         // Assert
-        state.Should().Be(10);
+        state.ShouldBe(10);
     }
 
     [Fact]
@@ -102,11 +102,11 @@ public sealed class SliceReducersTests : IDisposable
         JsonObject json = _sut.GetJson();
 
         // Assert
-        json.Should().NotBeNull();
-        json.ContainsKey("key").Should().BeTrue();
-        json.ContainsKey("state").Should().BeTrue();
-        json["key"]!.GetValue<string>().Should().Be("test-counter");
-        json["state"]!.GetValue<int>().Should().Be(10);
+        json.ShouldNotBeNull();
+        json.ContainsKey("key").ShouldBeTrue();
+        json.ContainsKey("state").ShouldBeTrue();
+        json["key"]!.GetValue<string>().ShouldBe("test-counter");
+        json["state"]!.GetValue<int>().ShouldBe(10);
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public sealed class SliceReducersTests : IDisposable
         object state = _sut.GetState();
 
         // Assert
-        state.Should().Be(11);
+        state.ShouldBe(11);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public sealed class SliceReducersTests : IDisposable
         object state = _sut.GetState();
 
         // Assert
-        state.Should().Be(9);
+        state.ShouldBe(9);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public sealed class SliceReducersTests : IDisposable
         object state = _sut.GetState();
 
         // Assert
-        state.Should().Be(10);
+        state.ShouldBe(10);
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public sealed class SliceReducersTests : IDisposable
         object state = _sut.GetState();
 
         // Assert
-        state.Should().Be(20);
+        state.ShouldBe(20);
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public sealed class SliceReducersTests : IDisposable
         _sut.OnDispatch(new TestIncrementAction());
 
         // Assert
-        stateUpdatedEmitted.Should().BeTrue();
+        stateUpdatedEmitted.ShouldBeTrue();
     }
 
     [Fact]
@@ -178,7 +178,7 @@ public sealed class SliceReducersTests : IDisposable
         object state = _sut.GetState();
 
         // Assert
-        state.Should().Be(initialState);
+        state.ShouldBe(initialState);
     }
 
     public void Dispose()

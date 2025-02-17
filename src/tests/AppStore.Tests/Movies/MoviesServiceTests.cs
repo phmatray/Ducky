@@ -22,8 +22,8 @@ public class MoviesServiceTests
         GetMoviesResponse result = await _moviesService.GetMoviesAsync(pageNumber, pageSize).ConfigureAwait(true);
 
         // Assert
-        result.Movies.Should().HaveCount(pageSize);
-        result.Movies.Should().BeEquivalentTo(MoviesExamples.Movies.Take(pageSize));
+        result.Movies.Count.ShouldBe(pageSize);
+        result.Movies.ShouldBe(MoviesExamples.Movies.Take(pageSize));
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class MoviesServiceTests
         GetMoviesResponse result = await _moviesService.GetMoviesAsync(pageNumber, pageSize).ConfigureAwait(true);
 
         // Assert
-        result.Movies.Should().BeEmpty();
+        result.Movies.ShouldBeEmpty();
     }
 
     [Fact]
@@ -56,6 +56,6 @@ public class MoviesServiceTests
         };
 
         // Assert
-        await act.Should().ThrowAsync<TaskCanceledException>().ConfigureAwait(true);
+        await act.ShouldThrowAsync<TaskCanceledException>().ConfigureAwait(true);
     }
 }

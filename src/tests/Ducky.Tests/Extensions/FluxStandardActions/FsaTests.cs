@@ -18,9 +18,9 @@ public class FsaTests
         TestCreateTodo action = new(title);
 
         // Assert
-        action.Payload.Title.Should().Be(title);
-        action.Meta.TimeStamp.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        action.TypeKey.Should().Be("todos/create");
+        action.Payload.Title.ShouldBe(title);
+        action.Meta.TimeStamp.ShouldBe(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        action.TypeKey.ShouldBe("todos/create");
     }
 
     [Fact]
@@ -33,9 +33,9 @@ public class FsaTests
         TestToggleTodo action = new(id);
 
         // Assert
-        action.Payload.Id.Should().Be(id);
-        action.Meta.TimeStamp.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        action.TypeKey.Should().Be("todos/toggle");
+        action.Payload.Id.ShouldBe(id);
+        action.Meta.TimeStamp.ShouldBe(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        action.TypeKey.ShouldBe("todos/toggle");
     }
 
     [Fact]
@@ -48,9 +48,9 @@ public class FsaTests
         TestDeleteTodo action = new(id);
 
         // Assert
-        action.Payload.Id.Should().Be(id);
-        action.Meta.TimeStamp.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        action.TypeKey.Should().Be("todos/delete");
+        action.Payload.Id.ShouldBe(id);
+        action.Meta.TimeStamp.ShouldBe(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        action.TypeKey.ShouldBe("todos/delete");
     }
 
     [Fact]
@@ -63,9 +63,9 @@ public class FsaTests
         TestFsaError action = new(exception);
 
         // Assert
-        action.Payload.Should().Be(exception);
-        FsaError.Error.Should().BeTrue();
-        action.TypeKey.Should().Be("error/action");
+        action.Payload.ShouldBe(exception);
+        FsaError.Error.ShouldBeTrue();
+        action.TypeKey.ShouldBe("error/action");
     }
 
     [Fact]
@@ -79,9 +79,9 @@ public class FsaTests
         TestFsaErrorWithMeta<object> action = new(exception, meta);
 
         // Assert
-        action.Payload.Should().Be(exception);
-        action.Meta.Should().Be(meta);
-        FsaError.Error.Should().BeTrue();
-        action.TypeKey.Should().Be("error/action");
+        action.Payload.ShouldBe(exception);
+        action.Meta.ShouldBe(meta);
+        FsaError.Error.ShouldBeTrue();
+        action.TypeKey.ShouldBe("error/action");
     }
 }

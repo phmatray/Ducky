@@ -42,8 +42,11 @@ public sealed class TimerEffectsTests : IDisposable
         _timeProvider.Advance(TimeSpan.FromSeconds(3));
 
         // Assert
-        _actualActions.Should().HaveCount(3);
-        _actualActions.Should().AllBeOfType<Tick>();
+        _actualActions.Count.ShouldBe(3);
+        foreach (object action in _actualActions)
+        {
+            action.ShouldBeOfType<Tick>();
+        }
     }
 
     [Fact]
@@ -59,8 +62,11 @@ public sealed class TimerEffectsTests : IDisposable
         _timeProvider.Advance(TimeSpan.FromSeconds(2));
 
         // Assert
-        _actualActions.Should().HaveCount(2);
-        _actualActions.Should().AllBeOfType<Tick>();
+        _actualActions.Count.ShouldBe(2);
+        foreach (object action in _actualActions)
+        {
+            action.ShouldBeOfType<Tick>();
+        }
     }
 
     private void SetupRootState()

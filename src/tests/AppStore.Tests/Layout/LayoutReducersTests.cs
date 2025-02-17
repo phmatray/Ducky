@@ -30,11 +30,11 @@ public sealed class LayoutReducersTests : IDisposable
         LayoutState initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Title.Should().BeEquivalentTo(_initialState.Title);
-        initialState.Version.Should().BeEquivalentTo(_initialState.Version);
-        initialState.IsDarkMode.Should().Be(_initialState.IsDarkMode);
-        initialState.IsDrawerOpen.Should().Be(_initialState.IsDrawerOpen);
-        initialState.IsNotificationOpen.Should().Be(_initialState.IsNotificationOpen);
+        initialState.Title.ShouldBeEquivalentTo(_initialState.Title);
+        initialState.Version.ShouldBeEquivalentTo(_initialState.Version);
+        initialState.IsDarkMode.ShouldBe(_initialState.IsDarkMode);
+        initialState.IsDrawerOpen.ShouldBe(_initialState.IsDrawerOpen);
+        initialState.IsNotificationOpen.ShouldBe(_initialState.IsNotificationOpen);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class LayoutReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be(Key);
+        key.ShouldBe(Key);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class LayoutReducersTests : IDisposable
         Type stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be<LayoutState>();
+        stateType.FullName.ShouldBe(typeof(LayoutState).FullName);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class LayoutReducersTests : IDisposable
         Dictionary<Type, Func<LayoutState, object, LayoutState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(4);
+        reducers.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class LayoutReducersTests : IDisposable
         LayoutState newState = _sut.Reduce(_initialState, new SetTitle(newTitle));
 
         // Assert
-        newState.Title.Should().Be(newTitle);
+        newState.Title.ShouldBe(newTitle);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public sealed class LayoutReducersTests : IDisposable
         string fullTitle = _initialState.SelectFullTitle();
 
         // Assert
-        fullTitle.Should().Be($"Ducky - {version}");
+        fullTitle.ShouldBe($"Ducky - {version}");
     }
 
     public void Dispose()

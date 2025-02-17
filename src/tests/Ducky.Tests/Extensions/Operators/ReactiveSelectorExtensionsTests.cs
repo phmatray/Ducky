@@ -24,8 +24,8 @@ public class ReactiveSelectorExtensionsTests
             .ConfigureAwait(true);
 
         // Assert
-        result.Should().BeEquivalentTo(
-            ["Selected: 3"], options => options.WithStrictOrdering());
+        string[] expected = ["Selected: 3"];
+        result.ShouldBeEquivalentTo(expected);
         return;
 
         static Observable<string> Selector(int x)
@@ -48,8 +48,14 @@ public class ReactiveSelectorExtensionsTests
             .ConfigureAwait(true);
 
         // Assert
-        result.Should().BeEquivalentTo(
-            ["Selected: 1", "Selected: 2", "Selected: 3"], options => options.WithStrictOrdering());
+        string[] expected =
+        [
+            "Selected: 1",
+            "Selected: 2",
+            "Selected: 3"
+        ];
+
+        result.ShouldBeEquivalentTo(expected);
         return;
 
         static Observable<string> Selector(int x)
@@ -69,8 +75,14 @@ public class ReactiveSelectorExtensionsTests
             .ConfigureAwait(true);
 
         // Assert
-        result.Should().BeEquivalentTo(
-            ["Selected: 1", "Selected: 2", "Selected: 3"], options => options.WithStrictOrdering());
+        string[] expected =
+        [
+            "Selected: 1",
+            "Selected: 2",
+            "Selected: 3"
+        ];
+        
+        result.ShouldBeEquivalentTo(expected);
         return;
 
         static Observable<string> Selector(int x)

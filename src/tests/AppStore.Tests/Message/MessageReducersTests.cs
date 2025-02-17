@@ -22,7 +22,7 @@ public sealed class MessageReducersTests : IDisposable
         MessageState initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Should().BeEquivalentTo(_initialState);
+        initialState.ShouldBeEquivalentTo(_initialState);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public sealed class MessageReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be(Key);
+        key.ShouldBe(Key);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public sealed class MessageReducersTests : IDisposable
         Type stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be<MessageState>();
+        stateType.FullName.ShouldBe(typeof(MessageState).FullName);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public sealed class MessageReducersTests : IDisposable
         Dictionary<Type, Func<MessageState, object, MessageState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(3);
+        reducers.Count.ShouldBe(3);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class MessageReducersTests : IDisposable
         MessageState newState = _sut.Reduce(_initialState, new SetMessage(newMessage));
 
         // Assert
-        newState.Message.Should().Be(newMessage);
+        newState.Message.ShouldBe(newMessage);
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public sealed class MessageReducersTests : IDisposable
         int messageLength = state.SelectMessageLength();
 
         // Assert
-        messageLength.Should().Be(5);
+        messageLength.ShouldBe(5);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class MessageReducersTests : IDisposable
         string reversedMessage = state.SelectMessageInReverse();
 
         // Assert
-        reversedMessage.Should().Be("olleH");
+        reversedMessage.ShouldBe("olleH");
     }
 
     public void Dispose()

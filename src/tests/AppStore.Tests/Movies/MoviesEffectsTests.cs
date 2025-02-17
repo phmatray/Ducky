@@ -49,8 +49,8 @@ public sealed class MoviesEffectsTests : IDisposable
         _timeProvider.Advance(TimeSpan.FromSeconds(1));
 
         // Assert
-        _actualActions.Should().HaveCount(1);
-        _actualActions[0].Should().BeOfType<LoadMoviesSuccess>().Which.Movies.Should().BeEquivalentTo(movies);
+        _actualActions.Count.ShouldBe(1);
+        _actualActions[0].ShouldBeOfType<LoadMoviesSuccess>().Movies.ShouldBeEquivalentTo(immutableMovies);
     }
 
     [Fact]
@@ -68,8 +68,8 @@ public sealed class MoviesEffectsTests : IDisposable
         _timeProvider.Advance(TimeSpan.FromSeconds(1));
 
         // Assert
-        _actualActions.Should().ContainSingle(); // One for failure
-        _actualActions[0].Should().BeOfType<LoadMoviesFailure>().Which.Error.Message.Should().Be(exceptionMessage);
+        _actualActions.ShouldHaveSingleItem(); // One for failure
+        _actualActions[0].ShouldBeOfType<LoadMoviesFailure>().Error.Message.ShouldBe(exceptionMessage);
     }
 
     private void SetupRootState()
