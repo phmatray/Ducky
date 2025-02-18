@@ -29,6 +29,10 @@ on:
       - 'releases/**'
     paths-ignore:
       - '**/README.md'
+        
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   ubuntu-latest:
