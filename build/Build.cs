@@ -64,7 +64,7 @@ partial class Build : NukeBuild
     readonly string ArtifactsType;
 
     [Nuke.Common.Parameter("Excluded Artifacts Type")]
-    readonly string ExcludedArtifactsType;
+    readonly string ExcludedArtifactsType = ".snupkg";
 
     [GitVersion]
     readonly GitVersion GitVersion;
