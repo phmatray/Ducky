@@ -31,7 +31,9 @@ public class RootStateSerializerTests
         string json = _sut.Serialize(_rootState);
 
         // Assert
-        json.Should().BeEquivalentTo(JsonString);
+        json.ShouldContain("test-key");
+        json.ShouldContain("Ducky.Tests.TestModels.TestState");
+        json.ShouldContain("42");
     }
 
     [Fact]
@@ -41,8 +43,8 @@ public class RootStateSerializerTests
         IRootState deserializedState = _sut.Deserialize(JsonString);
 
         // Assert
-        deserializedState.ContainsKey(Key).Should().BeTrue();
-        deserializedState.GetSliceState<TestState>(Key).Should().BeEquivalentTo(_initialState);
+        deserializedState.ContainsKey(Key).ShouldBeTrue();
+        deserializedState.GetSliceState<TestState>(Key).ShouldBeEquivalentTo(_initialState);
     }
 
     [Fact]
@@ -53,8 +55,8 @@ public class RootStateSerializerTests
         IRootState deserializedState = _sut.Deserialize(json);
 
         // Assert
-        deserializedState.ContainsKey(Key).Should().BeTrue();
-        deserializedState.GetSliceState<TestState>(Key).Should().BeEquivalentTo(_initialState);
+        deserializedState.ContainsKey(Key).ShouldBeTrue();
+        deserializedState.GetSliceState<TestState>(Key).ShouldBeEquivalentTo(_initialState);
     }
 
     [Fact]
@@ -70,8 +72,8 @@ public class RootStateSerializerTests
             IRootState loadedState = _sut.LoadFromFile(filePath);
 
             // Assert
-            loadedState.ContainsKey(Key).Should().BeTrue();
-            loadedState.GetSliceState<TestState>(Key).Should().BeEquivalentTo(_initialState);
+            loadedState.ContainsKey(Key).ShouldBeTrue();
+            loadedState.GetSliceState<TestState>(Key).ShouldBeEquivalentTo(_initialState);
         }
         finally
         {

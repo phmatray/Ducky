@@ -29,7 +29,8 @@ public sealed class TodoReducersTests : IDisposable
         TodoState initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Should().BeEquivalentTo(_initialState);
+        initialState.SelectEntities().Count.ShouldBe(5);
+        initialState.SelectEntities().ShouldBeEquivalentTo(_initialState.SelectEntities());
     }
 
     [Fact]
@@ -39,7 +40,7 @@ public sealed class TodoReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be(Key);
+        key.ShouldBe(Key);
     }
 
     [Fact]
@@ -49,7 +50,7 @@ public sealed class TodoReducersTests : IDisposable
         Type stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be<TodoState>();
+        stateType.FullName.ShouldBe(typeof(TodoState).FullName);
     }
 
     [Fact]
@@ -59,7 +60,7 @@ public sealed class TodoReducersTests : IDisposable
         Dictionary<Type, Func<TodoState, object, TodoState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(3);
+        reducers.Count.ShouldBe(3);
     }
 
     [Fact]
@@ -73,7 +74,9 @@ public sealed class TodoReducersTests : IDisposable
         TodoState newState = _sut.Reduce(state, new CreateTodo(newTitle));
 
         // Assert
-        newState.SelectEntities().Should().ContainSingle(todo => todo.Title == newTitle && !todo.IsCompleted);
+        newState.SelectEntities()
+            .Where(todo => todo is { Title: newTitle, IsCompleted: false })
+            .ShouldHaveSingleItem();
     }
 
     [Fact]
@@ -87,7 +90,7 @@ public sealed class TodoReducersTests : IDisposable
         TodoState newState = _sut.Reduce(state, new ToggleTodo(todoItem.Id));
 
         // Assert
-        newState[todoItem.Id].IsCompleted.Should().BeTrue();
+        newState[todoItem.Id].IsCompleted.ShouldBeTrue();
     }
 
     [Fact]
@@ -101,7 +104,7 @@ public sealed class TodoReducersTests : IDisposable
         TodoState newState = _sut.Reduce(state, new DeleteTodo(todoItem.Id));
 
         // Assert
-        newState.SelectEntities().Should().NotContain(todo => todo.Id == todoItem.Id);
+        newState.SelectEntities().ShouldNotContain(todo => todo.Id == todoItem.Id);
     }
 
     [Fact]
@@ -116,8 +119,8 @@ public sealed class TodoReducersTests : IDisposable
         ValueCollection<TodoItem> activeTodos = state.SelectActiveTodos();
 
         // Assert
-        activeTodos.Should().ContainSingle(todo => todo.Id == activeTodo.Id);
-        activeTodos.Should().NotContain(todo => todo.Id == completedTodo.Id);
+        activeTodos.Where(todo => todo.Id == activeTodo.Id).ShouldHaveSingleItem();
+        activeTodos.ShouldNotContain(todo => todo.Id == completedTodo.Id);
     }
 
     [Fact]
@@ -132,7 +135,7 @@ public sealed class TodoReducersTests : IDisposable
         int activeTodosCount = state.SelectActiveTodosCount();
 
         // Assert
-        activeTodosCount.Should().Be(1);
+        activeTodosCount.ShouldBe(1);
     }
 
     [Fact]
@@ -147,8 +150,8 @@ public sealed class TodoReducersTests : IDisposable
         ValueCollection<TodoItem> completedTodos = state.SelectCompletedTodos();
 
         // Assert
-        completedTodos.Should().ContainSingle(todo => todo.Id == completedTodo.Id);
-        completedTodos.Should().NotContain(todo => todo.Id == activeTodo.Id);
+        completedTodos.Where(todo => todo.Id == completedTodo.Id).ShouldHaveSingleItem();
+        completedTodos.ShouldNotContain(todo => todo.Id == activeTodo.Id);
     }
 
     [Fact]
@@ -163,7 +166,7 @@ public sealed class TodoReducersTests : IDisposable
         int completedTodosCount = state.SelectCompletedTodosCount();
 
         // Assert
-        completedTodosCount.Should().Be(1);
+        completedTodosCount.ShouldBe(1);
     }
 
     public void Dispose()

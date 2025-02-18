@@ -118,17 +118,17 @@ partial class Build : NukeBuild
             ArtifactsDirectory.CreateOrCleanDirectory();
         });
     
-    // Target InstallWorkloads => _ => _
-    //     .Description("Install .NET workloads")
-    //     .Executes(() =>
-    //     {
-    //         // this requires sudo on macOS and Linux
-    //         DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools", "wasm-tools-net8"));
-    //     });
+    Target InstallWorkloads => _ => _
+        .Description("Install .NET workloads")
+        .Executes(() =>
+        {
+            // this requires sudo on macOS and Linux
+            DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools"));
+        });
 
     Target Restore => _ => _
         .Description("Restore project dependencies")
-        // .DependsOn(InstallWorkloads)
+        .DependsOn(InstallWorkloads)
         .Executes(() =>
         {
             Log.Information("Restoring NuGet packages");

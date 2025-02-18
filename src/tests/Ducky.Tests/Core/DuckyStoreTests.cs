@@ -16,8 +16,8 @@ public class DuckyStoreTests
         IRootState rootState = observable.FirstSync();
 
         // Assert
-        rootState.Should().NotBeNull();
-        rootState.Should().BeOfType<RootState>();
+        rootState.ShouldNotBeNull();
+        rootState.ShouldBeOfType<RootState>();
     }
 
     [Fact]
@@ -35,6 +35,6 @@ public class DuckyStoreTests
         int updatedState = sliceStateObs.FirstSync();
 
         // Assert
-        updatedState.Should().Be(11);
+        updatedState.ShouldBe(11);
     }
 }

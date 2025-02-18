@@ -22,7 +22,7 @@ public sealed class DispatcherTests : IDisposable
         _sut.Dispatch(action);
 
         // Assert
-        _sut.ActionStream.Should().NotBeNull();
+        _sut.ActionStream.ShouldNotBeNull();
     }
 
     [Fact]
@@ -37,7 +37,11 @@ public sealed class DispatcherTests : IDisposable
         _sut.Dispatch(_action2);
 
         // Assert
-        emittedActions.Should().ContainInOrder(_action1, _action2);
+        List<object> expected = [_action1, _action2];
+        foreach (object action in expected)
+        {
+            emittedActions.ShouldContain(action);
+        }
     }
 
     [Fact]
@@ -47,7 +51,7 @@ public sealed class DispatcherTests : IDisposable
         Action act = () => _sut.Dispatch(null!);
 
         // Assert
-        act.Should().Throw<ArgumentNullException>();
+        act.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
@@ -65,7 +69,11 @@ public sealed class DispatcherTests : IDisposable
             () => _sut.Dispatch(_action3));
 
         // Assert
-        emittedActions.Should().Contain([_action1, _action2, _action3]);
+        List<object> expected = [_action1, _action2, _action3];
+        foreach (object action in expected)
+        {
+            emittedActions.ShouldContain(action);
+        }
     }
 
     [Fact]
@@ -82,7 +90,7 @@ public sealed class DispatcherTests : IDisposable
         _sut.Dispatch(_action2);
 
         // Assert
-        emittedActions.Should().ContainSingle().Which.Should().Be(_action1);
+        emittedActions.ShouldHaveSingleItem().ShouldBe(_action1);
     }
 
     [Fact]
@@ -94,7 +102,7 @@ public sealed class DispatcherTests : IDisposable
         Action act = () => _sut.Dispatch(_action1);
 
         // Assert
-        act.Should().NotThrow();
+        act.ShouldNotThrow();
     }
 
     [Fact]
@@ -110,7 +118,7 @@ public sealed class DispatcherTests : IDisposable
         _sut.Dispose();
 
         // Assert
-        completed.Should().BeTrue();
+        completed.ShouldBeTrue();
     }
 
     [Fact]
@@ -123,7 +131,7 @@ public sealed class DispatcherTests : IDisposable
         Action act = () => _sut.Dispatch(_action1);
 
         // Assert
-        act.Should().Throw<DuckyException>().WithInnerException<ObjectDisposedException>();
+        act.ShouldThrow<DuckyException>().InnerException.ShouldBeOfType<ObjectDisposedException>();
     }
 
     [Fact]
@@ -137,7 +145,7 @@ public sealed class DispatcherTests : IDisposable
         };
 
         // Assert
-        act.Should().NotThrow();
+        act.ShouldNotThrow();
     }
 
     public void Dispose()

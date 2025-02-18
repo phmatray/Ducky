@@ -22,7 +22,7 @@ public sealed class CounterReducersTests : IDisposable
         CounterState initialState = _sut.GetInitialState();
 
         // Assert
-        initialState.Should().Be(_initialState);
+        initialState.ShouldBe(_initialState);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public sealed class CounterReducersTests : IDisposable
         string key = _sut.GetKey();
 
         // Assert
-        key.Should().Be(Key);
+        key.ShouldBe(Key);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public sealed class CounterReducersTests : IDisposable
         Type stateType = _sut.GetStateType();
 
         // Assert
-        stateType.Should().Be<CounterState>();
+        stateType.FullName.ShouldBe(typeof(CounterState).FullName);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public sealed class CounterReducersTests : IDisposable
         Dictionary<Type, Func<CounterState, object, CounterState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Should().HaveCount(4);
+        reducers.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class CounterReducersTests : IDisposable
         CounterState newState = _sut.Reduce(initialState, new Increment());
 
         // Assert
-        newState.Should().Be(expectedState);
+        newState.ShouldBe(expectedState);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class CounterReducersTests : IDisposable
         CounterState newState = _sut.Reduce(initialState, new Decrement());
 
         // Assert
-        newState.Should().Be(expectedState);
+        newState.ShouldBe(expectedState);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public sealed class CounterReducersTests : IDisposable
         CounterState newState = _sut.Reduce(state, new Reset());
 
         // Assert
-        newState.Should().Be(_initialState);
+        newState.ShouldBe(_initialState);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public sealed class CounterReducersTests : IDisposable
         CounterState newState = _sut.Reduce(_initialState, new SetValue(valueToSet));
 
         // Assert
-        newState.Value.Should().Be(valueToSet);
+        newState.Value.ShouldBe(valueToSet);
     }
 
     public void Dispose()

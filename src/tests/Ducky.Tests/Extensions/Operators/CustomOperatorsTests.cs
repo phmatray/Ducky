@@ -26,8 +26,8 @@ public sealed class CustomOperatorsTests : IDisposable
         source.OnNext(new OtherAction());
 
         // Assert
-        actions.Should().ContainSingle();
-        actions[0].Should().BeOfType<TestAction>();
+        actions.ShouldHaveSingleItem();
+        actions[0].ShouldBeOfType<TestAction>();
     }
 
     [Fact]
@@ -47,8 +47,11 @@ public sealed class CustomOperatorsTests : IDisposable
         source.OnNext(2);
 
         // Assert
-        actions.Should().HaveCount(2);
-        actions.Should().AllBeOfType<TestAction>();
+        actions.Count.ShouldBe(2);
+        foreach (object action in actions)
+        {
+            action.ShouldBeOfType<TestAction>();
+        }
     }
 
     // TODO: Not sure if the assertion is correct
@@ -70,10 +73,10 @@ public sealed class CustomOperatorsTests : IDisposable
     //     source.OnNext(2);
     //
     //     // Assert
-    //     results.Should().HaveCount(3);
-    //     results.Should().HaveElementAt(0, 1);
-    //     results.Should().HaveElementAt(1, -1);
-    //     results.Should().HaveElementAt(2, 2);
+    //     results.ShouldBe(3);
+    //     results.ShouldHaveElementAt(0, 1);
+    //     results.ShouldHaveElementAt(1, -1);
+    //     results.ShouldHaveElementAt(2, 2);
     // }
     public void Dispose()
     {

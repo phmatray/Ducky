@@ -14,10 +14,10 @@ public class ValueCollectionTests
         OrderItem item2 = new("ProductA", 2, 10.0m);
 
         // Assert
-        item1.ProductName.Should().Be(item2.ProductName);
-        item1.Quantity.Should().Be(item2.Quantity);
-        item1.Price.Should().Be(item2.Price);
-        item1.Should().Be(item2);
+        item1.ProductName.ShouldBe(item2.ProductName);
+        item1.Quantity.ShouldBe(item2.Quantity);
+        item1.Price.ShouldBe(item2.Price);
+        item1.ShouldBe(item2);
     }
 
     [Fact]
@@ -31,11 +31,10 @@ public class ValueCollectionTests
         Order order2 = new("Order1", "John Doe", [item1, item2]);
 
         // Assert
-        order1.OrderId.Should().Be(order2.OrderId);
-        order1.CustomerName.Should().Be(order2.CustomerName);
-        order1.Items.Should().HaveElementAt(0, order2.Items[0]);
-        order1.Items.Should().HaveElementAt(1, order2.Items[1]);
-        order1.Should().Be(order2);
+        order1.OrderId.ShouldBe(order2.OrderId);
+        order1.CustomerName.ShouldBe(order2.CustomerName);
+        order1.Items.ShouldBeEquivalentTo(order2.Items);
+        order1.ShouldBe(order2);
     }
 
     [Fact]
@@ -50,10 +49,10 @@ public class ValueCollectionTests
         // Act
         collection.Add("Three");
 
-        collection.Should().HaveCount(3);
-        collection[0].Should().Be("One");
-        collection[1].Should().Be("Two");
-        collection[2].Should().Be("Three");
+        collection.Count.ShouldBe(3);
+        collection[0].ShouldBe("One");
+        collection[1].ShouldBe("Two");
+        collection[2].ShouldBe("Three");
     }
 
     [Fact]
@@ -67,7 +66,7 @@ public class ValueCollectionTests
         string result = collection.ToString();
 
         // Assert
-        result.Should().Be(expected);
+        result.ShouldBe(expected);
     }
 
     [Fact]
@@ -81,7 +80,7 @@ public class ValueCollectionTests
         string result = collection.ToString();
 
         // Assert
-        result.Should().Be(expected);
+        result.ShouldBe(expected);
     }
 
     [Fact]
@@ -92,7 +91,7 @@ public class ValueCollectionTests
         ValueCollection<string> collection2 = ["One", "Two", "Three"];
 
         // Assert
-        collection1.Should().BeEquivalentTo(collection2);
+        collection1.ShouldBeEquivalentTo(collection2);
     }
 
     [Fact]
@@ -103,7 +102,7 @@ public class ValueCollectionTests
         ValueCollection<string> collection2 = ["One", "Two", "Four"];
 
         // Assert
-        collection1.Should().NotEqual(collection2);
+        collection1.ShouldNotBe(collection2);
     }
 
     [Fact]
@@ -116,7 +115,7 @@ public class ValueCollectionTests
         bool equals = collection.Equals(null);
 
         // Assert
-        equals.Should().BeFalse();
+        equals.ShouldBeFalse();
     }
 
     [Fact]
@@ -131,7 +130,7 @@ public class ValueCollectionTests
         int hashCode2 = collection2.GetHashCode();
 
         // Assert
-        hashCode1.Should().Be(hashCode2);
+        hashCode1.ShouldBe(hashCode2);
     }
 
     [Fact]
@@ -144,7 +143,7 @@ public class ValueCollectionTests
         Action act = () => collection.Add(null!);
 
         // Assert
-        act.Should().Throw<ArgumentNullException>();
+        act.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
@@ -153,10 +152,10 @@ public class ValueCollectionTests
         string[] items = ["One", "Two", "Three"];
         ValueCollection<string> collection = items;
 
-        collection.Should().HaveCount(3);
-        collection[0].Should().Be("One");
-        collection[1].Should().Be("Two");
-        collection[2].Should().Be("Three");
+        collection.Count.ShouldBe(3);
+        collection[0].ShouldBe("One");
+        collection[1].ShouldBe("Two");
+        collection[2].ShouldBe("Three");
     }
 
     [Fact]
@@ -165,10 +164,10 @@ public class ValueCollectionTests
         List<string> items = ["One", "Two", "Three"];
         ValueCollection<string> collection = items;
 
-        collection.Should().HaveCount(3);
-        collection[0].Should().Be("One");
-        collection[1].Should().Be("Two");
-        collection[2].Should().Be("Three");
+        collection.Count.ShouldBe(3);
+        collection[0].ShouldBe("One");
+        collection[1].ShouldBe("Two");
+        collection[2].ShouldBe("Three");
     }
 
     [Fact]
@@ -181,16 +180,16 @@ public class ValueCollectionTests
         IEnumerator<string> enumerator = collection.GetEnumerator();
 
         // Assert
-        enumerator.MoveNext().Should().BeTrue();
-        enumerator.Current.Should().Be("One");
+        enumerator.MoveNext().ShouldBeTrue();
+        enumerator.Current.ShouldBe("One");
 
-        enumerator.MoveNext().Should().BeTrue();
-        enumerator.Current.Should().Be("Two");
+        enumerator.MoveNext().ShouldBeTrue();
+        enumerator.Current.ShouldBe("Two");
 
-        enumerator.MoveNext().Should().BeTrue();
-        enumerator.Current.Should().Be("Three");
+        enumerator.MoveNext().ShouldBeTrue();
+        enumerator.Current.ShouldBe("Three");
 
-        enumerator.MoveNext().Should().BeFalse();
+        enumerator.MoveNext().ShouldBeFalse();
         enumerator.Dispose();
     }
 
@@ -204,8 +203,8 @@ public class ValueCollectionTests
         var clone = (ValueCollection<string>)collection.Clone();
 
         // Assert
-        collection.Should().BeEquivalentTo(clone);
-        collection.GetHashCode().Should().Be(clone.GetHashCode());
+        collection.ShouldBeEquivalentTo(clone);
+        collection.GetHashCode().ShouldBe(clone.GetHashCode());
     }
 
     [Fact]
@@ -220,8 +219,8 @@ public class ValueCollectionTests
         string third = collection[2];
 
         // Assert
-        first.Should().Be("One");
-        second.Should().Be("Two");
-        third.Should().Be("Three");
+        first.ShouldBe("One");
+        second.ShouldBe("Two");
+        third.ShouldBe("Three");
     }
 }

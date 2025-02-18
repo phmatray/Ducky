@@ -20,9 +20,9 @@ public class MemoizedSelectorTests
         int result2 = memoizedSelector(5);
 
         // Assert
-        result1.Should().Be(10);
-        result2.Should().Be(10);
-        callCount.Should().Be(1, "because the selector function should be called only once for the same input");
+        result1.ShouldBe(10);
+        result2.ShouldBe(10);
+        callCount.ShouldBe(1, "because the selector function should be called only once for the same input");
         return;
 
         int Selector(int x)
@@ -44,9 +44,9 @@ public class MemoizedSelectorTests
         int result2 = memoizedSelector(10);
 
         // Assert
-        result1.Should().Be(10);
-        result2.Should().Be(20);
-        callCount.Should().Be(2, "because the selector function should be called for each unique input");
+        result1.ShouldBe(10);
+        result2.ShouldBe(20);
+        callCount.ShouldBe(2, "because the selector function should be called for each unique input");
         return;
 
         int Selector(int x)
@@ -69,10 +69,10 @@ public class MemoizedSelectorTests
         int result3 = memoizedSelector(5);
 
         // Assert
-        result1.Should().Be(10);
-        result2.Should().Be(20);
-        result3.Should().Be(10);
-        callCount.Should().Be(2, "because the selector function should be called for each unique input with cached results");
+        result1.ShouldBe(10);
+        result2.ShouldBe(20);
+        result3.ShouldBe(10);
+        callCount.ShouldBe(2, "because the selector function should be called for each unique input with cached results");
         return;
 
         int Selector(int x)
@@ -95,9 +95,9 @@ public class MemoizedSelectorTests
         int result2 = memoizedSelector(state);
 
         // Assert
-        result1.Should().Be(0);
-        result2.Should().Be(0);
-        callCount.Should().Be(1, "because the selector function should be called only once when dependencies are unchanged");
+        result1.ShouldBe(0);
+        result2.ShouldBe(0);
+        callCount.ShouldBe(1, "because the selector function should be called only once when dependencies are unchanged");
         return;
 
         int Selector(TodoState s)
@@ -122,9 +122,9 @@ public class MemoizedSelectorTests
         int result2 = memoizedSelector(state);
 
         // Assert
-        result1.Should().Be(1);
-        result2.Should().Be(2);
-        callCount.Should().Be(2, "because the selector function should be called again when dependencies change");
+        result1.ShouldBe(1);
+        result2.ShouldBe(2);
+        callCount.ShouldBe(2, "because the selector function should be called again when dependencies change");
         return;
 
         int Selector(TodoState s)
@@ -157,7 +157,7 @@ public class MemoizedSelectorTests
         int result2 = selector2(state);
 
         // Assert
-        result1.Should().Be(0);
-        result2.Should().Be(1);
+        result1.ShouldBe(0);
+        result2.ShouldBe(1);
     }
 }

@@ -41,8 +41,7 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
     <PackageReference Include="Snapshooter.Xunit" />
-    <PackageReference Include="FluentAssertions" />
-    <PackageReference Include="FluentAssertions.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Shouldly" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 </Project>

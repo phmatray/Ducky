@@ -31,4 +31,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="..\.github\workflows\macos-latest.yml" />
+    <None Remove="..\.github\workflows\ubuntu-latest.yml" />
+    <None Remove="..\.github\workflows\windows-latest.yml" />
+  </ItemGroup>
+
 </Project>

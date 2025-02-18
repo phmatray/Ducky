@@ -30,7 +30,7 @@ public sealed class CounterEffectsTests
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
 
         // Assert
-        _sut.LastAction.Should().BeOfType<Reset>();
+        _sut.LastAction.ShouldBeOfType<Reset>();
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class CounterEffectsTests
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
 
         // Assert
-        _sut.LastAction.Should().BeNull();
+        _sut.LastAction.ShouldBeNull();
     }
 
     private static RootState GetRootState(int counterValue)

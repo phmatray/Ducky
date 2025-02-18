@@ -18,7 +18,7 @@ public class NormalizedStateTests
         SampleGuidEntity result = state[id];
 
         // Assert
-        result.Should().Be(entity);
+        result.ShouldBe(entity);
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public class NormalizedStateTests
         Action act = () => _ = state[Guid.NewGuid()];
 
         // Assert
-        act.Should().Throw<DuckyException>().WithMessage("The entity does not exist.");
+        act.ShouldThrow<DuckyException>("The entity does not exist.");
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class NormalizedStateTests
         bool containsKey = state.ContainsKey(id);
 
         // Assert
-        containsKey.Should().BeTrue();
+        containsKey.ShouldBeTrue();
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class NormalizedStateTests
         bool containsKey = state.ContainsKey(Guid.NewGuid());
 
         // Assert
-        containsKey.Should().BeFalse();
+        containsKey.ShouldBeFalse();
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class NormalizedStateTests
         Action act = () => state.ContainsKey(string.Empty);
 
         // Assert
-        act.Should().Throw<DuckyException>().WithMessage("The key cannot be empty.");
+        act.ShouldThrow<DuckyException>("The key cannot be empty.");
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class NormalizedStateTests
         SampleGuidEntity result = state.GetByKey(id);
 
         // Assert
-        result.Should().Be(entity);
+        result.ShouldBe(entity);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class NormalizedStateTests
         Action act = () => state.GetByKey(Guid.NewGuid());
 
         // Assert
-        act.Should().Throw<DuckyException>().WithMessage("The entity does not exist.");
+        act.ShouldThrow<DuckyException>("The entity does not exist.");
     }
 
     [Fact]
@@ -114,7 +114,8 @@ public class NormalizedStateTests
         ValueCollection<Guid> allIds = state.AllIds;
 
         // Assert
-        allIds.Should().Contain([entity1.Id, entity2.Id]);
+        allIds.ShouldContain(entity1.Id);
+        allIds.ShouldContain(entity2.Id);
     }
 
     [Fact]
@@ -129,7 +130,8 @@ public class NormalizedStateTests
         ValueCollection<SampleGuidEntity> entities = state.SelectEntities();
 
         // Assert
-        entities.Should().Contain([entity1, entity2]);
+        entities.ShouldContain(entity1);
+        entities.ShouldContain(entity2);
     }
 
     [Fact]
@@ -146,7 +148,7 @@ public class NormalizedStateTests
         ValueCollection<SampleGuidEntity> result = state.SelectEntities(e => e.Name.Contains("Entity"));
 
         // Assert
-        result.Should().HaveCount(2);
+        result.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -162,9 +164,11 @@ public class NormalizedStateTests
         SampleGuidState mergedState = state1.Merge(state2.ById);
 
         // Assert
-        mergedState.ById.Should().ContainKeys(entity1.Id, entity2.Id);
-        mergedState.ById[entity1.Id].Should().Be(entity1);
-        mergedState.ById[entity2.Id].Should().Be(entity2);
+        mergedState.ById.ShouldContainKey(entity1.Id);
+        mergedState.ById[entity1.Id].ShouldBe(entity1);
+
+        mergedState.ById.ShouldContainKey(entity2.Id);
+        mergedState.ById[entity2.Id].ShouldBe(entity2);
     }
 
     [Fact]
@@ -181,8 +185,8 @@ public class NormalizedStateTests
         SampleGuidState mergedState = state1.Merge(state2.ById, MergeStrategy.Overwrite);
 
         // Assert
-        mergedState.ById.Should().ContainKey(id);
-        mergedState.ById[id].Name.Should().Be("Entity 2");
+        mergedState.ById.ShouldContainKey(id);
+        mergedState.ById[id].Name.ShouldBe("Entity 2");
     }
 
     [Fact]
@@ -199,7 +203,7 @@ public class NormalizedStateTests
         Action act = () => state1.Merge(state2.ById);
 
         // Assert
-        act.Should().Throw<DuckyException>().WithMessage($"Duplicate entity with key '{id}' found during merge.");
+        act.ShouldThrow<DuckyException>($"Duplicate entity with key '{id}' found during merge.");
     }
 
     [Fact]
@@ -214,9 +218,11 @@ public class NormalizedStateTests
         SampleGuidState state = SampleGuidState.Create(entities);
 
         // Assert
-        state.ById.Should().ContainKeys(entity1.Id, entity2.Id);
-        state.ById[entity1.Id].Should().Be(entity1);
-        state.ById[entity2.Id].Should().Be(entity2);
+        state.ById.ShouldContainKey(entity1.Id);
+        state.ById[entity1.Id].ShouldBe(entity1);
+
+        state.ById.ShouldContainKey(entity2.Id);
+        state.ById[entity2.Id].ShouldBe(entity2);
     }
 
     [Fact]
@@ -230,8 +236,8 @@ public class NormalizedStateTests
         SampleGuidState newState = state.AddOne(entity);
 
         // Assert
-        newState.ById.Should().ContainKey(entity.Id);
-        newState[entity.Id].Should().Be(entity);
+        newState.ById.ShouldContainKey(entity.Id);
+        newState[entity.Id].ShouldBe(entity);
     }
 
     [Fact]
@@ -249,7 +255,9 @@ public class NormalizedStateTests
         SampleGuidState newState = state.AddMany(entities);
 
         // Assert
-        newState.ById.Should().ContainKeys(entities.Select(e => e.Id));
+        // newState.ById.ShouldContainKeys(entities.Select(e => e.Id));
+        // ==> shouldly
+        newState.ById.ShouldAllBe(pair => entities.Select(e => e.Id).Contains(pair.Key));
     }
 
     [Fact]
@@ -267,7 +275,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.SetAll(entities);
 
         // Assert
-        newState.ById.Should().Equal(entities.ToDictionary(e => e.Id));
+        newState.ById.ShouldBeEquivalentTo(entities.ToImmutableDictionary(e => e.Id));
     }
 
     [Fact]
@@ -281,8 +289,8 @@ public class NormalizedStateTests
         SampleGuidState newState = state.SetOne(entity);
 
         // Assert
-        newState.ById.Should().ContainKey(entity.Id);
-        newState[entity.Id].Should().Be(entity);
+        newState.ById.ShouldContainKey(entity.Id);
+        newState[entity.Id].ShouldBe(entity);
     }
 
     [Fact]
@@ -300,7 +308,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.SetMany(entities);
 
         // Assert
-        newState.ById.Should().ContainKeys(entities.Select(e => e.Id));
+        newState.ById.ShouldAllBe(pair => entities.Select(e => e.Id).Contains(pair.Key));
     }
 
     [Fact]
@@ -314,7 +322,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.RemoveOne(entity.Id);
 
         // Assert
-        newState.ById.Should().NotContainKey(entity.Id);
+        newState.ById.ShouldNotContainKey(entity.Id);
     }
 
     [Fact]
@@ -327,7 +335,7 @@ public class NormalizedStateTests
         Action act = () => state.RemoveOne(string.Empty);
 
         // Assert
-        act.Should().Throw<DuckyException>().WithMessage("The key cannot be empty.");
+        act.ShouldThrow<DuckyException>("The key cannot be empty.");
     }
 
     [Fact]
@@ -345,7 +353,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.RemoveMany(entities.Select(e => e.Id));
 
         // Assert
-        newState.ById.Should().NotContainKeys(entities.Select(e => e.Id));
+        newState.ById.ShouldAllBe(pair => entities.Select(e => e.Id).Contains(pair.Key));
     }
 
     [Fact]
@@ -363,7 +371,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.RemoveMany(e => e.Name.Contains("Entity"));
 
         // Assert
-        newState.ById.Should().BeEmpty();
+        newState.ById.ShouldBeEmpty();
     }
 
     [Fact]
@@ -381,7 +389,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.RemoveAll();
 
         // Assert
-        newState.ById.Should().BeEmpty();
+        newState.ById.ShouldBeEmpty();
     }
 
     [Fact]
@@ -395,7 +403,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.UpdateOne(entity.Id, e => e.Name = "Updated Entity");
 
         // Assert
-        newState[entity.Id].Name.Should().Be("Updated Entity");
+        newState[entity.Id].Name.ShouldBe("Updated Entity");
     }
 
     [Fact]
@@ -409,7 +417,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.UpdateOne(entity.Id, e => new SampleGuidEntity(e.Id, "Updated Entity"));
 
         // Assert
-        newState[entity.Id].Name.Should().Be("Updated Entity");
+        newState[entity.Id].Name.ShouldBe("Updated Entity");
     }
 
     [Fact]
@@ -427,7 +435,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.UpdateMany(entities.Select(e => e.Id), e => e.Name = "Updated Entity");
 
         // Assert
-        newState.ById.Values.Should().AllSatisfy(e => e.Name.Should().Be("Updated Entity"));
+        newState.ById.Values.ShouldAllBe(e => e.Name == "Updated Entity");
     }
 
     [Fact]
@@ -445,7 +453,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.UpdateMany(entities.Select(e => e.Id), e => new SampleGuidEntity(e.Id, "Updated Entity"));
 
         // Assert
-        newState.ById.Values.Should().AllSatisfy(e => e.Name.Should().Be("Updated Entity"));
+        newState.ById.Values.ShouldAllBe(e => e.Name == "Updated Entity");
     }
 
     [Fact]
@@ -459,7 +467,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.UpsertOne(entity);
 
         // Assert
-        newState.ById.Should().ContainKey(entity.Id);
+        newState.ById.ShouldContainKey(entity.Id);
     }
 
     [Fact]
@@ -477,7 +485,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.UpsertMany(entities);
 
         // Assert
-        newState.ById.Should().ContainKeys(entities.Select(e => e.Id));
+        newState.ById.ShouldAllBe(pair => entities.Select(e => e.Id).Contains(pair.Key));
     }
 
     [Fact]
@@ -491,7 +499,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.MapOne(entity.Id, e => new SampleGuidEntity(e.Id, "Mapped Entity"));
 
         // Assert
-        newState[entity.Id].Name.Should().Be("Mapped Entity");
+        newState[entity.Id].Name.ShouldBe("Mapped Entity");
     }
 
     [Fact]
@@ -509,7 +517,7 @@ public class NormalizedStateTests
         SampleGuidState newState = state.Map(e => new SampleGuidEntity(e.Id, "Mapped Entity"));
 
         // Assert
-        newState.ById.Values.Should().AllSatisfy(e => e.Name.Should().Be("Mapped Entity"));
+        newState.ById.Values.ShouldAllBe(e => e.Name == "Mapped Entity");
     }
 
     private static SampleGuidEntity CreateEntity(in Guid id, string name)
