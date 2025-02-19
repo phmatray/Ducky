@@ -156,9 +156,9 @@ partial class Build : NukeBuild
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
                 .SetVersion(OctoVersionInfo.NuGetVersion)
-                .SetAssemblyVersion(OctoVersionInfo.FullSemVer)
+                .SetAssemblyVersion(OctoVersionInfo.MajorMinorPatch)
                 .SetInformationalVersion(OctoVersionInfo.InformationalVersion)
-                .SetFileVersion(OctoVersionInfo.FullSemVer)
+                .SetFileVersion(OctoVersionInfo.MajorMinorPatch)
                 .SetDeterministic(true)
                 .EnableNoRestore());
             Log.Information("Solution built successfully");
@@ -214,9 +214,9 @@ partial class Build : NukeBuild
                     .SetSymbolPackageFormat(DotNetSymbolPackageFormat.snupkg)
                     .SetCopyright(Copyright)
                     .SetVersion(OctoVersionInfo.NuGetVersion)
-                    .SetAssemblyVersion(OctoVersionInfo.FullSemVer)
+                    .SetAssemblyVersion(OctoVersionInfo.MajorMinorPatch)
                     .SetInformationalVersion(OctoVersionInfo.InformationalVersion)
-                    .SetFileVersion(OctoVersionInfo.FullSemVer));
+                    .SetFileVersion(OctoVersionInfo.MajorMinorPatch));
                 Log.Information("Project {ProjectName} packed successfully", project.Name);
             }
         });
