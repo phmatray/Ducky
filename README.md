@@ -42,6 +42,18 @@ A Predictable State Management Library for Blazor
 
 Ducky simplifies state management in Blazor applications by providing a structured and predictable way to handle state changes, inspired by the Redux pattern. It promotes best practices such as immutability, single source of truth, and clear separation of concerns, making it easier to manage complex application states.
 
+## 🚀 How to Install
+
+To install Ducky, you can use the following command:
+
+```bash
+dotnet add package Ducky
+dotnet add package Ducky.Blazor
+```
+
+Alternatively, you can install the packages using the NuGet Package Manager in Visual Studio.
+
+
 ## 📌 Features
 
 1. **Predictable State Management**: By following the principles of Redux, Ducky ensures that the application state is predictable. Every state change is described by an action and handled by a reducer, which returns a new state.

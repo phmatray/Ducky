@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <PackageDownload Include="docfx.console" Version="[2.59.4]" />
-    <PackageDownload Include="GitVersion.Tool" Version="[6.1.0]" />
+    <PackageDownload Include="Octopus.OctoVersion.Tool" Version="[1.0.9]" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,12 +29,6 @@
     <Content Include="..\CHANGELOG.md">
       <Link>config\CHANGELOG.md</Link>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="..\.github\workflows\macos-latest.yml" />
-    <None Remove="..\.github\workflows\ubuntu-latest.yml" />
-    <None Remove="..\.github\workflows\windows-latest.yml" />
   </ItemGroup>
 
 </Project>
