@@ -27,6 +27,7 @@
         "Clean",
         "Compile",
         "CreateRelease",
+        "InstallWorkloads",
         "Pack",
         "PublishToGithub",
         "PublishToGitHubPages",
