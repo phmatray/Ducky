@@ -11,8 +11,8 @@
     <Authors>Philippe Matray</Authors>
     <Copyright>Atypical Consulting SRL</Copyright>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/phmatray/r3dux</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/phmatray/r3dux</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/phmatray/Ducky</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/phmatray/Ducky</PackageProjectUrl>
     <PackageReleaseNotes>https://github.com/phmatray/Ducky/releases</PackageReleaseNotes>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>

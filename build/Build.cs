@@ -27,6 +27,8 @@ using static Nuke.Common.Tools.Discord.DiscordTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using Project = Nuke.Common.ProjectModel.Project;
 
+// ReSharper disable AllUnderscoreLocalParameterName
+
 [GitHubActions(
     "continuous",
     GitHubActionsImage.UbuntuLatest,
@@ -199,8 +201,8 @@ partial class Build : NukeBuild
                     .SetOutputDirectory(ArtifactsDirectory)
                     .EnableNoBuild()
                     .EnableNoRestore()
-                    .SetIncludeSymbols(true)
-                    .SetIncludeSource(true)
+                    .SetIncludeSymbols(false)
+                    .SetIncludeSource(false)
                     .SetSymbolPackageFormat(DotNetSymbolPackageFormat.snupkg)
                     .SetCopyright(Copyright)
                     .SetVersion(GitVersion.NuGetVersionV2)
@@ -258,7 +260,8 @@ partial class Build : NukeBuild
         .Executes(async () =>
         {
             var credentials = new Credentials(GitHubActions.Token);
-            GitHubTasks.GitHubClient = new GitHubClient(new ProductHeaderValue(nameof(NukeBuild)),
+            GitHubTasks.GitHubClient = new GitHubClient(
+                new ProductHeaderValue(nameof(NukeBuild)),
                 new InMemoryCredentialStore(credentials));
 
             string owner = GitRepository.GetGitHubOwner();
