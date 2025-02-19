@@ -15,12 +15,13 @@ using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Discord;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitHub;
-using Nuke.Common.Tools.GitVersion;
+using Nuke.Common.Tools.OctoVersion;
 using Nuke.Common.Utilities;
 using Nuke.Common.Utilities.Collections;
 using Octokit;
 using Octokit.Internal;
 using Serilog;
+using Serilog.Core;
 using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.Discord.DiscordTasks;
@@ -67,9 +68,16 @@ partial class Build : NukeBuild
 
     [Nuke.Common.Parameter("Excluded Artifacts Type")]
     readonly string ExcludedArtifactsType = ".snupkg";
-
-    [GitVersion]
-    readonly GitVersion GitVersion;
+    
+    // The Required Attribute will automatically throw an exception if the 
+    // OctoVersionInfo parameter is not set due to an error or misconfiguration in Nuke.
+    [Required]
+    [OctoVersion(
+        AutoDetectBranch = true,
+        UpdateBuildNumber = true,
+        Framework = "net9.0",
+        Major = 1)]
+    readonly OctoVersionInfo OctoVersionInfo;
 
     [GitRepository]
     readonly GitRepository GitRepository;
@@ -99,7 +107,7 @@ partial class Build : NukeBuild
         .Description("Logs the GitVersion")
         .Executes(() =>
         {
-            Log.Information("GitVersion = {Value}", GitVersion.NuGetVersionV2);
+            Log.Information("GitVersion = {Value}", OctoVersionInfo.NuGetVersion);
         });
     
     Target Clean => _ => _
@@ -147,10 +155,10 @@ partial class Build : NukeBuild
             DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
-                .SetVersion(GitVersion.NuGetVersionV2)
-                .SetAssemblyVersion(GitVersion.AssemblySemVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
-                .SetFileVersion(GitVersion.AssemblySemFileVer)
+                .SetVersion(OctoVersionInfo.NuGetVersion)
+                .SetAssemblyVersion(OctoVersionInfo.MajorMinorPatch)
+                .SetInformationalVersion(OctoVersionInfo.InformationalVersion)
+                .SetFileVersion(OctoVersionInfo.MajorMinorPatch)
                 .SetDeterministic(true)
                 .EnableNoRestore());
             Log.Information("Solution built successfully");
@@ -205,10 +213,10 @@ partial class Build : NukeBuild
                     .SetIncludeSource(false)
                     .SetSymbolPackageFormat(DotNetSymbolPackageFormat.snupkg)
                     .SetCopyright(Copyright)
-                    .SetVersion(GitVersion.NuGetVersionV2)
-                    .SetAssemblyVersion(GitVersion.AssemblySemVer)
-                    .SetInformationalVersion(GitVersion.InformationalVersion)
-                    .SetFileVersion(GitVersion.AssemblySemFileVer));
+                    .SetVersion(OctoVersionInfo.NuGetVersion)
+                    .SetAssemblyVersion(OctoVersionInfo.MajorMinorPatch)
+                    .SetInformationalVersion(OctoVersionInfo.InformationalVersion)
+                    .SetFileVersion(OctoVersionInfo.MajorMinorPatch));
                 Log.Information("Project {ProjectName} packed successfully", project.Name);
             }
         });
@@ -267,17 +275,17 @@ partial class Build : NukeBuild
             string owner = GitRepository.GetGitHubOwner();
             string name = GitRepository.GetGitHubName();
 
-            var releaseTag = GitVersion.NuGetVersionV2;
+            var releaseTag = OctoVersionInfo?.NuGetVersion;
             var changeLogSectionEntries = ChangelogTasks.ExtractChangelogSectionNotes(ChangeLogFile);
             var latestChangeLog = changeLogSectionEntries
                 .Aggregate((c, n) => c + Environment.NewLine + n);
 
             var newRelease = new NewRelease(releaseTag)
             {
-                TargetCommitish = GitVersion.Sha,
+                TargetCommitish = GitRepository.Branch,
                 Draft = true,
                 Name = $"v{releaseTag}",
-                Prerelease = !string.IsNullOrEmpty(GitVersion.PreReleaseTag),
+                Prerelease = !string.IsNullOrEmpty(OctoVersionInfo.PreReleaseTag),
                 Body = latestChangeLog
             };
 
