@@ -216,7 +216,6 @@ partial class Build : NukeBuild
     Target PublishToGithub => _ => _
         .Description($"Publishing to Github for Development only.")
         .Triggers(CreateRelease)
-        .Requires(() => GithubNugetFeed)
         .Requires(() => GitHubActions.Token)
         .Requires(() => Configuration.Equals(Configuration.Release))
         .OnlyWhenStatic(() => GitRepository.IsOnDevelopBranch() || GitHubActions?.IsPullRequest == true)
