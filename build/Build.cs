@@ -216,7 +216,6 @@ partial class Build : NukeBuild
     Target PublishToGithub => _ => _
         .Description($"Publishing to Github for Development only.")
         .Triggers(CreateRelease)
-        .Requires(() => GitHubActions.Token)
         .Requires(() => Configuration.Equals(Configuration.Release))
         .OnlyWhenStatic(() => GitRepository.IsOnDevelopBranch() || GitHubActions?.IsPullRequest == true)
         .Executes(() =>
@@ -237,8 +236,6 @@ partial class Build : NukeBuild
     Target PublishToNuGet => _ => _
         .Description($"Publishing to NuGet with the version.")
         .Triggers(CreateRelease)
-        .Requires(() => NugetFeed)
-        .Requires(() => NuGetApiKey)
         .Requires(() => Configuration.Equals(Configuration.Release))
         .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>
