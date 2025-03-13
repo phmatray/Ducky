@@ -12,22 +12,23 @@ public interface IAsyncEffect
     /// <summary>
     /// Gets the last action that was dispatched.
     /// </summary>
-    object? LastAction { get; }
+    public object? LastAction { get; }
 
     /// <summary>
     /// Handles the specified action and dispatches new actions.
     /// </summary>
     /// <param name="action">The action to handle.</param>
-    /// <param name="rootState">The root state of the application.</param>
+    /// <param name="rootState">The current root state of the application.</param>
+    /// <param name="dispatcher">The dispatcher used to dispatch new actions.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task HandleAsync(object action, IRootState rootState);
+    Task HandleAsync(object action, IRootState rootState, IDispatcher dispatcher);
 
     /// <summary>
     /// Determines whether the effect can handle the specified action.
     /// </summary>
     /// <param name="action">The action to check.</param>
     /// <returns><c>true</c> if the effect can handle the action; otherwise, <c>false</c>.</returns>
-    bool CanHandle(object action);
+    public bool CanHandle(object action);
 
     /// <summary>
     /// Sets the dispatcher used to dispatch new actions.
@@ -41,5 +42,5 @@ public interface IAsyncEffect
     /// <param name="action">The action to dispatch.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="action"/> is null.</exception>
     /// <exception cref="ObjectDisposedException">Thrown when the dispatcher has been disposed.</exception>
-    void Dispatch(object action);
+    public void Dispatch(object action);
 }

@@ -8,14 +8,14 @@ namespace AppStore.Tests.Counter;
 
 public sealed class CounterEffectsTests
 {
-    private readonly ResetCounterAfter3Sec _sut;
+    private readonly CounterEffects _sut;
     private readonly FakeTimeProvider _timeProvider = new();
 
     public CounterEffectsTests()
     {
         ObservableSystem.DefaultTimeProvider = _timeProvider;
 
-        _sut = new ResetCounterAfter3Sec();
+        _sut = new CounterEffects();
         _sut.SetDispatcher(new Dispatcher());
     }
 
