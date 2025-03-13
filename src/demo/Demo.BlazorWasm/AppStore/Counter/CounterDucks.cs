@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Ducky.Generators;
+
 namespace Demo.BlazorWasm.AppStore;
 
 #region State
@@ -12,13 +14,48 @@ public record CounterState(int Value);
 
 #region Actions
 
+[DuckyAction]
 public record Increment(int Amount = 1);
 
+[DuckyAction]
 public record Decrement(int Amount = 1);
 
+[DuckyAction]
 public record Reset;
 
+[DuckyAction]
 public record SetValue(int Value);
+
+public static partial class ActionDispatcher
+{
+    public static void DispatchIncrement(
+        this IDispatcher dispatcher,
+        int amount = 1)
+        => dispatcher.Dispatch(new Increment(amount));
+}
+
+public static partial class ActionDispatcher
+{
+    public static void DispatchDecrement(
+        this IDispatcher dispatcher,
+        int amount = 1)
+        => dispatcher.Dispatch(new Decrement(amount));
+}
+
+public static partial class ActionDispatcher
+{
+    public static void DispatchReset(
+        this IDispatcher dispatcher)
+        => dispatcher.Dispatch(new Reset());
+}
+
+public static partial class ActionDispatcher
+{
+    public static void DispatchSetValue(
+        this IDispatcher dispatcher,
+        int value)
+        => dispatcher.Dispatch(new SetValue(value));
+}
 
 #endregion
 

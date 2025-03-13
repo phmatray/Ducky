@@ -16,9 +16,18 @@
     <PackageReference Include="PublishSPAforGitHubPages.Build"/>
   </ItemGroup>
 
+
   <ItemGroup>
-    <ProjectReference Include="..\..\library\Ducky.Blazor\Ducky.Blazor.csproj"/>
     <ProjectReference Include="..\..\library\Ducky\Ducky.csproj"/>
+    <ProjectReference Include="..\..\library\Ducky.Blazor\Ducky.Blazor.csproj"/>
+    <ProjectReference Include="..\..\library\Ducky.Generator\Ducky.Generator.csproj" 
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="DDD.UbiquitousLanguageRegistry.txt"/>
+    <AdditionalFiles Include="DDD.UbiquitousLanguageRegistry.txt"/>
   </ItemGroup>
 
 </Project>
