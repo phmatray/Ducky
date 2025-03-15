@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Ducky.Generator.Tests;
 
-public class SampleIncrementalSourceGeneratorTests
+public class ActionDispatcherSourceGeneratorTests
 {
     private const string VectorClassText =
         """
@@ -45,7 +45,7 @@ public class SampleIncrementalSourceGeneratorTests
     public void GenerateReportMethod()
     {
         // Create an instance of the source generator.
-        SampleIncrementalSourceGenerator generator = new();
+        ActionDispatcherSourceGenerator generator = new();
 
         // Source generators should be tested using 'GeneratorDriver'.
         CSharpGeneratorDriver driver = CSharpGeneratorDriver.Create(generator);

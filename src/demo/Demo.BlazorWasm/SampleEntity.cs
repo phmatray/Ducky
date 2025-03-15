@@ -1,5 +1,3 @@
-using Ducky.Generators;
-
 namespace Demo.BlazorWasm;
 
 // This code will not compile until you build the project with the Source Generators

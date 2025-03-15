@@ -52,6 +52,7 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
 
 #region Actions
 
+[DuckyAction]
 public sealed record AddProduct
     : Fsa<AddProduct.ActionPayload, ActionMeta>
 {
@@ -65,6 +66,7 @@ public sealed record AddProduct
     public sealed record ActionPayload(Product Product);
 }
 
+[DuckyAction]
 public sealed record RemoveProduct
     : Fsa<RemoveProduct.ActionPayload, ActionMeta>
 {

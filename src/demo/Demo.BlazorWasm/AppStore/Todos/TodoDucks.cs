@@ -33,6 +33,7 @@ public record TodoState
 
 #region Actions
 
+[DuckyAction]
 public sealed record CreateTodo
     : Fsa<CreateTodo.ActionPayload, CreateTodo.ActionMeta>
 {
@@ -52,6 +53,7 @@ public sealed record CreateTodo
     public sealed record ActionMeta(DateTime TimeStamp);
 }
 
+[DuckyAction]
 public sealed record ToggleTodo
     : Fsa<ToggleTodo.ActionPayload, ToggleTodo.ActionMeta>
 {
@@ -71,6 +73,7 @@ public sealed record ToggleTodo
     public sealed record ActionMeta(DateTime TimeStamp);
 }
 
+[DuckyAction]
 public sealed record DeleteTodo
     : Fsa<DeleteTodo.ActionPayload, ActionMeta>
 {

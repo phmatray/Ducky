@@ -7,8 +7,8 @@ using Microsoft.CodeAnalysis.Text;
 namespace Ducky.Generator;
 
 /// <summary>
-/// A sample source generator that creates a custom report based on class properties. The target class should be annotated with the 'Generators.ReportAttribute' attribute.
-/// When using the source code as a baseline, an incremental source generator is preferable because it reduces the performance overhead.
+/// A sample source generator that creates ActionDispatcher extension methods
+/// for action records decorated with the [DuckyAction] attribute.
 /// </summary>
 [Generator]
 public class ActionDispatcherSourceGenerator : IIncrementalGenerator
@@ -22,7 +22,7 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
 
           namespace {{Namespace}}
           {
-              [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct | System.AttributeTargets.Record)]
+              [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct)]
               public class {{AttributeName}} : System.Attribute
               {
               }
@@ -83,9 +83,9 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
         return (recordDeclaration, found);
     }
 
-
     /// <summary>
     /// Generates a single source file "ActionDispatcher.g.cs" containing all the extension methods.
+    /// Each extension method uses the fully qualified type name for the action record.
     /// </summary>
     private void GenerateCode(
         Compilation compilation,
@@ -109,7 +109,10 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
 
             // The method name will be "Dispatch" plus the record's name.
             string recordName = recordSymbol.Name;
-            string methodName = "Dispatch" + recordName;
+            string methodName = recordName;
+
+            // Use fully qualified type name so that actions from any assembly/namespace are accessible.
+            string fullyQualifiedRecordName = recordSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
             // Process the primary constructor parameters (if any)
             string parameterList = string.Empty;
@@ -139,7 +142,7 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
                     string defaultText = string.Empty;
                     if (parameter.Default is not null)
                     {
-                        defaultText = " = " + parameter.Default.Value.ToString();
+                        defaultText = $" = {parameter.Default.Value}";
                     }
 
                     paramListBuilder.Add($"{typeStr} {paramName}{defaultText}");
@@ -154,8 +157,8 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
             }
 
             // Generate the extension method for this action record.
-            sb.AppendLine($"    public static void {methodName}(this IDispatcher dispatcher{parameterList})");
-            sb.AppendLine("        => dispatcher.Dispatch(new " + recordName + "(" + argumentList + "));");
+            sb.AppendLine($"    public static void {methodName}(this global::Ducky.IDispatcher dispatcher{parameterList})");
+            sb.AppendLine("        => dispatcher.Dispatch(new " + fullyQualifiedRecordName + "(" + argumentList + "));");
             sb.AppendLine();
         }
 

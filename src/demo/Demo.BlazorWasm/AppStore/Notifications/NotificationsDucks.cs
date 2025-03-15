@@ -38,10 +38,13 @@ public record NotificationsState
 
 #region Actions
 
+[DuckyAction]
 public record AddNotification(Notification Notification);
 
+[DuckyAction]
 public record MarkNotificationAsRead(Guid NotificationId);
 
+[DuckyAction]
 public record MarkAllNotificationsAsRead;
 
 #endregion
