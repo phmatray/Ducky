@@ -27,7 +27,6 @@
 
   <ItemGroup>
     <None Remove="DDD.UbiquitousLanguageRegistry.txt"/>
-    <AdditionalFiles Include="DDD.UbiquitousLanguageRegistry.txt"/>
   </ItemGroup>
 
 </Project>
