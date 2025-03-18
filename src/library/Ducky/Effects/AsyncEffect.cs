@@ -8,7 +8,8 @@ namespace Ducky;
 public abstract class AsyncEffect<TAction> : IAsyncEffect
 {
     /// <inheritdoc />
-    public object? LastAction { get; private set; }
+    public object? LastAction
+        => Dispatcher?.LastAction;
 
     /// <summary>
     /// Gets the dispatcher.
@@ -50,6 +51,5 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
         }
 
         Dispatcher.Dispatch(action);
-        LastAction = Dispatcher.LastAction;
     }
 }
