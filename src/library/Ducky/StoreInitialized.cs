@@ -7,7 +7,6 @@ namespace Ducky;
 /// <summary>
 /// Represents an action that is dispatched when the store is initialized.
 /// </summary>
-[DuckyAction]
 public sealed record StoreInitialized : IKeyedAction
 {
     /// <inheritdoc />

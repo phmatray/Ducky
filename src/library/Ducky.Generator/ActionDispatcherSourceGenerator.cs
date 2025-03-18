@@ -8,7 +8,7 @@ namespace Ducky.Generator;
 
 /// <summary>
 /// A source generator that creates ActionDispatcher extension methods for each action record decorated with the [DuckyAction] attribute.
-/// Each method is generated in its own partial declaration of the ActionDispatcher class.
+/// Each generated method is placed in its own partial declaration of the ActionDispatcher class.
 /// </summary>
 [Generator]
 public class ActionDispatcherSourceGenerator : IIncrementalGenerator
@@ -22,6 +22,9 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
 
           namespace {{Namespace}}
           {
+              /// <summary>
+              /// An attribute that marks a record as an action that can be dispatched.
+              /// </summary>
               [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct)]
               public class {{AttributeName}} : System.Attribute
               {
@@ -104,16 +107,16 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
             string recordName = recordSymbol.Name;
             string methodName = recordName;
 
-            // Use the fully qualified type name so that actions from any assembly/namespace are referenced correctly.
+            // Use fully qualified type name so that actions from any assembly/namespace are referenced correctly.
             string fullyQualifiedRecordName = recordSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-            // Build the parameter list for the extension method.
-            // Always include "this IDispatcher dispatcher" as the first parameter.
+            // Build the parameter lines for the dispatch method.
+            // Always include the first parameter: "this IDispatcher dispatcher".
             List<string> parameterLines = ["this IDispatcher dispatcher"];
 
-            string argumentList = string.Empty;
             List<string> argListBuilder = [];
 
+            // First try using the primary constructor (record syntax parameter list).
             if (recordSyntax.ParameterList is not null)
             {
                 foreach (ParameterSyntax parameter in recordSyntax.ParameterList.Parameters)
@@ -123,15 +126,10 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
                         continue;
                     }
 
-                    // Retrieve the parameter type.
                     TypeInfo typeInfo = semanticModel.GetTypeInfo(parameter.Type);
                     string typeStr = typeInfo.Type?.ToDisplayString() ?? parameter.Type.ToString();
-
-                    // Convert the record's parameter name (e.g. "Amount") to a lower-case name (e.g. "amount")
                     string originalName = parameter.Identifier.Text;
                     string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
-
-                    // Check if there is a default value (e.g. "= 1")
                     string defaultText = string.Empty;
                     if (parameter.Default is not null)
                     {
@@ -141,11 +139,62 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
                     parameterLines.Add($"{typeStr} {paramName}{defaultText}");
                     argListBuilder.Add(paramName);
                 }
+            }
+            else
+            {
+                // No primary constructor parameters, so look for user-defined constructors.
+                List<IMethodSymbol> ctors = recordSymbol.InstanceConstructors
+                    .Where(c => !c.IsImplicitlyDeclared && c.Parameters.Length > 0)
+                    .ToList();
+                if (ctors.Count > 0)
+                {
+                    // Choose the first available declared constructor.
+                    IMethodSymbol ctor = ctors[0];
+                    foreach (IParameterSymbol parameter in ctor.Parameters)
+                    {
+                        string typeStr = parameter.Type.ToDisplayString();
+                        string originalName = parameter.Name;
+                        string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
+                        string defaultText = string.Empty;
+                        if (parameter.HasExplicitDefaultValue)
+                        {
+                            if (parameter.ExplicitDefaultValue is string)
+                            {
+                                defaultText = " = \"" + parameter.ExplicitDefaultValue + "\"";
+                            }
+                            else if (parameter.ExplicitDefaultValue is not null)
+                            {
+                                defaultText = " = " + parameter.ExplicitDefaultValue.ToString();
+                            }
+                            else
+                            {
+                                defaultText = " = null";
+                            }
+                        }
 
-                argumentList = string.Join(", ", argListBuilder);
+                        parameterLines.Add($"{typeStr} {paramName}{defaultText}");
+                        argListBuilder.Add(paramName);
+                    }
+                }
             }
 
-            // Build the source file content with formatting that matches your sample.
+            string argumentList = string.Join(", ", argListBuilder);
+
+            // Format the parameter list with each parameter on its own line, appending a comma for all but the last.
+            StringBuilder parametersText = new();
+            for (int i = 0; i < parameterLines.Count; i++)
+            {
+                if (i < parameterLines.Count - 1)
+                {
+                    parametersText.AppendLine($"        {parameterLines[i]},");
+                }
+                else
+                {
+                    parametersText.AppendLine($"        {parameterLines[i]}");
+                }
+            }
+
+            // Build the source file content with the desired formatting.
             StringBuilder sb = new();
             sb.AppendLine("// <auto-generated/>");
             sb.AppendLine("using System;");
@@ -153,18 +202,7 @@ public class ActionDispatcherSourceGenerator : IIncrementalGenerator
             sb.AppendLine("public static partial class ActionDispatcher");
             sb.AppendLine("{");
             sb.AppendLine($"    public static void {methodName}(");
-            for (int i = 0; i < parameterLines.Count; i++)
-            {
-                if (i < parameterLines.Count - 1)
-                {
-                    sb.AppendLine($"        {parameterLines[i]},");
-                }
-                else
-                {
-                    sb.AppendLine($"        {parameterLines[i]}");
-                }
-            }
-
+            sb.Append(parametersText.ToString());
             sb.AppendLine("    )");
             sb.AppendLine("        => dispatcher.Dispatch(new " + fullyQualifiedRecordName + "(" + argumentList + "));");
             sb.AppendLine("}");
