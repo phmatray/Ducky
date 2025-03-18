@@ -24,37 +24,6 @@ public record Reset;
 [DuckyAction]
 public record SetValue(int Value);
 
-public static partial class ActionDispatcher
-{
-    public static void DispatchIncrement(
-        this IDispatcher dispatcher,
-        int amount = 1)
-        => dispatcher.Dispatch(new Increment(amount));
-}
-
-public static partial class ActionDispatcher
-{
-    public static void DispatchDecrement(
-        this IDispatcher dispatcher,
-        int amount = 1)
-        => dispatcher.Dispatch(new Decrement(amount));
-}
-
-public static partial class ActionDispatcher
-{
-    public static void DispatchReset(
-        this IDispatcher dispatcher)
-        => dispatcher.Dispatch(new Reset());
-}
-
-public static partial class ActionDispatcher
-{
-    public static void DispatchSetValue(
-        this IDispatcher dispatcher,
-        int value)
-        => dispatcher.Dispatch(new SetValue(value));
-}
-
 #endregion
 
 #region Reducers
@@ -112,7 +81,7 @@ public class ResetCounterAfter3Sec : AsyncEffect<Increment>
         if (counterState.Value > 15)
         {
             await Task.Delay(TimeSpan.FromSeconds(3), ObservableSystem.DefaultTimeProvider);
-            Dispatch(new Reset());
+            Dispatcher.Reset();
         }
 
         await Task.CompletedTask;

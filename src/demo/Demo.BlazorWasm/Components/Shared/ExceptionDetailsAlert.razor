@@ -46,6 +46,6 @@
   public string SearchTerm { get; set; } = "";
 
   private void MarkNotificationAsRead(Guid id)
-    => Dispatch(new MarkNotificationAsRead(id));
+    => Dispatcher.MarkNotificationAsRead(id);
   
 }

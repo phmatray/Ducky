@@ -7,10 +7,13 @@ namespace Ducky;
 /// <inheritdoc />
 public abstract class AsyncEffect<TAction> : IAsyncEffect
 {
-    private IDispatcher? _dispatcher;
-
     /// <inheritdoc />
     public object? LastAction { get; private set; }
+
+    /// <summary>
+    /// Gets the dispatcher.
+    /// </summary>
+    public IDispatcher? Dispatcher { get; private set; }
 
     /// <summary>
     /// Handles the specified action and dispatches new actions.
@@ -35,18 +38,18 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
     /// <inheritdoc />
     public void SetDispatcher(IDispatcher dispatcher)
     {
-        _dispatcher = dispatcher;
+        Dispatcher = dispatcher;
     }
 
     /// <inheritdoc />
     public void Dispatch(object action)
     {
-        if (_dispatcher is null)
+        if (Dispatcher is null)
         {
             throw new InvalidOperationException("The dispatcher has not been set.");
         }
 
-        _dispatcher.Dispatch(action);
-        LastAction = _dispatcher.LastAction;
+        Dispatcher.Dispatch(action);
+        LastAction = Dispatcher.LastAction;
     }
 }

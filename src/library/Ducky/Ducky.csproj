@@ -13,4 +13,10 @@
     <PackageReference Include="R3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Ducky.Generator\Ducky.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"/>
+  </ItemGroup>
+  
 </Project>

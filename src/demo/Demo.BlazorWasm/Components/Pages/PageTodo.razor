@@ -121,19 +121,19 @@
   {
     if (!string.IsNullOrWhiteSpace(_newTodo))
     {
-      Dispatch(new CreateTodo(_newTodo));
+      Dispatcher.CreateTodo(_newTodo);
       _newTodo = string.Empty;
     }
   }
 
   private void ToggleTodoItem(Guid id)
   {
-    Dispatch(new ToggleTodo(id));
+    Dispatcher.ToggleTodo(id);
   }
 
   private void DeleteTodoItem(Guid id)
   {
-    Dispatch(new DeleteTodo(id));
+    Dispatcher.DeleteTodo(id);
   }
 
 }

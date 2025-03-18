@@ -59,11 +59,11 @@
     => AppTheme.GetDarkLightModeButtonIcon(State.IsDarkMode);
   
   private void ToggleDrawer()
-    => Dispatch(new ToggleDrawer());
+    => Dispatcher.ToggleDrawer();
 
   private void ToggleDarkMode()
-    => Dispatch(new ToggleDarkMode());
+    => Dispatcher.ToggleDarkMode();
   
   private void OpenAboutDialog()
-    => Dispatch(new OpenAboutDialog());
+    => Dispatcher.OpenAboutDialog();
 }
