@@ -118,9 +118,11 @@ partial class Build : NukeBuild
             // Clean projects
             DotNetClean(c => c.SetProject(Solution.library.Ducky));
             DotNetClean(c => c.SetProject(Solution.library.Ducky_Blazor));
+            DotNetClean(c => c.SetProject(Solution.library.Ducky_Generator));
 
             DotNetClean(c => c.SetProject(Solution.tests.AppStore_Tests));
             DotNetClean(c => c.SetProject(Solution.tests.Ducky_Tests));
+            DotNetClean(c => c.SetProject(Solution.tests.Ducky_Generator_Tests));
             
             DotNetClean(c => c.SetProject(Solution.demo.Demo_BlazorWasm));
             
@@ -197,7 +199,8 @@ partial class Build : NukeBuild
             Project[] projectsToPack =
             [
                 Solution.library.Ducky,
-                Solution.library.Ducky_Blazor
+                Solution.library.Ducky_Blazor,
+                Solution.library.Ducky_Generator
             ];
 
             foreach (var project in projectsToPack)
@@ -317,22 +320,4 @@ partial class Build : NukeBuild
         };
         await GitHubTasks.GitHubClient.Repository.Release.UploadAsset(release, assetUpload);
     }
-    
-    // TODO: Validate this target
-    Target PublishToGitHubPages => _ => _
-        .Description("Publish demo to GitHub Pages")
-        .Requires(() => Configuration.Equals(Configuration.Release))
-        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
-        .Executes(() =>
-        {
-            // Publish the site
-            DotNetPublish(s => s
-                .SetProject(Solution.demo.Demo_BlazorWasm)
-                .SetConfiguration(Configuration.Release)
-                .SetOutput(ArtifactsDirectory / "public")
-                .SetProperty("GHPages", true)
-            );
-            
-            // TODO: Deploy the site
-        });
 }
