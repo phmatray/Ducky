@@ -120,13 +120,13 @@
   
   private void LoadMovies()
   {
-    Dispatch(new LoadMovies());
+    Dispatcher.LoadMovies();
   }
 
   private void SetCurrentPage(int page)
   {
-    Dispatch(new SetCurrentPage(page));
-    Dispatch(new LoadMovies());
+    Dispatcher.SetCurrentPage(page);
+    Dispatcher.LoadMovies();
   }
   
   private void GoToMovieDetails(int movieId)

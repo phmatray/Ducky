@@ -7,4 +7,5 @@ namespace Demo.BlazorWasm.Features.Feedback.Actions;
 /// <summary>
 /// Action to open the About dialog.
 /// </summary>
+[DuckyAction]
 public record OpenAboutDialog;

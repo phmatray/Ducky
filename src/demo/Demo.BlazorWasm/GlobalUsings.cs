@@ -8,5 +8,6 @@ global using Demo.BlazorWasm.Components.Shared;
 global using Demo.BlazorWasm.Features.Feedback.Actions;
 global using Demo.BlazorWasm.Features.JsonColoring.Helpers;
 global using Ducky;
+global using Ducky.Generators;
 global using MudBlazor;
 global using R3;

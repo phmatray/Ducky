@@ -1315,3 +1315,9 @@ roslynator_compiler_diagnostic_fix.cs8625.enabled = true
 roslynator_compiler_diagnostic_fix.cs8632.enabled = true
 roslynator_compiler_diagnostic_fix.cs8765.enabled = true
 roslynator_compiler_diagnostic_fix.cs8767.enabled = true
+
+# The analysis performed by RS1022 is slow and relies on implementation 
+# details of the JIT compiler for correctness.
+# Authors of compiler extensions are encouraged to use the stricter 
+# (and faster) analyzer RS1038 instead of this rule.
+roslyn_correctness.assembly_reference_validation = relaxed

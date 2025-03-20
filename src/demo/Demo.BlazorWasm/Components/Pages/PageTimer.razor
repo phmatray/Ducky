@@ -60,17 +60,17 @@
   private void ResetTimer()
   {
     StopTimer();
-    Dispatch(new ResetTimer());
+    Dispatcher.ResetTimer();
   }
 
   private void StartTimer()
   {
-    Dispatch(new StartTimer());
+    Dispatcher.StartTimer();
   }
 
   private void StopTimer()
   {
-    Dispatch(new StopTimer());
+    Dispatcher.StopTimer();
   }
 
 }

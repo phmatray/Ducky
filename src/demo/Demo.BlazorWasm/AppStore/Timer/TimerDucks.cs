@@ -21,12 +21,16 @@ public record TimerState
 
 #region Actions
 
+[DuckyAction]
 public record StartTimer;
 
+[DuckyAction]
 public record StopTimer;
 
+[DuckyAction]
 public record ResetTimer;
 
+[DuckyAction]
 public record Tick;
 
 #endregion

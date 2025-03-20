@@ -68,17 +68,17 @@
 
   private void SetMessage()
   {
-    Dispatch(new SetMessage("New message from Blazor!"));
+    Dispatcher.SetMessage("New message from Blazor!");
   }
 
   private void AppendMessage()
   {
-    Dispatch(new AppendMessage(" Appended text"));
+    Dispatcher.AppendMessage(" Appended text");
   }
 
   private void ClearMessage()
   {
-    Dispatch(new ClearMessage());
+    Dispatcher.ClearMessage();
   }
 
 }

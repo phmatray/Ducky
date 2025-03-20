@@ -46,12 +46,16 @@ public record MoviesState
 
 #region Actions
 
+[DuckyAction]
 public record LoadMovies;
 
+[DuckyAction]
 public record LoadMoviesSuccess(ValueCollection<Movie> Movies, int TotalItems);
 
+[DuckyAction]
 public record LoadMoviesFailure(Exception Error);
 
+[DuckyAction]
 public record SetCurrentPage(int CurrentPage);
 
 #endregion

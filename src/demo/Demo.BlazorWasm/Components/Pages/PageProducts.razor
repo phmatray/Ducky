@@ -135,7 +135,7 @@
     if (!string.IsNullOrWhiteSpace(_newProductName) && _newProductPrice > 0)
     {
       var newProduct = new Product(Guid.NewGuid(), _newProductName, _newProductPrice, _newProductCategory);
-      Dispatch(new AddProduct(newProduct));
+      Dispatcher.AddProduct(newProduct);
       _newProductName = string.Empty;
       _newProductPrice = 0;
       _newProductCategory = "Electronics";
@@ -144,6 +144,6 @@
 
   private void DeleteProduct(Guid id)
   {
-    Dispatch(new RemoveProduct(id));
+    Dispatcher.RemoveProduct(id);
   }
 }

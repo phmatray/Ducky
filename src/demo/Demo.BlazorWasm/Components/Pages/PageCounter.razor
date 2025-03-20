@@ -60,17 +60,17 @@
 
   private void Increment()
   {
-    Dispatch(new Increment(Amount));
+    Dispatcher.Increment(Amount);
   }
 
   private void Decrement()
   {
-    Dispatch(new Decrement(Amount));
+    Dispatcher.Decrement(Amount);
   }
 
   private void Reset()
   {
-    Dispatch(new Reset());
+    Dispatcher.Reset();
   }
 
 }

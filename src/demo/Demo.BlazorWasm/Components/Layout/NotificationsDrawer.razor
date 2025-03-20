@@ -80,12 +80,12 @@
   
   private void MarkNotificationAsRead(Guid id)
   {
-    Dispatch(new MarkNotificationAsRead(id));
+    Dispatcher.MarkNotificationAsRead(id);
   }
 
   private void MarkAllNotificationsAsRead()
   {
-    Dispatch(new MarkAllNotificationsAsRead());
+    Dispatcher.MarkAllNotificationsAsRead();
   }
   
   private void GoToErrorDetails(Guid id)

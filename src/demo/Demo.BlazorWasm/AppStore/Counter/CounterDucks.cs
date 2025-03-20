@@ -12,12 +12,16 @@ public record CounterState(int Value);
 
 #region Actions
 
+[DuckyAction]
 public record Increment(int Amount = 1);
 
+[DuckyAction]
 public record Decrement(int Amount = 1);
 
+[DuckyAction]
 public record Reset;
 
+[DuckyAction]
 public record SetValue(int Value);
 
 #endregion
@@ -77,7 +81,7 @@ public class ResetCounterAfter3Sec : AsyncEffect<Increment>
         if (counterState.Value > 15)
         {
             await Task.Delay(TimeSpan.FromSeconds(3), ObservableSystem.DefaultTimeProvider);
-            Dispatch(new Reset());
+            Dispatcher.Reset();
         }
 
         await Task.CompletedTask;

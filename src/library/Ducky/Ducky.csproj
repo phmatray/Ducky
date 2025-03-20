@@ -12,5 +12,5 @@
     <PackageReference Include="ObservableCollections.R3" />
     <PackageReference Include="R3" />
   </ItemGroup>
-
+  
 </Project>

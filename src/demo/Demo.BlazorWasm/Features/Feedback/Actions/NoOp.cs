@@ -7,4 +7,5 @@ namespace Demo.BlazorWasm.Features.Feedback.Actions;
 /// <summary>
 /// Action that does nothing.
 /// </summary>
+[DuckyAction]
 public record NoOp;
