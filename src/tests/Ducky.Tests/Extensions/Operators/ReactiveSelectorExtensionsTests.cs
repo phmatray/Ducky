@@ -15,12 +15,12 @@ public class ReactiveSelectorExtensionsTests
     public async Task SwitchSelect_ShouldSwitchToLatestObservable()
     {
         // Arrange
-        Observable<int> input = SourceArray.ToObservable();
+        Observable<int> input = SourceArray.ToObservable(TestContext.Current.CancellationToken);
 
         // Act
         string[] result = await input
             .SwitchSelect(Selector)
-            .ToArrayAsync()
+            .ToArrayAsync(TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
 
         // Assert
@@ -39,12 +39,12 @@ public class ReactiveSelectorExtensionsTests
     public async Task ConcatSelect_ShouldConcatAllObservableSequences()
     {
         // Arrange
-        Observable<int> input = SourceArray.ToObservable();
+        Observable<int> input = SourceArray.ToObservable(TestContext.Current.CancellationToken);
 
         // Act
         string[] result = await input
             .ConcatSelect(Selector)
-            .ToArrayAsync()
+            .ToArrayAsync(TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
 
         // Assert
@@ -66,12 +66,12 @@ public class ReactiveSelectorExtensionsTests
     public async Task MergeSelect_ShouldMergeAllObservableSequences()
     {
         // Arrange
-        Observable<int> input = SourceArray.ToObservable();
+        Observable<int> input = SourceArray.ToObservable(TestContext.Current.CancellationToken);
 
         // Act
         string[] result = await input
             .MergeSelect(Selector)
-            .ToArrayAsync()
+            .ToArrayAsync(TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
 
         // Assert

@@ -30,11 +30,9 @@
         "InstallWorkloads",
         "Pack",
         "PublishToGithub",
-        "PublishToGitHubPages",
         "PublishToNuGet",
         "Restore",
         "UnitTests",
-        "UpdateChangeLog",
         "UpdateDocumentation",
         "Version"
       ]

@@ -25,6 +25,7 @@ A Predictable State Management Library for Blazor
   * [📝 Table of Contents](#-table-of-contents)
   * [📊 Stats](#-stats)
   * [📝 Summary](#-summary)
+  * [🚀 How to Install](#-how-to-install)
   * [📌 Features](#-features)
     * [How Ducky Works](#how-ducky-works)
     * [The Counter Example](#the-counter-example)
@@ -63,6 +64,7 @@ Alternatively, you can install the packages using the NuGet Package Manager in V
 5. **Middleware and Effects**: Middleware allows for intercepting actions before they reach the reducer, enabling tasks such as logging, analytics, and asynchronous operations. Effects handle side effects like data fetching and other asynchronous tasks.
 6. **Selectors**: Selectors are used to query the state in a performant manner. Memoized selectors help in reducing unnecessary recomputations, thus optimizing performance.
 7. **Integration with Blazor**: Ducky is tailored for Blazor applications, integrating seamlessly with Blazor's component-based architecture.
+8. **Source Generators**: Ducky uses source generators to generate code for dispatching actions, reducing boilerplate code and ensuring type safety.
 
 ### How Ducky Works
 
@@ -142,4 +144,3 @@ You can contact us by opening an issue on this repository.
 ## 📜 License
 
 Apache-2.0 License
-
