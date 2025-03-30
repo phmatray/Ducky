@@ -19,7 +19,9 @@ public class MoviesServiceTests
         const int pageSize = 2;
 
         // Act
-        GetMoviesResponse result = await _moviesService.GetMoviesAsync(pageNumber, pageSize).ConfigureAwait(true);
+        GetMoviesResponse result = await _moviesService
+            .GetMoviesAsync(pageNumber, pageSize, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
 
         // Assert
         result.Movies.Count.ShouldBe(pageSize);
@@ -34,7 +36,9 @@ public class MoviesServiceTests
         const int pageSize = 2;
 
         // Act
-        GetMoviesResponse result = await _moviesService.GetMoviesAsync(pageNumber, pageSize).ConfigureAwait(true);
+        GetMoviesResponse result = await _moviesService
+            .GetMoviesAsync(pageNumber, pageSize, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
 
         // Assert
         result.Movies.ShouldBeEmpty();

@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Xunit;
+
+// using Microsoft.CodeAnalysis.CSharp;
 
 namespace Ducky.Generator.Tests;
 
@@ -109,13 +110,16 @@ public class ActionDispatcherSourceGeneratorTests
 
         // Act
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-        driver = driver.RunGenerators(compilation);
+        driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
         GeneratorDriverRunResult runResult = driver.GetRunResult();
 
         // Find the generated file for the Increment action.
         SyntaxTree generatedTree = runResult.GeneratedTrees
             .Single(tree => tree.FilePath.EndsWith("ActionDispatcher.Increment.g.cs"));
-        string generatedText = generatedTree.GetText().ToString();
+        
+        string generatedText = generatedTree
+            .GetText(TestContext.Current.CancellationToken)
+            .ToString();
 
         // Assert
         Assert.Equal(ExpectedIncrementDispatcher, generatedText, ignoreLineEndingDifferences: true);
@@ -138,13 +142,16 @@ public class ActionDispatcherSourceGeneratorTests
 
         // Act
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-        driver = driver.RunGenerators(compilation);
+        driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
         GeneratorDriverRunResult runResult = driver.GetRunResult();
 
         // Find the generated file for the CreateTodo action.
         SyntaxTree generatedTree = runResult.GeneratedTrees
             .Single(tree => tree.FilePath.EndsWith("ActionDispatcher.CreateTodo.g.cs"));
-        string generatedText = generatedTree.GetText().ToString();
+
+        string generatedText = generatedTree
+            .GetText(TestContext.Current.CancellationToken)
+            .ToString();
 
         // Assert
         Assert.Equal(ExpectedCreateTodoDispatcher, generatedText, ignoreLineEndingDifferences: true);

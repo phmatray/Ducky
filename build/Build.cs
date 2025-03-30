@@ -14,6 +14,7 @@ using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.Discord;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.Git;
 using Nuke.Common.Tools.GitHub;
 using Nuke.Common.Tools.OctoVersion;
 using Nuke.Common.Utilities;
@@ -180,12 +181,12 @@ partial class Build : NukeBuild
             Log.Information("Unit tests passed successfully");
         });
     
-    Target UpdateChangeLog => _ => _
-        .Description("Update the CHANGELOG.md file")
-        .Before(Pack)
-        .Executes(() =>
-        {
-        });
+    // Target UpdateChangeLog => _ => _
+    //     .Description("Update the CHANGELOG.md file")
+    //     .Before(Pack)
+    //     .Executes(() =>
+    //     {
+    //     });
 
     Target Pack => _ => _
         .Description("Pack libraries into NuGet packages with the version")
@@ -193,6 +194,7 @@ partial class Build : NukeBuild
         .Produces(ArtifactsDirectory / ArtifactsType)
         .DependsOn(Compile, UnitTests)
         .Triggers(PublishToGithub, PublishToNuGet)
+        // .Triggers(PublishToGithub, PublishToNuGet, PublishDemoToArtifacts)
         .Executes(() =>
         {
             Log.Information("Packing NuGet packages for projects starting with 'Ducky'");
@@ -264,6 +266,78 @@ partial class Build : NukeBuild
                 });
         });
     
+    // Target PublishDemoToArtifacts => _ => _
+    //     .Description("Publish demo to Artifacts directory")
+    //     .Requires(() => Configuration.Equals(Configuration.Release))
+    //     .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
+    //     .Triggers(DeployToGitHubPages)
+    //     .Executes(() =>
+    //     {
+    //         // Publish the site
+    //         DotNetPublish(s => s
+    //             .SetProject(Solution.demo.Demo_BlazorWasm)
+    //             .SetConfiguration(Configuration.Release)
+    //             .SetOutput(ArtifactsDirectory / "public")
+    //             .SetProperty("GHPages", true)
+    //         );
+    //     });
+
+    // Target DeployToGitHubPages => _ => _
+    //     .Description("Deploy the demo site to GitHub Pages")
+    //     .Triggers(CreateRelease)
+    //     .Requires(() => Configuration.Equals(Configuration.Release))
+    //     .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
+    //     .Executes(() =>
+    //     {
+    //         // Define constants and parameters
+    //         const string siteBranch = "gh-pages";
+    //         const string siteRemote = "origin";
+    //         
+    //         // Use the HTTPS URL (which can include auth tokens via environment variables or parameters)
+    //         var repositoryUrl = GitRepository.HttpsUrl;
+    //         var commitAuthorName = "CI Bot"; // parameterize as needed
+    //         var commitAuthorEmail = "phmatray@gmail.com"; // parameterize as needed
+    //
+    //         // Create a unique temporary work directory (like getWorkDirName in the action)
+    //         var workDirName = $"gh-pages-{DateTime.UtcNow.Ticks}";
+    //         var workDir = TemporaryDirectory / workDirName;
+    //         workDir.CreateOrCleanDirectory();
+    //
+    //         // Clone the existing gh-pages branch into the temporary directory
+    //         GitTasks.Git($"clone --branch {siteBranch} --depth 1 {repositoryUrl} {workDir}");
+    //
+    //         // Configure Git commit author information
+    //         GitTasks.Git($"-C {workDir} config user.name \"{commitAuthorName}\"");
+    //         GitTasks.Git($"-C {workDir} config user.email \"{commitAuthorEmail}\"");
+    //
+    //         // (Optional) Create .nojekyll file so GitHub Pages won’t process your site with Jekyll
+    //         // var noJekyllFile = Path.Combine(workDir, ".nojekyll");
+    //         // if (!File.Exists(noJekyllFile))
+    //         //     File.WriteAllText(noJekyllFile, string.Empty);
+    //
+    //         // (Optional) If you have a custom domain, add a CNAME file
+    //         // File.WriteAllText(Path.Combine(workDir, "CNAME"), "yourcustomdomain.com");
+    //
+    //         // Copy published files from ArtifactsDirectory/public/wwwroot to the work directory
+    //         var publishedSiteDirectory = ArtifactsDirectory / "public" / "wwwroot";
+    //         if (!Directory.Exists(publishedSiteDirectory))
+    //             throw new Exception($"Published site directory not found: {publishedSiteDirectory}");
+    //
+    //         publishedSiteDirectory.Copy(workDir, ExistsPolicy.MergeAndOverwrite);
+    //
+    //         // Stage all changes
+    //         GitTasks.Git($"-C {workDir} add --all");
+    //
+    //         // Build a commit message (you can incorporate commit SHA or timestamp like in the action)
+    //         var commitMessage = $"Deploy site - {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}";
+    //
+    //         // Commit changes (if there are any)
+    //         GitTasks.Git($"-C {workDir} commit -m \"{commitMessage}\"", logOutput: true, logInvocation: true);
+    //
+    //         // Push the commit to the remote gh-pages branch
+    //         GitTasks.Git($"-C {workDir} push {siteRemote} {siteBranch}", logOutput: true, logInvocation: true);
+    //     });
+    
     Target CreateRelease => _ => _
         .Description($"Creating release for the publishable version.")
         .Requires(() => Configuration.Equals(Configuration.Release))
@@ -299,7 +373,7 @@ partial class Build : NukeBuild
 
             ArtifactsDirectory.GlobFiles(ArtifactsType)
                 .Where(x => !x.Name.EndsWith(ExcludedArtifactsType))
-                .ForEach(async x => await UploadReleaseAssetToGithub(createdRelease, x));
+                .ForEach(async void (x) => await UploadReleaseAssetToGithub(createdRelease, x));
 
             await GitHubTasks
                 .GitHubClient
@@ -308,7 +382,7 @@ partial class Build : NukeBuild
                 .Edit(owner, name, createdRelease.Id, new ReleaseUpdate { Draft = false });
         });
 
-    private static async Task UploadReleaseAssetToGithub(Release release, string asset)
+    static async Task UploadReleaseAssetToGithub(Release release, string asset)
     {
         await using var artifactStream = File.OpenRead(asset);
         var fileName = Path.GetFileName(asset);
