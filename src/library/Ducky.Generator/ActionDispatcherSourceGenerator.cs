@@ -79,7 +79,7 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
         foreach (RecordDeclarationSyntax recordSyntax in records)
         {
             SemanticModel semanticModel = compilation.GetSemanticModel(recordSyntax.SyntaxTree);
-            if (!(semanticModel.GetDeclaredSymbol(recordSyntax) is INamedTypeSymbol recordSymbol))
+            if (semanticModel.GetDeclaredSymbol(recordSyntax) is not INamedTypeSymbol recordSymbol)
             {
                 continue;
             }

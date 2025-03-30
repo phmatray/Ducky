@@ -20,26 +20,40 @@ public class ActionDispatcherSource(
     protected override void Build()
     {
         // Using directives.
-        Builder.AppendLine("using System;");
-        Builder.AppendLine("using Ducky;");
-        Builder.AppendLine();
-        Builder.AppendLine("public static partial class ActionDispatcher");
-        Builder.AppendLine("{");
-        Builder.Indent();
-        Builder.AppendLine($"public static void {methodName}(");
-        Builder.Indent();
-
-        // Append each parameter on its own line.
-        for (int i = 0; i < parameterLines.Count; i++)
+        Builder.Line("using System;");
+        Builder.EmptyLine();
+        Builder.Line("public static partial class ActionDispatcher");
+        Builder.Braces(() =>
         {
-            string comma = (i < parameterLines.Count - 1) ? "," : string.Empty;
-            Builder.AppendLine($"{parameterLines[i]}{comma}");
-        }
+            Builder.Summary($"Dispatches a new {methodName} action.");
+            Builder.SummaryParam("dispatcher", "The dispatcher instance.");
+            // Additional parameter summaries can be inserted here.
 
-        Builder.Outdent();
-        Builder.AppendLine(")");
-        Builder.AppendLine($"    => dispatcher.Dispatch(new {fullyQualifiedRecordName}({argumentList}));");
-        Builder.Outdent();
-        Builder.AppendLine("}");
+            Builder.Line($"public static void {methodName}(");
+            Builder.Indent(() =>
+            {
+                // Append each parameter on its own indented line.
+                for (int i = 0; i < parameterLines.Count; i++)
+                {
+                    string parameter = parameterLines[i].Replace("IDispatcher", "Ducky.IDispatcher");
+
+                    // Last parameter: append closing parenthesis on the same line.
+                    Builder.Line((i < parameterLines.Count - 1) ? $"{parameter}," : $"{parameter})");
+                }
+            });
+
+            Builder.Braces(() =>
+            {
+                // Add braces for the null-check.
+                Builder.Line("if (dispatcher is null)");
+                Builder.Braces(() => Builder.Line("throw new System.ArgumentNullException(nameof(dispatcher));"));
+                // Ensure the fully qualified record name uses a single global:: prefix.
+                string typeName = (fullyQualifiedRecordName.StartsWith("global::"))
+                    ? fullyQualifiedRecordName
+                    : "global::" + fullyQualifiedRecordName;
+                Builder.EmptyLine();
+                Builder.Line($"dispatcher.Dispatch(new {typeName}({argumentList}));");
+            });
+        });
     }
 }
