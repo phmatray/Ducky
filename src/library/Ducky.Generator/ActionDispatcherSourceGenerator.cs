@@ -24,7 +24,7 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
         context.RegisterPostInitializationOutput(ctx =>
         {
             ActionAttributeSource attributeSource = new(GeneratorNamespace, AttributeName);
-            ctx.AddSource("DuckyActionAttribute.g.cs", attributeSource.ToSourceText());
+            ctx.AddSource($"{AttributeName}.g.cs", attributeSource.ToSourceText());
         });
 
         // Create a syntax provider that filters for record declarations with any attributes.
@@ -79,70 +79,13 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
         foreach (RecordDeclarationSyntax recordSyntax in records)
         {
             SemanticModel semanticModel = compilation.GetSemanticModel(recordSyntax.SyntaxTree);
-            if (semanticModel.GetDeclaredSymbol(recordSyntax) is not INamedTypeSymbol recordSymbol)
+            if (semanticModel.GetDeclaredSymbol(recordSyntax) is INamedTypeSymbol recordSymbol)
             {
-                continue;
+                ActionDispatcherSource dispatcherSource = new(semanticModel, recordSyntax, recordSymbol);
+
+                string hintName = $"ActionDispatcher.{recordSymbol.Name}.g.cs";
+                AddSource(context, hintName, dispatcherSource.ToString());
             }
-
-            string recordName = recordSymbol.Name;
-            string methodName = recordName;
-            string fullyQualifiedRecordName = recordSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-            List<string> parameterLines = ["this IDispatcher dispatcher"];
-            List<string> argListBuilder = [];
-
-            if (recordSyntax.ParameterList is not null)
-            {
-                foreach (ParameterSyntax parameter in recordSyntax.ParameterList.Parameters)
-                {
-                    if (parameter.Type is null)
-                    {
-                        continue;
-                    }
-
-                    TypeInfo typeInfo = semanticModel.GetTypeInfo(parameter.Type);
-                    string typeStr = typeInfo.Type?.ToDisplayString() ?? parameter.Type.ToString();
-                    string originalName = parameter.Identifier.Text;
-                    string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
-                    string defaultText = (parameter.Default is not null) ? " = " + parameter.Default.Value : string.Empty;
-
-                    parameterLines.Add($"{typeStr} {paramName}{defaultText}");
-                    argListBuilder.Add(paramName);
-                }
-            }
-            else
-            {
-                List<IMethodSymbol> ctors = recordSymbol.InstanceConstructors
-                    .Where(c => !c.IsImplicitlyDeclared && c.Parameters.Length > 0)
-                    .ToList();
-
-                if (ctors.Count > 0)
-                {
-                    IMethodSymbol ctor = ctors[0];
-                    foreach (IParameterSymbol parameter in ctor.Parameters)
-                    {
-                        string typeStr = parameter.Type.ToDisplayString();
-                        string originalName = parameter.Name;
-                        string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
-                        string defaultText = string.Empty;
-                        if (parameter.HasExplicitDefaultValue)
-                        {
-                            defaultText = (parameter.ExplicitDefaultValue is string)
-                                ? " = \"" + parameter.ExplicitDefaultValue + "\""
-                                : " = " + parameter.ExplicitDefaultValue;
-                        }
-
-                        parameterLines.Add($"{typeStr} {paramName}{defaultText}");
-                        argListBuilder.Add(paramName);
-                    }
-                }
-            }
-
-            string argumentList = string.Join(", ", argListBuilder);
-
-            ActionDispatcherSource dispatcherSource = new(methodName, fullyQualifiedRecordName, argumentList, parameterLines);
-            string hintName = $"ActionDispatcher.{recordName}.g.cs";
-            AddSource(context, hintName, dispatcherSource.ToString());
         }
     }
 }
