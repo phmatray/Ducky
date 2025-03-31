@@ -10,6 +10,7 @@ namespace Ducky.Generator.Core;
 /// </summary>
 public abstract class SourceGeneratorBase : IIncrementalGenerator
 {
+    /// <inheritdoc/>
     public abstract void Initialize(IncrementalGeneratorInitializationContext context);
 
     /// <summary>

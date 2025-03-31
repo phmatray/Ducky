@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using Ducky.Generator.Core;
 using Ducky.Generator.Sources;
 using Microsoft.CodeAnalysis;
@@ -18,6 +16,7 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
     private const string GeneratorNamespace = "Ducky.Generators";
     private const string AttributeName = "DuckyActionAttribute";
 
+    /// <inheritdoc/>
     public override void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Inject the marker attribute into the user's compilation.

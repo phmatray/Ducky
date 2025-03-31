@@ -11,10 +11,12 @@ namespace Ducky.Generator.Sources;
 /// </summary>
 public class ActionDispatcherSource : GeneratedSource
 {
+    private const string DispatcherParameter = "this IDispatcher dispatcher";
+
     private readonly string _recordName;
     private readonly string _recordNameFullyQualified;
     private readonly string _methodName;
-    private readonly List<string> _methodParameters = ["this IDispatcher dispatcher"];
+    private readonly List<string> _methodParameters = [DispatcherParameter];
     private readonly string _argumentList;
 
     /// <summary>
@@ -32,30 +34,37 @@ public class ActionDispatcherSource : GeneratedSource
         _recordNameFullyQualified = recordSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         _methodName = _recordName;
 
-        // Get parameters from the record's parameter list if available;
-        // otherwise, get them from the first non-implicit constructor.
         List<string> argListBuilder = [];
+
+        // Helper to process a record parameter.
+        void ProcessRecordParameter(ParameterSyntax parameter)
+        {
+            if (parameter.Type is null)
+            {
+                return;
+            }
+
+            TypeInfo typeInfo = semanticModel.GetTypeInfo(parameter.Type);
+            string typeStr = typeInfo.Type?.ToDisplayString() ?? parameter.Type.ToString();
+            string originalName = parameter.Identifier.Text;
+            string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
+            string defaultText = (parameter.Default is not null) ? " = " + parameter.Default.Value : string.Empty;
+
+            _methodParameters.Add($"{typeStr} {paramName}{defaultText}");
+            argListBuilder.Add(paramName);
+        }
+
+        // Process parameters if record declaration has a parameter list.
         if (recordSyntax.ParameterList is not null)
         {
             foreach (ParameterSyntax parameter in recordSyntax.ParameterList.Parameters)
             {
-                if (parameter.Type is null)
-                {
-                    continue;
-                }
-
-                TypeInfo typeInfo = semanticModel.GetTypeInfo(parameter.Type);
-                string typeStr = typeInfo.Type?.ToDisplayString() ?? parameter.Type.ToString();
-                string originalName = parameter.Identifier.Text;
-                string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
-                string defaultText = (parameter.Default is not null) ? " = " + parameter.Default.Value : string.Empty;
-
-                _methodParameters.Add($"{typeStr} {paramName}{defaultText}");
-                argListBuilder.Add(paramName);
+                ProcessRecordParameter(parameter);
             }
         }
         else
         {
+            // Retrieve parameters from the first non-implicit constructor.
             List<IMethodSymbol> ctors = recordSymbol.InstanceConstructors
                 .Where(c => !c.IsImplicitlyDeclared && c.Parameters.Length > 0)
                 .ToList();
@@ -65,18 +74,15 @@ public class ActionDispatcherSource : GeneratedSource
                 IMethodSymbol ctor = ctors[0];
                 foreach (IParameterSymbol parameter in ctor.Parameters)
                 {
-                    string typeStr = parameter.Type.ToDisplayString();
                     string originalName = parameter.Name;
                     string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
-                    string defaultText = string.Empty;
-                    if (parameter.HasExplicitDefaultValue)
-                    {
-                        defaultText = (parameter.ExplicitDefaultValue is string)
+                    string defaultText = (parameter.HasExplicitDefaultValue)
+                        ? (parameter.ExplicitDefaultValue is string)
                             ? " = \"" + parameter.ExplicitDefaultValue + "\""
-                            : " = " + parameter.ExplicitDefaultValue;
-                    }
+                            : " = " + parameter.ExplicitDefaultValue
+                        : string.Empty;
 
-                    _methodParameters.Add($"{typeStr} {paramName}{defaultText}");
+                    _methodParameters.Add($"{parameter.Type.ToDisplayString()} {paramName}{defaultText}");
                     argListBuilder.Add(paramName);
                 }
             }
@@ -85,6 +91,7 @@ public class ActionDispatcherSource : GeneratedSource
         _argumentList = string.Join(", ", argListBuilder);
     }
 
+    /// <inheritdoc/>
     protected override void Build()
     {
         // Using directives.
@@ -104,8 +111,6 @@ public class ActionDispatcherSource : GeneratedSource
                 for (int i = 0; i < _methodParameters.Count; i++)
                 {
                     string parameter = _methodParameters[i].Replace("IDispatcher", "Ducky.IDispatcher");
-
-                    // Last parameter: append closing parenthesis on the same line.
                     Builder.Line((i < _methodParameters.Count - 1) ? $"{parameter}," : $"{parameter})");
                 }
             });
