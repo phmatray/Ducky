@@ -1,0 +1,3 @@
+# Ducky
+
+Start typing here...
