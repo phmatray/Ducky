@@ -18,7 +18,7 @@ In Ducky, reducers are defined by extending the `SliceReducers<TState>` class, w
 
 ### Example of a Simple Reducer
 
-```csharp
+```C#
 public class CounterReducers : SliceReducers<int>
 {
     public CounterReducers()
@@ -48,7 +48,7 @@ Reducers use the `On<TAction>` method to specify how the state should change in 
 
 ### Example of Handling Actions
 
-```csharp
+```C#
 public class UserReducers : SliceReducers<UserState>
 {
     public UserReducers()
@@ -77,7 +77,7 @@ In Ducky, the global state is automatically composed from the individual slice s
 
 Each slice reducer manages its own piece of the global state. For example, a `UserReducers` might manage the `UserState`, while a `CounterReducers` manages the `CounterState`. Ducky automatically combines these slices into the root state.
 
-```csharp
+```C#
 public class RootState : IRootState
 {
     // RootState is automatically composed by Ducky from the individual slice states.
@@ -92,7 +92,7 @@ As your application grows, your reducers may become more complex. To improve mai
 
 ### Refactored Reducer Example
 
-```csharp
+```C#
 public record TodoReducers : SliceReducers<TodoState>
 {
     public TodoReducers()
@@ -141,7 +141,7 @@ Each reducer defines an initial state using the `GetInitialState` method. This m
 
 ### Example of Initializing State
 
-```csharp
+```C#
 public override int GetInitialState()
 {
     return 10; // Sets the initial counter value to 10

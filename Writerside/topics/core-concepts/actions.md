@@ -16,7 +16,7 @@ Actions are simple objects that describe a change that should occur in the state
 
 Defining actions in Ducky is straightforward. You simply create a class or record that implements the `IAction` interface. Here’s an example:
 
-```csharp
+```C#
 public record Increment(int Amount = 1);
 public record Decrement(int Amount = 1);
 ```
@@ -25,9 +25,7 @@ public record Decrement(int Amount = 1);
 
 Each action should have a distinct type that identifies what kind of state change it represents. In C#, when using records or classes for actions, the class or record name typically serves as the action type implicitly.
 
-#### Example:
-
-```csharp
+```C#
 public record SetUserName(string UserName);
 ```
 
@@ -43,7 +41,7 @@ Once actions are defined, they are dispatched to the store to initiate a state c
 
 Consider a Blazor component that needs to update the user's name in the global state:
 
-```razor
+```C#
 @code {
     private void UpdateUserName()
     {
@@ -62,7 +60,7 @@ Actions by themselves do not modify the state. Instead, they are handled by redu
 
 ### Example of Handling Actions in Reducers
 
-```csharp
+```C#
 public class UserReducers : SliceReducers<UserState>
 {
     public UserReducers()
@@ -87,7 +85,7 @@ Actions often carry additional data necessary to perform a state update. This da
 
 ### Example of an Action with Payload
 
-```csharp
+```C#
 public record AddProduct(string ProductName, decimal Price);
 ```
 
@@ -99,9 +97,7 @@ In this example:
 
 While actions themselves are typically synchronous, they can be dispatched from asynchronous operations. This is often handled through **Effects** in Ducky, where actions are dispatched based on the result of an asynchronous operation such as an API call.
 
-### Example:
-
-```csharp
+```C#
 public class LoadProductsEffect : ReactiveEffect
 {
     public override Observable<object> Handle(

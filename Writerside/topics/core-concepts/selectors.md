@@ -20,7 +20,7 @@ Selectors can be defined as methods within your state classes. These methods are
 
 Here’s an example of a `MoviesState` record with basic selectors:
 
-```csharp
+```C#
 public record MoviesState
 {
     public required ImmutableDictionary<int, Movie> Movies { get; init; }
@@ -68,7 +68,7 @@ As your application grows, you might need more advanced selectors that can handl
 
 Here’s an example of a `ProductState` record that uses memoized selectors:
 
-```csharp
+```C#
 public record ProductState : NormalizedState<Guid, Product, ProductState>
 {
     private readonly Func<ProductState, ImmutableList<Product>> _selectElectronics;

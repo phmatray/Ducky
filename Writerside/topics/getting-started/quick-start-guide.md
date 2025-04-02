@@ -8,8 +8,6 @@ Welcome to the Ducky Quick Start Guide! This guide will help you get up and runn
 
 To get started, you'll need to create a new .NET project. You can create a console application, a Blazor application, or any other type of .NET project where you want to manage state using Ducky.
 
-#### Using the .NET CLI
-
 Open your terminal or command prompt and run the following commands to create a new .NET console application:
 
 ```bash
@@ -22,8 +20,6 @@ This creates a new directory called `DuckyDemo` containing a basic .NET console 
 ### 2. Install Ducky
 
 Next, you need to install Ducky via NuGet.
-
-#### Using the .NET CLI
 
 Run the following command to install Ducky:
 
@@ -39,7 +35,7 @@ In your project, you'll need to define actions, reducers, and optionally effects
 
 Create a new file called `CounterActions.cs`:
 
-```csharp
+```C#
 public record Increment;
 public record Decrement;
 ```
@@ -48,7 +44,7 @@ public record Decrement;
 
 Create a new file called `CounterReducers.cs`:
 
-```csharp
+```C#
 public class CounterReducers : SliceReducers<int>
 {
     public CounterReducers()
@@ -68,7 +64,7 @@ public class CounterReducers : SliceReducers<int>
 
 In your `Program.cs` file (or equivalent entry point), set up the Ducky store:
 
-```csharp
+```C#
 using Ducky;
 
 class Program

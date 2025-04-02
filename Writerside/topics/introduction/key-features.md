@@ -15,7 +15,7 @@ Ducky enforces immutable state management, ensuring that state changes are predi
 
 Actions in Ducky are simple objects that describe a state change. They are the only way to send data to the store, ensuring a clear and consistent way to update the state.
 
-### Features:
+### Features: {id="features_1"}
 - Clear and explicit state changes
 - Easy to track and log actions
 - Supports asynchronous operations through effects
@@ -24,7 +24,7 @@ Actions in Ducky are simple objects that describe a state change. They are the o
 
 Reducers are pure functions that take the current state and an action, and return a new state. They are responsible for handling state transitions in a predictable manner.
 
-### Features:
+### Features: {id="features_2"}
 - Pure functions ensure consistency
 - Easily testable
 - Supports composition for managing complex state trees
@@ -33,7 +33,7 @@ Reducers are pure functions that take the current state and an action, and retur
 
 Effects handle side effects in Ducky, such as asynchronous API calls, logging, and other operations that interact with the outside world. They listen for specific actions and can dispatch new actions based on the outcome.
 
-### Features:
+### Features: {id="features_3"}
 - Clean separation of side effects from state logic
 - Supports asynchronous operations
 - Simplifies handling of complex side effects
@@ -42,7 +42,7 @@ Effects handle side effects in Ducky, such as asynchronous API calls, logging, a
 
 Selectors are functions that derive and memoize state. They allow you to compute derived state efficiently, ensuring that your components re-render only when necessary.
 
-### Features:
+### Features: {id="features_4"}
 - Efficient state derivation
 - Memoization for performance optimization
 - Composable and reusable
@@ -51,7 +51,7 @@ Selectors are functions that derive and memoize state. They allow you to compute
 
 Ducky leverages the strong typing system of .NET to provide type safety throughout your application. This ensures that your actions, reducers, and state are type-checked, reducing runtime errors and improving code quality.
 
-### Features:
+### Features: {id="features_5"}
 - Strongly typed actions and state
 - Compile-time type checking
 - Reduced runtime errors
@@ -60,7 +60,7 @@ Ducky leverages the strong typing system of .NET to provide type safety througho
 
 Ducky is designed with performance in mind. It supports memoization, efficient state updates, and minimizes unnecessary re-renders, ensuring that your application remains responsive and performant.
 
-### Features:
+### Features: {id="features_6"}
 - Memoized selectors
 - Efficient state updates
 - Minimized re-renders

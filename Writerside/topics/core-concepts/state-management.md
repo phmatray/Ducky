@@ -33,7 +33,7 @@ Let's consider a simple example of global state management using Ducky in a Blaz
 
 Suppose we have a counter application. The global state could be as simple as an integer representing the current count:
 
-```csharp
+```C#
 public class CounterReducers : SliceReducers<int>
 {
     public CounterReducers()

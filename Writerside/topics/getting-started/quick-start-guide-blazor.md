@@ -34,7 +34,7 @@ Open the `Program.cs` file and add the Ducky services to the Blazor service cont
 
 If your slices are automatically discoverable, you can use the basic configuration:
 
-```csharp
+```C#
 using Ducky.Blazor;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -50,7 +50,7 @@ await builder.Build().RunAsync();
 
 If you want more control, for example, specifying which assemblies to scan for slices, use the following configuration:
 
-```csharp
+```C#
 using Ducky.Blazor;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -73,7 +73,7 @@ Now that Ducky is set up, let’s implement a simple counter example in your Bla
 
 Create a new file called `CounterActions.cs` in the `Shared` folder:
 
-```csharp
+```C#
 public record Increment;
 public record Decrement;
 ```
@@ -82,7 +82,7 @@ public record Decrement;
 
 Create a new file called `CounterReducers.cs` in the `Shared` folder:
 
-```csharp
+```C#
 public class CounterReducers : SliceReducers<int>
 {
     public CounterReducers()
@@ -106,7 +106,7 @@ Now, let's modify the default `Counter.razor` component to use Ducky.
 
 Replace the contents of the `Counter.razor` component with the following:
 
-```razor
+```C#
 @page "/counter"
 @inherits DuckyComponent<int>
 
