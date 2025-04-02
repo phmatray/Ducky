@@ -20,7 +20,7 @@ To define a normalized state, extend the `NormalizedState<TKey, TEntity, TState>
 
 Consider a todo application where each todo item has a unique identifier. Here's how you would define a normalized state for managing todos:
 
-```csharp
+```C#
 public record TodoState : NormalizedState<Guid, TodoItem, TodoState>
 {
     // Selectors for retrieving specific subsets of todos
@@ -70,127 +70,127 @@ The `NormalizedState` record provides a comprehensive API for managing collectio
 Here’s an overview of the key methods available in `NormalizedState`:
 
 - **Create**: Initializes a new state with a collection of entities.
-  ```csharp
+  ```C#
   public static TState Create(ImmutableList<TEntity> entities)
   ```
   Example:
-  ```csharp
+  ```C#
   var initialState = TodoState.Create(initialTodos);
   ```
 
 - **AddOne**: Adds a single entity to the state.
-  ```csharp
+  ```C#
   public TState AddOne(TEntity entity)
   ```
   Example:
-  ```csharp
+  ```C#
   var newState = state.AddOne(new TodoItem(Guid.NewGuid(), "New Task"));
   ```
 
 - **AddMany**: Adds multiple entities to the state.
-  ```csharp
+  ```C#
   public TState AddMany(IEnumerable<TEntity> entities)
   ```
   Example:
-  ```csharp
+  ```C#
   var newState = state.AddMany(newListOfTodos);
   ```
 
 - **SetOne**: Replaces or adds a single entity.
-  ```csharp
+  ```C#
   public TState SetOne(TEntity entity)
   ```
   Example:
-  ```csharp
+  ```C#
   var updatedState = state.SetOne(updatedTodo);
   ```
 
 - **SetMany**: Replaces or adds multiple entities.
-  ```csharp
+  ```C#
   public TState SetMany(IEnumerable<TEntity> entities)
   ```
   Example:
-  ```csharp
+  ```C#
   var updatedState = state.SetMany(updatedTodos);
   ```
 
 - **RemoveOne**: Removes an entity by its key.
-  ```csharp
+  ```C#
   public TState RemoveOne(TKey key)
   ```
   Example:
-  ```csharp
+  ```C#
   var newState = state.RemoveOne(todoId);
   ```
 
 - **RemoveMany**: Removes multiple entities by their keys.
-  ```csharp
+  ```C#
   public TState RemoveMany(IEnumerable<TKey> keys)
   ```
   Example:
-  ```csharp
+  ```C#
   var newState = state.RemoveMany(todoIds);
   ```
 
 - **UpdateOne**: Updates a single entity using an action or function.
-  ```csharp
+  ```C#
   public TState UpdateOne(TKey key, Action<TEntity> update)
   public TState UpdateOne(TKey key, Func<TEntity, TEntity> update)
   ```
   Example:
-  ```csharp
+  ```C#
   var updatedState = state.UpdateOne(todoId, todo => todo.MarkAsCompleted());
   ```
 
 - **UpdateMany**: Updates multiple entities using an action or function.
-  ```csharp
+  ```C#
   public TState UpdateMany(IEnumerable<TKey> keys, Action<TEntity> update)
   public TState UpdateMany(IEnumerable<TKey> keys, Func<TEntity, TEntity> update)
   ```
   Example:
-  ```csharp
+  ```C#
   var updatedState = state.UpdateMany(todoIds, todo => todo.MarkAsCompleted());
   ```
 
 - **UpsertOne**: Updates or inserts a single entity.
-  ```csharp
+  ```C#
   public TState UpsertOne(TEntity entity)
   ```
   Example:
-  ```csharp
+  ```C#
   var newState = state.UpsertOne(newTodoItem);
   ```
 
 - **UpsertMany**: Updates or inserts multiple entities.
-  ```csharp
+  ```C#
   public TState UpsertMany(IEnumerable<TEntity> entities)
   ```
   Example:
-  ```csharp
+  ```C#
   var newState = state.UpsertMany(todoItems);
   ```
 
 - **MapOne**: Transforms a single entity by applying a function.
-  ```csharp
+  ```C#
   public TState MapOne(TKey key, Func<TEntity, TEntity> map)
   ```
   Example:
-  ```csharp
+  ```C#
   var mappedState = state.MapOne(todoId, todo => todo.WithPriority("High"));
   ```
 
 - **Map**: Transforms all entities in the state.
-  ```csharp
+  ```C#
   public TState Map(Func<TEntity, TEntity> map)
   ```
   Example:
-  ```csharp
+  ```C#
   var mappedState = state.Map(todo => todo.WithCategory("Work"));
   ```
 
 ### Example: Adding, Updating, and Removing Entities
 
-```csharp
+```C#
 // Adding a new todo item
 var newState = state.AddOne(new TodoItem(Guid.NewGuid(), "New Task"));
 
@@ -207,7 +207,7 @@ newState = newState.RemoveOne(todoId);
 
 When you need to merge a set of entities into the state, you can use the `Merge` method. This method allows for different merge strategies, such as overwriting existing entities or failing if duplicates are found.
 
-```csharp
+```C#
 var mergedState = state.Merge(newEntitiesDictionary, MergeStrategy.Overwrite);
 ```
 
@@ -218,7 +218,7 @@ var mergedState = state.Merge(newEntitiesDictionary, MergeStrategy.Overwrite);
 
 Entities stored in a `NormalizedState` are indexed by their keys, making it easy to query them efficiently. You can retrieve an entity directly by its key using the indexer.
 
-```csharp
+```C#
 var todo = state[todoId];
 ```
 
@@ -226,7 +226,7 @@ var todo = state[todoId];
 
 Selectors allow you to define reusable queries that filter or transform the state. This keeps your components clean and focused on rendering UI rather than managing data.
 
-```csharp
+```C#
 public ImmutableList<TodoItem> SelectCompletedTodos()
 {
     return SelectImmutableList(todo => todo.IsCompleted);

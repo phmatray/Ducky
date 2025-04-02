@@ -26,7 +26,7 @@ In Ducky, you define an effect by extending the `ReactiveEffect` class and overr
 
 Here’s an example of an effect that handles loading movies from an external API:
 
-```csharp
+```C#
 public class LoadMoviesEffect : Effect
 {
     private readonly IMoviesService _moviesService;
@@ -62,7 +62,7 @@ In this example:
 
 This example demonstrates how to use an effect to display a success notification after movies are successfully loaded:
 
-```csharp
+```C#
 public class LoadMoviesSuccessEffect : ReactiveEffect
 {
     private readonly ISnackbar _snackbar;
@@ -102,7 +102,7 @@ In this example:
 
 Effects are also useful for handling time-based operations, such as starting and stopping timers. Here's an example of an effect that handles a timer:
 
-```csharp
+```C#
 public class StartTimerEffect : ReactiveEffect
 {
     public override Observable<(IAction)> Handle(
@@ -137,7 +137,7 @@ Ducky provides several custom operators to simplify common patterns in effects, 
 
 ### Example: Using Custom Operators
 
-```csharp
+```C#
 public override Observable<object> Handle(
     Observable<object> actions,
     Observable<IRootState> rootState)

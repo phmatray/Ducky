@@ -36,7 +36,7 @@ To illustrate how immutability works in practice, let's take a look at a simple 
 
 Here’s how you would define and manage an immutable counter state:
 
-```csharp
+```C#
 public record CounterState(int Value);
 
 public record CounterReducers : SliceReducers<CounterState>
@@ -62,7 +62,7 @@ In this example:
 
 ### Example: Updating Counter State Immutably
 
-```csharp
+```C#
 var newState = state with { Value = state.Value + 1 };
 ```
 
@@ -96,7 +96,7 @@ By requiring immutability, Ducky enforces best practices in state management, gu
 
 For more complex state structures, like managing a collection of todo items, immutability is handled through normalized state management:
 
-```csharp
+```C#
 public record TodoState : NormalizedState<Guid, TodoItem, TodoState>
 {
     // Selectors and other methods...

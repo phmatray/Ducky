@@ -38,7 +38,6 @@
   </toc-element>
 
   <toc-element topic="_api-reference.md">
-    <toc-element topic="i-action.md"/>
     <toc-element topic="slice-reducers.md"/>
     <toc-element topic="effect-base.md"/>
     <toc-element topic="store.md"/>
