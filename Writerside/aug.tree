@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE instance-profile
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
+
+<instance-profile id="aug"
+                 name="Ducky"
+                 start-page="ducky.md">
+
+  <toc-element topic="ducky.md"/>
+  
+  <toc-element topic="_introduction.md">
+    <toc-element topic="overview.md"/>
+    <toc-element topic="key-features.md"/>
+    <toc-element topic="philosophy-and-goals.md"/>
+    <toc-element topic="license-information.md"/>
+  </toc-element>
+
+  <toc-element topic="_getting-started.md">
+    <toc-element topic="installation.md"/>
+    <toc-element topic="quick-start-guide.md"/>
+    <toc-element topic="quick-start-guide-blazor.md"/>
+    <toc-element topic="app-settings.md"/>
+  </toc-element>
+
+  <toc-element topic="_core-concepts.md">
+    <toc-element topic="state-management.md"/>
+    <toc-element topic="actions.md"/>
+    <toc-element topic="reducers.md"/>
+    <toc-element topic="effects.md"/>
+    <toc-element topic="selectors.md"/>
+  </toc-element>
+
+  <toc-element topic="_guides.md">
+    <toc-element topic="creating-and-dispatching-actions.md"/>
+    <toc-element topic="writing-reducers.md"/>
+    <toc-element topic="handling-side-effects-with-effects.md"/>
+    <toc-element topic="using-selectors.md"/>
+  </toc-element>
+
+  <toc-element topic="_api-reference.md">
+    <toc-element topic="i-action.md"/>
+    <toc-element topic="slice-reducers.md"/>
+    <toc-element topic="effect-base.md"/>
+    <toc-element topic="store.md"/>
+    <toc-element topic="custom-operators.md"/>
+    <toc-element topic="utility-functions.md"/>
+  </toc-element>
+
+  <toc-element topic="_advanced-topics.md">
+    <toc-element topic="immutable-state-management.md"/>
+    <toc-element topic="normalized-state.md"/>
+    <toc-element topic="type-safety-and-generics.md"/>
+    <toc-element topic="error-handling-and-debugging.md"/>
+    <toc-element topic="performance-optimization.md"/>
+    <toc-element topic="integration-with-other-libraries.md"/>
+  </toc-element>
+
+  <toc-element topic="_examples.md">
+    <toc-element topic="counter-example.md"/>
+    <toc-element topic="todo-list-example.md"/>
+    <toc-element topic="api-data-fetching-example.md"/>
+    <toc-element topic="real-time-updates-example.md"/>
+  </toc-element>
+
+  <toc-element topic="_best-practices.md">
+    <toc-element topic="structuring-your-application.md"/>
+    <toc-element topic="testing-your-ducky-code.md"/>
+    <toc-element topic="handling-large-state-trees.md"/>
+    <toc-element topic="debugging-and-logging.md"/>
+  </toc-element>
+
+  <toc-element topic="_faq.md">
+    <toc-element topic="common-questions.md"/>
+    <toc-element topic="troubleshooting.md"/>
+  </toc-element>
+
+  <toc-element topic="_community-and-contribution.md">
+    <toc-element topic="contributing.md"/>
+    <toc-element topic="code-of-conduct.md"/>
+    <toc-element topic="reporting-issues.md"/>
+    <toc-element topic="feature-requests.md"/>
+  </toc-element>
+
+  <toc-element topic="_changelog.md">
+    <toc-element topic="version-history.md"/>
+    <toc-element topic="release-notes.md"/>
+  </toc-element>
+
+  <toc-element topic="_resources.md">
+    <toc-element topic="tutorials-and-blog-posts.md"/>
+    <toc-element topic="videos-and-talks.md"/>
+    <toc-element topic="related-projects.md"/>
+  </toc-element>
+
+  <toc-element topic="_architecture-decisions.md">
+    <toc-element topic="decision-log.md"/>
+  </toc-element>
+
+  <toc-element topic="_working-agreements.md">
+  </toc-element>
+
+</instance-profile>
