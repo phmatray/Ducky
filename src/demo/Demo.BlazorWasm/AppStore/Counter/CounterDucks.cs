@@ -55,22 +55,6 @@ public record CounterReducers : SliceReducers<CounterState>
 
 #region Effects
 
-// public class IncrementEffect : ReactiveEffect
-// {
-//     public override Observable<object> Handle(
-//         Observable<object> actions,
-//         Observable<IRootState> rootState)
-//     {
-//         // if the Value is greater than 15, then reset the counter
-//         return actions
-//             .OfActionType<Increment>()
-//             .WithSliceState<CounterState, Increment>(rootState)
-//             .Where(pair => pair.State.Value > 15)
-//             .Delay(TimeSpan.FromSeconds(3), TimeProvider)
-//             .SelectAction(_ => new Reset());
-//     }
-// }
-
 public class ResetCounterAfter3Sec : AsyncEffect<Increment>
 {
     public override async Task HandleAsync(Increment action, IRootState rootState)
