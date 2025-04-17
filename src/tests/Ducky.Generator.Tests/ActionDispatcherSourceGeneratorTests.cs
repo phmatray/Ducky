@@ -128,7 +128,7 @@ public class ActionDispatcherSourceGeneratorTests
         CSharpCompilation compilation = CSharpCompilation.Create(
             assemblyName: "TestAssembly",
             syntaxTrees: sources.Select(source => CSharpSyntaxTree.ParseText(source)),
-            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
+            references: [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
         );
 
@@ -160,7 +160,7 @@ public class ActionDispatcherSourceGeneratorTests
         CSharpCompilation compilation = CSharpCompilation.Create(
             assemblyName: "TestAssembly",
             syntaxTrees: sources.Select(source => CSharpSyntaxTree.ParseText(source)),
-            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
+            references: [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
         );
 

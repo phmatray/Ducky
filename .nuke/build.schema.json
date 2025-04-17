@@ -33,7 +33,6 @@
         "PublishToNuGet",
         "Restore",
         "UnitTests",
-        "UpdateDocumentation",
         "Version"
       ]
     },
