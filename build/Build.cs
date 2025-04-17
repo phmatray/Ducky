@@ -117,15 +117,15 @@ partial class Build : NukeBuild
         .Executes(() =>
         {
             // Clean projects
-            DotNetClean(c => c.SetProject(Solution.library.Ducky));
-            DotNetClean(c => c.SetProject(Solution.library.Ducky_Blazor));
-            DotNetClean(c => c.SetProject(Solution.library.Ducky_Generator));
+            DotNetClean(c => c.SetProject(Solution.src.library.Ducky));
+            DotNetClean(c => c.SetProject(Solution.src.library.Ducky_Blazor));
+            DotNetClean(c => c.SetProject(Solution.src.library.Ducky_Generator));
 
-            DotNetClean(c => c.SetProject(Solution.tests.AppStore_Tests));
-            DotNetClean(c => c.SetProject(Solution.tests.Ducky_Tests));
-            DotNetClean(c => c.SetProject(Solution.tests.Ducky_Generator_Tests));
+            DotNetClean(c => c.SetProject(Solution.src.tests.AppStore_Tests));
+            DotNetClean(c => c.SetProject(Solution.src.tests.Ducky_Tests));
+            DotNetClean(c => c.SetProject(Solution.src.tests.Ducky_Generator_Tests));
             
-            DotNetClean(c => c.SetProject(Solution.demo.Demo_BlazorWasm));
+            DotNetClean(c => c.SetProject(Solution.src.demo.Demo_BlazorWasm));
             
             // Clean artifacts directory
             ArtifactsDirectory.CreateOrCleanDirectory();
@@ -200,9 +200,9 @@ partial class Build : NukeBuild
             Log.Information("Packing NuGet packages for projects starting with 'Ducky'");
             Project[] projectsToPack =
             [
-                Solution.library.Ducky,
-                Solution.library.Ducky_Blazor,
-                Solution.library.Ducky_Generator
+                Solution.src.library.Ducky,
+                Solution.src.library.Ducky_Blazor,
+                Solution.src.library.Ducky_Generator
             ];
 
             foreach (var project in projectsToPack)
