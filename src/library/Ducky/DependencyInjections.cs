@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using Ducky.Middlewares;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -29,10 +30,12 @@ public static class DependencyInjections
         services.AddSingleton<IDispatcher, Dispatcher>();
         services.AddSingleton<IRootStateSerializer, RootStateSerializer>();
 
-        // Scan and register all Slices an Effects
+        // Scan and register all Slices, Effects and Middlewares
         services.ScanAndRegister<ISlice>(options.Assemblies);
         services.ScanAndRegister<IAsyncEffect>(options.Assemblies);
         services.ScanAndRegister<IReactiveEffect>(options.Assemblies);
+
+        // TODO: Add middleware scanning and registration (must respect a specific order)
 
         // Add Store
         services.AddScoped<DuckyStore>(sp =>
@@ -42,11 +45,12 @@ public static class DependencyInjections
             IEnumerable<ISlice> slices = sp.GetServices<ISlice>();
             IEnumerable<IAsyncEffect> asyncEffects = sp.GetServices<IAsyncEffect>();
             IEnumerable<IReactiveEffect> reactiveEffects = sp.GetServices<IReactiveEffect>();
+            IEnumerable<IStoreMiddleware> middlewares = [];
 
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
 
-            return DuckyStoreFactory.CreateStore(dispatcher, slices, asyncEffects, reactiveEffects);
+            return DuckyStoreFactory.CreateStore(dispatcher, slices, asyncEffects, reactiveEffects, middlewares);
         });
 
         return services;

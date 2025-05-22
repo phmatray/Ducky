@@ -2,6 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Ducky.Middlewares;
 using R3;
 
 namespace Ducky;
@@ -9,12 +10,17 @@ namespace Ducky;
 /// <summary>
 /// Represents a store that manages application state and handles actions.
 /// </summary>
-internal interface IStore
+public interface IStore
 {
     /// <summary>
     /// Gets an observable stream of the root state of the application.
     /// </summary>
     ReadOnlyReactiveProperty<IRootState> RootStateObservable { get; }
+
+    /// <summary>
+    /// Gets the current root state of the application.
+    /// </summary>
+    IRootState CurrentState { get; }
 
     /// <summary>
     /// Adds a single slice to the store.
@@ -51,4 +57,16 @@ internal interface IStore
     /// </summary>
     /// <param name="reactiveEffects">The reactive effects to add.</param>
     void AddReactiveEffects(params IEnumerable<IReactiveEffect> reactiveEffects);
+
+    /// <summary>
+    /// Adds a single middleware to the store.
+    /// </summary>
+    /// <param name="middleware">The middleware to add.</param>
+    void AddMiddleware(IStoreMiddleware middleware);
+
+    /// <summary>
+    /// Adds multiple middlewares to the store.
+    /// </summary>
+    /// <param name="middlewares">The middlewares to add.</param>
+    void AddMiddlewares(params IEnumerable<IStoreMiddleware> middlewares);
 }

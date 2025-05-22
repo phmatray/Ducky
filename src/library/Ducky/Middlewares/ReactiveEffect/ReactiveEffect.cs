@@ -4,7 +4,7 @@
 
 using R3;
 
-namespace Ducky;
+namespace Ducky.Middlewares.ReactiveEffect;
 
 /// <inheritdoc />
 public abstract class ReactiveEffect : IReactiveEffect

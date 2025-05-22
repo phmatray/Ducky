@@ -73,4 +73,12 @@ internal static partial class DuckyLogMessages
         string prevState,
         string action,
         string nextState);
+
+    [LoggerMessage(
+        EventId = 1007,
+        Level = LogLevel.Debug,
+        Message = "Middleware [{MiddlewareName}] added")]
+    public static partial void MiddlewareAdded(
+        this ILogger<DuckyStore> logger,
+        string middlewareName);
 }

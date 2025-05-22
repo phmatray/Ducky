@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Ducky.Middlewares;
+using Ducky.Pipeline;
 using Microsoft.Extensions.Logging;
 using R3;
 
@@ -18,6 +20,9 @@ public sealed class DuckyStore : IStore, IDisposable
     private readonly IDispatcher _dispatcher;
     private readonly CompositeDisposable _subscriptions = [];
     private readonly ObservableSlices _slices = new();
+    private readonly StoreMiddlewarePipeline _middlewarePipeline;
+    private readonly PipelineEventPublisher _pipelineEventPublisher = new();
+    private readonly List<IStoreMiddleware> _middlewares = [];
     private bool _isDisposed;
 
     /// <summary>
@@ -37,6 +42,10 @@ public sealed class DuckyStore : IStore, IDisposable
     /// <inheritdoc/>
     public ReadOnlyReactiveProperty<IRootState> RootStateObservable
         => _slices.RootStateObservable;
+
+    /// <inheritdoc/>
+    public IRootState CurrentState
+        => RootStateObservable.CurrentValue;
 
     /// <inheritdoc/>
     public void AddSlice(ISlice slice)
@@ -77,7 +86,7 @@ public sealed class DuckyStore : IStore, IDisposable
             .Subscribe(action => asyncEffect.HandleAsync(action, RootStateObservable.CurrentValue))
             .AddTo(_subscriptions);
 
-        Logger?.Log(LogLevel.Information, $"Effect added: {asyncEffect.GetType().Name}");
+        Logger?.Log(LogLevel.Information, "Effect added: {Name}", asyncEffect.GetType().Name);
     }
 
     /// <inheritdoc/>
@@ -112,6 +121,28 @@ public sealed class DuckyStore : IStore, IDisposable
         foreach (IReactiveEffect reactiveEffect in reactiveEffects)
         {
             AddReactiveEffect(reactiveEffect);
+        }
+    }
+
+    /// <inheritdoc />
+    public void AddMiddleware(IStoreMiddleware middleware)
+    {
+        ArgumentNullException.ThrowIfNull(middleware);
+
+        _middlewares.Add(middleware);
+        middleware.InitializeAsync(_dispatcher, this);
+
+        Logger?.MiddlewareAdded(middleware.GetType().Name);
+    }
+
+    /// <inheritdoc />
+    public void AddMiddlewares(params IEnumerable<IStoreMiddleware> middlewares)
+    {
+        ArgumentNullException.ThrowIfNull(middlewares);
+
+        foreach (IStoreMiddleware middleware in middlewares)
+        {
+            AddMiddleware(middleware);
         }
     }
 

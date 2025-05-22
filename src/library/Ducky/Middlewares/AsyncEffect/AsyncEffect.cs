@@ -2,10 +2,10 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-namespace Ducky;
+namespace Ducky.Middlewares.AsyncEffect;
 
 /// <inheritdoc />
-public abstract class AsyncEffect<TAction> : IAsyncEffect
+public abstract class AsyncEffect<TAction> : Ducky.IAsyncEffect
 {
     /// <inheritdoc />
     public object? LastAction

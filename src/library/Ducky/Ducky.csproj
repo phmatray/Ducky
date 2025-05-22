@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <PackageReference Include="ObservableCollections" />
     <PackageReference Include="ObservableCollections.R3" />
+    <PackageReference Include="Polly" />
     <PackageReference Include="R3" />
   </ItemGroup>
   

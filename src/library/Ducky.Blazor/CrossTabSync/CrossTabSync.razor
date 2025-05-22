@@ -1,0 +1,14 @@
+@inject CrossTabSyncModule TabSync
+
+@code {
+
+  /// <inheritdoc />
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      await TabSync.StartAsync();
+    }
+  }
+  
+}
