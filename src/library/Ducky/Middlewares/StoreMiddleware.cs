@@ -7,14 +7,44 @@ namespace Ducky.Middlewares;
 /// </summary>
 public abstract class StoreMiddleware : IStoreMiddleware
 {
+    private IDispatcher? _dispatcher;
+    private IStore? _store;
+    private IPipelineEventPublisher? _events;
+
+    /// <summary>
+    /// Gets the dispatcher.
+    /// </summary>
+    /// <exception cref="DuckyException">Thrown when the middleware is not initialized.</exception>
+    protected IDispatcher Dispatcher
+        => _dispatcher ?? throw new DuckyException("Middleware not initialized.");
+
+    /// <summary>
+    /// Gets the store.
+    /// </summary>
+    /// <exception cref="DuckyException">Thrown when the middleware is not initialized.</exception>
+    protected IStore Store
+        => _store ?? throw new DuckyException("Middleware not initialized.");
+
+    /// <summary>
+    /// Gets the event publisher.
+    /// </summary>
+    /// <exception cref="DuckyException">Thrown when the middleware is not initialized.</exception>
+    protected IPipelineEventPublisher Events
+        => _events ?? throw new DuckyException("Middleware not initialized.");
+
     /// <inheritdoc />
     public virtual StoreMiddlewareAsyncMode AsyncMode
         => StoreMiddlewareAsyncMode.Await;
 
     /// <inheritdoc />
-    public virtual async Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public virtual async Task InitializeAsync(
+        IDispatcher dispatcher,
+        IStore store,
+        IPipelineEventPublisher eventPublisher)
     {
-        // No-op
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
+        _events = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
         await Task.CompletedTask.ConfigureAwait(false);
     }
 

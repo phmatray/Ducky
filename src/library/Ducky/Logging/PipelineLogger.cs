@@ -1,17 +1,19 @@
 using Ducky.Pipeline;
 using Microsoft.Extensions.Logging;
+using R3;
 
 namespace Ducky;
 
 /// <summary>
 /// Observes and logs pipeline events.
 /// </summary>
-public class PipelineLogger
+public class PipelineLogger : Observer<PipelineEventArgs>
 {
     private readonly ILogger _logger;
+    private readonly IDisposable _subscription;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="PipelineLogger"/> class and subscribes to pipeline events.
+    /// Initializes a new instance of the <see cref="PipelineLogger"/> class and subscribes to pipeline events via R3.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="eventPublisher">The pipeline event publisher.</param>
@@ -19,16 +21,15 @@ public class PipelineLogger
         ILogger<PipelineLogger> logger,
         IPipelineEventPublisher eventPublisher)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        eventPublisher.EventPublished += OnEventPublished;
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(eventPublisher);
+
+        _logger = logger;
+        _subscription = eventPublisher.Events.Subscribe(this);
     }
 
-    /// <summary>
-    /// Handles and logs pipeline events to the console.
-    /// </summary>
-    /// <param name="sender">The event sender.</param>
-    /// <param name="e">The pipeline event.</param>
-    private void OnEventPublished(object? sender, PipelineEventArgs e)
+    /// <inheritdoc />
+    protected override void OnNextCore(PipelineEventArgs e)
     {
         switch (e)
         {
@@ -82,5 +83,23 @@ public class PipelineLogger
                 break;
             }
         }
+    }
+
+    /// <inheritdoc />
+    protected override void OnErrorResumeCore(Exception error)
+    {
+        _logger.LogError(error, "[EVENT] Error in event stream");
+    }
+
+    /// <inheritdoc />
+    protected override void OnCompletedCore(R3.Result result)
+    {
+        _logger.LogInformation("[EVENT] Event stream completed");
+    }
+
+    /// <inheritdoc />
+    protected override void DisposeCore()
+    {
+        _subscription.Dispose();
     }
 }

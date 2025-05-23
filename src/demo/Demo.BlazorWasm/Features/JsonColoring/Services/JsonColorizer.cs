@@ -83,7 +83,7 @@ public class JsonColorizer : IJsonColorizer
             sb.AppendIndentation();
             sb.Append($"{SpanJsonPropertyName(property.Name)}: ");
             ProcessElement(property.Value, sb);
-            sb.Append((i < properties.Length - 1) ? $",{BreakLine}" : BreakLine);
+            sb.Append(i < properties.Length - 1 ? $",{BreakLine}" : BreakLine);
         }
 
         sb.Unindent();
@@ -105,7 +105,7 @@ public class JsonColorizer : IJsonColorizer
             {
                 JsonElement item = items[i];
                 ProcessElement(item, sb, true);
-                sb.Append((i < items.Length - 1) ? $",{BreakLine}" : BreakLine);
+                sb.Append(i < items.Length - 1 ? $",{BreakLine}" : BreakLine);
             }
 
             sb.Unindent();

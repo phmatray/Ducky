@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Ducky.Middlewares;
+using Ducky.Pipeline;
 
 namespace Ducky.Tests.TestModels;
 
@@ -14,12 +15,14 @@ internal static class Factories
         IStoreMiddleware[]? middlewares = null)
     {
         Dispatcher dispatcher = new();
+        PipelineEventPublisher pipelineEventPublisher = new();
         ILoggerFactory loggerFactory = LoggerFactory.Create(Configure);
         LoggerProvider.Configure(loggerFactory);
         TestCounterReducers counterReducers = new();
 
         return DuckyStoreFactory.CreateStore(
             dispatcher,
+            pipelineEventPublisher,
             [counterReducers],
             asyncEffects ?? [],
             reactiveEffects ?? [],

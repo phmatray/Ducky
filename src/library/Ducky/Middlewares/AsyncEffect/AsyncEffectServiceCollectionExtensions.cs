@@ -10,13 +10,11 @@ public static class AsyncEffectServiceCollectionExtensions
     /// <summary>
     /// Registers the AsyncEffect middleware for the given state type.
     /// </summary>
-    /// <typeparam name="TState">The type of the state to use with the middleware.</typeparam>
     /// <param name="services">The service collection.</param>
     /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddAsyncEffectMiddleware<TState>(this IServiceCollection services)
-        where TState : class
+    public static IServiceCollection AddAsyncEffectMiddleware(this IServiceCollection services)
     {
-        services.AddSingleton<AsyncEffectMiddleware<TState>>();
+        services.AddSingleton<AsyncEffectMiddleware>();
         return services;
     }
 }

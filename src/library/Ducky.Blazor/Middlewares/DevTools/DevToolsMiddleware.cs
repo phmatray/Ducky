@@ -11,7 +11,6 @@ public sealed class DevToolsMiddleware<TState> : StoreMiddleware
     where TState : class
 {
     private readonly ReduxDevToolsModule<TState> _devTools;
-    private IStore? _store;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DevToolsMiddleware{TState}"/> class.
@@ -20,13 +19,6 @@ public sealed class DevToolsMiddleware<TState> : StoreMiddleware
     public DevToolsMiddleware(ReduxDevToolsModule<TState> devTools)
     {
         _devTools = devTools ?? throw new ArgumentNullException(nameof(devTools));
-    }
-
-    /// <inheritdoc />
-    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
-    {
-        _store = store ?? throw new ArgumentNullException(nameof(store));
-        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <summary>
@@ -40,7 +32,7 @@ public sealed class DevToolsMiddleware<TState> : StoreMiddleware
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
-        IRootState state = _store!.CurrentState;
+        IRootState state = Store.CurrentState;
 
         // Fire-and-forget DevTools sync
         _ = _devTools.SendAsync(context.Action!, state);

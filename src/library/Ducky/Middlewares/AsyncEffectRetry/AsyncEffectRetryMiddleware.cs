@@ -15,9 +15,6 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
     where TState : class
 {
     private readonly AsyncPolicyWrap _policy;
-    private readonly IPipelineEventPublisher _events;
-    private IDispatcher? _dispatcher;
-    private IStore? _store;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncEffectRetryMiddleware{TState}"/> class.
@@ -32,8 +29,6 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
         int exceptionsAllowedBeforeBreaking,
         in TimeSpan durationOfBreak)
     {
-        _events = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
-
         AsyncRetryPolicy retryPolicy = Policy
             .Handle<Exception>()
             .WaitAndRetryAsync(
@@ -42,7 +37,7 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
                 {
                     var ctx = context["ActionContext"] as IActionContext;
                     object act = context["Action"];
-                    _events.Publish(new RetryAttemptEventArgs(ctx!, act!, attempt, exception));
+                    Events.Publish(new RetryAttemptEventArgs(ctx!, act!, attempt, exception));
                 });
 
         AsyncCircuitBreakerPolicy breakerPolicy = Policy
@@ -54,13 +49,13 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
                 {
                     var ctx = context["ActionContext"] as IActionContext;
                     object act = context["Action"];
-                    _events.Publish(new CircuitBreakerOpenedEventArgs(ctx!, act!, exception));
+                    Events.Publish(new CircuitBreakerOpenedEventArgs(ctx!, act!, exception));
                 },
                 context =>
                 {
                     var ctx = context["ActionContext"] as IActionContext;
                     object act = context["Action"];
-                    _events.Publish(new CircuitBreakerResetEventArgs(ctx!, act!));
+                    Events.Publish(new CircuitBreakerResetEventArgs(ctx!, act!));
                 });
 
         _policy = Policy.WrapAsync(breakerPolicy, retryPolicy);
@@ -80,14 +75,6 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
             _ = ExecuteWithPolicyAsync(asyncAction, context, cancellationToken);
         }
 
-        await Task.CompletedTask.ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
-    {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-        _store = store ?? throw new ArgumentNullException(nameof(store));
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
@@ -115,7 +102,7 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
             await _policy
                 .ExecuteAsync(
                     async _ => await asyncEffect
-                        .HandleAsync(context.Action!, _store!.CurrentState)
+                        .HandleAsync(context.Action!, Store.CurrentState)
                         .ConfigureAwait(false),
                     pollyContext)
                 .ConfigureAwait(false);
@@ -123,8 +110,8 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
         catch (Exception ex)
         {
             ServiceUnavailableAction unavailable = new(ex.Message, context.Action!);
-            _events.Publish(new ServiceUnavailableEventArgs(context, context.Action!, ex.Message, ex));
-            _dispatcher?.Dispatch(unavailable);
+            Events.Publish(new ServiceUnavailableEventArgs(context, context.Action!, ex.Message, ex));
+            Dispatcher.Dispatch(unavailable);
         }
     }
 }

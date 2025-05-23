@@ -78,7 +78,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
         => new()
         {
             Notifications = state.Notifications
-                .Select(n => (n.Id == action.NotificationId)
+                .Select(n => n.Id == action.NotificationId
                     ? n with { IsRead = true }
                     : n)
                 .ToValueCollection()

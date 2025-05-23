@@ -4,6 +4,7 @@
 
 using System.Reflection;
 using Ducky.Middlewares;
+using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -28,6 +29,7 @@ public static class DependencyInjections
     {
         // Add Store services
         services.AddSingleton<IDispatcher, Dispatcher>();
+        services.AddSingleton<IPipelineEventPublisher, PipelineEventPublisher>();
         services.AddSingleton<IRootStateSerializer, RootStateSerializer>();
 
         // Scan and register all Slices, Effects and Middlewares
@@ -41,6 +43,7 @@ public static class DependencyInjections
         services.AddScoped<DuckyStore>(sp =>
         {
             IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
+            IPipelineEventPublisher pipelineEventPublisher = sp.GetRequiredService<IPipelineEventPublisher>();
             ILoggerFactory loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             IEnumerable<ISlice> slices = sp.GetServices<ISlice>();
             IEnumerable<IAsyncEffect> asyncEffects = sp.GetServices<IAsyncEffect>();
@@ -50,7 +53,13 @@ public static class DependencyInjections
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
 
-            return DuckyStoreFactory.CreateStore(dispatcher, slices, asyncEffects, reactiveEffects, middlewares);
+            return DuckyStoreFactory.CreateStore(
+                dispatcher,
+                pipelineEventPublisher,
+                slices,
+                asyncEffects,
+                reactiveEffects,
+                middlewares);
         });
 
         return services;

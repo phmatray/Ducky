@@ -12,7 +12,6 @@ public sealed class PersistenceMiddleware<TState> : StoreMiddleware
 {
     private readonly IPersistenceProvider<TState> _persistenceProvider;
     private readonly HydrationManager _hydrationManager;
-    private IStore? _store;
     private bool _hydrated;
 
     /// <summary>
@@ -29,9 +28,10 @@ public sealed class PersistenceMiddleware<TState> : StoreMiddleware
     }
 
     /// <inheritdoc />
-    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store, IPipelineEventPublisher publisher)
     {
-        _store = store;
+        await base.InitializeAsync(dispatcher, store, publisher).ConfigureAwait(false);
+
         _hydrationManager.StartHydrating();
 
         TState? persistedState = await _persistenceProvider
@@ -77,12 +77,12 @@ public sealed class PersistenceMiddleware<TState> : StoreMiddleware
         CancellationToken cancellationToken = default)
     {
         // Save state after every action except HydrateAction
-        if (!_hydrated || context.Action is HydrateAction<TState> || _store is null)
+        if (!_hydrated || context.Action is HydrateAction<TState>)
         {
             return;
         }
 
-        if (_store.CurrentState is not TState state)
+        if (Store.CurrentState is not TState state)
         {
             return;
         }

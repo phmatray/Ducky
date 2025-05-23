@@ -1,29 +1,35 @@
 using Ducky.Pipeline;
 using Microsoft.Extensions.Logging;
+using R3;
 
 namespace Ducky.Middlewares.AsyncEffectRetry;
 
 /// <summary>
-/// Observes retry events and logs them.
+/// Observes and logs retry events.
 /// </summary>
-public class AsyncEffectRetryEventListener
+public class AsyncEffectRetryMiddlewareLogger : Observer<PipelineEventArgs>
 {
     private readonly ILogger _logger;
+    private readonly IDisposable _subscription;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncEffectRetryEventListener"/> class and subscribes to retry events.
+    /// Initializes a new instance of the <see cref="AsyncEffectRetryMiddlewareLogger"/> class and subscribes to retry events via R3.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="eventPublisher">The pipeline event publisher.</param>
-    public AsyncEffectRetryEventListener(
-        ILogger<AsyncEffectRetryEventListener> logger,
+    public AsyncEffectRetryMiddlewareLogger(
+        ILogger<AsyncEffectRetryMiddlewareLogger> logger,
         IPipelineEventPublisher eventPublisher)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        eventPublisher.EventPublished += OnEventPublished;
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(eventPublisher);
+
+        _logger = logger;
+        _subscription = eventPublisher.Events.Subscribe(this);
     }
 
-    private void OnEventPublished(object? sender, PipelineEventArgs e)
+    /// <inheritdoc />
+    protected override void OnNextCore(PipelineEventArgs e)
     {
         switch (e)
         {
@@ -60,5 +66,23 @@ public class AsyncEffectRetryEventListener
                 break;
             }
         }
+    }
+
+    /// <inheritdoc />
+    protected override void OnErrorResumeCore(Exception error)
+    {
+        _logger.LogError(error, "[EVENT] Error in event stream");
+    }
+
+    /// <inheritdoc />
+    protected override void OnCompletedCore(Result result)
+    {
+        _logger.LogInformation("[EVENT] Event stream completed");
+    }
+
+    /// <inheritdoc />
+    protected override void DisposeCore()
+    {
+        _subscription.Dispose();
     }
 }

@@ -59,7 +59,7 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
     /// Gets an observable stream of the state managed by this component.
     /// </summary>
     private Observable<TState> StateObservable
-        => (typeof(TState) == typeof(RootState))
+        => typeof(TState) == typeof(RootState)
             ? Store.RootStateObservable
                 .Cast<IRootState, TState>()
             : Store.RootStateObservable

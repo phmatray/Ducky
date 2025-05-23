@@ -12,7 +12,6 @@ public sealed class JsLoggingMiddleware<TState> : StoreMiddleware
     where TState : class
 {
     private readonly JsConsoleLoggerModule _loggerModule;
-    private IStore? _store;
 
     private const string MetadataPrevState = "PrevState";
     private const string MetadataStartTime = "StartTime";
@@ -27,13 +26,6 @@ public sealed class JsLoggingMiddleware<TState> : StoreMiddleware
     }
 
     /// <inheritdoc />
-    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
-    {
-        _store = store ?? throw new ArgumentNullException(nameof(store));
-        await Task.CompletedTask.ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
     public override StoreMiddlewareAsyncMode AsyncMode
         => StoreMiddlewareAsyncMode.FireAndForget;
 
@@ -42,7 +34,7 @@ public sealed class JsLoggingMiddleware<TState> : StoreMiddleware
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
-        context.SetMetadata(MetadataPrevState, _store!.CurrentState);
+        context.SetMetadata(MetadataPrevState, Store.CurrentState);
         context.SetMetadata(MetadataStartTime, DateTime.Now);
         await Task.CompletedTask.ConfigureAwait(false);
     }
@@ -57,7 +49,7 @@ public sealed class JsLoggingMiddleware<TState> : StoreMiddleware
         double duration = (DateTime.Now - startTime).TotalMilliseconds;
         string timestamp = startTime.ToString("HH:mm:ss.fff");
         string label = $"action {typeof(TAction).Name} @ {timestamp} (in {duration:n2} ms)";
-        IRootState newState = _store!.CurrentState;
+        IRootState newState = Store.CurrentState;
 
         JsonElement prevElem = JsonDocument.Parse(JsonSerializer.Serialize(prevState)).RootElement;
         JsonElement actionElem = JsonDocument.Parse(JsonSerializer.Serialize(context.Action)).RootElement;

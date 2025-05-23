@@ -1,3 +1,5 @@
+using Ducky.Pipeline.Reactive;
+
 namespace Ducky.Pipeline;
 
 /// <summary>
@@ -9,7 +11,7 @@ public class ActionCompletedEventArgs : PipelineEventArgs
     /// Initializes a new instance of the <see cref="ActionCompletedEventArgs"/> class.
     /// </summary>
     /// <param name="context">The context associated with the action.</param>
-    public ActionCompletedEventArgs(IActionContext context)
+    public ActionCompletedEventArgs(ActionContext context)
     {
         Context = context ?? throw new ArgumentNullException(nameof(context));
     }
@@ -17,5 +19,5 @@ public class ActionCompletedEventArgs : PipelineEventArgs
     /// <summary>
     /// The context associated with the action.
     /// </summary>
-    public IActionContext Context { get; }
+    public ActionContext Context { get; }
 }

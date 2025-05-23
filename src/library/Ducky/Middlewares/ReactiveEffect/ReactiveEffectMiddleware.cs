@@ -14,32 +14,25 @@ public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposa
     private readonly Subject<object> _actions = new();
     private readonly BehaviorSubject<object> _state;
     private bool _disposed;
-    private IDispatcher? _dispatcher;
-    private IStore? _store;
     private readonly IEnumerable<ReactiveEffectGroup<TState>> _groups;
-    private readonly IPipelineEventPublisher _publisher;
 
     /// <summary>
     /// Initializes a new instance of <see cref="ReactiveEffectMiddleware{TState}"/>.
     /// </summary>
-    /// <param name="publisher">The event publisher for dispatching events.</param>
     /// <param name="groups">The reactive effect groups to activate.</param>
     /// <param name="initialState">The initial state of the store.</param>
     public ReactiveEffectMiddleware(
-        IPipelineEventPublisher publisher,
         IEnumerable<ReactiveEffectGroup<TState>> groups,
         TState initialState)
     {
-        _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
         _state = new BehaviorSubject<object>(initialState ?? throw new ArgumentNullException(nameof(initialState)));
         _groups = groups;
     }
 
     /// <inheritdoc />
-    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store, IPipelineEventPublisher publisher)
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-        _store = store ?? throw new ArgumentNullException(nameof(store));
+        await base.InitializeAsync(dispatcher, store, publisher).ConfigureAwait(false);
 
         Observable<object> actions = _actions.AsObservable();
         Observable<object> state = _state.AsObservable();
@@ -55,7 +48,7 @@ public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposa
                         {
                             try
                             {
-                                _dispatcher.Dispatch(action);
+                                Dispatcher.Dispatch(action);
                                 PublishReactiveEffectDispatchedEvent(action);
                             }
                             catch (Exception ex)
@@ -87,7 +80,7 @@ public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposa
         // Push new state if available
         try
         {
-            _state.OnNext(_store!.CurrentState);
+            _state.OnNext(Store.CurrentState);
         }
         catch (Exception ex)
         {
@@ -123,11 +116,11 @@ public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposa
 
     private void PublishReactiveEffectDispatchedEvent(object action)
     {
-        _publisher.Publish(new ReactiveEffectDispatchedEventArgs(action));
+        Events.Publish(new ReactiveEffectDispatchedEventArgs(action));
     }
 
     private void PublishReactiveEffectErrorEvent(object? action, Exception ex)
     {
-        _publisher.Publish(new ReactiveEffectErrorEventArgs(action, ex));
+        Events.Publish(new ReactiveEffectErrorEventArgs(action, ex));
     }
 }

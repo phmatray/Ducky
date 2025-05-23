@@ -11,5 +11,6 @@ public interface IReduxMiddlewarePipeline
     /// <typeparam name="TAction">The type of the action.</typeparam>
     /// <param name="action">The action to process.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    Task ProcessAsync<TAction>(TAction action, CancellationToken cancellationToken = default);
+    Task ProcessAsync<TAction>(TAction action, CancellationToken cancellationToken = default)
+        where TAction: notnull;
 }

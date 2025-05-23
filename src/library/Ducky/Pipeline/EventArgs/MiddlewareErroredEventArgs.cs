@@ -1,4 +1,5 @@
 using Ducky.Middlewares;
+using Ducky.Pipeline.Reactive;
 
 namespace Ducky.Pipeline;
 
@@ -14,7 +15,7 @@ public class MiddlewareErroredEventArgs : PipelineEventArgs
     /// <param name="middleware">The middleware instance.</param>
     /// <param name="phase">The phase, either "Before" or "After".</param>
     /// <param name="exception">The exception thrown.</param>
-    public MiddlewareErroredEventArgs(IActionContext context, IStoreMiddleware middleware, StoreMiddlewarePhase phase, Exception exception)
+    public MiddlewareErroredEventArgs(ActionContext context, IStoreMiddleware middleware, StoreMiddlewarePhase phase, Exception exception)
     {
         Context = context;
         Middleware = middleware;
@@ -25,7 +26,7 @@ public class MiddlewareErroredEventArgs : PipelineEventArgs
     /// <summary>
     /// The action context.
     /// </summary>
-    public IActionContext Context { get; }
+    public ActionContext Context { get; }
 
     /// <summary>
     /// The middleware instance.

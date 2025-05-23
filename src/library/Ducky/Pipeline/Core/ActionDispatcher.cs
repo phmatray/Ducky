@@ -1,4 +1,5 @@
 using Ducky.Middlewares;
+using Ducky.Pipeline.Reactive;
 
 namespace Ducky.Pipeline;
 
@@ -20,7 +21,7 @@ public sealed class ActionDispatcher : IActionDispatcher
 
     /// <inheritdoc />
     public async Task DispatchAsync(
-        IActionContext context,
+        ActionContext context,
         List<IStoreMiddleware> middlewares,
         CancellationToken cancellationToken = default)
     {
@@ -33,7 +34,7 @@ public sealed class ActionDispatcher : IActionDispatcher
     /// Internal implementation of action dispatching with middleware.
     /// </summary>
     private async Task DispatchInternalAsync<TAction>(
-        ActionContext<TAction> context,
+        ActionContext context,
         List<IStoreMiddleware> middlewares,
         CancellationToken cancellationToken = default)
     {
@@ -76,7 +77,7 @@ public sealed class ActionDispatcher : IActionDispatcher
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
                     _events.Publish(new MiddlewareErroredEventArgs(context, middleware, StoreMiddlewarePhase.Before, ex));
-                    context.AbortPipeline();
+                    context.Abort();
                     _events.Publish(new ActionAbortedEventArgs(context, $"Exception: {ex.Message}"));
                     break;
                 }
@@ -135,7 +136,7 @@ public sealed class ActionDispatcher : IActionDispatcher
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
                     _events.Publish(new MiddlewareErroredEventArgs(context, middleware, StoreMiddlewarePhase.After, ex));
-                    context.AbortPipeline();
+                    context.Abort();
                     _events.Publish(new ActionAbortedEventArgs(context, $"Exception: {ex.Message}"));
                     break;
                 }

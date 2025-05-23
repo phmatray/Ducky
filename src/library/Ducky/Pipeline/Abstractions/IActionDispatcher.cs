@@ -1,4 +1,5 @@
 using Ducky.Middlewares;
+using Ducky.Pipeline.Reactive;
 
 namespace Ducky.Pipeline;
 
@@ -14,7 +15,7 @@ public interface IActionDispatcher
     /// <param name="middlewares">The middlewares to execute.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     Task DispatchAsync(
-        IActionContext context,
+        ActionContext context,
         List<IStoreMiddleware> middlewares,
         CancellationToken cancellationToken = default);
 }

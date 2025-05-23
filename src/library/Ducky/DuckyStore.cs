@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using Ducky.Middlewares;
+using Ducky.Middlewares.AsyncEffect;
 using Ducky.Pipeline;
+using Ducky.Pipeline.Reactive;
 using Microsoft.Extensions.Logging;
 using R3;
 
@@ -18,24 +20,40 @@ public sealed class DuckyStore : IStore, IDisposable
         LoggerProvider.CreateLogger<DuckyStore>();
 
     private readonly IDispatcher _dispatcher;
+    private readonly ActionPipeline _pipeline;
     private readonly CompositeDisposable _subscriptions = [];
     private readonly ObservableSlices _slices = new();
-    private readonly StoreMiddlewarePipeline _middlewarePipeline;
-    private readonly PipelineEventPublisher _pipelineEventPublisher = new();
-    private readonly List<IStoreMiddleware> _middlewares = [];
     private bool _isDisposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DuckyStore"/> class.
     /// </summary>
     /// <param name="dispatcher">The dispatcher used to dispatch actions to the store.</param>
-    public DuckyStore(IDispatcher dispatcher)
+    /// <param name="services">Service provider used to resolve dependencies.</param>
+    public DuckyStore(IDispatcher dispatcher, IServiceProvider services)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
+        ArgumentNullException.ThrowIfNull(services);
 
         _dispatcher = dispatcher;
-        _dispatcher.Dispatch(new StoreInitialized());
 
+        // build the pipeline, injecting IServiceProvider and a way to get current state
+        _pipeline = new ActionPipeline(dispatcher, services)
+            .Use<AsyncEffectMiddleware>();
+
+        // subscribe slices to the end of the pipeline
+        _pipeline
+            .Subscribe(ctx =>
+            {
+                if (!ctx.IsAborted)
+                {
+                    _slices.OnDispatch(ctx.Action);
+                }
+            })
+            .AddTo(_subscriptions);
+
+        // initial action
+        _dispatcher.Dispatch(new StoreInitialized());
         Logger?.StoreInitialized();
     }
 
@@ -130,7 +148,7 @@ public sealed class DuckyStore : IStore, IDisposable
         ArgumentNullException.ThrowIfNull(middleware);
 
         _middlewares.Add(middleware);
-        middleware.InitializeAsync(_dispatcher, this);
+        middleware.InitializeAsync(_dispatcher, this, _pipelineEventPublisher);
 
         Logger?.MiddlewareAdded(middleware.GetType().Name);
     }
@@ -157,6 +175,7 @@ public sealed class DuckyStore : IStore, IDisposable
         Logger?.DisposingStore();
 
         _subscriptions.Dispose();
+        _pipeline.Dispose();
         _slices.Dispose();
 
         _isDisposed = true;

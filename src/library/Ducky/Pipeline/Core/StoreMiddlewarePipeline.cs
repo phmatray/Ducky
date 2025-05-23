@@ -1,4 +1,5 @@
 using Ducky.Middlewares;
+using Ducky.Pipeline.Reactive;
 
 namespace Ducky.Pipeline;
 
@@ -8,7 +9,7 @@ namespace Ducky.Pipeline;
 public sealed class StoreMiddlewarePipeline : IReduxMiddlewarePipeline
 {
     private readonly List<IStoreMiddleware> _middlewares = [];
-    private readonly Queue<IActionContext> _queue = [];
+    private readonly Queue<ActionContext> _queue = [];
     private bool _processing;
     private readonly IActionDispatcher _dispatcher;
     private readonly IPipelineEventPublisher _events;
@@ -31,8 +32,9 @@ public sealed class StoreMiddlewarePipeline : IReduxMiddlewarePipeline
 
     /// <inheritdoc />
     public async Task ProcessAsync<TAction>(TAction action, CancellationToken cancellationToken = default)
+        where TAction: notnull
     {
-        ActionContext<TAction> context = new(action);
+        ActionContext context = new(action);
         _queue.Enqueue(context);
 
         // If not currently processing, process everything (including new enqueues)
@@ -46,7 +48,7 @@ public sealed class StoreMiddlewarePipeline : IReduxMiddlewarePipeline
         {
             while (_queue.Count > 0)
             {
-                IActionContext next = _queue.Dequeue();
+                ActionContext next = _queue.Dequeue();
                 await _dispatcher.DispatchAsync(next, _middlewares, cancellationToken).ConfigureAwait(false);
             }
         }
