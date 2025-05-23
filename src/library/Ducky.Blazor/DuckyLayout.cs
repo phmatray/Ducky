@@ -22,8 +22,8 @@ public abstract class DuckyLayout<TState> : DuckyComponent<TState>
 
     /// <inheritdoc />
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(LayoutComponentBase))]
-    public override Task SetParametersAsync(ParameterView parameters)
+    public override async Task SetParametersAsync(ParameterView parameters)
     {
-        return base.SetParametersAsync(parameters);
+        await base.SetParametersAsync(parameters).ConfigureAwait(false);
     }
 }

@@ -13,11 +13,11 @@ public sealed class AsyncEffectMiddleware<TState> : StoreMiddleware
     private IStore? _store;
 
     /// <inheritdoc />
-    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _store = store ?? throw new ArgumentNullException(nameof(store));
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -27,7 +27,7 @@ public sealed class AsyncEffectMiddleware<TState> : StoreMiddleware
     /// <summary>
     /// Checks if the action implements <see cref="IAsyncEffect"/> and, if so, executes it asynchronously.
     /// </summary>
-    public override Task BeforeDispatchAsync<TAction>(
+    public override async Task BeforeDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
@@ -41,11 +41,11 @@ public sealed class AsyncEffectMiddleware<TState> : StoreMiddleware
                 if (asyncEffect.CanHandle(context.Action))
                 {
                     // Fire-and-forget the async effect. No need to block the pipeline.
-                    asyncEffect.HandleAsync(context.Action, _store.CurrentState);
+                    _ = asyncEffect.HandleAsync(context.Action, _store.CurrentState);
                 }
             }
         }
 
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

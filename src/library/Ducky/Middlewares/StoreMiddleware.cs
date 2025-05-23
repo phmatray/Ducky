@@ -12,10 +12,10 @@ public abstract class StoreMiddleware : IStoreMiddleware
         => StoreMiddlewareAsyncMode.Await;
 
     /// <inheritdoc />
-    public virtual Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public virtual async Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         // No-op
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -23,17 +23,21 @@ public abstract class StoreMiddleware : IStoreMiddleware
         => true;
 
     /// <inheritdoc />
-    public virtual Task BeforeDispatchAsync<TAction>(ActionContext<TAction> context, CancellationToken cancellationToken = default)
+    public virtual async Task BeforeDispatchAsync<TAction>(
+        ActionContext<TAction> context,
+        CancellationToken cancellationToken = default)
     {
         Before(context);
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public virtual Task AfterDispatchAsync<TAction>(ActionContext<TAction> context, CancellationToken cancellationToken = default)
+    public virtual async Task AfterDispatchAsync<TAction>(
+        ActionContext<TAction> context,
+        CancellationToken cancellationToken = default)
     {
         After(context);
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <summary>

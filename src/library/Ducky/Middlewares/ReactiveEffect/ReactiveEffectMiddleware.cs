@@ -36,7 +36,7 @@ public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposa
     }
 
     /// <inheritdoc />
-    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _store = store ?? throw new ArgumentNullException(nameof(store));
@@ -68,24 +68,18 @@ public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposa
             }
         }
 
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public override Task BeforeDispatchAsync<TAction>(
-        ActionContext<TAction> context,
-        CancellationToken cancellationToken = default)
-        => Task.CompletedTask; // No-op: all logic is in AfterAsync to capture post-reducer state.
-
-    /// <inheritdoc />
-    public override Task AfterDispatchAsync<TAction>(
+    public override async Task AfterDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
         // Defensive: Only push if not disposed
         if (_disposed)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         _actions.OnNext(context.Action!);
@@ -100,7 +94,7 @@ public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposa
             PublishReactiveEffectErrorEvent(context.Action, ex);
         }
 
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <summary>

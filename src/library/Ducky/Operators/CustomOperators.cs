@@ -42,7 +42,7 @@ public static class CustomOperators
             rootStateObs,
             (action, rootState) =>
             {
-                TState sliceState = (sliceKey is null)
+                TState sliceState = sliceKey is null
                     ? rootState.GetSliceState<TState>()
                     : rootState.GetSliceState<TState>(sliceKey);
 

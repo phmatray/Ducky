@@ -23,10 +23,10 @@ public sealed class DevToolsMiddleware<TState> : StoreMiddleware
     }
 
     /// <inheritdoc />
-    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _store = store ?? throw new ArgumentNullException(nameof(store));
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public sealed class DevToolsMiddleware<TState> : StoreMiddleware
         => StoreMiddlewareAsyncMode.FireAndForget;
 
     /// <inheritdoc />
-    public override Task AfterDispatchAsync<TAction>(
+    public override async Task AfterDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
@@ -45,6 +45,6 @@ public sealed class DevToolsMiddleware<TState> : StoreMiddleware
         // Fire-and-forget DevTools sync
         _ = _devTools.SendAsync(context.Action!, state);
 
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

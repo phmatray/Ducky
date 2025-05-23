@@ -10,16 +10,20 @@ public sealed class NoOpMiddleware : StoreMiddleware
     /// <summary>
     /// No operation before action.
     /// </summary>
-    public override Task BeforeDispatchAsync<TAction>(
+    public override async Task BeforeDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
 
     /// <summary>
     /// No operation after action.
     /// </summary>
-    public override Task AfterDispatchAsync<TAction>(
+    public override async Task AfterDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
-        => Task.CompletedTask;
+    {
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
 }

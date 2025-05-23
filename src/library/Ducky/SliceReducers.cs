@@ -83,7 +83,7 @@ public abstract partial record SliceReducers<TState>
             _isInitialized = true;
         }
 
-        return (_state.Value is null)
+        return _state.Value is null
             ? throw new DuckyException("State is null.")
             : _state.Value;
     }
@@ -178,7 +178,7 @@ public abstract partial record SliceReducers<TState>
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return (Reducers.TryGetValue(action.GetType(), out Func<TState, object, TState>? reducer))
+        return Reducers.TryGetValue(action.GetType(), out Func<TState, object, TState>? reducer)
             ? reducer(state, action)
             : state;
     }

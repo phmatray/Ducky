@@ -26,7 +26,7 @@ public class AppTheme : MudTheme
     /// <returns>The icon for the dark/light mode button.</returns>
     public static string GetDarkLightModeButtonIcon(bool isDarkMode)
     {
-        return (isDarkMode)
+        return isDarkMode
             ? Icons.Material.Outlined.LightMode
             : Icons.Material.Outlined.DarkMode;
     }

@@ -39,7 +39,7 @@ public sealed class ActionContext<TAction>(TAction action) : IActionContext
     {
         if (Metadata.TryGetValue(key, out object? obj))
         {
-            value = (obj is T t) ? t : default;
+            value = obj is T t ? t : default;
             // Will return true even if value is null (if the key was present)
             return true;
         }

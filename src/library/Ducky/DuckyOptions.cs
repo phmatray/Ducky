@@ -32,7 +32,7 @@ public class DuckyOptions
 
     private Assembly[] GetAssemblies()
     {
-        return (AssemblyNames.Length == 0)
+        return AssemblyNames.Length == 0
             ? GetDefaultAssemblies()
             : AssemblyNames.Select(Assembly.Load).ToArray();
     }

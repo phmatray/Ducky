@@ -48,7 +48,7 @@ public class ActionDispatcherSource : GeneratedSource
             string typeStr = typeInfo.Type?.ToDisplayString() ?? parameter.Type.ToString();
             string originalName = parameter.Identifier.Text;
             string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
-            string defaultText = (parameter.Default is not null) ? " = " + parameter.Default.Value : string.Empty;
+            string defaultText = parameter.Default is not null ? " = " + parameter.Default.Value : string.Empty;
 
             _methodParameters.Add($"{typeStr} {paramName}{defaultText}");
             argListBuilder.Add(paramName);
@@ -76,8 +76,8 @@ public class ActionDispatcherSource : GeneratedSource
                 {
                     string originalName = parameter.Name;
                     string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
-                    string defaultText = (parameter.HasExplicitDefaultValue)
-                        ? (parameter.ExplicitDefaultValue is string)
+                    string defaultText = parameter.HasExplicitDefaultValue
+                        ? parameter.ExplicitDefaultValue is string
                             ? " = \"" + parameter.ExplicitDefaultValue + "\""
                             : " = " + parameter.ExplicitDefaultValue
                         : string.Empty;
@@ -111,7 +111,7 @@ public class ActionDispatcherSource : GeneratedSource
                 for (int i = 0; i < _methodParameters.Count; i++)
                 {
                     string parameter = _methodParameters[i].Replace("IDispatcher", "Ducky.IDispatcher");
-                    Builder.Line((i < _methodParameters.Count - 1) ? $"{parameter}," : $"{parameter})");
+                    Builder.Line(i < _methodParameters.Count - 1 ? $"{parameter}," : $"{parameter})");
                 }
             });
 

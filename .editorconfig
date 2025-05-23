@@ -52,7 +52,7 @@ roslynator_block_braces_style = multi_line
 roslynator_body_style = block
 # Applicable to: rcs1016
 
-roslynator_conditional_operator_condition_parentheses_style = include
+roslynator_conditional_operator_condition_parentheses_style = omit
 # Applicable to: rcs1051
 
 roslynator_conditional_operator_new_line = before

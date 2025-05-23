@@ -27,10 +27,10 @@ public sealed class JsLoggingMiddleware<TState> : StoreMiddleware
     }
 
     /// <inheritdoc />
-    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _store = store ?? throw new ArgumentNullException(nameof(store));
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -38,22 +38,22 @@ public sealed class JsLoggingMiddleware<TState> : StoreMiddleware
         => StoreMiddlewareAsyncMode.FireAndForget;
 
     /// <inheritdoc />
-    public override Task BeforeDispatchAsync<TAction>(
+    public override async Task BeforeDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
         context.SetMetadata(MetadataPrevState, _store!.CurrentState);
         context.SetMetadata(MetadataStartTime, DateTime.Now);
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public override Task AfterDispatchAsync<TAction>(
+    public override async Task AfterDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
-        TState? prevState = (context.TryGetMetadata(MetadataPrevState, out TState? prev)) ? prev : null;
-        DateTime startTime = (context.TryGetMetadata(MetadataStartTime, out DateTime st)) ? st : DateTime.Now;
+        TState? prevState = context.TryGetMetadata(MetadataPrevState, out TState? prev) ? prev : null;
+        DateTime startTime = context.TryGetMetadata(MetadataStartTime, out DateTime st) ? st : DateTime.Now;
         double duration = (DateTime.Now - startTime).TotalMilliseconds;
         string timestamp = startTime.ToString("HH:mm:ss.fff");
         string label = $"action {typeof(TAction).Name} @ {timestamp} (in {duration:n2} ms)";
@@ -65,7 +65,6 @@ public sealed class JsLoggingMiddleware<TState> : StoreMiddleware
 
         // Use logger module, fire-and-forget
         _ = _loggerModule.LogAsync(label, prevElem, actionElem, nextElem);
-
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

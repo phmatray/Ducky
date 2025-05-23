@@ -25,7 +25,7 @@ public sealed class CorrelationIdMiddleware : StoreMiddleware
     }
 
     /// <inheritdoc />
-    public override Task BeforeDispatchAsync<TAction>(
+    public override async Task BeforeDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
@@ -47,6 +47,6 @@ public sealed class CorrelationIdMiddleware : StoreMiddleware
             }
         }
 
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }

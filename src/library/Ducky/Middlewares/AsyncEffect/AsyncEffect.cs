@@ -5,7 +5,7 @@
 namespace Ducky.Middlewares.AsyncEffect;
 
 /// <inheritdoc />
-public abstract class AsyncEffect<TAction> : Ducky.IAsyncEffect
+public abstract class AsyncEffect<TAction> : IAsyncEffect
 {
     /// <inheritdoc />
     public object? LastAction

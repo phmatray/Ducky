@@ -59,18 +59,12 @@
     => State.Value > 15;
 
   private void Increment()
-  {
-    Dispatcher.Increment(Amount);
-  }
+    => Dispatcher.Increment(Amount);
 
   private void Decrement()
-  {
-    Dispatcher.Decrement(Amount);
-  }
+    => Dispatcher.Decrement(Amount);
 
   private void Reset()
-  {
-    Dispatcher.Reset();
-  }
+    => Dispatcher.Reset();
 
 }

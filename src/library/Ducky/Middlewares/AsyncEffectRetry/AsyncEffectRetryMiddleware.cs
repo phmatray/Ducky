@@ -71,7 +71,7 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
         => StoreMiddlewareAsyncMode.FireAndForget;
 
     /// <inheritdoc />
-    public override Task BeforeDispatchAsync<TAction>(
+    public override async Task BeforeDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
@@ -80,15 +80,15 @@ public sealed class AsyncEffectRetryMiddleware<TState> : StoreMiddleware
             _ = ExecuteWithPolicyAsync(asyncAction, context, cancellationToken);
         }
 
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override async Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _store = store ?? throw new ArgumentNullException(nameof(store));
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <summary>

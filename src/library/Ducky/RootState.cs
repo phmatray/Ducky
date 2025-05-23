@@ -42,7 +42,7 @@ public sealed record RootState : IRootState
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        return (_state.TryGetValue(key, out object? value) && value is TState state)
+        return _state.TryGetValue(key, out object? value) && value is TState state
             ? state
             : throw new DuckyException($"State with key '{key}' is not of type '{typeof(TState).Name}'.");
     }

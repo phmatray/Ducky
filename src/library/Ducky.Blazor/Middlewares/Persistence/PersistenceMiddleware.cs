@@ -58,7 +58,7 @@ public sealed class PersistenceMiddleware<TState> : StoreMiddleware
     public override StoreMiddlewareAsyncMode AsyncMode => StoreMiddlewareAsyncMode.FireAndForget;
 
     /// <inheritdoc />
-    public override Task BeforeDispatchAsync<TAction>(
+    public override async Task BeforeDispatchAsync<TAction>(
         ActionContext<TAction> context,
         CancellationToken cancellationToken = default)
     {
@@ -68,7 +68,7 @@ public sealed class PersistenceMiddleware<TState> : StoreMiddleware
             _hydrationManager.EnqueueAction(context.Action!);
         }
 
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
