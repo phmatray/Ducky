@@ -28,8 +28,6 @@ public class DuckyStoreTests
         Observable<int> sliceStateObs = _sut.RootStateObservable
             .Select(state => state.GetSliceState<int>("test-counter"));
 
-        _sut.AddSlice(counterSlice);
-
         // Act
         counterSlice.OnDispatch(new TestIncrementAction());
         int updatedState = sliceStateObs.FirstSync();

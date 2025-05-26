@@ -33,7 +33,7 @@ services.AddTransient<IMoviesService, MoviesService>();
 
 // Register ducky middlewares
 services.AddNoOpMiddleware();
-services.AddJsLoggingMiddleware();
+// services.AddJsLoggingMiddleware();
 // services.AddAsyncEffectMiddleware();
 
 // Add Ducky
@@ -45,7 +45,7 @@ services.AddDucky(
         options.ConfigurePipeline = pipeline =>
         {
             pipeline.Use<NoOpMiddleware>();
-            pipeline.Use<JsLoggingMiddleware>();
+            // pipeline.Use<JsLoggingMiddleware>();
             // pipeline.Use<AsyncEffectMiddleware>();
         };
     });

@@ -2,30 +2,30 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Middlewares;
-using Ducky.Pipeline;
+using Ducky.Middlewares.AsyncEffect;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky.Tests.TestModels;
 
 internal static class Factories
 {
-    public static DuckyStore CreateTestCounterStore(
-        IAsyncEffect[]? asyncEffects = null,
-        IReactiveEffect[]? reactiveEffects = null,
-        IStoreMiddleware[]? middlewares = null)
+    public static DuckyStore CreateTestCounterStore()
     {
         Dispatcher dispatcher = new();
-        PipelineEventPublisher pipelineEventPublisher = new();
         ILoggerFactory loggerFactory = LoggerFactory.Create(Configure);
         LoggerProvider.Configure(loggerFactory);
         TestCounterReducers counterReducers = new();
 
+        // Use a basic ServiceProvider for tests
+        ServiceCollection services = [];
+        services.AddAsyncEffectMiddleware();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
         return DuckyStoreFactory.CreateStore(
             dispatcher,
+            serviceProvider,
             [counterReducers],
-            asyncEffects ?? [],
-            reactiveEffects ?? [],
-            middlewares ?? []);
+            pipeline => pipeline.Use<AsyncEffectMiddleware>());
     }
 
     public static RootState CreateTestRootState()

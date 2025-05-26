@@ -20,7 +20,11 @@ public sealed class ActionContext
     /// </summary>
     public bool IsAborted { get; private set; }
 
-    internal ActionContext(object action)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ActionContext"/> class with the specified action.
+    /// </summary>
+    /// <param name="action">The action to carry through the pipeline.</param>
+    public ActionContext(object action)
     {
         ArgumentNullException.ThrowIfNull(action);
         Action = action;
