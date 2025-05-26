@@ -6,7 +6,6 @@ using System.Reflection;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 
 namespace Ducky;
 
@@ -42,11 +41,7 @@ public static class DependencyInjections
         {
             IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
             IStoreEventPublisher eventPublisher = sp.GetRequiredService<IStoreEventPublisher>();
-            ILoggerFactory loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             IEnumerable<ISlice> slices = sp.GetServices<ISlice>();
-
-            // Configure the logger provider
-            LoggerProvider.Configure(loggerFactory);
 
             // Ensure StoreLogger is created to start listening to events
             _ = sp.GetRequiredService<StoreLogger>();

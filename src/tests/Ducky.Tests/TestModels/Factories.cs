@@ -12,8 +12,6 @@ internal static class Factories
     public static DuckyStore CreateTestCounterStore()
     {
         Dispatcher dispatcher = new();
-        ILoggerFactory loggerFactory = LoggerFactory.Create(Configure);
-        LoggerProvider.Configure(loggerFactory);
         TestCounterReducers counterReducers = new();
 
         // Use a basic ServiceProvider for tests
@@ -39,9 +37,5 @@ internal static class Factories
             .Add(testKey, initialState);
 
         return new RootState(dictionary);
-    }
-
-    private static void Configure(ILoggingBuilder obj)
-    {
     }
 }
