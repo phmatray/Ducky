@@ -5,6 +5,9 @@ using Demo.BlazorWasm.AppStore;
 using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
 using Ducky.Blazor;
+using Ducky.Blazor.Middlewares.JsLogging;
+using Ducky.Middlewares.AsyncEffect;
+using Ducky.Middlewares.NoOp;
 using MudBlazor.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -28,7 +31,23 @@ services.AddMudServices(
 services.AddScoped<IJsonColorizer, JsonColorizer>();
 services.AddTransient<IMoviesService, MoviesService>();
 
+// Register ducky middlewares
+services.AddNoOpMiddleware();
+services.AddJsLoggingMiddleware();
+// services.AddAsyncEffectMiddleware();
+
 // Add Ducky
-services.AddDucky(configuration);
+services.AddDucky(
+    configuration,
+    options =>
+    {
+        // Compose the middleware pipeline IN THE ORDER YOU WANT:
+        options.ConfigurePipeline = pipeline =>
+        {
+            pipeline.Use<NoOpMiddleware>();
+            pipeline.Use<JsLoggingMiddleware>();
+            // pipeline.Use<AsyncEffectMiddleware>();
+        };
+    });
 
 await builder.Build().RunAsync();

@@ -22,7 +22,6 @@ internal static class Factories
 
         return DuckyStoreFactory.CreateStore(
             dispatcher,
-            pipelineEventPublisher,
             [counterReducers],
             asyncEffects ?? [],
             reactiveEffects ?? [],

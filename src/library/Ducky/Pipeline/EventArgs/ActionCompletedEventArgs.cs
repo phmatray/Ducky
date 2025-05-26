@@ -1,5 +1,3 @@
-using Ducky.Pipeline.Reactive;
-
 namespace Ducky.Pipeline;
 
 /// <summary>

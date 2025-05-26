@@ -16,7 +16,6 @@ public sealed class CounterEffectsTests
         ObservableSystem.DefaultTimeProvider = _timeProvider;
 
         _sut = new ResetCounterAfter3Sec();
-        _sut.SetDispatcher(new Dispatcher());
     }
 
     [Fact]
@@ -24,9 +23,10 @@ public sealed class CounterEffectsTests
     {
         // Arrange
         RootState rootState = GetRootState(16);
+        Dispatcher dispatcher = new();
 
         // Act
-        _ = _sut.HandleAsync(new Increment(), rootState);
+        _ = _sut.HandleAsync(new Increment(), rootState, dispatcher);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
 
         // Assert
@@ -38,9 +38,10 @@ public sealed class CounterEffectsTests
     {
         // Arrange
         RootState rootState = GetRootState(15);
+        Dispatcher dispatcher = new();
 
         // Act
-        _ = _sut.HandleAsync(new Increment(), rootState);
+        _ = _sut.HandleAsync(new Increment(), rootState, dispatcher);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
 
         // Assert

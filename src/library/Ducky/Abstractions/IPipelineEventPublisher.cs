@@ -1,6 +1,7 @@
+using Ducky.Pipeline;
 using R3;
 
-namespace Ducky.Pipeline;
+namespace Ducky;
 
 /// <summary>
 /// Publishes pipeline events and allows subscribers to listen for them.

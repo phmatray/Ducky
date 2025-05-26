@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Ducky.Middlewares;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -37,29 +36,17 @@ public static class DependencyInjections
         services.ScanAndRegister<IAsyncEffect>(options.Assemblies);
         services.ScanAndRegister<IReactiveEffect>(options.Assemblies);
 
-        // TODO: Add middleware scanning and registration (must respect a specific order)
-
         // Add Store
         services.AddScoped<DuckyStore>(sp =>
         {
             IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
-            IPipelineEventPublisher pipelineEventPublisher = sp.GetRequiredService<IPipelineEventPublisher>();
             ILoggerFactory loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             IEnumerable<ISlice> slices = sp.GetServices<ISlice>();
-            IEnumerable<IAsyncEffect> asyncEffects = sp.GetServices<IAsyncEffect>();
-            IEnumerable<IReactiveEffect> reactiveEffects = sp.GetServices<IReactiveEffect>();
-            IEnumerable<IStoreMiddleware> middlewares = [];
 
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
 
-            return DuckyStoreFactory.CreateStore(
-                dispatcher,
-                pipelineEventPublisher,
-                slices,
-                asyncEffects,
-                reactiveEffects,
-                middlewares);
+            return DuckyStoreFactory.CreateStore(dispatcher, sp, slices, options.ConfigurePipeline);
         });
 
         return services;

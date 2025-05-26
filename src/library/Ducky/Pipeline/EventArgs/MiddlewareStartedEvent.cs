@@ -1,5 +1,4 @@
 using Ducky.Middlewares;
-using Ducky.Pipeline.Reactive;
 
 namespace Ducky.Pipeline;
 
@@ -14,7 +13,7 @@ public class MiddlewareStartedEvent : PipelineEventArgs
     /// <param name="context">The action context.</param>
     /// <param name="middleware">The middleware instance.</param>
     /// <param name="phase">The phase, either "Before" or "After".</param>
-    public MiddlewareStartedEvent(ActionContext context, IStoreMiddleware middleware, StoreMiddlewarePhase phase)
+    public MiddlewareStartedEvent(ActionContext context, IActionMiddleware middleware, StoreMiddlewarePhase phase)
     {
         Context = context;
         Middleware = middleware;
@@ -29,7 +28,7 @@ public class MiddlewareStartedEvent : PipelineEventArgs
     /// <summary>
     /// The middleware instance.
     /// </summary>
-    public IStoreMiddleware Middleware { get; }
+    public IActionMiddleware Middleware { get; }
 
     /// <summary>
     /// The phase, either "Before" or "After".

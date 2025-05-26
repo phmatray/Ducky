@@ -2,41 +2,38 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Middlewares;
 using Ducky.Pipeline;
 
 namespace Ducky;
 
 /// <summary>
-/// Factory for creating instances of <see cref="DuckyStore"/>.
+/// Factory for creating fully-wired <see cref="DuckyStore"/> instances.
 /// </summary>
 public static class DuckyStoreFactory
 {
     /// <summary>
-    /// Creates a new instance of <see cref="DuckyStore"/>.
+    /// Builds the <see cref="ActionPipeline"/>, applies the configured middlewares, and returns a configured <see cref="DuckyStore"/>.
     /// </summary>
-    /// <param name="dispatcher">The dispatcher to be used by the store.</param>
-    /// <param name="pipelineEventPublisher">The event publisher for pipeline events.</param>
-    /// <param name="slices">The collection of slices to be added to the store.</param>
-    /// <param name="asyncEffects">The collection of async effects to be added to the store.</param>
-    /// <param name="reactiveEffects">The collection of reactive effects to be added to the store.</param>
-    /// <param name="middlewares">The collection of middlewares to be added to the store.</param>
-    /// <returns>A new instance of <see cref="DuckyStore"/>.</returns>
+    /// <param name="dispatcher">Your action dispatcher.</param>
+    /// <param name="services">The root <see cref="IServiceProvider"/> (must have all middleware and slices registered).</param>
+    /// <param name="slices">Any initial slices to add to the store.</param>
+    /// <param name="configurePipeline">Pipeline configuration action.</param>
+    /// <returns>A configured <see cref="DuckyStore"/> instance.</returns>
     public static DuckyStore CreateStore(
         IDispatcher dispatcher,
-        IPipelineEventPublisher pipelineEventPublisher,
+        IServiceProvider services,
         IEnumerable<ISlice> slices,
-        IEnumerable<IAsyncEffect> asyncEffects,
-        IEnumerable<IReactiveEffect> reactiveEffects,
-        IEnumerable<IStoreMiddleware> middlewares)
+        Action<ActionPipeline>? configurePipeline = null)
     {
-        DuckyStore store = new(dispatcher, pipelineEventPublisher);
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        ArgumentNullException.ThrowIfNull(services);
 
-        store.AddSlices(slices);
-        store.AddAsyncEffects(asyncEffects);
-        store.AddReactiveEffects(reactiveEffects);
-        store.AddMiddlewares(middlewares);
+        ActionPipeline pipeline = new(dispatcher, services);
 
-        return store;
+        // Compose the pipeline according to user-supplied configuration
+        configurePipeline?.Invoke(pipeline);
+
+        // Instantiate the store with the configured pipeline
+        return new DuckyStore(dispatcher, pipeline, slices);
     }
 }

@@ -2,10 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Middlewares;
-using Ducky.Middlewares.AsyncEffect;
 using Ducky.Pipeline;
-using Ducky.Pipeline.Reactive;
 using Microsoft.Extensions.Logging;
 using R3;
 
@@ -28,31 +25,55 @@ public sealed class DuckyStore : IStore, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="DuckyStore"/> class.
     /// </summary>
-    /// <param name="dispatcher">The dispatcher used to dispatch actions to the store.</param>
-    /// <param name="services">Service provider used to resolve dependencies.</param>
-    public DuckyStore(IDispatcher dispatcher, IServiceProvider services)
+    /// <param name="dispatcher">The dispatcher used to enqueue actions.</param>
+    /// <param name="pipeline">The reactive action pipeline that processes actions.</param>
+    /// <param name="slices">The initial collection of slices to register.</param>
+    public DuckyStore(
+        IDispatcher dispatcher,
+        ActionPipeline pipeline,
+        IEnumerable<ISlice> slices)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
-        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(pipeline);
+        ArgumentNullException.ThrowIfNull(slices);
 
         _dispatcher = dispatcher;
+        _pipeline = pipeline;
 
-        // build the pipeline, injecting IServiceProvider and a way to get current state
-        _pipeline = new ActionPipeline(dispatcher, services)
-            .Use<AsyncEffectMiddleware>();
+        // Register slices
+        foreach (ISlice slice in slices)
+        {
+            _slices.AddSlice(slice);
+            Logger?.SliceAdded(slice.GetKey());
+        }
 
-        // subscribe slices to the end of the pipeline
+        // Subscribe all slices to the BEFORE pipeline (standard: state update/reducer logic)
         _pipeline
-            .Subscribe(ctx =>
+            .SubscribeBefore(new SliceObserver(ctx =>
             {
-                if (!ctx.IsAborted)
+                if (ctx.IsAborted)
                 {
-                    _slices.OnDispatch(ctx.Action);
+                    return;
                 }
-            })
+
+                foreach (ISlice slice in _slices.AllSlices)
+                {
+                    slice.OnDispatch(ctx.Action);
+                }
+            }))
             .AddTo(_subscriptions);
 
-        // initial action
+        // Subscribe all slices to the AFTER pipeline (for post-processing/effects)
+        _pipeline
+            .SubscribeAfter(new SliceObserver(ctx =>
+            {
+                // Most often used for effects, not for mutation.
+                // Example: logging, triggers, analytics, etc.
+                // _slices.Dispatch(ctx.Action);
+            }))
+            .AddTo(_subscriptions);
+
+        // Dispatch initial action
         _dispatcher.Dispatch(new StoreInitialized());
         Logger?.StoreInitialized();
     }
@@ -64,105 +85,6 @@ public sealed class DuckyStore : IStore, IDisposable
     /// <inheritdoc/>
     public IRootState CurrentState
         => RootStateObservable.CurrentValue;
-
-    /// <inheritdoc/>
-    public void AddSlice(ISlice slice)
-    {
-        ArgumentNullException.ThrowIfNull(slice);
-
-        // Add the slice to the ObservableSlices collection
-        _slices.AddSlice(slice);
-
-        // Subscribe the slice to the dispatcher's action stream
-        _dispatcher.ActionStream
-            .Subscribe(slice.OnDispatch)
-            .AddTo(_subscriptions);
-
-        Logger?.SliceAdded(slice.GetKey());
-    }
-
-    /// <inheritdoc/>
-    public void AddSlices(params IEnumerable<ISlice> slices)
-    {
-        ArgumentNullException.ThrowIfNull(slices);
-
-        foreach (ISlice slice in slices)
-        {
-            AddSlice(slice);
-        }
-    }
-
-    /// <inheritdoc/>
-    public void AddAsyncEffect(IAsyncEffect asyncEffect)
-    {
-        ArgumentNullException.ThrowIfNull(asyncEffect);
-
-        asyncEffect.SetDispatcher(_dispatcher);
-
-        _dispatcher.ActionStream
-            .Where(asyncEffect.CanHandle)
-            .Subscribe(action => asyncEffect.HandleAsync(action, RootStateObservable.CurrentValue))
-            .AddTo(_subscriptions);
-
-        Logger?.Log(LogLevel.Information, "Effect added: {Name}", asyncEffect.GetType().Name);
-    }
-
-    /// <inheritdoc/>
-    public void AddAsyncEffects(params IEnumerable<IAsyncEffect> asyncEffects)
-    {
-        ArgumentNullException.ThrowIfNull(asyncEffects);
-
-        foreach (IAsyncEffect effect in asyncEffects)
-        {
-            AddAsyncEffect(effect);
-        }
-    }
-
-    /// <inheritdoc/>
-    public void AddReactiveEffect(IReactiveEffect reactiveEffect)
-    {
-        ArgumentNullException.ThrowIfNull(reactiveEffect);
-
-        reactiveEffect
-            .Handle(_dispatcher.ActionStream, RootStateObservable)
-            .Subscribe(_dispatcher.Dispatch)
-            .AddTo(_subscriptions);
-
-        Logger?.EffectAdded(reactiveEffect.GetKey(), reactiveEffect.GetAssemblyName());
-    }
-
-    /// <inheritdoc/>
-    public void AddReactiveEffects(params IEnumerable<IReactiveEffect> reactiveEffects)
-    {
-        ArgumentNullException.ThrowIfNull(reactiveEffects);
-
-        foreach (IReactiveEffect reactiveEffect in reactiveEffects)
-        {
-            AddReactiveEffect(reactiveEffect);
-        }
-    }
-
-    /// <inheritdoc />
-    public void AddMiddleware(IStoreMiddleware middleware)
-    {
-        ArgumentNullException.ThrowIfNull(middleware);
-
-        _middlewares.Add(middleware);
-        middleware.InitializeAsync(_dispatcher, this, _pipelineEventPublisher);
-
-        Logger?.MiddlewareAdded(middleware.GetType().Name);
-    }
-
-    /// <inheritdoc />
-    public void AddMiddlewares(params IEnumerable<IStoreMiddleware> middlewares)
-    {
-        ArgumentNullException.ThrowIfNull(middlewares);
-
-        foreach (IStoreMiddleware middleware in middlewares)
-        {
-            AddMiddleware(middleware);
-        }
-    }
 
     /// <inheritdoc/>
     public void Dispose()

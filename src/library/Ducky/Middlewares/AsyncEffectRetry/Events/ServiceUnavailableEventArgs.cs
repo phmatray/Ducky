@@ -15,7 +15,7 @@ public class ServiceUnavailableEventArgs : PipelineEventArgs
     /// <param name="reason">The reason why the service is unavailable.</param>
     /// <param name="exception">The exception that caused the service to become unavailable, if any.</param>
     public ServiceUnavailableEventArgs(
-        IActionContext context,
+        ActionContext context,
         object action,
         string reason,
         Exception exception)
@@ -29,7 +29,7 @@ public class ServiceUnavailableEventArgs : PipelineEventArgs
     /// <summary>
     /// Gets the action context in which the service became unavailable.
     /// </summary>
-    public IActionContext Context { get; }
+    public ActionContext Context { get; }
 
     /// <summary>
     /// Gets the action that triggered the service unavailability event.

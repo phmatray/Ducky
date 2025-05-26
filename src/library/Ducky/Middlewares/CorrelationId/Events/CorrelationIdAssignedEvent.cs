@@ -12,7 +12,7 @@ public class CorrelationIdAssignedEvent : PipelineEventArgs
     /// </summary>
     /// <param name="context">The action context.</param>
     /// <param name="correlationId">The assigned correlation ID.</param>
-    public CorrelationIdAssignedEvent(IActionContext context, in Guid correlationId)
+    public CorrelationIdAssignedEvent(ActionContext context, in Guid correlationId)
     {
         Context = context;
         CorrelationId = correlationId;
@@ -21,7 +21,7 @@ public class CorrelationIdAssignedEvent : PipelineEventArgs
     /// <summary>
     /// The action context.
     /// </summary>
-    public IActionContext Context { get; init; }
+    public ActionContext Context { get; init; }
 
     /// <summary>
     /// The assigned correlation ID.

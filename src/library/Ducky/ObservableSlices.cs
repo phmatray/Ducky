@@ -38,6 +38,12 @@ public sealed class ObservableSlices : IDisposable
     }
 
     /// <summary>
+    /// Gets an enumerable collection of all registered slices.
+    /// </summary>
+    public IEnumerable<ISlice> AllSlices
+        => _slices.Select(pair => pair.Value);
+
+    /// <summary>
     /// Gets an observable that emits the root state whenever a slice is added, removed, or replaced.
     /// </summary>
     public ReadOnlyReactiveProperty<IRootState> RootStateObservable { get; }

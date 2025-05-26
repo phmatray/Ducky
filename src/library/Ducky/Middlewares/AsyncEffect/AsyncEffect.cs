@@ -16,18 +16,10 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
     /// </summary>
     public IDispatcher? Dispatcher { get; private set; }
 
-    /// <summary>
-    /// Handles the specified action and dispatches new actions.
-    /// </summary>
-    /// <param name="action">The action to handle.</param>
-    /// <param name="rootState">The current root state of the application.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task HandleAsync(TAction action, IRootState rootState);
-
     /// <inheritdoc />
-    public Task HandleAsync(object action, IRootState rootState)
+    public void SetDispatcher(IDispatcher dispatcher)
     {
-        return HandleAsync((TAction)action, rootState);
+        Dispatcher = dispatcher;
     }
 
     /// <inheritdoc />
@@ -37,19 +29,16 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
     }
 
     /// <inheritdoc />
-    public void SetDispatcher(IDispatcher dispatcher)
+    public Task HandleAsync(object action, IRootState rootState)
     {
-        Dispatcher = dispatcher;
+        return HandleAsync((TAction)action, rootState);
     }
 
-    /// <inheritdoc />
-    public void Dispatch(object action)
-    {
-        if (Dispatcher is null)
-        {
-            throw new InvalidOperationException("The dispatcher has not been set.");
-        }
-
-        Dispatcher.Dispatch(action);
-    }
+    /// <summary>
+    /// Handles the specified action and dispatches new actions.
+    /// </summary>
+    /// <param name="action">The action to handle.</param>
+    /// <param name="rootState">The current root state of the application.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public abstract Task HandleAsync(TAction action, IRootState rootState);
 }

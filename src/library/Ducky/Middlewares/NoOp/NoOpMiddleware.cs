@@ -1,29 +1,23 @@
 using Ducky.Pipeline;
+using R3;
 
 namespace Ducky.Middlewares.NoOp;
 
 /// <summary>
-/// A no-op middleware that does nothing. Useful for testing, benchmarking, or as a placeholder.
+/// A no-op middleware that simply passes through all actions unchanged.
+/// Useful for testing, benchmarking, or as a pipeline placeholder.
 /// </summary>
-public sealed class NoOpMiddleware : StoreMiddleware
+public sealed class NoOpMiddleware : IActionMiddleware
 {
-    /// <summary>
-    /// No operation before action.
-    /// </summary>
-    public override async Task BeforeDispatchAsync<TAction>(
-        ActionContext<TAction> context,
-        CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
     {
-        await Task.CompletedTask.ConfigureAwait(false);
+        return actions;
     }
 
-    /// <summary>
-    /// No operation after action.
-    /// </summary>
-    public override async Task AfterDispatchAsync<TAction>(
-        ActionContext<TAction> context,
-        CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
     {
-        await Task.CompletedTask.ConfigureAwait(false);
+        return actions;
     }
 }

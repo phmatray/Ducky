@@ -1,4 +1,6 @@
+using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Blazor.Middlewares.JsLogging;
 
@@ -10,14 +12,17 @@ public static class JsLoggingServiceCollectionExtensions
     /// <summary>
     /// Registers the JS logging middleware and its dependencies for the given state type.
     /// </summary>
-    /// <typeparam name="TState">The type of the state to log.</typeparam>
-    /// <param name="services">The service collection.</param>
-    /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddJsLoggingMiddleware<TState>(this IServiceCollection services)
-        where TState : class
+    public static IServiceCollection AddJsLoggingMiddleware(this IServiceCollection services)
     {
-        services.AddSingleton<JsConsoleLoggerModule>();
-        services.AddSingleton<JsLoggingMiddleware<TState>>();
+        services.AddScoped<JsConsoleLoggerModule>();
+        services.AddScoped<JsLoggingMiddleware>(sp =>
+            new JsLoggingMiddleware(
+                sp.GetRequiredService<JsConsoleLoggerModule>(),
+                () => sp.GetRequiredService<DuckyStore>().CurrentState)
+        );
+
+        // services.TryAddEnumerable(ServiceDescriptor.Scoped<IActionMiddleware, JsLoggingMiddleware>());
+
         return services;
     }
 }

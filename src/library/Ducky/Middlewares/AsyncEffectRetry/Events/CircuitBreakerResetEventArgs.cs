@@ -12,7 +12,7 @@ public class CircuitBreakerResetEventArgs : PipelineEventArgs
     /// </summary>
     /// <param name="context">The action context in which the reset occurred.</param>
     /// <param name="action">The action that triggered the reset.</param>
-    public CircuitBreakerResetEventArgs(IActionContext context, object action)
+    public CircuitBreakerResetEventArgs(ActionContext context, object action)
     {
         Context = context;
         Action = action;
@@ -21,7 +21,7 @@ public class CircuitBreakerResetEventArgs : PipelineEventArgs
     /// <summary>
     /// Gets the action context in which the reset occurred.
     /// </summary>
-    public IActionContext Context { get; }
+    public ActionContext Context { get; }
 
     /// <summary>
     /// Gets the action that triggered the reset.

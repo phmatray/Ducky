@@ -15,7 +15,7 @@ public class RetryAttemptEventArgs : PipelineEventArgs
     /// <param name="attempt">The current retry attempt number.</param>
     /// <param name="exception">The exception that caused the retry.</param>
     public RetryAttemptEventArgs(
-        IActionContext context,
+        ActionContext context,
         object action,
         int attempt,
         Exception exception)
@@ -29,7 +29,7 @@ public class RetryAttemptEventArgs : PipelineEventArgs
     /// <summary>
     /// Gets the action context in which the retry is occurring.
     /// </summary>
-    public IActionContext Context { get; }
+    public ActionContext Context { get; }
 
     /// <summary>
     /// Gets the action being retried.

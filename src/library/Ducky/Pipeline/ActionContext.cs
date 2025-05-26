@@ -1,4 +1,4 @@
-namespace Ducky.Pipeline.Reactive;
+namespace Ducky.Pipeline;
 
 /// <summary>
 /// Carries an action (and metadata) through the middleware pipeline.
@@ -13,7 +13,7 @@ public sealed class ActionContext
     /// <summary>
     /// Arbitrary metadata bag for handlers.
     /// </summary>
-    public IDictionary<string, object?> Metadata { get; } = [];
+    public Dictionary<string, object?> Metadata { get; } = [];
 
     /// <summary>
     /// Returns true if a middleware aborted further processing.

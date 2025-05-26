@@ -14,7 +14,7 @@ public class CircuitBreakerOpenedEventArgs : PipelineEventArgs
     /// <param name="action">The action that triggered the circuit breaker.</param>
     /// <param name="exception">The exception that caused the circuit breaker to open.</param>
     public CircuitBreakerOpenedEventArgs(
-        IActionContext context,
+        ActionContext context,
         object action,
         Exception exception)
     {
@@ -26,7 +26,7 @@ public class CircuitBreakerOpenedEventArgs : PipelineEventArgs
     /// <summary>
     /// Gets the action context in which the exception occurred.
     /// </summary>
-    public IActionContext Context { get; }
+    public ActionContext Context { get; }
 
     /// <summary>
     /// Gets the action that triggered the circuit breaker.

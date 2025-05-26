@@ -1,62 +1,65 @@
 using System.Text.Json;
-using Ducky.Middlewares;
 using Ducky.Pipeline;
+using R3;
 
 namespace Ducky.Blazor.Middlewares.JsLogging;
 
 /// <summary>
-/// Middleware that logs the action and state changes to the console.
+/// Reactive middleware that logs actions and state changes to the browser console.
 /// </summary>
-/// <typeparam name="TState"></typeparam>
-public sealed class JsLoggingMiddleware<TState> : StoreMiddleware
-    where TState : class
+public sealed class JsLoggingMiddleware : IActionMiddleware
 {
     private readonly JsConsoleLoggerModule _loggerModule;
+    private readonly Func<IRootState> _getState;
 
     private const string MetadataPrevState = "PrevState";
     private const string MetadataStartTime = "StartTime";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="JsLoggingMiddleware{TState}"/> class.
+    /// Initializes a new instance of the <see cref="JsLoggingMiddleware"/> class.
     /// </summary>
-    /// <param name="loggerModule">The logger module to use for logging.</param>
-    public JsLoggingMiddleware(JsConsoleLoggerModule loggerModule)
+    /// <param name="loggerModule">The logger module for console logging.</param>
+    /// <param name="getState">A function to get the current root state.</param>
+    public JsLoggingMiddleware(JsConsoleLoggerModule loggerModule, Func<IRootState> getState)
     {
         _loggerModule = loggerModule;
+        _getState = getState;
     }
 
     /// <inheritdoc />
-    public override StoreMiddlewareAsyncMode AsyncMode
-        => StoreMiddlewareAsyncMode.FireAndForget;
-
-    /// <inheritdoc />
-    public override async Task BeforeDispatchAsync<TAction>(
-        ActionContext<TAction> context,
-        CancellationToken cancellationToken = default)
+    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
     {
-        context.SetMetadata(MetadataPrevState, Store.CurrentState);
-        context.SetMetadata(MetadataStartTime, DateTime.Now);
-        await Task.CompletedTask.ConfigureAwait(false);
+        // Attach previous state and time to context metadata
+        return actions.Do(ctx =>
+        {
+            ctx.SetMetadata(MetadataPrevState, _getState());
+            ctx.SetMetadata(MetadataStartTime, DateTime.Now);
+        });
     }
 
     /// <inheritdoc />
-    public override async Task AfterDispatchAsync<TAction>(
-        ActionContext<TAction> context,
-        CancellationToken cancellationToken = default)
+    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
     {
-        TState? prevState = context.TryGetMetadata(MetadataPrevState, out TState? prev) ? prev : null;
-        DateTime startTime = context.TryGetMetadata(MetadataStartTime, out DateTime st) ? st : DateTime.Now;
-        double duration = (DateTime.Now - startTime).TotalMilliseconds;
-        string timestamp = startTime.ToString("HH:mm:ss.fff");
-        string label = $"action {typeof(TAction).Name} @ {timestamp} (in {duration:n2} ms)";
-        IRootState newState = Store.CurrentState;
+        return actions.Do(ctx =>
+        {
+            if (ctx.Action is StoreInitialized)
+            {
+                Console.WriteLine($"StoreInitialized seen by JsLoggingMiddleware. Stack: {Environment.StackTrace}");
+            }
+            
+            object? prevState = ctx.TryGetMetadata(MetadataPrevState, out object? prev) ? prev : null;
+            DateTime startTime = ctx.TryGetMetadata(MetadataStartTime, out DateTime st) ? st : DateTime.Now;
+            double duration = (DateTime.Now - startTime).TotalMilliseconds;
+            string timestamp = startTime.ToString("HH:mm:ss.fff");
+            string label = $"action {ctx.Action.GetType().Name} @ {timestamp} (in {duration:n2} ms)";
+            IRootState newState = _getState();
 
-        JsonElement prevElem = JsonDocument.Parse(JsonSerializer.Serialize(prevState)).RootElement;
-        JsonElement actionElem = JsonDocument.Parse(JsonSerializer.Serialize(context.Action)).RootElement;
-        JsonElement nextElem = JsonDocument.Parse(JsonSerializer.Serialize(newState)).RootElement;
+            JsonElement prevElem = JsonDocument.Parse(JsonSerializer.Serialize(prevState)).RootElement;
+            JsonElement actionElem = JsonDocument.Parse(JsonSerializer.Serialize(ctx.Action)).RootElement;
+            JsonElement nextElem = JsonDocument.Parse(JsonSerializer.Serialize(newState)).RootElement;
 
-        // Use logger module, fire-and-forget
-        _ = _loggerModule.LogAsync(label, prevElem, actionElem, nextElem);
-        await Task.CompletedTask.ConfigureAwait(false);
+            // Fire-and-forget async logging
+            _ = _loggerModule.LogAsync(label, prevElem, actionElem, nextElem);
+        });
     }
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using Ducky.Pipeline;
 
 namespace Ducky;
 
@@ -21,6 +22,11 @@ public class DuckyOptions
     /// </summary>
     public Assembly[] Assemblies
         => GetAssemblies();
+
+    /// <summary>
+    /// Configures the middleware pipeline by allowing registration of middlewares in user-defined order.
+    /// </summary>
+    public Action<ActionPipeline>? ConfigurePipeline { get; set; }
 
     private static Assembly[] GetDefaultAssemblies()
     {
