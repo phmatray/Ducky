@@ -1,4 +1,5 @@
 using Ducky.Middlewares.AsyncEffect;
+using Spectre.Console;
 
 namespace Demo.ConsoleApp.Counter;
 
@@ -6,11 +7,12 @@ public sealed class DelayedIncrementEffect : AsyncEffect<IncrementAsync>
 {
     public override async Task HandleAsync(IncrementAsync action, IRootState rootState)
     {
-        Console.WriteLine($"[Effect] Starting delayed increment of {action.Amount} after {action.DelayMs}ms...");
+        AnsiConsole.MarkupLine(
+            $"[cyan][[Effect]][/] Starting delayed increment of [yellow]{action.Amount}[/] after [blue]{action.DelayMs}ms[/]...");
 
         await Task.Delay(action.DelayMs).ConfigureAwait(false);
 
-        Console.WriteLine($"[Effect] Delay complete, incrementing by {action.Amount}");
+        AnsiConsole.MarkupLine($"[cyan][[Effect]][/] Delay complete, incrementing by [yellow]{action.Amount}[/]");
         Dispatcher.Increment(action.Amount);
     }
 }
@@ -23,9 +25,9 @@ public sealed class CounterThresholdEffect : AsyncEffect<Increment>
 
         if (counterState.Value >= 10)
         {
-            Console.WriteLine("[Effect] Counter reached 10! Triggering celebration...");
+            AnsiConsole.MarkupLine("[cyan][[Effect]][/] [bold yellow]Counter reached 10![/] Triggering celebration...");
             await Task.Delay(500).ConfigureAwait(false);
-            Console.WriteLine("[Effect] 🎉 Congratulations! You've reached 10!");
+            AnsiConsole.MarkupLine("[cyan][[Effect]][/] [bold green]🎉 Congratulations! You've reached 10![/]");
         }
 
         if (counterState.Value < 20)
@@ -33,6 +35,6 @@ public sealed class CounterThresholdEffect : AsyncEffect<Increment>
             return;
         }
 
-        Console.WriteLine("[Effect] Counter is getting high! Consider resetting.");
+        AnsiConsole.MarkupLine("[cyan][[Effect]][/] [bold red]Counter is getting high! Consider resetting.[/]");
     }
 }

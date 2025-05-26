@@ -6,8 +6,12 @@ using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using R3;
+using Spectre.Console;
 
-Console.WriteLine("=== Ducky Console Demo ===\n");
+AnsiConsole.Write(
+    new FigletText("Ducky Demo")
+        .Centered()
+        .Color(Color.Blue));
 
 // Setup dispatcher and store
 Dispatcher dispatcher = new();
@@ -49,230 +53,262 @@ IDisposable subscription = store.RootStateObservable
         CounterState counterState = rootState.GetSliceState<CounterState>();
         TodoState todoState = rootState.GetSliceState<TodoState>();
 
-        string msg = $"\n[State Update] Counter: {counterState.Value} | ";
-        msg += $"Todos: {todoState.ActiveCount} active, {todoState.CompletedCount} completed";
-        Console.WriteLine(msg);
+        string stateMessage = $"[dim][[State Update]] [/][yellow]Counter: {counterState.Value}[/] | "
+            + $"[green]Todos: {todoState.ActiveCount} active[/], [blue]{todoState.CompletedCount} completed[/]";
+        AnsiConsole.MarkupLine(stateMessage);
     });
 
 // Interactive menu
 var running = true;
 while (running)
 {
-    Console.WriteLine("\n--- Main Menu ---");
-    Console.WriteLine("1. Counter Demo");
-    Console.WriteLine("2. Todo List Demo");
-    Console.WriteLine("3. Show Current State");
-    Console.WriteLine("0. Exit");
-    Console.Write("\nSelect option: ");
-
-    string? choice = Console.ReadLine();
+    AnsiConsole.Clear();
+    
+    string choice = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+            .Title("[bold blue]Main Menu[/]")
+            .PageSize(10)
+            .AddChoices(new[] {
+                "Counter Demo",
+                "Todo List Demo", 
+                "Show Current State",
+                "Exit"
+            }));
 
     switch (choice)
     {
-        case "1":
+        case "Counter Demo":
         {
-            await RunCounterDemo(dispatcher, store.CurrentState).ConfigureAwait(false);
+            await RunCounterDemo(dispatcher, store).ConfigureAwait(false);
             break;
         }
-        case "2":
+        case "Todo List Demo":
         {
-            await RunTodoDemo(dispatcher, store.CurrentState).ConfigureAwait(false);
+            await RunTodoDemo(dispatcher, store).ConfigureAwait(false);
             break;
         }
-        case "3":
+        case "Show Current State":
         {
             ShowCurrentState(store.CurrentState);
+            AnsiConsole.Prompt(new TextPrompt<string>("[grey]Press Enter to continue...[/]")
+                .AllowEmpty());
             break;
         }
-        case "0":
+        case "Exit":
         {
             running = false;
             break;
         }
-        default:
-            {
-                Console.WriteLine("Invalid option!");
-                break;
-            }
     }
 }
 
 subscription.Dispose();
-Console.WriteLine("\nGoodbye!");
+AnsiConsole.MarkupLine("[green]Goodbye![/]");
 
-async Task RunCounterDemo(IDispatcher dispatcher, IRootState rootState)
+async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
 {
     var counterRunning = true;
     while (counterRunning)
     {
-        CounterState counterState = rootState.GetSliceState<CounterState>();
+        AnsiConsole.Clear();
+        
+        // Get fresh state each time we display
+        CounterState counterState = store.CurrentState.GetSliceState<CounterState>();
+        
+        Panel panel = new Panel($"[bold yellow]Current Value: {counterState.Value}[/]")
+            .Header("[blue]Counter Demo[/]")
+            .BorderColor(Color.Blue);
+        AnsiConsole.Write(panel);
 
-        Console.WriteLine($"\n--- Counter Demo (Current: {counterState.Value}) ---");
-        Console.WriteLine("1. Increment (+1)");
-        Console.WriteLine("2. Increment (+5)");
-        Console.WriteLine("3. Decrement (-1)");
-        Console.WriteLine("4. Async Increment (+3 after 2s)");
-        Console.WriteLine("5. Set Value");
-        Console.WriteLine("6. Reset");
-        Console.WriteLine("0. Back to main menu");
-        Console.Write("\nSelect option: ");
-
-        string? choice = Console.ReadLine();
+        string choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("[bold]Select an action:[/]")
+                .AddChoices(new[] {
+                    "Increment (+1)",
+                    "Increment (+5)",
+                    "Decrement (-1)",
+                    "Async Increment (+3 after 2s)",
+                    "Set Value",
+                    "Reset",
+                    "Back to main menu"
+                }));
 
         switch (choice)
         {
-            case "1":
-                {
-                    dispatcher.Increment();
-                    break;
-                }
-            case "2":
-                {
-                    dispatcher.Increment(5);
-                    break;
-                }
-            case "3":
-                {
-                    dispatcher.Decrement();
-                    break;
-                }
-            case "4":
-                {
-                    dispatcher.IncrementAsync(3, 2000);
-                    Console.WriteLine("Async increment started...");
-                    break;
-                }
-            case "5":
+            case "Increment (+1)":
             {
-                Console.Write("Enter value: ");
-                if (int.TryParse(Console.ReadLine(), out int value))
-                {
-                    dispatcher.SetValue(value);
-                }
-                else
-                {
-                    Console.WriteLine("Invalid number!");
-                }
-
+                dispatcher.Increment();
                 break;
             }
-            case "6":
-                {
-                    dispatcher.Reset();
-                    break;
-                }
-            case "0":
-                {
-                    counterRunning = false;
-                    break;
-                }
-            default:
-                {
-                    Console.WriteLine("Invalid option!");
-                    break;
-                }
+            case "Increment (+5)":
+            {
+                dispatcher.Increment(5);
+                break;
+            }
+            case "Decrement (-1)":
+            {
+                dispatcher.Decrement();
+                break;
+            }
+            case "Async Increment (+3 after 2s)":
+            {
+                dispatcher.IncrementAsync(3, 2000);
+                await AnsiConsole.Status()
+                    .StartAsync(
+                        "Starting async increment...",
+                        async ctx =>
+                        {
+                            await Task.Delay(500).ConfigureAwait(false);
+                        })
+                    .ConfigureAwait(false);
+                break;
+            }
+            case "Set Value":
+            {
+                int value = AnsiConsole.Prompt(
+                    new TextPrompt<int>("Enter value:")
+                        .ValidationErrorMessage("[red]That's not a valid number[/]"));
+                dispatcher.SetValue(value);
+                break;
+            }
+            case "Reset":
+            {
+                dispatcher.Reset();
+                break;
+            }
+            case "Back to main menu":
+            {
+                counterRunning = false;
+                break;
+            }
         }
 
-        await Task.Delay(100).ConfigureAwait(false);
+        if (counterRunning)
+        {
+            await Task.Delay(100).ConfigureAwait(false);
+        }
     }
 }
 
-async Task RunTodoDemo(IDispatcher dispatcher, IRootState rootState)
+async Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)
 {
     var todoRunning = true;
     while (todoRunning)
     {
-        TodoState todoState = rootState.GetSliceState<TodoState>();
-
-        Console.WriteLine($"\n--- Todo List Demo ---");
-        Console.WriteLine($"Active: {todoState.ActiveCount} | Completed: {todoState.CompletedCount}");
-        Console.WriteLine("\nTodos:");
+        AnsiConsole.Clear();
+        
+        TodoState todoState = store.CurrentState.GetSliceState<TodoState>();
+        
+        Rule rule = new("[blue]Todo List Demo[/]");
+        AnsiConsole.Write(rule);
+        
+        AnsiConsole.MarkupLine(
+            $"[green]Active: {todoState.ActiveCount}[/] | [blue]Completed: {todoState.CompletedCount}[/]\n");
 
         ValueCollection<TodoItem> todos = todoState.SelectEntities();
         if (todos.IsEmpty)
         {
-            Console.WriteLine("  (No todos yet)");
+            AnsiConsole.MarkupLine("[grey]No todos yet[/]");
         }
         else
         {
+            Table table = new();
+            table.AddColumn("Status");
+            table.AddColumn("ID");
+            table.AddColumn("Title");
+            table.Border(TableBorder.Rounded);
+
             foreach (TodoItem todo in todos)
             {
-                string status = todo.IsCompleted ? "[X]" : "[ ]";
-                Console.WriteLine($"  {status} {todo.Title} (ID: {todo.Id})");
+                string status = todo.IsCompleted ? "[green]✓[/]" : "[red]○[/]";
+                string title = todo.IsCompleted 
+                    ? $"[strikethrough grey]{todo.Title}[/]" 
+                    : todo.Title;
+                table.AddRow(status, $"[dim]{todo.Id}[/]", title);
             }
+            
+            AnsiConsole.Write(table);
         }
 
-        Console.WriteLine("\nOptions:");
-        Console.WriteLine("1. Add Todo");
-        Console.WriteLine("2. Toggle Todo");
-        Console.WriteLine("3. Remove Todo");
-        Console.WriteLine("4. Clear Completed");
-        Console.WriteLine("5. Toggle All");
-        Console.WriteLine("0. Back to main menu");
-        Console.Write("\nSelect option: ");
-
-        string? choice = Console.ReadLine();
+        string choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("\n[bold]Select an action:[/]")
+                .AddChoices(new[] {
+                    "Add Todo",
+                    "Toggle Todo",
+                    "Remove Todo",
+                    "Clear Completed",
+                    "Toggle All",
+                    "Back to main menu"
+                }));
 
         switch (choice)
         {
-            case "1":
+            case "Add Todo":
             {
-                Console.Write("Enter todo title: ");
-                string? title = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(title))
-                {
-                    dispatcher.AddTodo(title);
-                }
-
+                string title = AnsiConsole.Prompt(
+                    new TextPrompt<string>("Enter todo title:")
+                        .ValidationErrorMessage("[red]Title cannot be empty[/]")
+                        .Validate(t => !string.IsNullOrWhiteSpace(t)));
+                dispatcher.AddTodo(title);
                 break;
             }
-            case "2":
+            case "Toggle Todo":
             {
-                Console.Write("Enter todo ID to toggle: ");
-                string? toggleId = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(toggleId))
+                if (!todos.IsEmpty)
                 {
+                    string toggleId = AnsiConsole.Prompt(
+                        new TextPrompt<string>("Enter todo ID to toggle:")
+                            .ValidationErrorMessage("[red]ID cannot be empty[/]"));
                     dispatcher.ToggleTodo(toggleId);
                 }
+                else
+                {
+                    AnsiConsole.MarkupLine("[red]No todos to toggle[/]");
+                    await Task.Delay(1000).ConfigureAwait(false);
+                }
 
                 break;
             }
-            case "3":
+            case "Remove Todo":
             {
-                Console.Write("Enter todo ID to remove: ");
-                string? removeId = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(removeId))
+                if (!todos.IsEmpty)
                 {
+                    string removeId = AnsiConsole.Prompt(
+                        new TextPrompt<string>("Enter todo ID to remove:")
+                            .ValidationErrorMessage("[red]ID cannot be empty[/]"));
                     dispatcher.RemoveTodo(removeId);
                 }
+                else
+                {
+                    AnsiConsole.MarkupLine("[red]No todos to remove[/]");
+                    await Task.Delay(1000).ConfigureAwait(false);
+                }
 
                 break;
             }
-            case "4":
-                {
-                    dispatcher.ClearCompleted();
-                    break;
-                }
-            case "5":
+            case "Clear Completed":
             {
-                Console.Write("Mark all as completed? (y/n): ");
-                bool markCompleted = Console.ReadLine()?.ToLower() == "y";
+                dispatcher.ClearCompleted();
+                break;
+            }
+            case "Toggle All":
+            {
+                bool markCompleted = AnsiConsole.Confirm("Mark all as completed?");
                 dispatcher.ToggleAll(markCompleted);
                 break;
             }
-            case "0":
-                {
-                    todoRunning = false;
-                    break;
-                }
-            default:
-                {
-                    Console.WriteLine("Invalid option!");
-                    break;
-                }
+            case "Back to main menu":
+            {
+                todoRunning = false;
+                break;
+            }
         }
 
-        await Task.Delay(100).ConfigureAwait(false);
+        if (todoRunning)
+        {
+            await Task.Delay(100).ConfigureAwait(false);
+        }
     }
 }
 
@@ -281,24 +317,40 @@ void ShowCurrentState(IRootState rootState)
     CounterState counterState = rootState.GetSliceState<CounterState>();
     TodoState todoState = rootState.GetSliceState<TodoState>();
 
-    Console.WriteLine("\n=== Current State ===");
-    Console.WriteLine($"Counter Value: {counterState.Value}");
-    string summary = $"Todo Summary: {todoState.ActiveCount} active, ";
-    summary += $"{todoState.CompletedCount} completed";
-    Console.WriteLine(summary);
+    Panel statePanel = new Panel(
+        new Rows(
+            new Markup($"[yellow]Counter Value:[/] {counterState.Value}"),
+            new Markup($"[green]Active Todos:[/] {todoState.ActiveCount}"),
+            new Markup($"[blue]Completed Todos:[/] {todoState.CompletedCount}")
+        ))
+        .Header("[bold]Current State[/]")
+        .BorderColor(Color.Green);
+    
+    AnsiConsole.Write(statePanel);
 
     ValueCollection<TodoItem> todos = todoState.SelectEntities();
     if (todos.IsEmpty)
     {
         return;
     }
+    
+    AnsiConsole.WriteLine();
+    Table todoTable = new();
+    todoTable.Title("[underline]Todo Items[/]");
+    todoTable.AddColumn("Status");
+    todoTable.AddColumn("Title");
+    todoTable.Border(TableBorder.Simple);
 
-    Console.WriteLine("\nTodo Items:");
     foreach (TodoItem todo in todos)
     {
-        string status = todo.IsCompleted ? "[X]" : "[ ]";
-        Console.WriteLine($"  {status} {todo.Title}");
+        string status = todo.IsCompleted ? "[green]✓[/]" : "[red]○[/]";
+        string title = todo.IsCompleted 
+            ? $"[strikethrough grey]{todo.Title}[/]" 
+            : todo.Title;
+        todoTable.AddRow(status, title);
     }
+    
+    AnsiConsole.Write(todoTable);
 }
 
 // Custom middleware for demonstration
@@ -308,7 +360,7 @@ public sealed class LoggingMiddleware : IActionMiddleware
     {
         return actions.Do(context =>
         {
-            Console.WriteLine($"[Middleware] Before: {context.Action.GetType().Name}");
+            AnsiConsole.MarkupLine($"[dim][[Middleware]] Before: {context.Action.GetType().Name}[/]");
         });
     }
 
@@ -316,7 +368,7 @@ public sealed class LoggingMiddleware : IActionMiddleware
     {
         return actions.Do(context =>
         {
-            Console.WriteLine($"[Middleware] After: {context.Action.GetType().Name}");
+            AnsiConsole.MarkupLine($"[dim][[Middleware]] After: {context.Action.GetType().Name}[/]");
         });
     }
 }

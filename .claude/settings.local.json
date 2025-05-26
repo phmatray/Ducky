@@ -3,8 +3,9 @@
     "allow": [
       "Bash(dotnet clean:*)",
       "Bash(dotnet build:*)",
-      "Bash(find:*)",
+      "Bash(dotnet restore)",
       "Bash(dotnet run:*)",
+      "Bash(find:*)",
       "Bash(od:*)",
       "Bash(grep:*)"
     ],
