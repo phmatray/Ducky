@@ -5,7 +5,7 @@ namespace Ducky.Middlewares.ReactiveEffect;
 /// <summary>
 /// Event published when a reactive effect encounters an error.
 /// </summary>
-public class ReactiveEffectErrorEventArgs : PipelineEventArgs
+public class ReactiveEffectErrorEventArgs : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ReactiveEffectErrorEventArgs"/> class.

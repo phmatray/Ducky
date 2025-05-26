@@ -5,21 +5,21 @@
 // namespace Ducky;
 //
 // /// <summary>
-// /// Observes and logs pipeline events.
+// /// Observes and logs store events.
 // /// </summary>
-// public class PipelineLogger : Observer<PipelineEventArgs>
+// public class StoreLogger : Observer<StoreEventArgs>
 // {
 //     private readonly ILogger _logger;
 //     private readonly IDisposable _subscription;
 //
 //     /// <summary>
-//     /// Initializes a new instance of the <see cref="PipelineLogger"/> class and subscribes to pipeline events via R3.
+//     /// Initializes a new instance of the <see cref="StoreLogger"/> class and subscribes to pipeline events via R3.
 //     /// </summary>
 //     /// <param name="logger">The logger instance.</param>
 //     /// <param name="eventPublisher">The pipeline event publisher.</param>
-//     public PipelineLogger(
-//         ILogger<PipelineLogger> logger,
-//         IPipelineEventPublisher eventPublisher)
+//     public StoreLogger(
+//         ILogger<StoreLogger> logger,
+//         IStoreEventPublisher eventPublisher)
 //     {
 //         ArgumentNullException.ThrowIfNull(logger);
 //         ArgumentNullException.ThrowIfNull(eventPublisher);
@@ -29,7 +29,7 @@
 //     }
 //
 //     /// <inheritdoc />
-//     protected override void OnNextCore(PipelineEventArgs e)
+//     protected override void OnNextCore(StoreEventArgs e)
 //     {
 //         switch (e)
 //         {

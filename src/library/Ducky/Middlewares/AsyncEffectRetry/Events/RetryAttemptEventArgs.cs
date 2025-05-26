@@ -5,7 +5,7 @@ namespace Ducky.Middlewares.AsyncEffectRetry;
 /// <summary>
 /// Provides data for the event raised when a retry attempt is made after an exception during action processing.
 /// </summary>
-public class RetryAttemptEventArgs : PipelineEventArgs
+public class RetryAttemptEventArgs : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="RetryAttemptEventArgs"/> class.

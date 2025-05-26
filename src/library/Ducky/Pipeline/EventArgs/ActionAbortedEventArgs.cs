@@ -3,7 +3,7 @@ namespace Ducky.Pipeline;
 /// <summary>
 /// Event published when an action is aborted during processing.
 /// </summary>
-public class ActionAbortedEventArgs : PipelineEventArgs
+public class ActionAbortedEventArgs : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ActionAbortedEventArgs"/> class.

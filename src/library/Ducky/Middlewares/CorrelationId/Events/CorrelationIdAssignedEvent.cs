@@ -5,7 +5,7 @@ namespace Ducky.Middlewares.CorrelationId;
 /// <summary>
 /// Event published when a correlation ID is assigned to an action.
 /// </summary>
-public class CorrelationIdAssignedEvent : PipelineEventArgs
+public class CorrelationIdAssignedEvent : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CorrelationIdAssignedEvent"/> class.

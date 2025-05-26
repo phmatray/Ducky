@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using R3;
 
 namespace Ducky.Pipeline;
@@ -14,39 +13,30 @@ public sealed class ActionPipeline : IDisposable
     private Observable<ActionContext>? _builtBefore;
     private Observable<ActionContext>? _builtAfter;
     private readonly IDisposable _dispatcherSub;
-    private readonly IServiceProvider _services;
 
     /// <summary>
     /// Creates a new pipeline that listens to the dispatcher’s ActionStream.
     /// </summary>
-    public ActionPipeline(IDispatcher dispatcher, IServiceProvider services)
+    /// <param name="dispatcher">The dispatcher to listen to.</param>
+    public ActionPipeline(IDispatcher dispatcher)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
-        ArgumentNullException.ThrowIfNull(services);
 
         _dispatcherSub = dispatcher.ActionStream
             .Select(a => new ActionContext(a))
             .Subscribe(ctx => _incoming.OnNext(ctx));
-
-        _services = services;
     }
 
     /// <summary>
-    /// Registers a middleware by type. Must be registered in DI as <see cref="IActionMiddleware"/>.
+    /// Registers a middleware instance.
     /// </summary>
-    public ActionPipeline Use<TMiddleware>()
-        where TMiddleware : IActionMiddleware
+    /// <param name="middleware">The middleware instance to register.</param>
+    /// <returns>The current <see cref="ActionPipeline"/> instance for chaining.</returns>
+    public ActionPipeline Use(IActionMiddleware middleware)
     {
-        _beforeMiddlewares.Add(src =>
-        {
-            TMiddleware mw = _services.GetRequiredService<TMiddleware>();
-            return mw.InvokeBeforeReduce(src);
-        });
-        _afterMiddlewares.Add(src =>
-        {
-            TMiddleware mw = _services.GetRequiredService<TMiddleware>();
-            return mw.InvokeAfterReduce(src);
-        });
+        ArgumentNullException.ThrowIfNull(middleware);
+        _beforeMiddlewares.Add(middleware.InvokeBeforeReduce);
+        _afterMiddlewares.Add(middleware.InvokeAfterReduce);
         _builtBefore = null;
         _builtAfter = null;
         return this;

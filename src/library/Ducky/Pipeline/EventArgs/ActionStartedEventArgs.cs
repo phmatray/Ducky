@@ -3,7 +3,7 @@ namespace Ducky.Pipeline;
 /// <summary>
 /// Event published when an action starts processing.
 /// </summary>
-public class ActionStartedEventArgs : PipelineEventArgs
+public class ActionStartedEventArgs : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ActionStartedEventArgs"/> class.

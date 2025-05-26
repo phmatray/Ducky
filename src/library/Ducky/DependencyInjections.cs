@@ -28,7 +28,7 @@ public static class DependencyInjections
     {
         // Add Store services
         services.AddSingleton<IDispatcher, Dispatcher>();
-        services.AddSingleton<IPipelineEventPublisher, PipelineEventPublisher>();
+        services.AddSingleton<IStoreEventPublisher, StoreEventPublisher>();
         services.AddSingleton<IRootStateSerializer, RootStateSerializer>();
 
         // Scan and register all Slices, Effects and Middlewares
@@ -46,7 +46,7 @@ public static class DependencyInjections
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
 
-            return DuckyStoreFactory.CreateStore(dispatcher, sp, slices, options.ConfigurePipeline);
+            return DuckyStoreFactory.CreateStore(dispatcher, slices, options.ConfigurePipeline);
         });
 
         return services;

@@ -35,6 +35,7 @@ services.AddTransient<IMoviesService, MoviesService>();
 services.AddNoOpMiddleware();
 // services.AddJsLoggingMiddleware();
 // services.AddAsyncEffectMiddleware();
+IServiceProvider serviceProvider = services.BuildServiceProvider();
 
 // Add Ducky
 services.AddDucky(
@@ -44,9 +45,9 @@ services.AddDucky(
         // Compose the middleware pipeline IN THE ORDER YOU WANT:
         options.ConfigurePipeline = pipeline =>
         {
-            pipeline.Use<NoOpMiddleware>();
-            // pipeline.Use<JsLoggingMiddleware>();
-            // pipeline.Use<AsyncEffectMiddleware>();
+            pipeline.Use(serviceProvider.GetRequiredService<NoOpMiddleware>());
+            pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
+            pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
         };
     });
 

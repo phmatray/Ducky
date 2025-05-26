@@ -38,8 +38,7 @@ public sealed class ActionPipelineTests
         Mock<IDispatcher> dispatcherMock = new();
         Subject<object> subject = new();
         dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
-        ServiceProvider services = new ServiceCollection().BuildServiceProvider();
-        ActionPipeline pipeline = new(dispatcherMock.Object, services);
+        ActionPipeline pipeline = new(dispatcherMock.Object);
         var called = false;
         pipeline.UseBefore(action =>
         {
@@ -59,8 +58,7 @@ public sealed class ActionPipelineTests
         Mock<IDispatcher> dispatcherMock = new();
         Subject<object> subject = new();
         dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
-        ServiceProvider services = new ServiceCollection().BuildServiceProvider();
-        ActionPipeline pipeline = new(dispatcherMock.Object, services);
+        ActionPipeline pipeline = new(dispatcherMock.Object);
         var called = false;
         pipeline.UseAfter(action =>
         {
@@ -93,9 +91,8 @@ public sealed class ActionPipelineTests
         DummyMiddleware dummyMw = new();
         services.AddSingleton(dummyMw);
         services.AddSingleton<IActionMiddleware, DummyMiddleware>();
-        ServiceProvider provider = services.BuildServiceProvider();
-        ActionPipeline pipeline = new(dispatcherMock.Object, provider);
-        pipeline.Use<DummyMiddleware>();
+        ActionPipeline pipeline = new(dispatcherMock.Object);
+        pipeline.Use(dummyMw);
         return (pipeline, dummyMw, subject);
     }
 }

@@ -5,7 +5,7 @@ namespace Ducky.Middlewares.ReactiveEffect;
 /// <summary>
 /// Event published when a reactive effect dispatches an action.
 /// </summary>
-public class ReactiveEffectDispatchedEventArgs : PipelineEventArgs
+public class ReactiveEffectDispatchedEventArgs : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ReactiveEffectDispatchedEventArgs"/> class.

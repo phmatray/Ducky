@@ -3,7 +3,7 @@ namespace Ducky.Pipeline;
 /// <summary>
 /// Event args for actions dispatched through <see cref="Dispatcher"/>.
 /// </summary>
-public class ActionDispatchedEventArgs : EventArgs
+public class ActionDispatchedEventArgs : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ActionDispatchedEventArgs"/> class.

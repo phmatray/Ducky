@@ -5,7 +5,7 @@ namespace Ducky.Middlewares.AsyncEffectRetry;
 /// <summary>
 /// Provides data for the event raised when a circuit breaker is reset after being previously opened.
 /// </summary>
-public class CircuitBreakerResetEventArgs : PipelineEventArgs
+public class CircuitBreakerResetEventArgs : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CircuitBreakerResetEventArgs"/> class.

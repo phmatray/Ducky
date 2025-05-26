@@ -5,7 +5,7 @@ namespace Ducky.Pipeline;
 /// <summary>
 /// Event published when a middleware begins processing an action.
 /// </summary>
-public class MiddlewareStartedEvent : PipelineEventArgs
+public class MiddlewareStartedEvent : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="MiddlewareStartedEvent"/> class.

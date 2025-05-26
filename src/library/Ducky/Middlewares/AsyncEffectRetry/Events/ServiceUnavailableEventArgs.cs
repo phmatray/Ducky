@@ -5,7 +5,7 @@ namespace Ducky.Middlewares.AsyncEffectRetry;
 /// <summary>
 /// Provides data for the event raised when a service becomes unavailable during action processing.
 /// </summary>
-public class ServiceUnavailableEventArgs : PipelineEventArgs
+public class ServiceUnavailableEventArgs : StoreEventArgs
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ServiceUnavailableEventArgs"/> class.

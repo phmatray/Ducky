@@ -15,20 +15,17 @@ public static class DuckyStoreFactory
     /// Builds the <see cref="ActionPipeline"/>, applies the configured middlewares, and returns a configured <see cref="DuckyStore"/>.
     /// </summary>
     /// <param name="dispatcher">Your action dispatcher.</param>
-    /// <param name="services">The root <see cref="IServiceProvider"/> (must have all middleware and slices registered).</param>
     /// <param name="slices">Any initial slices to add to the store.</param>
     /// <param name="configurePipeline">Pipeline configuration action.</param>
     /// <returns>A configured <see cref="DuckyStore"/> instance.</returns>
     public static DuckyStore CreateStore(
         IDispatcher dispatcher,
-        IServiceProvider services,
         IEnumerable<ISlice> slices,
         Action<ActionPipeline>? configurePipeline = null)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
-        ArgumentNullException.ThrowIfNull(services);
 
-        ActionPipeline pipeline = new(dispatcher, services);
+        ActionPipeline pipeline = new(dispatcher);
 
         // Compose the pipeline according to user-supplied configuration
         configurePipeline?.Invoke(pipeline);

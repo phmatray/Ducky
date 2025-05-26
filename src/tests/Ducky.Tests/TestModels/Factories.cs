@@ -23,9 +23,11 @@ internal static class Factories
 
         return DuckyStoreFactory.CreateStore(
             dispatcher,
-            serviceProvider,
             [counterReducers],
-            pipeline => pipeline.Use<AsyncEffectMiddleware>());
+            pipeline =>
+            {
+                pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
+            });
     }
 
     public static RootState CreateTestRootState()

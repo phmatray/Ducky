@@ -7,7 +7,7 @@ namespace Ducky.Middlewares.AsyncEffectRetry;
 /// <summary>
 /// Observes and logs retry events.
 /// </summary>
-public class AsyncEffectRetryMiddlewareLogger : Observer<PipelineEventArgs>
+public class AsyncEffectRetryMiddlewareLogger : Observer<StoreEventArgs>
 {
     private readonly ILogger _logger;
     private readonly IDisposable _subscription;
@@ -19,7 +19,7 @@ public class AsyncEffectRetryMiddlewareLogger : Observer<PipelineEventArgs>
     /// <param name="eventPublisher">The pipeline event publisher.</param>
     public AsyncEffectRetryMiddlewareLogger(
         ILogger<AsyncEffectRetryMiddlewareLogger> logger,
-        IPipelineEventPublisher eventPublisher)
+        IStoreEventPublisher eventPublisher)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(eventPublisher);
@@ -29,7 +29,7 @@ public class AsyncEffectRetryMiddlewareLogger : Observer<PipelineEventArgs>
     }
 
     /// <inheritdoc />
-    protected override void OnNextCore(PipelineEventArgs e)
+    protected override void OnNextCore(StoreEventArgs e)
     {
         switch (e)
         {
