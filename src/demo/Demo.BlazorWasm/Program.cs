@@ -33,8 +33,8 @@ services.AddTransient<IMoviesService, MoviesService>();
 
 // Register ducky middlewares
 services.AddNoOpMiddleware();
-// services.AddJsLoggingMiddleware();
-// services.AddAsyncEffectMiddleware();
+services.AddJsLoggingMiddleware();
+services.AddAsyncEffectMiddleware();
 IServiceProvider serviceProvider = services.BuildServiceProvider();
 
 // Add Ducky

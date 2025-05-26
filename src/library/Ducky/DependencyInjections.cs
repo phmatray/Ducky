@@ -30,6 +30,7 @@ public static class DependencyInjections
         services.AddSingleton<IDispatcher, Dispatcher>();
         services.AddSingleton<IStoreEventPublisher, StoreEventPublisher>();
         services.AddSingleton<IRootStateSerializer, RootStateSerializer>();
+        services.AddSingleton<StoreLogger>();
 
         // Scan and register all Slices, Effects and Middlewares
         services.ScanAndRegister<ISlice>(options.Assemblies);
@@ -40,13 +41,20 @@ public static class DependencyInjections
         services.AddScoped<DuckyStore>(sp =>
         {
             IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
+            IStoreEventPublisher eventPublisher = sp.GetRequiredService<IStoreEventPublisher>();
             ILoggerFactory loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             IEnumerable<ISlice> slices = sp.GetServices<ISlice>();
 
             // Configure the logger provider
             LoggerProvider.Configure(loggerFactory);
 
-            return DuckyStoreFactory.CreateStore(dispatcher, slices, options.ConfigurePipeline);
+            // Ensure StoreLogger is created to start listening to events
+            _ = sp.GetRequiredService<StoreLogger>();
+
+            ActionPipeline pipeline = new(dispatcher);
+            options.ConfigurePipeline?.Invoke(pipeline);
+
+            return new DuckyStore(dispatcher, pipeline, eventPublisher, slices);
         });
 
         return services;

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Ducky.Pipeline;
-using Microsoft.Extensions.Logging;
 using R3;
 
 namespace Ducky;
@@ -13,13 +12,12 @@ namespace Ducky;
 /// </summary>
 public sealed class DuckyStore : IStore, IDisposable
 {
-    private static readonly ILogger<DuckyStore>? Logger =
-        LoggerProvider.CreateLogger<DuckyStore>();
-
     private readonly IDispatcher _dispatcher;
     private readonly ActionPipeline _pipeline;
+    private readonly IStoreEventPublisher _eventPublisher;
     private readonly CompositeDisposable _subscriptions = [];
     private readonly ObservableSlices _slices = new();
+    private readonly DateTime _startTime = DateTime.UtcNow;
     private bool _isDisposed;
 
     /// <summary>
@@ -27,24 +25,32 @@ public sealed class DuckyStore : IStore, IDisposable
     /// </summary>
     /// <param name="dispatcher">The dispatcher used to enqueue actions.</param>
     /// <param name="pipeline">The reactive action pipeline that processes actions.</param>
+    /// <param name="eventPublisher">The event publisher for store events.</param>
     /// <param name="slices">The initial collection of slices to register.</param>
     public DuckyStore(
         IDispatcher dispatcher,
         ActionPipeline pipeline,
+        IStoreEventPublisher eventPublisher,
         IEnumerable<ISlice> slices)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(pipeline);
+        ArgumentNullException.ThrowIfNull(eventPublisher);
         ArgumentNullException.ThrowIfNull(slices);
 
         _dispatcher = dispatcher;
         _pipeline = pipeline;
+        _eventPublisher = eventPublisher;
 
+        List<string> sliceKeys = [];
+        
         // Register slices
         foreach (ISlice slice in slices)
         {
             _slices.AddSlice(slice);
-            Logger?.SliceAdded(slice.GetKey());
+            string sliceKey = slice.GetKey();
+            sliceKeys.Add(sliceKey);
+            _eventPublisher.Publish(new SliceAddedEventArgs(sliceKey, slice.GetType()));
         }
 
         // Subscribe all slices to the BEFORE pipeline (standard: state update/reducer logic)
@@ -65,7 +71,7 @@ public sealed class DuckyStore : IStore, IDisposable
 
         // Subscribe all slices to the AFTER pipeline (for post-processing/effects)
         _pipeline
-            .SubscribeAfter(new SliceObserver(ctx =>
+            .SubscribeAfter(new SliceObserver(_ =>
             {
                 // Most often used for effects, not for mutation.
                 // Example: logging, triggers, analytics, etc.
@@ -75,7 +81,9 @@ public sealed class DuckyStore : IStore, IDisposable
 
         // Dispatch initial action
         _dispatcher.Dispatch(new StoreInitialized());
-        Logger?.StoreInitialized();
+        
+        // Publish store initialized event
+        _eventPublisher.Publish(new StoreInitializedEventArgs(sliceKeys.Count, sliceKeys));
     }
 
     /// <inheritdoc/>
@@ -94,7 +102,8 @@ public sealed class DuckyStore : IStore, IDisposable
             return;
         }
 
-        Logger?.DisposingStore();
+        TimeSpan uptime = DateTime.UtcNow - _startTime;
+        _eventPublisher.Publish(new StoreDisposingEventArgs(uptime));
 
         _subscriptions.Dispose();
         _pipeline.Dispose();

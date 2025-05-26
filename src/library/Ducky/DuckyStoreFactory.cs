@@ -26,11 +26,12 @@ public static class DuckyStoreFactory
         ArgumentNullException.ThrowIfNull(dispatcher);
 
         ActionPipeline pipeline = new(dispatcher);
+        StoreEventPublisher eventPublisher = new();
 
         // Compose the pipeline according to user-supplied configuration
         configurePipeline?.Invoke(pipeline);
 
         // Instantiate the store with the configured pipeline
-        return new DuckyStore(dispatcher, pipeline, slices);
+        return new DuckyStore(dispatcher, pipeline, eventPublisher, slices);
     }
 }
