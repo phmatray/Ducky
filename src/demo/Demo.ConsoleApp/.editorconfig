@@ -1,0 +1,4 @@
+[*.cs]
+# Disable style warnings for demo
+dotnet_analyzer_diagnostic.category-Style.severity = none
+dotnet_analyzer_diagnostic.category-Roslynator.severity = none
