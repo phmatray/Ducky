@@ -1,6 +1,4 @@
-using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Blazor.Middlewares.JsLogging;
 

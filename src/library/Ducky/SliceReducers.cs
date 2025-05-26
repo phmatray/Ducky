@@ -25,7 +25,6 @@ public abstract partial record SliceReducers<TState>
     private bool _isInitialized;
     private readonly ReactiveProperty<TState> _state = new();
     private readonly Subject<Unit> _stateUpdated = new();
-    private readonly StateLoggerObserver<TState> _stateLoggerObserver = new();
     private bool _disposed;
 
     /// <inheritdoc />
@@ -118,14 +117,6 @@ public abstract partial record SliceReducers<TState>
             return;
         }
 
-        StateChange<TState> stateChange = new(
-            action,
-            prevState,
-            updatedState,
-            stopwatch.Elapsed.TotalMilliseconds);
-
-        _stateLoggerObserver.OnNext(stateChange);
-
         // First update the state...
         _state.OnNext(updatedState);
 
@@ -209,7 +200,6 @@ public abstract partial record SliceReducers<TState>
             // Dispose managed resources.
             _state.Dispose();
             _stateUpdated.Dispose();
-            _stateLoggerObserver.Dispose();
         }
 
         // Note disposing has been done.

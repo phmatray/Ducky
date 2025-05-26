@@ -1,4 +1,3 @@
-using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky.Middlewares.NoOp;

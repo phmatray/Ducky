@@ -1,10 +1,8 @@
 using Demo.ConsoleApp.Counter;
 using Demo.ConsoleApp.Todos;
-using Ducky;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using R3;
 using Spectre.Console;
 
@@ -111,10 +109,10 @@ async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
     while (counterRunning)
     {
         AnsiConsole.Clear();
-        
+
         // Get fresh state each time we display
         CounterState counterState = store.CurrentState.GetSliceState<CounterState>();
-        
+
         Panel panel = new Panel($"[bold yellow]Current Value: {counterState.Value}[/]")
             .Header("[blue]Counter Demo[/]")
             .BorderColor(Color.Blue);
@@ -123,7 +121,8 @@ async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
         string choice = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
                 .Title("[bold]Select an action:[/]")
-                .AddChoices(new[] {
+                .AddChoices(new[]
+                {
                     "Increment (+1)",
                     "Increment (+5)",
                     "Decrement (-1)",
@@ -156,10 +155,7 @@ async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
                 await AnsiConsole.Status()
                     .StartAsync(
                         "Starting async increment...",
-                        async ctx =>
-                        {
-                            await Task.Delay(500).ConfigureAwait(false);
-                        })
+                        async ctx => { await Task.Delay(500).ConfigureAwait(false); })
                     .ConfigureAwait(false);
                 break;
             }
@@ -196,12 +192,12 @@ async Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)
     while (todoRunning)
     {
         AnsiConsole.Clear();
-        
+
         TodoState todoState = store.CurrentState.GetSliceState<TodoState>();
-        
+
         Rule rule = new("[blue]Todo List Demo[/]");
         AnsiConsole.Write(rule);
-        
+
         AnsiConsole.MarkupLine(
             $"[green]Active: {todoState.ActiveCount}[/] | [blue]Completed: {todoState.CompletedCount}[/]\n");
 
@@ -221,19 +217,20 @@ async Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)
             foreach (TodoItem todo in todos)
             {
                 string status = todo.IsCompleted ? "[green]✓[/]" : "[red]○[/]";
-                string title = todo.IsCompleted 
-                    ? $"[strikethrough grey]{todo.Title}[/]" 
+                string title = todo.IsCompleted
+                    ? $"[strikethrough grey]{todo.Title}[/]"
                     : todo.Title;
                 table.AddRow(status, $"[dim]{todo.Id}[/]", title);
             }
-            
+
             AnsiConsole.Write(table);
         }
 
         string choice = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
                 .Title("\n[bold]Select an action:[/]")
-                .AddChoices(new[] {
+                .AddChoices(new[]
+                {
                     "Add Todo",
                     "Toggle Todo",
                     "Remove Todo",
@@ -321,11 +318,10 @@ void ShowCurrentState(IRootState rootState)
         new Rows(
             new Markup($"[yellow]Counter Value:[/] {counterState.Value}"),
             new Markup($"[green]Active Todos:[/] {todoState.ActiveCount}"),
-            new Markup($"[blue]Completed Todos:[/] {todoState.CompletedCount}")
-        ))
+            new Markup($"[blue]Completed Todos:[/] {todoState.CompletedCount}")))
         .Header("[bold]Current State[/]")
         .BorderColor(Color.Green);
-    
+
     AnsiConsole.Write(statePanel);
 
     ValueCollection<TodoItem> todos = todoState.SelectEntities();
@@ -333,7 +329,7 @@ void ShowCurrentState(IRootState rootState)
     {
         return;
     }
-    
+
     AnsiConsole.WriteLine();
     Table todoTable = new();
     todoTable.Title("[underline]Todo Items[/]");
@@ -344,12 +340,12 @@ void ShowCurrentState(IRootState rootState)
     foreach (TodoItem todo in todos)
     {
         string status = todo.IsCompleted ? "[green]✓[/]" : "[red]○[/]";
-        string title = todo.IsCompleted 
-            ? $"[strikethrough grey]{todo.Title}[/]" 
+        string title = todo.IsCompleted
+            ? $"[strikethrough grey]{todo.Title}[/]"
             : todo.Title;
         todoTable.AddRow(status, title);
     }
-    
+
     AnsiConsole.Write(todoTable);
 }
 
@@ -358,17 +354,13 @@ public sealed class LoggingMiddleware : IActionMiddleware
 {
     public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
     {
-        return actions.Do(context =>
-        {
-            AnsiConsole.MarkupLine($"[dim][[Middleware]] Before: {context.Action.GetType().Name}[/]");
-        });
+        return actions.Do(context => AnsiConsole
+            .MarkupLine($"[dim][[Middleware]] Before: {context.Action.GetType().Name}[/]"));
     }
 
     public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
     {
-        return actions.Do(context =>
-        {
-            AnsiConsole.MarkupLine($"[dim][[Middleware]] After: {context.Action.GetType().Name}[/]");
-        });
+        return actions.Do(context => AnsiConsole
+            .MarkupLine($"[dim][[Middleware]] After: {context.Action.GetType().Name}[/]"));
     }
 }

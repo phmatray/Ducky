@@ -12,17 +12,17 @@ public sealed record CounterReducers : SliceReducers<CounterState>
     }
 
     public override CounterState GetInitialState()
-        => new(0);
+        => new();
 
     private static CounterState Reduce(CounterState state, Increment action)
-        => state with { Value = state.Value + action.Amount };
+        => new(state.Value + action.Amount);
 
     private static CounterState Reduce(CounterState state, Decrement action)
-        => state with { Value = Math.Max(0, state.Value - action.Amount) };
+        => new(Math.Max(0, state.Value - action.Amount));
 
     private static CounterState Reduce(CounterState _, SetValue action)
         => new(action.Value);
 
     private static CounterState Reduce(CounterState state, IncrementAsync action)
-        => state with { Value = state.Value + action.Amount };
+        => new(state.Value + action.Amount);
 }

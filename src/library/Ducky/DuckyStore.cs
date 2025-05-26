@@ -43,7 +43,7 @@ public sealed class DuckyStore : IStore, IDisposable
         _eventPublisher = eventPublisher;
 
         List<string> sliceKeys = [];
-        
+
         // Register slices
         foreach (ISlice slice in slices)
         {
@@ -81,7 +81,7 @@ public sealed class DuckyStore : IStore, IDisposable
 
         // Dispatch initial action
         _dispatcher.Dispatch(new StoreInitialized());
-        
+
         // Publish store initialized event
         _eventPublisher.Publish(new StoreInitializedEventArgs(sliceKeys.Count, sliceKeys));
     }
