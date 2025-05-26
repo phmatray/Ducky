@@ -7,7 +7,11 @@
       "Bash(dotnet run:*)",
       "Bash(find:*)",
       "Bash(od:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(dotnet test:*)",
+      "Bash(rm:*)",
+      "Bash(chmod:*)",
+      "Bash(/Users/philippe/repo/github/Ducky/check_tests.sh)"
     ],
     "deny": []
   }
