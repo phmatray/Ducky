@@ -7,6 +7,7 @@ using Demo.BlazorWasm.Features.JsonColoring.Services;
 using Ducky.Blazor;
 using Ducky.Blazor.Middlewares.JsLogging;
 using Ducky.Middlewares.AsyncEffect;
+using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.NoOp;
 using MudBlazor.Services;
 
@@ -34,6 +35,7 @@ services.AddTransient<IMoviesService, MoviesService>();
 // Register ducky middlewares
 services.AddNoOpMiddleware();
 services.AddJsLoggingMiddleware();
+services.AddCorrelationIdMiddleware();
 services.AddAsyncEffectMiddleware();
 IServiceProvider serviceProvider = services.BuildServiceProvider();
 
@@ -46,6 +48,7 @@ services.AddDucky(
         options.ConfigurePipeline = pipeline =>
         {
             pipeline.Use(serviceProvider.GetRequiredService<NoOpMiddleware>());
+            pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
             pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
             pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
         };

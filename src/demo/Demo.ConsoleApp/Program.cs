@@ -1,6 +1,7 @@
 using Demo.ConsoleApp.Counter;
 using Demo.ConsoleApp.Todos;
 using Ducky.Middlewares.AsyncEffect;
+using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using R3;
@@ -22,6 +23,7 @@ TodoReducers todoReducers = new();
 ServiceCollection services = [];
 services.AddSingleton<IAsyncEffect, DelayedIncrementEffect>();
 services.AddSingleton<IAsyncEffect, CounterThresholdEffect>();
+services.AddSingleton<IStoreEventPublisher, StoreEventPublisher>();
 
 ServiceProvider serviceProvider = services.BuildServiceProvider();
 
@@ -34,6 +36,8 @@ DuckyStore store = DuckyStoreFactory.CreateStore(
     [counterReducers, todoReducers],
     pipeline =>
     {
+        IStoreEventPublisher eventPublisher = serviceProvider.GetRequiredService<IStoreEventPublisher>();
+        pipeline.Use(new CorrelationIdMiddleware(eventPublisher));
         pipeline.Use(new LoggingMiddleware());
         pipeline.Use(new AsyncEffectMiddleware(
             serviceProvider,
@@ -66,12 +70,7 @@ while (running)
         new SelectionPrompt<string>()
             .Title("[bold blue]Main Menu[/]")
             .PageSize(10)
-            .AddChoices(new[] {
-                "Counter Demo",
-                "Todo List Demo", 
-                "Show Current State",
-                "Exit"
-            }));
+            .AddChoices("Counter Demo", "Todo List Demo", "Show Current State", "Exit"));
 
     switch (choice)
     {
@@ -354,13 +353,23 @@ public sealed class LoggingMiddleware : IActionMiddleware
 {
     public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
     {
-        return actions.Do(context => AnsiConsole
-            .MarkupLine($"[dim][[Middleware]] Before: {context.Action.GetType().Name}[/]"));
+        return actions.Do(context =>
+        {
+            string correlationId = context.Metadata.TryGetValue(CorrelationIdMiddleware.CorrelationIdKey, out object? id) && id is Guid guid
+                ? guid.ToString()[..8]
+                : "unknown";
+            AnsiConsole.MarkupLine($"[dim][[Middleware]] Before: {context.Action.GetType().Name} (CorrelationId: {correlationId})[/]");
+        });
     }
 
     public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
     {
-        return actions.Do(context => AnsiConsole
-            .MarkupLine($"[dim][[Middleware]] After: {context.Action.GetType().Name}[/]"));
+        return actions.Do(context =>
+        {
+            string correlationId = context.Metadata.TryGetValue(CorrelationIdMiddleware.CorrelationIdKey, out object? id) && id is Guid guid
+                ? guid.ToString()[..8]
+                : "unknown";
+            AnsiConsole.MarkupLine($"[dim][[Middleware]] After: {context.Action.GetType().Name} (CorrelationId: {correlationId})[/]");
+        });
     }
 }
