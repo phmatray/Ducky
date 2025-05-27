@@ -80,7 +80,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         Observable<ActionContext> result = _middleware.InvokeBeforeReduce(actions);
         List<ActionContext> received = [];
         using IDisposable subscription = result.Subscribe(received.Add);
-        
+
         actions.OnNext(context);
 
         // Assert
@@ -94,13 +94,13 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Arrange
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
-        
+
         ServiceCollection services = [];
         services.AddSingleton<IReactiveEffect>(testEffect);
         IServiceProvider serviceProvider = services.BuildServiceProvider();
-        
+
         _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
-        
+
         Subject<ActionContext> actions = new();
         TestAction testAction = new();
         ActionContext context = new(testAction);
@@ -108,7 +108,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Act
         Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
         using IDisposable subscription = result.Subscribe();
-        
+
         actions.OnNext(context);
 
         // Assert
@@ -122,13 +122,13 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Arrange
         List<IRootState> capturedStates = [];
         TestStateCapturingEffect stateEffect = new(capturedStates);
-        
+
         ServiceCollection services = [];
         services.AddSingleton<IReactiveEffect>(stateEffect);
         IServiceProvider serviceProvider = services.BuildServiceProvider();
-        
+
         _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
-        
+
         Subject<ActionContext> actions = new();
         TestAction testAction = new();
         ActionContext context = new(testAction);
@@ -136,7 +136,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Act
         Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
         using IDisposable subscription = result.Subscribe();
-        
+
         actions.OnNext(context);
 
         // Assert
@@ -150,13 +150,13 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Arrange
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
-        
+
         ServiceCollection services = [];
         services.AddSingleton<IReactiveEffect>(testEffect);
         IServiceProvider serviceProvider = services.BuildServiceProvider();
-        
+
         _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
-        
+
         Subject<ActionContext> actions = new();
         TestAction testAction = new();
         ActionContext context = new(testAction);
@@ -165,7 +165,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Act
         Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
         using IDisposable subscription = result.Subscribe();
-        
+
         actions.OnNext(context);
 
         // Assert
@@ -178,13 +178,13 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Arrange
         TestAction actionToDispatch = new();
         TestDispatchingEffect dispatchingEffect = new(actionToDispatch);
-        
+
         ServiceCollection services = [];
         services.AddSingleton<IReactiveEffect>(dispatchingEffect);
         IServiceProvider serviceProvider = services.BuildServiceProvider();
-        
+
         _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
-        
+
         Subject<ActionContext> actions = new();
         TestAction triggerAction = new();
         ActionContext context = new(triggerAction);
@@ -192,7 +192,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Act
         Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
         using IDisposable subscription = result.Subscribe();
-        
+
         actions.OnNext(context);
 
         // Allow time for async processing
@@ -205,18 +205,17 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         publisherMock.Verify(p => p.Publish(It.IsAny<ReactiveEffectDispatchedEventArgs>()), Times.Once);
     }
 
-
     [Fact]
     public void Dispose_CanBeCalledMultipleTimes()
     {
         // Arrange
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
-        
+
         ServiceCollection services = [];
         services.AddSingleton<IReactiveEffect>(testEffect);
         IServiceProvider serviceProvider = services.BuildServiceProvider();
-        
+
         _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
 
         // Act
@@ -233,14 +232,14 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Arrange
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
-        
+
         ServiceCollection services = [];
         services.AddSingleton<IReactiveEffect>(testEffect);
         IServiceProvider serviceProvider = services.BuildServiceProvider();
-        
+
         _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
         _middleware.Dispose();
-        
+
         Subject<ActionContext> actions = new();
         TestAction testAction = new();
         ActionContext context = new(testAction);
@@ -248,7 +247,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         // Act
         Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
         using IDisposable subscription = result.Subscribe();
-        
+
         actions.OnNext(context);
 
         // Assert
@@ -313,6 +312,4 @@ public class ReactiveEffectMiddlewareTests : IDisposable
             return actions.Take(1).Select(_ => _actionToDispatch);
         }
     }
-
-
 }

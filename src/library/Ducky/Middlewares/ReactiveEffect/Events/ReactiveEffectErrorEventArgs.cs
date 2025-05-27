@@ -20,7 +20,7 @@ public class ReactiveEffectErrorEventArgs : StoreEventArgs
     /// The action that caused the error, if any.
     /// </summary>
     public object? Action { get; }
-    
+
     /// <summary>
     /// The exception that was thrown.
     /// </summary>

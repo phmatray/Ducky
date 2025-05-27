@@ -39,13 +39,13 @@ public sealed class ReactiveEffectMiddleware : IActionMiddleware, IDisposable
         _getState = getState;
         _dispatcher = dispatcher;
         _eventPublisher = eventPublisher;
-        
+
         // Initialize state with current state
         _state = new BehaviorSubject<IRootState>(_getState());
-        
+
         // Resolve all registered reactive effects
         _effects = services.GetServices<IReactiveEffect>().ToArray();
-        
+
         // Set up effect subscriptions
         InitializeEffects();
     }
@@ -60,11 +60,11 @@ public sealed class ReactiveEffectMiddleware : IActionMiddleware, IDisposable
             try
             {
                 Observable<object> effectObservable = effect.Handle(actions, state);
-                
+
                 IDisposable subscription = effectObservable
                     .Catch<object, Exception>(error =>
                     {
-                        _eventPublisher.Publish(new ReactiveEffectErrorEventArgs(null, error));
+                        _eventPublisher.Publish(new EffectErrorEventArgs(error, effect.GetType(), null!));
                         return Observable.Empty<object>();
                     })
                     .Where(action => action is not null)
@@ -77,15 +77,15 @@ public sealed class ReactiveEffectMiddleware : IActionMiddleware, IDisposable
                         }
                         catch (Exception ex)
                         {
-                            _eventPublisher.Publish(new ReactiveEffectErrorEventArgs(action, ex));
+                            _eventPublisher.Publish(new EffectErrorEventArgs(ex, effect.GetType(), action));
                         }
                     });
-                
+
                 _subscriptions.Add(subscription);
             }
             catch (Exception ex)
             {
-                _eventPublisher.Publish(new ReactiveEffectErrorEventArgs(null, ex));
+                _eventPublisher.Publish(new EffectErrorEventArgs(ex, effect.GetType(), null!));
             }
         }
     }

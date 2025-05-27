@@ -47,7 +47,7 @@ public class ReactiveEffectTests
         // Act
         Observable<object> result = effect.Handle(actions, states);
         using IDisposable subscription = result.Subscribe(results.Add);
-        
+
         actions.OnNext(new TestAction());
         states.OnNext(new Mock<IRootState>().Object);
 
@@ -67,7 +67,7 @@ public class ReactiveEffectTests
         // Act
         Observable<object> result = effect.Handle(actions, states);
         using IDisposable subscription = result.Subscribe(results.Add);
-        
+
         TestAction inputAction = new();
         actions.OnNext(inputAction);
 
@@ -90,11 +90,11 @@ public class ReactiveEffectTests
         // Act
         Observable<object> result = effect.Handle(actions, states);
         using IDisposable subscription = result.Subscribe(results.Add);
-        
+
         // Emit state changes
         IRootState state1 = CreateMockState("State1");
         IRootState state2 = CreateMockState("State2");
-        
+
         states.OnNext(state1);
         states.OnNext(state2);
 
@@ -115,11 +115,11 @@ public class ReactiveEffectTests
         // Act
         Observable<object> result = effect.Handle(actions, states);
         using IDisposable subscription = result.Subscribe(results.Add);
-        
+
         // Set initial state
         IRootState mockState = CreateMockState("TestState");
         states.OnNext(mockState);
-        
+
         // Dispatch action
         TestAction action = new();
         actions.OnNext(action);
@@ -140,9 +140,7 @@ public class ReactiveEffectTests
         return stateMock.Object;
     }
 
-    private class TestEffect : ReactiveEffect
-    {
-    }
+    private class TestEffect : ReactiveEffect;
 
     private class TestDefaultEffect : ReactiveEffect
     {

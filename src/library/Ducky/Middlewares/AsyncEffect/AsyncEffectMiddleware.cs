@@ -11,6 +11,7 @@ public sealed class AsyncEffectMiddleware : IActionMiddleware
 {
     private readonly Func<IRootState> _getState;
     private readonly IAsyncEffect[] _effects;
+    private readonly IStoreEventPublisher _eventPublisher;
 
     /// <summary>
     /// Initializes a new instance of <see cref="AsyncEffectMiddleware"/> with the specified dependencies.
@@ -18,12 +19,15 @@ public sealed class AsyncEffectMiddleware : IActionMiddleware
     /// <param name="services">The service provider used to resolve dependencies.</param>
     /// <param name="getState">A function that returns the current state of the application.</param>
     /// <param name="dispatcher">The dispatcher used to handle actions.</param>
+    /// <param name="eventPublisher">The store event publisher for error events.</param>
     public AsyncEffectMiddleware(
         IServiceProvider services,
         Func<IRootState> getState,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IStoreEventPublisher eventPublisher)
     {
         _getState = getState;
+        _eventPublisher = eventPublisher;
 
         // Resolve and cache effects
         _effects = services.GetServices<IAsyncEffect>().ToArray();
@@ -52,9 +56,24 @@ public sealed class AsyncEffectMiddleware : IActionMiddleware
             {
                 if (effect.CanHandle(ctx.Action))
                 {
-                    _ = effect.HandleAsync(ctx.Action, _getState());
+                    // Fire and forget with exception handling
+                    _ = HandleEffectAsync(effect, ctx.Action);
                 }
             }
         });
+    }
+
+    private async Task HandleEffectAsync(IAsyncEffect effect, object action)
+    {
+        try
+        {
+            await effect.HandleAsync(action, _getState()).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            // Publish error event for async effects
+            EffectErrorEventArgs errorEventArgs = new(exception, effect.GetType(), action);
+            _eventPublisher.Publish(errorEventArgs);
+        }
     }
 }

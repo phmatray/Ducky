@@ -17,33 +17,29 @@ internal static class Factories
         // Use a basic ServiceProvider for tests
         ServiceCollection services = [];
         services.AddSingleton<IDispatcher>(dispatcher);
-        
+
         // Create a temporary store instance for the middleware factory
         DuckyStore? store = null;
-        services.AddSingleton<Func<IRootState>>(() => 
+        services.AddSingleton<Func<IRootState>>(() =>
             store?.CurrentState ?? new RootState(ImmutableSortedDictionary<string, object>.Empty));
-        
+
         // Register AsyncEffectMiddleware manually without using the extension method
         services.AddSingleton<AsyncEffectMiddleware>(sp =>
         {
             return new AsyncEffectMiddleware(
                 sp,
                 sp.GetRequiredService<Func<IRootState>>(),
-                sp.GetRequiredService<IDispatcher>()
+                sp.GetRequiredService<IDispatcher>(),
+                sp.GetRequiredService<IStoreEventPublisher>()
             );
         });
-        
+
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        store = DuckyStoreFactory.CreateStore(
+        return DuckyStoreFactory.CreateStore(
             dispatcher,
             [counterReducers],
-            pipeline =>
-            {
-                pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
-            });
-            
-        return store;
+            pipeline => pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>()));
     }
 
     public static RootState CreateTestRootState()

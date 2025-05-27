@@ -42,7 +42,8 @@ DuckyStore store = DuckyStoreFactory.CreateStore(
         pipeline.Use(new AsyncEffectMiddleware(
             serviceProvider,
             () => storeRef!.CurrentState,
-            dispatcher));
+            dispatcher,
+            eventPublisher));
     });
 
 // Set the store reference

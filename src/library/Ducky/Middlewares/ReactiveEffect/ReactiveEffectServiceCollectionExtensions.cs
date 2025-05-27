@@ -18,7 +18,7 @@ public static class ReactiveEffectServiceCollectionExtensions
         services.TryAddSingleton<ReactiveEffectMiddleware>();
         return services;
     }
-    
+
     /// <summary>
     /// Registers a reactive effect.
     /// </summary>

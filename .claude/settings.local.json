@@ -16,7 +16,10 @@
       "Bash(pwsh:*)",
       "Bash(rm:*)",
       "Bash(sed:*)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "Bash(dotnet roslynator fix:*)",
+      "Bash(dotnet tool list:*)",
+      "Bash(roslynator fix:*)"
     ],
     "deny": []
   }

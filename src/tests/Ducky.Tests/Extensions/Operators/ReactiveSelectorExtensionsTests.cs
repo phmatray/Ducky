@@ -81,7 +81,7 @@ public class ReactiveSelectorExtensionsTests
             "Selected: 2",
             "Selected: 3"
         ];
-        
+
         result.ShouldBeEquivalentTo(expected);
         return;
 

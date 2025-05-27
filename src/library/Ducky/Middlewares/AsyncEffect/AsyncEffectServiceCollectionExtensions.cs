@@ -21,7 +21,8 @@ public static class AsyncEffectServiceCollectionExtensions
             return new AsyncEffectMiddleware(
                 sp,
                 () => sp.GetRequiredService<DuckyStore>().CurrentState,
-                sp.GetRequiredService<IDispatcher>()
+                sp.GetRequiredService<IDispatcher>(),
+                sp.GetRequiredService<IStoreEventPublisher>()
             );
         });
 

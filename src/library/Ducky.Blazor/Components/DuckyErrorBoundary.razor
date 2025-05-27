@@ -1,0 +1,103 @@
+@* Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved. *@
+@* Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license. *@
+@* See the LICENSE file in the project root for full license information. *@
+
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.Extensions.Logging
+@using Ducky.Abstractions
+@using Ducky.Pipeline
+@inherits ComponentBase
+@inject IEnumerable<IExceptionHandler> ExceptionHandlers
+@inject IStoreEventPublisher EventPublisher
+@inject ILogger<DuckyErrorBoundary> Logger
+
+<ErrorBoundary @ref="errorBoundary">
+    <ChildContent>
+        @ChildContent
+    </ChildContent>
+    <ErrorContent Context="exception">
+        @if (ErrorContent != null)
+        {
+            @ErrorContent(exception)
+        }
+        else
+        {
+            <div class="ducky-error-boundary">
+                <h3>Something went wrong</h3>
+                <p>An error occurred while rendering this component.</p>
+                @if (ShowDetails)
+                {
+                    <details>
+                        <summary>Error Details</summary>
+                        <pre>@exception.ToString()</pre>
+                    </details>
+                }
+            </div>
+        }
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    private ErrorBoundary? errorBoundary;
+
+    /// <summary>
+    /// Gets or sets the child content to be rendered inside the error boundary.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the error content to be rendered when an exception occurs.
+    /// If not provided, a default error UI will be displayed.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<Exception>? ErrorContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to show detailed error information in the default error UI.
+    /// </summary>
+    [Parameter]
+    public bool ShowDetails { get; set; }
+
+    protected override async Task OnErrorAsync(Exception exception)
+    {
+        Logger.LogError(exception, "Unhandled exception occurred in Blazor component");
+
+        // Create error event args
+        var errorEventArgs = new ActionErrorEventArgs(exception, "BlazorComponent", new ActionContext("BlazorError"));
+
+        // Allow exception handlers to handle the exception
+        bool isHandled = false;
+        foreach (IExceptionHandler handler in ExceptionHandlers)
+        {
+            try
+            {
+                if (handler.HandleActionError(errorEventArgs))
+                {
+                    isHandled = true;
+                    break;
+                }
+            }
+            catch (Exception handlerException)
+            {
+                Logger.LogError(handlerException, 
+                    "Exception handler {HandlerType} threw an exception while handling {OriginalExceptionType}",
+                    handler.GetType().Name, exception.GetType().Name);
+            }
+        }
+
+        // Publish the error event
+        var finalEventArgs = new ActionErrorEventArgs(exception, "BlazorComponent", new ActionContext("BlazorError"), isHandled);
+        EventPublisher.Publish(finalEventArgs);
+
+        await base.OnErrorAsync(exception);
+    }
+
+    /// <summary>
+    /// Recovers from the error state and re-renders the component.
+    /// </summary>
+    public void Recover()
+    {
+        errorBoundary?.Recover();
+    }
+}

@@ -265,7 +265,7 @@ public class NormalizedStateTests
     {
         // Arrange
         SampleGuidState state = new();
-        List<SampleGuidEntity> entities = 
+        List<SampleGuidEntity> entities =
         [
             CreateEntity(Guid.NewGuid(), "Entity 1"),
             CreateEntity(Guid.NewGuid(), "Entity 2")
@@ -474,7 +474,7 @@ public class NormalizedStateTests
     public void UpsertMany_ShouldAddOrUpdateEntities()
     {
         // Arrange
-        List<SampleGuidEntity> entities = 
+        List<SampleGuidEntity> entities =
         [
             CreateEntity(Guid.NewGuid(), "Entity 1"),
             CreateEntity(Guid.NewGuid(), "Entity 2")

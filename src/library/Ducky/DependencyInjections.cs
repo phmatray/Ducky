@@ -88,8 +88,7 @@ public static class DependencyInjections
         foreach (Assembly assembly in assemblies)
         {
             IEnumerable<ServiceDescriptor> serviceDescriptors = assembly.DefinedTypes
-                .Where(type => type is { IsAbstract: false, IsInterface: false })
-                .Where(type => typeof(T).IsAssignableFrom(type))
+                .Where(type => type is { IsAbstract: false, IsInterface: false } && typeof(T).IsAssignableFrom(type))
                 .Select(type => ServiceDescriptor.Scoped(typeof(T), type));
 
             services.TryAddEnumerable(serviceDescriptors);

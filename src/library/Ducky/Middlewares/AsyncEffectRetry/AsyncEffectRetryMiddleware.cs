@@ -76,9 +76,9 @@ public sealed class AsyncEffectRetryMiddleware : IActionMiddleware
         foreach (IAsyncEffect effect in _effects)
         {
             Type effectType = effect.GetType();
-            
+
             ResiliencePipelineBuilder pipelineBuilder = new();
-            
+
             // Add retry policy
             pipelineBuilder.AddRetry(new()
             {
@@ -92,17 +92,17 @@ public sealed class AsyncEffectRetryMiddleware : IActionMiddleware
                         effectType,
                         args.AttemptNumber,
                         args.Outcome.Exception!));
-                    
+
                     _logger.LogWarning(
                         "Retry attempt {AttemptNumber} for effect {EffectType}: {Exception}",
                         args.AttemptNumber,
                         effectType.Name,
                         args.Outcome.Exception?.Message);
-                    
+
                     return default;
                 }
             });
-            
+
             // Add circuit breaker policy
             pipelineBuilder.AddCircuitBreaker(new()
             {
@@ -116,12 +116,12 @@ public sealed class AsyncEffectRetryMiddleware : IActionMiddleware
                         new ActionContext(effectType),
                         effectType,
                         args.Outcome.Exception!));
-                    
+
                     _logger.LogError(
                         "Circuit breaker opened for effect {EffectType}: {Exception}",
                         effectType.Name,
                         args.Outcome.Exception?.Message);
-                    
+
                     return default;
                 },
                 OnClosed = _ =>
@@ -129,11 +129,11 @@ public sealed class AsyncEffectRetryMiddleware : IActionMiddleware
                     _eventPublisher.Publish(new CircuitBreakerResetEventArgs(
                         new ActionContext(effectType),
                         effectType));
-                    
+
                     _logger.LogInformation(
                         "Circuit breaker closed for effect {EffectType}",
                         effectType.Name);
-                    
+
                     return default;
                 }
             });
@@ -152,10 +152,7 @@ public sealed class AsyncEffectRetryMiddleware : IActionMiddleware
             try
             {
                 await pipeline
-                    .ExecuteAsync(async _ =>
-                    {
-                        await effect.HandleAsync(context.Action, _getState()).ConfigureAwait(false);
-                    })
+                    .ExecuteAsync(async _ => await effect.HandleAsync(context.Action, _getState()).ConfigureAwait(false))
                     .ConfigureAwait(false);
             }
             catch (BrokenCircuitException ex)
@@ -193,5 +190,4 @@ public sealed class AsyncEffectRetryMiddleware : IActionMiddleware
             }
         });
     }
-
 }
