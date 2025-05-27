@@ -2,6 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Ducky.Pipeline;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using R3;
@@ -36,6 +37,27 @@ public static class DependencyInjections
         {
             services.AddScoped<TimeProvider, SynchronizationContextTimeProvider>();
         }
+
+        return services.AddDuckyCore(options);
+    }
+
+    /// <summary>
+    /// Adds Ducky services with middleware pipeline configuration that has access to the service provider.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <param name="configurePipeline">An action to configure the middleware pipeline with service provider access.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    public static IServiceCollection AddDuckyWithPipeline(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        Action<ActionPipeline, IServiceProvider> configurePipeline)
+    {
+        services.AddScoped<TimeProvider, SynchronizationContextTimeProvider>();
+
+        DuckyOptions options = new();
+        configuration.GetSection("Ducky").Bind(options);
+        options.ConfigurePipelineWithServices = configurePipeline;
 
         return services.AddDuckyCore(options);
     }

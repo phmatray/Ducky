@@ -47,12 +47,33 @@ public static class DependencyInjections
             _ = sp.GetRequiredService<StoreLogger>();
 
             ActionPipeline pipeline = new(dispatcher);
+
+            // Configure pipeline with legacy method if provided
             options.ConfigurePipeline?.Invoke(pipeline);
+
+            // Configure pipeline with service provider if provided
+            options.ConfigurePipelineWithServices?.Invoke(pipeline, sp);
 
             return new DuckyStore(dispatcher, pipeline, eventPublisher, slices);
         });
 
         return services;
+    }
+
+    /// <summary>
+    /// Adds Ducky services to the specified <see cref="IServiceCollection"/> with middleware configuration.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="configure">An action to configure the Ducky options.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    public static IServiceCollection AddDucky(
+        this IServiceCollection services,
+        Action<DuckyOptions> configure)
+    {
+        DuckyOptions options = new();
+        configure(options);
+
+        return services.AddDuckyCore(options);
     }
 
     /// <summary>

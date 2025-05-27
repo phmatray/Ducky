@@ -15,7 +15,8 @@
       "Bash(perl:*)",
       "Bash(pwsh:*)",
       "Bash(rm:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(xxd:*)"
     ],
     "deny": []
   }

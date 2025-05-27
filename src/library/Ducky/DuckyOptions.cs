@@ -28,6 +28,11 @@ public class DuckyOptions
     /// </summary>
     public Action<ActionPipeline>? ConfigurePipeline { get; set; }
 
+    /// <summary>
+    /// Configures the middleware pipeline with access to the service provider.
+    /// </summary>
+    public Action<ActionPipeline, IServiceProvider>? ConfigurePipelineWithServices { get; set; }
+
     private static Assembly[] GetDefaultAssemblies()
     {
         Assembly entryAssembly = Assembly.GetEntryAssembly()

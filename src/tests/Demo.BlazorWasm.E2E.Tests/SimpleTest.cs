@@ -39,6 +39,6 @@ public class SimpleTest : PageTest
         Console.WriteLine($"MudAppBar exists: {mudAppBarExists}");
         
         // Simple assertion
-        Assert.That(await Page.TitleAsync(), Is.EqualTo("Ducky"));
+        Assert.That(await Page.TitleAsync(), Is.EqualTo("Ducky Blazor Demo - State Management for Blazor"));
     }
 }

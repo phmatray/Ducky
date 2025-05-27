@@ -54,13 +54,38 @@ services.AddReactiveEffect<OpenAboutDialogEffect>();
 services.AddReactiveEffect<TimerTickEffect>();
 services.AddReactiveEffect<DebouncedSearchEffect>();
 
-// Add Ducky
-services.AddDucky(
+// Add Ducky with configured middleware pipeline - Option 1: Direct configuration
+services.AddDuckyWithPipeline(
     configuration,
-    options =>
+    (pipeline, serviceProvider) =>
     {
-        // The middleware services are not yet available here, so we'll let Ducky handle the pipeline configuration
-        // Middlewares will be registered but not used in the pipeline for now
+        // Configure the middleware pipeline in the order you want
+        pipeline.Use(serviceProvider.GetRequiredService<NoOpMiddleware>());
+        pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
+        pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
+        pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
+        pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectRetryMiddleware>());
+        pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
     });
+
+// Alternative Option 2: Using middleware types
+// services.AddDuckyWithMiddleware(
+//     typeof(NoOpMiddleware),
+//     typeof(CorrelationIdMiddleware),
+//     typeof(JsLoggingMiddleware),
+//     typeof(AsyncEffectMiddleware),
+//     typeof(AsyncEffectRetryMiddleware),
+//     typeof(ReactiveEffectMiddleware)
+// );
+
+// Alternative Option 3: Using fluent builder
+// services.AddDucky(builder => builder
+//     .UseMiddleware<NoOpMiddleware>()
+//     .UseMiddleware<CorrelationIdMiddleware>()
+//     .UseMiddleware<JsLoggingMiddleware>()
+//     .UseMiddleware<AsyncEffectMiddleware>()
+//     .UseMiddleware<AsyncEffectRetryMiddleware>()
+//     .UseMiddleware<ReactiveEffectMiddleware>()
+// );
 
 await builder.Build().RunAsync();
