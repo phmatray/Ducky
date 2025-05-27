@@ -11,12 +11,15 @@ namespace Demo.BlazorWasm.Features.Feedback.Effects;
 /// </summary>
 public class AllActionsEffect : ReactiveEffect
 {
-    // TODO: Fix this
-    // /// <inheritdoc />
-    // public override Observable<object> Handle(
-    //     Observable<object> actions, Observable<IRootState> rootState)
-    // {
-    //     return actions
-    //         .Do(action => Console.WriteLine($"Action: {action}"));
-    // }
+    /// <inheritdoc />
+    public override Observable<object> Handle(
+        Observable<object> actions, Observable<IRootState> rootState)
+    {
+        // Log all actions to console (side effect only, no new actions dispatched)
+        actions
+            .Subscribe(action => Console.WriteLine($"[AllActionsEffect] Action: {action.GetType().Name}"));
+        
+        // Return empty observable since this effect only logs
+        return Observable.Empty<object>();
+    }
 }

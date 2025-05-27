@@ -55,10 +55,13 @@ public record LoadMovies;
 public record LoadMoviesSuccess(ValueCollection<Movie> Movies, int TotalItems);
 
 [DuckyAction]
-public record LoadMoviesFailure(Exception Error);
+public record LoadMoviesFailure(string ErrorMessage);
 
 [DuckyAction]
 public record SetCurrentPage(int CurrentPage);
+
+[DuckyAction]
+public record SearchMovies(string Query);
 
 #endregion
 
@@ -111,7 +114,7 @@ public record MoviesReducers : SliceReducers<MoviesState>
         => state with
         {
             Movies = ImmutableDictionary<int, Movie>.Empty,
-            ErrorMessage = action.Error.Message,
+            ErrorMessage = action.ErrorMessage,
             IsLoading = false
         };
 
@@ -143,7 +146,7 @@ public class LoadMoviesEffect(IMoviesService moviesService) : ReactiveEffect
             .InvokeService(
                 pair => moviesService.GetMoviesAsync(pair.State.Pagination.CurrentPage, 5),
                 response => new LoadMoviesSuccess(response.Movies, response.TotalItems),
-                ex => new LoadMoviesFailure(ex))
+                ex => new LoadMoviesFailure(ex.Message))
             .LogMessage("Movies loaded.");
 
         // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE

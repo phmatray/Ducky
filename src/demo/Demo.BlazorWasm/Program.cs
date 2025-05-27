@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Demo.BlazorWasm;
 using Demo.BlazorWasm.AppStore;
+using Demo.BlazorWasm.Features.Feedback.Effects;
 using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
 using Ducky.Blazor;
@@ -9,6 +10,7 @@ using Ducky.Blazor.Middlewares.JsLogging;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.NoOp;
+using Ducky.Middlewares.ReactiveEffect;
 using MudBlazor.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -37,6 +39,16 @@ services.AddNoOpMiddleware();
 services.AddJsLoggingMiddleware();
 services.AddCorrelationIdMiddleware();
 services.AddAsyncEffectMiddleware();
+services.AddReactiveEffectMiddleware();
+
+// Register reactive effects
+services.AddReactiveEffect<AllActionsEffect>();
+services.AddReactiveEffect<LoadMoviesSuccessEffect>();
+services.AddReactiveEffect<LoadMoviesFailureEffect>();
+services.AddReactiveEffect<OpenAboutDialogEffect>();
+services.AddReactiveEffect<TimerTickEffect>();
+services.AddReactiveEffect<DebouncedSearchEffect>();
+
 IServiceProvider serviceProvider = services.BuildServiceProvider();
 
 // Add Ducky
@@ -51,6 +63,7 @@ services.AddDucky(
             pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
             pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
             pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
+            pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
         };
     });
 
