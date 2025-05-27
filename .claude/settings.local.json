@@ -13,7 +13,12 @@
       "Bash(chmod:*)",
       "Bash(/Users/philippe/repo/github/Ducky/check_tests.sh)",
       "Bash(perl:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(docker build:*)",
+      "Bash(docker run:*)",
+      "Bash(curl:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,49 @@
+{
+  "name": "Ducky Blazor Demo",
+  "short_name": "Ducky Demo",
+  "description": "A demonstration of Ducky state management for Blazor WebAssembly",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#594AE2",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "developer", "education"],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop view of Ducky Demo"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Counter",
+      "url": "/counter",
+      "description": "Redux-style counter example"
+    },
+    {
+      "name": "Movies",
+      "url": "/movies",
+      "description": "Async data loading example"
+    },
+    {
+      "name": "Todo List",
+      "url": "/todo",
+      "description": "Todo list with persistence"
+    }
+  ]
+}

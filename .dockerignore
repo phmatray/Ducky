@@ -23,3 +23,16 @@
 **/values.dev.yaml
 LICENSE
 README.md
+**/.artifacts
+**/TestResults
+**/*.bak
+**/*.cache
+**/*.log
+**/*.tmp
+.DS_Store
+Thumbs.db
+docs/
+Writerside/
+.github/
+build/
+.nuke/

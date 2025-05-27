@@ -22,14 +22,21 @@
   </MudItem>
 
   <MudItem xs="12">
-    @if (IsLoading)
-    {
-      <MudButton Variant="Variant.Outlined" Disabled>Please wait...</MudButton>
-    }
-    else
-    {
-      <MudButton Variant="Variant.Outlined" OnClick="LoadMovies">Reload Movies</MudButton>
-    }
+    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+      @if (IsLoading)
+      {
+        <MudButton Variant="Variant.Outlined" Disabled>Please wait...</MudButton>
+      }
+      else
+      {
+        <MudButton Variant="Variant.Outlined" OnClick="LoadMovies">Reload Movies</MudButton>
+      }
+      <MudSpacer />
+      <SearchBox Label="Search movies..." 
+                 OnSearch="OnSearchMovies" 
+                 Class="flex-grow-0" 
+                 DebounceInterval="500" />
+    </MudStack>
   </MudItem>
   
   <MudItem xs="12">
@@ -49,36 +56,46 @@
     }
     else
     {
-      <MudSimpleTable>
-        <thead>
-        <tr>
-          <th>Title</th>
-          <th>Director</th>
-          <th>Year</th>
-          <th>Duration</th>
-          <th>Score</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var movie in Movies.Values)
-        {
+      @if (FilteredMovies.Any())
+      {
+        <MudSimpleTable Hover="true" Class="animate-fadeIn">
+          <thead>
           <tr>
-            <td>@movie.Title</td>
-            <td>@movie.Director</td>
-            <td>@movie.Year</td>
-            <td>@movie.Duration</td>
-            <td>
-              <MudStack Row AlignItems="AlignItems.Baseline">
-                <MudRating SelectedValue="@movie.Score" ReadOnly/>
-                <MudIconButton 
-                  Icon="@Icons.Material.Filled.Info"
-                  OnClick="() => GoToMovieDetails(movie.Id)"/>
-              </MudStack>
-            </td>
+            <th>Title</th>
+            <th>Director</th>
+            <th>Year</th>
+            <th>Duration</th>
+            <th>Score</th>
           </tr>
-        }
-        </tbody>
-      </MudSimpleTable>
+          </thead>
+          <tbody>
+          @foreach (var movie in FilteredMovies)
+          {
+            <tr class="transition-fast" style="cursor: pointer;" @onclick="() => GoToMovieDetails(movie.Id)">
+              <td>@movie.Title</td>
+              <td>@movie.Director</td>
+              <td>@movie.Year</td>
+              <td>@movie.Duration</td>
+              <td @onclick:stopPropagation="true">
+                <MudStack Row AlignItems="AlignItems.Baseline">
+                  <MudRating SelectedValue="@movie.Score" ReadOnly Size="Size.Small"/>
+                  <MudIconButton 
+                    Icon="@Icons.Material.Filled.Info"
+                    Size="Size.Small"
+                    OnClick="@(() => GoToMovieDetails(movie.Id))"/>
+                </MudStack>
+              </td>
+            </tr>
+          }
+          </tbody>
+        </MudSimpleTable>
+      }
+      else
+      {
+        <MudAlert Severity="Severity.Info">
+          No movies found matching your search criteria.
+        </MudAlert>
+      }
     }
   </MudItem>
 
@@ -98,6 +115,8 @@
   
   // TODO: Master/Detail view with selected movie details.
   
+  private string _searchTerm = "";
+  
   private ImmutableDictionary<int, Movie> Movies
     => State.SelectMoviesByYear();
   
@@ -109,6 +128,21 @@
   
   private int TotalPages
     => State.Pagination.TotalPages;
+    
+  private IEnumerable<Movie> FilteredMovies
+  {
+    get
+    {
+      if (string.IsNullOrWhiteSpace(_searchTerm))
+        return Movies.Values;
+        
+      var searchLower = _searchTerm.ToLowerInvariant();
+      return Movies.Values.Where(m => 
+        m.Title.ToLowerInvariant().Contains(searchLower) ||
+        m.Director.ToLowerInvariant().Contains(searchLower) ||
+        m.Year.ToString().Contains(searchLower));
+    }
+  }
 
   protected override void OnAfterSubscribed()
   {
@@ -132,6 +166,12 @@
   private void GoToMovieDetails(int movieId)
   {
     Navigation.NavigateTo($"/movies/{movieId}");
+  }
+  
+  private void OnSearchMovies(string searchTerm)
+  {
+    _searchTerm = searchTerm;
+    InvokeAsync(StateHasChanged);
   }
 
 }

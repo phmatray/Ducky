@@ -1,0 +1,38 @@
+@using System.Timers
+
+<MudTextField @bind-Value="SearchTerm"
+              Label="@Label"
+              Variant="Variant.Outlined"
+              Adornment="Adornment.Start"
+              AdornmentIcon="@Icons.Material.Filled.Search"
+              Class="@Class"
+              Immediate="true"
+              DebounceInterval="@DebounceInterval"
+              OnDebounceIntervalElapsed="OnDebounceIntervalElapsed"
+              Clearable="true" />
+
+@code {
+    [Parameter] public string Label { get; set; } = "Search";
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public int DebounceInterval { get; set; } = 300;
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+    
+    private string _searchTerm = "";
+    
+    private string SearchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            if (_searchTerm != value)
+            {
+                _searchTerm = value;
+            }
+        }
+    }
+    
+    private async Task OnDebounceIntervalElapsed(string value)
+    {
+        await OnSearch.InvokeAsync(value);
+    }
+}

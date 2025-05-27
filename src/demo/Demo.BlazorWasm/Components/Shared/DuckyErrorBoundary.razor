@@ -1,0 +1,50 @@
+@inherits ErrorBoundary
+
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else if (ErrorContent is not null)
+{
+    @ErrorContent(CurrentException)
+}
+else
+{
+    <MudAlert Severity="Severity.Error" Class="my-4">
+        <MudText Typo="Typo.h6">An error occurred</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">
+            @CurrentException.Message
+        </MudText>
+        @if (ShowDetails && !string.IsNullOrEmpty(CurrentException.StackTrace))
+        {
+            <details class="mt-2">
+                <summary style="cursor: pointer;">Technical Details</summary>
+                <pre style="font-size: 0.75rem; overflow-x: auto;">@CurrentException.StackTrace</pre>
+            </details>
+        }
+        <MudButton Variant="Variant.Text" 
+                   Color="Color.Error" 
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="Recover"
+                   Class="mt-2">
+            Try Again
+        </MudButton>
+    </MudAlert>
+}
+
+@code {
+    [Parameter] public bool ShowDetails { get; set; } = false;
+    
+    protected override Task OnErrorAsync(Exception exception)
+    {
+        // Log the error
+        Logger.LogError(exception, "Error boundary caught exception");
+        
+        // You could also dispatch an error action to the store here
+        // Dispatcher.DispatchError(exception.Message);
+        
+        return base.OnErrorAsync(exception);
+    }
+    
+    [Inject] private ILogger<DuckyErrorBoundary> Logger { get; set; } = default!;
+}

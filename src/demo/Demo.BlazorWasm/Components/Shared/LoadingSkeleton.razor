@@ -1,0 +1,56 @@
+@* Loading skeleton component for better perceived performance *@
+
+<div class="skeleton-container">
+    @for (int i = 0; i < Rows; i++)
+    {
+        <div class="skeleton-row">
+            @for (int j = 0; j < Columns; j++)
+            {
+                <div class="skeleton @(GetSkeletonClass(j))" style="@GetSkeletonStyle(j)"></div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Rows { get; set; } = 5;
+    [Parameter] public int Columns { get; set; } = 4;
+    [Parameter] public string[] ColumnWidths { get; set; } = Array.Empty<string>();
+    
+    private string GetSkeletonClass(int columnIndex)
+    {
+        return columnIndex == 0 ? "skeleton-text" : "skeleton-cell";
+    }
+    
+    private string GetSkeletonStyle(int columnIndex)
+    {
+        if (ColumnWidths.Length > columnIndex)
+        {
+            return $"width: {ColumnWidths[columnIndex]}";
+        }
+        return columnIndex == 0 ? "width: 40%" : "width: 15%";
+    }
+}
+
+<style>
+    .skeleton-container {
+        width: 100%;
+    }
+    
+    .skeleton-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        align-items: center;
+    }
+    
+    .skeleton-cell {
+        height: 1.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    .skeleton-text {
+        height: 1.5rem;
+        border-radius: 0.25rem;
+    }
+</style>
