@@ -12,7 +12,8 @@
       "Bash(rm:*)",
       "Bash(chmod:*)",
       "Bash(/Users/philippe/repo/github/Ducky/check_tests.sh)",
-      "Bash(perl:*)"
+      "Bash(perl:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

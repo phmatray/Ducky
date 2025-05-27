@@ -24,12 +24,19 @@ public class DuckyStoreTests
     public void Store_Should_Add_Slice_And_Propagate_State_Changes()
     {
         // Arrange
+        Dispatcher dispatcher = new();
         TestCounterReducers counterSlice = new();
-        Observable<int> sliceStateObs = _sut.RootStateObservable
+        DuckyStore store = DuckyStoreFactory.CreateStore(dispatcher, [counterSlice]);
+        
+        Observable<int> sliceStateObs = store.RootStateObservable
             .Select(state => state.GetSliceState<int>("test-counter"));
 
         // Act
-        counterSlice.OnDispatch(new TestIncrementAction());
+        dispatcher.Dispatch(new TestIncrementAction());
+        
+        // Wait for the action to be processed
+        Thread.Sleep(50);
+        
         int updatedState = sliceStateObs.FirstSync();
 
         // Assert

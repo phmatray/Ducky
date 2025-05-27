@@ -20,10 +20,10 @@ public class LoadMoviesFailureEffect(ISnackbar snackbar) : ReactiveEffect
     {
         return actions
             .OfActionType<LoadMoviesFailure>()
-            .Do(action => snackbar.Add(action.Error.Message, Severity.Error))
+            .Do(action => snackbar.Add(action.ErrorMessage, Severity.Error))
             .Select(object (action) =>
             {
-                ExceptionNotification notification = new(action.Error);
+                ErrorNotification notification = new(action.ErrorMessage);
                 return new AddNotification(notification);
             });
     }

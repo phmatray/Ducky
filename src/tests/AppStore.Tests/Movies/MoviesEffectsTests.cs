@@ -69,7 +69,7 @@ public sealed class MoviesEffectsTests : IDisposable
 
         // Assert
         _actualActions.ShouldHaveSingleItem(); // One for failure
-        _actualActions[0].ShouldBeOfType<LoadMoviesFailure>().Error.Message.ShouldBe(exceptionMessage);
+        _actualActions[0].ShouldBeOfType<LoadMoviesFailure>().ErrorMessage.ShouldBe(exceptionMessage);
     }
 
     private void SetupRootState()

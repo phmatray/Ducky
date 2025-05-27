@@ -62,6 +62,11 @@ public sealed class ReactiveEffectMiddleware : IActionMiddleware, IDisposable
                 Observable<object> effectObservable = effect.Handle(actions, state);
                 
                 IDisposable subscription = effectObservable
+                    .Catch<object, Exception>(error =>
+                    {
+                        _eventPublisher.Publish(new ReactiveEffectErrorEventArgs(null, error));
+                        return Observable.Empty<object>();
+                    })
                     .Where(action => action is not null)
                     .Subscribe(action =>
                     {

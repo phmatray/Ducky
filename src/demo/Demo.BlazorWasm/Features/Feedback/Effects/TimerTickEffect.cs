@@ -21,7 +21,7 @@ public class TimerTickEffect : ReactiveEffect
         Observable<object> startTimer = actions
             .OfActionType<StartTimer>()
             .Select(_ => rootState
-                .Select(state => state.GetSlice<TimerState>())
+                .Select(state => state.GetSliceState<TimerState>())
                 .Where(timer => timer is { IsRunning: true })
                 .SelectMany(_ => Observable.Interval(TimeSpan.FromSeconds(1), TimeProvider))
                 .TakeUntil(actions.OfActionType<StopTimer>())
@@ -30,8 +30,8 @@ public class TimerTickEffect : ReactiveEffect
 
         // When timer reaches zero, automatically stop it
         Observable<object> autoStop = rootState
-            .Select(state => state.GetSlice<TimerState>())
-            .Where(timer => timer is { IsRunning: true, RemainingTime: <= 0 })
+            .Select(state => state.GetSliceState<TimerState>())
+            .Where(timer => timer is { IsRunning: true, Time: <= 0 })
             .Select(_ => (object)new StopTimer());
 
         return Observable.Merge(startTimer, autoStop);

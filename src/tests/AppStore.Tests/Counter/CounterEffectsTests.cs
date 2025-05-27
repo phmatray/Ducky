@@ -10,40 +10,44 @@ public sealed class CounterEffectsTests
 {
     private readonly ResetCounterAfter3Sec _sut;
     private readonly FakeTimeProvider _timeProvider = new();
+    private readonly Dispatcher _dispatcher = new();
 
     public CounterEffectsTests()
     {
         ObservableSystem.DefaultTimeProvider = _timeProvider;
 
         _sut = new ResetCounterAfter3Sec();
+        _sut.SetDispatcher(_dispatcher);
     }
 
     [Fact]
-    public void IncrementEffect_ShouldEmitResetAction_WhenValueGreaterThan15()
+    public async Task IncrementEffect_ShouldEmitResetAction_WhenValueGreaterThan15Async()
     {
         // Arrange
         RootState rootState = GetRootState(16);
 
         // Act
-        _ = _sut.HandleAsync(new Increment(), rootState);
+        Task handleTask = _sut.HandleAsync(new Increment(), rootState);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
+        await handleTask;
 
         // Assert
-        _sut.LastAction.ShouldBeOfType<Reset>();
+        _dispatcher.LastAction.ShouldBeOfType<Reset>();
     }
 
     [Fact]
-    public void IncrementEffect_ShouldNotEmitResetAction_WhenValueIs15OrLess()
+    public async Task IncrementEffect_ShouldNotEmitResetAction_WhenValueIs15OrLessAsync()
     {
         // Arrange
         RootState rootState = GetRootState(15);
 
         // Act
-        _ = _sut.HandleAsync(new Increment(), rootState);
+        Task handleTask = _sut.HandleAsync(new Increment(), rootState);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
+        await handleTask;
 
         // Assert
-        _sut.LastAction.ShouldBeNull();
+        _dispatcher.LastAction.ShouldBeNull();
     }
 
     private static RootState GetRootState(int counterValue)

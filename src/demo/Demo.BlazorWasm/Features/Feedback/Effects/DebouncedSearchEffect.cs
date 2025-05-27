@@ -31,21 +31,20 @@ public class DebouncedSearchEffect : ReactiveEffect
         return actions
             .OfActionType<SearchMovies>()
             .Debounce(TimeSpan.FromMilliseconds(500)) // Wait 500ms after last keystroke
-            .DistinctUntilChanged(action => action.Query) // Only search if query changed
-            .SelectAwait(async action =>
+            .SelectAwait(async (action, ct) =>
             {
                 try
                 {
-                    // Simulate filtering movies based on search query
-                    List<Movie> allMovies = await _moviesService.GetMoviesAsync();
+                    // For search, we'll just load the first page of movies
+                    GetMoviesResponse response = await _moviesService.GetMoviesAsync(1, 20, ct);
                     List<Movie> filteredMovies = string.IsNullOrWhiteSpace(action.Query)
-                        ? allMovies
-                        : allMovies.Where(m => 
+                        ? response.Movies.ToList()
+                        : response.Movies.Where(m => 
                             m.Title.Contains(action.Query, StringComparison.OrdinalIgnoreCase)
                                 || m.Director.Contains(action.Query, StringComparison.OrdinalIgnoreCase))
                             .ToList();
 
-                    return (object)new LoadMoviesSuccess(filteredMovies);
+                    return (object)new LoadMoviesSuccess(filteredMovies, filteredMovies.Count);
                 }
                 catch (Exception ex)
                 {

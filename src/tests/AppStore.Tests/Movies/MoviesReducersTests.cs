@@ -98,10 +98,9 @@ public sealed class MoviesReducersTests : IDisposable
     {
         // Arrange
         const string errorMessage = "Failed to load movies.";
-        DuckyException exception = new(errorMessage);
 
         // Act
-        MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesFailure(exception));
+        MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesFailure(errorMessage));
 
         // Assert
         newState.ErrorMessage.ShouldBe(errorMessage);
