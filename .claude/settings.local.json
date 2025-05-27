@@ -1,24 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet clean:*)",
-      "Bash(dotnet build:*)",
-      "Bash(dotnet restore)",
-      "Bash(dotnet run:*)",
-      "Bash(find:*)",
-      "Bash(od:*)",
-      "Bash(grep:*)",
-      "Bash(dotnet test:*)",
-      "Bash(rm:*)",
-      "Bash(chmod:*)",
       "Bash(/Users/philippe/repo/github/Ducky/check_tests.sh)",
-      "Bash(perl:*)",
-      "Bash(ls:*)",
-      "Bash(docker build:*)",
-      "Bash(docker run:*)",
+      "Bash(BASE_URL=http://localhost:8080 dotnet test:*)",
+      "Bash(chmod:*)",
       "Bash(curl:*)",
-      "Bash(docker stop:*)",
-      "Bash(docker rm:*)"
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)",
+      "Bash(dotnet:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(od:*)",
+      "Bash(perl:*)",
+      "Bash(pwsh:*)",
+      "Bash(rm:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

@@ -41,7 +41,7 @@ public record CounterReducers : SliceReducers<CounterState>
     }
 
     public override CounterState GetInitialState()
-        => new(10);
+        => new(0);
 
     private static CounterState Reduce(CounterState state, Increment action)
         => new(state.Value + action.Amount);

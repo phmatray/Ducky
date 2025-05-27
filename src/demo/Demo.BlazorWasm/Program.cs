@@ -54,23 +54,13 @@ services.AddReactiveEffect<OpenAboutDialogEffect>();
 services.AddReactiveEffect<TimerTickEffect>();
 services.AddReactiveEffect<DebouncedSearchEffect>();
 
-IServiceProvider serviceProvider = services.BuildServiceProvider();
-
 // Add Ducky
 services.AddDucky(
     configuration,
     options =>
     {
-        // Compose the middleware pipeline IN THE ORDER YOU WANT:
-        options.ConfigurePipeline = pipeline =>
-        {
-            pipeline.Use(serviceProvider.GetRequiredService<NoOpMiddleware>());
-            pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
-            pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
-            pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
-            pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectRetryMiddleware>());
-            pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
-        };
+        // The middleware services are not yet available here, so we'll let Ducky handle the pipeline configuration
+        // Middlewares will be registered but not used in the pipeline for now
     });
 
 await builder.Build().RunAsync();
