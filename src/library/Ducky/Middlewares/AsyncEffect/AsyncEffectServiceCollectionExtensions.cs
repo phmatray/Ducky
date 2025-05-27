@@ -29,4 +29,17 @@ public static class AsyncEffectServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Registers an async effect implementation.
+    /// </summary>
+    /// <typeparam name="TEffect">The type of the async effect to register.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAsyncEffect<TEffect>(this IServiceCollection services)
+        where TEffect : class, IAsyncEffect
+    {
+        services.AddScoped<IAsyncEffect, TEffect>();
+        return services;
+    }
 }

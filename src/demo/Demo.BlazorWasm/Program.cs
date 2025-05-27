@@ -11,6 +11,7 @@ using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.NoOp;
 using Ducky.Middlewares.ReactiveEffect;
+using Ducky.Middlewares.AsyncEffectRetry;
 using MudBlazor.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -39,7 +40,11 @@ services.AddNoOpMiddleware();
 services.AddJsLoggingMiddleware();
 services.AddCorrelationIdMiddleware();
 services.AddAsyncEffectMiddleware();
+services.AddAsyncEffectRetryMiddleware();
 services.AddReactiveEffectMiddleware();
+
+// Register async effects (for retry demonstration)
+services.AddAsyncEffect<RetryableMoviesEffect>();
 
 // Register reactive effects
 services.AddReactiveEffect<AllActionsEffect>();
@@ -63,6 +68,7 @@ services.AddDucky(
             pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
             pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
             pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
+            pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectRetryMiddleware>());
             pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
         };
     });
