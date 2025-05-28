@@ -83,6 +83,10 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
     {
         // Arrange
         ServiceCollection services = [];
+        
+        // Add required dependencies
+        services.AddLogging();
+        services.AddSingleton<IStoreEventPublisher, StoreEventPublisher>();
 
         // Act
         services.AddExceptionHandlingMiddleware();

@@ -23,7 +23,11 @@ public sealed class AsyncEffectExceptionHandlingTests
         Mock<IAsyncEffect> effect = new();
 
         effect.Setup(e => e.CanHandle(It.IsAny<object>())).Returns(false);
-        serviceProvider.Setup(sp => sp.GetServices<IAsyncEffect>()).Returns([effect.Object]);
+        
+        // Mock GetService to return the collection instead of using GetServices extension
+        serviceProvider
+            .Setup(sp => sp.GetService(typeof(IEnumerable<IAsyncEffect>)))
+            .Returns(new[] { effect.Object });
 
         // Act
         AsyncEffectMiddleware middleware = new(
