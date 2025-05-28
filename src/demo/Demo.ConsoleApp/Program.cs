@@ -21,9 +21,9 @@ TodoReducers todoReducers = new();
 
 // Setup services for async effects
 ServiceCollection services = [];
-services.AddSingleton<IAsyncEffect, DelayedIncrementEffect>();
-services.AddSingleton<IAsyncEffect, CounterThresholdEffect>();
-services.AddSingleton<IStoreEventPublisher, StoreEventPublisher>();
+services.AddScoped<IAsyncEffect, DelayedIncrementEffect>();
+services.AddScoped<IAsyncEffect, CounterThresholdEffect>();
+services.AddScoped<IStoreEventPublisher, StoreEventPublisher>();
 
 ServiceProvider serviceProvider = services.BuildServiceProvider();
 

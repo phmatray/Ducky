@@ -242,8 +242,8 @@ public sealed class ActionPipelineTests
         dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
         ServiceCollection services = [];
         DummyMiddleware dummyMw = new();
-        services.AddSingleton(dummyMw);
-        services.AddSingleton<IActionMiddleware, DummyMiddleware>();
+        services.AddScoped(_ => dummyMw);
+        services.AddScoped<IActionMiddleware, DummyMiddleware>();
         ActionPipeline pipeline = new(dispatcherMock.Object);
         pipeline.Use(dummyMw);
         return (pipeline, dummyMw, subject);

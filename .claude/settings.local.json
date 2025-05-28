@@ -19,7 +19,9 @@
       "Bash(xxd:*)",
       "Bash(dotnet roslynator fix:*)",
       "Bash(dotnet tool list:*)",
-      "Bash(roslynator fix:*)"
+      "Bash(roslynator fix:*)",
+      "Bash(pkill:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

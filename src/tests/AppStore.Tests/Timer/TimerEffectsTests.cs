@@ -13,15 +13,12 @@ public sealed class TimerEffectsTests : IDisposable
     private readonly Subject<object> _actionsSubject = new();
     private readonly Subject<IRootState> _rootStateSubject = new();
     private readonly List<object> _actualActions = [];
+    private readonly StartTimerEffect _effect;
 
     public TimerEffectsTests()
     {
         ObservableSystem.DefaultTimeProvider = _timeProvider;
-
-        new StartTimerEffect()
-            .Handle(_actionsSubject, _rootStateSubject)
-            .Subscribe(_actualActions.Add)
-            .AddTo(_disposables);
+        _effect = new StartTimerEffect();
     }
 
     public void Dispose()
@@ -36,6 +33,13 @@ public sealed class TimerEffectsTests : IDisposable
     {
         // Arrange
         SetupRootState();
+        _actualActions.Clear();
+
+        using CompositeDisposable testDisposables = [];
+        _effect
+            .Handle(_actionsSubject, _rootStateSubject)
+            .Subscribe(_actualActions.Add)
+            .AddTo(testDisposables);
 
         // Act
         _actionsSubject.OnNext(new StartTimer());
@@ -54,6 +58,13 @@ public sealed class TimerEffectsTests : IDisposable
     {
         // Arrange
         SetupRootState();
+        _actualActions.Clear();
+
+        using CompositeDisposable testDisposables = [];
+        _effect
+            .Handle(_actionsSubject, _rootStateSubject)
+            .Subscribe(_actualActions.Add)
+            .AddTo(testDisposables);
 
         // Act
         _actionsSubject.OnNext(new StartTimer());

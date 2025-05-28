@@ -3,11 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Ducky.Abstractions;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Pipeline;
-using Ducky.Tests.TestModels;
 
 namespace Ducky.Tests.Integration;
 
@@ -45,7 +43,7 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
         services.AddExceptionHandler<TestExceptionHandler>(_ => _exceptionHandler);
 
         // Add test slice
-        services.AddSingleton<ISlice, TestCounterReducers>();
+        services.AddScoped<ISlice, TestCounterReducers>();
 
         _serviceProvider = services.BuildServiceProvider();
         _store = _serviceProvider.GetRequiredService<IStore>();
@@ -83,10 +81,10 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
     {
         // Arrange
         ServiceCollection services = [];
-        
+
         // Add required dependencies
         services.AddLogging();
-        services.AddSingleton<IStoreEventPublisher, StoreEventPublisher>();
+        services.AddScoped<IStoreEventPublisher, StoreEventPublisher>();
 
         // Act
         services.AddExceptionHandlingMiddleware();

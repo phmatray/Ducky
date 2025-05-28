@@ -20,8 +20,11 @@ public static class ExceptionHandlingServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddExceptionHandlingMiddleware(this IServiceCollection services)
     {
-        services.AddSingleton<ExceptionHandlingMiddleware>();
-        services.AddSingleton<IActionMiddleware, ExceptionHandlingMiddleware>(sp => sp.GetRequiredService<ExceptionHandlingMiddleware>());
+        services.AddScoped<ExceptionHandlingMiddleware>();
+
+        services.AddScoped<IActionMiddleware, ExceptionHandlingMiddleware>(sp =>
+            sp.GetRequiredService<ExceptionHandlingMiddleware>());
+
         return services;
     }
 
@@ -34,7 +37,7 @@ public static class ExceptionHandlingServiceCollectionExtensions
     public static IServiceCollection AddExceptionHandler<THandler>(this IServiceCollection services)
         where THandler : class, IExceptionHandler
     {
-        return services.AddSingleton<IExceptionHandler, THandler>();
+        return services.AddScoped<IExceptionHandler, THandler>();
     }
 
     /// <summary>
@@ -49,6 +52,6 @@ public static class ExceptionHandlingServiceCollectionExtensions
         Func<IServiceProvider, THandler> factory)
         where THandler : class, IExceptionHandler
     {
-        return services.AddSingleton<IExceptionHandler>(factory);
+        return services.AddScoped<IExceptionHandler>(factory);
     }
 }

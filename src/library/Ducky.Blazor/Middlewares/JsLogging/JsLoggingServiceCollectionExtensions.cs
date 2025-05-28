@@ -1,3 +1,4 @@
+using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky.Blazor.Middlewares.JsLogging;
@@ -16,10 +17,11 @@ public static class JsLoggingServiceCollectionExtensions
         services.AddScoped<JsLoggingMiddleware>(sp =>
             new JsLoggingMiddleware(
                 sp.GetRequiredService<JsConsoleLoggerModule>(),
-                () => sp.GetRequiredService<DuckyStore>().CurrentState)
+                () => sp.GetRequiredService<IStore>().CurrentState)
         );
 
-        // services.TryAddEnumerable(ServiceDescriptor.Scoped<IActionMiddleware, JsLoggingMiddleware>());
+        services.AddScoped<IActionMiddleware, JsLoggingMiddleware>(
+            sp => sp.GetRequiredService<JsLoggingMiddleware>());
 
         return services;
     }

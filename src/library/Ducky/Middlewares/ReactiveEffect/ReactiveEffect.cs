@@ -12,7 +12,7 @@ public abstract class ReactiveEffect : IReactiveEffect
     /// <summary>
     /// Gets or init the time provider used to provide the current time.
     /// </summary>
-    protected TimeProvider TimeProvider { get; } = ObservableSystem.DefaultTimeProvider;
+    protected TimeProvider TimeProvider => ObservableSystem.DefaultTimeProvider;
 
     /// <inheritdoc />
     public string GetKey()

@@ -37,7 +37,6 @@ services.AddScoped<IJsonColorizer, JsonColorizer>();
 services.AddTransient<IMoviesService, MoviesService>();
 
 // Register ducky middlewares
-services.AddNoOpMiddleware();
 services.AddJsLoggingMiddleware();
 services.AddCorrelationIdMiddleware();
 services.AddExceptionHandlingMiddleware();
@@ -51,32 +50,35 @@ services.AddExceptionHandler<NotificationExceptionHandler>();
 services.AddAsyncEffect<RetryableMoviesEffect>();
 
 // Register reactive effects
-services.AddReactiveEffect<AllActionsEffect>();
+// Temporarily disable effects that might cause initialization issues
+// services.AddReactiveEffect<AllActionsEffect>(); // Subscribes to ALL actions immediately
 services.AddReactiveEffect<LoadMoviesSuccessEffect>();
 services.AddReactiveEffect<LoadMoviesFailureEffect>();
 services.AddReactiveEffect<OpenAboutDialogEffect>();
-services.AddReactiveEffect<TimerTickEffect>();
+// Temporarily disable TimerTickEffect to test if it's causing the loading issue
+// services.AddReactiveEffect<TimerTickEffect>();
 services.AddReactiveEffect<DebouncedSearchEffect>();
-services.AddReactiveEffect<ErrorRecoveryEffect>();
-services.AddReactiveEffect<TestErrorEffect>();
+// services.AddReactiveEffect<ErrorRecoveryEffect>(); // Uses .Subscribe() directly
+// services.AddReactiveEffect<TestErrorEffect>(); // Uses .Subscribe() directly
 
 // Add Ducky with configured middleware pipeline - Option 1: Direct configuration
+// TESTING MIDDLEWARES ONE BY ONE
 services.AddDuckyWithPipeline(
     configuration,
     (pipeline, serviceProvider) =>
     {
         // Configure the middleware pipeline in the order you want
-        pipeline.Use(serviceProvider.GetRequiredService<NoOpMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<ExceptionHandlingMiddleware>());
+        // Both effect middlewares
         pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
-        pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
+        // ISSUE: ReactiveEffectMiddleware causes the app to hang on initialization
+        // pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
     });
 
 // Alternative Option 2: Using middleware types
 // services.AddDuckyWithMiddleware(
-//     typeof(NoOpMiddleware),
 //     typeof(CorrelationIdMiddleware),
 //     typeof(JsLoggingMiddleware),
 //     typeof(AsyncEffectMiddleware),
@@ -85,7 +87,6 @@ services.AddDuckyWithPipeline(
 
 // Alternative Option 3: Using fluent builder
 // services.AddDucky(builder => builder
-//     .UseMiddleware<NoOpMiddleware>()
 //     .UseMiddleware<CorrelationIdMiddleware>()
 //     .UseMiddleware<JsLoggingMiddleware>()
 //     .UseMiddleware<AsyncEffectMiddleware>()

@@ -42,11 +42,6 @@ public sealed class JsLoggingMiddleware : IActionMiddleware
     {
         return actions.Do(ctx =>
         {
-            if (ctx.Action is StoreInitialized)
-            {
-                Console.WriteLine($"StoreInitialized seen by JsLoggingMiddleware. Stack: {Environment.StackTrace}");
-            }
-            
             object? prevState = ctx.TryGetMetadata(MetadataPrevState, out object? prev) ? prev : null;
             DateTime startTime = ctx.TryGetMetadata(MetadataStartTime, out DateTime st) ? st : DateTime.Now;
             double duration = (DateTime.Now - startTime).TotalMilliseconds;

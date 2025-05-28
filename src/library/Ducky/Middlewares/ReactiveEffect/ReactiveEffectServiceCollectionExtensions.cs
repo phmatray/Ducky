@@ -19,7 +19,7 @@ public static class ReactiveEffectServiceCollectionExtensions
         {
             return new ReactiveEffectMiddleware(
                 sp.GetServices<IReactiveEffect>(),
-                () => sp.GetRequiredService<DuckyStore>().CurrentState,
+                () => sp.GetRequiredService<IStore>().CurrentState,
                 sp.GetRequiredService<IDispatcher>(),
                 sp.GetRequiredService<IStoreEventPublisher>()
             );

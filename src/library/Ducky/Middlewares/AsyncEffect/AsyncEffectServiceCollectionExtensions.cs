@@ -19,14 +19,14 @@ public static class AsyncEffectServiceCollectionExtensions
         {
             return new AsyncEffectMiddleware(
                 sp.GetServices<IAsyncEffect>(),
-                () => sp.GetRequiredService<DuckyStore>().CurrentState,
+                () => sp.GetRequiredService<IStore>().CurrentState,
                 sp.GetRequiredService<IDispatcher>(),
                 sp.GetRequiredService<IStoreEventPublisher>()
             );
         });
 
-        services.AddScoped<IActionMiddleware, AsyncEffectMiddleware>(
-            sp => sp.GetRequiredService<AsyncEffectMiddleware>());
+        services.AddScoped<IActionMiddleware, AsyncEffectMiddleware>(sp =>
+            sp.GetRequiredService<AsyncEffectMiddleware>());
 
         return services;
     }
