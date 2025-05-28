@@ -6,52 +6,47 @@
 @using Microsoft.Extensions.Logging
 @using Ducky.Abstractions
 @using Ducky.Pipeline
-@inherits ComponentBase
+@inherits ErrorBoundary
 @inject IEnumerable<IExceptionHandler> ExceptionHandlers
 @inject IStoreEventPublisher EventPublisher
 @inject ILogger<DuckyErrorBoundary> Logger
 
-<ErrorBoundary @ref="errorBoundary">
-    <ChildContent>
-        @ChildContent
-    </ChildContent>
-    <ErrorContent Context="exception">
-        @if (ErrorContent != null)
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else if (ErrorContent != null)
+{
+    @ErrorContent(CurrentException)
+}
+else
+{
+    <div class="ducky-error-boundary">
+        <h3>Something went wrong</h3>
+        <p>An error occurred while rendering this component.</p>
+        @if (ShowDetails)
         {
-            @ErrorContent(exception)
+            <details>
+                <summary>Error Details</summary>
+                <pre>@CurrentException.ToString()</pre>
+            </details>
         }
-        else
-        {
-            <div class="ducky-error-boundary">
-                <h3>Something went wrong</h3>
-                <p>An error occurred while rendering this component.</p>
-                @if (ShowDetails)
-                {
-                    <details>
-                        <summary>Error Details</summary>
-                        <pre>@exception.ToString()</pre>
-                    </details>
-                }
-            </div>
-        }
-    </ErrorContent>
-</ErrorBoundary>
+    </div>
+}
 
 @code {
-    private ErrorBoundary? errorBoundary;
-
     /// <summary>
     /// Gets or sets the child content to be rendered inside the error boundary.
     /// </summary>
     [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+    public new RenderFragment? ChildContent { get; set; }
 
     /// <summary>
     /// Gets or sets the error content to be rendered when an exception occurs.
     /// If not provided, a default error UI will be displayed.
     /// </summary>
     [Parameter]
-    public RenderFragment<Exception>? ErrorContent { get; set; }
+    public new RenderFragment<Exception>? ErrorContent { get; set; }
 
     /// <summary>
     /// Gets or sets whether to show detailed error information in the default error UI.
@@ -59,7 +54,8 @@
     [Parameter]
     public bool ShowDetails { get; set; }
 
-    protected override async Task OnErrorAsync(Exception exception)
+    /// <inheritdoc />
+    protected override Task OnErrorAsync(Exception exception)
     {
         Logger.LogError(exception, "Unhandled exception occurred in Blazor component");
 
@@ -90,14 +86,14 @@
         var finalEventArgs = new ActionErrorEventArgs(exception, "BlazorComponent", new ActionContext("BlazorError"), isHandled);
         EventPublisher.Publish(finalEventArgs);
 
-        await base.OnErrorAsync(exception);
+        return base.OnErrorAsync(exception);
     }
 
     /// <summary>
     /// Recovers from the error state and re-renders the component.
     /// </summary>
-    public void Recover()
+    public new void Recover()
     {
-        errorBoundary?.Recover();
+        base.Recover();
     }
 }

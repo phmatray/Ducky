@@ -47,6 +47,9 @@ public record MarkNotificationAsRead(Guid NotificationId);
 [DuckyAction]
 public record MarkAllNotificationsAsRead;
 
+[DuckyAction]
+public record ClearErrorNotifications;
+
 #endregion
 
 #region Reducers
@@ -58,6 +61,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
         On<AddNotification>(Reduce);
         On<MarkNotificationAsRead>(Reduce);
         On<MarkAllNotificationsAsRead>(Reduce);
+        On<ClearErrorNotifications>(Reduce);
     }
 
     public override NotificationsState GetInitialState()
@@ -89,6 +93,14 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
         {
             Notifications = state.Notifications
                 .Select(n => n with { IsRead = true })
+                .ToValueCollection()
+        };
+
+    private static NotificationsState Reduce(NotificationsState state, ClearErrorNotifications action)
+        => new()
+        {
+            Notifications = state.Notifications
+                .Where(n => n.Severity != NotificationSeverity.Error)
                 .ToValueCollection()
         };
 }

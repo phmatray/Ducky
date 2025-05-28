@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Demo.BlazorWasm;
 using Demo.BlazorWasm.AppStore;
+using Demo.BlazorWasm.Features.Feedback;
 using Demo.BlazorWasm.Features.Feedback.Effects;
 using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
@@ -9,6 +10,7 @@ using Ducky.Blazor;
 using Ducky.Blazor.Middlewares.JsLogging;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
+using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.NoOp;
 using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Middlewares.AsyncEffectRetry;
@@ -39,9 +41,13 @@ services.AddTransient<IMoviesService, MoviesService>();
 services.AddNoOpMiddleware();
 services.AddJsLoggingMiddleware();
 services.AddCorrelationIdMiddleware();
+services.AddExceptionHandlingMiddleware();
 services.AddAsyncEffectMiddleware();
 services.AddAsyncEffectRetryMiddleware();
 services.AddReactiveEffectMiddleware();
+
+// Register exception handler
+services.AddExceptionHandler<NotificationExceptionHandler>();
 
 // Register async effects (for retry demonstration)
 services.AddAsyncEffect<RetryableMoviesEffect>();
@@ -53,6 +59,8 @@ services.AddReactiveEffect<LoadMoviesFailureEffect>();
 services.AddReactiveEffect<OpenAboutDialogEffect>();
 services.AddReactiveEffect<TimerTickEffect>();
 services.AddReactiveEffect<DebouncedSearchEffect>();
+services.AddReactiveEffect<ErrorRecoveryEffect>();
+services.AddReactiveEffect<TestErrorEffect>();
 
 // Add Ducky with configured middleware pipeline - Option 1: Direct configuration
 services.AddDuckyWithPipeline(
@@ -63,6 +71,7 @@ services.AddDuckyWithPipeline(
         pipeline.Use(serviceProvider.GetRequiredService<NoOpMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
+        pipeline.Use(serviceProvider.GetRequiredService<ExceptionHandlingMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectRetryMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());

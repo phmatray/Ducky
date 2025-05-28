@@ -1,12 +1,8 @@
-@inherits ErrorBoundary
+@inherits Ducky.Blazor.Components.DuckyErrorBoundary
 
 @if (CurrentException is null)
 {
     @ChildContent
-}
-else if (ErrorContent is not null)
-{
-    @ErrorContent(CurrentException)
 }
 else
 {
@@ -33,18 +29,5 @@ else
 }
 
 @code {
-    [Parameter] public bool ShowDetails { get; set; } = false;
-    
-    protected override Task OnErrorAsync(Exception exception)
-    {
-        // Log the error
-        Logger.LogError(exception, "Error boundary caught exception");
-        
-        // You could also dispatch an error action to the store here
-        // Dispatcher.DispatchError(exception.Message);
-        
-        return base.OnErrorAsync(exception);
-    }
-    
-    [Inject] private ILogger<DuckyErrorBoundary> Logger { get; set; } = default!;
+    // All parameters and functionality are inherited from DuckyErrorBoundary
 }

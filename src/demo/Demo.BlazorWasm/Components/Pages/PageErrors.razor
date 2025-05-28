@@ -1,17 +1,62 @@
 @page "/errors"
+@using Demo.BlazorWasm.Features.Feedback.Actions
 @inherits DuckyComponent<NotificationsState>
 
-<PageTitle>Ducky - Notifications</PageTitle>
+<PageTitle>Ducky - Errors & Exception Handling</PageTitle>
 
 <MudGrid>
   <MudItem xs="12">
     <MudStack>
       <MudText Typo="Typo.subtitle1">System</MudText>
-      <MudText Typo="Typo.h3">Errors</MudText>
+      <MudText Typo="Typo.h3">Error Handling Demo</MudText>
       <MudText Typo="Typo.body1">
-        Review and manage system errors and exceptions.
+        Test global error handling and recovery features.
       </MudText>
     </MudStack>
+  </MudItem>
+  
+  <MudItem xs="12">
+    <MudPaper Class="pa-4">
+      <MudText Typo="Typo.h6" Class="mb-4">Error Simulation</MudText>
+      <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+          <MudButton 
+            Variant="Variant.Filled" 
+            Color="Color.Error" 
+            FullWidth="true"
+            OnClick="ThrowException">
+            Throw Exception
+          </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+          <MudButton 
+            Variant="Variant.Filled" 
+            Color="Color.Warning" 
+            FullWidth="true"
+            OnClick="ThrowAsyncException">
+            Throw Async Exception
+          </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+          <MudButton 
+            Variant="Variant.Filled" 
+            Color="Color.Info" 
+            FullWidth="true"
+            OnClick="SimulateActionError">
+            Simulate Action Error
+          </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+          <MudButton 
+            Variant="Variant.Filled" 
+            Color="Color.Secondary" 
+            FullWidth="true"
+            OnClick="ClearErrors">
+            Clear All Errors
+          </MudButton>
+        </MudItem>
+      </MudGrid>
+    </MudPaper>
   </MudItem>
   
   <MudItem xs="12">
@@ -53,4 +98,25 @@
   private ValueCollection<Notification> ErrorNotifications
     => State.SelectErrorNotifications();
 
+  private void ThrowException()
+  {
+    throw new InvalidOperationException("This is a test exception thrown from the UI!");
+  }
+
+  private async Task ThrowAsyncException()
+  {
+    await Task.Delay(100);
+    throw new NotSupportedException("This is an async exception for testing error boundaries!");
+  }
+
+  private void SimulateActionError()
+  {
+    // Dispatch an action that will fail
+    Dispatcher.Dispatch(new TestErrorAction());
+  }
+
+  private void ClearErrors()
+  {
+    Dispatcher.Dispatch(new ClearErrorNotifications());
+  }
 }
