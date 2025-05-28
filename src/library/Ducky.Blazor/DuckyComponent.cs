@@ -22,7 +22,7 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
     /// Gets or sets the store that manages the application state.
     /// </summary>
     [Inject]
-    public required DuckyStore Store { get; set; }
+    public required IStore Store { get; set; }
 
     /// <summary>
     /// Gets or sets the dispatcher used to dispatch actions to the store.

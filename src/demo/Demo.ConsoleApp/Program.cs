@@ -40,7 +40,7 @@ DuckyStore store = DuckyStoreFactory.CreateStore(
         pipeline.Use(new CorrelationIdMiddleware(eventPublisher));
         pipeline.Use(new LoggingMiddleware());
         pipeline.Use(new AsyncEffectMiddleware(
-            serviceProvider,
+            serviceProvider.GetServices<IAsyncEffect>(),
             () => storeRef!.CurrentState,
             dispatcher,
             eventPublisher));

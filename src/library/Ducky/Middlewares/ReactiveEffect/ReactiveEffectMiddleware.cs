@@ -1,5 +1,4 @@
 using Ducky.Pipeline;
-using Microsoft.Extensions.DependencyInjection;
 using R3;
 
 namespace Ducky.Middlewares.ReactiveEffect;
@@ -12,39 +11,37 @@ public sealed class ReactiveEffectMiddleware : IActionMiddleware, IDisposable
     private readonly CompositeDisposable _subscriptions = [];
     private readonly Subject<object> _actions = new();
     private readonly BehaviorSubject<IRootState> _state;
-    private readonly IReactiveEffect[] _effects;
+    private readonly IEnumerable<IReactiveEffect> _effects;
     private readonly IDispatcher _dispatcher;
-    private readonly IStoreEventPublisher _eventPublisher;
     private readonly Func<IRootState> _getState;
+    private readonly IStoreEventPublisher _eventPublisher;
     private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of <see cref="ReactiveEffectMiddleware"/>.
     /// </summary>
-    /// <param name="services">The service provider used to resolve dependencies.</param>
+    /// <param name="effects">An enumerable collection of reactive effects that implement <see cref="IReactiveEffect"/>.</param>
     /// <param name="getState">A function that returns the current state of the application.</param>
     /// <param name="dispatcher">The dispatcher used to handle actions.</param>
     /// <param name="eventPublisher">The event publisher for dispatching reactive effect events.</param>
     public ReactiveEffectMiddleware(
-        IServiceProvider services,
+        IEnumerable<IReactiveEffect> effects,
         Func<IRootState> getState,
         IDispatcher dispatcher,
         IStoreEventPublisher eventPublisher)
     {
-        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(effects);
         ArgumentNullException.ThrowIfNull(getState);
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(eventPublisher);
 
+        _effects = effects;
         _getState = getState;
         _dispatcher = dispatcher;
         _eventPublisher = eventPublisher;
 
         // Initialize state with current state
         _state = new BehaviorSubject<IRootState>(_getState());
-
-        // Resolve all registered reactive effects
-        _effects = services.GetServices<IReactiveEffect>().ToArray();
 
         // Set up effect subscriptions
         InitializeEffects();

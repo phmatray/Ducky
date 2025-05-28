@@ -15,7 +15,8 @@ public static class CorrelationIdServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddCorrelationIdMiddleware(this IServiceCollection services)
     {
-        services.AddSingleton<IActionMiddleware, CorrelationIdMiddleware>();
+        services.AddSingleton<CorrelationIdMiddleware>();
+        services.AddSingleton<IActionMiddleware, CorrelationIdMiddleware>(sp => sp.GetRequiredService<CorrelationIdMiddleware>());
         return services;
     }
 }

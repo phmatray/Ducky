@@ -43,7 +43,7 @@ services.AddJsLoggingMiddleware();
 services.AddCorrelationIdMiddleware();
 services.AddExceptionHandlingMiddleware();
 services.AddAsyncEffectMiddleware();
-services.AddAsyncEffectRetryMiddleware();
+// services.AddAsyncEffectRetryMiddleware();
 services.AddReactiveEffectMiddleware();
 
 // Register exception handler
@@ -73,7 +73,7 @@ services.AddDuckyWithPipeline(
         pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<ExceptionHandlingMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
-        pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectRetryMiddleware>());
+        // pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectRetryMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
     });
 

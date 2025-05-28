@@ -1,5 +1,4 @@
 using Ducky.Pipeline;
-using Microsoft.Extensions.DependencyInjection;
 using R3;
 
 namespace Ducky.Middlewares.AsyncEffect;
@@ -9,30 +8,28 @@ namespace Ducky.Middlewares.AsyncEffect;
 /// </summary>
 public sealed class AsyncEffectMiddleware : IActionMiddleware
 {
+    private readonly IEnumerable<IAsyncEffect> _effects;
     private readonly Func<IRootState> _getState;
-    private readonly IAsyncEffect[] _effects;
     private readonly IStoreEventPublisher _eventPublisher;
 
     /// <summary>
     /// Initializes a new instance of <see cref="AsyncEffectMiddleware"/> with the specified dependencies.
     /// </summary>
-    /// <param name="services">The service provider used to resolve dependencies.</param>
+    /// <param name="effects">An enumerable collection of asynchronous effects that implement <see cref="IAsyncEffect"/>.</param>
     /// <param name="getState">A function that returns the current state of the application.</param>
     /// <param name="dispatcher">The dispatcher used to handle actions.</param>
     /// <param name="eventPublisher">The store event publisher for error events.</param>
     public AsyncEffectMiddleware(
-        IServiceProvider services,
+        IEnumerable<IAsyncEffect> effects,
         Func<IRootState> getState,
         IDispatcher dispatcher,
         IStoreEventPublisher eventPublisher)
     {
+        _effects = effects;
         _getState = getState;
         _eventPublisher = eventPublisher;
 
-        // Resolve and cache effects
-        _effects = services.GetServices<IAsyncEffect>().ToArray();
-
-        // Optionally, inject the dispatcher into each effect if needed:
+        // Inject the dispatcher into each effect
         foreach (IAsyncEffect effect in _effects)
         {
             effect.SetDispatcher(dispatcher);

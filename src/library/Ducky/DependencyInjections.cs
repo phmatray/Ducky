@@ -37,7 +37,7 @@ public static class DependencyInjections
         services.ScanAndRegister<IReactiveEffect>(options.Assemblies);
 
         // Add Store
-        services.AddScoped<DuckyStore>(sp =>
+        services.AddScoped<IStore, DuckyStore>(sp =>
         {
             IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
             IStoreEventPublisher eventPublisher = sp.GetRequiredService<IStoreEventPublisher>();
@@ -56,9 +56,6 @@ public static class DependencyInjections
 
             return new DuckyStore(dispatcher, pipeline, eventPublisher, slices);
         });
-        
-        // Register IStore interface
-        services.AddScoped<IStore>(sp => sp.GetRequiredService<DuckyStore>());
 
         return services;
     }

@@ -4,6 +4,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Ducky.Abstractions;
+using Ducky.Pipeline;
 
 namespace Ducky.Middlewares.ExceptionHandling;
 
@@ -19,7 +20,9 @@ public static class ExceptionHandlingServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddExceptionHandlingMiddleware(this IServiceCollection services)
     {
-        return services.AddSingleton<ExceptionHandlingMiddleware>();
+        services.AddSingleton<ExceptionHandlingMiddleware>();
+        services.AddSingleton<IActionMiddleware, ExceptionHandlingMiddleware>(sp => sp.GetRequiredService<ExceptionHandlingMiddleware>());
+        return services;
     }
 
     /// <summary>

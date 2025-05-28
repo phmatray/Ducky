@@ -1,10 +1,7 @@
 using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Pipeline;
-using Ducky.Tests.TestModels;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using R3;
-using System.Collections.Immutable;
 
 namespace Ducky.Tests.Middlewares;
 
@@ -48,7 +45,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new ReactiveEffectMiddleware(_serviceProvider, null!, _dispatcher, _eventPublisher));
+            new ReactiveEffectMiddleware([], null!, _dispatcher, _eventPublisher));
     }
 
     [Fact]
@@ -56,7 +53,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new ReactiveEffectMiddleware(_serviceProvider, _getState, null!, _eventPublisher));
+            new ReactiveEffectMiddleware([], _getState, null!, _eventPublisher));
     }
 
     [Fact]
@@ -64,14 +61,14 @@ public class ReactiveEffectMiddlewareTests : IDisposable
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new ReactiveEffectMiddleware(_serviceProvider, _getState, _dispatcher, null!));
+            new ReactiveEffectMiddleware([], _getState, _dispatcher, null!));
     }
 
     [Fact]
     public void InvokeBeforeReduce_ReturnsActionsUnchanged()
     {
         // Arrange
-        _middleware = new ReactiveEffectMiddleware(_serviceProvider, _getState, _dispatcher, _eventPublisher);
+        _middleware = new ReactiveEffectMiddleware([], _getState, _dispatcher, _eventPublisher);
         Subject<ActionContext> actions = new();
         TestAction testAction = new();
         ActionContext context = new(testAction);
@@ -95,11 +92,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
 
-        ServiceCollection services = [];
-        services.AddSingleton<IReactiveEffect>(testEffect);
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
+        _middleware = new ReactiveEffectMiddleware([testEffect], _getState, _dispatcher, _eventPublisher);
 
         Subject<ActionContext> actions = new();
         TestAction testAction = new();
@@ -123,11 +116,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         List<IRootState> capturedStates = [];
         TestStateCapturingEffect stateEffect = new(capturedStates);
 
-        ServiceCollection services = [];
-        services.AddSingleton<IReactiveEffect>(stateEffect);
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
+        _middleware = new ReactiveEffectMiddleware([stateEffect], _getState, _dispatcher, _eventPublisher);
 
         Subject<ActionContext> actions = new();
         TestAction testAction = new();
@@ -151,11 +140,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
 
-        ServiceCollection services = [];
-        services.AddSingleton<IReactiveEffect>(testEffect);
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
+        _middleware = new ReactiveEffectMiddleware([testEffect], _getState, _dispatcher, _eventPublisher);
 
         Subject<ActionContext> actions = new();
         TestAction testAction = new();
@@ -179,11 +164,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         TestAction actionToDispatch = new();
         TestDispatchingEffect dispatchingEffect = new(actionToDispatch);
 
-        ServiceCollection services = [];
-        services.AddSingleton<IReactiveEffect>(dispatchingEffect);
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
+        _middleware = new ReactiveEffectMiddleware([dispatchingEffect], _getState, _dispatcher, _eventPublisher);
 
         Subject<ActionContext> actions = new();
         TestAction triggerAction = new();
@@ -212,11 +193,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
 
-        ServiceCollection services = [];
-        services.AddSingleton<IReactiveEffect>(testEffect);
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
+        _middleware = new ReactiveEffectMiddleware([testEffect], _getState, _dispatcher, _eventPublisher);
 
         // Act
         _middleware.Dispose();
@@ -233,11 +210,7 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
 
-        ServiceCollection services = [];
-        services.AddSingleton<IReactiveEffect>(testEffect);
-        IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        _middleware = new ReactiveEffectMiddleware(serviceProvider, _getState, _dispatcher, _eventPublisher);
+        _middleware = new ReactiveEffectMiddleware([testEffect], _getState, _dispatcher, _eventPublisher);
         _middleware.Dispose();
 
         Subject<ActionContext> actions = new();
@@ -266,50 +239,29 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         public bool ContainsKey(string key) => false;
     }
 
-    private class TestReactiveEffect : ReactiveEffect
+    private class TestReactiveEffect(List<object> capturedActions) : ReactiveEffect
     {
-        private readonly List<object> _capturedActions;
-
-        public TestReactiveEffect(List<object> capturedActions)
-        {
-            _capturedActions = capturedActions;
-        }
-
         public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
         {
-            actions.Subscribe(_capturedActions.Add);
+            actions.Subscribe(capturedActions.Add);
             return Observable.Empty<object>();
         }
     }
 
-    private class TestStateCapturingEffect : ReactiveEffect
+    private class TestStateCapturingEffect(List<IRootState> capturedStates) : ReactiveEffect
     {
-        private readonly List<IRootState> _capturedStates;
-
-        public TestStateCapturingEffect(List<IRootState> capturedStates)
-        {
-            _capturedStates = capturedStates;
-        }
-
         public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
         {
-            rootState.Subscribe(_capturedStates.Add);
+            rootState.Subscribe(capturedStates.Add);
             return Observable.Empty<object>();
         }
     }
 
-    private class TestDispatchingEffect : ReactiveEffect
+    private class TestDispatchingEffect(object actionToDispatch) : ReactiveEffect
     {
-        private readonly object _actionToDispatch;
-
-        public TestDispatchingEffect(object actionToDispatch)
-        {
-            _actionToDispatch = actionToDispatch;
-        }
-
         public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
         {
-            return actions.Take(1).Select(_ => _actionToDispatch);
+            return actions.Take(1).Select(_ => actionToDispatch);
         }
     }
 }
