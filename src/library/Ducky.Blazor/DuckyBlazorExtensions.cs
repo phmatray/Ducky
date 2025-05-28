@@ -4,7 +4,6 @@
 
 using Ducky.Blazor.Middlewares.JsLogging;
 using Ducky.Middlewares.AsyncEffect;
-using Ducky.Middlewares.AsyncEffectRetry;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Pipeline;
@@ -35,7 +34,6 @@ public static class DuckyBlazorExtensions
         services.AddCorrelationIdMiddleware();
         services.AddJsLoggingMiddleware();
         services.AddAsyncEffectMiddleware();
-        services.AddAsyncEffectRetryMiddleware();
         services.AddReactiveEffectMiddleware();
 
         return services.AddDuckyWithPipeline(
@@ -46,7 +44,6 @@ public static class DuckyBlazorExtensions
                 pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
                 pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
                 pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
-                pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectRetryMiddleware>());
                 pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
 
                 // Apply any additional configuration

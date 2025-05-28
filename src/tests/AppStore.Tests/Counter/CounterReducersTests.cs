@@ -10,7 +10,7 @@ public sealed class CounterReducersTests : IDisposable
 {
     private const string Key = "counter";
 
-    private readonly CounterState _initialState = new(10);
+    private readonly CounterState _initialState = new(0);
     private readonly CounterReducers _sut = new();
 
     private bool _disposed;

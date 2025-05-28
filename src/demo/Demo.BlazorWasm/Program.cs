@@ -13,7 +13,6 @@ using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.NoOp;
 using Ducky.Middlewares.ReactiveEffect;
-using Ducky.Middlewares.AsyncEffectRetry;
 using MudBlazor.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -43,7 +42,6 @@ services.AddJsLoggingMiddleware();
 services.AddCorrelationIdMiddleware();
 services.AddExceptionHandlingMiddleware();
 services.AddAsyncEffectMiddleware();
-// services.AddAsyncEffectRetryMiddleware();
 services.AddReactiveEffectMiddleware();
 
 // Register exception handler
@@ -73,7 +71,6 @@ services.AddDuckyWithPipeline(
         pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<ExceptionHandlingMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
-        // pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectRetryMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
     });
 
@@ -83,7 +80,6 @@ services.AddDuckyWithPipeline(
 //     typeof(CorrelationIdMiddleware),
 //     typeof(JsLoggingMiddleware),
 //     typeof(AsyncEffectMiddleware),
-//     typeof(AsyncEffectRetryMiddleware),
 //     typeof(ReactiveEffectMiddleware)
 // );
 
@@ -93,7 +89,6 @@ services.AddDuckyWithPipeline(
 //     .UseMiddleware<CorrelationIdMiddleware>()
 //     .UseMiddleware<JsLoggingMiddleware>()
 //     .UseMiddleware<AsyncEffectMiddleware>()
-//     .UseMiddleware<AsyncEffectRetryMiddleware>()
 //     .UseMiddleware<ReactiveEffectMiddleware>()
 // );
 
