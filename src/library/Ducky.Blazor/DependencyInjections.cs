@@ -5,6 +5,7 @@
 using Ducky.Pipeline;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using R3;
 
 namespace Ducky.Blazor;
@@ -35,7 +36,7 @@ public static class DependencyInjections
         // Add Reactive Extensions for Blazor if configuration is provided
         if (configuration is not null)
         {
-            services.AddScoped<TimeProvider, SynchronizationContextTimeProvider>();
+            services.TryAddScoped<TimeProvider, SynchronizationContextTimeProvider>();
         }
 
         return services.AddDuckyCore(options);
@@ -53,7 +54,7 @@ public static class DependencyInjections
         IConfiguration configuration,
         Action<ActionPipeline, IServiceProvider> configurePipeline)
     {
-        services.AddScoped<TimeProvider, SynchronizationContextTimeProvider>();
+        services.TryAddScoped<TimeProvider, SynchronizationContextTimeProvider>();
 
         DuckyOptions options = new();
         configuration.GetSection("Ducky").Bind(options);

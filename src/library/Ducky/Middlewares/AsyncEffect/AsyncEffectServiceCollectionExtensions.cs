@@ -1,5 +1,6 @@
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Middlewares.AsyncEffect;
 
@@ -15,7 +16,7 @@ public static class AsyncEffectServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddAsyncEffectMiddleware(this IServiceCollection services)
     {
-        services.AddScoped<AsyncEffectMiddleware>(sp =>
+        services.TryAddScoped<AsyncEffectMiddleware>(sp =>
         {
             return new AsyncEffectMiddleware(
                 sp.GetServices<IAsyncEffect>(),
@@ -24,9 +25,6 @@ public static class AsyncEffectServiceCollectionExtensions
                 sp.GetRequiredService<IStoreEventPublisher>()
             );
         });
-
-        services.AddScoped<IActionMiddleware, AsyncEffectMiddleware>(sp =>
-            sp.GetRequiredService<AsyncEffectMiddleware>());
 
         return services;
     }
@@ -40,7 +38,7 @@ public static class AsyncEffectServiceCollectionExtensions
     public static IServiceCollection AddAsyncEffect<TEffect>(this IServiceCollection services)
         where TEffect : class, IAsyncEffect
     {
-        services.AddScoped<IAsyncEffect, TEffect>();
+        services.TryAddScoped<IAsyncEffect, TEffect>();
         return services;
     }
 }

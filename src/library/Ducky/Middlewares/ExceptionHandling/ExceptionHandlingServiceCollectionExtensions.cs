@@ -5,6 +5,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Ducky.Abstractions;
 using Ducky.Pipeline;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Middlewares.ExceptionHandling;
 
@@ -20,11 +21,7 @@ public static class ExceptionHandlingServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddExceptionHandlingMiddleware(this IServiceCollection services)
     {
-        services.AddScoped<ExceptionHandlingMiddleware>();
-
-        services.AddScoped<IActionMiddleware, ExceptionHandlingMiddleware>(sp =>
-            sp.GetRequiredService<ExceptionHandlingMiddleware>());
-
+        services.TryAddScoped<ExceptionHandlingMiddleware>();
         return services;
     }
 
@@ -37,7 +34,8 @@ public static class ExceptionHandlingServiceCollectionExtensions
     public static IServiceCollection AddExceptionHandler<THandler>(this IServiceCollection services)
         where THandler : class, IExceptionHandler
     {
-        return services.AddScoped<IExceptionHandler, THandler>();
+        services.TryAddScoped<IExceptionHandler, THandler>();
+        return services;
     }
 
     /// <summary>
@@ -52,6 +50,7 @@ public static class ExceptionHandlingServiceCollectionExtensions
         Func<IServiceProvider, THandler> factory)
         where THandler : class, IExceptionHandler
     {
-        return services.AddScoped<IExceptionHandler>(factory);
+        services.TryAddScoped<IExceptionHandler>(factory);
+        return services;
     }
 }

@@ -16,8 +16,8 @@
 //     public static IServiceCollection AddDevToolsMiddleware<TState>(this IServiceCollection services)
 //         where TState : class
 //     {
-//         services.AddScoped<ReduxDevToolsModule<TState>>();
-//         services.AddScoped<DevToolsMiddleware<TState>>();
+//         services.TryAddScoped<ReduxDevToolsModule<TState>>();
+//         services.TryAddScoped<DevToolsMiddleware<TState>>();
 //         return services;
 //     }
 // }

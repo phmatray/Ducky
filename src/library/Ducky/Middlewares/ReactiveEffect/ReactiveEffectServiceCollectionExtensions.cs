@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Ducky.Pipeline;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Middlewares.ReactiveEffect;
 
@@ -15,7 +16,7 @@ public static class ReactiveEffectServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddReactiveEffectMiddleware(this IServiceCollection services)
     {
-        services.AddScoped<ReactiveEffectMiddleware>(sp =>
+        services.TryAddScoped<ReactiveEffectMiddleware>(sp =>
         {
             return new ReactiveEffectMiddleware(
                 sp.GetServices<IReactiveEffect>(),
@@ -24,9 +25,6 @@ public static class ReactiveEffectServiceCollectionExtensions
                 sp.GetRequiredService<IStoreEventPublisher>()
             );
         });
-
-        services.AddScoped<IActionMiddleware, ReactiveEffectMiddleware>(
-            sp => sp.GetRequiredService<ReactiveEffectMiddleware>());
 
         return services;
     }
@@ -40,7 +38,7 @@ public static class ReactiveEffectServiceCollectionExtensions
     public static IServiceCollection AddReactiveEffect<TEffect>(this IServiceCollection services)
         where TEffect : class, IReactiveEffect
     {
-        services.AddScoped<IReactiveEffect, TEffect>();
+        services.TryAddScoped<IReactiveEffect, TEffect>();
         return services;
     }
 }

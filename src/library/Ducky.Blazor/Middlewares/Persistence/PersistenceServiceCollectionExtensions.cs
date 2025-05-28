@@ -19,9 +19,9 @@
 //         where TState : class
 //         where TProvider : class, IPersistenceProvider<TState>
 //     {
-//         services.AddScoped<HydrationManager>();
-//         services.AddScoped<IPersistenceProvider<TState>, TProvider>();
-//         services.AddScoped<PersistenceMiddleware<TState>>();
+//         services.TryAddScoped<HydrationManager>();
+//         services.TryAddScoped<IPersistenceProvider<TState>, TProvider>();
+//         services.TryAddScoped<PersistenceMiddleware<TState>>();
 //         return services;
 //     }
 // }

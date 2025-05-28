@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Middlewares.NoOp;
 
@@ -14,7 +15,7 @@ public static class NoOpServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddNoOpMiddleware(this IServiceCollection services)
     {
-        services.AddScoped<NoOpMiddleware>();
+        services.TryAddScoped<NoOpMiddleware>();
         return services;
     }
 }

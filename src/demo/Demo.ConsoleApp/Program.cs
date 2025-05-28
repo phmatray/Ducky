@@ -4,6 +4,7 @@ using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using R3;
 using Spectre.Console;
 
@@ -21,9 +22,9 @@ TodoReducers todoReducers = new();
 
 // Setup services for async effects
 ServiceCollection services = [];
-services.AddScoped<IAsyncEffect, DelayedIncrementEffect>();
-services.AddScoped<IAsyncEffect, CounterThresholdEffect>();
-services.AddScoped<IStoreEventPublisher, StoreEventPublisher>();
+services.TryAddScoped<IAsyncEffect, DelayedIncrementEffect>();
+services.TryAddScoped<IAsyncEffect, CounterThresholdEffect>();
+services.TryAddScoped<IStoreEventPublisher, StoreEventPublisher>();
 
 ServiceProvider serviceProvider = services.BuildServiceProvider();
 

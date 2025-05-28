@@ -13,6 +13,7 @@ using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.NoOp;
 using Ducky.Middlewares.ReactiveEffect;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MudBlazor.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -22,7 +23,7 @@ IServiceCollection services = builder.Services;
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+services.TryAddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 // Add front services
 services.AddMudServices(
@@ -33,8 +34,8 @@ services.AddMudServices(
     });
 
 // Add business services
-services.AddScoped<IJsonColorizer, JsonColorizer>();
-services.AddTransient<IMoviesService, MoviesService>();
+services.TryAddScoped<IJsonColorizer, JsonColorizer>();
+services.TryAddScoped<IMoviesService, MoviesService>();
 
 // Register ducky middlewares
 services.AddJsLoggingMiddleware();
@@ -46,21 +47,6 @@ services.AddReactiveEffectMiddleware();
 // Register exception handler
 services.AddExceptionHandler<NotificationExceptionHandler>();
 
-// Register async effects (for retry demonstration)
-services.AddAsyncEffect<RetryableMoviesEffect>();
-
-// Register reactive effects
-// Temporarily disable effects that might cause initialization issues
-// services.AddReactiveEffect<AllActionsEffect>(); // Subscribes to ALL actions immediately
-services.AddReactiveEffect<LoadMoviesSuccessEffect>();
-services.AddReactiveEffect<LoadMoviesFailureEffect>();
-services.AddReactiveEffect<OpenAboutDialogEffect>();
-// Temporarily disable TimerTickEffect to test if it's causing the loading issue
-// services.AddReactiveEffect<TimerTickEffect>();
-services.AddReactiveEffect<DebouncedSearchEffect>();
-// services.AddReactiveEffect<ErrorRecoveryEffect>(); // Uses .Subscribe() directly
-// services.AddReactiveEffect<TestErrorEffect>(); // Uses .Subscribe() directly
-
 // Add Ducky with configured middleware pipeline - Option 1: Direct configuration
 // TESTING MIDDLEWARES ONE BY ONE
 services.AddDuckyWithPipeline(
@@ -69,7 +55,8 @@ services.AddDuckyWithPipeline(
     {
         // Configure the middleware pipeline in the order you want
         pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
-        pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
+        // ISSUE: JsLoggingMiddleware causes duplicate key error in Blazor WebAssembly
+        // pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
         pipeline.Use(serviceProvider.GetRequiredService<ExceptionHandlingMiddleware>());
         // Both effect middlewares
         pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());

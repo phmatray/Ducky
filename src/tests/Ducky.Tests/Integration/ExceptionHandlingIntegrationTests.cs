@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Ducky.Abstractions;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Pipeline;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Tests.Integration;
 
@@ -43,7 +44,7 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
         services.AddExceptionHandler<TestExceptionHandler>(_ => _exceptionHandler);
 
         // Add test slice
-        services.AddScoped<ISlice, TestCounterReducers>();
+        services.TryAddScoped<ISlice, TestCounterReducers>();
 
         _serviceProvider = services.BuildServiceProvider();
         _store = _serviceProvider.GetRequiredService<IStore>();
@@ -84,7 +85,7 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
 
         // Add required dependencies
         services.AddLogging();
-        services.AddScoped<IStoreEventPublisher, StoreEventPublisher>();
+        services.TryAddScoped<IStoreEventPublisher, StoreEventPublisher>();
 
         // Act
         services.AddExceptionHandlingMiddleware();

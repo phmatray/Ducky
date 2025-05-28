@@ -1,5 +1,6 @@
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Middlewares.CorrelationId;
 
@@ -15,11 +16,7 @@ public static class CorrelationIdServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddCorrelationIdMiddleware(this IServiceCollection services)
     {
-        services.AddScoped<CorrelationIdMiddleware>();
-
-        services.AddScoped<IActionMiddleware, CorrelationIdMiddleware>(sp =>
-            sp.GetRequiredService<CorrelationIdMiddleware>());
-
+        services.TryAddScoped<CorrelationIdMiddleware>();
         return services;
     }
 }
