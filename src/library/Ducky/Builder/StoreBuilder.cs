@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Ducky.Middlewares.AsyncEffect;
+using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Pipeline;
 
 namespace Ducky.Builder;
@@ -8,6 +10,9 @@ internal class StoreBuilder : IStoreBuilder
 {
     private readonly List<Type> _middlewareTypes = [];
     private readonly List<Type> _sliceTypes = [];
+    private bool _asyncEffectMiddlewareAdded;
+    private bool _reactiveEffectMiddlewareAdded;
+    private bool _validationEnabled = true;
 
     public IServiceCollection Services { get; }
 
@@ -25,6 +30,16 @@ internal class StoreBuilder : IStoreBuilder
             _middlewareTypes.Add(middlewareType);
             Services.TryAddScoped<TMiddleware>();
             Services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<TMiddleware>());
+
+            // Track effect middleware additions
+            if (middlewareType == typeof(AsyncEffectMiddleware))
+            {
+                _asyncEffectMiddlewareAdded = true;
+            }
+            else if (middlewareType == typeof(ReactiveEffectMiddleware))
+            {
+                _reactiveEffectMiddlewareAdded = true;
+            }
         }
 
         return this;
@@ -40,6 +55,16 @@ internal class StoreBuilder : IStoreBuilder
             _middlewareTypes.Add(middlewareType);
             Services.TryAddScoped(implementationFactory);
             Services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<TMiddleware>());
+
+            // Track effect middleware additions
+            if (middlewareType == typeof(AsyncEffectMiddleware))
+            {
+                _asyncEffectMiddlewareAdded = true;
+            }
+            else if (middlewareType == typeof(ReactiveEffectMiddleware))
+            {
+                _reactiveEffectMiddlewareAdded = true;
+            }
         }
 
         return this;
@@ -129,6 +154,14 @@ internal class StoreBuilder : IStoreBuilder
 
     public IStoreBuilder AddEffect<TEffect>() where TEffect : class, IAsyncEffect
     {
+        if (!_asyncEffectMiddlewareAdded)
+        {
+            throw new MissingMiddlewareException(
+                typeof(TEffect),
+                typeof(AsyncEffectMiddleware),
+                "AddAsyncEffectMiddleware()");
+        }
+
         Services.TryAddScoped<TEffect>();
         Services.AddScoped<IAsyncEffect>(sp => sp.GetRequiredService<TEffect>());
         return this;
@@ -146,6 +179,14 @@ internal class StoreBuilder : IStoreBuilder
 
     public IStoreBuilder AddReactiveEffect<TEffect>() where TEffect : class, IReactiveEffect
     {
+        if (!_reactiveEffectMiddlewareAdded)
+        {
+            throw new MissingMiddlewareException(
+                typeof(TEffect),
+                typeof(ReactiveEffectMiddleware),
+                "AddReactiveEffectMiddleware()");
+        }
+
         Services.TryAddScoped<TEffect>();
         Services.AddScoped<IReactiveEffect>(sp => sp.GetRequiredService<TEffect>());
         return this;
@@ -179,5 +220,26 @@ internal class StoreBuilder : IStoreBuilder
         return this;
     }
 
-    internal List<Type> GetMiddlewareTypes() => new(_middlewareTypes);
+    internal List<Type> GetMiddlewareTypes()
+    {
+        if (_validationEnabled)
+        {
+            List<MiddlewareOrderViolation> violations = MiddlewareOrderValidator.Validate(_middlewareTypes);
+            if (violations.Count > 0)
+            {
+                throw new MiddlewareOrderException(violations);
+            }
+        }
+
+        return new List<Type>(_middlewareTypes);
+    }
+
+    /// <summary>
+    /// Disables middleware order validation (useful for testing or advanced scenarios).
+    /// </summary>
+    public IStoreBuilder DisableOrderValidation()
+    {
+        _validationEnabled = false;
+        return this;
+    }
 }

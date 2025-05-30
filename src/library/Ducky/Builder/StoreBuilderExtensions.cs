@@ -58,7 +58,7 @@ public static class StoreBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.AddMiddleware<AsyncEffectMiddleware>(sp => 
+        return builder.AddMiddleware<AsyncEffectMiddleware>(sp =>
             new AsyncEffectMiddleware(
                 sp.GetServices<IAsyncEffect>(),
                 () => sp.GetRequiredService<IStore>().CurrentState,
@@ -75,7 +75,7 @@ public static class StoreBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.AddMiddleware<ReactiveEffectMiddleware>(sp => 
+        return builder.AddMiddleware<ReactiveEffectMiddleware>(sp =>
             new ReactiveEffectMiddleware(
                 sp.GetServices<IReactiveEffect>(),
                 () => sp.GetRequiredService<IStore>().CurrentState,

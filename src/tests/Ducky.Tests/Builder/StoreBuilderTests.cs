@@ -122,6 +122,8 @@ public class StoreBuilderTests
         services.AddDuckyStore(builder =>
         {
             builder
+                .AddAsyncEffectMiddleware()
+                .AddReactiveEffectMiddleware()
                 .AddEffect<TestAsyncEffect>()
                 .AddReactiveEffect<TestReactiveEffect>();
         });

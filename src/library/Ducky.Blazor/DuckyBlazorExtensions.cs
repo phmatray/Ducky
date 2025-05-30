@@ -28,7 +28,7 @@ public static class DuckyBlazorExtensions
     {
         // Add Blazor-specific time provider
         services.AddBlazorTimeProvider();
-        
+
         return services.AddDuckyStore(builder =>
         {
             // Add default Blazor middlewares
