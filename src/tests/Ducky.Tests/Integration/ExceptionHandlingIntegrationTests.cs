@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
+using Ducky.Builder;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -28,19 +29,10 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
         // Configure logging
         services.AddLogging();
 
-        // Add Ducky services
-        services.AddDucky(options =>
-        {
-            options.ConfigurePipelineWithServices = (pipeline, sp) =>
-            {
-                // Add exception handling middleware first
-                pipeline.Use(sp.GetRequiredService<ExceptionHandlingMiddleware>());
-            };
-        });
-
-        // Add exception handling
-        services.AddExceptionHandlingMiddleware();
-        services.AddExceptionHandler<TestExceptionHandler>(_ => _exceptionHandler);
+        // Add Ducky services with StoreBuilder
+        services.AddDuckyStore(builder => builder
+            .AddExceptionHandlingMiddleware()
+            .AddExceptionHandler<TestExceptionHandler>(_ => _exceptionHandler));
 
         // Add test slice
         services.TryAddScoped<ISlice, TestCounterReducers>();
@@ -86,9 +78,10 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
         services.AddLogging();
         services.TryAddScoped<IStoreEventPublisher, StoreEventPublisher>();
 
-        // Act
-        services.AddExceptionHandlingMiddleware();
-        services.AddExceptionHandler<TestExceptionHandler>();
+        // Act - Add exception handling directly (for testing service registration)
+        services.TryAddScoped<ExceptionHandlingMiddleware>();
+        services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<ExceptionHandlingMiddleware>());
+        services.AddScoped<IExceptionHandler, TestExceptionHandler>();
 
         ServiceProvider provider = services.BuildServiceProvider();
 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
+using Ducky.Builder;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.AsyncEffect;
@@ -14,17 +15,18 @@ namespace Ducky.Tests.Integration;
 public class MiddlewareRegistrationTests
 {
     [Fact]
-    public void Middleware_WhenRegisteredWithExtensionMethod_ShouldBeRegisteredInDI()
+    public void Middleware_WhenRegisteredWithStoreBuilder_ShouldBeRegisteredInDI()
     {
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
 
-        // Act - Register middlewares using their extension methods
-        services.AddCorrelationIdMiddleware();
-        services.AddExceptionHandlingMiddleware();
-        services.AddAsyncEffectMiddleware();
-        services.AddReactiveEffectMiddleware();
+        // Act - Register middlewares using StoreBuilder
+        services.AddDuckyStore(builder => builder
+            .AddCorrelationIdMiddleware()
+            .AddExceptionHandlingMiddleware()
+            .AddAsyncEffectMiddleware()
+            .AddReactiveEffectMiddleware());
 
         // Assert - Middlewares should be registered in the service collection
         services.Any(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).ShouldBeTrue();
@@ -37,17 +39,18 @@ public class MiddlewareRegistrationTests
     }
 
     [Fact]
-    public void Middleware_RegistrationMethods_ShouldRegisterBothConcreteAndInterface()
+    public void StoreBuilder_RegistrationMethods_ShouldRegisterBothConcreteAndInterface()
     {
-        // This test verifies that the original middleware registration issue is fixed
-        // where middlewares were not being registered as both concrete type and IActionMiddleware
+        // This test verifies that StoreBuilder correctly registers middlewares
+        // as both concrete type and IActionMiddleware
 
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
 
         // Act
-        services.AddCorrelationIdMiddleware();
+        services.AddDuckyStore(builder => builder
+            .AddCorrelationIdMiddleware());
 
         // Assert - Both registrations should exist
         ServiceDescriptor? concreteRegistration =

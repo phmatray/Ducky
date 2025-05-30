@@ -2,8 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Pipeline;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using R3;
@@ -16,50 +14,13 @@ namespace Ducky.Blazor;
 public static class DependencyInjections
 {
     /// <summary>
-    /// Adds Ducky services to the specified <see cref="IServiceCollection"/>. This method registers the BlazorR3 services, dispatcher, slices, and effects.
+    /// Registers the Blazor-specific time provider for R3 Observable support.
     /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
-    /// <param name="configuration">The application configuration (optional).</param>
-    /// <param name="configureOptions">An optional action to configure the <see cref="DuckyOptions"/>.</param>
-    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddDucky(
-        this IServiceCollection services,
-        IConfiguration? configuration = null,
-        Action<DuckyOptions>? configureOptions = null)
-    {
-        // Configure options
-        DuckyOptions options = new();
-
-        configuration?.GetSection("Ducky").Bind(options); // Bind configuration section to DuckyOptions
-        configureOptions?.Invoke(options);
-
-        // Add Reactive Extensions for Blazor if configuration is provided
-        if (configuration is not null)
-        {
-            services.TryAddScoped<TimeProvider, SynchronizationContextTimeProvider>();
-        }
-
-        return services.AddDuckyCore(options);
-    }
-
-    /// <summary>
-    /// Adds Ducky services with middleware pipeline configuration that has access to the service provider.
-    /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
-    /// <param name="configuration">The application configuration.</param>
-    /// <param name="configurePipeline">An action to configure the middleware pipeline with service provider access.</param>
-    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddDuckyWithPipeline(
-        this IServiceCollection services,
-        IConfiguration configuration,
-        Action<ActionPipeline, IServiceProvider> configurePipeline)
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    internal static IServiceCollection AddBlazorTimeProvider(this IServiceCollection services)
     {
         services.TryAddScoped<TimeProvider, SynchronizationContextTimeProvider>();
-
-        DuckyOptions options = new();
-        configuration.GetSection("Ducky").Bind(options);
-        options.ConfigurePipelineWithServices = configurePipeline;
-
-        return services.AddDuckyCore(options);
+        return services;
     }
 }

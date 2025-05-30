@@ -1,8 +1,10 @@
+using Microsoft.Extensions.DependencyInjection;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.NoOp;
 using Ducky.Middlewares.ReactiveEffect;
+using Ducky.Pipeline;
 
 namespace Ducky.Builder;
 
@@ -56,7 +58,12 @@ public static class StoreBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.AddMiddleware<AsyncEffectMiddleware>();
+        return builder.AddMiddleware<AsyncEffectMiddleware>(sp => 
+            new AsyncEffectMiddleware(
+                sp.GetServices<IAsyncEffect>(),
+                () => sp.GetRequiredService<IStore>().CurrentState,
+                sp.GetRequiredService<IDispatcher>(),
+                sp.GetRequiredService<IStoreEventPublisher>()));
     }
 
     /// <summary>
@@ -68,7 +75,12 @@ public static class StoreBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.AddMiddleware<ReactiveEffectMiddleware>();
+        return builder.AddMiddleware<ReactiveEffectMiddleware>(sp => 
+            new ReactiveEffectMiddleware(
+                sp.GetServices<IReactiveEffect>(),
+                () => sp.GetRequiredService<IStore>().CurrentState,
+                sp.GetRequiredService<IDispatcher>(),
+                sp.GetRequiredService<IStoreEventPublisher>()));
     }
 
     /// <summary>

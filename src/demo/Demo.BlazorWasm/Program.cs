@@ -5,14 +5,10 @@ using Demo.BlazorWasm.AppStore;
 using Demo.BlazorWasm.Features.Feedback;
 using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
-using Ducky.Blazor;
+using Ducky.Builder;
 using Ducky.Blazor.Middlewares.DevTools;
-using Ducky.Blazor.Middlewares.JsLogging;
-using Ducky.Middlewares.AsyncEffect;
-using Ducky.Middlewares.CorrelationId;
-using Ducky.Middlewares.ExceptionHandling;
-using Ducky.Middlewares.ReactiveEffect;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.JSInterop;
 using MudBlazor.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -36,60 +32,51 @@ services.AddMudServices(
 services.TryAddScoped<IJsonColorizer, JsonColorizer>();
 services.TryAddScoped<IMoviesService, MoviesService>();
 
-// Register ducky middlewares
-services.AddJsLoggingMiddleware();
-services.AddCorrelationIdMiddleware();
-services.AddExceptionHandlingMiddleware();
-services.AddAsyncEffectMiddleware();
-services.AddReactiveEffectMiddleware();
-
-// Add Redux DevTools for debugging (only in development)
-services.AddDevToolsMiddleware(
-    options =>
+// Configure DevTools options
+services.TryAddSingleton<DevToolsOptions>(
+    _ => new DevToolsOptions
     {
-        options.StoreName = "DuckyDemo";
-        options.Enabled = builder.HostEnvironment.IsDevelopment();
-        options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
-        options.MaxAge = 100; // Keep more history for demo
+        StoreName = "DuckyDemo",
+        Enabled = builder.HostEnvironment.IsDevelopment(),
+        ExcludedActionTypes = ["Tick"], // Exclude noisy timer ticks
+        MaxAge = 100 // Keep more history for demo
     });
 
-// Register exception handler
-services.AddExceptionHandler<NotificationExceptionHandler>();
-
-// Add Ducky with configured middleware pipeline - Option 1: Direct configuration
-// TESTING MIDDLEWARES ONE BY ONE
-services.AddDuckyWithPipeline(
-    configuration,
-    (pipeline, serviceProvider) =>
+// Register DevTools dependencies
+services.TryAddSingleton<DevToolsStateManager>();
+services.TryAddScoped<DevToolsReducer>();
+services.TryAddScoped<ReduxDevToolsModule>(
+    serviceProvider =>
     {
-        // Configure the middleware pipeline in the order you want
-        pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
-        // ISSUE: JsLoggingMiddleware causes duplicate key error in Blazor WebAssembly
-        // pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
-        pipeline.Use(serviceProvider.GetRequiredService<ExceptionHandlingMiddleware>());
-        // Both effect middlewares
-        pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
-        // ISSUE: ReactiveEffectMiddleware causes the app to hang on initialization
-        // pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
-
-        // Add DevTools middleware (will auto-initialize when first action is dispatched)
-        pipeline.Use(serviceProvider.GetRequiredService<DevToolsMiddleware>());
+        IJSRuntime jsRuntime = serviceProvider.GetRequiredService<IJSRuntime>();
+        IStore store = serviceProvider.GetRequiredService<IStore>();
+        IDispatcher dispatcher = serviceProvider.GetRequiredService<IDispatcher>();
+        DevToolsStateManager stateManager = serviceProvider.GetRequiredService<DevToolsStateManager>();
+        DevToolsOptions options = serviceProvider.GetRequiredService<DevToolsOptions>();
+        return new ReduxDevToolsModule(jsRuntime, store, dispatcher, stateManager, options);
     });
 
-// Alternative Option 2: Using middleware types
-// services.AddDuckyWithMiddleware(
-//     typeof(CorrelationIdMiddleware),
-//     typeof(JsLoggingMiddleware),
-//     typeof(AsyncEffectMiddleware),
-//     typeof(ReactiveEffectMiddleware)
-// );
-
-// Alternative Option 3: Using fluent builder
-// services.AddDucky(builder => builder
-//     .UseMiddleware<CorrelationIdMiddleware>()
-//     .UseMiddleware<JsLoggingMiddleware>()
-//     .UseMiddleware<AsyncEffectMiddleware>()
-//     .UseMiddleware<ReactiveEffectMiddleware>()
-// );
+// Add Ducky with the new StoreBuilder approach
+services.AddDuckyStore(storeBuilder => storeBuilder
+    // Add middlewares in order
+    .AddCorrelationIdMiddleware()
+    .AddExceptionHandlingMiddleware()
+    .AddAsyncEffectMiddleware()
+    // ISSUE: JsLoggingMiddleware causes duplicate key error in Blazor WebAssembly
+    // .AddMiddleware<Ducky.Blazor.Middlewares.JsLogging.JsLoggingMiddleware>()
+    // ISSUE: ReactiveEffectMiddleware causes the app to hang on initialization
+    // .AddReactiveEffectMiddleware()
+    
+    // Add Redux DevTools for debugging
+    .AddMiddleware<DevToolsMiddleware>(sp =>
+    {
+        ReduxDevToolsModule devTools = sp.GetRequiredService<ReduxDevToolsModule>();
+        IStore store = sp.GetRequiredService<IStore>();
+        return new DevToolsMiddleware(devTools, store);
+    })
+    
+    // Add exception handler
+    .AddExceptionHandler<NotificationExceptionHandler>()
+);
 
 await builder.Build().RunAsync();
