@@ -26,6 +26,8 @@ public static class ReactiveEffectServiceCollectionExtensions
             );
         });
 
+        services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<ReactiveEffectMiddleware>());
+
         return services;
     }
 

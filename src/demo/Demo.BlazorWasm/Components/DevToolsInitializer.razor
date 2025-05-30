@@ -1,0 +1,21 @@
+@using Ducky.Blazor.Middlewares.DevTools
+@inject ReduxDevToolsModule DevTools
+@implements IAsyncDisposable
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Initialize DevTools after the first render
+            // This ensures the JS runtime is ready
+            await DevTools.InitAsync();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Clean up if needed
+        await Task.CompletedTask;
+    }
+}

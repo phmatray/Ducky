@@ -84,6 +84,37 @@ public static class DuckyServiceCollectionExtensions
 
         return services.AddDuckyCore(options);
     }
+
+    /// <summary>
+    /// Adds Ducky services with a store builder for robust configuration.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configure">The store builder configuration action.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddDuckyStore(
+        this IServiceCollection services,
+        Action<Builder.IStoreBuilder> configure)
+    {
+        Builder.StoreBuilder storeBuilder = new(services);
+        configure(storeBuilder);
+
+        // Extract middleware types from the builder
+        List<Type> middlewareTypes = storeBuilder.GetMiddlewareTypes();
+
+        DuckyOptions options = new()
+        {
+            ConfigurePipelineWithServices = (pipeline, sp) =>
+            {
+                foreach (Type middlewareType in middlewareTypes)
+                {
+                    var middleware = (IActionMiddleware)sp.GetRequiredService(middlewareType);
+                    pipeline.Use(middleware);
+                }
+            }
+        };
+
+        return services.AddDuckyCore(options);
+    }
 }
 
 /// <summary>

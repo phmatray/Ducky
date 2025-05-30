@@ -67,7 +67,7 @@ var running = true;
 while (running)
 {
     AnsiConsole.Clear();
-    
+
     string choice = AnsiConsole.Prompt(
         new SelectionPrompt<string>()
             .Title("[bold blue]Main Menu[/]")

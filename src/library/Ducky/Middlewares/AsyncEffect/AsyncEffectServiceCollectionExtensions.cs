@@ -26,6 +26,8 @@ public static class AsyncEffectServiceCollectionExtensions
             );
         });
 
+        services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<AsyncEffectMiddleware>());
+
         return services;
     }
 

@@ -4,7 +4,6 @@
 
 using Demo.BlazorWasm.AppStore;
 using Ducky.Middlewares.ReactiveEffect;
-using R3;
 
 namespace Demo.BlazorWasm.Features.Feedback.Effects;
 
@@ -39,7 +38,7 @@ public class DebouncedSearchEffect : ReactiveEffect
                     GetMoviesResponse response = await _moviesService.GetMoviesAsync(1, 20, ct);
                     List<Movie> filteredMovies = string.IsNullOrWhiteSpace(action.Query)
                         ? response.Movies.ToList()
-                        : response.Movies.Where(m => 
+                        : response.Movies.Where(m =>
                             m.Title.Contains(action.Query, StringComparison.OrdinalIgnoreCase)
                                 || m.Director.Contains(action.Query, StringComparison.OrdinalIgnoreCase))
                             .ToList();

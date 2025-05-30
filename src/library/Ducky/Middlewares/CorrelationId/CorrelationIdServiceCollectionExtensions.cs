@@ -17,6 +17,7 @@ public static class CorrelationIdServiceCollectionExtensions
     public static IServiceCollection AddCorrelationIdMiddleware(this IServiceCollection services)
     {
         services.TryAddScoped<CorrelationIdMiddleware>();
+        services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<CorrelationIdMiddleware>());
         return services;
     }
 }

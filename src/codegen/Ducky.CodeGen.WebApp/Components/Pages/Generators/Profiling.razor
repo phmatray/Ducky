@@ -1,0 +1,28 @@
+@page "/generator/profiling"
+@inject ProfilingGenerator Generator
+
+<MudStack Class="mx-6">
+  <MudText Typo="Typo.h4">Profiling Generator</MudText>
+</MudStack>
+
+<MudExObjectEditForm
+  OnValidSubmit="@GenerateAsync"
+  Value="@_opts">
+</MudExObjectEditForm>
+
+<div class="mx-6">
+  <GeneratedCode Code="@GeneratedCode" />
+</div>
+
+@code {
+  
+  private readonly ProfilingGeneratorOptions _opts = new();
+  
+  public string? GeneratedCode { get; private set; }
+
+  private async Task GenerateAsync()
+  {
+    GeneratedCode = await Generator.GenerateCodeAsync(_opts);
+  }
+    
+}

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Ducky.Abstractions;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection.Extensions;

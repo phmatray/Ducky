@@ -1,0 +1,179 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxKind;
+
+namespace Ducky.CodeGen.Core;
+
+// === Model Interfaces ===
+public interface ICodeElement
+{
+    T Accept<T>(ISyntaxVisitor<T> visitor);
+}
+
+public interface ISyntaxVisitor<T>
+{
+    T Visit(CompilationUnitElement unit);
+    T Visit(NamespaceElement ns);
+    T Visit(ClassElement cls);
+    T Visit(MethodElement method);
+    T Visit(ExpressionElement expr);
+}
+
+// === Model Classes ===
+public class CompilationUnitElement : ICodeElement
+{
+    public IEnumerable<string> Usings { get; set; } = [];
+    public IEnumerable<NamespaceElement> Namespaces { get; set; } = [];
+
+    public T Accept<T>(ISyntaxVisitor<T> visitor)
+        => visitor.Visit(this);
+}
+
+public class NamespaceElement : ICodeElement
+{
+    public string Name { get; set; } = string.Empty;
+    public IEnumerable<ClassElement> Classes { get; set; } = [];
+
+    public T Accept<T>(ISyntaxVisitor<T> visitor)
+        => visitor.Visit(this);
+}
+
+public class ClassElement : ICodeElement
+{
+    public string Name { get; set; } = string.Empty;
+    public bool IsStatic { get; set; } = true;
+    public IEnumerable<MethodElement> Methods { get; set; } = [];
+
+    public T Accept<T>(ISyntaxVisitor<T> visitor)
+        => visitor.Visit(this);
+}
+
+public class MethodElement : ICodeElement
+{
+    public string Name { get; set; } = string.Empty;
+
+    public string ReturnType { get; set; } = "void";
+
+    /// <summary>
+    /// If true, the first parameter will get a `this` modifier.
+    /// </summary>
+    public bool IsExtensionMethod { get; set; }
+
+    /// <summary>
+    /// If true and no body is supplied, we'll emit a `private static partial …;` declaration.
+    /// </summary>
+    public bool IsPartialDeclaration { get; set; }
+
+    // now an ordered list of parameters
+    public IEnumerable<ParameterDescriptor> Parameters { get; set; } = [];
+
+    // if set, we emit => body
+    public ExpressionElement? ExpressionBody { get; set; }
+
+    public T Accept<T>(ISyntaxVisitor<T> visitor) => visitor.Visit(this);
+}
+
+public class ExpressionElement : ICodeElement
+{
+    public string Code { get; set; } = string.Empty; // raw or could be parsed more strongly
+
+    public T Accept<T>(ISyntaxVisitor<T> visitor)
+        => visitor.Visit(this);
+}
+
+// === Concrete Visitor Implementation ===
+public class SyntaxFactoryVisitor : ISyntaxVisitor<SyntaxNode>
+{
+    public SyntaxNode Visit(CompilationUnitElement unit)
+    {
+        UsingDirectiveSyntax[] usingDirectives = unit.Usings
+            .Select(u => UsingDirective(ParseName(u)))
+            .ToArray();
+        MemberDeclarationSyntax[] namespaceNodes = unit.Namespaces
+            .Select(ns => (NamespaceDeclarationSyntax)ns.Accept(this))
+            .ToArray<MemberDeclarationSyntax>();
+        return CompilationUnit()
+            .AddUsings(usingDirectives)
+            .AddMembers(namespaceNodes)
+            .NormalizeWhitespace();
+    }
+
+    public SyntaxNode Visit(NamespaceElement ns)
+    {
+        MemberDeclarationSyntax[] classes = ns.Classes
+            .Select(c => (ClassDeclarationSyntax)c.Accept(this))
+            .ToArray<MemberDeclarationSyntax>();
+        return NamespaceDeclaration(ParseName(ns.Name))
+            .AddMembers(classes);
+    }
+
+    public SyntaxNode Visit(ClassElement cls)
+    {
+        ClassDeclarationSyntax classDecl = ClassDeclaration(cls.Name)
+            .AddModifiers(Token(PublicKeyword))
+            .AddModifiers(cls.IsStatic ? Token(StaticKeyword) : default);
+        MemberDeclarationSyntax[] methods = cls.Methods
+            .Select(m => (MemberDeclarationSyntax)m.Accept(this))
+            .ToArray();
+        return classDecl.AddMembers(methods);
+    }
+
+    public SyntaxNode Visit(MethodElement method)
+    {
+        // 1) Build parameter list, injecting `this` on param[0] if needed
+        ParameterSyntax[] parameters = method.Parameters
+            .Select((p, i) =>
+            {
+                ParameterSyntax parm = Parameter(Identifier(p.ParamName))
+                    .WithType(ParseTypeName(p.ParamType));
+
+                if (method.IsExtensionMethod && i == 0)
+                {
+                    parm = parm.AddModifiers(Token(ThisKeyword));
+                }
+
+                return parm;
+            })
+            .ToArray();
+
+        // 2) Start method declaration
+        MethodDeclarationSyntax methodDecl = MethodDeclaration(ParseTypeName(method.ReturnType), Identifier(method.Name))
+            .AddModifiers(Token(PublicKeyword), Token(StaticKeyword))
+            .WithParameterList(ParameterList(SeparatedList(parameters)));
+
+        // 3) If it's a partial declaration no body, emit “private static partial …;”
+        if (method.IsPartialDeclaration)
+        {
+            return methodDecl
+                .WithModifiers(TokenList(
+                    Token(PrivateKeyword),
+                    Token(StaticKeyword),
+                    Token(PartialKeyword)))
+                .WithSemicolonToken(Token(SemicolonToken));
+        }
+
+        // 4) Expression-bodied reducer
+        if (method.ExpressionBody is { } exprBody)
+        {
+            ExpressionSyntax expr = ParseExpression(exprBody.Code);
+            return methodDecl
+                .WithExpressionBody(ArrowExpressionClause(expr))
+                .WithSemicolonToken(Token(SemicolonToken));
+        }
+
+        // fallback (shouldn't happen here)
+        return methodDecl;
+    }
+
+    public SyntaxNode Visit(ExpressionElement expr)
+    {
+        return ParseExpression(expr.Code);
+    }
+}
+
+// === Usage Example ===
+// var model = new CompilationUnitElement { ... populate model ... };
+// var visitor = new SyntaxFactoryVisitor();
+// var syntaxRoot = model.Accept(visitor) as CompilationUnitSyntax;
+// var code = syntaxRoot?.ToFullString();

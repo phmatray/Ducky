@@ -3,10 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Demo.BlazorWasm.AppStore;
-using Demo.BlazorWasm.Features.Feedback.Actions;
-using Ducky.Abstractions;
 using Ducky.Middlewares.ReactiveEffect;
-using R3;
 
 namespace Demo.BlazorWasm.Features.Feedback.Effects;
 
@@ -27,7 +24,7 @@ public class ErrorRecoveryEffect : ReactiveEffect
     }
 
     public override Observable<object> Handle(
-        Observable<object> actions, 
+        Observable<object> actions,
         Observable<IRootState> rootState)
     {
         // Handle retry failed operation
@@ -35,7 +32,7 @@ public class ErrorRecoveryEffect : ReactiveEffect
             .Subscribe(action =>
             {
                 _logger.LogInformation(
-                    "Retrying failed operation: {ActionType}", 
+                    "Retrying failed operation: {ActionType}",
                     action.OriginalAction.GetType().Name);
 
                 // Dispatch the original action again

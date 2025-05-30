@@ -24,5 +24,6 @@
       "Bash(true)"
     ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": false
 }

@@ -43,7 +43,12 @@ public sealed class TimerEffectsTests : IDisposable
 
         // Act
         _actionsSubject.OnNext(new StartTimer());
-        _timeProvider.Advance(TimeSpan.FromSeconds(3));
+
+        // Advance time in small increments to trigger interval emissions
+        for (int i = 0; i < 3; i++)
+        {
+            _timeProvider.Advance(TimeSpan.FromSeconds(1));
+        }
 
         // Assert
         _actualActions.Count.ShouldBe(3);
@@ -68,8 +73,16 @@ public sealed class TimerEffectsTests : IDisposable
 
         // Act
         _actionsSubject.OnNext(new StartTimer());
-        _timeProvider.Advance(TimeSpan.FromSeconds(2));
+
+        // Advance time for 2 ticks
+        for (int i = 0; i < 2; i++)
+        {
+            _timeProvider.Advance(TimeSpan.FromSeconds(1));
+        }
+
         _actionsSubject.OnNext(new StopTimer());
+
+        // Advance time for 2 more seconds (should not emit more ticks)
         _timeProvider.Advance(TimeSpan.FromSeconds(2));
 
         // Assert

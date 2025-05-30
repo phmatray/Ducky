@@ -4,7 +4,6 @@
 
 using Demo.BlazorWasm.AppStore;
 using Ducky.Middlewares.ReactiveEffect;
-using R3;
 
 namespace Demo.BlazorWasm.Features.Feedback.Effects;
 

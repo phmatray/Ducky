@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Ducky.Abstractions;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -22,6 +21,7 @@ public static class ExceptionHandlingServiceCollectionExtensions
     public static IServiceCollection AddExceptionHandlingMiddleware(this IServiceCollection services)
     {
         services.TryAddScoped<ExceptionHandlingMiddleware>();
+        services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<ExceptionHandlingMiddleware>());
         return services;
     }
 

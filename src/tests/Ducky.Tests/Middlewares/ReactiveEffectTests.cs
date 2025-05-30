@@ -1,6 +1,5 @@
 using Ducky.Middlewares.ReactiveEffect;
 using Moq;
-using R3;
 
 namespace Ducky.Tests.Middlewares;
 

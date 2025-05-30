@@ -2,9 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Demo.BlazorWasm.Features.Feedback.Actions;
 using Ducky.Middlewares.ReactiveEffect;
-using R3;
 
 namespace Demo.BlazorWasm.Features.Feedback.Effects;
 
@@ -14,7 +12,7 @@ namespace Demo.BlazorWasm.Features.Feedback.Effects;
 public class TestErrorEffect : ReactiveEffect
 {
     public override Observable<object> Handle(
-        Observable<object> actions, 
+        Observable<object> actions,
         Observable<IRootState> rootState)
     {
         actions.OfType<object, TestErrorAction>()

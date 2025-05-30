@@ -3,15 +3,14 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Demo.BlazorWasm;
 using Demo.BlazorWasm.AppStore;
 using Demo.BlazorWasm.Features.Feedback;
-using Demo.BlazorWasm.Features.Feedback.Effects;
 using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
 using Ducky.Blazor;
+using Ducky.Blazor.Middlewares.DevTools;
 using Ducky.Blazor.Middlewares.JsLogging;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.ExceptionHandling;
-using Ducky.Middlewares.NoOp;
 using Ducky.Middlewares.ReactiveEffect;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MudBlazor.Services;
@@ -44,6 +43,16 @@ services.AddExceptionHandlingMiddleware();
 services.AddAsyncEffectMiddleware();
 services.AddReactiveEffectMiddleware();
 
+// Add Redux DevTools for debugging (only in development)
+services.AddDevToolsMiddleware(
+    options =>
+    {
+        options.StoreName = "DuckyDemo";
+        options.Enabled = builder.HostEnvironment.IsDevelopment();
+        options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
+        options.MaxAge = 100; // Keep more history for demo
+    });
+
 // Register exception handler
 services.AddExceptionHandler<NotificationExceptionHandler>();
 
@@ -62,6 +71,9 @@ services.AddDuckyWithPipeline(
         pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
         // ISSUE: ReactiveEffectMiddleware causes the app to hang on initialization
         // pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
+
+        // Add DevTools middleware (will auto-initialize when first action is dispatched)
+        pipeline.Use(serviceProvider.GetRequiredService<DevToolsMiddleware>());
     });
 
 // Alternative Option 2: Using middleware types

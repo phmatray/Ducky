@@ -2,12 +2,9 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Microsoft.Extensions.Logging;
 using Moq;
-using Ducky.Abstractions;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Pipeline;
-using Ducky.Tests.TestModels;
 
 namespace Ducky.Tests.Middlewares;
 

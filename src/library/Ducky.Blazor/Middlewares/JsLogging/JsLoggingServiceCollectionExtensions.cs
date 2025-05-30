@@ -21,6 +21,8 @@ public static class JsLoggingServiceCollectionExtensions
                 () => sp.GetRequiredService<IStore>().CurrentState)
         );
 
+        services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<JsLoggingMiddleware>());
+
         return services;
     }
 }

@@ -4,7 +4,7 @@
 
 using Ducky.Pipeline;
 
-namespace Ducky.Abstractions;
+namespace Ducky;
 
 /// <summary>
 /// Interface for handling global exceptions in the Ducky store.

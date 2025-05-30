@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Demo.BlazorWasm.AppStore;
-using Ducky.Abstractions;
 using Ducky.Pipeline;
 
 namespace Demo.BlazorWasm.Features.Feedback;
