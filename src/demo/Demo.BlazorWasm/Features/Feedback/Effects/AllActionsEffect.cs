@@ -16,10 +16,8 @@ public class AllActionsEffect : ReactiveEffect
         Observable<object> actions, Observable<IRootState> rootState)
     {
         // Log all actions to console (side effect only, no new actions dispatched)
-        actions
-            .Subscribe(action => Console.WriteLine($"[AllActionsEffect] Action: {action.GetType().Name}"));
-
-        // Return empty observable since this effect only logs
-        return Observable.Empty<object>();
+        return actions
+            .Do(action => Console.WriteLine($"[AllActionsEffect] Action: {action.GetType().Name}"))
+            .IgnoreElements();
     }
 }

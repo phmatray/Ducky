@@ -1,5 +1,4 @@
 using Ducky.Pipeline;
-using R3;
 
 namespace Ducky.Middlewares.NoOp;
 
@@ -7,17 +6,21 @@ namespace Ducky.Middlewares.NoOp;
 /// A no-op middleware that simply passes through all actions unchanged.
 /// Useful for testing, benchmarking, or as a pipeline placeholder.
 /// </summary>
-public sealed class NoOpMiddleware : IActionMiddleware
+public sealed class NoOpMiddleware : MiddlewareBase
 {
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
+        => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public override void BeforeDispatch(object action)
     {
-        return actions;
+        // Nothing to do
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+    public override void AfterDispatch(object action)
     {
-        return actions;
+        // Nothing to do
     }
 }

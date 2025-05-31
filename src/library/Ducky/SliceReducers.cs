@@ -47,24 +47,39 @@ public abstract partial record SliceReducers<TState>
     /// <inheritdoc />
     public virtual string GetKey()
     {
-        // get type of the inheriting class
-        string typeName = GetType().Name;
-
-        // the key should not end with "Reducers" or "Reducer"
-        if (typeName.EndsWith("Reducers", StringComparison.InvariantCulture))
+        Type type = GetType();
+        
+        // Use full name for robustness, but clean it up for readability
+        string fullTypeName = type.FullName ?? type.Name;
+        
+        // Handle generic types by removing generic parameters
+        if (type.IsGenericType)
         {
-            typeName = typeName[..^8];
+            int genericIndex = fullTypeName.IndexOf('`');
+            if (genericIndex > 0)
+            {
+                fullTypeName = fullTypeName[..genericIndex];
+            }
         }
-        else if (typeName.EndsWith("Reducer", StringComparison.InvariantCulture))
+        
+        // Remove common reducer suffixes BEFORE transforming
+        if (fullTypeName.EndsWith("Reducers", StringComparison.InvariantCulture))
         {
-            typeName = typeName[..^7];
+            fullTypeName = fullTypeName[..^8];
         }
+        else if (fullTypeName.EndsWith("Reducer", StringComparison.InvariantCulture))
+        {
+            fullTypeName = fullTypeName[..^7];
+        }
+        
+        // Replace namespace dots with dashes for flat key structure
+        fullTypeName = fullTypeName.Replace('.', '-');
 
-        // convert to kebab case
-        typeName = LowerCharUpperCharRegex().Replace(typeName, "$1-$2");
+        // Convert to kebab case
+        string kebabCase = LowerCharUpperCharRegex().Replace(fullTypeName, "$1-$2");
 
-        // return the key in lowercase
-        return typeName.ToLower(CultureInfo.InvariantCulture);
+        // Return the key in lowercase for consistency
+        return kebabCase.ToLower(CultureInfo.InvariantCulture);
     }
 
     /// <inheritdoc />

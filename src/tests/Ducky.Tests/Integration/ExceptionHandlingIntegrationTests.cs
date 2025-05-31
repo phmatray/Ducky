@@ -80,7 +80,7 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
 
         // Act - Add exception handling directly (for testing service registration)
         services.TryAddScoped<ExceptionHandlingMiddleware>();
-        services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<ExceptionHandlingMiddleware>());
+        services.AddScoped<IMiddleware>(sp => sp.GetRequiredService<ExceptionHandlingMiddleware>());
         services.AddScoped<IExceptionHandler, TestExceptionHandler>();
 
         ServiceProvider provider = services.BuildServiceProvider();

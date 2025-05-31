@@ -64,13 +64,13 @@ public class ResetCounterAfter3Sec : AsyncEffect<Increment>
         CounterState counterState = rootState.GetSliceState<CounterState>();
 
         // if the Value is greater than 15, then reset the counter
-        if (counterState.Value > 15)
+        if (counterState.Value <= 15)
         {
-            await Task.Delay(TimeSpan.FromSeconds(3), ObservableSystem.DefaultTimeProvider);
-            Dispatcher.Reset();
+            return;
         }
 
-        await Task.CompletedTask;
+        await Task.Delay(TimeSpan.FromSeconds(3));
+        Dispatcher?.Reset();
     }
 }
 

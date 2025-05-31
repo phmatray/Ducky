@@ -1,5 +1,4 @@
 using Ducky.Pipeline;
-using R3;
 
 namespace Ducky.Middlewares.CorrelationId;
 
@@ -7,7 +6,7 @@ namespace Ducky.Middlewares.CorrelationId;
 /// Middleware that ensures every dispatched action has a correlation ID, generating one if missing.
 /// Publishes a <see cref="CorrelationIdAssignedEvent"/> via the pipeline event system.
 /// </summary>
-public sealed class CorrelationIdMiddleware : IActionMiddleware
+public sealed class CorrelationIdMiddleware : IMiddleware
 {
     /// <summary>
     /// The metadata key used for the correlation ID.
@@ -26,34 +25,43 @@ public sealed class CorrelationIdMiddleware : IActionMiddleware
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        // Assign correlation ID before reducer processing
-        return actions.Do(context =>
-        {
-            // Use an existing correlation ID if present, otherwise assign a new one
-            if (!context.Metadata.TryGetValue(CorrelationIdKey, out object? corrIdObj) || corrIdObj is not Guid)
-            {
-                Guid correlationId = Guid.NewGuid();
-                context.Metadata[CorrelationIdKey] = correlationId;
-
-                // Publish event for observability
-                _eventPublisher.Publish(new CorrelationIdAssignedEvent(context, correlationId));
-            }
-            else
-            {
-                // Even if externally provided, you can still publish an event
-                if (corrIdObj is Guid existingId)
-                {
-                    _eventPublisher.Publish(new CorrelationIdAssignedEvent(context, existingId));
-                }
-            }
-        });
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+    public void AfterInitializeAllMiddlewares()
     {
-        return actions;
+        // Nothing to do
+    }
+
+    /// <inheritdoc />
+    public bool MayDispatchAction(object action)
+    {
+        return true;
+    }
+
+    /// <inheritdoc />
+    public void BeforeDispatch(object action)
+    {
+        // Assign correlation ID before dispatch
+        Guid correlationId = Guid.NewGuid();
+        
+        // Note: Since we can't attach metadata to actions directly,
+        // we'll use a different approach for correlation tracking
+        _eventPublisher.Publish(new CorrelationIdAssignedEvent(action, correlationId));
+    }
+
+    /// <inheritdoc />
+    public void AfterDispatch(object action)
+    {
+        // Nothing to do after dispatch
+    }
+
+    /// <inheritdoc />
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { });
     }
 }

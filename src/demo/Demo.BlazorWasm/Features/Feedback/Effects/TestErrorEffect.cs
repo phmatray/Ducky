@@ -15,12 +15,9 @@ public class TestErrorEffect : ReactiveEffect
         Observable<object> actions,
         Observable<IRootState> rootState)
     {
-        actions.OfType<object, TestErrorAction>()
-            .Subscribe(action =>
-            {
-                throw new ApplicationException(action.ErrorMessage);
-            });
-
-        return Observable.Empty<object>();
+        return actions.OfType<object, TestErrorAction>()
+            .Do(action => throw new ApplicationException(action.ErrorMessage))
+            .Cast<TestErrorAction, object>()
+            .IgnoreElements();
     }
 }

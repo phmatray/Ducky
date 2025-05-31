@@ -21,6 +21,11 @@ public sealed class ActionContext
     public bool IsAborted { get; private set; }
 
     /// <summary>
+    /// The current root state of the store.
+    /// </summary>
+    public IRootState RootState { get; set; } = null!;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="ActionContext"/> class with the specified action.
     /// </summary>
     /// <param name="action">The action to carry through the pipeline.</param>

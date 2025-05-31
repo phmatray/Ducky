@@ -34,15 +34,15 @@ public class MiddlewareRegistrationTests
         services.Any(sd => sd.ServiceType == typeof(AsyncEffectMiddleware)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(ReactiveEffectMiddleware)).ShouldBeTrue();
 
-        // Also check that they are registered as IActionMiddleware
-        services.Where(sd => sd.ServiceType == typeof(IActionMiddleware)).Count().ShouldBe(4);
+        // Also check that they are registered as IMiddleware
+        services.Where(sd => sd.ServiceType == typeof(IMiddleware)).Count().ShouldBe(4);
     }
 
     [Fact]
     public void StoreBuilder_RegistrationMethods_ShouldRegisterBothConcreteAndInterface()
     {
         // This test verifies that StoreBuilder correctly registers middlewares
-        // as both concrete type and IActionMiddleware
+        // as both concrete type and IMiddleware
 
         // Arrange
         ServiceCollection services = [];
@@ -56,7 +56,7 @@ public class MiddlewareRegistrationTests
         ServiceDescriptor? concreteRegistration =
             services.FirstOrDefault(sd => sd.ServiceType == typeof(CorrelationIdMiddleware));
         ServiceDescriptor? interfaceRegistration = services.FirstOrDefault(sd =>
-            sd.ServiceType == typeof(IActionMiddleware));
+            sd.ServiceType == typeof(IMiddleware));
 
         concreteRegistration.ShouldNotBeNull();
         interfaceRegistration.ShouldNotBeNull();

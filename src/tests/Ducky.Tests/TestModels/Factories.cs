@@ -2,19 +2,27 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Ducky.Tests.TestModels;
 
 internal static class Factories
 {
-    public static DuckyStore CreateTestCounterStore()
+    public static IStore CreateTestCounterStore()
     {
-        Dispatcher dispatcher = new();
-        TestCounterReducers counterReducers = new();
+        ServiceCollection services = [];
 
-        // Create store without middleware for simple tests
-        return DuckyStoreFactory.CreateStore(
-            dispatcher,
-            [counterReducers]);
+        // Add logging services for tests
+        services.AddLogging();
+
+        // Register the test counter slice
+        services.AddScoped<ISlice, TestCounterReducers>();
+
+        // Add Ducky store with minimal configuration
+        services.AddDuckyStore(builder => { });
+
+        ServiceProvider provider = services.BuildServiceProvider();
+        return provider.GetRequiredService<IStore>();
     }
 
     public static RootState CreateTestRootState()

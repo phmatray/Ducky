@@ -1,9 +1,3 @@
-using Ducky.Middlewares.AsyncEffect;
-using Ducky.Middlewares.CorrelationId;
-using Ducky.Middlewares.ExceptionHandling;
-using Ducky.Middlewares.ReactiveEffect;
-using Ducky.Middlewares.NoOp;
-
 namespace Ducky.Builder;
 
 /// <summary>

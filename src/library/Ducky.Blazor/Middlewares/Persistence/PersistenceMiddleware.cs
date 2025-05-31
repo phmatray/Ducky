@@ -6,26 +6,24 @@ using System.Text;
 using System.Text.Json;
 using Ducky;
 using Ducky.Pipeline;
-using R3;
 
 namespace Ducky.Blazor.Middlewares.Persistence;
 
 /// <summary>
-/// Modern reactive middleware that handles state persistence and hydration with comprehensive features.
+/// Modern middleware that handles state persistence and hydration with comprehensive features.
 /// </summary>
-public sealed class PersistenceMiddleware : IActionMiddleware
+public sealed class PersistenceMiddleware : IMiddleware, IDisposable
 {
     private readonly IEnhancedPersistenceProvider<IRootState> _persistenceProvider;
     private readonly HydrationManager _hydrationManager;
     private readonly PersistenceOptions _options;
-    private readonly IDispatcher _dispatcher;
-    private readonly IStore _store;
+    private IDispatcher? _dispatcher;
+    private IStore? _store;
 
     private bool _isEnabled;
     private bool _isHydrated;
     private readonly object _persistenceLock = new();
     private DateTime _lastPersistenceTime = DateTime.MinValue;
-    private readonly ConcurrentQueue<object> _pendingActions = [];
     private readonly Timer _debounceTimer;
     private readonly Timer _throttleTimer;
     private string? _lastPersistedStateHash;
@@ -36,34 +34,41 @@ public sealed class PersistenceMiddleware : IActionMiddleware
     /// <param name="persistenceProvider">The enhanced persistence provider.</param>
     /// <param name="hydrationManager">The hydration manager.</param>
     /// <param name="options">Configuration options for persistence.</param>
-    /// <param name="dispatcher">The action dispatcher.</param>
-    /// <param name="store">The state store.</param>
     public PersistenceMiddleware(
         IEnhancedPersistenceProvider<IRootState> persistenceProvider,
         HydrationManager hydrationManager,
-        PersistenceOptions options,
-        IDispatcher dispatcher,
-        IStore store)
+        PersistenceOptions options)
     {
         _persistenceProvider = persistenceProvider ?? throw new ArgumentNullException(nameof(persistenceProvider));
         _hydrationManager = hydrationManager ?? throw new ArgumentNullException(nameof(hydrationManager));
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-        _store = store ?? throw new ArgumentNullException(nameof(store));
 
         _isEnabled = _options.Enabled;
 
         // Initialize timers for debouncing and throttling
         _debounceTimer = new Timer(OnDebounceElapsed, null, Timeout.Infinite, Timeout.Infinite);
         _throttleTimer = new Timer(OnThrottleElapsed, null, Timeout.Infinite, Timeout.Infinite);
+    }
+
+    /// <inheritdoc />
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    {
+        _dispatcher = dispatcher;
+        _store = store;
 
         // Start auto-hydration if enabled
-        if (!_options.AutoHydrate)
+        if (_options.AutoHydrate)
         {
-            return;
+            return HydrateAsync();
         }
 
-        _ = Task.Run(HydrateAsync);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public void AfterInitializeAllMiddlewares()
+    {
+        // Nothing to do after all middlewares are initialized
     }
 
     /// <summary>
@@ -71,7 +76,7 @@ public sealed class PersistenceMiddleware : IActionMiddleware
     /// </summary>
     public async Task HydrateAsync()
     {
-        if (!_isEnabled || _isHydrated)
+        if (!_isEnabled || _isHydrated || _dispatcher is null)
         {
             return;
         }
@@ -149,46 +154,58 @@ public sealed class PersistenceMiddleware : IActionMiddleware
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+    public bool MayDispatchAction(object action)
     {
-        return actions.Do(context =>
-        {
-            // Queue actions during hydration if enabled
-            if (!_options.QueueActionsOnHydration || !_hydrationManager.IsHydrating || IsHydrationAction(context.Action))
-            {
-                return;
-            }
-
-            _hydrationManager.EnqueueAction(context.Action);
-        });
+        // Allow all actions
+        return true;
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+    public void BeforeDispatch(object action)
     {
-        return actions.Do(context =>
+        // Queue actions during hydration if enabled
+        if (!_options.QueueActionsOnHydration || !_hydrationManager.IsHydrating || IsHydrationAction(action))
         {
-            // Skip persistence during hydration or for hydration actions
-            if (!_isEnabled || _hydrationManager.IsHydrating || IsHydrationAction(context.Action))
-            {
-                return;
-            }
+            return;
+        }
 
-            // Check if action should trigger persistence
-            if (!ShouldPersistForAction(context.Action))
-            {
-                return;
-            }
+        _hydrationManager.EnqueueAction(action);
+    }
 
-            // Check if state should be persisted
-            if (!ShouldPersistState(_store.CurrentState))
-            {
-                return;
-            }
+    /// <inheritdoc />
+    public void AfterDispatch(object action)
+    {
+        if (_store is null)
+        {
+            return;
+        }
 
-            // Schedule persistence based on throttling/debouncing configuration
-            SchedulePersistence("action");
-        });
+        // Skip persistence during hydration or for hydration actions
+        if (!_isEnabled || _hydrationManager.IsHydrating || IsHydrationAction(action))
+        {
+            return;
+        }
+
+        // Check if action should trigger persistence
+        if (!ShouldPersistForAction(action))
+        {
+            return;
+        }
+
+        // Check if state should be persisted
+        if (!ShouldPersistState(_store.CurrentState))
+        {
+            return;
+        }
+
+        // Schedule persistence based on throttling/debouncing configuration
+        SchedulePersistence("action");
+    }
+
+    /// <inheritdoc />
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { });
     }
 
     /// <summary>
@@ -244,7 +261,7 @@ public sealed class PersistenceMiddleware : IActionMiddleware
     /// <param name="trigger">What triggered the persistence.</param>
     private async Task PersistCurrentStateAsync(string trigger)
     {
-        if (!_isEnabled)
+        if (!_isEnabled || _dispatcher is null || _store is null)
         {
             return;
         }

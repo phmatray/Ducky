@@ -6,6 +6,7 @@ using System.Reflection;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky;
 
@@ -46,7 +47,8 @@ public static class DependencyInjections
             // Ensure StoreLogger is created to start listening to events
             _ = sp.GetRequiredService<StoreLogger>();
 
-            ActionPipeline pipeline = new(dispatcher);
+            ILogger<ActionPipeline> logger = sp.GetRequiredService<ILogger<ActionPipeline>>();
+            ActionPipeline pipeline = new(sp, logger);
 
             // Configure pipeline with legacy method if provided
             options.ConfigurePipeline?.Invoke(pipeline);

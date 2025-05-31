@@ -10,18 +10,18 @@ public class CorrelationIdAssignedEvent : StoreEventArgs
     /// <summary>
     /// Initializes a new instance of the <see cref="CorrelationIdAssignedEvent"/> class.
     /// </summary>
-    /// <param name="context">The action context.</param>
+    /// <param name="action">The action object.</param>
     /// <param name="correlationId">The assigned correlation ID.</param>
-    public CorrelationIdAssignedEvent(ActionContext context, in Guid correlationId)
+    public CorrelationIdAssignedEvent(object action, in Guid correlationId)
     {
-        Context = context;
+        Action = action;
         CorrelationId = correlationId;
     }
 
     /// <summary>
-    /// The action context.
+    /// The action object.
     /// </summary>
-    public ActionContext Context { get; init; }
+    public object Action { get; init; }
 
     /// <summary>
     /// The assigned correlation ID.

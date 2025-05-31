@@ -15,10 +15,12 @@ public sealed class DuckyStore : IStore, IDisposable
     private readonly IDispatcher _dispatcher;
     private readonly ActionPipeline _pipeline;
     private readonly IStoreEventPublisher _eventPublisher;
-    private readonly CompositeDisposable _subscriptions = [];
     private readonly ObservableSlices _slices = new();
     private readonly DateTime _startTime = DateTime.UtcNow;
-    private bool _isDisposed;
+    private readonly CompositeDisposable _subscriptions = [];
+    private readonly object _syncRoot = new();
+    private volatile bool _isDisposed;
+    private volatile bool _isDispatching;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DuckyStore"/> class.
@@ -53,30 +55,12 @@ public sealed class DuckyStore : IStore, IDisposable
             _eventPublisher.Publish(new SliceAddedEventArgs(sliceKey, slice.GetType()));
         }
 
-        // Subscribe all slices to the BEFORE pipeline (standard: state update/reducer logic)
-        _pipeline
-            .SubscribeBefore(new SliceObserver(ctx =>
-            {
-                if (ctx.IsAborted)
-                {
-                    return;
-                }
+        // Initialize the pipeline
+        _pipeline.InitializeAsync(_dispatcher, this).Wait();
 
-                foreach (ISlice slice in _slices.AllSlices)
-                {
-                    slice.OnDispatch(ctx.Action);
-                }
-            }))
-            .AddTo(_subscriptions);
-
-        // Subscribe all slices to the AFTER pipeline (for post-processing/effects)
-        _pipeline
-            .SubscribeAfter(new SliceObserver(_ =>
-            {
-                // Most often used for effects, not for mutation.
-                // Example: logging, triggers, analytics, etc.
-                // _slices.Dispatch(ctx.Action);
-            }))
+        // Subscribe to action stream and process through pipeline
+        _dispatcher.ActionStream
+            .Subscribe(ProcessActionSafely)
             .AddTo(_subscriptions);
 
         // Dispatch initial action
@@ -87,7 +71,7 @@ public sealed class DuckyStore : IStore, IDisposable
     }
 
     /// <inheritdoc/>
-    public ReadOnlyReactiveProperty<IRootState> RootStateObservable
+    public R3.ReadOnlyReactiveProperty<IRootState> RootStateObservable
         => _slices.RootStateObservable;
 
     /// <inheritdoc/>
@@ -110,5 +94,55 @@ public sealed class DuckyStore : IStore, IDisposable
         _slices.Dispose();
 
         _isDisposed = true;
+    }
+
+    private void ProcessActionSafely(object action)
+    {
+        // Prevent re-entrant processing
+        if (_isDispatching)
+        {
+            return;
+        }
+
+        lock (_syncRoot)
+        {
+            if (_isDispatching)
+            {
+                return;
+            }
+
+            _isDispatching = true;
+
+            try
+            {
+                ProcessAction(action);
+            }
+            finally
+            {
+                _isDispatching = false;
+            }
+        }
+    }
+
+    private void ProcessAction(object action)
+    {
+        try
+        {
+            // Process action through middleware pipeline
+            bool shouldProcess = _pipeline.ProcessAction(action);
+            
+            if (shouldProcess)
+            {
+                // Execute slice reducers
+                foreach (ISlice slice in _slices.AllSlices)
+                {
+                    slice.OnDispatch(action);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _eventPublisher.Publish(new ActionErrorEventArgs(ex, action, null!));
+        }
     }
 }

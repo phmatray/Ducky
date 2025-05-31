@@ -58,30 +58,4 @@ public class RootStateSerializerTests
         deserializedState.ContainsKey(Key).ShouldBeTrue();
         deserializedState.GetSliceState<TestState>(Key).ShouldBeEquivalentTo(_initialState);
     }
-
-    [Fact]
-    public void SaveAndLoadState_Should_Persist_State_Correctly()
-    {
-        // Arrange
-        string filePath = Path.GetTempFileName();
-
-        try
-        {
-            // Act
-            _sut.SaveToFile(_rootState, filePath);
-            IRootState loadedState = _sut.LoadFromFile(filePath);
-
-            // Assert
-            loadedState.ContainsKey(Key).ShouldBeTrue();
-            loadedState.GetSliceState<TestState>(Key).ShouldBeEquivalentTo(_initialState);
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-        }
-    }
 }

@@ -33,11 +33,25 @@ services.AddMudServices(
 services.TryAddScoped<IJsonColorizer, JsonColorizer>();
 services.TryAddScoped<IMoviesService, MoviesService>();
 
+// Register all application slice reducers
+services.TryAddScoped<ISlice<CounterState>, CounterReducers>();
+services.TryAddScoped<ISlice<GoalState>, GoalsReducers>();
+services.TryAddScoped<ISlice<LayoutState>, LayoutReducers>();
+services.TryAddScoped<ISlice<MessageState>, MessageReducers>();
+services.TryAddScoped<ISlice<MoviesState>, MoviesReducers>();
+services.TryAddScoped<ISlice<NotificationsState>, NotificationsReducers>();
+services.TryAddScoped<ISlice<ProductState>, ProductsReducers>();
+services.TryAddScoped<ISlice<TimerState>, TimerReducers>();
+services.TryAddScoped<ISlice<TodoState>, TodoReducers>();
+
 // Add Ducky with the new StoreBuilder approach
 services.AddDuckyStore(storeBuilder => storeBuilder
-    // Use production preset which includes standard middlewares
-    .UseProductionPreset()
-    
+    // Add middlewares in the correct order
+    .AddCorrelationIdMiddleware()
+    .AddExceptionHandlingMiddleware()
+    .AddAsyncEffectMiddleware()
+    .AddReactiveEffectMiddleware() // Fixed: now uses lazy initialization
+
     // Add Redux DevTools for debugging (with simplified API)
     .AddDevToolsMiddleware(options =>
     {
@@ -46,7 +60,13 @@ services.AddDuckyStore(storeBuilder => storeBuilder
         options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
         options.MaxAge = 100; // Keep more history for demo
     })
+
+    // Register async effects
+    .AddEffect<ResetCounterAfter3Sec>()
     
+    // Register reactive effects (now fixed with lazy initialization)
+    .AddReactiveEffect<StartTimerEffect>()
+
     // Add exception handler
     .AddExceptionHandler<NotificationExceptionHandler>()
 );

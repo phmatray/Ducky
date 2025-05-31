@@ -8,7 +8,7 @@ namespace AppStore.Tests.Products;
 
 public sealed class ProductsReducersTests : IDisposable
 {
-    private const string Key = "products";
+    private const string Key = "demo-blazor-wasm-app-store-products";
 
     private readonly ProductsReducers _sut = new();
 

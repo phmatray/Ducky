@@ -27,9 +27,8 @@ public class ErrorRecoveryEffect : ReactiveEffect
         Observable<object> actions,
         Observable<IRootState> rootState)
     {
-        // Handle retry failed operation
-        actions.OfType<object, RetryFailedOperation>()
-            .Subscribe(action =>
+        Observable<RetryFailedOperation> retryEffects = actions.OfType<object, RetryFailedOperation>()
+            .Do(action =>
             {
                 _logger.LogInformation(
                     "Retrying failed operation: {ActionType}",
@@ -44,9 +43,8 @@ public class ErrorRecoveryEffect : ReactiveEffect
                 _dispatcher.Dispatch(new AddNotification(notification));
             });
 
-        // Handle error reporting
-        actions.OfType<object, ReportError>()
-            .Subscribe(action =>
+        Observable<ReportError> errorReportEffects = actions.OfType<object, ReportError>()
+            .Do(action =>
             {
                 _logger.LogError(
                     action.Exception,
@@ -60,6 +58,10 @@ public class ErrorRecoveryEffect : ReactiveEffect
                 _dispatcher.Dispatch(new AddNotification(notification));
             });
 
-        return Observable.Empty<object>();
+        return Observable
+            .Merge(
+                retryEffects.Cast<RetryFailedOperation, object>(),
+                errorReportEffects.Cast<ReportError, object>())
+            .IgnoreElements();
     }
 }

@@ -1,5 +1,7 @@
 using Demo.ConsoleApp.Counter;
 using Demo.ConsoleApp.Todos;
+using Ducky;
+using Ducky.Builder;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
@@ -13,42 +15,27 @@ AnsiConsole.Write(
         .Centered()
         .Color(Color.Blue));
 
-// Setup dispatcher and store
-Dispatcher dispatcher = new();
-
-// Create reducers
-CounterReducers counterReducers = new();
-TodoReducers todoReducers = new();
-
-// Setup services for async effects
+// Setup services
 ServiceCollection services = [];
-services.TryAddScoped<IAsyncEffect, DelayedIncrementEffect>();
-services.TryAddScoped<IAsyncEffect, CounterThresholdEffect>();
-services.TryAddScoped<IStoreEventPublisher, StoreEventPublisher>();
+
+// Register slices manually since they have custom implementations
+services.AddScoped<ISlice, CounterReducers>();
+services.AddScoped<ISlice, TodoReducers>();
+
+// Add Ducky store with builder
+services.AddDuckyStore(
+    builder => builder
+        .AddCorrelationIdMiddleware()
+        .AddMiddleware<LoggingMiddleware>()
+        .AddAsyncEffectMiddleware()
+        .AddEffect<DelayedIncrementEffect>()
+        .AddEffect<CounterThresholdEffect>());
 
 ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-// Create a variable to hold the store reference
-DuckyStore? storeRef = null;
-
-// Create store with middleware pipeline
-DuckyStore store = DuckyStoreFactory.CreateStore(
-    dispatcher,
-    [counterReducers, todoReducers],
-    pipeline =>
-    {
-        IStoreEventPublisher eventPublisher = serviceProvider.GetRequiredService<IStoreEventPublisher>();
-        pipeline.Use(new CorrelationIdMiddleware(eventPublisher));
-        pipeline.Use(new LoggingMiddleware());
-        pipeline.Use(new AsyncEffectMiddleware(
-            serviceProvider.GetServices<IAsyncEffect>(),
-            () => storeRef!.CurrentState,
-            dispatcher,
-            eventPublisher));
-    });
-
-// Set the store reference
-storeRef = store;
+// Get store and dispatcher from DI
+IStore store = serviceProvider.GetRequiredService<IStore>();
+IDispatcher dispatcher = serviceProvider.GetRequiredService<IDispatcher>();
 
 // Subscribe to state changes
 IDisposable subscription = store.RootStateObservable
@@ -104,7 +91,7 @@ while (running)
 subscription.Dispose();
 AnsiConsole.MarkupLine("[green]Goodbye![/]");
 
-async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
+async Task RunCounterDemo(IDispatcher actionDispatcher, IStore stateStore)
 {
     var counterRunning = true;
     while (counterRunning)
@@ -112,7 +99,7 @@ async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
         AnsiConsole.Clear();
 
         // Get fresh state each time we display
-        CounterState counterState = store.CurrentState.GetSliceState<CounterState>();
+        CounterState counterState = stateStore.CurrentState.GetSliceState<CounterState>();
 
         Panel panel = new Panel($"[bold yellow]Current Value: {counterState.Value}[/]")
             .Header("[blue]Counter Demo[/]")
@@ -137,22 +124,22 @@ async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
         {
             case "Increment (+1)":
             {
-                dispatcher.Increment();
+                actionDispatcher.Increment();
                 break;
             }
             case "Increment (+5)":
             {
-                dispatcher.Increment(5);
+                actionDispatcher.Increment(5);
                 break;
             }
             case "Decrement (-1)":
             {
-                dispatcher.Decrement();
+                actionDispatcher.Decrement();
                 break;
             }
             case "Async Increment (+3 after 2s)":
             {
-                dispatcher.IncrementAsync(3, 2000);
+                actionDispatcher.IncrementAsync(3, 2000);
                 await AnsiConsole.Status()
                     .StartAsync(
                         "Starting async increment...",
@@ -165,12 +152,12 @@ async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
                 int value = AnsiConsole.Prompt(
                     new TextPrompt<int>("Enter value:")
                         .ValidationErrorMessage("[red]That's not a valid number[/]"));
-                dispatcher.SetValue(value);
+                actionDispatcher.SetValue(value);
                 break;
             }
             case "Reset":
             {
-                dispatcher.Reset();
+                actionDispatcher.Reset();
                 break;
             }
             case "Back to main menu":
@@ -187,14 +174,14 @@ async Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)
     }
 }
 
-async Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)
+async Task RunTodoDemo(IDispatcher actionDispatcher, IStore stateStore)
 {
     var todoRunning = true;
     while (todoRunning)
     {
         AnsiConsole.Clear();
 
-        TodoState todoState = store.CurrentState.GetSliceState<TodoState>();
+        TodoState todoState = stateStore.CurrentState.GetSliceState<TodoState>();
 
         Rule rule = new("[blue]Todo List Demo[/]");
         AnsiConsole.Write(rule);
@@ -248,7 +235,7 @@ async Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)
                     new TextPrompt<string>("Enter todo title:")
                         .ValidationErrorMessage("[red]Title cannot be empty[/]")
                         .Validate(t => !string.IsNullOrWhiteSpace(t)));
-                dispatcher.AddTodo(title);
+                actionDispatcher.AddTodo(title);
                 break;
             }
             case "Toggle Todo":
@@ -258,7 +245,7 @@ async Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)
                     string toggleId = AnsiConsole.Prompt(
                         new TextPrompt<string>("Enter todo ID to toggle:")
                             .ValidationErrorMessage("[red]ID cannot be empty[/]"));
-                    dispatcher.ToggleTodo(toggleId);
+                    actionDispatcher.ToggleTodo(toggleId);
                 }
                 else
                 {
@@ -275,7 +262,7 @@ async Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)
                     string removeId = AnsiConsole.Prompt(
                         new TextPrompt<string>("Enter todo ID to remove:")
                             .ValidationErrorMessage("[red]ID cannot be empty[/]"));
-                    dispatcher.RemoveTodo(removeId);
+                    actionDispatcher.RemoveTodo(removeId);
                 }
                 else
                 {
@@ -287,13 +274,13 @@ async Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)
             }
             case "Clear Completed":
             {
-                dispatcher.ClearCompleted();
+                actionDispatcher.ClearCompleted();
                 break;
             }
             case "Toggle All":
             {
                 bool markCompleted = AnsiConsole.Confirm("Mark all as completed?");
-                dispatcher.ToggleAll(markCompleted);
+                actionDispatcher.ToggleAll(markCompleted);
                 break;
             }
             case "Back to main menu":
@@ -351,27 +338,35 @@ void ShowCurrentState(IRootState rootState)
 }
 
 // Custom middleware for demonstration
-public sealed class LoggingMiddleware : IActionMiddleware
+public sealed class LoggingMiddleware : IMiddleware
 {
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        return actions.Do(context =>
-        {
-            string correlationId = context.Metadata.TryGetValue(CorrelationIdMiddleware.CorrelationIdKey, out object? id) && id is Guid guid
-                ? guid.ToString()[..8]
-                : "unknown";
-            AnsiConsole.MarkupLine($"[dim][[Middleware]] Before: {context.Action.GetType().Name} (CorrelationId: {correlationId})[/]");
-        });
+        return Task.CompletedTask;
     }
 
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+    public void AfterInitializeAllMiddlewares()
     {
-        return actions.Do(context =>
-        {
-            string correlationId = context.Metadata.TryGetValue(CorrelationIdMiddleware.CorrelationIdKey, out object? id) && id is Guid guid
-                ? guid.ToString()[..8]
-                : "unknown";
-            AnsiConsole.MarkupLine($"[dim][[Middleware]] After: {context.Action.GetType().Name} (CorrelationId: {correlationId})[/]");
-        });
+        // Nothing to do
+    }
+
+    public bool MayDispatchAction(object action)
+    {
+        return true;
+    }
+
+    public void BeforeDispatch(object action)
+    {
+        AnsiConsole.MarkupLine($"[dim][[Middleware]] Before: {action.GetType().Name}[/]");
+    }
+
+    public void AfterDispatch(object action)
+    {
+        AnsiConsole.MarkupLine($"[dim][[Middleware]] After: {action.GetType().Name}[/]");
+    }
+
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { });
     }
 }

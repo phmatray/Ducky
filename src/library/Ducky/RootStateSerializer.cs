@@ -75,27 +75,4 @@ public sealed class RootStateSerializer : IRootStateSerializer
 
         return new RootState(state.ToImmutableSortedDictionary());
     }
-
-    /// <inheritdoc />
-    public void SaveToFile(IRootState rootState, string filePath)
-    {
-        ArgumentNullException.ThrowIfNull(rootState);
-        ArgumentNullException.ThrowIfNull(filePath);
-
-        File.WriteAllText(filePath, Serialize(rootState));
-    }
-
-    /// <inheritdoc />
-    public IRootState LoadFromFile(string filePath)
-    {
-        ArgumentNullException.ThrowIfNull(filePath);
-
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException($"The file '{filePath}' does not exist.");
-        }
-
-        string json = File.ReadAllText(filePath);
-        return Deserialize(json);
-    }
 }

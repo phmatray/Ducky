@@ -8,7 +8,7 @@ namespace AppStore.Tests.Notifications;
 
 public sealed class NotificationsReducersTests : IDisposable
 {
-    private const string Key = "notifications";
+    private const string Key = "demo-blazor-wasm-app-store-notifications";
 
     private readonly NotificationsReducers _sut = new();
 

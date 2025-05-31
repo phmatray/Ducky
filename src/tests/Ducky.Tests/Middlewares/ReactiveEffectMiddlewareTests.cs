@@ -10,21 +10,21 @@ namespace Ducky.Tests.Middlewares;
 /// </summary>
 public class ReactiveEffectMiddlewareTests : IDisposable
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IDispatcher _dispatcher;
-    private readonly IStoreEventPublisher _eventPublisher;
-    private readonly Func<IRootState> _getState;
+    private readonly Mock<IStoreEventPublisher> _eventPublisherMock;
+    private readonly Mock<IDispatcher> _dispatcherMock;
+    private readonly Mock<IStore> _storeMock;
     private readonly TestRootState _rootState;
     private ReactiveEffectMiddleware? _middleware;
 
+    private const int ProcessingDelayMs = 50;
+
     public ReactiveEffectMiddlewareTests()
     {
-        ServiceCollection services = [];
-        _serviceProvider = services.BuildServiceProvider();
-        _dispatcher = new Mock<IDispatcher>().Object;
-        _eventPublisher = new Mock<IStoreEventPublisher>().Object;
+        _eventPublisherMock = new Mock<IStoreEventPublisher>();
+        _dispatcherMock = new Mock<IDispatcher>();
+        _storeMock = new Mock<IStore>();
         _rootState = new TestRootState();
-        _getState = () => _rootState;
+        _storeMock.Setup(s => s.CurrentState).Returns(_rootState);
     }
 
     public void Dispose()
@@ -32,77 +32,66 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         _middleware?.Dispose();
     }
 
-    [Fact]
-    public void Constructor_WithNullServices_ThrowsArgumentNullException()
+    private async Task<ReactiveEffectMiddleware> CreateInitializedMiddleware(params IReactiveEffect[] effects)
     {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() =>
-            new ReactiveEffectMiddleware(null!, _getState, _dispatcher, _eventPublisher));
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        return middleware;
     }
 
     [Fact]
-    public void Constructor_WithNullGetState_ThrowsArgumentNullException()
+    public void Constructor_WithNullEffects_ThrowsArgumentNullException()
     {
-        // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new ReactiveEffectMiddleware([], null!, _dispatcher, _eventPublisher));
-    }
-
-    [Fact]
-    public void Constructor_WithNullDispatcher_ThrowsArgumentNullException()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() =>
-            new ReactiveEffectMiddleware([], _getState, null!, _eventPublisher));
+            new ReactiveEffectMiddleware(null!, _eventPublisherMock.Object));
     }
 
     [Fact]
     public void Constructor_WithNullEventPublisher_ThrowsArgumentNullException()
     {
-        // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new ReactiveEffectMiddleware([], _getState, _dispatcher, null!));
+            new ReactiveEffectMiddleware([], null!));
     }
 
     [Fact]
-    public void InvokeBeforeReduce_ReturnsActionsUnchanged()
+    public async Task InitializeAsync_ShouldCompleteSuccessfully()
     {
-        // Arrange
-        _middleware = new ReactiveEffectMiddleware([], _getState, _dispatcher, _eventPublisher);
-        Subject<ActionContext> actions = new();
-        TestAction testAction = new();
-        ActionContext context = new(testAction);
+        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock.Object);
 
-        // Act
-        Observable<ActionContext> result = _middleware.InvokeBeforeReduce(actions);
-        List<ActionContext> received = [];
-        using IDisposable subscription = result.Subscribe(received.Add);
+        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
 
-        actions.OnNext(context);
-
-        // Assert
-        Assert.Single(received);
-        Assert.Same(context, received[0]);
+        // No exception means success
     }
 
     [Fact]
-    public void InvokeAfterReduce_EmitsActionToEffects()
+    public void MayDispatchAction_ShouldAlwaysReturnTrue()
+    {
+        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock.Object);
+        TestAction action = new();
+
+        bool result = middleware.MayDispatchAction(action);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task AfterDispatch_ShouldEmitActionToEffects()
     {
         // Arrange
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
+        _middleware = await CreateInitializedMiddleware(testEffect);
 
-        _middleware = new ReactiveEffectMiddleware([testEffect], _getState, _dispatcher, _eventPublisher);
+        // Trigger lazy initialization
+        _middleware.BeforeDispatch(new TestAction());
 
-        Subject<ActionContext> actions = new();
         TestAction testAction = new();
-        ActionContext context = new(testAction);
 
         // Act
-        Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
-        using IDisposable subscription = result.Subscribe();
+        _middleware.AfterDispatch(testAction);
 
-        actions.OnNext(context);
+        // Allow time for async processing
+        await Task.Delay(ProcessingDelayMs, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Single(capturedActions);
@@ -110,128 +99,139 @@ public class ReactiveEffectMiddlewareTests : IDisposable
     }
 
     [Fact]
-    public void InvokeAfterReduce_UpdatesStateAfterAction()
+    public async Task AfterDispatch_ShouldUpdateStateAfterAction()
     {
         // Arrange
         List<IRootState> capturedStates = [];
         TestStateCapturingEffect stateEffect = new(capturedStates);
+        _middleware = await CreateInitializedMiddleware(stateEffect);
 
-        _middleware = new ReactiveEffectMiddleware([stateEffect], _getState, _dispatcher, _eventPublisher);
+        // Trigger lazy initialization
+        _middleware.BeforeDispatch(new TestAction());
 
-        Subject<ActionContext> actions = new();
         TestAction testAction = new();
-        ActionContext context = new(testAction);
 
         // Act
-        Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
-        using IDisposable subscription = result.Subscribe();
+        _middleware.AfterDispatch(testAction);
 
-        actions.OnNext(context);
+        // Allow time for async processing
+        await Task.Delay(ProcessingDelayMs, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(capturedStates);
-        Assert.Same(_rootState, capturedStates[0]);
+        // The middleware emits initial empty state and then the actual state
+        // Find the TestRootState instance in the captured states
+        TestRootState? testRootState = capturedStates.OfType<TestRootState>().FirstOrDefault();
+        Assert.NotNull(testRootState);
+        Assert.Same(_rootState, testRootState);
+        
+        // Verify that the store's CurrentState was called
+        _storeMock.Verify(s => s.CurrentState, Times.AtLeastOnce);
     }
 
     [Fact]
-    public void InvokeAfterReduce_WithAbortedContext_DoesNotProcessAction()
-    {
-        // Arrange
-        List<object> capturedActions = [];
-        TestReactiveEffect testEffect = new(capturedActions);
-
-        _middleware = new ReactiveEffectMiddleware([testEffect], _getState, _dispatcher, _eventPublisher);
-
-        Subject<ActionContext> actions = new();
-        TestAction testAction = new();
-        ActionContext context = new(testAction);
-        context.Abort();
-
-        // Act
-        Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
-        using IDisposable subscription = result.Subscribe();
-
-        actions.OnNext(context);
-
-        // Assert
-        Assert.Empty(capturedActions);
-    }
-
-    [Fact]
-    public void ReactiveEffect_DispatchesAction_PublishesDispatchedEvent()
+    public async Task ReactiveEffect_DispatchesAction_PublishesDispatchedEvent()
     {
         // Arrange
         TestAction actionToDispatch = new();
         TestDispatchingEffect dispatchingEffect = new(actionToDispatch);
+        _middleware = await CreateInitializedMiddleware(dispatchingEffect);
 
-        _middleware = new ReactiveEffectMiddleware([dispatchingEffect], _getState, _dispatcher, _eventPublisher);
+        // Trigger lazy initialization
+        _middleware.BeforeDispatch(new TestAction());
 
-        Subject<ActionContext> actions = new();
         TestAction triggerAction = new();
-        ActionContext context = new(triggerAction);
 
         // Act
-        Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
-        using IDisposable subscription = result.Subscribe();
-
-        actions.OnNext(context);
+        _middleware.AfterDispatch(triggerAction);
 
         // Allow time for async processing
-        Thread.Sleep(100);
+        await Task.Delay(ProcessingDelayMs, TestContext.Current.CancellationToken);
 
         // Assert
-        Mock<IDispatcher> dispatcherMock = Mock.Get(_dispatcher);
-        Mock<IStoreEventPublisher> publisherMock = Mock.Get(_eventPublisher);
-        dispatcherMock.Verify(d => d.Dispatch(actionToDispatch), Times.Once);
-        publisherMock.Verify(p => p.Publish(It.IsAny<ReactiveEffectDispatchedEventArgs>()), Times.Once);
+        _dispatcherMock.Verify(d => d.Dispatch(actionToDispatch), Times.Once);
+        _eventPublisherMock.Verify(p => p.Publish(It.IsAny<ReactiveEffectDispatchedEventArgs>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ReactiveEffect_WithError_PublishesErrorEvent()
+    {
+        // Arrange
+        TestErrorThrowingEffect errorEffect = new();
+        _middleware = await CreateInitializedMiddleware(errorEffect);
+
+        // Trigger lazy initialization
+        _middleware.BeforeDispatch(new TestAction());
+
+        TestAction testAction = new();
+
+        // Act - Call BeforeDispatch to ensure initialization, then AfterDispatch to emit action
+        _middleware.BeforeDispatch(testAction);
+        _middleware.AfterDispatch(testAction);
+
+        // Allow more time for async processing since error handling might be slower
+        await Task.Delay(ProcessingDelayMs * 2, TestContext.Current.CancellationToken);
+
+        // Assert
+        _eventPublisherMock.Verify(p => p.Publish(It.IsAny<EffectErrorEventArgs>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void BeginInternalMiddlewareChange_ShouldReturnDisposable()
+    {
+        // Arrange
+        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock.Object);
+
+        // Act
+        IDisposable result = middleware.BeginInternalMiddlewareChange();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.IsAssignableFrom<IDisposable>(result);
+        result.Dispose(); // Verify dispose doesn't throw
     }
 
     [Fact]
     public void Dispose_CanBeCalledMultipleTimes()
     {
         // Arrange
-        List<object> capturedActions = [];
-        TestReactiveEffect testEffect = new(capturedActions);
+        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock.Object);
 
-        _middleware = new ReactiveEffectMiddleware([testEffect], _getState, _dispatcher, _eventPublisher);
-
-        // Act
-        _middleware.Dispose();
-        _middleware.Dispose(); // Second call should not throw
-
-        // Assert - just verify no exception is thrown
-        Assert.True(true);
+        // Act & Assert - no exception should be thrown
+        middleware.Dispose();
+        middleware.Dispose();
     }
 
     [Fact]
-    public void InvokeAfterReduce_AfterDispose_DoesNotProcessActions()
+    public async Task AfterDispatch_AfterDispose_DoesNotProcessActions()
     {
         // Arrange
         List<object> capturedActions = [];
         TestReactiveEffect testEffect = new(capturedActions);
+        _middleware = await CreateInitializedMiddleware(testEffect);
 
-        _middleware = new ReactiveEffectMiddleware([testEffect], _getState, _dispatcher, _eventPublisher);
+        // Trigger lazy initialization
+        _middleware.BeforeDispatch(new TestAction());
+
         _middleware.Dispose();
 
-        Subject<ActionContext> actions = new();
         TestAction testAction = new();
-        ActionContext context = new(testAction);
 
         // Act
-        Observable<ActionContext> result = _middleware.InvokeAfterReduce(actions);
-        using IDisposable subscription = result.Subscribe();
+        _middleware.AfterDispatch(testAction);
 
-        actions.OnNext(context);
+        // Allow time for async processing
+        await Task.Delay(ProcessingDelayMs, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Empty(capturedActions);
     }
 
     // Test helper classes
-    private class TestRootState : IRootState
+    private sealed class TestRootState : IRootState
     {
         public T GetSlice<T>() where T : IState => default!;
-        public IEnumerable<ISlice> GetSlices() => [];
+        public IEnumerable<ISlice> GetSlices() => Array.Empty<ISlice>();
         public ImmutableSortedDictionary<string, object> GetStateDictionary() => ImmutableSortedDictionary<string, object>.Empty;
         public ImmutableSortedSet<string> GetKeys() => ImmutableSortedSet<string>.Empty;
         public TState GetSliceState<TState>(string key) where TState : notnull => default!;
@@ -239,29 +239,59 @@ public class ReactiveEffectMiddlewareTests : IDisposable
         public bool ContainsKey(string key) => false;
     }
 
-    private class TestReactiveEffect(List<object> capturedActions) : ReactiveEffect
+    private sealed class TestReactiveEffect : ReactiveEffect
     {
+        private readonly List<object> _capturedActions;
+
+        public TestReactiveEffect(List<object> capturedActions)
+        {
+            _capturedActions = capturedActions;
+        }
+
         public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
         {
-            actions.Subscribe(capturedActions.Add);
+            actions.Subscribe(_capturedActions.Add);
             return Observable.Empty<object>();
         }
     }
 
-    private class TestStateCapturingEffect(List<IRootState> capturedStates) : ReactiveEffect
+    private sealed class TestStateCapturingEffect : ReactiveEffect
     {
+        private readonly List<IRootState> _capturedStates;
+
+        public TestStateCapturingEffect(List<IRootState> capturedStates)
+        {
+            _capturedStates = capturedStates;
+        }
+
         public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
         {
-            rootState.Subscribe(capturedStates.Add);
+            rootState.Subscribe(_capturedStates.Add);
             return Observable.Empty<object>();
         }
     }
 
-    private class TestDispatchingEffect(object actionToDispatch) : ReactiveEffect
+    private sealed class TestDispatchingEffect : ReactiveEffect
+    {
+        private readonly object _actionToDispatch;
+
+        public TestDispatchingEffect(object actionToDispatch)
+        {
+            _actionToDispatch = actionToDispatch;
+        }
+
+        public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
+        {
+            return actions.Take(1).Select(_ => _actionToDispatch);
+        }
+    }
+
+    private sealed class TestErrorThrowingEffect : ReactiveEffect
     {
         public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
         {
-            return actions.Take(1).Select(_ => actionToDispatch);
+            return actions.SelectMany<object, object>(_ => 
+                Observable.Throw<object>(new InvalidOperationException("Test error")));
         }
     }
 }

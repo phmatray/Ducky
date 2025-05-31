@@ -2,7 +2,7 @@
 
 <MudDialog>
   <TitleContent>
-    @State.SelectFullTitle()
+    @_fullTitle
   </TitleContent>
   <DialogContent>
     <MudStack>
@@ -15,7 +15,7 @@
       <MudText Typo="Typo.subtitle1">Version Information</MudText>
       <MudDivider/>
       <MudText>
-        <strong>Version:</strong> @State.Version
+        <strong>Version:</strong> @_version
       </MudText>
       <MudSpacer/>
       <MudText Typo="Typo.subtitle1">Credits</MudText>
@@ -42,8 +42,27 @@
 </MudDialog>
 
 @code {
+  private string _fullTitle = "";
+  private string _version = "";
 
   [CascadingParameter]
   private IMudDialogInstance MudDialog { get; set; } = null!;
 
+  protected override void OnAfterSubscribed()
+  {
+      // Get the initial state safely
+      var rootState = Store.CurrentState;
+      var layoutState = rootState.GetSliceState<LayoutState>();
+      _fullTitle = layoutState.SelectFullTitle();
+      _version = layoutState.Version;
+  }
+
+  protected override void OnParametersSet()
+  {
+      // Update when state changes
+      var rootState = Store.CurrentState;
+      var layoutState = rootState.GetSliceState<LayoutState>();
+      _fullTitle = layoutState.SelectFullTitle();
+      _version = layoutState.Version;
+  }
 }

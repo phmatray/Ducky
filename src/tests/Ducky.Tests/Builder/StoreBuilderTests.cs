@@ -34,7 +34,7 @@ public class StoreBuilderTests
         services.Any(sd => sd.ServiceType == typeof(ReactiveEffectMiddleware)).ShouldBeTrue();
 
         // Check interface registrations
-        services.Where(sd => sd.ServiceType == typeof(IActionMiddleware)).Count().ShouldBe(4);
+        services.Where(sd => sd.ServiceType == typeof(IMiddleware)).Count().ShouldBe(4);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class StoreBuilderTests
 
         // Assert - Should only register once
         services.Where(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).Count().ShouldBe(1);
-        services.Where(sd => sd.ServiceType == typeof(IActionMiddleware)).Count().ShouldBe(1);
+        services.Where(sd => sd.ServiceType == typeof(IMiddleware)).Count().ShouldBe(1);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class StoreBuilderTests
 
         // Assert
         services.Any(sd => sd.ServiceType == typeof(TestMiddleware)).ShouldBeTrue();
-        services.Any(sd => sd.ServiceType == typeof(IActionMiddleware)).ShouldBeTrue();
+        services.Any(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBeTrue();
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class StoreBuilderTests
         // Build provider and resolve
         ServiceProvider provider = services.BuildServiceProvider();
         TestMiddleware resolved = provider.GetRequiredService<TestMiddleware>();
-        IActionMiddleware resolvedInterface = provider.GetRequiredService<IActionMiddleware>();
+        IMiddleware resolvedInterface = provider.GetRequiredService<IMiddleware>();
 
         // Assert
         resolved.ShouldBe(capturedMiddleware);
@@ -194,7 +194,7 @@ public class StoreBuilderTests
         });
 
         // Verify all registrations
-        services.Where(sd => sd.ServiceType == typeof(IActionMiddleware)).Count().ShouldBe(4); // Default middlewares
+        services.Where(sd => sd.ServiceType == typeof(IMiddleware)).Count().ShouldBe(4); // Default middlewares
         services.Any(sd => sd.ServiceType == typeof(ISlice<TestState>)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IAsyncEffect)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IReactiveEffect)).ShouldBeTrue();
@@ -202,16 +202,33 @@ public class StoreBuilderTests
     }
 
     // Test doubles
-    private class TestMiddleware : IActionMiddleware
+    private class TestMiddleware : IMiddleware
     {
-        public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+        public Task InitializeAsync(IDispatcher dispatcher, IStore store)
         {
-            return actions;
+            return Task.CompletedTask;
         }
 
-        public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+        public void AfterInitializeAllMiddlewares()
         {
-            return actions;
+        }
+
+        public bool MayDispatchAction(object action)
+        {
+            return true;
+        }
+
+        public void BeforeDispatch(object action)
+        {
+        }
+
+        public void AfterDispatch(object action)
+        {
+        }
+
+        public IDisposable BeginInternalMiddlewareChange()
+        {
+            return new DisposableCallback(() => { });
         }
     }
 

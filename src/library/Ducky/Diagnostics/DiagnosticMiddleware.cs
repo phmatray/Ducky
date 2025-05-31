@@ -2,16 +2,15 @@ using System.Diagnostics;
 using Ducky.Builder;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
-using R3;
 
 namespace Ducky.Diagnostics;
 
 /// <summary>
 /// A middleware that wraps other middlewares to collect diagnostic information.
 /// </summary>
-public class DiagnosticMiddleware : IActionMiddleware
+public class DiagnosticMiddleware : IMiddleware
 {
-    private readonly IActionMiddleware _innerMiddleware;
+    private readonly IMiddleware _innerMiddleware;
     private readonly MiddlewareDiagnostics _diagnostics;
     private readonly Type _middlewareType;
 
@@ -21,7 +20,7 @@ public class DiagnosticMiddleware : IActionMiddleware
     /// <param name="innerMiddleware">The middleware to wrap and collect diagnostics for.</param>
     /// <param name="diagnostics">The diagnostics service to record metrics.</param>
     public DiagnosticMiddleware(
-        IActionMiddleware innerMiddleware,
+        IMiddleware innerMiddleware,
         MiddlewareDiagnostics diagnostics)
     {
         _innerMiddleware = innerMiddleware;
@@ -29,60 +28,65 @@ public class DiagnosticMiddleware : IActionMiddleware
         _middlewareType = innerMiddleware.GetType();
     }
 
-    /// <summary>
-    /// Invokes the wrapped middleware before state reduction and records execution metrics.
-    /// </summary>
-    /// <param name="actions">The stream of action contexts to process.</param>
-    /// <returns>The processed action contexts.</returns>
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+    /// <inheritdoc />
+    public async Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        return actions.Select(context =>
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            try
-            {
-                ActionContext result = _innerMiddleware.InvokeBeforeReduce(Observable.Return(context))
-                    .FirstOrDefaultAsync()
-                    .GetAwaiter()
-                    .GetResult();
-
-                _diagnostics.RecordExecution(_middlewareType, stopwatch.Elapsed, true);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _diagnostics.RecordError(_middlewareType, ex, true);
-                throw;
-            }
-        });
+        await _innerMiddleware.InitializeAsync(dispatcher, store).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Invokes the wrapped middleware after state reduction and records execution metrics.
-    /// </summary>
-    /// <param name="actions">The stream of action contexts to process.</param>
-    /// <returns>The processed action contexts.</returns>
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+    /// <inheritdoc />
+    public void AfterInitializeAllMiddlewares()
     {
-        return actions.Select(context =>
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            try
-            {
-                ActionContext result = _innerMiddleware.InvokeAfterReduce(Observable.Return(context))
-                    .FirstOrDefaultAsync()
-                    .GetAwaiter()
-                    .GetResult();
+        _innerMiddleware.AfterInitializeAllMiddlewares();
+    }
 
-                _diagnostics.RecordExecution(_middlewareType, stopwatch.Elapsed, false);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _diagnostics.RecordError(_middlewareType, ex, false);
-                throw;
-            }
-        });
+    /// <inheritdoc />
+    public bool MayDispatchAction(object action)
+        => ExecuteWithDiagnostics(() => _innerMiddleware.MayDispatchAction(action), isBeforePhase: true);
+
+    /// <inheritdoc />
+    public void BeforeDispatch(object action)
+        => ExecuteWithDiagnostics(() => _innerMiddleware.BeforeDispatch(action), isBeforePhase: true);
+
+    /// <inheritdoc />
+    public void AfterDispatch(object action)
+        => ExecuteWithDiagnostics(() => _innerMiddleware.AfterDispatch(action), isBeforePhase: false);
+    
+    private void ExecuteWithDiagnostics(Action action, bool isBeforePhase)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        try
+        {
+            action();
+            _diagnostics.RecordExecution(_middlewareType, stopwatch.Elapsed, isBeforePhase);
+        }
+        catch (Exception ex)
+        {
+            _diagnostics.RecordError(_middlewareType, ex, isBeforePhase);
+            throw;
+        }
+    }
+    
+    private T ExecuteWithDiagnostics<T>(Func<T> func, bool isBeforePhase)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        try
+        {
+            T result = func();
+            _diagnostics.RecordExecution(_middlewareType, stopwatch.Elapsed, isBeforePhase);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _diagnostics.RecordError(_middlewareType, ex, isBeforePhase);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return _innerMiddleware.BeginInternalMiddlewareChange();
     }
 }
 

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <RootNamespace>Ducky.Blazor.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="bunit" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="R3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../library/Ducky/Ducky.csproj" />
+    <ProjectReference Include="../../library/Ducky.Blazor/Ducky.Blazor.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -4,7 +4,6 @@ using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.NoOp;
 using Ducky.Middlewares.ReactiveEffect;
-using Ducky.Pipeline;
 
 namespace Ducky.Builder;
 
@@ -61,8 +60,6 @@ public static class StoreBuilderExtensions
         return builder.AddMiddleware<AsyncEffectMiddleware>(sp =>
             new AsyncEffectMiddleware(
                 sp.GetServices<IAsyncEffect>(),
-                () => sp.GetRequiredService<IStore>().CurrentState,
-                sp.GetRequiredService<IDispatcher>(),
                 sp.GetRequiredService<IStoreEventPublisher>()));
     }
 
@@ -78,8 +75,6 @@ public static class StoreBuilderExtensions
         return builder.AddMiddleware<ReactiveEffectMiddleware>(sp =>
             new ReactiveEffectMiddleware(
                 sp.GetServices<IReactiveEffect>(),
-                () => sp.GetRequiredService<IStore>().CurrentState,
-                sp.GetRequiredService<IDispatcher>(),
                 sp.GetRequiredService<IStoreEventPublisher>()));
     }
 

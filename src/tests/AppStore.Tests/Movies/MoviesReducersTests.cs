@@ -8,7 +8,7 @@ namespace AppStore.Tests.Movies;
 
 public sealed class MoviesReducersTests : IDisposable
 {
-    private const string Key = "movies";
+    private const string Key = "demo-blazor-wasm-app-store-movies";
 
     private readonly MoviesReducers _sut = new();
 

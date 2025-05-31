@@ -1,5 +1,4 @@
 using Ducky.Pipeline;
-using R3;
 
 namespace Ducky.Blazor.Middlewares.DevTools;
 
@@ -7,38 +6,63 @@ namespace Ducky.Blazor.Middlewares.DevTools;
 /// Middleware that sends every dispatched action and resulting state to the Redux DevTools browser extension.
 /// This middleware integrates with the Redux DevTools extension to provide time-travel debugging capabilities.
 /// </summary>
-public sealed class DevToolsMiddleware : IActionMiddleware
+public sealed class DevToolsMiddleware : IMiddleware
 {
     private readonly ReduxDevToolsModule _devTools;
-    private readonly IStore _store;
+    private IStore? _store;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DevToolsMiddleware"/> class.
     /// </summary>
     /// <param name="devTools">The DevTools JSInterop module.</param>
-    /// <param name="store">The Ducky store instance.</param>
-    public DevToolsMiddleware(ReduxDevToolsModule devTools, IStore store)
+    public DevToolsMiddleware(ReduxDevToolsModule devTools)
     {
         _devTools = devTools ?? throw new ArgumentNullException(nameof(devTools));
-        _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    {
+        _store = store;
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public void AfterInitializeAllMiddlewares()
+    {
+        // Nothing to do after all middlewares are initialized
+    }
+
+    /// <inheritdoc />
+    public bool MayDispatchAction(object action)
+    {
+        // Allow all actions
+        return true;
+    }
+
+    /// <inheritdoc />
+    public void BeforeDispatch(object action)
     {
         // DevTools doesn't need to process actions before reduction
         // Time-travel state restoration is handled via special actions
-        return actions;
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+    public void AfterDispatch(object action)
     {
-        // Send action and state to DevTools after reduction
-        return actions.Do(context =>
+        if (_store is null)
         {
-            // Fire-and-forget to avoid blocking the pipeline
-            _ = _devTools.SendAsync(context.Action, _store.CurrentState);
-        });
+            return;
+        }
+
+        // Send action and state to DevTools after reduction
+        // Fire-and-forget to avoid blocking the pipeline
+        _ = _devTools.SendAsync(action, _store.CurrentState);
+    }
+
+    /// <inheritdoc />
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { });
     }
 }

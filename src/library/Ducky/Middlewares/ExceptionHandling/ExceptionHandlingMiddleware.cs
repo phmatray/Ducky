@@ -4,14 +4,13 @@
 
 using Microsoft.Extensions.Logging;
 using Ducky.Pipeline;
-using R3;
 
 namespace Ducky.Middlewares.ExceptionHandling;
 
 /// <summary>
 /// Middleware that provides global exception handling for actions in the pipeline.
 /// </summary>
-public sealed class ExceptionHandlingMiddleware : IActionMiddleware
+public sealed class ExceptionHandlingMiddleware : IMiddleware
 {
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
     private readonly IStoreEventPublisher _eventPublisher;
@@ -34,44 +33,55 @@ public sealed class ExceptionHandlingMiddleware : IActionMiddleware
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        return actions.SelectMany(context =>
-        {
-            return Observable.Return(context)
-                .Catch<ActionContext, Exception>(exception =>
-                {
-                    HandleException(exception, context);
-
-                    // Mark context as aborted so it doesn't continue processing
-                    context.Abort();
-                    return Observable.Return(context);
-                });
-        });
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+    public void AfterInitializeAllMiddlewares()
     {
-        return actions.SelectMany(context =>
-        {
-            return Observable.Return(context)
-                .Catch<ActionContext, Exception>(exception =>
-                {
-                    HandleException(exception, context);
-                    return Observable.Return(context);
-                });
-        });
+        // Nothing to do
     }
 
-    private void HandleException(Exception exception, ActionContext context)
+    /// <inheritdoc />
+    public bool MayDispatchAction(object action)
+    {
+        return true;
+    }
+
+    /// <inheritdoc />
+    public void BeforeDispatch(object action)
+    {
+        // Nothing to do before dispatch
+    }
+
+    /// <inheritdoc />
+    public void AfterDispatch(object action)
+    {
+        // Exception handling is now done at a higher level in the pipeline
+        // Individual middlewares can still handle their own exceptions
+    }
+
+    /// <inheritdoc />
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { });
+    }
+
+    /// <summary>
+    /// Handles exceptions that occur during action processing.
+    /// </summary>
+    /// <param name="exception">The exception that occurred.</param>
+    /// <param name="action">The action being processed.</param>
+    public void HandleException(Exception exception, object action)
     {
         _logger.LogError(
             exception,
             "Unhandled exception occurred while processing action {ActionType}",
-            context.Action.GetType().Name);
+            action.GetType().Name);
 
-        ActionErrorEventArgs errorEventArgs = new(exception, context.Action, context);
+        ActionErrorEventArgs errorEventArgs = new(exception, action, null!);
 
         // Allow exception handlers to handle the exception
         var isHandled = false;
@@ -96,7 +106,7 @@ public sealed class ExceptionHandlingMiddleware : IActionMiddleware
         }
 
         // Publish the error event
-        ActionErrorEventArgs finalEventArgs = new(exception, context.Action, context, isHandled);
+        ActionErrorEventArgs finalEventArgs = new(exception, action, null!, isHandled);
         _eventPublisher.Publish(finalEventArgs);
     }
 }

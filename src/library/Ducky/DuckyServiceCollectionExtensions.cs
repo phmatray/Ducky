@@ -2,7 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky;
@@ -12,7 +11,6 @@ namespace Ducky;
 /// </summary>
 public static class DuckyServiceCollectionExtensions
 {
-
     /// <summary>
     /// Adds Ducky services with a store builder for robust configuration.
     /// This is the recommended way to configure Ducky services.
@@ -45,12 +43,11 @@ public static class DuckyServiceCollectionExtensions
 
         DuckyOptions options = new()
         {
-            ConfigurePipelineWithServices = (pipeline, sp) =>
+            ConfigurePipelineWithServices = (pipeline, _) =>
             {
                 foreach (Type middlewareType in middlewareTypes)
                 {
-                    var middleware = (IActionMiddleware)sp.GetRequiredService(middlewareType);
-                    pipeline.Use(middleware);
+                    pipeline.Use(middlewareType);
                 }
             }
         };

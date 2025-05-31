@@ -81,8 +81,8 @@ public sealed class SliceReducersTests : IDisposable
         // Act
         string key = _sut.GetKey();
 
-        // Assert
-        key.ShouldBe("test-counter");
+        // Assert - Now includes namespace for robustness
+        key.ShouldBe("ducky-tests-test-models-test-counter");
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public sealed class SliceReducersTests : IDisposable
         json.ShouldNotBeNull();
         json.ContainsKey("key").ShouldBeTrue();
         json.ContainsKey("state").ShouldBeTrue();
-        json["key"]!.GetValue<string>().ShouldBe("test-counter");
+        json["key"]!.GetValue<string>().ShouldBe("ducky-tests-test-models-test-counter");
         json["state"]!.GetValue<int>().ShouldBe(10);
     }
 

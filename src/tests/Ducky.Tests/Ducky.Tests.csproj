@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <NoWarn>$(NoWarn);AD0001;RCS1090</NoWarn>
+    <NoWarn>$(NoWarn);AD0001;RCS1046;RCS1090</NoWarn>
     <RootNamespace>Ducky.Tests</RootNamespace>
 
     <!-- To enable the Microsoft Testing Platform 'dotnet test' experience -->

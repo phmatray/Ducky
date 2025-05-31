@@ -6,45 +6,56 @@ namespace Ducky.Middlewares.ReactiveEffect;
 /// <summary>
 /// Middleware that enables reactive side effects in response to actions and state changes.
 /// </summary>
-public sealed class ReactiveEffectMiddleware : IActionMiddleware, IDisposable
+public sealed class ReactiveEffectMiddleware : IMiddleware, IDisposable
 {
     private readonly CompositeDisposable _subscriptions = [];
     private readonly Subject<object> _actions = new();
     private readonly BehaviorSubject<IRootState> _state;
     private readonly IEnumerable<IReactiveEffect> _effects;
-    private readonly IDispatcher _dispatcher;
-    private readonly Func<IRootState> _getState;
+    private IDispatcher _dispatcher = null!;
+    private Func<IRootState> _getState = null!;
     private readonly IStoreEventPublisher _eventPublisher;
     private bool _disposed;
+    private bool _initialized;
 
     /// <summary>
     /// Initializes a new instance of <see cref="ReactiveEffectMiddleware"/>.
     /// </summary>
     /// <param name="effects">An enumerable collection of reactive effects that implement <see cref="IReactiveEffect"/>.</param>
-    /// <param name="getState">A function that returns the current state of the application.</param>
-    /// <param name="dispatcher">The dispatcher used to handle actions.</param>
     /// <param name="eventPublisher">The event publisher for dispatching reactive effect events.</param>
     public ReactiveEffectMiddleware(
         IEnumerable<IReactiveEffect> effects,
-        Func<IRootState> getState,
-        IDispatcher dispatcher,
         IStoreEventPublisher eventPublisher)
     {
         ArgumentNullException.ThrowIfNull(effects);
-        ArgumentNullException.ThrowIfNull(getState);
-        ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(eventPublisher);
 
         _effects = effects;
-        _getState = getState;
-        _dispatcher = dispatcher;
         _eventPublisher = eventPublisher;
 
-        // Initialize state with current state
-        _state = new BehaviorSubject<IRootState>(_getState());
+        // Initialize state - will be properly set during initialization
+        System.Collections.Immutable.ImmutableSortedDictionary<string, object> emptyStateDictionary = 
+            System.Collections.Immutable.ImmutableSortedDictionary<string, object>.Empty;
+        _state = new BehaviorSubject<IRootState>(new RootState(emptyStateDictionary));
+    }
 
-        // Set up effect subscriptions
-        InitializeEffects();
+    private void EnsureInitialized()
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        lock (_subscriptions)
+        {
+            if (_initialized)
+            {
+                return;
+            }
+
+            InitializeEffects();
+            _initialized = true;
+        }
     }
 
     private void InitializeEffects()
@@ -88,37 +99,63 @@ public sealed class ReactiveEffectMiddleware : IActionMiddleware, IDisposable
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        // Pass through actions unchanged before reduce
-        return actions;
+        _dispatcher = dispatcher;
+        _getState = () => store.CurrentState;
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
+    public void AfterInitializeAllMiddlewares()
     {
-        // After reduce, emit actions to effects and update state
-        return actions.Do(context =>
+        // Defer effect initialization to avoid hanging during startup
+        // Effects will be initialized on first action dispatch
+    }
+
+    /// <inheritdoc />
+    public bool MayDispatchAction(object action)
+    {
+        return true;
+    }
+
+    /// <inheritdoc />
+    public void BeforeDispatch(object action)
+    {
+        EnsureInitialized();
+    }
+
+    /// <inheritdoc />
+    public void AfterDispatch(object action)
+    {
+        // Emit action to effects and update state after dispatch
+        if (_disposed)
         {
-            if (_disposed || context.IsAborted)
-            {
-                return;
-            }
+            return;
+        }
 
-            // Emit action to effects
-            _actions.OnNext(context.Action);
+        // Ensure effects are initialized before processing
+        EnsureInitialized();
 
-            // Update state after reducer has processed
-            try
-            {
-                IRootState currentState = _getState();
-                _state.OnNext(currentState);
-            }
-            catch (Exception ex)
-            {
-                _eventPublisher.Publish(new ReactiveEffectErrorEventArgs(context.Action, ex));
-            }
-        });
+        // Emit action to effects
+        _actions.OnNext(action);
+
+        // Update state after reducer has processed
+        try
+        {
+            IRootState currentState = _getState();
+            _state.OnNext(currentState);
+        }
+        catch (Exception ex)
+        {
+            _eventPublisher.Publish(new ReactiveEffectErrorEventArgs(action, ex));
+        }
+    }
+
+    /// <inheritdoc />
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { });
     }
 
     /// <summary>

@@ -10,25 +10,25 @@ public class MiddlewareStartedEvent : StoreEventArgs
     /// <summary>
     /// Initializes a new instance of the <see cref="MiddlewareStartedEvent"/> class.
     /// </summary>
-    /// <param name="context">The action context.</param>
+    /// <param name="action">The action being processed.</param>
     /// <param name="middleware">The middleware instance.</param>
     /// <param name="phase">The phase, either "Before" or "After".</param>
-    public MiddlewareStartedEvent(ActionContext context, IActionMiddleware middleware, StoreMiddlewarePhase phase)
+    public MiddlewareStartedEvent(object action, IMiddleware middleware, StoreMiddlewarePhase phase)
     {
-        Context = context;
+        Action = action;
         Middleware = middleware;
         Phase = phase;
     }
 
     /// <summary>
-    /// The action context.
+    /// The action being processed.
     /// </summary>
-    public ActionContext Context { get; }
+    public object Action { get; }
 
     /// <summary>
     /// The middleware instance.
     /// </summary>
-    public IActionMiddleware Middleware { get; }
+    public IMiddleware Middleware { get; }
 
     /// <summary>
     /// The phase, either "Before" or "After".

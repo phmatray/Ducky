@@ -21,7 +21,7 @@ internal class StoreBuilder : IStoreBuilder
         Services = services ?? throw new ArgumentNullException(nameof(services));
     }
 
-    public IStoreBuilder AddMiddleware<TMiddleware>() where TMiddleware : class, IActionMiddleware
+    public IStoreBuilder AddMiddleware<TMiddleware>() where TMiddleware : class, IMiddleware
     {
         Type middlewareType = typeof(TMiddleware);
 
@@ -29,24 +29,16 @@ internal class StoreBuilder : IStoreBuilder
         {
             _middlewareTypes.Add(middlewareType);
             Services.TryAddScoped<TMiddleware>();
-            Services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<TMiddleware>());
+            Services.AddScoped<IMiddleware>(sp => sp.GetRequiredService<TMiddleware>());
 
-            // Track effect middleware additions
-            if (middlewareType == typeof(AsyncEffectMiddleware))
-            {
-                _asyncEffectMiddlewareAdded = true;
-            }
-            else if (middlewareType == typeof(ReactiveEffectMiddleware))
-            {
-                _reactiveEffectMiddlewareAdded = true;
-            }
+            TrackEffectMiddleware(middlewareType);
         }
 
         return this;
     }
 
     public IStoreBuilder AddMiddleware<TMiddleware>(Func<IServiceProvider, TMiddleware> implementationFactory)
-        where TMiddleware : class, IActionMiddleware
+        where TMiddleware : class, IMiddleware
     {
         Type middlewareType = typeof(TMiddleware);
 
@@ -54,17 +46,9 @@ internal class StoreBuilder : IStoreBuilder
         {
             _middlewareTypes.Add(middlewareType);
             Services.TryAddScoped(implementationFactory);
-            Services.AddScoped<IActionMiddleware>(sp => sp.GetRequiredService<TMiddleware>());
+            Services.AddScoped<IMiddleware>(sp => sp.GetRequiredService<TMiddleware>());
 
-            // Track effect middleware additions
-            if (middlewareType == typeof(AsyncEffectMiddleware))
-            {
-                _asyncEffectMiddlewareAdded = true;
-            }
-            else if (middlewareType == typeof(ReactiveEffectMiddleware))
-            {
-                _reactiveEffectMiddlewareAdded = true;
-            }
+            TrackEffectMiddleware(middlewareType);
         }
 
         return this;
@@ -74,10 +58,10 @@ internal class StoreBuilder : IStoreBuilder
     {
         ArgumentNullException.ThrowIfNull(middlewareType);
 
-        if (!typeof(IActionMiddleware).IsAssignableFrom(middlewareType))
+        if (!typeof(IMiddleware).IsAssignableFrom(middlewareType))
         {
             throw new ArgumentException(
-                $"Type {middlewareType.Name} must implement IActionMiddleware",
+                $"Type {middlewareType.Name} must implement IMiddleware",
                 nameof(middlewareType));
         }
 
@@ -85,7 +69,7 @@ internal class StoreBuilder : IStoreBuilder
         {
             _middlewareTypes.Add(middlewareType);
             Services.TryAddScoped(middlewareType);
-            Services.AddScoped(typeof(IActionMiddleware), middlewareType);
+            Services.AddScoped(typeof(IMiddleware), middlewareType);
         }
 
         return this;
@@ -96,10 +80,10 @@ internal class StoreBuilder : IStoreBuilder
         ArgumentNullException.ThrowIfNull(middlewareType);
         ArgumentNullException.ThrowIfNull(implementationFactory);
 
-        if (!typeof(IActionMiddleware).IsAssignableFrom(middlewareType))
+        if (!typeof(IMiddleware).IsAssignableFrom(middlewareType))
         {
             throw new ArgumentException(
-                $"Type {middlewareType.Name} must implement IActionMiddleware",
+                $"Type {middlewareType.Name} must implement IMiddleware",
                 nameof(middlewareType));
         }
 
@@ -107,7 +91,7 @@ internal class StoreBuilder : IStoreBuilder
         {
             _middlewareTypes.Add(middlewareType);
             Services.TryAddScoped(middlewareType, implementationFactory);
-            Services.AddScoped<IActionMiddleware>(sp => (IActionMiddleware)implementationFactory(sp));
+            Services.AddScoped<IMiddleware>(sp => (IMiddleware)implementationFactory(sp));
         }
 
         return this;
@@ -154,16 +138,8 @@ internal class StoreBuilder : IStoreBuilder
 
     public IStoreBuilder AddEffect<TEffect>() where TEffect : class, IAsyncEffect
     {
-        if (!_asyncEffectMiddlewareAdded)
-        {
-            throw new MissingMiddlewareException(
-                typeof(TEffect),
-                typeof(AsyncEffectMiddleware),
-                "AddAsyncEffectMiddleware()");
-        }
-
-        Services.TryAddScoped<TEffect>();
-        Services.AddScoped<IAsyncEffect>(sp => sp.GetRequiredService<TEffect>());
+        EnsureMiddlewareAdded(_asyncEffectMiddlewareAdded, typeof(AsyncEffectMiddleware), "AddAsyncEffectMiddleware()");
+        RegisterService<TEffect, IAsyncEffect>();
         return this;
     }
 
@@ -171,24 +147,15 @@ internal class StoreBuilder : IStoreBuilder
         where TEffect : class, IAsyncEffect
     {
         ArgumentNullException.ThrowIfNull(implementationFactory);
-
-        Services.TryAddScoped(implementationFactory);
-        Services.AddScoped<IAsyncEffect>(sp => implementationFactory(sp));
+        EnsureMiddlewareAdded(_asyncEffectMiddlewareAdded, typeof(AsyncEffectMiddleware), "AddAsyncEffectMiddleware()");
+        RegisterService(implementationFactory, sp => (IAsyncEffect)implementationFactory(sp));
         return this;
     }
 
     public IStoreBuilder AddReactiveEffect<TEffect>() where TEffect : class, IReactiveEffect
     {
-        if (!_reactiveEffectMiddlewareAdded)
-        {
-            throw new MissingMiddlewareException(
-                typeof(TEffect),
-                typeof(ReactiveEffectMiddleware),
-                "AddReactiveEffectMiddleware()");
-        }
-
-        Services.TryAddScoped<TEffect>();
-        Services.AddScoped<IReactiveEffect>(sp => sp.GetRequiredService<TEffect>());
+        EnsureMiddlewareAdded(_reactiveEffectMiddlewareAdded, typeof(ReactiveEffectMiddleware), "AddReactiveEffectMiddleware()");
+        RegisterService<TEffect, IReactiveEffect>();
         return this;
     }
 
@@ -196,16 +163,14 @@ internal class StoreBuilder : IStoreBuilder
         where TEffect : class, IReactiveEffect
     {
         ArgumentNullException.ThrowIfNull(implementationFactory);
-
-        Services.TryAddScoped(implementationFactory);
-        Services.AddScoped<IReactiveEffect>(sp => implementationFactory(sp));
+        EnsureMiddlewareAdded(_reactiveEffectMiddlewareAdded, typeof(ReactiveEffectMiddleware), "AddReactiveEffectMiddleware()");
+        RegisterService(implementationFactory, sp => (IReactiveEffect)implementationFactory(sp));
         return this;
     }
 
     public IStoreBuilder AddExceptionHandler<TExceptionHandler>() where TExceptionHandler : class, IExceptionHandler
     {
-        Services.TryAddScoped<TExceptionHandler>();
-        Services.AddScoped<IExceptionHandler>(sp => sp.GetRequiredService<TExceptionHandler>());
+        RegisterService<TExceptionHandler, IExceptionHandler>();
         return this;
     }
 
@@ -214,9 +179,7 @@ internal class StoreBuilder : IStoreBuilder
         where TExceptionHandler : class, IExceptionHandler
     {
         ArgumentNullException.ThrowIfNull(implementationFactory);
-
-        Services.TryAddScoped(implementationFactory);
-        Services.AddScoped<IExceptionHandler>(implementationFactory);
+        RegisterService(implementationFactory, sp => (IExceptionHandler)implementationFactory(sp));
         return this;
     }
 
@@ -241,5 +204,47 @@ internal class StoreBuilder : IStoreBuilder
     {
         _validationEnabled = false;
         return this;
+    }
+    
+    private void EnsureMiddlewareAdded(bool isAdded, Type middlewareType, string methodName)
+    {
+        if (isAdded)
+        {
+            return;
+        }
+            
+        throw new MissingMiddlewareException(
+            typeof(object), // This will be replaced by the actual effect type in the exception
+            middlewareType,
+            methodName);
+    }
+    
+    private void RegisterService<TImplementation, TService>() 
+        where TImplementation : class, TService
+        where TService : class
+    {
+        Services.TryAddScoped<TImplementation>();
+        Services.AddScoped<TService>(sp => sp.GetRequiredService<TImplementation>());
+    }
+    
+    private void RegisterService<TService>(
+        Func<IServiceProvider, TService> implementationFactory,
+        Func<IServiceProvider, TService> serviceFactory)
+        where TService : class
+    {
+        Services.TryAddScoped(implementationFactory);
+        Services.AddScoped(serviceFactory);
+    }
+    
+    private void TrackEffectMiddleware(Type middlewareType)
+    {
+        if (middlewareType == typeof(AsyncEffectMiddleware))
+        {
+            _asyncEffectMiddlewareAdded = true;
+        }
+        else if (middlewareType == typeof(ReactiveEffectMiddleware))
+        {
+            _reactiveEffectMiddlewareAdded = true;
+        }
     }
 }

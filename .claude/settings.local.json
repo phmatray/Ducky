@@ -21,7 +21,10 @@
       "Bash(dotnet tool list:*)",
       "Bash(roslynator fix:*)",
       "Bash(pkill:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "mcp__ide__getDiagnostics",
+      "Bash(mv:*)",
+      "Bash(/Users/phmatray/.nvm/versions/node/v20.18.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg \"IActionMiddleware\" src/tests/Ducky.Tests/Core/ActionPipelineTests.cs)"
     ],
     "deny": []
   },

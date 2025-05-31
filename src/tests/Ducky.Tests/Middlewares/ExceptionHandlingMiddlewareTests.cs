@@ -14,6 +14,8 @@ public sealed class ExceptionHandlingMiddlewareTests
     private readonly Mock<IStoreEventPublisher> _eventPublisher;
     private readonly List<IExceptionHandler> _exceptionHandlers;
     private readonly ExceptionHandlingMiddleware _middleware;
+    private readonly Mock<IDispatcher> _dispatcher;
+    private readonly Mock<IStore> _store;
 
     public ExceptionHandlingMiddlewareTests()
     {
@@ -21,56 +23,160 @@ public sealed class ExceptionHandlingMiddlewareTests
         _eventPublisher = new Mock<IStoreEventPublisher>();
         _exceptionHandlers = new List<IExceptionHandler>();
         _middleware = new ExceptionHandlingMiddleware(_logger.Object, _eventPublisher.Object, _exceptionHandlers);
+        _dispatcher = new Mock<IDispatcher>();
+        _store = new Mock<IStore>();
     }
 
     [Fact]
-    public void InvokeBeforeReduce_WhenNoExceptionThrown_ShouldPassThroughNormally()
+    public async Task InitializeAsync_ShouldCompleteSuccessfully()
+    {
+        // Act
+        await _middleware.InitializeAsync(_dispatcher.Object, _store.Object);
+
+        // Assert - just verify no exception is thrown
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void AfterInitializeAllMiddlewares_ShouldCompleteSuccessfully()
+    {
+        // Act
+        _middleware.AfterInitializeAllMiddlewares();
+
+        // Assert - just verify no exception is thrown
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void MayDispatchAction_ShouldAlwaysReturnTrue()
     {
         // Arrange
-        ActionContext context = new(new TestAction());
-        Observable<ActionContext> source = Observable.Return(context);
+        TestAction action = new();
 
         // Act
-        Observable<ActionContext> result = _middleware.InvokeBeforeReduce(source);
+        bool result = _middleware.MayDispatchAction(action);
 
         // Assert
-        List<ActionContext> receivedContexts = [];
-        result.Subscribe(receivedContexts.Add);
-
-        receivedContexts.Count.ShouldBe(1);
-        receivedContexts[0].ShouldBe(context);
-        receivedContexts[0].IsAborted.ShouldBeFalse();
+        Assert.True(result);
     }
 
     [Fact]
-    public void InvokeAfterReduce_WhenNoExceptionThrown_ShouldPassThroughNormally()
+    public void BeforeDispatch_ShouldCompleteSuccessfully()
     {
         // Arrange
-        ActionContext context = new(new TestAction());
-        Observable<ActionContext> source = Observable.Return(context);
+        TestAction action = new();
 
         // Act
-        Observable<ActionContext> result = _middleware.InvokeAfterReduce(source);
+        _middleware.BeforeDispatch(action);
 
-        // Assert
-        List<ActionContext> receivedContexts = [];
-        result.Subscribe(receivedContexts.Add);
-
-        receivedContexts.Count.ShouldBe(1);
-        receivedContexts[0].ShouldBe(context);
+        // Assert - just verify no exception is thrown
+        Assert.True(true);
     }
 
     [Fact]
-    public void ExceptionHandlers_WhenHandlerHandlesException_ShouldMarkAsHandled()
+    public void AfterDispatch_ShouldCompleteSuccessfully()
     {
         // Arrange
+        TestAction action = new();
+
+        // Act
+        _middleware.AfterDispatch(action);
+
+        // Assert - just verify no exception is thrown
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void BeginInternalMiddlewareChange_ShouldReturnDisposable()
+    {
+        // Act
+        IDisposable result = _middleware.BeginInternalMiddlewareChange();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.IsAssignableFrom<IDisposable>(result);
+
+        // Verify dispose doesn't throw
+        result.Dispose();
+    }
+
+    [Fact]
+    public void HandleException_WithNoHandlers_ShouldLogAndPublishUnhandledError()
+    {
+        // Arrange
+        InvalidOperationException exception = new("Test exception");
+        TestAction action = new();
+
+        // Act
+        _middleware.HandleException(exception, action);
+
+        // Assert
+        _logger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Unhandled exception occurred")),
+                exception,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        _eventPublisher.Verify(
+            x => x.Publish(It.Is<ActionErrorEventArgs>(args =>
+                args.Exception == exception
+                    && args.Action.Equals(action)
+                    && !args.IsHandled)),
+            Times.Once);
+    }
+
+    [Fact]
+    public void HandleException_WithHandlerThatHandles_ShouldMarkAsHandled()
+    {
+        // Arrange
+        InvalidOperationException exception = new("Test exception");
+        TestAction action = new();
         TestExceptionHandler testHandler = new() { ShouldHandleActionErrors = true };
         _exceptionHandlers.Add(testHandler);
 
         ExceptionHandlingMiddleware middleware = new(_logger.Object, _eventPublisher.Object, _exceptionHandlers);
 
-        // This test verifies the handler integration by checking published events
-        // The actual exception handling logic is tested through integration tests
-        Assert.True(true); // Placeholder - real testing happens in integration tests
+        // Act
+        middleware.HandleException(exception, action);
+
+        // Assert
+        _eventPublisher.Verify(
+            x => x.Publish(It.Is<ActionErrorEventArgs>(args =>
+                args.Exception == exception
+                    && args.Action.Equals(action)
+                    && args.IsHandled)),
+            Times.Once);
+    }
+
+    [Fact]
+    public void HandleException_WhenHandlerThrows_ShouldLogHandlerError()
+    {
+        // Arrange
+        InvalidOperationException exception = new("Test exception");
+        TestAction action = new();
+        Exception handlerException = new("Handler error");
+
+        Mock<IExceptionHandler> mockHandler = new();
+        mockHandler.Setup(h => h.HandleActionError(It.IsAny<ActionErrorEventArgs>()))
+            .Throws(handlerException);
+        _exceptionHandlers.Add(mockHandler.Object);
+
+        ExceptionHandlingMiddleware middleware = new(_logger.Object, _eventPublisher.Object, _exceptionHandlers);
+
+        // Act
+        middleware.HandleException(exception, action);
+
+        // Assert
+        _logger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Exception handler") && v.ToString()!.Contains("threw an exception")),
+                handlerException,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 }

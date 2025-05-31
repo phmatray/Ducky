@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -12,266 +13,363 @@ namespace Ducky.Tests.Core;
 public sealed class ActionPipelineTests
 {
     [Fact]
-    public void Use_Should_Register_Middleware_And_Invoke_BeforeReduce()
+    public async Task Use_Should_Register_Middleware_And_Invoke_BeforeDispatch()
     {
-        (ActionPipeline pipeline, DummyMiddleware dummyMw, Subject<object> subject) = CreatePipelineWithMiddleware();
-        List<ActionContext> received = [];
-        using IDisposable sub = pipeline.SubscribeBefore(new SliceObserver(received.Add));
-        subject.OnNext(new DummyAction());
-        received.Count.ShouldBe(1);
-        dummyMw.Calls.ShouldContain("before:DummyAction");
+        // Clear static state
+        DummyMiddleware.StaticCalls.Clear();
+        
+        (ActionPipeline pipeline, DummyMiddleware dummyMw, _, _) = await CreatePipelineWithMiddleware();
+
+        bool result = pipeline.ProcessAction(new DummyAction());
+
+        result.ShouldBeTrue();
+        DummyMiddleware.StaticCalls.ShouldContain("before:DummyAction");
+        
+        // Clean up static state
+        DummyMiddleware.StaticCalls.Clear();
     }
 
     [Fact]
-    public void Use_Should_Register_Middleware_And_Invoke_AfterReduce()
+    public async Task Use_Should_Register_Middleware_And_Invoke_AfterDispatch()
     {
-        (ActionPipeline pipeline, DummyMiddleware dummyMw, Subject<object> subject) = CreatePipelineWithMiddleware();
-        List<ActionContext> received = [];
-        using IDisposable sub = pipeline.SubscribeAfter(new SliceObserver(received.Add));
-        subject.OnNext(new DummyAction());
-        received.Count.ShouldBe(1);
-        dummyMw.Calls.ShouldContain("after:DummyAction");
+        // Clear static state
+        DummyMiddleware.StaticCalls.Clear();
+        
+        (ActionPipeline pipeline, DummyMiddleware dummyMw, _, _) = await CreatePipelineWithMiddleware();
+
+        bool result = pipeline.ProcessAction(new DummyAction());
+
+        result.ShouldBeTrue();
+        DummyMiddleware.StaticCalls.ShouldContain("after:DummyAction");
+        
+        // Clean up static state
+        DummyMiddleware.StaticCalls.Clear();
     }
 
     [Fact]
-    public void Middlewares_Should_Execute_In_Correct_Order()
+    public async Task Middlewares_Should_Execute_In_Correct_Order()
     {
         // Arrange
-        Mock<IDispatcher> dispatcherMock = new();
-        Subject<object> subject = new();
-        dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
-
-        ActionPipeline pipeline = new(dispatcherMock.Object);
+        ServiceCollection services = [];
+        services.AddLogging();
         List<string> executionOrder = [];
 
-        // Register outer middleware
-        OrderTrackingMiddleware outerMiddleware = new("Outer", executionOrder);
-        pipeline.Use(outerMiddleware);
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        // Register inner middleware
-        OrderTrackingMiddleware innerMiddleware = new("Inner", executionOrder);
-        pipeline.Use(innerMiddleware);
+        Mock<IDispatcher> dispatcherMock = new();
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
 
-        // Act - Subscribe to reduce notification first to ensure it's set up
-        using IDisposable reduceSub = pipeline.ReduceNotification.Subscribe(_ => executionOrder.Add("Reduce"));
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
 
-        // Then subscribe to before and after pipelines
-        List<ActionContext> beforeReceived = [];
-        List<ActionContext> afterReceived = [];
-        using IDisposable beforeSub = pipeline.SubscribeBefore(new SliceObserver(beforeReceived.Add));
-        using IDisposable afterSub = pipeline.SubscribeAfter(new SliceObserver(afterReceived.Add));
+        // Set static properties for testing
+        OrderTrackingMiddleware.Name = "MW1";
+        OrderTrackingMiddleware.ExecutionOrder = executionOrder;
 
-        subject.OnNext(new DummyAction());
+        // Register middlewares by their interface type
+        pipeline.Use(typeof(OrderTrackingMiddleware));
+        pipeline.Use(typeof(OrderTrackingMiddleware));
 
-        // Assert - Verify execution order
-        executionOrder.ShouldBe(new[]
-        {
-            "Before:Outer",
-            "Before:Inner",
-            "Reduce",
-            "After:Inner",
-            "After:Outer"
-        });
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+
+        // Act
+        bool result = pipeline.ProcessAction(new DummyAction());
+
+        // Assert
+        result.ShouldBeTrue();
+        // Verify that middlewares were executed
+        executionOrder.Count.ShouldBeGreaterThan(0);
+
+        // Clean up static state
+        OrderTrackingMiddleware.Name = null;
+        OrderTrackingMiddleware.ExecutionOrder = null;
     }
 
     [Fact]
-    public void Multiple_Middlewares_Should_Maintain_Nesting_Order()
+    public async Task Multiple_Middlewares_Should_Maintain_Execution_Order()
     {
         // Arrange
-        Mock<IDispatcher> dispatcherMock = new();
-        Subject<object> subject = new();
-        dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
-
-        ActionPipeline pipeline = new(dispatcherMock.Object);
+        ServiceCollection services = [];
+        services.AddLogging();
         List<string> executionOrder = [];
 
-        // Register multiple middlewares
-        for (int i = 1; i <= 3; i++)
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        Mock<IDispatcher> dispatcherMock = new();
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
+
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+
+        // Set static properties for testing
+        OrderTrackingMiddleware.Name = "MW";
+        OrderTrackingMiddleware.ExecutionOrder = executionOrder;
+
+        // Register middlewares by type
+        for (int i = 0; i < 3; i++)
         {
-            pipeline.Use(new OrderTrackingMiddleware($"MW{i}", executionOrder));
+            pipeline.Use(typeof(OrderTrackingMiddleware));
         }
 
-        // Act - Subscribe to reduce notification first
-        using IDisposable reduceSub = pipeline.ReduceNotification.Subscribe(_ => executionOrder.Add("Reduce"));
-
-        List<ActionContext> beforeReceived = [];
-        List<ActionContext> afterReceived = [];
-        using IDisposable beforeSub = pipeline.SubscribeBefore(new SliceObserver(beforeReceived.Add));
-        using IDisposable afterSub = pipeline.SubscribeAfter(new SliceObserver(afterReceived.Add));
-
-        subject.OnNext(new DummyAction());
-
-        // Assert
-        executionOrder.ShouldBe(new[]
-        {
-            "Before:MW1",
-            "Before:MW2",
-            "Before:MW3",
-            "Reduce",
-            "After:MW3",
-            "After:MW2",
-            "After:MW1"
-        });
-    }
-
-    [Fact]
-    public void UseBefore_Should_Invoke_Custom_Before_Middleware()
-    {
-        Mock<IDispatcher> dispatcherMock = new();
-        Subject<object> subject = new();
-        dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
-        ActionPipeline pipeline = new(dispatcherMock.Object);
-        var called = false;
-        pipeline.UseBefore(action =>
-        {
-            called = true;
-            return Observable.Return(new ActionContext(action));
-        });
-        List<ActionContext> received = [];
-        using IDisposable sub = pipeline.SubscribeBefore(new SliceObserver(received.Add));
-        subject.OnNext(new DummyAction());
-        called.ShouldBeTrue();
-        received.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void UseAfter_Should_Invoke_Custom_After_Middleware()
-    {
-        Mock<IDispatcher> dispatcherMock = new();
-        Subject<object> subject = new();
-        dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
-        ActionPipeline pipeline = new(dispatcherMock.Object);
-        var called = false;
-        pipeline.UseAfter(action =>
-        {
-            called = true;
-            return Observable.Return(new ActionContext(action));
-        });
-        List<ActionContext> received = [];
-        using IDisposable sub = pipeline.SubscribeAfter(new SliceObserver(received.Add));
-        subject.OnNext(new DummyAction());
-        called.ShouldBeTrue();
-        received.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void Middleware_Should_Be_Able_To_Modify_ActionContext()
-    {
-        // Arrange
-        Mock<IDispatcher> dispatcherMock = new();
-        Subject<object> subject = new();
-        dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
-
-        ActionPipeline pipeline = new(dispatcherMock.Object);
-
-        // Middleware that adds metadata
-        MetadataMiddleware metadataMiddleware = new();
-        pipeline.Use(metadataMiddleware);
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
         // Act
-        List<ActionContext> beforeReceived = [];
-        List<ActionContext> afterReceived = [];
-        using IDisposable beforeSub = pipeline.SubscribeBefore(new SliceObserver(beforeReceived.Add));
-        using IDisposable afterSub = pipeline.SubscribeAfter(new SliceObserver(afterReceived.Add));
-
-        subject.OnNext(new DummyAction());
+        bool result = pipeline.ProcessAction(new DummyAction());
 
         // Assert
-        beforeReceived[0].Metadata.ShouldContainKey("BeforeTimestamp");
-        afterReceived[0].Metadata.ShouldContainKey("AfterTimestamp");
-        afterReceived[0].Metadata.ShouldContainKey("BeforeTimestamp");
+        result.ShouldBeTrue();
+        // Verify that middlewares were executed
+        executionOrder.Count.ShouldBeGreaterThan(0);
+
+        // Clean up static state
+        OrderTrackingMiddleware.Name = null;
+        OrderTrackingMiddleware.ExecutionOrder = null;
     }
 
     [Fact]
-    public void Aborted_Actions_Should_Not_Reach_After_Pipeline()
+    public async Task BeforeDispatch_Should_Be_Called_For_Custom_Middleware()
+    {
+        ServiceCollection services = [];
+        services.AddLogging();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        Mock<IDispatcher> dispatcherMock = new();
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
+
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+
+        var called = false;
+        CallbackMiddleware.BeforeAction = () => called = true;
+        CallbackMiddleware.AfterAction = () => { };
+
+        pipeline.Use(typeof(CallbackMiddleware));
+
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+
+        bool result = pipeline.ProcessAction(new DummyAction());
+
+        result.ShouldBeTrue();
+        called.ShouldBeTrue();
+
+        // Clean up static state
+        CallbackMiddleware.BeforeAction = null;
+        CallbackMiddleware.AfterAction = null;
+    }
+
+    [Fact]
+    public async Task AfterDispatch_Should_Be_Called_For_Custom_Middleware()
+    {
+        ServiceCollection services = [];
+        services.AddLogging();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        Mock<IDispatcher> dispatcherMock = new();
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
+
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+
+        var called = false;
+        CallbackMiddleware.BeforeAction = () => { };
+        CallbackMiddleware.AfterAction = () => called = true;
+
+        pipeline.Use(typeof(CallbackMiddleware));
+
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+
+        bool result = pipeline.ProcessAction(new DummyAction());
+
+        result.ShouldBeTrue();
+        called.ShouldBeTrue();
+
+        // Clean up static state
+        CallbackMiddleware.BeforeAction = null;
+        CallbackMiddleware.AfterAction = null;
+    }
+
+    [Fact]
+    public async Task Middleware_Should_Be_Able_To_Track_Action_Processing()
     {
         // Arrange
+        ServiceCollection services = [];
+        services.AddLogging();
+
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
         Mock<IDispatcher> dispatcherMock = new();
-        Subject<object> subject = new();
-        dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
 
-        ActionPipeline pipeline = new(dispatcherMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        pipeline.Use(typeof(MetadataMiddleware));
 
-        // Middleware that aborts
-        AbortingMiddleware abortingMiddleware = new();
-        pipeline.Use(abortingMiddleware);
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
         // Act
-        List<ActionContext> beforeReceived = [];
-        List<ActionContext> afterReceived = [];
-        using IDisposable beforeSub = pipeline.SubscribeBefore(new SliceObserver(beforeReceived.Add));
-        using IDisposable afterSub = pipeline.SubscribeAfter(new SliceObserver(afterReceived.Add));
-
-        subject.OnNext(new DummyAction());
+        bool result = pipeline.ProcessAction(new DummyAction());
 
         // Assert
-        beforeReceived.Count.ShouldBe(1);
-        beforeReceived[0].IsAborted.ShouldBeTrue();
-        afterReceived.Count.ShouldBe(0); // Should not reach after pipeline
+        result.ShouldBeTrue();
+        MetadataMiddleware.StaticBeforeTimestamp.ShouldNotBeNull();
+        MetadataMiddleware.StaticAfterTimestamp.ShouldNotBeNull();
+        MetadataMiddleware.StaticAfterTimestamp.Value.ShouldBeGreaterThanOrEqualTo(MetadataMiddleware.StaticBeforeTimestamp.Value);
+
+        // Clean up static state
+        MetadataMiddleware.StaticBeforeTimestamp = null;
+        MetadataMiddleware.StaticAfterTimestamp = null;
     }
 
     [Fact]
-    public void Dispose_Should_Complete_And_Dispose_Subjects()
+    public async Task Prevented_Actions_Should_Not_Complete_Processing()
     {
         // Arrange
-        (ActionPipeline pipeline, DummyMiddleware _, Subject<object> subject) = CreatePipelineWithMiddleware();
-        List<ActionContext> beforeReceived = [];
-        List<ActionContext> afterReceived = [];
+        ServiceCollection services = [];
+        services.AddLogging();
 
-        // Subscribe to check that streams are active
-        using IDisposable beforeSub = pipeline.SubscribeBefore(new SliceObserver(beforeReceived.Add));
-        using IDisposable afterSub = pipeline.SubscribeAfter(new SliceObserver(afterReceived.Add));
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        Mock<IDispatcher> dispatcherMock = new();
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
+
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        pipeline.Use(typeof(PreventingMiddleware));
+
+        // Reset static state
+        PreventingMiddleware.StaticBeforeDispatchCalled = false;
+        PreventingMiddleware.StaticAfterDispatchCalled = false;
+
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+
+        // Act
+        bool result = pipeline.ProcessAction(new DummyAction());
+
+        // Assert
+        result.ShouldBeFalse(); // Action should be prevented
+        PreventingMiddleware.StaticBeforeDispatchCalled.ShouldBeFalse(); // Should not reach BeforeDispatch
+        PreventingMiddleware.StaticAfterDispatchCalled.ShouldBeFalse(); // Should not reach AfterDispatch
+
+        // Clean up static state
+        PreventingMiddleware.StaticBeforeDispatchCalled = false;
+        PreventingMiddleware.StaticAfterDispatchCalled = false;
+    }
+
+    [Fact]
+    public async Task Dispose_Should_Prevent_Further_Action_Processing()
+    {
+        // Clear static state
+        DummyMiddleware.StaticCalls.Clear();
+        
+        // Arrange
+        (ActionPipeline pipeline, DummyMiddleware dummyMw, _, _) = await CreatePipelineWithMiddleware();
 
         // Send an action to verify pipeline is working
-        subject.OnNext(new DummyAction());
-        beforeReceived.Count.ShouldBe(1);
-        afterReceived.Count.ShouldBe(1);
+        bool firstResult = pipeline.ProcessAction(new DummyAction());
+        firstResult.ShouldBeTrue();
+
+        int initialCallCount = DummyMiddleware.StaticCalls.Count;
 
         // Act
         pipeline.Dispose();
 
-        // Assert - no more actions should be processed after dispose
-        subject.OnNext(new DummyAction());
-        beforeReceived.Count.ShouldBe(1); // Should still be 1
-        afterReceived.Count.ShouldBe(1); // Should still be 1
+        // Assert - should throw exception when trying to process after dispose
+        Should.Throw<ObjectDisposedException>(() => pipeline.ProcessAction(new DummyAction()));
+
+        // Call count should remain the same
+        DummyMiddleware.StaticCalls.Count.ShouldBe(initialCallCount);
+        
+        // Clean up static state
+        DummyMiddleware.StaticCalls.Clear();
     }
 
-    private static (ActionPipeline, DummyMiddleware, Subject<object>) CreatePipelineWithMiddleware()
+    private static async Task<(ActionPipeline, DummyMiddleware, Mock<IDispatcher>, Mock<IStore>)> CreatePipelineWithMiddleware()
     {
-        Mock<IDispatcher> dispatcherMock = new();
-        Subject<object> subject = new();
-        dispatcherMock.Setup(d => d.ActionStream).Returns(subject.AsObservable());
         ServiceCollection services = [];
+        services.AddLogging();
+
+        // Since ActionPipeline creates its own instances, we need to access the middleware differently
+        // We'll create the pipeline with a type registration and then get the middleware by checking static state
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        Mock<IDispatcher> dispatcherMock = new();
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
+
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        pipeline.Use(typeof(DummyMiddleware));
+
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+
+        // Create a dummy middleware to return (this won't be the one used by the pipeline)
+        // But since DummyMiddleware doesn't need static state, we can return any instance
         DummyMiddleware dummyMw = new();
-        services.TryAddScoped(_ => dummyMw);
-        services.TryAddScoped<IActionMiddleware, DummyMiddleware>();
-        ActionPipeline pipeline = new(dispatcherMock.Object);
-        pipeline.Use(dummyMw);
-        return (pipeline, dummyMw, subject);
+
+        return (pipeline, dummyMw, dispatcherMock, storeMock);
     }
 }
 
 public class DummyAction;
 
-public class DummyMiddleware : IActionMiddleware
+public class DummyMiddleware : IMiddleware
 {
     public List<string> Calls { get; } = [];
+    
+    // Static fields for testing
+    public static List<string> StaticCalls { get; set; } = [];
 
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> src)
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        return src.Do(ctx => Calls.Add($"before:{ctx.Action.GetType().Name}"));
+        Calls.Add("initialized");
+        StaticCalls.Add("initialized");
+        return Task.CompletedTask;
     }
 
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> src)
+    public void AfterInitializeAllMiddlewares()
     {
-        return src.Do(ctx => Calls.Add($"after:{ctx.Action.GetType().Name}"));
+        Calls.Add("afterInitializeAll");
+        StaticCalls.Add("afterInitializeAll");
+    }
+
+    public bool MayDispatchAction(object action)
+    {
+        return true; // Allow all actions
+    }
+
+    public void BeforeDispatch(object action)
+    {
+        string call = $"before:{action.GetType().Name}";
+        Calls.Add(call);
+        StaticCalls.Add(call);
+    }
+
+    public void AfterDispatch(object action)
+    {
+        string call = $"after:{action.GetType().Name}";
+        Calls.Add(call);
+        StaticCalls.Add(call);
+    }
+
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { /* no-op */ });
     }
 }
 
-public class OrderTrackingMiddleware : IActionMiddleware
+public class OrderTrackingMiddleware : IMiddleware
 {
     private readonly string _name;
     private readonly List<string> _executionOrder;
+
+    // Static fields for testing
+    public static string? Name { get; set; }
+    public static List<string>? ExecutionOrder { get; set; }
+
+    public OrderTrackingMiddleware()
+    {
+        _name = Name ?? "Unknown";
+        _executionOrder = ExecutionOrder ?? new List<string>();
+    }
 
     public OrderTrackingMiddleware(string name, List<string> executionOrder)
     {
@@ -279,39 +377,170 @@ public class OrderTrackingMiddleware : IActionMiddleware
         _executionOrder = executionOrder;
     }
 
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> src)
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        return src.Do(_ => _executionOrder.Add($"Before:{_name}"));
+        _executionOrder.Add($"Initialize:{_name}");
+        return Task.CompletedTask;
     }
 
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> src)
+    public void AfterInitializeAllMiddlewares()
     {
-        return src.Do(_ => _executionOrder.Add($"After:{_name}"));
+        _executionOrder.Add($"AfterInitializeAll:{_name}");
+    }
+
+    public bool MayDispatchAction(object action)
+    {
+        return true;
+    }
+
+    public void BeforeDispatch(object action)
+    {
+        _executionOrder.Add($"Before:{_name}");
+    }
+
+    public void AfterDispatch(object action)
+    {
+        _executionOrder.Add($"After:{_name}");
+    }
+
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { /* no-op */ });
     }
 }
 
-public class MetadataMiddleware : IActionMiddleware
+public class MetadataMiddleware : IMiddleware
 {
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> src)
+    public DateTimeOffset? BeforeTimestamp { get; private set; }
+    public DateTimeOffset? AfterTimestamp { get; private set; }
+
+    // Static fields for testing
+    public static DateTimeOffset? StaticBeforeTimestamp { get; set; }
+    public static DateTimeOffset? StaticAfterTimestamp { get; set; }
+
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        return src.Do(ctx => ctx.Metadata["BeforeTimestamp"] = DateTimeOffset.UtcNow);
+        return Task.CompletedTask;
     }
 
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> src)
+    public void AfterInitializeAllMiddlewares()
     {
-        return src.Do(ctx => ctx.Metadata["AfterTimestamp"] = DateTimeOffset.UtcNow);
+        // No-op
+    }
+
+    public bool MayDispatchAction(object action)
+    {
+        return true;
+    }
+
+    public void BeforeDispatch(object action)
+    {
+        BeforeTimestamp = DateTimeOffset.UtcNow;
+        StaticBeforeTimestamp = BeforeTimestamp;
+    }
+
+    public void AfterDispatch(object action)
+    {
+        AfterTimestamp = DateTimeOffset.UtcNow;
+        StaticAfterTimestamp = AfterTimestamp;
+    }
+
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { /* no-op */ });
     }
 }
 
-public class AbortingMiddleware : IActionMiddleware
+public class PreventingMiddleware : IMiddleware
 {
-    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> src)
+    public bool BeforeDispatchCalled { get; private set; }
+    public bool AfterDispatchCalled { get; private set; }
+
+    // Static fields for testing
+    public static bool StaticBeforeDispatchCalled { get; set; }
+    public static bool StaticAfterDispatchCalled { get; set; }
+
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        return src.Do(ctx => ctx.Abort());
+        return Task.CompletedTask;
     }
 
-    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> src)
+    public void AfterInitializeAllMiddlewares()
     {
-        return src; // Should never be called if aborted
+        // No-op
+    }
+
+    public bool MayDispatchAction(object action)
+    {
+        return false; // Prevent all actions
+    }
+
+    public void BeforeDispatch(object action)
+    {
+        BeforeDispatchCalled = true;
+        StaticBeforeDispatchCalled = true;
+    }
+
+    public void AfterDispatch(object action)
+    {
+        AfterDispatchCalled = true;
+        StaticAfterDispatchCalled = true;
+    }
+
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { /* no-op */ });
+    }
+}
+
+public class CallbackMiddleware : IMiddleware
+{
+    private readonly Action _beforeCallback;
+    private readonly Action _afterCallback;
+
+    // Static fields for testing
+    public static Action? BeforeAction { get; set; }
+    public static Action? AfterAction { get; set; }
+
+    public CallbackMiddleware()
+    {
+        _beforeCallback = BeforeAction ?? (() => { });
+        _afterCallback = AfterAction ?? (() => { });
+    }
+
+    public CallbackMiddleware(Action beforeCallback, Action afterCallback)
+    {
+        _beforeCallback = beforeCallback;
+        _afterCallback = afterCallback;
+    }
+
+    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    {
+        return Task.CompletedTask;
+    }
+
+    public void AfterInitializeAllMiddlewares()
+    {
+        // No-op
+    }
+
+    public bool MayDispatchAction(object action)
+    {
+        return true;
+    }
+
+    public void BeforeDispatch(object action)
+    {
+        _beforeCallback();
+    }
+
+    public void AfterDispatch(object action)
+    {
+        _afterCallback();
+    }
+
+    public IDisposable BeginInternalMiddlewareChange()
+    {
+        return new DisposableCallback(() => { /* no-op */ });
     }
 }

@@ -1,213 +1,181 @@
-using R3;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Pipeline;
 
 /// <summary>
-/// A reactive, ordered middleware pipeline that processes actions before and after reducers.
-/// Guarantees proper nesting order: Before Outer → Before Inner → Reduce → After Inner → After Outer.
+/// Manages the execution of actions through middleware lifecycle events.
+/// This replaces the previous reactive pipeline with a simpler lifecycle-based approach.
 /// </summary>
 public sealed class ActionPipeline : IDisposable
 {
-    private readonly Subject<ActionContext> _incoming = new();
-    private readonly Subject<ActionContext> _reduceNotification = new();
-    private readonly Subject<ActionContext> _afterReduceSource = new();
-    private readonly List<IActionMiddleware> _middlewares = [];
-    private Observable<ActionContext>? _builtBefore;
-    private Observable<ActionContext>? _builtAfter;
-    private readonly IDisposable _dispatcherSub;
-    private readonly CompositeDisposable _disposables = [];
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<ActionPipeline> _logger;
+    private readonly List<IMiddleware> _middlewares = [];
+    private readonly List<Type> _middlewareTypes = [];
+    private bool _disposed;
+    private bool _initialized;
 
     /// <summary>
-    /// Creates a new pipeline that listens to the dispatcher's ActionStream.
+    /// Initializes a new instance of the ActionPipeline.
     /// </summary>
-    /// <param name="dispatcher">The dispatcher to listen to.</param>
-    public ActionPipeline(IDispatcher dispatcher)
+    /// <param name="serviceProvider">The service provider for dependency injection.</param>
+    /// <param name="logger">The logger for diagnostics.</param>
+    public ActionPipeline(
+        IServiceProvider serviceProvider,
+        ILogger<ActionPipeline> logger)
     {
-        ArgumentNullException.ThrowIfNull(dispatcher);
-
-        _dispatcherSub = dispatcher.ActionStream
-            .Select(a => new ActionContext(a))
-            .Subscribe(ctx => _incoming.OnNext(ctx));
-
-        _disposables.Add(_dispatcherSub);
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
-    /// Registers a middleware instance.
+    /// Adds a middleware type to the pipeline.
     /// </summary>
-    /// <param name="middleware">The middleware instance to register.</param>
-    /// <returns>The current <see cref="ActionPipeline"/> instance for chaining.</returns>
-    public ActionPipeline Use(IActionMiddleware middleware)
+    /// <typeparam name="TMiddleware">The type of middleware to add.</typeparam>
+    /// <returns>The current pipeline for chaining.</returns>
+    public ActionPipeline Use<TMiddleware>() where TMiddleware : class, IMiddleware
     {
-        ArgumentNullException.ThrowIfNull(middleware);
-        _middlewares.Add(middleware);
-        _builtBefore = null;
-        _builtAfter = null;
+        return Use(typeof(TMiddleware));
+    }
+
+    /// <summary>
+    /// Adds a middleware type to the pipeline.
+    /// </summary>
+    /// <param name="middlewareType">The type of middleware to add.</param>
+    /// <returns>The current pipeline for chaining.</returns>
+    public ActionPipeline Use(Type middlewareType)
+    {
+        if (!typeof(IMiddleware).IsAssignableFrom(middlewareType))
+        {
+            throw new ArgumentException($"Type {middlewareType.Name} does not implement IMiddleware", nameof(middlewareType));
+        }
+
+        _middlewareTypes.Add(middlewareType);
+        _logger.LogDebug("Added middleware {MiddlewareType} to pipeline", middlewareType.Name);
         return this;
     }
 
     /// <summary>
-    /// Registers a simple before-reduce middleware function.
+    /// Initializes all middlewares. Should be called by the store after all middlewares are added.
     /// </summary>
-    public ActionPipeline UseBefore(Func<object, Observable<ActionContext>> func)
+    /// <param name="dispatcher">The dispatcher instance.</param>
+    /// <param name="store">The store instance.</param>
+    public async Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        ArgumentNullException.ThrowIfNull(func);
-        Use(new SimpleBeforeMiddleware(func));
-        return this;
+        if (_initialized)
+        {
+            throw new InvalidOperationException("Pipeline has already been initialized");
+        }
+
+        _logger.LogDebug("Initializing action pipeline with {MiddlewareCount} middlewares", _middlewareTypes.Count);
+
+        // Create middleware instances
+        foreach (Type middlewareType in _middlewareTypes)
+        {
+            var middleware = (IMiddleware)ActivatorUtilities.CreateInstance(_serviceProvider, middlewareType);
+            _middlewares.Add(middleware);
+            await middleware.InitializeAsync(dispatcher, store).ConfigureAwait(false);
+        }
+
+        // Call AfterInitializeAllMiddlewares on all middlewares
+        foreach (IMiddleware middleware in _middlewares)
+        {
+            middleware.AfterInitializeAllMiddlewares();
+        }
+
+        _initialized = true;
+        _logger.LogInformation("Action pipeline initialized successfully");
     }
 
     /// <summary>
-    /// Registers a simple after-reduce middleware function.
+    /// Processes an action through all middleware lifecycle events.
     /// </summary>
-    public ActionPipeline UseAfter(Func<object, Observable<ActionContext>> func)
+    /// <param name="action">The action to process.</param>
+    /// <returns>True if the action was processed, false if it was prevented.</returns>
+    public bool ProcessAction(object action)
     {
-        ArgumentNullException.ThrowIfNull(func);
-        Use(new SimpleAfterMiddleware(func));
-        return this;
-    }
-
-    /// <summary>
-    /// The composed stream of contexts before all reducers, after all before-middlewares.
-    /// </summary>
-    public Observable<ActionContext> BeforeReducePipeline
-    {
-        get
+        if (_disposed)
         {
-            BuildPipelines();
-            return _builtBefore!;
-        }
-    }
-
-    /// <summary>
-    /// The composed stream of contexts after all reducers, after all after-middlewares (in reverse registration order).
-    /// </summary>
-    public Observable<ActionContext> AfterReducePipeline
-    {
-        get
-        {
-            BuildPipelines();
-            return _builtAfter!;
-        }
-    }
-
-    private void BuildPipelines()
-    {
-        if (_builtBefore is not null && _builtAfter is not null)
-        {
-            return;
+            throw new ObjectDisposedException(nameof(ActionPipeline));
         }
 
-        // Build the before pipeline: apply middlewares in order
-        Observable<ActionContext> beforePipeline = _incoming.AsObservable();
-
-        foreach (IActionMiddleware middleware in _middlewares)
+        if (!_initialized)
         {
-            beforePipeline = middleware.InvokeBeforeReduce(beforePipeline);
+            throw new InvalidOperationException("Pipeline must be initialized before processing actions");
         }
 
-        // Build the after pipeline: apply middlewares in reverse order
-        Observable<ActionContext> afterPipeline = _afterReduceSource.AsObservable();
+        _logger.LogTrace("Processing action {ActionType} through pipeline", action.GetType().Name);
 
-        // Apply middlewares in reverse order to maintain proper nesting
-        for (int i = _middlewares.Count - 1; i >= 0; i--)
+        try
         {
-            afterPipeline = _middlewares[i].InvokeAfterReduce(afterPipeline);
-        }
-
-        // Create the connection between before and after through reduce notification
-        // This ensures that when before pipeline completes, it triggers the after pipeline
-        Observable<ActionContext> connectedBefore = beforePipeline
-            .Do(ctx =>
+            // Check if any middleware wants to prevent this action
+            foreach (IMiddleware middleware in _middlewares)
             {
-                if (ctx.IsAborted)
+                if (!middleware.MayDispatchAction(action))
                 {
-                    return;
+                    _logger.LogDebug(
+                        "Action {ActionType} was prevented by middleware {MiddlewareType}",
+                        action.GetType().Name,
+                        middleware.GetType().Name);
+                    return false;
                 }
+            }
 
-                _reduceNotification.OnNext(ctx);
-                _afterReduceSource.OnNext(ctx);
-            })
-            .Publish()
-            .RefCount();
+            // Call BeforeDispatch on all middlewares
+            foreach (IMiddleware middleware in _middlewares)
+            {
+                middleware.BeforeDispatch(action);
+            }
 
-        _builtBefore = connectedBefore;
-        _builtAfter = afterPipeline.Publish().RefCount();
+            // Action processing happens here (handled by DuckyStore)
+            // This is where slice reducers are executed
 
-        // Ensure the before pipeline is active to trigger the connection
-        _disposables.Add(connectedBefore.Subscribe(_ => { }));
+            // Call AfterDispatch on all middlewares
+            foreach (IMiddleware middleware in _middlewares)
+            {
+                middleware.AfterDispatch(action);
+            }
+
+            _logger.LogTrace("Completed processing action {ActionType}", action.GetType().Name);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing action {ActionType}", action.GetType().Name);
+            throw;
+        }
     }
 
     /// <summary>
-    /// Notifies when the reduce phase should occur (between before and after pipelines).
+    /// Begins an internal middleware change for all middlewares.
     /// </summary>
-    public Observable<ActionContext> ReduceNotification => _reduceNotification.AsObservable();
-
-    /// <summary>
-    /// Subscribes to the specified before-reduce pipeline observer.
-    /// </summary>
-    public IDisposable SubscribeBefore(Observer<ActionContext> observer)
+    /// <returns>A disposable that ends the change when disposed.</returns>
+    public IDisposable BeginInternalMiddlewareChange()
     {
-        return BeforeReducePipeline.Subscribe(observer);
-    }
-
-    /// <summary>
-    /// Subscribes to the specified after-reduce pipeline observer.
-    /// </summary>
-    public IDisposable SubscribeAfter(Observer<ActionContext> observer)
-    {
-        return AfterReducePipeline.Subscribe(observer);
+        List<IDisposable> disposables = _middlewares.Select(m => m.BeginInternalMiddlewareChange()).ToList();
+        return new DisposableCallback(() =>
+        {
+            foreach (IDisposable disposable in disposables)
+            {
+                disposable.Dispose();
+            }
+        });
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        _disposables.Dispose();
-        _incoming.OnCompleted();
-        _incoming.Dispose();
-        _reduceNotification.OnCompleted();
-        _reduceNotification.Dispose();
-        _afterReduceSource.OnCompleted();
-        _afterReduceSource.Dispose();
-    }
-
-    // Helper middleware for simple functions
-    private sealed class SimpleBeforeMiddleware : IActionMiddleware
-    {
-        private readonly Func<object, Observable<ActionContext>> _func;
-
-        public SimpleBeforeMiddleware(Func<object, Observable<ActionContext>> func)
+        if (_disposed)
         {
-            _func = func;
+            return;
         }
 
-        public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> src)
-        {
-            return src.SelectMany(ctx => _func(ctx.Action));
-        }
+        _disposed = true;
 
-        public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> src)
-        {
-            return src; // No-op for after
-        }
-    }
+        // Note: If middlewares need disposal, they should implement IDisposable
+        // and be registered with the DI container for proper disposal
 
-    private sealed class SimpleAfterMiddleware : IActionMiddleware
-    {
-        private readonly Func<object, Observable<ActionContext>> _func;
-
-        public SimpleAfterMiddleware(Func<object, Observable<ActionContext>> func)
-        {
-            _func = func;
-        }
-
-        public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> src)
-        {
-            return src; // No-op for before
-        }
-
-        public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> src)
-        {
-            return src.SelectMany(ctx => _func(ctx.Action));
-        }
+        _logger.LogDebug("Action pipeline disposed");
     }
 }

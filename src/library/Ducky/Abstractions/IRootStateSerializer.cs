@@ -30,18 +30,4 @@ public interface IRootStateSerializer
     /// <param name="json">The JSON string representation of the state.</param>
     /// <returns>A new instance of <see cref="IRootState"/> with the deserialized state.</returns>
     IRootState Deserialize(string json);
-
-    /// <summary>
-    /// Saves the specified <see cref="IRootState"/> to a file.
-    /// </summary>
-    /// <param name="rootState">The <see cref="IRootState"/> to save.</param>
-    /// <param name="filePath">The path of the file to save the state to.</param>
-    void SaveToFile(IRootState rootState, string filePath);
-
-    /// <summary>
-    /// Loads a <see cref="IRootState"/> from a file.
-    /// </summary>
-    /// <param name="filePath">The path of the file to load the state from.</param>
-    /// <returns>A new instance of <see cref="IRootState"/> with the loaded state.</returns>
-    IRootState LoadFromFile(string filePath);
 }

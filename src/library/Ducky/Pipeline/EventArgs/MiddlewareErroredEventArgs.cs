@@ -10,27 +10,27 @@ public class MiddlewareErroredEventArgs : StoreEventArgs
     /// <summary>
     /// Initializes a new instance of the <see cref="MiddlewareErroredEventArgs"/> class.
     /// </summary>
-    /// <param name="context">The action context.</param>
+    /// <param name="action">The action being processed.</param>
     /// <param name="middleware">The middleware instance.</param>
     /// <param name="phase">The phase, either "Before" or "After".</param>
     /// <param name="exception">The exception thrown.</param>
-    public MiddlewareErroredEventArgs(ActionContext context, IActionMiddleware middleware, StoreMiddlewarePhase phase, Exception exception)
+    public MiddlewareErroredEventArgs(object action, IMiddleware middleware, StoreMiddlewarePhase phase, Exception exception)
     {
-        Context = context;
+        Action = action;
         Middleware = middleware;
         Phase = phase;
         Exception = exception;
     }
 
     /// <summary>
-    /// The action context.
+    /// The action being processed.
     /// </summary>
-    public ActionContext Context { get; }
+    public object Action { get; }
 
     /// <summary>
     /// The middleware instance.
     /// </summary>
-    public IActionMiddleware Middleware { get; }
+    public IMiddleware Middleware { get; }
 
     /// <summary>
     /// The phase, either "Before" or "After".

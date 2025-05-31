@@ -8,7 +8,7 @@ namespace AppStore.Tests.Timer;
 
 public sealed class TimerReducersTests : IDisposable
 {
-    private const string Key = "timer";
+    private const string Key = "demo-blazor-wasm-app-store-timer";
 
     private readonly TimerReducers _sut = new();
     private readonly TimerState _initialState = new() { Time = 0, IsRunning = false };

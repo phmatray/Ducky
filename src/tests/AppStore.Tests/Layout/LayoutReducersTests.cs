@@ -8,7 +8,7 @@ namespace AppStore.Tests.Layout;
 
 public sealed class LayoutReducersTests : IDisposable
 {
-    private const string Key = "layout";
+    private const string Key = "demo-blazor-wasm-app-store-layout";
 
     private readonly LayoutReducers _sut = new();
 

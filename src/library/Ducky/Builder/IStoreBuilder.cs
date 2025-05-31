@@ -18,7 +18,7 @@ public interface IStoreBuilder
     /// </summary>
     /// <typeparam name="TMiddleware">The type of middleware to add.</typeparam>
     /// <returns>The store builder for chaining.</returns>
-    IStoreBuilder AddMiddleware<TMiddleware>() where TMiddleware : class, IActionMiddleware;
+    IStoreBuilder AddMiddleware<TMiddleware>() where TMiddleware : class, IMiddleware;
 
     /// <summary>
     /// Adds a middleware to the store pipeline with a factory function.
@@ -27,7 +27,7 @@ public interface IStoreBuilder
     /// <param name="implementationFactory">The factory function to create the middleware.</param>
     /// <returns>The store builder for chaining.</returns>
     IStoreBuilder AddMiddleware<TMiddleware>(Func<IServiceProvider, TMiddleware> implementationFactory)
-        where TMiddleware : class, IActionMiddleware;
+        where TMiddleware : class, IMiddleware;
 
     /// <summary>
     /// Adds a middleware to the store pipeline by type.

@@ -8,7 +8,7 @@ namespace AppStore.Tests.Todos;
 
 public sealed class TodoReducersTests : IDisposable
 {
-    private const string Key = "todo";
+    private const string Key = "demo-blazor-wasm-app-store-todo";
 
     private readonly TodoReducers _sut = new();
 

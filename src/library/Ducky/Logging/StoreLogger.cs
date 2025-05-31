@@ -76,7 +76,7 @@ public class StoreLogger : Observer<StoreEventArgs>
                     "[EVENT] Middleware {Phase} started: {Middleware} for {ActionType}",
                     startedMw.Phase,
                     startedMw.Middleware.GetType().Name,
-                    startedMw.Context.Action.GetType().Name);
+                    startedMw.Action.GetType().Name);
                 break;
             }
             case MiddlewareCompletedEventArgs completedMw:
@@ -85,7 +85,7 @@ public class StoreLogger : Observer<StoreEventArgs>
                     "[EVENT] Middleware {Phase} completed: {Middleware} for {ActionType}",
                     completedMw.Phase,
                     completedMw.Middleware.GetType().Name,
-                    completedMw.Context.Action.GetType().Name);
+                    completedMw.Action.GetType().Name);
                 break;
             }
             case MiddlewareErroredEventArgs erroredMw:

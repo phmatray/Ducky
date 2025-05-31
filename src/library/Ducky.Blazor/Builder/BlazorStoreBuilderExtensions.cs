@@ -72,8 +72,7 @@ public static class BlazorStoreBuilderExtensions
         return builder.AddMiddleware<DevToolsMiddleware>(sp =>
         {
             ReduxDevToolsModule devTools = sp.GetRequiredService<ReduxDevToolsModule>();
-            IStore store = sp.GetRequiredService<IStore>();
-            return new DevToolsMiddleware(devTools, store);
+            return new DevToolsMiddleware(devTools);
         });
     }
 
@@ -102,9 +101,25 @@ public static class BlazorStoreBuilderExtensions
 
         // Register the persistence provider (default to LocalStorage)
         builder.Services.TryAddScoped(typeof(IPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
+        builder.Services.TryAddScoped(typeof(IEnhancedPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
+        
+        // Register the enhanced persistence provider specifically for IRootState
+        builder.Services.TryAddScoped<IEnhancedPersistenceProvider<IRootState>>(sp =>
+        {
+            Blazored.LocalStorage.ILocalStorageService localStorage = sp.GetRequiredService<Blazored.LocalStorage.ILocalStorageService>();
+            PersistenceOptions options = sp.GetRequiredService<PersistenceOptions>();
+            return new LocalStoragePersistenceProvider<IRootState>(localStorage, options.StorageKey);
+        });
 
-        // Register the middleware
-        return builder.AddMiddleware<PersistenceMiddleware>();
+        // Register the middleware with factory
+        return builder.AddMiddleware<PersistenceMiddleware>(sp =>
+        {
+            IEnhancedPersistenceProvider<IRootState> persistenceProvider = 
+                sp.GetRequiredService<IEnhancedPersistenceProvider<IRootState>>();
+            HydrationManager hydrationManager = sp.GetRequiredService<HydrationManager>();
+            PersistenceOptions options = sp.GetRequiredService<PersistenceOptions>();
+            return new PersistenceMiddleware(persistenceProvider, hydrationManager, options);
+        });
     }
 
     /// <summary>

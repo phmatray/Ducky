@@ -8,7 +8,7 @@ namespace AppStore.Tests.Message;
 
 public sealed class MessageReducersTests : IDisposable
 {
-    private const string Key = "message";
+    private const string Key = "demo-blazor-wasm-app-store-message";
 
     private readonly MessageReducers _sut = new();
     private readonly MessageState _initialState = new() { Message = "Hello, Blazor!" };
