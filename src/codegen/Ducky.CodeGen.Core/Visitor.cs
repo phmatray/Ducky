@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -19,6 +16,7 @@ public interface ISyntaxVisitor<T>
     T Visit(CompilationUnitElement unit);
     T Visit(NamespaceElement ns);
     T Visit(ClassElement cls);
+    T Visit(PropertyElement property);
     T Visit(MethodElement method);
     T Visit(ExpressionElement expr);
 }
@@ -47,10 +45,30 @@ public class ClassElement : ICodeElement
     public string Name { get; set; } = string.Empty;
     public bool IsStatic { get; set; } = true;
     public bool IsPartial { get; set; } = false;
+    public bool IsAbstract { get; set; } = false;
+    public string BaseClass { get; set; } = string.Empty;
+    public IEnumerable<string> Interfaces { get; set; } = Array.Empty<string>();
+    public IEnumerable<PropertyElement> Properties { get; set; } = Array.Empty<PropertyElement>();
     public IEnumerable<MethodElement> Methods { get; set; } = Array.Empty<MethodElement>();
 
     public T Accept<T>(ISyntaxVisitor<T> visitor)
         => visitor.Visit(this);
+}
+
+public class PropertyElement : ICodeElement
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Accessibility { get; set; } = "public";
+    public bool HasGetter { get; set; } = true;
+    public bool HasSetter { get; set; } = true;
+    public bool IsStatic { get; set; } = false;
+    public ExpressionElement? GetterBody { get; set; }
+    public ExpressionElement? DefaultValue { get; set; }
+    public IEnumerable<string> Attributes { get; set; } = Array.Empty<string>();
+    public string XmlDocumentation { get; set; } = string.Empty;
+
+    public T Accept<T>(ISyntaxVisitor<T> visitor) => visitor.Visit(this);
 }
 
 public class MethodElement : ICodeElement
@@ -123,16 +141,91 @@ public class SyntaxFactoryVisitor : ISyntaxVisitor<SyntaxNode>
         ClassDeclarationSyntax classDecl = ClassDeclaration(cls.Name)
             .AddModifiers(Token(PublicKeyword));
         
+        if (cls.IsAbstract)
+            classDecl = classDecl.AddModifiers(Token(AbstractKeyword));
+            
         if (cls.IsStatic)
             classDecl = classDecl.AddModifiers(Token(StaticKeyword));
             
         if (cls.IsPartial)
             classDecl = classDecl.AddModifiers(Token(PartialKeyword));
+
+        // Add base class and interfaces
+        if (!string.IsNullOrEmpty(cls.BaseClass) || cls.Interfaces.Any())
+        {
+            var baseTypes = new List<BaseTypeSyntax>();
             
-        MemberDeclarationSyntax[] methods = cls.Methods
-            .Select(m => (MemberDeclarationSyntax)m.Accept(this))
-            .ToArray();
-        return classDecl.AddMembers(methods);
+            if (!string.IsNullOrEmpty(cls.BaseClass))
+                baseTypes.Add(SimpleBaseType(ParseTypeName(cls.BaseClass)));
+                
+            baseTypes.AddRange(cls.Interfaces.Select(i => SimpleBaseType(ParseTypeName(i))));
+            
+            classDecl = classDecl.WithBaseList(BaseList(SeparatedList(baseTypes)));
+        }
+        
+        var members = new List<MemberDeclarationSyntax>();
+        
+        // Add properties
+        members.AddRange(cls.Properties.Select(p => (MemberDeclarationSyntax)p.Accept(this)));
+        
+        // Add methods
+        members.AddRange(cls.Methods.Select(m => (MemberDeclarationSyntax)m.Accept(this)));
+        
+        return classDecl.AddMembers(members.ToArray());
+    }
+
+    public SyntaxNode Visit(PropertyElement property)
+    {
+        var modifiers = new List<SyntaxToken> { Token(PublicKeyword) };
+        
+        if (property.IsStatic)
+            modifiers.Add(Token(StaticKeyword));
+
+        PropertyDeclarationSyntax propDecl = PropertyDeclaration(
+            ParseTypeName(property.Type),
+            Identifier(property.Name))
+            .AddModifiers(modifiers.ToArray());
+
+        // Add accessors
+        var accessors = new List<AccessorDeclarationSyntax>();
+        
+        if (property.HasGetter)
+        {
+            var getter = property.GetterBody is not null
+                ? AccessorDeclaration(GetAccessorDeclaration)
+                    .WithExpressionBody(ArrowExpressionClause(ParseExpression(property.GetterBody.Code)))
+                    .WithSemicolonToken(Token(SemicolonToken))
+                : AccessorDeclaration(GetAccessorDeclaration)
+                    .WithSemicolonToken(Token(SemicolonToken));
+            accessors.Add(getter);
+        }
+        
+        if (property.HasSetter)
+        {
+            var setter = AccessorDeclaration(SetAccessorDeclaration)
+                .WithSemicolonToken(Token(SemicolonToken));
+            accessors.Add(setter);
+        }
+
+        propDecl = propDecl.WithAccessorList(AccessorList(List(accessors)));
+
+        // Add default value if specified
+        if (property.DefaultValue is not null)
+        {
+            propDecl = propDecl.WithInitializer(
+                EqualsValueClause(ParseExpression(property.DefaultValue.Code)))
+                .WithSemicolonToken(Token(SemicolonToken));
+        }
+
+        // Add attributes
+        if (property.Attributes.Any())
+        {
+            var attributes = property.Attributes.Select(attr =>
+                AttributeList(SingletonSeparatedList(Attribute(ParseName(attr)))));
+            propDecl = propDecl.WithAttributeLists(List(attributes));
+        }
+
+        return propDecl;
     }
 
     public SyntaxNode Visit(MethodElement method)

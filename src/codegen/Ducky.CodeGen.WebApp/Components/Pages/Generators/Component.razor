@@ -18,42 +18,49 @@
                     Component Generator
                 </MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom="true">
-                    Generate Blazor components with Ducky state management integration (Coming Soon).
+                    Generate strongly-typed Blazor component base classes for specific state slices.
                 </MudText>
                 
                 <MudDivider Class="my-4" />
                 
-                <MudAlert Severity="Severity.Info" Class="mb-4">
-                    <MudText>This generator is currently in development. Future features will include:</MudText>
-                    <ul>
-                        <li>DuckyComponent base class integration</li>
-                        <li>State selector properties</li>
-                        <li>Action dispatch methods</li>
-                        <li>Automatic re-rendering on state changes</li>
-                        <li>MudBlazor component templates</li>
-                    </ul>
-                </MudAlert>
-                
                 <MudForm @ref="_form" @bind-IsValid="@_isValid">
                     <MudStack Spacing="3">
-                        <!-- Placeholder Configuration -->
                         <MudTextField @bind-Value="_namespace" 
                                       Label="Namespace" 
                                       Variant="Variant.Outlined"
                                       HelperText="The C# namespace for generated components"
                                       Required="true" />
                         
+                        <MudTextField @bind-Value="_rootStateType" 
+                                      Label="Root State Type" 
+                                      Variant="Variant.Outlined"
+                                      HelperText="The root state type (e.g., AppState)"
+                                      Required="true" />
+                        
                         <MudTextField @bind-Value="_componentName" 
                                       Label="Component Name" 
                                       Variant="Variant.Outlined"
-                                      HelperText="The name of the Blazor component"
+                                      HelperText="The name of the component base class"
                                       Required="true" />
                         
-                        <MudTextField @bind-Value="_stateType" 
-                                      Label="State Type" 
+                        <MudTextField @bind-Value="_stateSliceName" 
+                                      Label="State Slice Name" 
                                       Variant="Variant.Outlined"
-                                      HelperText="The state type this component will use"
+                                      HelperText="The name of the state slice property"
                                       Required="true" />
+                        
+                        <MudTextField @bind-Value="_stateSliceType" 
+                                      Label="State Slice Type" 
+                                      Variant="Variant.Outlined"
+                                      HelperText="The type of the state slice"
+                                      Required="true" />
+                        
+                        <MudTextField @bind-Value="_actionsText" 
+                                      Label="Actions" 
+                                      Variant="Variant.Outlined"
+                                      Lines="3"
+                                      HelperText="Actions (one per line: ActionName|ActionType|param1:type1,param2:type2)"
+                                      Placeholder="AddTodo|AddTodoAction|id:int,title:string&#10;ToggleTodo|ToggleTodoAction|id:int" />
                         
                         <!-- Generate Button -->
                         <MudButton Variant="Variant.Filled" 
@@ -116,24 +123,32 @@
     
     <!-- Example Usage -->
     <MudPaper Class="pa-4 mt-6" Elevation="1">
-        <MudText Typo="Typo.h6" GutterBottom="true">Planned Features</MudText>
+        <MudText Typo="Typo.h6" GutterBottom="true">Example Usage</MudText>
         <MudText Typo="Typo.body2" GutterBottom="true">
-            The component generator will create Blazor components with built-in Ducky integration:
+            After generating a component base class, inherit from it in your Blazor components:
         </MudText>
         <MudPaper Class="pa-3 mt-3" Style="background-color: #f5f5f5;">
-            <pre style="margin: 0; font-family: 'Cascadia Code', monospace; font-size: 12px;">// Future component template
-@@inherits DuckyComponent&lt;TodoState&gt;
+            <pre style="margin: 0; font-family: 'Cascadia Code', monospace; font-size: 12px;">@@page "/todos"
+@@inherits TodoStateComponent
 
 &lt;MudCard&gt;
     &lt;MudCardContent&gt;
+        &lt;MudText Typo="Typo.h6"&gt;Todo List&lt;/MudText&gt;
         &lt;MudText&gt;Todo Count: @@State.Items.Count&lt;/MudText&gt;
-        &lt;MudButton OnClick="@@AddTodo"&gt;Add Todo&lt;/MudButton&gt;
+        
+        @@foreach (var todo in State.Items)
+        {
+            &lt;MudCheckBox Value="@@todo.IsCompleted" 
+                         ValueChanged="@@(() =&gt; ToggleTodo(todo.Id))"&gt;
+                @@todo.Title
+            &lt;/MudCheckBox&gt;
+        }
+        
+        &lt;MudButton OnClick="@@(() =&gt; AddTodo(Random.Shared.Next(), 'New Todo'))"&gt;
+            Add Todo
+        &lt;/MudButton&gt;
     &lt;/MudCardContent&gt;
-&lt;/MudCard&gt;
-
-@@code {
-    private void AddTodo() => Dispatch(new AddTodoAction("New Todo"));
-}</pre>
+&lt;/MudCard&gt;</pre>
         </MudPaper>
     </MudPaper>
 </MudContainer>
@@ -150,41 +165,89 @@
     private bool _isValid;
     private string? _generatedCode;
     private string _namespace = "MyApp.Components";
-    private string _componentName = "MyComponent";
-    private string _stateType = "AppState";
+    private string _rootStateType = "AppState";
+    private string _componentName = "TodoStateComponent";
+    private string _stateSliceName = "Todos";
+    private string _stateSliceType = "TodoState";
+    private string _actionsText = "AddTodo|AddTodoAction|id:int,title:string\nToggleTodo|ToggleTodoAction|id:int";
 
-    private Task GenerateAsync()
+    private async Task GenerateAsync()
     {
         try
         {
-            // This is a placeholder - actual component generation would be implemented here
-            _generatedCode = GenerateComponentTemplate();
+            var actions = ParseActions(_actionsText);
+            
+            var options = new ComponentGeneratorOptions
+            {
+                Namespace = _namespace,
+                RootStateType = _rootStateType,
+                Components = new List<ComponentDescriptor>
+                {
+                    new ComponentDescriptor
+                    {
+                        ComponentName = _componentName,
+                        StateSliceName = _stateSliceName,
+                        StateSliceType = _stateSliceType,
+                        StateSliceProperty = _stateSliceName,
+                        Actions = actions
+                    }
+                }
+            };
+
+            var generator = new ComponentGenerator();
+            _generatedCode = await generator.GenerateCodeAsync(options);
             Snackbar.Add("Component generated successfully!", Severity.Success);
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error generating code: {ex.Message}", Severity.Error);
         }
-        
-        return Task.CompletedTask;
     }
 
-    private string GenerateComponentTemplate()
+    private List<ComponentActionDescriptor> ParseActions(string actionsText)
     {
-        return $@"@inherits DuckyComponent<{_stateType}>
-
-<MudCard>
-    <MudCardContent>
-        <MudText Typo=""Typo.h6"">{_componentName}</MudText>
-        <MudText>State: @State</MudText>
-    </MudCardContent>
-</MudCard>
-
-@code {{
-    // Component logic here
-    // Use State property to access current state
-    // Use Dispatch(action) to dispatch actions
-}}";
+        var actions = new List<ComponentActionDescriptor>();
+        
+        if (string.IsNullOrWhiteSpace(actionsText))
+            return actions;
+            
+        var lines = actionsText.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach (var line in lines)
+        {
+            var parts = line.Split('|', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2) continue;
+            
+            var actionName = parts[0].Trim();
+            var actionType = parts[1].Trim();
+            var parameters = new List<ParameterDescriptor>();
+            
+            if (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]))
+            {
+                var paramParts = parts[2].Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var paramPart in paramParts)
+                {
+                    var paramInfo = paramPart.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                    if (paramInfo.Length == 2)
+                    {
+                        parameters.Add(new ParameterDescriptor
+                        {
+                            ParamName = paramInfo[0].Trim(),
+                            ParamType = paramInfo[1].Trim()
+                        });
+                    }
+                }
+            }
+            
+            actions.Add(new ComponentActionDescriptor
+            {
+                ActionName = actionName,
+                ActionType = actionType,
+                Parameters = parameters
+            });
+        }
+        
+        return actions;
     }
 
     private async Task CopyToClipboard()

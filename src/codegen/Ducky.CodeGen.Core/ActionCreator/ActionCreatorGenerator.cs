@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Ducky.CodeGen.Core;
 
 /// <summary>
@@ -11,7 +7,7 @@ public class ActionCreatorGenerator : SourceGeneratorBase<ActionCreatorGenerator
 {
     protected override CompilationUnitElement BuildModel(ActionCreatorGeneratorOptions opts)
     {
-        return new CompilationUnitElement()
+        return new CompilationUnitElement
         {
             Usings = new List<string>
             {
@@ -22,17 +18,15 @@ public class ActionCreatorGenerator : SourceGeneratorBase<ActionCreatorGenerator
             },
             Namespaces = new List<NamespaceElement>
             {
-                new NamespaceElement()
+                new()
                 {
                     Name = opts.Namespace,
-                    Classes = opts.Actions
-                        .Select(action => new ClassElement()
-                        {
-                            Name      = action.ActionName + "Creator",
-                            IsStatic  = true,
-                            Methods   = BuildMethods(opts.StateType, action)
-                        })
-                        .ToList()
+                    Classes = opts.Actions.ConvertAll(action => new ClassElement
+                    {
+                        Name      = action.ActionName + "Creator",
+                        IsStatic  = true,
+                        Methods   = BuildMethods(opts.StateType, action)
+                    })
                 }
             }
         };
@@ -49,12 +43,12 @@ public class ActionCreatorGenerator : SourceGeneratorBase<ActionCreatorGenerator
         var result = new List<MethodElement>();
 
         // 1) Create(...)
-        result.Add(new MethodElement()
+        result.Add(new MethodElement
         {
             Name           = "Create",
             ReturnType     = action.ActionName,
             Parameters     = parametersList,
-            ExpressionBody = new ExpressionElement()
+            ExpressionBody = new ExpressionElement
             {
                 // target‐typed new
                 Code = $"new {action.ActionName}({string.Join(", ", names)})"
@@ -62,32 +56,34 @@ public class ActionCreatorGenerator : SourceGeneratorBase<ActionCreatorGenerator
         });
 
         // 2) Dispatch(...)
-        var dispatchParameters = new List<ParameterDescriptor> { new ParameterDescriptor() { ParamName = "store", ParamType = "IStore" } };
+        var dispatchParameters = new List<ParameterDescriptor> { new ParameterDescriptor { ParamName = "store", ParamType = "IStore" } };
         dispatchParameters.AddRange(parametersList);
         
-        result.Add(new MethodElement()
+        result.Add(new MethodElement
         {
             Name              = "Dispatch",
             ReturnType        = "void",
             IsExtensionMethod = true,
             Parameters        = dispatchParameters,
-            ExpressionBody    = new ExpressionElement() { Code = $"store.Dispatch(Create({string.Join(", ", names)}))" }
+            ExpressionBody    = new ExpressionElement { Code = $"store.Dispatch(Create({string.Join(", ", names)}))" }
         });
 
         // 3) AsFluxStandardAction(...)
-        result.Add(new MethodElement()
+        result.Add(new MethodElement
         {
             Name = "AsFluxStandardAction",
             ReturnType = "string",
             IsExtensionMethod = true,
-            Parameters = new List<ParameterDescriptor> { new ParameterDescriptor() { ParamName = "action", ParamType = action.ActionName } },
-            ExpressionBody = new ExpressionElement()
+            Parameters = new List<ParameterDescriptor> { new() { ParamName = "action", ParamType = action.ActionName } },
+            ExpressionBody = new ExpressionElement
             {
-                Code = $@"JsonSerializer.Serialize(new {{
-    type    = nameof({action.ActionName}),
-    payload = new {{ {string.Join(", ", names.Select(n => $"action.{n[0].ToString().ToUpperInvariant()}{n.Substring(1)}"))} }},
-    meta    = new {{ timestamp = DateTime.UtcNow }}
-}})"
+                Code = $$"""
+                         JsonSerializer.Serialize(new {
+                             type    = nameof({{action.ActionName}}),
+                             payload = new { {{string.Join(", ", names.Select(n => $"action.{n[0].ToString().ToUpperInvariant()}{n[1..]}"))}} },
+                             meta    = new { timestamp = DateTime.UtcNow }
+                         })
+                         """
             }
         });
 
