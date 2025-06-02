@@ -18,7 +18,7 @@ public class CrossTabSyncModule : JsModule
     /// <param name="store">The Redux store instance to synchronize.</param>
     /// <param name="key">The localStorage key used for sync.</param>
     public CrossTabSyncModule(IJSRuntime js, IStore store, string key)
-        : base(js, "./crosstabSync.js")
+        : base(js, "./_content/Ducky.Blazor/crosstabSync.js")
     {
         _store = store;
         _key = key;

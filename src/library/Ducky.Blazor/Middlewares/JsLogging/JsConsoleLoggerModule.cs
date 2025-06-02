@@ -13,7 +13,7 @@ public sealed class JsConsoleLoggerModule : JsModule
     /// </summary>
     /// <param name="js">The Blazor JS runtime.</param>
     public JsConsoleLoggerModule(IJSRuntime js)
-        : base(js, "./jsConsoleLogger.js") // Replace with your JS module path
+        : base(js, "./_content/Ducky.Blazor/jsConsoleLogger.js")
     {
     }
 

@@ -49,7 +49,7 @@ public class ReduxDevToolsModule : JsModule
         IDispatcher dispatcher,
         DevToolsStateManager stateManager,
         DevToolsOptions? options = default)
-        : base(js, "./reduxDevtools.js")
+        : base(js, "./_content/Ducky.Blazor/reduxDevtools.js")
     {
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));

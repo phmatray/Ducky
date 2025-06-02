@@ -5,6 +5,7 @@ using Demo.BlazorWasm.AppStore;
 using Demo.BlazorWasm.Features.Feedback;
 using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
+using Ducky.Blazor.Builder;
 using Ducky.Builder;
 using MudBlazor.Services;
 
@@ -55,6 +56,9 @@ services.AddDuckyStore(storeBuilder => storeBuilder
     //     options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
     //     options.MaxAge = 100; // Keep more history for demo
     // })
+
+    // Add JS Logging middleware
+    .AddJsLoggingMiddleware()
 
     // Add exception handler
     .AddExceptionHandler<NotificationExceptionHandler>()
