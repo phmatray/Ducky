@@ -7,10 +7,8 @@
   <base href="/"/>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
   <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
-  <link rel="stylesheet" href="@Assets["prism.css"]"/>
-  <link rel="stylesheet" href="@Assets["app.css"]"/>
-  <link rel="stylesheet" href="@Assets["CodeGen.App.styles.css"]"/>
-  <ImportMap/>
+  <link rel="stylesheet" href="css/app.css"/>
+  <link rel="stylesheet" href="Ducky.CodeGen.WebApp.styles.css"/>
   <HeadOutlet @rendermode="InteractiveServer"/>
 </head>
 
@@ -18,12 +16,7 @@
 <Routes @rendermode="new InteractiveServerRenderMode(false)"/>
 <script src="_framework/blazor.web.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-<script src="prism.js"></script>
-<script>
-  window.highlight = (code) => {
-    return Prism.highlight(code, Prism.languages.csharp, 'csharp');
-  }
-</script>
+<script src="js/app.js"></script>
 </body>
 
 </html>

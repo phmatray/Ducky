@@ -1,6 +1,234 @@
 @page "/"
-<h3>Index</h3>
+
+<PageTitle>Ducky Code Generator</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <!-- Hero Section with Gradient Background -->
+    <MudPaper Class="pa-12 text-center mud-elevation-0" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px;">
+        <MudStack AlignItems="AlignItems.Center" Spacing="4">
+            <MudAvatar Size="Size.Large" Style="width: 80px; height: 80px; background-color: rgba(255,255,255,0.2);">
+                <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Style="font-size: 48px;" />
+            </MudAvatar>
+            <MudText Typo="Typo.h2" Style="font-weight: 700;">Ducky Code Generator</MudText>
+            <MudText Typo="Typo.h5" Style="opacity: 0.9; max-width: 600px;">
+                Generate production-ready state management code with the power of Ducky's Redux-inspired architecture
+            </MudText>
+            <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Class="mt-4">
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Surface" 
+                           Size="Size.Large"
+                           Style="color: #667eea;"
+                           StartIcon="@Icons.Material.Filled.RocketLaunch"
+                           Href="/appstores">
+                    Start Building
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" 
+                           Color="Color.Surface" 
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.PlayCircleOutline"
+                           Href="#demo">
+                    Watch Demo
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    <!-- Quick Stats -->
+    <MudGrid Class="mt-8 mb-8">
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-4 text-center" Elevation="0" Style="border: 1px solid rgba(0,0,0,0.12);">
+                <MudIcon Icon="@Icons.Material.Filled.Speed" Color="Color.Primary" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Color="Color.Primary" Class="mt-2">Fast</MudText>
+                <MudText Typo="Typo.body2">Generate complete app stores in seconds</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-4 text-center" Elevation="0" Style="border: 1px solid rgba(0,0,0,0.12);">
+                <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Secondary" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Color="Color.Secondary" Class="mt-2">Type-Safe</MudText>
+                <MudText Typo="Typo.body2">Full C# type safety with generics</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-4 text-center" Elevation="0" Style="border: 1px solid rgba(0,0,0,0.12);">
+                <MudIcon Icon="@Icons.Material.Filled.Extension" Color="Color.Tertiary" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Color="Color.Tertiary" Class="mt-2">Flexible</MudText>
+                <MudText Typo="Typo.body2">Customize every aspect of your store</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Main Features -->
+    <MudText Typo="Typo.h4" Class="mb-6 text-center">Choose Your Path</MudText>
+    <MudGrid Spacing="4">
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2" Style="height: 100%; transition: transform 0.3s; cursor: pointer;" 
+                     @onmouseover="@(() => _hoveredCard = 1)" 
+                     @onmouseout="@(() => _hoveredCard = 0)"
+                     Class="@(_hoveredCard == 1 ? "mud-elevation-8" : "")">
+                <MudCardContent Class="d-flex flex-column" Style="height: 100%;">
+                    <div class="text-center mb-4">
+                        <MudAvatar Size="Size.Large" Color="Color.Primary" Variant="Variant.Outlined">
+                            <MudIcon Icon="@Icons.Material.Filled.Store" />
+                        </MudAvatar>
+                    </div>
+                    <MudText Typo="Typo.h5" Class="text-center mb-3">Complete App Stores</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4" Style="flex-grow: 1;">
+                        Build entire state management solutions from scratch. Define your state slices, 
+                        actions, and effects, then generate all the boilerplate code automatically.
+                    </MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                            Multiple state slices
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                            Async & reactive effects
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                            Full CRUD operations
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Primary" 
+                               StartIcon="@Icons.Material.Filled.Add"
+                               Href="/appstores">
+                        Create App Store
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2" Style="height: 100%; transition: transform 0.3s; cursor: pointer;"
+                     @onmouseover="@(() => _hoveredCard = 2)" 
+                     @onmouseout="@(() => _hoveredCard = 0)"
+                     Class="@(_hoveredCard == 2 ? "mud-elevation-8" : "")">
+                <MudCardContent Class="d-flex flex-column" Style="height: 100%;">
+                    <div class="text-center mb-4">
+                        <MudAvatar Size="Size.Large" Color="Color.Secondary" Variant="Variant.Outlined">
+                            <MudIcon Icon="@Icons.Material.Filled.Build" />
+                        </MudAvatar>
+                    </div>
+                    <MudText Typo="Typo.h5" Class="text-center mb-3">Individual Components</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4" Style="flex-grow: 1;">
+                        Need just a specific piece? Generate individual components to enhance your 
+                        existing Ducky implementation with minimal effort.
+                    </MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.PlayArrow" IconColor="Color.Info">
+                            Action creators
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Transform" IconColor="Color.Info">
+                            Reducer functions
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Speed" IconColor="Color.Info">
+                            Profiling tools
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton FullWidth="true" Variant="Variant.Outlined" Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Code"
+                               Href="/generator/action-creator">
+                        Browse Generators
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- How It Works -->
+    <MudText Typo="Typo.h4" Class="mt-12 mb-6 text-center">How It Works</MudText>
+    <MudTimeline>
+        <MudTimelineItem Color="Color.Primary" Elevation="2">
+            <ItemOpposite>
+                <MudText Typo="Typo.h6">Step 1</MudText>
+            </ItemOpposite>
+            <ItemContent>
+                <MudText Typo="Typo.h6">Define Your Store</MudText>
+                <MudText Typo="Typo.body2">Create an app store and define your state slices with their properties</MudText>
+            </ItemContent>
+            <ItemDot>
+                <MudIcon Icon="@Icons.Material.Filled.Description" />
+            </ItemDot>
+        </MudTimelineItem>
+        <MudTimelineItem Color="Color.Primary" Elevation="2">
+            <ItemOpposite>
+                <MudText Typo="Typo.h6">Step 2</MudText>
+            </ItemOpposite>
+            <ItemContent>
+                <MudText Typo="Typo.h6">Add Actions & Effects</MudText>
+                <MudText Typo="Typo.body2">Define the actions that modify state and effects for side effects</MudText>
+            </ItemContent>
+            <ItemDot>
+                <MudIcon Icon="@Icons.Material.Filled.PlaylistAdd" />
+            </ItemDot>
+        </MudTimelineItem>
+        <MudTimelineItem Color="Color.Primary" Elevation="2">
+            <ItemOpposite>
+                <MudText Typo="Typo.h6">Step 3</MudText>
+            </ItemOpposite>
+            <ItemContent>
+                <MudText Typo="Typo.h6">Generate Code</MudText>
+                <MudText Typo="Typo.body2">Click generate and get production-ready C# code following Ducky patterns</MudText>
+            </ItemContent>
+            <ItemDot>
+                <MudIcon Icon="@Icons.Material.Filled.AutoMode" />
+            </ItemDot>
+        </MudTimelineItem>
+        <MudTimelineItem Color="Color.Primary" Elevation="2">
+            <ItemOpposite>
+                <MudText Typo="Typo.h6">Step 4</MudText>
+            </ItemOpposite>
+            <ItemContent>
+                <MudText Typo="Typo.h6">Export & Use</MudText>
+                <MudText Typo="Typo.body2">Download the generated files and integrate them into your project</MudText>
+            </ItemContent>
+            <ItemDot>
+                <MudIcon Icon="@Icons.Material.Filled.Download" />
+            </ItemDot>
+        </MudTimelineItem>
+    </MudTimeline>
+
+    <!-- Code Example -->
+    <MudText Typo="Typo.h4" Class="mt-12 mb-6 text-center">Generated Code Example</MudText>
+    <MudPaper Class="pa-4" Style="background-color: #1e1e1e;">
+        <pre style="color: #d4d4d4; font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 14px; margin: 0; overflow-x: auto;">
+<span style="color: #569cd6;">public</span> <span style="color: #569cd6;">record</span> <span style="color: #4ec9b0;">CounterState</span>(<span style="color: #569cd6;">int</span> Count = <span style="color: #b5cea8;">0</span>);
+
+<span style="color: #569cd6;">public</span> <span style="color: #569cd6;">static</span> <span style="color: #569cd6;">class</span> <span style="color: #4ec9b0;">CounterDucks</span>
+{
+    <span style="color: #608b4e;">// Actions</span>
+    <span style="color: #569cd6;">public</span> <span style="color: #569cd6;">record</span> <span style="color: #4ec9b0;">Increment</span>(<span style="color: #569cd6;">int</span> Amount = <span style="color: #b5cea8;">1</span>);
+    <span style="color: #569cd6;">public</span> <span style="color: #569cd6;">record</span> <span style="color: #4ec9b0;">Decrement</span>(<span style="color: #569cd6;">int</span> Amount = <span style="color: #b5cea8;">1</span>);
+    <span style="color: #569cd6;">public</span> <span style="color: #569cd6;">record</span> <span style="color: #4ec9b0;">Reset</span>;
+
+    <span style="color: #608b4e;">// Reducers</span>
+    <span style="color: #569cd6;">public</span> <span style="color: #569cd6;">static</span> <span style="color: #569cd6;">readonly</span> <span style="color: #4ec9b0;">SliceReducers</span>&lt;<span style="color: #4ec9b0;">CounterState</span>&gt; Reducers = <span style="color: #569cd6;">new</span>(<span style="color: #569cd6;">new</span> <span style="color: #4ec9b0;">CounterState</span>())
+        .<span style="color: #dcdcaa;">On</span>&lt;<span style="color: #4ec9b0;">Increment</span>&gt;((state, action) => state <span style="color: #569cd6;">with</span> { Count = state.Count + action.Amount })
+        .<span style="color: #dcdcaa;">On</span>&lt;<span style="color: #4ec9b0;">Decrement</span>&gt;((state, action) => state <span style="color: #569cd6;">with</span> { Count = state.Count - action.Amount })
+        .<span style="color: #dcdcaa;">On</span>&lt;<span style="color: #4ec9b0;">Reset</span>&gt;((state, _) => <span style="color: #569cd6;">new</span> <span style="color: #4ec9b0;">CounterState</span>());
+}
+        </pre>
+    </MudPaper>
+
+    <!-- Call to Action -->
+    <MudPaper Class="pa-8 mt-12 text-center" Elevation="0" Style="background-color: #f5f5f5;">
+        <MudText Typo="Typo.h4" GutterBottom="true">Ready to Boost Your Productivity?</MudText>
+        <MudText Typo="Typo.body1" Class="mb-4">
+            Join developers who are building better state management solutions with Ducky
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.RocketLaunch"
+                   Href="/appstores">
+            Get Started Now
+        </MudButton>
+    </MudPaper>
+</MudContainer>
 
 @code {
-  
+    private int _hoveredCard = 0;
 }

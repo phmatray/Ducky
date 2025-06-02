@@ -4,11 +4,16 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Temporarily suppress Roslynator style warnings for codegen demo -->
+    <NoWarn>$(NoWarn);RCS0056;RCS0058;RCS1250;RCS0029;RCS1080;RCS1264;RCS0008;RCS0055;RCS0053;RCS1090;RCS1174;RCS0054;RCS1248;RCS1208</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="MudBlazor.Extensions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
   </ItemGroup>
 
   <ItemGroup>

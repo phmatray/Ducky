@@ -2,25 +2,17 @@ using System.Text;
 
 namespace Demo.BlazorWasm.E2E.Tests;
 
-[TestFixture]
-[Parallelizable(ParallelScope.Self)]
-public class LoadingDiagnosticsTest : PageTest
+public class LoadingDiagnosticsTest : MinimalTestBase
 {
-    private readonly List<string> _consoleLogs = new();
-    private readonly List<string> _consoleErrors = new();
+    private readonly List<string> _consoleLogs = [];
+    private readonly List<string> _consoleErrors = [];
     
-    public override BrowserNewContextOptions ContextOptions()
-    {
-        return new BrowserNewContextOptions
-        {
-            IgnoreHTTPSErrors = true,
-            ViewportSize = new ViewportSize { Width = 1280, Height = 720 }
-        };
-    }
+    // ContextOptions is already defined in MinimalTestBase
     
-    [SetUp]
-    public Task SetupConsoleLogging()
+    protected override async Task SetUp()
     {
+        await base.SetUp();
+        
         // Capture all console messages
         Page.Console += (_, msg) =>
         {
@@ -60,11 +52,9 @@ public class LoadingDiagnosticsTest : PageTest
         {
             _consoleErrors.Add($"[PAGE ERROR] {exception}");
         };
-        
-        return Task.CompletedTask;
     }
     
-    [Test]
+    [Fact]
     public async Task DiagnoseLoadingIssue()
     {
         var baseUrl = Environment.GetEnvironmentVariable("BASE_URL") ?? "http://localhost:5000";
@@ -74,16 +64,18 @@ public class LoadingDiagnosticsTest : PageTest
         try
         {
             // Navigate with a shorter timeout to see what happens
-            await Page.GotoAsync(baseUrl, new PageGotoOptions 
-            { 
-                WaitUntil = WaitUntilState.DOMContentLoaded,
-                Timeout = 30000 
-            });
+            await Page.GotoAsync(
+                baseUrl,
+                new PageGotoOptions 
+                    { 
+                        WaitUntil = WaitUntilState.DOMContentLoaded,
+                        Timeout = 30000 
+                    });
             
             Console.WriteLine("Initial page load completed (DOMContentLoaded)");
             
             // Wait a bit to collect logs
-            await Task.Delay(5000);
+            await Task.Delay(5000, TestContext.Current.CancellationToken);
             
             // Check if the app is stuck at loading
             var loadingProgress = false;
@@ -91,7 +83,7 @@ public class LoadingDiagnosticsTest : PageTest
             try
             {
                 loadingProgress = await Page.Locator("#blazor-loading-progress").IsVisibleAsync();
-                loadingText = await Page.Locator("#blazor-loading-text").TextContentAsync().ConfigureAwait(false) ?? "";
+                loadingText = await Page.Locator("#blazor-loading-text").TextContentAsync()?? "";
             }
             catch (Exception ex)
             {
@@ -187,7 +179,7 @@ public class LoadingDiagnosticsTest : PageTest
             }
             
             // Create a summary
-            var summary = new StringBuilder();
+            StringBuilder summary = new();
             summary.AppendLine("\n=== DIAGNOSIS SUMMARY ===");
             summary.AppendLine($"Total console logs: {_consoleLogs.Count}");
             summary.AppendLine($"Total console errors: {_consoleErrors.Count}");

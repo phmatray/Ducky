@@ -1,0 +1,322 @@
+@page "/appstores"
+@using Ducky.CodeGen.WebApp.Models
+@using Ducky.CodeGen.WebApp.Services
+@inject IAppStoreService AppStoreService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>App Stores - Ducky Code Generator</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <!-- Header with Breadcrumbs -->
+    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+    
+    <MudGrid Class="mb-6">
+        <MudItem xs="12" md="8">
+            <MudText Typo="Typo.h3" GutterBottom="true">
+                <MudIcon Icon="@Icons.Material.Filled.Store" Class="mr-2" Style="vertical-align: middle;" />
+                App Stores
+            </MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                Design and manage complete state management solutions. Each app store can contain multiple state slices with their own actions and effects.
+            </MudText>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="text-right">
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="CreateNewAppStore">
+                Create New App Store
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    @if (appStores == null)
+    {
+        <!-- Loading State -->
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="12" Class="text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <MudText Typo="Typo.body1" Class="mt-4">Loading your app stores...</MudText>
+            </MudItem>
+        </MudGrid>
+    }
+    else if (!appStores.Any())
+    {
+        <!-- Empty State -->
+        <MudPaper Class="pa-12 text-center" Elevation="0" Style="background-color: #f5f5f5; border: 2px dashed #e0e0e0;">
+            <MudAvatar Size="Size.Large" Style="width: 120px; height: 120px; margin: 0 auto 16px;" Color="Color.Primary" Variant="Variant.Outlined">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="font-size: 60px;" />
+            </MudAvatar>
+            <MudText Typo="Typo.h5" GutterBottom="true">Start Your First App Store</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4" Style="max-width: 500px; margin: 0 auto;">
+                App stores are containers for your state management logic. Create one to begin generating 
+                production-ready Ducky code.
+            </MudText>
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.RocketLaunch"
+                       OnClick="CreateNewAppStore">
+                Create Your First App Store
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- App Store Grid -->
+        <MudGrid Spacing="3">
+            @foreach (var appStore in appStores.OrderByDescending(a => a.UpdatedAt))
+            {
+                <MudItem xs="12" sm="6" lg="4">
+                    <MudCard Elevation="2" 
+                             Class="h-100 mud-card-hover" 
+                             Style="transition: all 0.3s ease; position: relative; overflow: hidden;">
+                        <!-- Card Header with Gradient -->
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px;">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+                                <div>
+                                    <MudText Typo="Typo.h6" Style="color: white; font-weight: 600;">
+                                        @appStore.Name
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Style="color: rgba(255,255,255,0.8);">
+                                        @appStore.Namespace
+                                    </MudText>
+                                </div>
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Surface" Dense="true">
+                                    <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => DuplicateAppStore(appStore))">
+                                        Duplicate
+                                    </MudMenuItem>
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Archive" OnClick="@(() => ArchiveAppStore(appStore))">
+                                        Archive
+                                    </MudMenuItem>
+                                    <MudDivider />
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteAppStore(appStore))">
+                                        <MudText Color="Color.Error">Delete</MudText>
+                                    </MudMenuItem>
+                                </MudMenu>
+                            </MudStack>
+                        </div>
+                        
+                        <MudCardContent>
+                            @if (!string.IsNullOrEmpty(appStore.Description))
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                    @appStore.Description
+                                </MudText>
+                            }
+                            
+                            <!-- Statistics -->
+                            <MudGrid Class="mb-3">
+                                <MudItem xs="4" Class="text-center">
+                                    <MudText Typo="Typo.h5" Color="Color.Info">@appStore.StateSlices.Count</MudText>
+                                    <MudText Typo="Typo.caption">Slices</MudText>
+                                </MudItem>
+                                <MudItem xs="4" Class="text-center">
+                                    <MudText Typo="Typo.h5" Color="Color.Success">@appStore.StateSlices.Sum(s => s.Actions.Count)</MudText>
+                                    <MudText Typo="Typo.caption">Actions</MudText>
+                                </MudItem>
+                                <MudItem xs="4" Class="text-center">
+                                    <MudText Typo="Typo.h5" Color="Color.Warning">@appStore.StateSlices.Sum(s => s.Effects.Count)</MudText>
+                                    <MudText Typo="Typo.caption">Effects</MudText>
+                                </MudItem>
+                            </MudGrid>
+                            
+                            <!-- Last Updated -->
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Color="Color.Secondary" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Updated @GetRelativeTime(appStore.UpdatedAt)
+                                </MudText>
+                            </MudStack>
+                        </MudCardContent>
+                        
+                        <MudCardActions Class="justify-space-between">
+                            <MudButton Variant="Variant.Text" 
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       OnClick="@(() => EditAppStore(appStore))">
+                                Edit
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.Code"
+                                       OnClick="@(() => GenerateCode(appStore))">
+                                Generate
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+<!-- Custom CSS for card hover effect -->
+<style>
+    .mud-card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
+    }
+</style>
+
+@code {
+    private List<AppStore>? appStores;
+    
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("App Stores", href: null, disabled: true, icon: Icons.Material.Filled.Store)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAppStores();
+    }
+
+    private async Task LoadAppStores()
+    {
+        appStores = await AppStoreService.GetAllAppStoresAsync();
+    }
+
+    private async Task CreateNewAppStore()
+    {
+        var parameters = new DialogParameters<CreateAppStoreDialog>();
+        var options = new DialogOptions 
+        { 
+            MaxWidth = MaxWidth.Small, 
+            FullWidth = true,
+            CloseButton = true
+        };
+        
+        var dialog = await DialogService.ShowAsync<CreateAppStoreDialog>("Create New App Store", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: AppStore newAppStore })
+        {
+            await LoadAppStores();
+            Snackbar.Add($"App Store '{newAppStore.Name}' created successfully!", Severity.Success);
+        }
+    }
+
+    private async Task EditAppStore(AppStore appStore)
+    {
+        var parameters = new DialogParameters<EditAppStoreDialog>
+        {
+            { x => x.AppStoreId, appStore.Id }
+        };
+        
+        var options = new DialogOptions 
+        { 
+            MaxWidth = MaxWidth.Large, 
+            FullWidth = true,
+            CloseButton = true
+        };
+        
+        var dialog = await DialogService.ShowAsync<EditAppStoreDialog>($"Edit {appStore.Name}", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            await LoadAppStores();
+            Snackbar.Add($"App Store '{appStore.Name}' updated successfully!", Severity.Success);
+        }
+    }
+
+    private async Task GenerateCode(AppStore appStore)
+    {
+        try
+        {
+            // Show loading
+            Snackbar.Add($"Generating code for '{appStore.Name}'...", Severity.Info);
+            
+            var generatedFiles = await AppStoreService.GenerateFilesAsync(appStore.Id);
+            
+            var parameters = new DialogParameters<GeneratedCodeDialog>
+            {
+                { x => x.GeneratedFiles, generatedFiles },
+                { x => x.AppStoreName, appStore.Name }
+            };
+            
+            var options = new DialogOptions 
+            { 
+                MaxWidth = MaxWidth.ExtraLarge, 
+                FullWidth = true,
+                CloseButton = true
+            };
+            
+            await DialogService.ShowAsync<GeneratedCodeDialog>($"Generated Code - {appStore.Name}", parameters, options);
+            
+            Snackbar.Add($"Successfully generated {generatedFiles.Count} files!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating code: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void DuplicateAppStore(AppStore appStore)
+    {
+        // TODO: Implement duplicate functionality
+        Snackbar.Add("Duplicate feature coming soon!", Severity.Info);
+    }
+
+    private void ArchiveAppStore(AppStore appStore)
+    {
+        // TODO: Implement archive functionality
+        Snackbar.Add("Archive feature coming soon!", Severity.Info);
+    }
+
+    private async Task DeleteAppStore(AppStore appStore)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var result = await DialogService.ShowMessageBox(
+            "Delete App Store",
+            $"Are you sure you want to delete '{appStore.Name}'? This action cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel", options: options);
+            
+        if (result == true)
+        {
+            try
+            {
+                await AppStoreService.DeleteAppStoreAsync(appStore.Id);
+                await LoadAppStores();
+                Snackbar.Add($"App Store '{appStore.Name}' deleted successfully.", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting app store: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private string GetRelativeTime(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime.ToUniversalTime();
+        
+        if (timeSpan.TotalDays < 1)
+        {
+            if (timeSpan.TotalHours < 1)
+                return $"{(int)timeSpan.TotalMinutes} minutes ago";
+            else
+                return $"{(int)timeSpan.TotalHours} hours ago";
+        }
+        else if (timeSpan.TotalDays < 7)
+        {
+            return $"{(int)timeSpan.TotalDays} days ago";
+        }
+        else if (timeSpan.TotalDays < 30)
+        {
+            return $"{(int)(timeSpan.TotalDays / 7)} weeks ago";
+        }
+        else if (timeSpan.TotalDays < 365)
+        {
+            return $"{(int)(timeSpan.TotalDays / 30)} months ago";
+        }
+        else
+        {
+            return dateTime.ToString("MMM dd, yyyy");
+        }
+    }
+}

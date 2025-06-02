@@ -1,28 +1,208 @@
 @page "/generator/component"
-@inject ReducerGenerator Generator
+@using Ducky.CodeGen.Core
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
-<MudStack Class="mx-6">
-  <MudText Typo="Typo.h4">Component Generator</MudText>
-</MudStack>
+<PageTitle>Component Generator - Ducky Code Generator</PageTitle>
 
-<MudExObjectEditForm
-  OnValidSubmit="@GenerateAsync"
-  Value="@_opts">
-</MudExObjectEditForm>
+<MudContainer MaxWidth="MaxWidth.Large">
+    <!-- Header with Breadcrumbs -->
+    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+    
+    <MudGrid>
+        <!-- Configuration Panel -->
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h5" GutterBottom="true">
+                    <MudIcon Icon="@Icons.Material.Filled.Web" Class="mr-2" />
+                    Component Generator
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom="true">
+                    Generate Blazor components with Ducky state management integration (Coming Soon).
+                </MudText>
+                
+                <MudDivider Class="my-4" />
+                
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    <MudText>This generator is currently in development. Future features will include:</MudText>
+                    <ul>
+                        <li>DuckyComponent base class integration</li>
+                        <li>State selector properties</li>
+                        <li>Action dispatch methods</li>
+                        <li>Automatic re-rendering on state changes</li>
+                        <li>MudBlazor component templates</li>
+                    </ul>
+                </MudAlert>
+                
+                <MudForm @ref="_form" @bind-IsValid="@_isValid">
+                    <MudStack Spacing="3">
+                        <!-- Placeholder Configuration -->
+                        <MudTextField @bind-Value="_namespace" 
+                                      Label="Namespace" 
+                                      Variant="Variant.Outlined"
+                                      HelperText="The C# namespace for generated components"
+                                      Required="true" />
+                        
+                        <MudTextField @bind-Value="_componentName" 
+                                      Label="Component Name" 
+                                      Variant="Variant.Outlined"
+                                      HelperText="The name of the Blazor component"
+                                      Required="true" />
+                        
+                        <MudTextField @bind-Value="_stateType" 
+                                      Label="State Type" 
+                                      Variant="Variant.Outlined"
+                                      HelperText="The state type this component will use"
+                                      Required="true" />
+                        
+                        <!-- Generate Button -->
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.AutoMode"
+                                   FullWidth="true"
+                                   Size="Size.Large"
+                                   Disabled="@(!_isValid)"
+                                   OnClick="GenerateAsync">
+                            Generate Component
+                        </MudButton>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Generated Code Panel -->
+        <MudItem xs="12" md="7">
+            @if (!string.IsNullOrEmpty(_generatedCode))
+            {
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudStack>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h5">Generated Code</MudText>
+                            <MudStack Row="true" Spacing="2">
+                                <MudButton Variant="Variant.Outlined" 
+                                           StartIcon="@Icons.Material.Filled.ContentCopy"
+                                           OnClick="CopyToClipboard">
+                                    Copy
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" 
+                                           Color="Color.Secondary"
+                                           StartIcon="@Icons.Material.Filled.Download"
+                                           OnClick="DownloadCode">
+                                    Download
+                                </MudButton>
+                            </MudStack>
+                        </MudStack>
+                        
+                        <MudDivider Class="my-3" />
+                        
+                        <MudPaper Class="pa-3" Style="background-color: #1e1e1e; border-radius: 8px; overflow: auto; max-height: 70vh;">
+                            <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 13px;">@_generatedCode</pre>
+                        </MudPaper>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Class="pa-8 text-center" Elevation="0" Style="background-color: #f5f5f5; height: 100%;">
+                    <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Class="mt-3">No Code Generated Yet</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Configure your component settings and click "Generate Component" to see the code.
+                    </MudText>
+                </MudPaper>
+            }
+        </MudItem>
+    </MudGrid>
+    
+    <!-- Example Usage -->
+    <MudPaper Class="pa-4 mt-6" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Planned Features</MudText>
+        <MudText Typo="Typo.body2" GutterBottom="true">
+            The component generator will create Blazor components with built-in Ducky integration:
+        </MudText>
+        <MudPaper Class="pa-3 mt-3" Style="background-color: #f5f5f5;">
+            <pre style="margin: 0; font-family: 'Cascadia Code', monospace; font-size: 12px;">// Future component template
+@@inherits DuckyComponent&lt;TodoState&gt;
 
-<div class="mx-6">
-  <GeneratedCode Code="@GeneratedCode" />
-</div>
+&lt;MudCard&gt;
+    &lt;MudCardContent&gt;
+        &lt;MudText&gt;Todo Count: @@State.Items.Count&lt;/MudText&gt;
+        &lt;MudButton OnClick="@@AddTodo"&gt;Add Todo&lt;/MudButton&gt;
+    &lt;/MudCardContent&gt;
+&lt;/MudCard&gt;
+
+@@code {
+    private void AddTodo() => Dispatch(new AddTodoAction("New Todo"));
+}</pre>
+        </MudPaper>
+    </MudPaper>
+</MudContainer>
 
 @code {
-  
-  private readonly ReducerGeneratorOptions _opts = new();
-  
-  public string? GeneratedCode { get; private set; }
-
-  private async Task GenerateAsync()
-  {
-    GeneratedCode = await Generator.GenerateCodeAsync(_opts);
-  }
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Generators", href: "#", icon: Icons.Material.Filled.Build),
+        new BreadcrumbItem("Component", href: null, disabled: true)
+    };
     
+    private MudForm _form = null!;
+    private bool _isValid;
+    private string? _generatedCode;
+    private string _namespace = "MyApp.Components";
+    private string _componentName = "MyComponent";
+    private string _stateType = "AppState";
+
+    private Task GenerateAsync()
+    {
+        try
+        {
+            // This is a placeholder - actual component generation would be implemented here
+            _generatedCode = GenerateComponentTemplate();
+            Snackbar.Add("Component generated successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating code: {ex.Message}", Severity.Error);
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    private string GenerateComponentTemplate()
+    {
+        return $@"@inherits DuckyComponent<{_stateType}>
+
+<MudCard>
+    <MudCardContent>
+        <MudText Typo=""Typo.h6"">{_componentName}</MudText>
+        <MudText>State: @State</MudText>
+    </MudCardContent>
+</MudCard>
+
+@code {{
+    // Component logic here
+    // Use State property to access current state
+    // Use Dispatch(action) to dispatch actions
+}}";
+    }
+
+    private async Task CopyToClipboard()
+    {
+        if (!string.IsNullOrEmpty(_generatedCode))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedCode);
+            Snackbar.Add("Code copied to clipboard!", Severity.Success);
+        }
+    }
+
+    private async Task DownloadCode()
+    {
+        if (!string.IsNullOrEmpty(_generatedCode))
+        {
+            var fileName = $"{_componentName}.razor";
+            await JS.InvokeVoidAsync("downloadFile", fileName, _generatedCode);
+            Snackbar.Add($"Downloaded {fileName}", Severity.Success);
+        }
+    }
 }

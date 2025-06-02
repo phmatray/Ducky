@@ -1,9 +1,8 @@
 namespace Demo.BlazorWasm.E2E.Tests;
 
-[TestFixture]
 public class HomePageTests : TestBase
 {
-    [Test]
+    [Fact]
     public async Task HomePage_ShouldLoadSuccessfully()
     {
         // Arrange & Act - Already navigated in setup
@@ -21,7 +20,7 @@ public class HomePageTests : TestBase
         await Expect(appBarTitle).ToHaveTextAsync("Ducky Store");
     }
 
-    [Test]
+    [Fact]
     public async Task Navigation_ShouldWorkCorrectly()
     {
         // Open navigation drawer
@@ -56,7 +55,7 @@ public class HomePageTests : TestBase
         await Expect(Page.Locator("h3")).ToContainTextAsync("Serialized State");
     }
 
-    [Test]
+    [Fact]
     public async Task NotificationsDrawer_ShouldOpenAndClose()
     {
         // Check notifications badge
@@ -76,7 +75,7 @@ public class HomePageTests : TestBase
         await Expect(drawer).Not.ToBeVisibleAsync();
     }
 
-    [Test]
+    [Fact]
     public async Task AboutDialog_ShouldOpenFromAppBar()
     {
         // Click on Info button in app bar

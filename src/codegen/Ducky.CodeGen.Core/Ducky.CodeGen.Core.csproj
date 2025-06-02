@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <!-- Temporarily suppress Roslynator style warnings while modernizing codegen -->
-    <NoWarn>$(NoWarn);RCS1050;RCS1250</NoWarn>
+    <NoWarn>$(NoWarn);RCS0001;RCS0008;RCS0048;RCS0055;RCS0056;RCS0058;RCS1007;RCS1050;RCS1078;RCS1080;RCS1208;RCS1250;RCS1264</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

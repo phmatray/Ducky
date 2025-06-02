@@ -1,28 +1,170 @@
 @page "/generator/profiling"
+@using Ducky.CodeGen.Core
 @inject ProfilingGenerator Generator
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
-<MudStack Class="mx-6">
-  <MudText Typo="Typo.h4">Profiling Generator</MudText>
-</MudStack>
+<PageTitle>Profiling Generator - Ducky Code Generator</PageTitle>
 
-<MudExObjectEditForm
-  OnValidSubmit="@GenerateAsync"
-  Value="@_opts">
-</MudExObjectEditForm>
-
-<div class="mx-6">
-  <GeneratedCode Code="@GeneratedCode" />
-</div>
+<MudContainer MaxWidth="MaxWidth.Large">
+    <!-- Header with Breadcrumbs -->
+    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+    
+    <MudGrid>
+        <!-- Configuration Panel -->
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h5" GutterBottom="true">
+                    <MudIcon Icon="@Icons.Material.Filled.Analytics" Class="mr-2" />
+                    Profiling Generator
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom="true">
+                    Generate profiling and instrumentation code for your Ducky application (Coming Soon).
+                </MudText>
+                
+                <MudDivider Class="my-4" />
+                
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    <MudText>This generator is currently in development. Future features will include:</MudText>
+                    <ul>
+                        <li>Performance monitoring decorators</li>
+                        <li>Action timing middleware</li>
+                        <li>Memory usage tracking</li>
+                        <li>State change analytics</li>
+                    </ul>
+                </MudAlert>
+                
+                <MudForm @ref="_form" @bind-IsValid="@_isValid">
+                    <MudStack Spacing="3">
+                        <!-- Placeholder Configuration -->
+                        <MudTextField @bind-Value="_namespace" 
+                                      Label="Namespace" 
+                                      Variant="Variant.Outlined"
+                                      HelperText="The C# namespace for generated profiling code"
+                                      Required="true" />
+                        
+                        <!-- Generate Button -->
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.AutoMode"
+                                   FullWidth="true"
+                                   Size="Size.Large"
+                                   Disabled="@(!_isValid)"
+                                   OnClick="GenerateAsync">
+                            Generate Profiling Code
+                        </MudButton>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Generated Code Panel -->
+        <MudItem xs="12" md="7">
+            @if (!string.IsNullOrEmpty(_generatedCode))
+            {
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudStack>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h5">Generated Code</MudText>
+                            <MudStack Row="true" Spacing="2">
+                                <MudButton Variant="Variant.Outlined" 
+                                           StartIcon="@Icons.Material.Filled.ContentCopy"
+                                           OnClick="CopyToClipboard">
+                                    Copy
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" 
+                                           Color="Color.Secondary"
+                                           StartIcon="@Icons.Material.Filled.Download"
+                                           OnClick="DownloadCode">
+                                    Download
+                                </MudButton>
+                            </MudStack>
+                        </MudStack>
+                        
+                        <MudDivider Class="my-3" />
+                        
+                        <MudPaper Class="pa-3" Style="background-color: #1e1e1e; border-radius: 8px; overflow: auto; max-height: 70vh;">
+                            <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 13px;">@_generatedCode</pre>
+                        </MudPaper>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Class="pa-8 text-center" Elevation="0" Style="background-color: #f5f5f5; height: 100%;">
+                    <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Class="mt-3">No Code Generated Yet</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Configure your profiling settings and click "Generate Profiling Code" to see the code.
+                    </MudText>
+                </MudPaper>
+            }
+        </MudItem>
+    </MudGrid>
+    
+    <!-- Example Usage -->
+    <MudPaper Class="pa-4 mt-6" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Planned Features</MudText>
+        <MudText Typo="Typo.body2" GutterBottom="true">
+            The profiling generator will help you monitor and optimize your Ducky application performance:
+        </MudText>
+        <MudPaper Class="pa-3 mt-3" Style="background-color: #f5f5f5;">
+            <pre style="margin: 0; font-family: 'Cascadia Code', monospace; font-size: 12px;">// Future profiling features
+services.AddDuckyStore(builder =>
+{
+    builder
+        .AddProfilingMiddleware()  // Track action performance
+        .AddMemoryMonitoring()     // Monitor memory usage
+        .AddStateChangeAnalytics() // Analyze state changes
+        .EnablePerformanceMetrics(); // Export metrics
+});</pre>
+        </MudPaper>
+    </MudPaper>
+</MudContainer>
 
 @code {
-  
-  private readonly ProfilingGeneratorOptions _opts = new();
-  
-  public string? GeneratedCode { get; private set; }
-
-  private async Task GenerateAsync()
-  {
-    GeneratedCode = await Generator.GenerateCodeAsync(_opts);
-  }
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Generators", href: "#", icon: Icons.Material.Filled.Build),
+        new BreadcrumbItem("Profiling", href: null, disabled: true)
+    };
     
+    private MudForm _form = null!;
+    private bool _isValid;
+    private readonly ProfilingGeneratorOptions _options = new();
+    private string? _generatedCode;
+    private string _namespace = "MyApp.Profiling";
+
+    private async Task GenerateAsync()
+    {
+        try
+        {
+            _generatedCode = await Generator.GenerateCodeAsync(_options);
+            Snackbar.Add("Profiling code generated successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating code: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        if (!string.IsNullOrEmpty(_generatedCode))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedCode);
+            Snackbar.Add("Code copied to clipboard!", Severity.Success);
+        }
+    }
+
+    private async Task DownloadCode()
+    {
+        if (!string.IsNullOrEmpty(_generatedCode))
+        {
+            var fileName = "ProfilingCode.cs";
+            await JS.InvokeVoidAsync("downloadFile", fileName, _generatedCode);
+            Snackbar.Add($"Downloaded {fileName}", Severity.Success);
+        }
+    }
 }

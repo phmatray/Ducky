@@ -1,26 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);RCS1046;RCS1090;RCS0058;RCS1248;RCS1264;RCS1078</NoWarn>
-    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-    <IncludeAnalyzers>false</IncludeAnalyzers>
+    <RootNamespace>Demo.BlazorWasm.E2E.Tests</RootNamespace>
+
+    <!-- To enable the Microsoft Testing Platform 'dotnet test' experience -->
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <!-- To enable the Microsoft Testing Platform native command line experience -->
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Playwright.NUnit" />
-    <PackageReference Include="MudBlazor" />
-    <PackageReference Include="NUnit" />
-    <PackageReference Include="NUnit3TestAdapter" />
+    <Using Include="Xunit"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="NUnit.Framework" />
+    <Content Include="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Playwright" />
+    <PackageReference Include="MudBlazor" />
   </ItemGroup>
 
 </Project>

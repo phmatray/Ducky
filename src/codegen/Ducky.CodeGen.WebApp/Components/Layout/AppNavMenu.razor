@@ -1,9 +1,38 @@
-<MudNavMenu>
-  <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
-  <MudNavGroup Title="Generators" Expanded>
-    <MudNavLink Href="/generator/action-creator" Match="NavLinkMatch.All">Action Creators</MudNavLink>
-    <MudNavLink Href="/generator/reducer" Match="NavLinkMatch.All">Reducers</MudNavLink>
-    <MudNavLink Href="/generator/profiling" Match="NavLinkMatch.All">Profiling</MudNavLink>
-    <MudNavLink Href="/generator/component" Match="NavLinkMatch.All">Components</MudNavLink>
-  </MudNavGroup>
+<MudNavMenu Class="mud-width-full" Color="Color.Primary">
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">
+        <MudText>Dashboard</MudText>
+    </MudNavLink>
+    
+    <MudDivider Class="my-2" />
+    
+    <MudNavLink Href="/appstores" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Store">
+        <MudText>App Stores</MudText>
+    </MudNavLink>
+    
+    <MudNavGroup Title="Individual Generators" Icon="@Icons.Material.Filled.Build" Expanded="false">
+        <MudNavLink Href="/generator/action-creator" Icon="@Icons.Material.Filled.PlayArrow">
+            <MudText>Action Creators</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/generator/reducer" Icon="@Icons.Material.Filled.Transform">
+            <MudText>Reducers</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/generator/state" Icon="@Icons.Material.Filled.DataObject">
+            <MudText>State Classes</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/generator/effects" Icon="@Icons.Material.Filled.AutoAwesome">
+            <MudText>Effects</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/generator/profiling" Icon="@Icons.Material.Filled.Speed">
+            <MudText>Profiling</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/generator/component" Icon="@Icons.Material.Filled.Widgets">
+            <MudText>Components</MudText>
+        </MudNavLink>
+    </MudNavGroup>
+    
+    <MudSpacer />
+    
+    <MudNavLink Href="https://github.com/phmatray/Ducky/wiki" Target="_blank" Icon="@Icons.Material.Filled.Help">
+        <MudText>Documentation</MudText>
+    </MudNavLink>
 </MudNavMenu>

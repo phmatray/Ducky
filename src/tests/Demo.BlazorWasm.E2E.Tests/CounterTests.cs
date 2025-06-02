@@ -1,16 +1,14 @@
 namespace Demo.BlazorWasm.E2E.Tests;
 
-[TestFixture]
 public class CounterTests : TestBase
 {
-    [SetUp]
-    public async Task SetUp()
+    protected override async Task SetUp()
     {
-        await TestSetup();
+        await base.SetUp();
         await NavigateAndWaitForBlazor("/counter");
     }
 
-    [Test]
+    [Fact]
     public async Task Counter_ShouldStartAtZero()
     {
         // The counter value is displayed in the h3 tag
@@ -18,7 +16,7 @@ public class CounterTests : TestBase
         await Expect(counterHeader).ToContainTextAsync("Counter 0");
     }
 
-    [Test]
+    [Fact]
     public async Task Counter_ShouldIncrementWhenClicked()
     {
         // Arrange
@@ -38,7 +36,7 @@ public class CounterTests : TestBase
         await Expect(counterHeader).ToContainTextAsync("Counter 6");
     }
 
-    [Test]
+    [Fact]
     public async Task Counter_ShouldDecrementWhenClicked()
     {
         // Arrange - First set to 10 using Reset button
@@ -63,7 +61,7 @@ public class CounterTests : TestBase
         await Expect(counterHeader).ToContainTextAsync("Counter 4");
     }
 
-    [Test]
+    [Fact]
     public async Task Counter_ShouldDisableDecrementAtZero()
     {
         // Arrange
@@ -80,7 +78,7 @@ public class CounterTests : TestBase
         await Expect(decrementButton).Not.ToBeDisabledAsync();
     }
 
-    [Test]
+    [Fact]
     public async Task Counter_ShouldResetToTen()
     {
         // Arrange
@@ -100,7 +98,7 @@ public class CounterTests : TestBase
         await Expect(counterHeader).ToContainTextAsync("Counter 10");
     }
 
-    [Test]
+    [Fact]
     public async Task Counter_ShouldIncrementByCustomAmount()
     {
         // Arrange
@@ -122,7 +120,7 @@ public class CounterTests : TestBase
         await Expect(counterHeader).ToContainTextAsync("Counter 15");
     }
 
-    [Test]
+    [Fact]
     public async Task Counter_ShouldShowProgressBar()
     {
         // Check progress bar exists

@@ -1,0 +1,418 @@
+@page "/generator/state"
+@using Ducky.CodeGen.Core
+@inject StateGenerator Generator
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<PageTitle>State Generator - Ducky Code Generator</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <!-- Header with Breadcrumbs -->
+    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+    
+    <MudGrid>
+        <!-- Configuration Panel -->
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h5" GutterBottom="true">
+                    <MudIcon Icon="@Icons.Material.Filled.DataObject" Class="mr-2" />
+                    State Generator
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom="true">
+                    Generate immutable state record classes for your Ducky state management with properties and helper methods.
+                </MudText>
+                
+                <MudDivider Class="my-4" />
+                
+                <MudForm @ref="_form" @bind-IsValid="@_isValid">
+                    <MudStack Spacing="3">
+                        <!-- Basic Configuration -->
+                        <MudTextField @bind-Value="_options.Namespace" 
+                                      Label="Namespace" 
+                                      Variant="Variant.Outlined"
+                                      HelperText="The C# namespace for your state classes"
+                                      Required="true" />
+                        
+                        <!-- States List -->
+                        <MudText Typo="Typo.h6" Class="mt-4">State Classes</MudText>
+                        
+                        @foreach (var state in _options.States)
+                        {
+                            <MudCard Outlined="true" Class="pa-3">
+                                <MudStack>
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                        <MudTextField Value="@GetStateNameWrapper(state)" 
+                                                      ValueChanged="@((string value) => UpdateStateName(state, value))"
+                                                      Label="State Class Name" 
+                                                      Variant="Variant.Outlined"
+                                                      Style="flex: 1;"
+                                                      Required="true" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                       Color="Color.Error" 
+                                                       Size="Size.Small"
+                                                       title="Remove State"
+                                                       OnClick="@(() => RemoveState(state))" />
+                                    </MudStack>
+                                    
+                                    <MudStack Row="true" Spacing="2">
+                                        <MudTextField Value="@GetBaseClassWrapper(state)" 
+                                                      ValueChanged="@((string value) => UpdateBaseClass(state, value))"
+                                                      Label="Base Class (Optional)" 
+                                                      Variant="Variant.Outlined"
+                                                      Style="flex: 1;"
+                                                      Placeholder="e.g., BaseState" />
+                                        <MudSwitch Value="@GetImplementsIStateWrapper(state)"
+                                                   ValueChanged="@((bool value) => UpdateImplementsIState(state, value))"
+                                                   Label="Implements IState"
+                                                   Color="Color.Primary" />
+                                    </MudStack>
+                                    
+                                    <!-- Properties -->
+                                    <MudText Typo="Typo.subtitle2">Properties</MudText>
+                                    @foreach (var property in state.Properties.ToList())
+                                    {
+                                        <MudCard Outlined="true" Class="pa-2" Style="background-color: #fafafa;">
+                                            <MudStack Spacing="2">
+                                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                    <MudTextField Value="@property.PropertyType" 
+                                                                  ValueChanged="@((string value) => UpdatePropertyType(state, property, value))"
+                                                                  Label="Type" 
+                                                                  Variant="Variant.Outlined"
+                                                                  Style="flex: 1;" />
+                                                    <MudTextField Value="@property.PropertyName" 
+                                                                  ValueChanged="@((string value) => UpdatePropertyName(state, property, value))"
+                                                                  Label="Name" 
+                                                                  Variant="Variant.Outlined"
+                                                                  Style="flex: 1;" />
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Remove" 
+                                                                   Color="Color.Error" 
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => RemoveProperty(state, property))" />
+                                                </MudStack>
+                                                <MudStack Row="true" Spacing="2">
+                                                    <MudTextField Value="@(property.DefaultValue ?? string.Empty)" 
+                                                                  ValueChanged="@((string value) => UpdatePropertyDefaultValue(state, property, value))"
+                                                                  Label="Default Value (Optional)" 
+                                                                  Variant="Variant.Outlined"
+                                                                  Style="flex: 1;"
+                                                                  Placeholder="e.g., 0, false, new()" />
+                                                    <MudTextField Value="@(property.Summary ?? string.Empty)" 
+                                                                  ValueChanged="@((string value) => UpdatePropertySummary(state, property, value))"
+                                                                  Label="Summary (Optional)" 
+                                                                  Variant="Variant.Outlined"
+                                                                  Style="flex: 1;"
+                                                                  Placeholder="Property description" />
+                                                </MudStack>
+                                            </MudStack>
+                                        </MudCard>
+                                    }
+                                    
+                                    <MudButton Variant="Variant.Text" 
+                                               StartIcon="@Icons.Material.Filled.Add"
+                                               Size="Size.Small"
+                                               OnClick="@(() => AddProperty(state))">
+                                        Add Property
+                                    </MudButton>
+                                </MudStack>
+                            </MudCard>
+                        }
+                        
+                        <MudButton Variant="Variant.Outlined" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   FullWidth="true"
+                                   OnClick="AddState">
+                            Add New State Class
+                        </MudButton>
+                        
+                        <!-- Generate Button -->
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.AutoMode"
+                                   FullWidth="true"
+                                   Size="Size.Large"
+                                   Disabled="@(!_isValid || !_options.States.Any())"
+                                   OnClick="GenerateAsync">
+                            Generate State Classes
+                        </MudButton>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Generated Code Panel -->
+        <MudItem xs="12" md="7">
+            @if (!string.IsNullOrEmpty(_generatedCode))
+            {
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudStack>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h5">Generated Code</MudText>
+                            <MudStack Row="true" Spacing="2">
+                                <MudButton Variant="Variant.Outlined" 
+                                           StartIcon="@Icons.Material.Filled.ContentCopy"
+                                           OnClick="CopyToClipboard">
+                                    Copy
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" 
+                                           Color="Color.Secondary"
+                                           StartIcon="@Icons.Material.Filled.Download"
+                                           OnClick="DownloadCode">
+                                    Download
+                                </MudButton>
+                            </MudStack>
+                        </MudStack>
+                        
+                        <MudDivider Class="my-3" />
+                        
+                        <MudPaper Class="pa-3" Style="background-color: #1e1e1e; border-radius: 8px; overflow: auto; max-height: 70vh;">
+                            <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 13px;">@_generatedCode</pre>
+                        </MudPaper>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Class="pa-8 text-center" Elevation="0" Style="background-color: #f5f5f5; height: 100%;">
+                    <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Class="mt-3">No Code Generated Yet</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Configure your state classes and click "Generate State Classes" to see the code.
+                    </MudText>
+                </MudPaper>
+            }
+        </MudItem>
+    </MudGrid>
+    
+    <!-- Example Usage -->
+    <MudPaper Class="pa-4 mt-6" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Example Usage</MudText>
+        <MudText Typo="Typo.body2" GutterBottom="true">
+            Generated state classes provide immutable state management with helper methods:
+        </MudText>
+        <MudPaper Class="pa-3 mt-3" Style="background-color: #f5f5f5;">
+            <pre style="margin: 0; font-family: 'Cascadia Code', monospace; font-size: 12px;">// Using generated state classes
+var initialState = new TodoState();
+var updatedState = initialState with { IsLoading = true };
+
+// Using helper methods
+var defaultState = TodoState.CreateDefault();
+var resetState = currentState.Reset();
+
+// In store configuration
+services.AddDuckyStore(builder =>
+{
+    builder.AddSlice&lt;TodoState&gt;();
+});</pre>
+        </MudPaper>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Generators", href: "#", icon: Icons.Material.Filled.Build),
+        new BreadcrumbItem("State", href: null, disabled: true)
+    };
+    
+    private MudForm _form = null!;
+    private bool _isValid;
+    private readonly StateGeneratorOptions _options = new();
+    private string? _generatedCode;
+    
+    // Wrapper dictionaries for init-only properties
+    private readonly Dictionary<StateDescriptor, string> _stateNames = new();
+    private readonly Dictionary<StateDescriptor, string> _baseClasses = new();
+    private readonly Dictionary<StateDescriptor, bool> _implementsIState = new();
+
+    protected override void OnInitialized()
+    {
+        // Set some better defaults
+        _options.Namespace = "MyApp.States";
+        var initialState = new StateDescriptor
+        {
+            StateName = "TodoState",
+            Properties = new List<PropertyDescriptor>
+            {
+                new PropertyDescriptor
+                {
+                    PropertyName = "Items",
+                    PropertyType = "List<TodoItem>",
+                    DefaultValue = "new()"
+                },
+                new PropertyDescriptor
+                {
+                    PropertyName = "IsLoading",
+                    PropertyType = "bool",
+                    DefaultValue = "false"
+                }
+            }
+        };
+        
+        _options.States = new List<StateDescriptor> { initialState };
+        
+        // Initialize dictionaries
+        _stateNames[initialState] = initialState.StateName;
+        _baseClasses[initialState] = initialState.BaseClass ?? string.Empty;
+        _implementsIState[initialState] = initialState.ImplementsIState;
+    }
+
+    // Wrapper methods for state properties
+    private string GetStateNameWrapper(StateDescriptor state)
+    {
+        return _stateNames.TryGetValue(state, out var value) ? value : state.StateName;
+    }
+    
+    private string GetBaseClassWrapper(StateDescriptor state)
+    {
+        return _baseClasses.TryGetValue(state, out var value) ? value : (state.BaseClass ?? string.Empty);
+    }
+    
+    private bool GetImplementsIStateWrapper(StateDescriptor state)
+    {
+        return _implementsIState.TryGetValue(state, out var value) ? value : state.ImplementsIState;
+    }
+    
+    private void UpdateStateName(StateDescriptor state, string newValue)
+    {
+        _stateNames[state] = newValue;
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { StateName = newValue };
+    }
+    
+    private void UpdateBaseClass(StateDescriptor state, string newValue)
+    {
+        _baseClasses[state] = newValue;
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { BaseClass = string.IsNullOrWhiteSpace(newValue) ? null : newValue };
+    }
+    
+    private void UpdateImplementsIState(StateDescriptor state, bool newValue)
+    {
+        _implementsIState[state] = newValue;
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { ImplementsIState = newValue };
+    }
+
+    // Property update methods
+    private void UpdatePropertyType(StateDescriptor state, PropertyDescriptor property, string newValue)
+    {
+        var properties = state.Properties.ToList();
+        var propIndex = properties.IndexOf(property);
+        properties[propIndex] = property with { PropertyType = newValue };
+        
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { Properties = properties };
+    }
+    
+    private void UpdatePropertyName(StateDescriptor state, PropertyDescriptor property, string newValue)
+    {
+        var properties = state.Properties.ToList();
+        var propIndex = properties.IndexOf(property);
+        properties[propIndex] = property with { PropertyName = newValue };
+        
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { Properties = properties };
+    }
+    
+    private void UpdatePropertyDefaultValue(StateDescriptor state, PropertyDescriptor property, string newValue)
+    {
+        var properties = state.Properties.ToList();
+        var propIndex = properties.IndexOf(property);
+        properties[propIndex] = property with { DefaultValue = string.IsNullOrWhiteSpace(newValue) ? null : newValue };
+        
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { Properties = properties };
+    }
+    
+    private void UpdatePropertySummary(StateDescriptor state, PropertyDescriptor property, string newValue)
+    {
+        var properties = state.Properties.ToList();
+        var propIndex = properties.IndexOf(property);
+        properties[propIndex] = property with { Summary = string.IsNullOrWhiteSpace(newValue) ? null : newValue };
+        
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { Properties = properties };
+    }
+
+    private void AddState()
+    {
+        var newState = new StateDescriptor
+        {
+            StateName = $"NewState{_options.States.Count + 1}",
+            Properties = new List<PropertyDescriptor>()
+        };
+        
+        _options.States.Add(newState);
+        _stateNames[newState] = newState.StateName;
+        _baseClasses[newState] = string.Empty;
+        _implementsIState[newState] = true;
+    }
+
+    private void RemoveState(StateDescriptor state)
+    {
+        _options.States.Remove(state);
+        _stateNames.Remove(state);
+        _baseClasses.Remove(state);
+        _implementsIState.Remove(state);
+    }
+
+    private void AddProperty(StateDescriptor state)
+    {
+        var properties = state.Properties.ToList();
+        properties.Add(new PropertyDescriptor
+        {
+            PropertyName = $"Property{properties.Count + 1}",
+            PropertyType = "string"
+        });
+        
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { Properties = properties };
+    }
+
+    private void RemoveProperty(StateDescriptor state, PropertyDescriptor property)
+    {
+        var properties = state.Properties.ToList();
+        properties.Remove(property);
+        
+        var index = _options.States.IndexOf(state);
+        _options.States[index] = state with { Properties = properties };
+    }
+
+    private async Task GenerateAsync()
+    {
+        try
+        {
+            _generatedCode = await Generator.GenerateCodeAsync(_options);
+            Snackbar.Add("State classes generated successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating code: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        if (!string.IsNullOrEmpty(_generatedCode))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedCode);
+            Snackbar.Add("Code copied to clipboard!", Severity.Success);
+        }
+    }
+
+    private async Task DownloadCode()
+    {
+        if (!string.IsNullOrEmpty(_generatedCode))
+        {
+            var fileName = "States.cs";
+            if (_options.States.Count == 1)
+            {
+                fileName = $"{_options.States.First().StateName}.cs";
+            }
+            await JS.InvokeVoidAsync("downloadFile", fileName, _generatedCode);
+            Snackbar.Add($"Downloaded {fileName}", Severity.Success);
+        }
+    }
+}

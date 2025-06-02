@@ -1,0 +1,543 @@
+@page "/generator/effects"
+@using Ducky.CodeGen.Core
+@inject EffectsGenerator Generator
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<PageTitle>Effects Generator - Ducky Code Generator</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <!-- Header with Breadcrumbs -->
+    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+    
+    <MudGrid>
+        <!-- Configuration Panel -->
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h5" GutterBottom="true">
+                    <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Class="mr-2" />
+                    Effects Generator
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom="true">
+                    Generate effect classes for handling side effects like API calls, timers, and other async operations.
+                </MudText>
+                
+                <MudDivider Class="my-4" />
+                
+                <MudForm @ref="_form" @bind-IsValid="@_isValid">
+                    <MudStack Spacing="3">
+                        <!-- Basic Configuration -->
+                        <MudTextField @bind-Value="_options.Namespace" 
+                                      Label="Namespace" 
+                                      Variant="Variant.Outlined"
+                                      HelperText="The C# namespace for your effects"
+                                      Required="true" />
+                        
+                        <!-- Effects List -->
+                        <MudText Typo="Typo.h6" Class="mt-4">Effect Classes</MudText>
+                        
+                        @foreach (var effect in _options.Effects)
+                        {
+                            <MudCard Outlined="true" Class="pa-3">
+                                <MudStack>
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                        <MudTextField Value="@GetEffectNameWrapper(effect)" 
+                                                      ValueChanged="@((string value) => UpdateEffectName(effect, value))"
+                                                      Label="Effect Class Name" 
+                                                      Variant="Variant.Outlined"
+                                                      Style="flex: 1;"
+                                                      Required="true" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                       Color="Color.Error" 
+                                                       Size="Size.Small"
+                                                       title="Remove Effect"
+                                                       OnClick="@(() => RemoveEffect(effect))" />
+                                    </MudStack>
+                                    
+                                    <MudStack Row="true" Spacing="2">
+                                        <MudSelect Value="@GetEffectTypeWrapper(effect)" 
+                                                   ValueChanged="@((EffectType value) => UpdateEffectType(effect, value))"
+                                                   Label="Effect Type" 
+                                                   Variant="Variant.Outlined"
+                                                   Style="flex: 1;">
+                                            <MudSelectItem Value="EffectType.Reactive">Reactive Effect</MudSelectItem>
+                                            <MudSelectItem Value="EffectType.Async">Async Effect</MudSelectItem>
+                                        </MudSelect>
+                                        <MudNumericField Value="@GetTimeoutWrapper(effect)"
+                                                         ValueChanged="@((int value) => UpdateTimeout(effect, value))"
+                                                         Label="Timeout (ms)"
+                                                         Variant="Variant.Outlined"
+                                                         Style="flex: 1;"
+                                                         Min="1000" Max="300000" />
+                                    </MudStack>
+                                    
+                                    <MudTextField Value="@GetSummaryWrapper(effect)" 
+                                                  ValueChanged="@((string value) => UpdateSummary(effect, value))"
+                                                  Label="Description" 
+                                                  Variant="Variant.Outlined"
+                                                  Placeholder="Describe what this effect does"
+                                                  Lines="2" />
+                                    
+                                    <MudSwitch Value="@GetHandleErrorsWrapper(effect)"
+                                               ValueChanged="@((bool value) => UpdateHandleErrors(effect, value))"
+                                               Label="Handle Errors Automatically"
+                                               Color="Color.Primary" />
+                                    
+                                    <!-- Trigger Actions -->
+                                    <MudText Typo="Typo.subtitle2">Trigger Actions</MudText>
+                                    @foreach (var action in effect.TriggerActions.ToList())
+                                    {
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudTextField Value="@action" 
+                                                          ValueChanged="@((string value) => UpdateTriggerAction(effect, action, value))"
+                                                          Label="Action Type" 
+                                                          Variant="Variant.Outlined"
+                                                          Style="flex: 1;" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Remove" 
+                                                           Color="Color.Error" 
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => RemoveTriggerAction(effect, action))" />
+                                        </MudStack>
+                                    }
+                                    <MudStack Row="true" Spacing="2">
+                                        <MudTextField @bind-Value="_newTriggerAction" 
+                                                      Label="New Trigger Action" 
+                                                      Variant="Variant.Outlined"
+                                                      Style="flex: 1;"
+                                                      Placeholder="e.g., LoadDataAction" />
+                                        <MudButton Variant="Variant.Text" 
+                                                   StartIcon="@Icons.Material.Filled.Add"
+                                                   Size="Size.Small"
+                                                   Disabled="@string.IsNullOrWhiteSpace(_newTriggerAction)"
+                                                   OnClick="@(() => AddTriggerAction(effect))">
+                                            Add
+                                        </MudButton>
+                                    </MudStack>
+                                    
+                                    <!-- Result Actions -->
+                                    <MudText Typo="Typo.subtitle2">Result Actions</MudText>
+                                    @foreach (var action in effect.ResultActions.ToList())
+                                    {
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudTextField Value="@action" 
+                                                          ValueChanged="@((string value) => UpdateResultAction(effect, action, value))"
+                                                          Label="Action Type" 
+                                                          Variant="Variant.Outlined"
+                                                          Style="flex: 1;" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Remove" 
+                                                           Color="Color.Error" 
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => RemoveResultAction(effect, action))" />
+                                        </MudStack>
+                                    }
+                                    <MudStack Row="true" Spacing="2">
+                                        <MudTextField @bind-Value="_newResultAction" 
+                                                      Label="New Result Action" 
+                                                      Variant="Variant.Outlined"
+                                                      Style="flex: 1;"
+                                                      Placeholder="e.g., LoadDataSuccessAction" />
+                                        <MudButton Variant="Variant.Text" 
+                                                   StartIcon="@Icons.Material.Filled.Add"
+                                                   Size="Size.Small"
+                                                   Disabled="@string.IsNullOrWhiteSpace(_newResultAction)"
+                                                   OnClick="@(() => AddResultAction(effect))">
+                                            Add
+                                        </MudButton>
+                                    </MudStack>
+                                    
+                                    <!-- Dependencies -->
+                                    <MudText Typo="Typo.subtitle2">Dependencies</MudText>
+                                    @foreach (var dep in effect.Dependencies.ToList())
+                                    {
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudTextField Value="@dep" 
+                                                          ValueChanged="@((string value) => UpdateDependency(effect, dep, value))"
+                                                          Label="Dependency" 
+                                                          Variant="Variant.Outlined"
+                                                          Style="flex: 1;" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Remove" 
+                                                           Color="Color.Error" 
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => RemoveDependency(effect, dep))" />
+                                        </MudStack>
+                                    }
+                                    <MudStack Row="true" Spacing="2">
+                                        <MudTextField @bind-Value="_newDependency" 
+                                                      Label="New Dependency" 
+                                                      Variant="Variant.Outlined"
+                                                      Style="flex: 1;"
+                                                      Placeholder="e.g., IDataService" />
+                                        <MudButton Variant="Variant.Text" 
+                                                   StartIcon="@Icons.Material.Filled.Add"
+                                                   Size="Size.Small"
+                                                   Disabled="@string.IsNullOrWhiteSpace(_newDependency)"
+                                                   OnClick="@(() => AddDependency(effect))">
+                                            Add
+                                        </MudButton>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCard>
+                        }
+                        
+                        <MudButton Variant="Variant.Outlined" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   FullWidth="true"
+                                   OnClick="AddEffect">
+                            Add New Effect
+                        </MudButton>
+                        
+                        <!-- Generate Button -->
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.AutoMode"
+                                   FullWidth="true"
+                                   Size="Size.Large"
+                                   Disabled="@(!_isValid || !_options.Effects.Any())"
+                                   OnClick="GenerateAsync">
+                            Generate Effects
+                        </MudButton>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Generated Code Panel -->
+        <MudItem xs="12" md="7">
+            @if (!string.IsNullOrEmpty(_generatedCode))
+            {
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudStack>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h5">Generated Code</MudText>
+                            <MudStack Row="true" Spacing="2">
+                                <MudButton Variant="Variant.Outlined" 
+                                           StartIcon="@Icons.Material.Filled.ContentCopy"
+                                           OnClick="CopyToClipboard">
+                                    Copy
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" 
+                                           Color="Color.Secondary"
+                                           StartIcon="@Icons.Material.Filled.Download"
+                                           OnClick="DownloadCode">
+                                    Download
+                                </MudButton>
+                            </MudStack>
+                        </MudStack>
+                        
+                        <MudDivider Class="my-3" />
+                        
+                        <MudPaper Class="pa-3" Style="background-color: #1e1e1e; border-radius: 8px; overflow: auto; max-height: 70vh;">
+                            <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 13px;">@_generatedCode</pre>
+                        </MudPaper>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Class="pa-8 text-center" Elevation="0" Style="background-color: #f5f5f5; height: 100%;">
+                    <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Class="mt-3">No Code Generated Yet</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Configure your effects and click "Generate Effects" to see the code.
+                    </MudText>
+                </MudPaper>
+            }
+        </MudItem>
+    </MudGrid>
+    
+    <!-- Example Usage -->
+    <MudPaper Class="pa-4 mt-6" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Example Usage</MudText>
+        <MudText Typo="Typo.body2" GutterBottom="true">
+            Effects handle side effects like API calls, timers, and other async operations:
+        </MudText>
+        <MudPaper Class="pa-3 mt-3" Style="background-color: #f5f5f5;">
+            <pre style="margin: 0; font-family: 'Cascadia Code', monospace; font-size: 12px;">// Register effects in store builder
+services.AddDuckyStore(builder =>
+{
+    builder
+        .AddEffect&lt;LoadTodosEffect&gt;()
+        .AddEffect&lt;SaveTodoEffect&gt;()
+        .AddDefaultMiddlewares();
+});
+
+// Effects will automatically handle actions
+store.Dispatch(new LoadTodosAction()); // Triggers LoadTodosEffect</pre>
+        </MudPaper>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private readonly List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Generators", href: "#", icon: Icons.Material.Filled.Build),
+        new BreadcrumbItem("Effects", href: null, disabled: true)
+    };
+    
+    private MudForm _form = null!;
+    private bool _isValid;
+    private readonly EffectsGeneratorOptions _options = new();
+    private string? _generatedCode;
+    private string _newTriggerAction = string.Empty;
+    private string _newResultAction = string.Empty;
+    private string _newDependency = string.Empty;
+    
+    // Wrapper dictionaries for init-only properties
+    private readonly Dictionary<EffectDescriptor, string> _effectNames = new();
+    private readonly Dictionary<EffectDescriptor, EffectType> _effectTypes = new();
+    private readonly Dictionary<EffectDescriptor, string> _summaries = new();
+    private readonly Dictionary<EffectDescriptor, bool> _handleErrors = new();
+    private readonly Dictionary<EffectDescriptor, int> _timeouts = new();
+
+    protected override void OnInitialized()
+    {
+        // Set some better defaults
+        _options.Namespace = "MyApp.Effects";
+        var initialEffect = new EffectDescriptor
+        {
+            EffectName = "LoadDataEffect",
+            EffectType = EffectType.Reactive,
+            TriggerActions = new List<string> { "LoadDataAction" },
+            ResultActions = new List<string> { "LoadDataSuccessAction", "LoadDataFailureAction" },
+            Dependencies = new List<string> { "IDataService" },
+            Summary = "Loads data from the API"
+        };
+        
+        _options.Effects = new List<EffectDescriptor> { initialEffect };
+        
+        // Initialize dictionaries
+        _effectNames[initialEffect] = initialEffect.EffectName;
+        _effectTypes[initialEffect] = initialEffect.EffectType;
+        _summaries[initialEffect] = initialEffect.Summary ?? string.Empty;
+        _handleErrors[initialEffect] = initialEffect.HandleErrors;
+        _timeouts[initialEffect] = initialEffect.TimeoutMs;
+    }
+
+    // Wrapper methods for effect properties
+    private string GetEffectNameWrapper(EffectDescriptor effect)
+    {
+        return _effectNames.TryGetValue(effect, out var value) ? value : effect.EffectName;
+    }
+    
+    private EffectType GetEffectTypeWrapper(EffectDescriptor effect)
+    {
+        return _effectTypes.TryGetValue(effect, out var value) ? value : effect.EffectType;
+    }
+    
+    private string GetSummaryWrapper(EffectDescriptor effect)
+    {
+        return _summaries.TryGetValue(effect, out var value) ? value : (effect.Summary ?? string.Empty);
+    }
+    
+    private bool GetHandleErrorsWrapper(EffectDescriptor effect)
+    {
+        return _handleErrors.TryGetValue(effect, out var value) ? value : effect.HandleErrors;
+    }
+    
+    private int GetTimeoutWrapper(EffectDescriptor effect)
+    {
+        return _timeouts.TryGetValue(effect, out var value) ? value : effect.TimeoutMs;
+    }
+    
+    private void UpdateEffectName(EffectDescriptor effect, string newValue)
+    {
+        _effectNames[effect] = newValue;
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { EffectName = newValue };
+    }
+    
+    private void UpdateEffectType(EffectDescriptor effect, EffectType newValue)
+    {
+        _effectTypes[effect] = newValue;
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { EffectType = newValue };
+    }
+    
+    private void UpdateSummary(EffectDescriptor effect, string newValue)
+    {
+        _summaries[effect] = newValue;
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { Summary = string.IsNullOrWhiteSpace(newValue) ? null : newValue };
+    }
+    
+    private void UpdateHandleErrors(EffectDescriptor effect, bool newValue)
+    {
+        _handleErrors[effect] = newValue;
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { HandleErrors = newValue };
+    }
+    
+    private void UpdateTimeout(EffectDescriptor effect, int newValue)
+    {
+        _timeouts[effect] = newValue;
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { TimeoutMs = newValue };
+    }
+
+    // Collection update methods
+    private void UpdateTriggerAction(EffectDescriptor effect, string oldAction, string newAction)
+    {
+        var actions = effect.TriggerActions.ToList();
+        var actionIndex = actions.IndexOf(oldAction);
+        actions[actionIndex] = newAction;
+        
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { TriggerActions = actions };
+    }
+    
+    private void UpdateResultAction(EffectDescriptor effect, string oldAction, string newAction)
+    {
+        var actions = effect.ResultActions.ToList();
+        var actionIndex = actions.IndexOf(oldAction);
+        actions[actionIndex] = newAction;
+        
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { ResultActions = actions };
+    }
+    
+    private void UpdateDependency(EffectDescriptor effect, string oldDep, string newDep)
+    {
+        var deps = effect.Dependencies.ToList();
+        var depIndex = deps.IndexOf(oldDep);
+        deps[depIndex] = newDep;
+        
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { Dependencies = deps };
+    }
+
+    private void AddEffect()
+    {
+        var newEffect = new EffectDescriptor
+        {
+            EffectName = $"NewEffect{_options.Effects.Count + 1}",
+            EffectType = EffectType.Reactive,
+            TriggerActions = new List<string>(),
+            ResultActions = new List<string>(),
+            Dependencies = new List<string>()
+        };
+        
+        _options.Effects.Add(newEffect);
+        _effectNames[newEffect] = newEffect.EffectName;
+        _effectTypes[newEffect] = newEffect.EffectType;
+        _summaries[newEffect] = string.Empty;
+        _handleErrors[newEffect] = true;
+        _timeouts[newEffect] = 30000;
+    }
+
+    private void RemoveEffect(EffectDescriptor effect)
+    {
+        _options.Effects.Remove(effect);
+        _effectNames.Remove(effect);
+        _effectTypes.Remove(effect);
+        _summaries.Remove(effect);
+        _handleErrors.Remove(effect);
+        _timeouts.Remove(effect);
+    }
+
+    private void AddTriggerAction(EffectDescriptor effect)
+    {
+        if (!string.IsNullOrWhiteSpace(_newTriggerAction))
+        {
+            var actions = effect.TriggerActions.ToList();
+            actions.Add(_newTriggerAction);
+            
+            var index = _options.Effects.IndexOf(effect);
+            _options.Effects[index] = effect with { TriggerActions = actions };
+            
+            _newTriggerAction = string.Empty;
+        }
+    }
+
+    private void RemoveTriggerAction(EffectDescriptor effect, string action)
+    {
+        var actions = effect.TriggerActions.ToList();
+        actions.Remove(action);
+        
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { TriggerActions = actions };
+    }
+
+    private void AddResultAction(EffectDescriptor effect)
+    {
+        if (!string.IsNullOrWhiteSpace(_newResultAction))
+        {
+            var actions = effect.ResultActions.ToList();
+            actions.Add(_newResultAction);
+            
+            var index = _options.Effects.IndexOf(effect);
+            _options.Effects[index] = effect with { ResultActions = actions };
+            
+            _newResultAction = string.Empty;
+        }
+    }
+
+    private void RemoveResultAction(EffectDescriptor effect, string action)
+    {
+        var actions = effect.ResultActions.ToList();
+        actions.Remove(action);
+        
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { ResultActions = actions };
+    }
+
+    private void AddDependency(EffectDescriptor effect)
+    {
+        if (!string.IsNullOrWhiteSpace(_newDependency))
+        {
+            var deps = effect.Dependencies.ToList();
+            deps.Add(_newDependency);
+            
+            var index = _options.Effects.IndexOf(effect);
+            _options.Effects[index] = effect with { Dependencies = deps };
+            
+            _newDependency = string.Empty;
+        }
+    }
+
+    private void RemoveDependency(EffectDescriptor effect, string dependency)
+    {
+        var deps = effect.Dependencies.ToList();
+        deps.Remove(dependency);
+        
+        var index = _options.Effects.IndexOf(effect);
+        _options.Effects[index] = effect with { Dependencies = deps };
+    }
+
+    private async Task GenerateAsync()
+    {
+        try
+        {
+            _generatedCode = await Generator.GenerateCodeAsync(_options);
+            Snackbar.Add("Effects generated successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating code: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        if (!string.IsNullOrEmpty(_generatedCode))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedCode);
+            Snackbar.Add("Code copied to clipboard!", Severity.Success);
+        }
+    }
+
+    private async Task DownloadCode()
+    {
+        if (!string.IsNullOrEmpty(_generatedCode))
+        {
+            var fileName = "Effects.cs";
+            if (_options.Effects.Count == 1)
+            {
+                fileName = $"{_options.Effects.First().EffectName}.cs";
+            }
+            await JS.InvokeVoidAsync("downloadFile", fileName, _generatedCode);
+            Snackbar.Add($"Downloaded {fileName}", Severity.Success);
+        }
+    }
+}

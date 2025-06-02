@@ -1,21 +1,39 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
   <MudAppBar Elevation="1">
-    Redux Store Generator
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+    <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-2" />
+    <MudText Typo="Typo.h6" Class="ml-1">Ducky Code Generator</MudText>
+    <MudSpacer />
+    <MudTooltip Text="@(_isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode")">
+      <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" 
+                     Color="Color.Inherit" 
+                     OnClick="ToggleDarkMode" />
+    </MudTooltip>
+    <MudTooltip Text="View on GitHub">
+      <MudIconButton Icon="@Icons.Custom.Brands.GitHub" 
+                     Color="Color.Inherit" 
+                     Href="https://github.com/phmatray/Ducky" 
+                     Target="_blank" />
+    </MudTooltip>
   </MudAppBar>
-  <MudDrawer Open="true" ClipMode="DrawerClipMode.Always" Elevation="2">
-    <AppNavMenu/>
+  <MudDrawer @bind-Open="_drawerOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
+    <MudDrawerHeader>
+      <MudText Typo="Typo.h6">Navigation</MudText>
+    </MudDrawerHeader>
+    <AppNavMenu />
   </MudDrawer>
   <MudMainContent>
-    <div class="py-4">
+    <MudContainer MaxWidth="MaxWidth.False" Class="py-4">
       @Body
-    </div>
+    </MudContainer>
   </MudMainContent>
 </MudLayout>
 
@@ -24,3 +42,53 @@
   <a href="." class="reload">Reload</a>
   <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode = false;
+    
+    private MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = Colors.Blue.Default,
+            Secondary = Colors.Teal.Default,
+            AppbarBackground = Colors.Blue.Default,
+            AppbarText = Colors.Shades.White,
+            DrawerBackground = Colors.Gray.Lighten5,
+            DrawerText = Colors.Gray.Darken4,
+            Surface = Colors.Shades.White,
+            Background = Colors.Gray.Lighten5,
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = Colors.Blue.Lighten1,
+            Secondary = Colors.Teal.Lighten1,
+            AppbarBackground = Colors.Gray.Darken4,
+            DrawerBackground = Colors.Gray.Darken4,
+            Surface = Colors.Gray.Darken3,
+            Background = Colors.Gray.Darken4,
+        },
+        LayoutProperties = new LayoutProperties()
+        {
+            DrawerWidthLeft = "260px",
+            DefaultBorderRadius = "8px"
+        }
+    };
+
+    protected override void OnInitialized()
+    {
+        // Load dark mode preference from local storage in a real app
+        _isDarkMode = false;
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void ToggleDarkMode()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+}

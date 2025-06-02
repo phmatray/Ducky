@@ -6,15 +6,14 @@ public abstract class MinimalTestBase : PageTest
     
     public override BrowserNewContextOptions ContextOptions()
     {
-        return new BrowserNewContextOptions
+        return new()
         {
             IgnoreHTTPSErrors = true,
             ViewportSize = new ViewportSize { Width = 1280, Height = 720 }
         };
     }
     
-    [SetUp]
-    public Task BaseSetup()
+    protected override Task SetUp()
     {
         BaseUrl = Environment.GetEnvironmentVariable("BASE_URL") ?? "http://localhost:8080";
         
@@ -27,11 +26,13 @@ public abstract class MinimalTestBase : PageTest
     
     protected async Task NavigateAndWait(string path = "")
     {
-        var response = await Page.GotoAsync($"{BaseUrl}{path}", new PageGotoOptions
-        {
-            WaitUntil = WaitUntilState.NetworkIdle,
-            Timeout = 60000
-        });
+        var response = await Page.GotoAsync(
+            $"{BaseUrl}{path}",
+            new PageGotoOptions
+            {
+                WaitUntil = WaitUntilState.NetworkIdle,
+                Timeout = 60000
+            });
         
         // Give the app extra time to initialize
         await Task.Delay(3000);

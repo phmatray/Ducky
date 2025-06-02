@@ -1,16 +1,14 @@
 namespace Demo.BlazorWasm.E2E.Tests;
 
-[TestFixture]
 public class TodoTests : TestBase
 {
-    [SetUp]
-    public async Task SetUp()
+    protected override async Task SetUp()
     {
-        await TestSetup();
+        await base.SetUp();
         await NavigateAndWaitForBlazor("/todo");
     }
 
-    [Test]
+    [Fact]
     public async Task Todo_ShouldAddNewItem()
     {
         // Arrange
@@ -31,7 +29,7 @@ public class TodoTests : TestBase
         await Expect(input).ToHaveValueAsync(string.Empty);
     }
 
-    [Test]
+    [Fact]
     public async Task Todo_ShouldToggleCompletion()
     {
         // Arrange - Add a todo first
@@ -55,7 +53,7 @@ public class TodoTests : TestBase
         await Expect(strikethroughText).ToHaveAttributeAsync("style", new Regex("text-decoration.*line-through"));
     }
 
-    [Test]
+    [Fact]
     public async Task Todo_ShouldDeleteItem()
     {
         // Arrange - Add a todo first
@@ -78,7 +76,7 @@ public class TodoTests : TestBase
         await Expect(todoItem).Not.ToBeVisibleAsync();
     }
 
-    [Test]
+    [Fact]
     public async Task Todo_ShouldShowActiveCount()
     {
         // Add multiple todos
@@ -108,7 +106,7 @@ public class TodoTests : TestBase
         await Expect(badgeContent).ToHaveTextAsync("2");
     }
 
-    [Test]
+    [Fact]
     public async Task Todo_ShouldShowCompletedCount()
     {
         // Add todos and complete some
@@ -132,7 +130,7 @@ public class TodoTests : TestBase
         await Expect(badgeContent).ToHaveTextAsync("1");
     }
 
-    [Test]
+    [Fact]
     public async Task Todo_ShouldShowGoalAchievements()
     {
         // Add 5 todos to trigger the goal
@@ -155,7 +153,7 @@ public class TodoTests : TestBase
             // Always click the first checkbox as items move when completed
             ILocator firstCheckbox = Page.Locator(".mud-list-item .mud-icon-button").First;
             await firstCheckbox.ClickAsync();
-            await Task.Delay(100); // Small delay to ensure UI updates
+            await Task.Delay(100, TestContext.Current.CancellationToken); // Small delay to ensure UI updates
         }
 
         // Check completed goal is achieved

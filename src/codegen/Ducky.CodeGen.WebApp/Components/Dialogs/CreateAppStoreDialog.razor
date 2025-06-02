@@ -1,0 +1,167 @@
+@using Ducky.CodeGen.WebApp.Models
+@using Ducky.CodeGen.WebApp.Services
+@inject IAppStoreService AppStoreService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" Style="vertical-align: middle;" />
+            Create New App Store
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="4">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                <MudText Typo="Typo.body2">
+                    An app store is a container for your application's state management logic. 
+                    Start by giving it a meaningful name and namespace.
+                </MudText>
+            </MudAlert>
+            
+            <MudForm @ref="form" @bind-IsValid="@isValid">
+                <MudStack Spacing="3">
+                    <MudTextField @bind-Value="appStoreName" 
+                                  Label="App Store Name" 
+                                  Required="true"
+                                  RequiredError="App store name is required"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Store"
+                                  HelperText="A descriptive name for your app store"
+                                  Counter="100"
+                                  MaxLength="100"
+                                  Immediate="true"
+                                  OnlyValidateIfDirty="false"
+                                  TextChanged="OnAppStoreNameChanged" />
+                    
+                    <MudTextField @bind-Value="description" 
+                                  Label="Description (Optional)" 
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Description"
+                                  HelperText="Briefly describe what this app store manages"
+                                  Counter="500"
+                                  MaxLength="500" />
+                    
+                    <MudTextField @bind-Value="namespaceName" 
+                                  Label="C# Namespace" 
+                                  Required="true"
+                                  RequiredError="Namespace is required"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.FolderOpen"
+                                  HelperText="The C# namespace for generated code"
+                                  Counter="100"
+                                  MaxLength="100"
+                                  Validation="@(new Func<string, string?>(ValidateNamespace))" />
+                    
+                    <!-- Namespace Preview -->
+                    @if (!string.IsNullOrWhiteSpace(namespaceName) && !string.IsNullOrWhiteSpace(appStoreName))
+                    {
+                        <MudPaper Class="pa-3" Elevation="0" Style="background-color: #f5f5f5;">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Preview:</MudText>
+                            <MudText Typo="Typo.body2" Style="font-family: 'Cascadia Code', monospace;">
+                                namespace @namespaceName { ... }
+                            </MudText>
+                        </MudPaper>
+                    }
+                </MudStack>
+            </MudForm>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled" 
+                   OnClick="Submit"
+                   StartIcon="@Icons.Material.Filled.Check"
+                   Disabled="@(!isValid || isCreating)">
+            @if (isCreating)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Creating...</span>
+            }
+            else
+            {
+                <span>Create App Store</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm form = null!;
+    private bool isValid;
+    private bool isCreating;
+
+    private string appStoreName = string.Empty;
+    private string description = string.Empty;
+    private string namespaceName = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        // Set default namespace
+        namespaceName = "MyApp.Store";
+    }
+
+    private void OnAppStoreNameChanged(string value)
+    {
+        // Auto-generate namespace based on app store name
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            namespaceName = "MyApp.Store";
+        }
+        else
+        {
+            // Convert to PascalCase and remove invalid characters
+            var cleanName = System.Text.RegularExpressions.Regex.Replace(value, @"[^a-zA-Z0-9]", "");
+            if (!string.IsNullOrWhiteSpace(cleanName))
+            {
+                namespaceName = $"MyApp.{char.ToUpper(cleanName[0])}{cleanName.Substring(1)}.Store";
+            }
+        }
+    }
+
+    private string? ValidateNamespace(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "Namespace is required";
+            
+        // Check for valid C# namespace pattern
+        var namespacePattern = @"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$";
+        if (!System.Text.RegularExpressions.Regex.IsMatch(value, namespacePattern))
+            return "Invalid namespace format. Use dot notation (e.g., MyApp.Store)";
+            
+        return null;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        if (!isValid) return;
+
+        isCreating = true;
+        StateHasChanged();
+
+        try
+        {
+            var appStore = await AppStoreService.CreateAppStoreAsync(
+                appStoreName.Trim(), 
+                string.IsNullOrWhiteSpace(description) ? null : description.Trim(), 
+                namespaceName.Trim());
+
+            MudDialog.Close(DialogResult.Ok(appStore));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating app store: {ex.Message}", Severity.Error);
+            isCreating = false;
+            StateHasChanged();
+        }
+    }
+}

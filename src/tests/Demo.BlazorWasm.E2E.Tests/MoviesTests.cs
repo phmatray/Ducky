@@ -1,16 +1,14 @@
 namespace Demo.BlazorWasm.E2E.Tests;
 
-[TestFixture]
 public class MoviesTests : TestBase
 {
-    [SetUp]
-    public async Task SetUp()
+    protected override async Task SetUp()
     {
-        await TestSetup();
+        await base.SetUp();
         await NavigateAndWaitForBlazor("/movies");
     }
 
-    [Test]
+    [Fact]
     public async Task Movies_ShouldLoadAndDisplayMovies()
     {
         // Wait for movies to load
@@ -19,7 +17,7 @@ public class MoviesTests : TestBase
         // Check that movies are displayed
         ILocator movieRows = Page.Locator("table tbody tr");
         int movieCount = await movieRows.CountAsync();
-        Assert.That(movieCount, Is.GreaterThan(0));
+        Assert.True(movieCount > 0);
 
         // Check table headers
         await Expect(Page.Locator("th:has-text('Title')")).ToBeVisibleAsync();
@@ -29,7 +27,7 @@ public class MoviesTests : TestBase
         await Expect(Page.Locator("th:has-text('Score')")).ToBeVisibleAsync();
     }
 
-    [Test]
+    [Fact]
     public async Task Movies_SearchShouldFilterResults()
     {
         // Wait for movies to load
@@ -45,28 +43,28 @@ public class MoviesTests : TestBase
         await searchBox.FillAsync("Matrix");
 
         // Wait for search to complete (debounced)
-        await Task.Delay(600);
+        await Task.Delay(600, TestContext.Current.CancellationToken);
 
         // Check filtered results
         int filteredCount = await movieRows.CountAsync();
-        Assert.That(filteredCount, Is.LessThan(initialCount));
+        Assert.True(filteredCount < initialCount);
 
         // Verify search results contain the search term
         IReadOnlyList<string> titles = await Page.Locator("table tbody tr td:first-child").AllTextContentsAsync();
         foreach (string title in titles)
         {
-            Assert.That(title.ToLower(), Does.Contain("matrix").IgnoreCase);
+            Assert.Contains("matrix", title, StringComparison.OrdinalIgnoreCase);
         }
 
         // Clear search
         await searchBox.FillAsync(string.Empty);
-        await Task.Delay(600);
+        await Task.Delay(600, TestContext.Current.CancellationToken);
 
         // Check that all movies are shown again
         await Expect(movieRows).ToHaveCountAsync(initialCount);
     }
 
-    [Test]
+    [Fact]
     public async Task Movies_ShouldNavigateToDetailsPage()
     {
         // Wait for movies to load
@@ -85,7 +83,7 @@ public class MoviesTests : TestBase
         await Expect(Page.Locator("text=Year:")).ToBeVisibleAsync();
     }
 
-    [Test]
+    [Fact]
     public async Task Movies_LoadingStateShouldBeShown()
     {
         // Navigate to trigger loading state
@@ -104,7 +102,7 @@ public class MoviesTests : TestBase
         await Expect(loadingSkeleton).ToHaveCountAsync(0);
     }
 
-    [Test]
+    [Fact]
     public async Task Movies_ShouldShowRatings()
     {
         // Wait for movies to load
@@ -117,6 +115,6 @@ public class MoviesTests : TestBase
         // Check rating stars are visible
         ILocator stars = Page.Locator(".mud-rating .mud-icon-root");
         int starCount = await stars.CountAsync();
-        Assert.That(starCount, Is.GreaterThan(0));
+        Assert.True(starCount > 0);
     }
 }

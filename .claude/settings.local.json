@@ -24,7 +24,16 @@
       "Bash(true)",
       "mcp__ide__getDiagnostics",
       "Bash(mv:*)",
-      "Bash(/Users/phmatray/.nvm/versions/node/v20.18.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg \"IActionMiddleware\" src/tests/Ducky.Tests/Core/ActionPipelineTests.cs)"
+      "Bash(/Users/phmatray/.nvm/versions/node/v20.18.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg \"IActionMiddleware\" src/tests/Ducky.Tests/Core/ActionPipelineTests.cs)",
+      "WebFetch(domain:xunit.net)",
+      "Bash(for project in src/tests/AppStore.Tests/AppStore.Tests.csproj src/tests/Ducky.Tests/Ducky.Tests.csproj src/tests/Ducky.Generator.Tests/Ducky.Generator.Tests.csproj src/tests/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj)",
+      "Bash(do echo \"Building $project\")",
+      "Bash(done)",
+      "Bash(playwright install)",
+      "Bash(timeout:*)",
+      "Bash(node:*)",
+      "Bash(rg:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   },

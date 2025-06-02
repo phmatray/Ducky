@@ -1,0 +1,303 @@
+@using Ducky.CodeGen.WebApp.Models
+@using Ducky.CodeGen.WebApp.Services
+@using System.Text.Json
+@inject IAppStoreService AppStoreService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        @if (appStore == null)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudTabs Elevation="2" Rounded="true" PanelClass="pa-6">
+                <!-- App Store Details Tab -->
+                <MudTabPanel Text="Details">
+                    <MudForm @bind-IsValid="@isValid">
+                        <MudTextField @bind-Value="appStore.Name" 
+                                      Label="App Store Name" 
+                                      Required="true"
+                                      MaxLength="100" />
+                        
+                        <MudTextField @bind-Value="appStore.Description" 
+                                      Label="Description" 
+                                      Lines="3"
+                                      MaxLength="500" />
+                        
+                        <MudTextField @bind-Value="appStore.Namespace" 
+                                      Label="Namespace" 
+                                      Required="true"
+                                      MaxLength="100" />
+                    </MudForm>
+                </MudTabPanel>
+
+                <!-- State Slices Tab -->
+                <MudTabPanel Text="State Slices">
+                    <MudStack>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h6">State Slices</MudText>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="AddStateSlice">
+                                Add State Slice
+                            </MudButton>
+                        </MudStack>
+
+                        @if (!appStore.StateSlices.Any())
+                        {
+                            <MudPaper Class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    No state slices yet. Add your first state slice to get started.
+                                </MudText>
+                            </MudPaper>
+                        }
+                        else
+                        {
+                            @foreach (var slice in appStore.StateSlices)
+                            {
+                                <MudExpansionPanels>
+                                    <MudExpansionPanel Text="@slice.Name">
+                                        <TitleContent>
+                                            <div style="display: flex; align-items: center;">
+                                                <MudIcon Icon="@Icons.Material.Filled.DataObject" class="mr-3"></MudIcon>
+                                                <MudText>@slice.Name</MudText>
+                                                <MudSpacer />
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Info">
+                                                    @slice.Actions.Count actions
+                                                </MudChip>
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="ml-2">
+                                                    @slice.Effects.Count effects
+                                                </MudChip>
+                                            </div>
+                                        </TitleContent>
+                                        <ChildContent>
+                                            <MudStack>
+                                                @if (!string.IsNullOrEmpty(slice.Description))
+                                                {
+                                                    <MudText Typo="Typo.body2">@slice.Description</MudText>
+                                                }
+
+                                                <!-- Actions Section -->
+                                                <MudDivider />
+                                                <MudText Typo="Typo.h6">Actions</MudText>
+                                                @if (!slice.Actions.Any())
+                                                {
+                                                    <MudText Typo="Typo.body2" Color="Color.Secondary">No actions defined</MudText>
+                                                }
+                                                else
+                                                {
+                                                    <MudSimpleTable Style="overflow-x: auto;">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Name</th>
+                                                                <th>Payload Type</th>
+                                                                <th>Async</th>
+                                                                <th>Description</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var action in slice.Actions)
+                                                            {
+                                                                <tr>
+                                                                    <td>@action.Name</td>
+                                                                    <td><code>@action.PayloadType</code></td>
+                                                                    <td>@(action.IsAsync ? "Yes" : "No")</td>
+                                                                    <td>@action.Description</td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </MudSimpleTable>
+                                                }
+                                                <MudButton Variant="Variant.Outlined" Size="Size.Small" 
+                                                           StartIcon="@Icons.Material.Filled.Add"
+                                                           OnClick="@(() => AddAction(slice))">
+                                                    Add Action
+                                                </MudButton>
+
+                                                <!-- Effects Section -->
+                                                <MudDivider />
+                                                <MudText Typo="Typo.h6">Effects</MudText>
+                                                @if (!slice.Effects.Any())
+                                                {
+                                                    <MudText Typo="Typo.body2" Color="Color.Secondary">No effects defined</MudText>
+                                                }
+                                                else
+                                                {
+                                                    <MudSimpleTable Style="overflow-x: auto;">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Name</th>
+                                                                <th>Type</th>
+                                                                <th>Trigger Actions</th>
+                                                                <th>Description</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var effect in slice.Effects)
+                                                            {
+                                                                <tr>
+                                                                    <td>@effect.Name</td>
+                                                                    <td>@effect.ImplementationType</td>
+                                                                    <td>
+                                                                        @{
+                                                                            var triggers = JsonSerializer.Deserialize<List<string>>(effect.TriggerActions);
+                                                                        }
+                                                                        @string.Join(", ", triggers!)
+                                                                    </td>
+                                                                    <td>@effect.Description</td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </MudSimpleTable>
+                                                }
+                                                <MudButton Variant="Variant.Outlined" Size="Size.Small" 
+                                                           StartIcon="@Icons.Material.Filled.Add"
+                                                           OnClick="@(() => AddEffect(slice))">
+                                                    Add Effect
+                                                </MudButton>
+                                            </MudStack>
+                                        </ChildContent>
+                                    </MudExpansionPanel>
+                                </MudExpansionPanels>
+                            }
+                        }
+                    </MudStack>
+                </MudTabPanel>
+            </MudTabs>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled" 
+                   OnClick="Save"
+                   Disabled="@(!isValid || isSaving)">
+            @if (isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                <span style="margin-left: 8px;">Saving...</span>
+            }
+            else
+            {
+                <span>Save</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public int AppStoreId { get; set; }
+
+    private AppStore? appStore;
+    private bool isValid = true;
+    private bool isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        appStore = await AppStoreService.GetAppStoreByIdAsync(AppStoreId);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        if (!isValid || appStore == null) return;
+
+        isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            await AppStoreService.UpdateAppStoreAsync(appStore);
+            MudDialog.Close(DialogResult.Ok(appStore));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving app store: {ex.Message}", Severity.Error);
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddStateSlice()
+    {
+        if (appStore == null) return;
+
+        // Simple inline creation for now - could be expanded to a dialog
+        var name = $"NewSlice{appStore.StateSlices.Count + 1}";
+        var stateDefinition = new Dictionary<string, object>
+        {
+            { "Loading", false },
+            { "Data", new List<object>() },
+            { "Error", string.Empty }
+        };
+
+        try
+        {
+            var newSlice = await AppStoreService.AddStateSliceAsync(
+                appStore.Id, 
+                name, 
+                "New state slice", 
+                stateDefinition);
+
+            appStore.StateSlices.Add(newSlice);
+            StateHasChanged();
+            Snackbar.Add("State slice added successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding state slice: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task AddAction(StateSlice slice)
+    {
+        try
+        {
+            var actionName = $"NewAction{slice.Actions.Count + 1}";
+            var newAction = await AppStoreService.AddActionAsync(
+                slice.Id,
+                actionName,
+                "New action",
+                "object", // Default payload type
+                false);
+
+            slice.Actions.Add(newAction);
+            StateHasChanged();
+            Snackbar.Add("Action added successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding action: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task AddEffect(StateSlice slice)
+    {
+        try
+        {
+            var effectName = $"NewEffect{slice.Effects.Count + 1}";
+            var triggerActions = slice.Actions.Any() ? 
+                new List<string> { slice.Actions.First().Name } : 
+                new List<string>();
+
+            var newEffect = await AppStoreService.AddEffectAsync(
+                slice.Id,
+                effectName,
+                "New effect",
+                "AsyncEffect", // Default to AsyncEffect
+                triggerActions);
+
+            slice.Effects.Add(newEffect);
+            StateHasChanged();
+            Snackbar.Add("Effect added successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding effect: {ex.Message}", Severity.Error);
+        }
+    }
+}

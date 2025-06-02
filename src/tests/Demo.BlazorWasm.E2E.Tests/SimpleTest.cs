@@ -1,35 +1,15 @@
 namespace Demo.BlazorWasm.E2E.Tests;
 
-[TestFixture]
-[Parallelizable(ParallelScope.Self)]
-public class SimpleTest : PageTest
+public class SimpleTest : MinimalTestBase
 {
-    public override BrowserNewContextOptions ContextOptions()
-    {
-        return new BrowserNewContextOptions
-        {
-            IgnoreHTTPSErrors = true,
-            ViewportSize = new ViewportSize { Width = 1280, Height = 720 }
-        };
-    }
-    
-    [Test]
+    [Fact]
     public async Task CanLoadHomePage()
     {
-        var baseUrl = Environment.GetEnvironmentVariable("BASE_URL") ?? "http://localhost:8080";
-        
-        // Navigate
-        await Page.GotoAsync(baseUrl, new PageGotoOptions 
-        { 
-            WaitUntil = WaitUntilState.NetworkIdle,
-            Timeout = 60000 
-        });
+        // Navigate using the base class method
+        await NavigateAndWait();
         
         // Take screenshot for debugging
         await Page.ScreenshotAsync(new() { Path = "test-screenshot.png", FullPage = true });
-        
-        // Wait a bit more
-        await Task.Delay(5000);
         
         // Check if MudBlazor loaded
         var mudLayoutExists = await Page.Locator(".mud-layout").CountAsync() > 0;
@@ -39,6 +19,6 @@ public class SimpleTest : PageTest
         Console.WriteLine($"MudAppBar exists: {mudAppBarExists}");
         
         // Simple assertion
-        Assert.That(await Page.TitleAsync(), Is.EqualTo("Ducky Blazor Demo - State Management for Blazor"));
+        Assert.Equal("Ducky Blazor Demo - State Management for Blazor", await Page.TitleAsync());
     }
 }
