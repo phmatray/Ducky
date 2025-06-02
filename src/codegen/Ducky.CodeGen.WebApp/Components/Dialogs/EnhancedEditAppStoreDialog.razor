@@ -1,0 +1,762 @@
+@using Ducky.CodeGen.WebApp.Models
+@using Ducky.CodeGen.WebApp.Services
+@using System.Text.Json
+@inject IAppStoreService AppStoreService
+@inject ISnackbar Snackbar
+
+<MudDialog maxwidth="MaxWidth.ExtraLarge" fullwidth="true">
+    <DialogContent>
+        @if (appStore == null)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
+                <MudGrid>
+                    <!-- Left Panel - Store Builder -->
+                    <MudItem xs="12" lg="8">
+                        <MudPaper Class="pa-4" Elevation="1" Style="min-height: 80vh;">
+                            <!-- Store Header -->
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                                <MudStack>
+                                    <MudText Typo="Typo.h4">@appStore.Name</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@appStore.Namespace</MudText>
+                                </MudStack>
+                                <MudStack Row="true" Spacing="2">
+                                    <MudButton Variant="Variant.Outlined" 
+                                               StartIcon="@Icons.Material.Filled.Build"
+                                               OnClick="ShowTemplates">
+                                        Templates
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" 
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.Add"
+                                               OnClick="AddStateSlice">
+                                        Add State Slice
+                                    </MudButton>
+                                </MudStack>
+                            </MudStack>
+
+                            <!-- Progress Indicator -->
+                            <MudTimeline TimelineOrientation="TimelineOrientation.Horizontal" Class="mb-6">
+                                <MudTimelineItem Color="@(appStore.StateSlices.Any() ? Color.Success : Color.Default)" 
+                                                 Variant="@(appStore.StateSlices.Any() ? Variant.Filled : Variant.Outlined)">
+                                    <MudText Typo="Typo.caption">State Slices</MudText>
+                                    <MudText Typo="Typo.body2">@appStore.StateSlices.Count</MudText>
+                                </MudTimelineItem>
+                                <MudTimelineItem Color="@(appStore.StateSlices.Any(s => s.Actions.Any()) ? Color.Success : Color.Default)"
+                                                 Variant="@(appStore.StateSlices.Any(s => s.Actions.Any()) ? Variant.Filled : Variant.Outlined)">
+                                    <MudText Typo="Typo.caption">Actions</MudText>
+                                    <MudText Typo="Typo.body2">@appStore.StateSlices.Sum(s => s.Actions.Count)</MudText>
+                                </MudTimelineItem>
+                                <MudTimelineItem Color="@(appStore.StateSlices.Any(s => s.Effects.Any()) ? Color.Success : Color.Default)"
+                                                 Variant="@(appStore.StateSlices.Any(s => s.Effects.Any()) ? Variant.Filled : Variant.Outlined)">
+                                    <MudText Typo="Typo.caption">Effects</MudText>
+                                    <MudText Typo="Typo.body2">@appStore.StateSlices.Sum(s => s.Effects.Count)</MudText>
+                                </MudTimelineItem>
+                                <MudTimelineItem Color="@(isReadyToGenerate ? Color.Success : Color.Default)"
+                                                 Variant="@(isReadyToGenerate ? Variant.Filled : Variant.Outlined)">
+                                    <MudText Typo="Typo.caption">Ready</MudText>
+                                    <MudIcon Icon="@(isReadyToGenerate ? Icons.Material.Filled.Check : Icons.Material.Filled.Schedule)" />
+                                </MudTimelineItem>
+                            </MudTimeline>
+
+                            <!-- State Slices Builder -->
+                            @if (!appStore.StateSlices.Any())
+                            {
+                                <!-- Empty State with Quick Start -->
+                                <MudPaper Class="pa-8 text-center" Elevation="0" Style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 16px;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Architecture" Size="Size.Large" Color="Color.Primary" Class="mb-3" />
+                                    <MudText Typo="Typo.h5" Class="mb-2">Design Your Store Architecture</MudText>
+                                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
+                                        Start by adding state slices - these represent different areas of your application state.
+                                    </MudText>
+                                    
+                                    <!-- Quick Start Templates -->
+                                    <MudGrid Justify="Justify.Center" Spacing="2" Class="mt-4">
+                                        <MudItem xs="12" sm="4">
+                                            <MudButton Variant="Variant.Outlined" 
+                                                       Color="Color.Primary"
+                                                       FullWidth="true"
+                                                       StartIcon="@Icons.Material.Filled.ListAlt"
+                                                       OnClick="() => CreateFromTemplate(StoreTemplate.TodoApp)">
+                                                Todo App
+                                            </MudButton>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="4">
+                                            <MudButton Variant="Variant.Outlined" 
+                                                       Color="Color.Success"
+                                                       FullWidth="true"
+                                                       StartIcon="@Icons.Material.Filled.ShoppingCart"
+                                                       OnClick="() => CreateFromTemplate(StoreTemplate.ECommerce)">
+                                                E-Commerce
+                                            </MudButton>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="4">
+                                            <MudButton Variant="Variant.Outlined" 
+                                                       Color="Color.Warning"
+                                                       FullWidth="true"
+                                                       StartIcon="@Icons.Material.Filled.Dashboard"
+                                                       OnClick="() => CreateFromTemplate(StoreTemplate.Dashboard)">
+                                                Dashboard
+                                            </MudButton>
+                                        </MudItem>
+                                    </MudGrid>
+                                    
+                                    <MudDivider Class="my-4" />
+                                    
+                                    <MudButton Variant="Variant.Filled" 
+                                               Color="Color.Primary"
+                                               Size="Size.Large"
+                                               StartIcon="@Icons.Material.Filled.Create"
+                                               OnClick="AddStateSlice">
+                                        Start From Scratch
+                                    </MudButton>
+                                </MudPaper>
+                            }
+                            else
+                            {
+                                <!-- State Slices Cards -->
+                                <MudStack Spacing="3">
+                                    @foreach (var slice in appStore.StateSlices)
+                                    {
+                                        <MudCard Elevation="2" Class="mud-card-hover">
+                                            <MudCardHeader>
+                                                <CardHeaderContent>
+                                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                        <MudIcon Icon="@Icons.Material.Filled.DataObject" Color="Color.Primary" />
+                                                        <MudText Typo="Typo.h6">@slice.Name</MudText>
+                                                        <MudSpacer />
+                                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                                                            @slice.Actions.Count actions
+                                                        </MudChip>
+                                                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">
+                                                            @slice.Effects.Count effects
+                                                        </MudChip>
+                                                    </MudStack>
+                                                </CardHeaderContent>
+                                                <CardHeaderActions>
+                                                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Default" Dense="true">
+                                                        <MudMenuItem Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditStateSlice(slice))">
+                                                            Edit
+                                                        </MudMenuItem>
+                                                        <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => DuplicateStateSlice(slice))">
+                                                            Duplicate
+                                                        </MudMenuItem>
+                                                        <MudDivider />
+                                                        <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteStateSlice(slice))">
+                                                            <MudText Color="Color.Error">Delete</MudText>
+                                                        </MudMenuItem>
+                                                    </MudMenu>
+                                                </CardHeaderActions>
+                                            </MudCardHeader>
+                                            
+                                            <MudCardContent>
+                                                @if (!string.IsNullOrEmpty(slice.Description))
+                                                {
+                                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                                        @slice.Description
+                                                    </MudText>
+                                                }
+
+                                                <!-- Quick Actions Grid -->
+                                                <MudGrid Spacing="2">
+                                                    <!-- Actions Column -->
+                                                    <MudItem xs="12" md="6">
+                                                        <MudStack Spacing="2">
+                                                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                                                <MudText Typo="Typo.subtitle1" Color="Color.Primary">
+                                                                    <MudIcon Icon="@Icons.Material.Filled.FlashOn" Size="Size.Small" Class="mr-1" />
+                                                                    Actions
+                                                                </MudText>
+                                                                <MudButton Size="Size.Small" 
+                                                                           Variant="Variant.Text" 
+                                                                           StartIcon="@Icons.Material.Filled.Add"
+                                                                           OnClick="@(() => AddAction(slice))">
+                                                                    Add
+                                                                </MudButton>
+                                                            </MudStack>
+                                                            
+                                                            @if (slice.Actions.Any())
+                                                            {
+                                                                <MudStack Spacing="1">
+                                                                    @foreach (var action in slice.Actions.Take(3))
+                                                                    {
+                                                                        <MudChip T="string" 
+                                                                                 Size="Size.Small" 
+                                                                                 Color="Color.Default" 
+                                                                                 Variant="Variant.Text"
+                                                                                 Icon="@Icons.Material.Filled.PlayArrow">
+                                                                            @action.Name
+                                                                        </MudChip>
+                                                                    }
+                                                                    @if (slice.Actions.Count > 3)
+                                                                    {
+                                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                                            +@(slice.Actions.Count - 3) more...
+                                                                        </MudText>
+                                                                    }
+                                                                </MudStack>
+                                                            }
+                                                            else
+                                                            {
+                                                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                                    No actions yet
+                                                                </MudText>
+                                                            }
+                                                        </MudStack>
+                                                    </MudItem>
+
+                                                    <!-- Effects Column -->
+                                                    <MudItem xs="12" md="6">
+                                                        <MudStack Spacing="2">
+                                                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                                                <MudText Typo="Typo.subtitle1" Color="Color.Warning">
+                                                                    <MudIcon Icon="@Icons.Material.Filled.Psychology" Size="Size.Small" Class="mr-1" />
+                                                                    Effects
+                                                                </MudText>
+                                                                <MudButton Size="Size.Small" 
+                                                                           Variant="Variant.Text" 
+                                                                           StartIcon="@Icons.Material.Filled.Add"
+                                                                           OnClick="@(() => AddEffect(slice))">
+                                                                    Add
+                                                                </MudButton>
+                                                            </MudStack>
+                                                            
+                                                            @if (slice.Effects.Any())
+                                                            {
+                                                                <MudStack Spacing="1">
+                                                                    @foreach (var effect in slice.Effects.Take(3))
+                                                                    {
+                                                                        <MudChip T="string" 
+                                                                                 Size="Size.Small" 
+                                                                                 Color="Color.Warning" 
+                                                                                 Variant="Variant.Text"
+                                                                                 Icon="@Icons.Material.Filled.AutoAwesome">
+                                                                            @effect.Name
+                                                                        </MudChip>
+                                                                    }
+                                                                    @if (slice.Effects.Count > 3)
+                                                                    {
+                                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                                            +@(slice.Effects.Count - 3) more...
+                                                                        </MudText>
+                                                                    }
+                                                                </MudStack>
+                                                            }
+                                                            else
+                                                            {
+                                                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                                    No effects yet
+                                                                </MudText>
+                                                            }
+                                                        </MudStack>
+                                                    </MudItem>
+                                                </MudGrid>
+                                            </MudCardContent>
+                                        </MudCard>
+                                    }
+                                </MudStack>
+                            }
+                        </MudPaper>
+                    </MudItem>
+
+                    <!-- Right Panel - Live Preview & Actions -->
+                    <MudItem xs="12" lg="4">
+                        <MudPaper Class="pa-4" Elevation="2" Style="min-height: 80vh; position: sticky; top: 0;">
+                            <MudTabs Elevation="0" Rounded="true" PanelClass="pa-0">
+                                <!-- Preview Tab -->
+                                <MudTabPanel Text="Preview" Icon="@Icons.Material.Filled.Visibility">
+                                    <MudStack Spacing="3" Class="mt-3">
+                                        <MudText Typo="Typo.h6">
+                                            <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-2" />
+                                            Generated Structure
+                                        </MudText>
+                                        
+                                        @if (appStore.StateSlices.Any())
+                                        {
+                                            <MudTreeView T="string">
+                                                <MudTreeViewItem Text="@appStore.Namespace" Icon="@Icons.Material.Filled.Folder">
+                                                    @foreach (var slice in appStore.StateSlices)
+                                                    {
+                                                        <MudTreeViewItem Text="@slice.Name" Icon="@Icons.Material.Filled.DataObject">
+                                                            <MudTreeViewItem Text="State.cs" Icon="@Icons.Material.Filled.Schema" />
+                                                            <MudTreeViewItem Text="Actions.cs" Icon="@Icons.Material.Filled.FlashOn" />
+                                                            <MudTreeViewItem Text="Reducers.cs" Icon="@Icons.Material.Filled.Settings" />
+                                                            @if (slice.Effects.Any())
+                                                            {
+                                                                <MudTreeViewItem Text="Effects.cs" Icon="@Icons.Material.Filled.Psychology" />
+                                                            }
+                                                        </MudTreeViewItem>
+                                                    }
+                                                    <MudTreeViewItem Text="Store.cs" Icon="@Icons.Material.Filled.Store" />
+                                                </MudTreeViewItem>
+                                            </MudTreeView>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                Add state slices to see the generated structure
+                                            </MudText>
+                                        }
+                                    </MudStack>
+                                </MudTabPanel>
+
+                                <!-- Settings Tab -->
+                                <MudTabPanel Text="Settings" Icon="@Icons.Material.Filled.Settings">
+                                    <MudStack Spacing="3" Class="mt-3">
+                                        <MudForm @bind-IsValid="@isValid">
+                                            <MudTextField @bind-Value="appStore.Name" 
+                                                          Label="App Store Name" 
+                                                          Required="true"
+                                                          MaxLength="100"
+                                                          Variant="Variant.Outlined" />
+                                            
+                                            <MudTextField @bind-Value="appStore.Description" 
+                                                          Label="Description" 
+                                                          Lines="3"
+                                                          MaxLength="500"
+                                                          Variant="Variant.Outlined" />
+                                            
+                                            <MudTextField @bind-Value="appStore.Namespace" 
+                                                          Label="Namespace" 
+                                                          Required="true"
+                                                          MaxLength="100"
+                                                          Variant="Variant.Outlined" />
+                                        </MudForm>
+                                    </MudStack>
+                                </MudTabPanel>
+
+                                <!-- Analytics Tab -->
+                                <MudTabPanel Text="Analytics" Icon="@Icons.Material.Filled.Analytics">
+                                    <MudStack Spacing="3" Class="mt-3">
+                                        <MudText Typo="Typo.h6">Store Metrics</MudText>
+                                        
+                                        <MudGrid>
+                                            <MudItem xs="6">
+                                                <MudPaper Class="pa-3 text-center" Elevation="0" Style="background-color: #f5f5f5;">
+                                                    <MudText Typo="Typo.h4" Color="Color.Primary">@appStore.StateSlices.Count</MudText>
+                                                    <MudText Typo="Typo.body2">State Slices</MudText>
+                                                </MudPaper>
+                                            </MudItem>
+                                            <MudItem xs="6">
+                                                <MudPaper Class="pa-3 text-center" Elevation="0" Style="background-color: #f5f5f5;">
+                                                    <MudText Typo="Typo.h4" Color="Color.Success">@appStore.StateSlices.Sum(s => s.Actions.Count)</MudText>
+                                                    <MudText Typo="Typo.body2">Total Actions</MudText>
+                                                </MudPaper>
+                                            </MudItem>
+                                            <MudItem xs="6">
+                                                <MudPaper Class="pa-3 text-center" Elevation="0" Style="background-color: #f5f5f5;">
+                                                    <MudText Typo="Typo.h4" Color="Color.Warning">@appStore.StateSlices.Sum(s => s.Effects.Count)</MudText>
+                                                    <MudText Typo="Typo.body2">Total Effects</MudText>
+                                                </MudPaper>
+                                            </MudItem>
+                                            <MudItem xs="6">
+                                                <MudPaper Class="pa-3 text-center" Elevation="0" Style="background-color: #f5f5f5;">
+                                                    <MudText Typo="Typo.h4" Color="Color.Info">@GetComplexityScore()</MudText>
+                                                    <MudText Typo="Typo.body2">Complexity</MudText>
+                                                </MudPaper>
+                                            </MudItem>
+                                        </MudGrid>
+
+                                        <MudDivider />
+
+                                        <MudText Typo="Typo.subtitle1">Recommendations</MudText>
+                                        <MudStack Spacing="2">
+                                            @if (!appStore.StateSlices.Any())
+                                            {
+                                                <MudAlert Severity="Severity.Info" Dense="true">
+                                                    Start by adding your first state slice
+                                                </MudAlert>
+                                            }
+                                            @if (appStore.StateSlices.Any(s => !s.Actions.Any()))
+                                            {
+                                                <MudAlert Severity="Severity.Warning" Dense="true">
+                                                    Some state slices have no actions
+                                                </MudAlert>
+                                            }
+                                            @if (appStore.StateSlices.Sum(s => s.Actions.Count) > 0 && !appStore.StateSlices.Any(s => s.Effects.Any()))
+                                            {
+                                                <MudAlert Severity="Severity.Info" Dense="true">
+                                                    Consider adding effects for side effects
+                                                </MudAlert>
+                                            }
+                                            @if (GetComplexityScore() > 50)
+                                            {
+                                                <MudAlert Severity="Severity.Warning" Dense="true">
+                                                    High complexity - consider splitting store
+                                                </MudAlert>
+                                            }
+                                        </MudStack>
+                                    </MudStack>
+                                </MudTabPanel>
+                            </MudTabs>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudContainer>
+        }
+    </DialogContent>
+    
+    <DialogActions>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%;">
+            <MudStack Row="true" Spacing="2">
+                <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+                <MudButton Color="Color.Secondary" 
+                           Variant="Variant.Outlined" 
+                           StartIcon="@Icons.Material.Filled.Visibility"
+                           OnClick="PreviewCode"
+                           Disabled="@(!appStore?.StateSlices.Any() ?? true)">
+                    Preview Code
+                </MudButton>
+            </MudStack>
+            
+            <MudStack Row="true" Spacing="2">
+                <MudButton Color="Color.Success" 
+                           Variant="Variant.Filled" 
+                           StartIcon="@Icons.Material.Filled.Code"
+                           OnClick="GenerateCode"
+                           Disabled="@(!isReadyToGenerate || isSaving)">
+                    @if (isSaving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Generating...</span>
+                    }
+                    else
+                    {
+                        <span>Generate Code</span>
+                    }
+                </MudButton>
+                <MudButton Color="Color.Primary" 
+                           Variant="Variant.Filled" 
+                           OnClick="Save"
+                           Disabled="@(!isValid || isSaving)">
+                    @if (isSaving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <span>Save Changes</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .mud-card-hover {
+        transition: all 0.3s ease;
+    }
+    .mud-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.12) !important;
+    }
+</style>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public int AppStoreId { get; set; }
+
+    private AppStore? appStore;
+    private bool isValid = true;
+    private bool isSaving;
+    private bool isReadyToGenerate => appStore?.StateSlices.Any() == true && 
+                                      appStore.StateSlices.Any(s => s.Actions.Any());
+
+    public enum StoreTemplate
+    {
+        TodoApp,
+        ECommerce,
+        Dashboard
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        appStore = await AppStoreService.GetAppStoreByIdAsync(AppStoreId);
+    }
+
+    private int GetComplexityScore()
+    {
+        if (appStore == null) return 0;
+        
+        var sliceCount = appStore.StateSlices.Count;
+        var actionCount = appStore.StateSlices.Sum(s => s.Actions.Count);
+        var effectCount = appStore.StateSlices.Sum(s => s.Effects.Count);
+        
+        return (sliceCount * 5) + (actionCount * 2) + (effectCount * 3);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        if (!isValid || appStore == null) return;
+
+        isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            await AppStoreService.UpdateAppStoreAsync(appStore);
+            MudDialog.Close(DialogResult.Ok(appStore));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving app store: {ex.Message}", Severity.Error);
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GenerateCode()
+    {
+        if (appStore == null) return;
+
+        isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            Snackbar.Add($"Generating code for '{appStore.Name}'...", Severity.Info);
+            
+            var generatedFiles = await AppStoreService.GenerateFilesAsync(appStore.Id);
+            
+            Snackbar.Add($"Successfully generated {generatedFiles.Count} files!", Severity.Success);
+            
+            // TODO: Show generated code dialog
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating code: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void PreviewCode()
+    {
+        // TODO: Implement code preview
+        Snackbar.Add("Code preview coming soon!", Severity.Info);
+    }
+
+    private void ShowTemplates()
+    {
+        // TODO: Implement templates dialog
+        Snackbar.Add("Templates coming soon!", Severity.Info);
+    }
+
+    private async Task CreateFromTemplate(StoreTemplate template)
+    {
+        if (appStore == null) return;
+
+        try
+        {
+            switch (template)
+            {
+                case StoreTemplate.TodoApp:
+                    await CreateTodoTemplate();
+                    break;
+                case StoreTemplate.ECommerce:
+                    await CreateECommerceTemplate();
+                    break;
+                case StoreTemplate.Dashboard:
+                    await CreateDashboardTemplate();
+                    break;
+            }
+            
+            StateHasChanged();
+            Snackbar.Add($"Created {template} template successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating template: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CreateTodoTemplate()
+    {
+        var stateDefinition = new Dictionary<string, object>
+        {
+            { "Items", "NormalizedState<int, TodoItem>" },
+            { "Filter", "TodoFilter" },
+            { "IsLoading", false },
+            { "Error", "string?" }
+        };
+
+        var slice = await AppStoreService.AddStateSliceAsync(
+            appStore!.Id, 
+            "Todos", 
+            "Manages todo items and filtering", 
+            stateDefinition);
+
+        // Add actions
+        await AppStoreService.AddActionAsync(slice.Id, "AddTodo", "Add a new todo item", "{ Id: int, Title: string }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "ToggleTodo", "Toggle todo completion", "{ Id: int }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "DeleteTodo", "Delete a todo item", "{ Id: int }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "SetFilter", "Change the todo filter", "{ Filter: TodoFilter }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "LoadTodos", "Load todos from API", "{}", true);
+        
+        // Add effects
+        await AppStoreService.AddEffectAsync(slice.Id, "TodoApiEffect", "Handles API operations", "AsyncEffect", new List<string> { "LoadTodos" });
+
+        appStore.StateSlices.Add(slice);
+    }
+
+    private async Task CreateECommerceTemplate()
+    {
+        // Products slice
+        var productsState = new Dictionary<string, object>
+        {
+            { "Items", "NormalizedState<int, Product>" },
+            { "Categories", "List<Category>" },
+            { "IsLoading", false },
+            { "SearchQuery", "string" }
+        };
+        
+        var productsSlice = await AppStoreService.AddStateSliceAsync(
+            appStore!.Id, "Products", "Product catalog management", productsState);
+
+        // Cart slice
+        var cartState = new Dictionary<string, object>
+        {
+            { "Items", "List<CartItem>" },
+            { "Total", "decimal" },
+            { "IsCheckingOut", false }
+        };
+        
+        var cartSlice = await AppStoreService.AddStateSliceAsync(
+            appStore.Id, "Cart", "Shopping cart management", cartState);
+
+        appStore.StateSlices.AddRange(new[] { productsSlice, cartSlice });
+    }
+
+    private async Task CreateDashboardTemplate()
+    {
+        // Analytics slice
+        var analyticsState = new Dictionary<string, object>
+        {
+            { "Metrics", "DashboardMetrics" },
+            { "Charts", "List<ChartData>" },
+            { "DateRange", "DateRange" },
+            { "IsLoading", false }
+        };
+        
+        var analyticsSlice = await AppStoreService.AddStateSliceAsync(
+            appStore!.Id, "Analytics", "Dashboard analytics data", analyticsState);
+
+        appStore.StateSlices.Add(analyticsSlice);
+    }
+
+    private async Task AddStateSlice()
+    {
+        // TODO: Open enhanced state slice dialog
+        if (appStore == null) return;
+
+        var name = $"NewSlice{appStore.StateSlices.Count + 1}";
+        var stateDefinition = new Dictionary<string, object>
+        {
+            { "IsLoading", false },
+            { "Data", "List<object>" },
+            { "Error", "string?" }
+        };
+
+        try
+        {
+            var newSlice = await AppStoreService.AddStateSliceAsync(
+                appStore.Id, 
+                name, 
+                "New state slice", 
+                stateDefinition);
+
+            appStore.StateSlices.Add(newSlice);
+            StateHasChanged();
+            Snackbar.Add("State slice added successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding state slice: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void EditStateSlice(StateSlice slice)
+    {
+        // TODO: Open enhanced state slice editor
+        Snackbar.Add("Enhanced state slice editor coming soon!", Severity.Info);
+    }
+
+    private void DuplicateStateSlice(StateSlice slice)
+    {
+        // TODO: Implement duplication
+        Snackbar.Add("Duplicate functionality coming soon!", Severity.Info);
+    }
+
+    private async Task DeleteStateSlice(StateSlice slice)
+    {
+        try
+        {
+            await AppStoreService.DeleteStateSliceAsync(slice.Id);
+            appStore?.StateSlices.Remove(slice);
+            StateHasChanged();
+            Snackbar.Add("State slice deleted successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting state slice: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task AddAction(StateSlice slice)
+    {
+        try
+        {
+            var actionName = $"NewAction{slice.Actions.Count + 1}";
+            var newAction = await AppStoreService.AddActionAsync(
+                slice.Id,
+                actionName,
+                "New action",
+                "object",
+                false);
+
+            slice.Actions.Add(newAction);
+            StateHasChanged();
+            Snackbar.Add("Action added successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding action: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task AddEffect(StateSlice slice)
+    {
+        try
+        {
+            var effectName = $"NewEffect{slice.Effects.Count + 1}";
+            var triggerActions = slice.Actions.Any() ? 
+                new List<string> { slice.Actions.First().Name } : 
+                new List<string>();
+
+            var newEffect = await AppStoreService.AddEffectAsync(
+                slice.Id,
+                effectName,
+                "New effect",
+                "AsyncEffect",
+                triggerActions);
+
+            slice.Effects.Add(newEffect);
+            StateHasChanged();
+            Snackbar.Add("Effect added successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding effect: {ex.Message}", Severity.Error);
+        }
+    }
+}

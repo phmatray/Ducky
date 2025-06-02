@@ -15,9 +15,64 @@
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
                 <MudText Typo="Typo.body2">
                     An app store is a container for your application's state management logic. 
-                    Start by giving it a meaningful name and namespace.
+                    Choose a template to get started quickly, or create a custom store from scratch.
                 </MudText>
             </MudAlert>
+
+            <!-- Quick Start Templates -->
+            <MudExpansionPanels Elevation="0" Class="mb-4">
+                <MudExpansionPanel Text="🚀 Quick Start Templates">
+                    <MudText Typo="Typo.body2" Class="mb-3">Choose a template that matches your use case:</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Class="pa-3 text-center mud-hover-card" 
+                                      Style="cursor: pointer; transition: all 0.2s; border: 2px solid transparent;"
+                                      @onclick="() => SelectTemplate(AppStoreTemplate.TodoApp)">
+                                <MudIcon Icon="@Icons.Material.Filled.ListAlt" Size="Size.Large" Color="Color.Primary" />
+                                <MudText Typo="Typo.subtitle2">Todo App</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Task management</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Class="pa-3 text-center mud-hover-card" 
+                                      Style="cursor: pointer; transition: all 0.2s; border: 2px solid transparent;"
+                                      @onclick="() => SelectTemplate(AppStoreTemplate.ECommerce)">
+                                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Large" Color="Color.Success" />
+                                <MudText Typo="Typo.subtitle2">E-Commerce</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Products & cart</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Class="pa-3 text-center mud-hover-card" 
+                                      Style="cursor: pointer; transition: all 0.2s; border: 2px solid transparent;"
+                                      @onclick="() => SelectTemplate(AppStoreTemplate.Dashboard)">
+                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Large" Color="Color.Warning" />
+                                <MudText Typo="Typo.subtitle2">Dashboard</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Analytics & metrics</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Class="pa-3 text-center mud-hover-card" 
+                                      Style="cursor: pointer; transition: all 0.2s; border: 2px solid transparent;"
+                                      @onclick="() => SelectTemplate(AppStoreTemplate.Custom)">
+                                <MudIcon Icon="@Icons.Material.Filled.Create" Size="Size.Large" Color="Color.Default" />
+                                <MudText Typo="Typo.subtitle2">Custom</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Start from scratch</MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                    
+                    @if (selectedTemplate != AppStoreTemplate.Custom)
+                    {
+                        <MudAlert Severity="Severity.Success" Class="mt-3" Dense="true">
+                            <MudText Typo="Typo.body2">
+                                Selected template: <strong>@GetTemplateName(selectedTemplate)</strong><br/>
+                                @GetTemplateDescription(selectedTemplate)
+                            </MudText>
+                        </MudAlert>
+                    }
+                </MudExpansionPanel>
+            </MudExpansionPanels>
             
             <MudForm @ref="form" @bind-IsValid="@isValid">
                 <MudStack Spacing="3">
@@ -101,11 +156,77 @@
     private string appStoreName = string.Empty;
     private string description = string.Empty;
     private string namespaceName = string.Empty;
+    private AppStoreTemplate selectedTemplate = AppStoreTemplate.Custom;
+
+    public enum AppStoreTemplate
+    {
+        Custom,
+        TodoApp,
+        ECommerce,
+        Dashboard
+    }
 
     protected override void OnInitialized()
     {
         // Set default namespace
         namespaceName = "MyApp.Store";
+    }
+
+    private void SelectTemplate(AppStoreTemplate template)
+    {
+        selectedTemplate = template;
+        
+        switch (template)
+        {
+            case AppStoreTemplate.TodoApp:
+                if (string.IsNullOrWhiteSpace(appStoreName))
+                {
+                    appStoreName = "Todo App Store";
+                    description = "Manages todo items with CRUD operations and filtering";
+                    OnAppStoreNameChanged(appStoreName);
+                }
+                break;
+            case AppStoreTemplate.ECommerce:
+                if (string.IsNullOrWhiteSpace(appStoreName))
+                {
+                    appStoreName = "E-Commerce Store";
+                    description = "Manages products, cart, and order processing";
+                    OnAppStoreNameChanged(appStoreName);
+                }
+                break;
+            case AppStoreTemplate.Dashboard:
+                if (string.IsNullOrWhiteSpace(appStoreName))
+                {
+                    appStoreName = "Dashboard Store";
+                    description = "Manages analytics data, metrics, and dashboard state";
+                    OnAppStoreNameChanged(appStoreName);
+                }
+                break;
+        }
+        
+        StateHasChanged();
+    }
+
+    private string GetTemplateName(AppStoreTemplate template)
+    {
+        return template switch
+        {
+            AppStoreTemplate.TodoApp => "Todo App",
+            AppStoreTemplate.ECommerce => "E-Commerce",
+            AppStoreTemplate.Dashboard => "Dashboard",
+            _ => "Custom"
+        };
+    }
+
+    private string GetTemplateDescription(AppStoreTemplate template)
+    {
+        return template switch
+        {
+            AppStoreTemplate.TodoApp => "Includes Todos state slice with CRUD actions and API effects",
+            AppStoreTemplate.ECommerce => "Includes Products and Cart state slices with shopping functionality",
+            AppStoreTemplate.Dashboard => "Includes Analytics state slice with metrics and real-time data",
+            _ => "Start with an empty store and add your own state slices"
+        };
     }
 
     private void OnAppStoreNameChanged(string value)
@@ -121,7 +242,7 @@
             var cleanName = System.Text.RegularExpressions.Regex.Replace(value, @"[^a-zA-Z0-9]", "");
             if (!string.IsNullOrWhiteSpace(cleanName))
             {
-                namespaceName = $"MyApp.{char.ToUpper(cleanName[0])}{cleanName.Substring(1)}.Store";
+                namespaceName = $"MyApp.{char.ToUpper(cleanName[0])}{cleanName[1..]}.Store";
             }
         }
     }
@@ -155,6 +276,12 @@
                 string.IsNullOrWhiteSpace(description) ? null : description.Trim(), 
                 namespaceName.Trim());
 
+            // Apply template if selected
+            if (selectedTemplate != AppStoreTemplate.Custom)
+            {
+                await ApplyTemplateToStore(appStore);
+            }
+
             MudDialog.Close(DialogResult.Ok(appStore));
         }
         catch (Exception ex)
@@ -164,4 +291,110 @@
             StateHasChanged();
         }
     }
+
+    private async Task ApplyTemplateToStore(AppStore appStore)
+    {
+        switch (selectedTemplate)
+        {
+            case AppStoreTemplate.TodoApp:
+                await CreateTodoTemplate(appStore);
+                break;
+            case AppStoreTemplate.ECommerce:
+                await CreateECommerceTemplate(appStore);
+                break;
+            case AppStoreTemplate.Dashboard:
+                await CreateDashboardTemplate(appStore);
+                break;
+        }
+    }
+
+    private async Task CreateTodoTemplate(AppStore appStore)
+    {
+        var stateDefinition = new Dictionary<string, object>
+        {
+            { "Items", "NormalizedState<int, TodoItem>" },
+            { "Filter", "TodoFilter" },
+            { "IsLoading", false },
+            { "Error", "string?" }
+        };
+
+        var slice = await AppStoreService.AddStateSliceAsync(
+            appStore.Id, 
+            "Todos", 
+            "Manages todo items and filtering", 
+            stateDefinition);
+
+        // Add common CRUD actions
+        await AppStoreService.AddActionAsync(slice.Id, "AddTodo", "Add a new todo item", "{ Id: int, Title: string }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "ToggleTodo", "Toggle todo completion", "{ Id: int }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "DeleteTodo", "Delete a todo item", "{ Id: int }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "SetFilter", "Change the todo filter", "{ Filter: TodoFilter }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "LoadTodos", "Load todos from API", "{}", true);
+        
+        // Add API effect
+        await AppStoreService.AddEffectAsync(slice.Id, "TodoApiEffect", "Handles API operations", "AsyncEffect", new List<string> { "LoadTodos" });
+    }
+
+    private async Task CreateECommerceTemplate(AppStore appStore)
+    {
+        // Products slice
+        var productsState = new Dictionary<string, object>
+        {
+            { "Items", "NormalizedState<int, Product>" },
+            { "Categories", "List<Category>" },
+            { "IsLoading", false },
+            { "SearchQuery", "string" }
+        };
+        
+        var productsSlice = await AppStoreService.AddStateSliceAsync(
+            appStore.Id, "Products", "Product catalog management", productsState);
+
+        await AppStoreService.AddActionAsync(productsSlice.Id, "LoadProducts", "Load products from API", "{}", true);
+        await AppStoreService.AddActionAsync(productsSlice.Id, "SearchProducts", "Search products", "{ Query: string }", false);
+        await AppStoreService.AddActionAsync(productsSlice.Id, "FilterByCategory", "Filter by category", "{ CategoryId: int }", false);
+
+        // Cart slice
+        var cartState = new Dictionary<string, object>
+        {
+            { "Items", "List<CartItem>" },
+            { "Total", "decimal" },
+            { "IsCheckingOut", false }
+        };
+        
+        var cartSlice = await AppStoreService.AddStateSliceAsync(
+            appStore.Id, "Cart", "Shopping cart management", cartState);
+
+        await AppStoreService.AddActionAsync(cartSlice.Id, "AddToCart", "Add item to cart", "{ ProductId: int, Quantity: int }", false);
+        await AppStoreService.AddActionAsync(cartSlice.Id, "RemoveFromCart", "Remove item from cart", "{ ProductId: int }", false);
+        await AppStoreService.AddActionAsync(cartSlice.Id, "UpdateQuantity", "Update item quantity", "{ ProductId: int, Quantity: int }", false);
+        await AppStoreService.AddActionAsync(cartSlice.Id, "Checkout", "Start checkout process", "{}", true);
+    }
+
+    private async Task CreateDashboardTemplate(AppStore appStore)
+    {
+        var analyticsState = new Dictionary<string, object>
+        {
+            { "Metrics", "DashboardMetrics" },
+            { "Charts", "List<ChartData>" },
+            { "DateRange", "DateRange" },
+            { "IsLoading", false }
+        };
+        
+        var analyticsSlice = await AppStoreService.AddStateSliceAsync(
+            appStore.Id, "Analytics", "Dashboard analytics data", analyticsState);
+
+        await AppStoreService.AddActionAsync(analyticsSlice.Id, "LoadMetrics", "Load dashboard metrics", "{}", true);
+        await AppStoreService.AddActionAsync(analyticsSlice.Id, "SetDateRange", "Set date range", "{ DateRange: DateRange }", false);
+        await AppStoreService.AddActionAsync(analyticsSlice.Id, "RefreshData", "Refresh all dashboard data", "{}", true);
+        
+        await AppStoreService.AddEffectAsync(analyticsSlice.Id, "AnalyticsEffect", "Handles analytics data loading", "AsyncEffect", new List<string> { "LoadMetrics", "RefreshData" });
+    }
 }
+
+<style>
+    .mud-hover-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+        border-color: #1976d2 !important;
+    }
+</style>

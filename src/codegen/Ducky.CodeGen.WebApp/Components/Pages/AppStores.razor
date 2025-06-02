@@ -202,19 +202,20 @@
 
     private async Task EditAppStore(AppStore appStore)
     {
-        var parameters = new DialogParameters<EditAppStoreDialog>
+        var parameters = new DialogParameters<EnhancedEditAppStoreDialog>
         {
             { x => x.AppStoreId, appStore.Id }
         };
         
         var options = new DialogOptions 
         { 
-            MaxWidth = MaxWidth.Large, 
+            MaxWidth = MaxWidth.ExtraLarge, 
             FullWidth = true,
-            CloseButton = true
+            CloseButton = true,
+            CloseOnEscapeKey = false
         };
         
-        var dialog = await DialogService.ShowAsync<EditAppStoreDialog>($"Edit {appStore.Name}", parameters, options);
+        var dialog = await DialogService.ShowAsync<EnhancedEditAppStoreDialog>($"Design Store: {appStore.Name}", parameters, options);
         var result = await dialog.Result;
 
         if (result is { Canceled: false })

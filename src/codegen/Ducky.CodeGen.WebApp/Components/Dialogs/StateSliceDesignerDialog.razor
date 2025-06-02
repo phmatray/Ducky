@@ -1,0 +1,563 @@
+@using Ducky.CodeGen.WebApp.Models
+@using System.Text.Json
+@inject ISnackbar Snackbar
+
+<MudDialog maxwidth="MaxWidth.Large" fullwidth="true">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Architecture" Class="mr-2" />
+            @(stateSlice?.Name ?? "New State Slice") Designer
+        </MudText>
+    </TitleContent>
+    
+    <DialogContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
+            <MudGrid>
+                <!-- Left Panel - State Design -->
+                <MudItem xs="12" lg="7">
+                    <MudStack Spacing="4">
+                        <!-- Basic Info -->
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.h6" Class="mb-3">
+                                <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
+                                Basic Information
+                            </MudText>
+                            <MudForm @bind-IsValid="@isValid">
+                                <MudGrid>
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField @bind-Value="sliceName" 
+                                                      Label="Slice Name" 
+                                                      Required="true"
+                                                      Variant="Variant.Outlined"
+                                                      HelperText="e.g., Users, Products, Orders" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudSelect T="string" Value="selectedTemplate" 
+                                                   Label="Template" 
+                                                   Variant="Variant.Outlined"
+                                                   ValueChanged="ApplyTemplate">
+                                            <MudSelectItem Value="@("custom")">Custom</MudSelectItem>
+                                            <MudSelectItem Value="@("crud")">CRUD Operations</MudSelectItem>
+                                            <MudSelectItem Value="@("async-data")">Async Data Loading</MudSelectItem>
+                                            <MudSelectItem Value="@("form")">Form Management</MudSelectItem>
+                                            <MudSelectItem Value="@("list-with-filter")">List with Filtering</MudSelectItem>
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField @bind-Value="sliceDescription" 
+                                                      Label="Description" 
+                                                      Lines="2"
+                                                      Variant="Variant.Outlined"
+                                                      HelperText="Describe what this state slice manages" />
+                                    </MudItem>
+                                </MudGrid>
+                            </MudForm>
+                        </MudPaper>
+
+                        <!-- State Properties Designer -->
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                                <MudText Typo="Typo.h6">
+                                    <MudIcon Icon="@Icons.Material.Filled.DataObject" Class="mr-2" />
+                                    State Properties
+                                </MudText>
+                                <MudButton Variant="Variant.Outlined" 
+                                           StartIcon="@Icons.Material.Filled.Add"
+                                           Size="Size.Small"
+                                           OnClick="AddStateProperty">
+                                    Add Property
+                                </MudButton>
+                            </MudStack>
+
+                            @if (stateProperties.Any())
+                            {
+                                <MudStack Spacing="2">
+                                    @for (int i = 0; i < stateProperties.Count; i++)
+                                    {
+                                        var propIndex = i;
+                                        var prop = stateProperties[propIndex];
+                                        
+                                        <MudPaper Class="pa-3" Elevation="0" Style="background-color: #f9f9f9;">
+                                            <MudGrid alignitems="Center">
+                                                <MudItem xs="3">
+                                                    <MudTextField @bind-Value="prop.Name"
+                                                                  Label="Property Name"
+                                                                  Variant="Variant.Outlined"
+                                                                  size="Size.Small" />
+                                                </MudItem>
+                                                <MudItem xs="3">
+                                                    <MudSelect T="string" @bind-Value="prop.Type"
+                                                               Label="Type"
+                                                               Variant="Variant.Outlined"
+                                                               size="Size.Small">
+                                                        <MudSelectItem Value="@("bool")">bool</MudSelectItem>
+                                                        <MudSelectItem Value="@("string")">string</MudSelectItem>
+                                                        <MudSelectItem Value="@("string?")">string?</MudSelectItem>
+                                                        <MudSelectItem Value="@("int")">int</MudSelectItem>
+                                                        <MudSelectItem Value="@("decimal")">decimal</MudSelectItem>
+                                                        <MudSelectItem Value="@("DateTime")">DateTime</MudSelectItem>
+                                                        <MudSelectItem Value="@("List<T>")">List&lt;T&gt;</MudSelectItem>
+                                                        <MudSelectItem Value="@("NormalizedState<K,V>")">NormalizedState&lt;K,V&gt;</MudSelectItem>
+                                                        <MudSelectItem Value="@("custom")">Custom Type</MudSelectItem>
+                                                    </MudSelect>
+                                                </MudItem>
+                                                <MudItem xs="4">
+                                                    <MudTextField @bind-Value="prop.DefaultValue"
+                                                                  Label="Default Value"
+                                                                  Variant="Variant.Outlined"
+                                                                  size="Size.Small"
+                                                                  HelperText="e.g., false, null, new()" />
+                                                </MudItem>
+                                                <MudItem xs="2" Class="text-right">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                                   Size="Size.Small"
+                                                                   Color="Color.Error"
+                                                                   OnClick="() => RemoveStateProperty(propIndex)" />
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudPaper>
+                                    }
+                                </MudStack>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info" Dense="true">
+                                    Add properties to define your state structure. Common properties include IsLoading, Error, and Data.
+                                </MudAlert>
+                            }
+                        </MudPaper>
+
+                        <!-- Actions Designer -->
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                                <MudText Typo="Typo.h6">
+                                    <MudIcon Icon="@Icons.Material.Filled.FlashOn" Class="mr-2" />
+                                    Actions
+                                </MudText>
+                                <MudButton Variant="Variant.Outlined" 
+                                           StartIcon="@Icons.Material.Filled.Add"
+                                           Size="Size.Small"
+                                           OnClick="AddAction">
+                                    Add Action
+                                </MudButton>
+                            </MudStack>
+
+                            @if (actions.Any())
+                            {
+                                <MudStack Spacing="2">
+                                    @for (int i = 0; i < actions.Count; i++)
+                                    {
+                                        var actionIndex = i;
+                                        var action = actions[actionIndex];
+                                        
+                                        <MudExpansionPanels Elevation="0">
+                                            <MudExpansionPanel>
+                                                <TitleContent>
+                                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                        <MudIcon Icon="@Icons.Material.Filled.PlayArrow" />
+                                                        <MudText Typo="Typo.subtitle1">@action.Name</MudText>
+                                                        <MudSpacer />
+                                                        <MudChip T="string" Size="Size.Small" 
+                                                                 Color="@(action.IsAsync ? Color.Warning : Color.Default)">
+                                                            @(action.IsAsync ? "Async" : "Sync")
+                                                        </MudChip>
+                                                    </MudStack>
+                                                </TitleContent>
+                                                <ChildContent>
+                                                    <MudGrid>
+                                                        <MudItem xs="12" md="6">
+                                                            <MudTextField @bind-Value="action.Name"
+                                                                          Label="Action Name"
+                                                                          Variant="Variant.Outlined"
+                                                                          HelperText="e.g., LoadData, UpdateUser" />
+                                                        </MudItem>
+                                                        <MudItem xs="12" md="6">
+                                                            <MudTextField @bind-Value="action.PayloadType"
+                                                                          Label="Payload Type"
+                                                                          Variant="Variant.Outlined"
+                                                                          HelperText="e.g., { Id: int }, User" />
+                                                        </MudItem>
+                                                        <MudItem xs="12">
+                                                            <MudTextField @bind-Value="action.Description"
+                                                                          Label="Description"
+                                                                          Lines="2"
+                                                                          Variant="Variant.Outlined" />
+                                                        </MudItem>
+                                                        <MudItem xs="12">
+                                                            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                                                                <MudSwitch @bind-Value="action.IsAsync" 
+                                                                           Label="Async Action" 
+                                                                           Color="Color.Primary" />
+                                                                <MudSpacer />
+                                                                <MudButton Variant="Variant.Text" 
+                                                                           Color="Color.Error"
+                                                                           StartIcon="@Icons.Material.Filled.Delete"
+                                                                           OnClick="() => RemoveAction(actionIndex)">
+                                                                    Remove
+                                                                </MudButton>
+                                                            </MudStack>
+                                                        </MudItem>
+                                                    </MudGrid>
+                                                </ChildContent>
+                                            </MudExpansionPanel>
+                                        </MudExpansionPanels>
+                                    }
+                                </MudStack>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info" Dense="true">
+                                    Add actions to define how users can interact with this state.
+                                </MudAlert>
+                            }
+                        </MudPaper>
+                    </MudStack>
+                </MudItem>
+
+                <!-- Right Panel - Preview -->
+                <MudItem xs="12" lg="5">
+                    <MudPaper Class="pa-4" Elevation="2" Style="position: sticky; top: 0;">
+                        <MudTabs Elevation="0" Rounded="true" PanelClass="pa-0">
+                            <!-- State Preview -->
+                            <MudTabPanel Text="State" Icon="@Icons.Material.Filled.DataObject">
+                                <MudStack Spacing="3" Class="mt-3">
+                                    <MudText Typo="Typo.h6">Generated State</MudText>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="0" Style="background-color: #1e1e1e; border-radius: 8px;">
+                                        <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', monospace; font-size: 12px; line-height: 1.4;">@GenerateStatePreview()</pre>
+                                    </MudPaper>
+                                </MudStack>
+                            </MudTabPanel>
+
+                            <!-- Actions Preview -->
+                            <MudTabPanel Text="Actions" Icon="@Icons.Material.Filled.FlashOn">
+                                <MudStack Spacing="3" Class="mt-3">
+                                    <MudText Typo="Typo.h6">Generated Actions</MudText>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="0" Style="background-color: #1e1e1e; border-radius: 8px;">
+                                        <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', monospace; font-size: 12px; line-height: 1.4;">@GenerateActionsPreview()</pre>
+                                    </MudPaper>
+                                </MudStack>
+                            </MudTabPanel>
+
+                            <!-- Reducers Preview -->
+                            <MudTabPanel Text="Reducers" Icon="@Icons.Material.Filled.Settings">
+                                <MudStack Spacing="3" Class="mt-3">
+                                    <MudText Typo="Typo.h6">Generated Reducers</MudText>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="0" Style="background-color: #1e1e1e; border-radius: 8px;">
+                                        <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', monospace; font-size: 12px; line-height: 1.4;">@GenerateReducersPreview()</pre>
+                                    </MudPaper>
+                                </MudStack>
+                            </MudTabPanel>
+                        </MudTabs>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled" 
+                   OnClick="Save"
+                   Disabled="@(!isValid || string.IsNullOrWhiteSpace(sliceName))">
+            @(stateSlice == null ? "Create" : "Update") State Slice
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public StateSlice? StateSlice { get; set; }
+    [Parameter] public int AppStoreId { get; set; }
+
+    private StateSlice? stateSlice;
+    private bool isValid = true;
+    private string sliceName = string.Empty;
+    private string sliceDescription = string.Empty;
+    private string selectedTemplate = "custom";
+
+    private List<StateProperty> stateProperties = new();
+    private List<ActionDefinition> actions = new();
+
+    public class StateProperty
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = "string";
+        public string DefaultValue { get; set; } = string.Empty;
+    }
+
+    protected override void OnInitialized()
+    {
+        stateSlice = StateSlice;
+        
+        if (stateSlice != null)
+        {
+            sliceName = stateSlice.Name;
+            sliceDescription = stateSlice.Description ?? string.Empty;
+            actions = stateSlice.Actions.ToList();
+            
+            // Parse state definition
+            if (!string.IsNullOrEmpty(stateSlice.StateDefinition))
+            {
+                try
+                {
+                    var stateDict = JsonSerializer.Deserialize<Dictionary<string, object>>(stateSlice.StateDefinition);
+                    if (stateDict != null)
+                    {
+                        stateProperties = stateDict.Select(kvp => new StateProperty
+                        {
+                            Name = kvp.Key,
+                            Type = kvp.Value?.ToString() ?? "object",
+                            DefaultValue = GetDefaultValueForType(kvp.Value?.ToString() ?? "object")
+                        }).ToList();
+                    }
+                }
+                catch
+                {
+                    // If parsing fails, start with empty properties
+                    stateProperties = new List<StateProperty>();
+                }
+            }
+        }
+        else
+        {
+            // Default properties for new state slice
+            stateProperties = new List<StateProperty>
+            {
+                new StateProperty { Name = "IsLoading", Type = "bool", DefaultValue = "false" },
+                new StateProperty { Name = "Error", Type = "string?", DefaultValue = "null" }
+            };
+        }
+    }
+
+    private void ApplyTemplate(string template)
+    {
+        selectedTemplate = template;
+        
+        switch (template)
+        {
+            case "crud":
+                ApplyCrudTemplate();
+                break;
+            case "async-data":
+                ApplyAsyncDataTemplate();
+                break;
+            case "form":
+                ApplyFormTemplate();
+                break;
+            case "list-with-filter":
+                ApplyListWithFilterTemplate();
+                break;
+        }
+        
+        StateHasChanged();
+    }
+
+    private void ApplyCrudTemplate()
+    {
+        stateProperties = new List<StateProperty>
+        {
+            new StateProperty { Name = "Items", Type = "NormalizedState<int, TEntity>", DefaultValue = "new()" },
+            new StateProperty { Name = "SelectedItem", Type = "TEntity?", DefaultValue = "null" },
+            new StateProperty { Name = "IsLoading", Type = "bool", DefaultValue = "false" },
+            new StateProperty { Name = "IsSaving", Type = "bool", DefaultValue = "false" },
+            new StateProperty { Name = "Error", Type = "string?", DefaultValue = "null" }
+        };
+
+        actions = new List<ActionDefinition>
+        {
+            new ActionDefinition { Name = "LoadItems", PayloadType = "{}", IsAsync = true, Description = "Load all items" },
+            new ActionDefinition { Name = "SelectItem", PayloadType = "{ Id: int }", IsAsync = false, Description = "Select an item" },
+            new ActionDefinition { Name = "CreateItem", PayloadType = "TEntity", IsAsync = true, Description = "Create a new item" },
+            new ActionDefinition { Name = "UpdateItem", PayloadType = "TEntity", IsAsync = true, Description = "Update existing item" },
+            new ActionDefinition { Name = "DeleteItem", PayloadType = "{ Id: int }", IsAsync = true, Description = "Delete an item" },
+            new ActionDefinition { Name = "SetLoading", PayloadType = "{ IsLoading: bool }", IsAsync = false, Description = "Set loading state" },
+            new ActionDefinition { Name = "SetError", PayloadType = "{ Error: string? }", IsAsync = false, Description = "Set error state" }
+        };
+    }
+
+    private void ApplyAsyncDataTemplate()
+    {
+        stateProperties = new List<StateProperty>
+        {
+            new StateProperty { Name = "Data", Type = "TData?", DefaultValue = "null" },
+            new StateProperty { Name = "IsLoading", Type = "bool", DefaultValue = "false" },
+            new StateProperty { Name = "LastFetch", Type = "DateTime?", DefaultValue = "null" },
+            new StateProperty { Name = "Error", Type = "string?", DefaultValue = "null" }
+        };
+
+        actions = new List<ActionDefinition>
+        {
+            new ActionDefinition { Name = "FetchData", PayloadType = "{}", IsAsync = true, Description = "Fetch data from API" },
+            new ActionDefinition { Name = "FetchDataSuccess", PayloadType = "{ Data: TData }", IsAsync = false, Description = "Data fetch succeeded" },
+            new ActionDefinition { Name = "FetchDataFailure", PayloadType = "{ Error: string }", IsAsync = false, Description = "Data fetch failed" },
+            new ActionDefinition { Name = "RefreshData", PayloadType = "{}", IsAsync = true, Description = "Refresh data" },
+            new ActionDefinition { Name = "ClearData", PayloadType = "{}", IsAsync = false, Description = "Clear cached data" }
+        };
+    }
+
+    private void ApplyFormTemplate()
+    {
+        stateProperties = new List<StateProperty>
+        {
+            new StateProperty { Name = "FormData", Type = "TFormData", DefaultValue = "new()" },
+            new StateProperty { Name = "Errors", Type = "Dictionary<string, string>", DefaultValue = "new()" },
+            new StateProperty { Name = "IsValid", Type = "bool", DefaultValue = "true" },
+            new StateProperty { Name = "IsSubmitting", Type = "bool", DefaultValue = "false" },
+            new StateProperty { Name = "IsDirty", Type = "bool", DefaultValue = "false" }
+        };
+
+        actions = new List<ActionDefinition>
+        {
+            new ActionDefinition { Name = "UpdateField", PayloadType = "{ FieldName: string, Value: object }", IsAsync = false, Description = "Update form field" },
+            new ActionDefinition { Name = "SetFieldError", PayloadType = "{ FieldName: string, Error: string }", IsAsync = false, Description = "Set field validation error" },
+            new ActionDefinition { Name = "ClearFieldError", PayloadType = "{ FieldName: string }", IsAsync = false, Description = "Clear field error" },
+            new ActionDefinition { Name = "SubmitForm", PayloadType = "{}", IsAsync = true, Description = "Submit the form" },
+            new ActionDefinition { Name = "ResetForm", PayloadType = "{}", IsAsync = false, Description = "Reset form to initial state" },
+            new ActionDefinition { Name = "SetSubmitting", PayloadType = "{ IsSubmitting: bool }", IsAsync = false, Description = "Set form submission state" }
+        };
+    }
+
+    private void ApplyListWithFilterTemplate()
+    {
+        stateProperties = new List<StateProperty>
+        {
+            new StateProperty { Name = "Items", Type = "List<TItem>", DefaultValue = "new()" },
+            new StateProperty { Name = "FilteredItems", Type = "List<TItem>", DefaultValue = "new()" },
+            new StateProperty { Name = "SearchQuery", Type = "string", DefaultValue = "string.Empty" },
+            new StateProperty { Name = "SortBy", Type = "string", DefaultValue = "string.Empty" },
+            new StateProperty { Name = "SortDirection", Type = "SortDirection", DefaultValue = "SortDirection.Ascending" },
+            new StateProperty { Name = "CurrentPage", Type = "int", DefaultValue = "1" },
+            new StateProperty { Name = "PageSize", Type = "int", DefaultValue = "10" },
+            new StateProperty { Name = "IsLoading", Type = "bool", DefaultValue = "false" }
+        };
+
+        actions = new List<ActionDefinition>
+        {
+            new ActionDefinition { Name = "LoadItems", PayloadType = "{}", IsAsync = true, Description = "Load items" },
+            new ActionDefinition { Name = "SetSearchQuery", PayloadType = "{ Query: string }", IsAsync = false, Description = "Set search query" },
+            new ActionDefinition { Name = "SetSort", PayloadType = "{ SortBy: string, Direction: SortDirection }", IsAsync = false, Description = "Set sort criteria" },
+            new ActionDefinition { Name = "SetPage", PayloadType = "{ Page: int }", IsAsync = false, Description = "Set current page" },
+            new ActionDefinition { Name = "SetPageSize", PayloadType = "{ PageSize: int }", IsAsync = false, Description = "Set page size" },
+            new ActionDefinition { Name = "ApplyFilters", PayloadType = "{}", IsAsync = false, Description = "Apply current filters" }
+        };
+    }
+
+    private void AddStateProperty()
+    {
+        stateProperties.Add(new StateProperty
+        {
+            Name = $"Property{stateProperties.Count + 1}",
+            Type = "string",
+            DefaultValue = "string.Empty"
+        });
+    }
+
+    private void RemoveStateProperty(int index)
+    {
+        if (index >= 0 && index < stateProperties.Count)
+        {
+            stateProperties.RemoveAt(index);
+        }
+    }
+
+    private void AddAction()
+    {
+        actions.Add(new ActionDefinition
+        {
+            Name = $"Action{actions.Count + 1}",
+            PayloadType = "{}",
+            IsAsync = false,
+            Description = "New action"
+        });
+    }
+
+    private void RemoveAction(int index)
+    {
+        if (index >= 0 && index < actions.Count)
+        {
+            actions.RemoveAt(index);
+        }
+    }
+
+    private string GetDefaultValueForType(string type)
+    {
+        return type.ToLower() switch
+        {
+            "bool" => "false",
+            "int" => "0",
+            "decimal" => "0m",
+            "string" => "string.Empty",
+            "string?" => "null",
+            "datetime" => "DateTime.Now",
+            _ when type.StartsWith("List<") => "new()",
+            _ when type.StartsWith("NormalizedState<") => "new()",
+            _ when type.EndsWith("?") => "null",
+            _ => "new()"
+        };
+    }
+
+    private string GenerateStatePreview()
+    {
+        if (string.IsNullOrWhiteSpace(sliceName) || !stateProperties.Any())
+            return "// Add properties to see preview";
+
+        var properties = stateProperties
+            .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+            .Select(p => $"    public {p.Type} {p.Name} {{ get; init; }} = {p.DefaultValue};")
+            .ToList();
+
+        return $"public record {sliceName}State : IState\n{{\n{string.Join("\n", properties)}\n}}";
+    }
+
+    private string GenerateActionsPreview()
+    {
+        if (!actions.Any())
+            return "// Add actions to see preview";
+
+        var actionRecords = actions
+            .Where(a => !string.IsNullOrWhiteSpace(a.Name))
+            .Select(a => $"public record {a.Name}Action({a.PayloadType});")
+            .ToList();
+
+        return string.Join("\n\n", actionRecords);
+    }
+
+    private string GenerateReducersPreview()
+    {
+        if (string.IsNullOrWhiteSpace(sliceName) || !actions.Any())
+            return "// Add actions to see preview";
+
+        var reducerMethods = actions
+            .Where(a => !string.IsNullOrWhiteSpace(a.Name))
+            .Select(a => $"        .On<{a.Name}Action>((state, action) => state with {{ /* TODO: Implement */ }})")
+            .ToList();
+
+        return $"public static class {sliceName}Reducers\n{{\n    public static SliceReducers<{sliceName}State> CreateReducers()\n    {{\n        return new SliceReducers<{sliceName}State>(new {sliceName}State())\n{string.Join("\n", reducerMethods)};\n    }}\n}}";
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Save()
+    {
+        if (!isValid || string.IsNullOrWhiteSpace(sliceName))
+            return;
+
+        var stateDefinition = stateProperties
+            .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+            .ToDictionary(p => p.Name, p => (object)p.Type);
+
+        var result = new
+        {
+            Name = sliceName.Trim(),
+            Description = string.IsNullOrWhiteSpace(sliceDescription) ? null : sliceDescription.Trim(),
+            StateDefinition = stateDefinition,
+            Actions = actions.Where(a => !string.IsNullOrWhiteSpace(a.Name)).ToList()
+        };
+
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+}

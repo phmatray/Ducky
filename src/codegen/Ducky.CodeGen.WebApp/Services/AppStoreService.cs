@@ -13,6 +13,7 @@ public interface IAppStoreService
     Task<AppStore> UpdateAppStoreAsync(AppStore appStore);
     Task DeleteAppStoreAsync(int id);
     Task<StateSlice> AddStateSliceAsync(int appStoreId, string name, string description, object stateDefinition);
+    Task DeleteStateSliceAsync(int stateSliceId);
     Task<ActionDefinition> AddActionAsync(int stateSliceId, string name, string description, string payloadType, bool isAsync = false);
     Task<EffectDefinition> AddEffectAsync(int stateSliceId, string name, string description, string implementationType, List<string> triggerActions);
     Task<List<GeneratedFile>> GenerateFilesAsync(int appStoreId);
@@ -110,6 +111,31 @@ public class AppStoreService : IAppStoreService
         }
 
         return stateSlice;
+    }
+
+    public async Task DeleteStateSliceAsync(int stateSliceId)
+    {
+        var stateSlice = await _context.StateSlices
+            .Include(s => s.Actions)
+            .Include(s => s.Effects)
+            .FirstOrDefaultAsync(s => s.Id == stateSliceId);
+
+        if (stateSlice != null)
+        {
+            var appStoreId = stateSlice.AppStoreId;
+            
+            // Remove related actions and effects (EF Core should handle this with cascade delete)
+            _context.StateSlices.Remove(stateSlice);
+            await _context.SaveChangesAsync();
+
+            // Update parent app store timestamp
+            var appStore = await _context.AppStores.FindAsync(appStoreId);
+            if (appStore != null)
+            {
+                appStore.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 
     public async Task<ActionDefinition> AddActionAsync(int stateSliceId, string name, string description, string payloadType, bool isAsync = false)

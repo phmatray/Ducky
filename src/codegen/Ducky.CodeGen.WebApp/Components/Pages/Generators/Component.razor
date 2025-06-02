@@ -11,7 +11,7 @@
     
     <MudGrid>
         <!-- Configuration Panel -->
-        <MudItem xs="12" md="5">
+        <MudItem xs="12" lg="6">
             <MudPaper Class="pa-4" Elevation="2">
                 <MudText Typo="Typo.h5" GutterBottom="true">
                     <MudIcon Icon="@Icons.Material.Filled.Web" Class="mr-2" />
@@ -29,38 +29,154 @@
                                       Label="Namespace" 
                                       Variant="Variant.Outlined"
                                       HelperText="The C# namespace for generated components"
-                                      Required="true" />
+                                      Required="true"
+                                      @bind-Value:after="@UpdateLivePreview" />
                         
                         <MudTextField @bind-Value="_rootStateType" 
                                       Label="Root State Type" 
                                       Variant="Variant.Outlined"
                                       HelperText="The root state type (e.g., AppState)"
-                                      Required="true" />
+                                      Required="true"
+                                      @bind-Value:after="@UpdateLivePreview" />
                         
                         <MudTextField @bind-Value="_componentName" 
                                       Label="Component Name" 
                                       Variant="Variant.Outlined"
                                       HelperText="The name of the component base class"
-                                      Required="true" />
+                                      Required="true"
+                                      @bind-Value:after="@UpdateLivePreview" />
                         
                         <MudTextField @bind-Value="_stateSliceName" 
                                       Label="State Slice Name" 
                                       Variant="Variant.Outlined"
                                       HelperText="The name of the state slice property"
-                                      Required="true" />
+                                      Required="true"
+                                      @bind-Value:after="@UpdateLivePreview" />
                         
                         <MudTextField @bind-Value="_stateSliceType" 
                                       Label="State Slice Type" 
                                       Variant="Variant.Outlined"
                                       HelperText="The type of the state slice"
-                                      Required="true" />
+                                      Required="true"
+                                      @bind-Value:after="@UpdateLivePreview" />
                         
-                        <MudTextField @bind-Value="_actionsText" 
-                                      Label="Actions" 
-                                      Variant="Variant.Outlined"
-                                      Lines="3"
-                                      HelperText="Actions (one per line: ActionName|ActionType|param1:type1,param2:type2)"
-                                      Placeholder="AddTodo|AddTodoAction|id:int,title:string&#10;ToggleTodo|ToggleTodoAction|id:int" />
+                        <!-- Actions Builder -->
+                        <MudStack>
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.subtitle1">Actions</MudText>
+                                <MudButton Variant="Variant.Outlined" 
+                                           StartIcon="@Icons.Material.Filled.Add"
+                                           Size="Size.Small"
+                                           OnClick="AddAction">
+                                    Add Action
+                                </MudButton>
+                            </MudStack>
+                            
+                            @if (_actions.Any())
+                            {
+                                <MudStack Spacing="2">
+                                    @for (int i = 0; i < _actions.Count; i++)
+                                    {
+                                        var actionIndex = i; // Capture for closure
+                                        var action = _actions[actionIndex];
+                                        
+                                        <MudPaper Class="pa-3" Elevation="1" Style="border-left: 4px solid #1976d2;">
+                                            <MudStack Spacing="2">
+                                                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                                    <MudText Typo="Typo.subtitle2">Action @(actionIndex + 1)</MudText>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                                   Size="Size.Small"
+                                                                   Color="Color.Error"
+                                                                   OnClick="() => RemoveAction(actionIndex)" />
+                                                </MudStack>
+                                                
+                                                <MudGrid>
+                                                    <MudItem xs="12" sm="6">
+                                                        <MudTextField @bind-Value="action.ActionName"
+                                                                      Label="Action Name"
+                                                                      Variant="Variant.Outlined"
+                                                                      HelperText="Method name (e.g., AddTodo)"
+                                                                      @bind-Value:after="@UpdateLivePreview" />
+                                                    </MudItem>
+                                                    <MudItem xs="12" sm="6">
+                                                        <MudTextField @bind-Value="action.ActionType"
+                                                                      Label="Action Type"
+                                                                      Variant="Variant.Outlined"
+                                                                      HelperText="Class name (e.g., AddTodoAction)"
+                                                                      @bind-Value:after="@UpdateLivePreview" />
+                                                    </MudItem>
+                                                </MudGrid>
+                                                
+                                                <!-- Parameters Section -->
+                                                <MudStack>
+                                                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Parameters</MudText>
+                                                        <MudButton Variant="Variant.Text" 
+                                                                   StartIcon="@Icons.Material.Filled.Add"
+                                                                   Size="Size.Small"
+                                                                   OnClick="() => AddParameter(actionIndex)">
+                                                            Add Parameter
+                                                        </MudButton>
+                                                    </MudStack>
+                                                    
+                                                    @if (action.Parameters.Any())
+                                                    {
+                                                        @for (int j = 0; j < action.Parameters.Count; j++)
+                                                        {
+                                                            var paramIndex = j; // Capture for closure
+                                                            var param = action.Parameters[paramIndex];
+                                                            
+                                                            <MudGrid>
+                                                                <MudItem xs="5">
+                                                                    <MudTextField @bind-Value="param.ParamName"
+                                                                                  Label="Name"
+                                                                                  Variant="Variant.Outlined"
+                                                                                  @bind-Value:after="@UpdateLivePreview" />
+                                                                </MudItem>
+                                                                <MudItem xs="5">
+                                                                    <MudSelect @bind-Value="param.ParamType"
+                                                                               Label="Type"
+                                                                               Variant="Variant.Outlined"
+                                                                               @bind-Value:after="@UpdateLivePreview">
+                                                                        <MudSelectItem Value="@("string")">string</MudSelectItem>
+                                                                        <MudSelectItem Value="@("int")">int</MudSelectItem>
+                                                                        <MudSelectItem Value="@("bool")">bool</MudSelectItem>
+                                                                        <MudSelectItem Value="@("Guid")">Guid</MudSelectItem>
+                                                                        <MudSelectItem Value="@("DateTime")">DateTime</MudSelectItem>
+                                                                        <MudSelectItem Value="@("decimal")">decimal</MudSelectItem>
+                                                                        <MudSelectItem Value="@("double")">double</MudSelectItem>
+                                                                    </MudSelect>
+                                                                </MudItem>
+                                                                <MudItem xs="2">
+                                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                                                   Size="Size.Small"
+                                                                                   Color="Color.Error"
+                                                                                   OnClick="() => RemoveParameter(actionIndex, paramIndex)" />
+                                                                </MudItem>
+                                                            </MudGrid>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="text-center pa-2">
+                                                            No parameters - click "Add Parameter" to add some
+                                                        </MudText>
+                                                    }
+                                                </MudStack>
+                                            </MudStack>
+                                        </MudPaper>
+                                    }
+                                </MudStack>
+                            }
+                            else
+                            {
+                                <MudPaper Class="pa-4 text-center" Elevation="0" Style="background-color: #f9f9f9; border: 2px dashed #ddd;">
+                                    <MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Large" Color="Color.Secondary" />
+                                    <MudText Typo="Typo.body1" Class="mt-2">No actions defined</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Click "Add Action" to get started</MudText>
+                                </MudPaper>
+                            }
+                        </MudStack>
                         
                         <!-- Generate Button -->
                         <MudButton Variant="Variant.Filled" 
@@ -77,47 +193,61 @@
             </MudPaper>
         </MudItem>
         
-        <!-- Generated Code Panel -->
-        <MudItem xs="12" md="7">
-            @if (!string.IsNullOrEmpty(_generatedCode))
-            {
-                <MudPaper Class="pa-4" Elevation="2">
-                    <MudStack>
-                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                            <MudText Typo="Typo.h5">Generated Code</MudText>
-                            <MudStack Row="true" Spacing="2">
-                                <MudButton Variant="Variant.Outlined" 
-                                           StartIcon="@Icons.Material.Filled.ContentCopy"
-                                           OnClick="CopyToClipboard">
-                                    Copy
-                                </MudButton>
-                                <MudButton Variant="Variant.Filled" 
-                                           Color="Color.Secondary"
-                                           StartIcon="@Icons.Material.Filled.Download"
-                                           OnClick="DownloadCode">
-                                    Download
-                                </MudButton>
-                            </MudStack>
+        <!-- Live Preview Panel -->
+        <MudItem xs="12" lg="6">
+            <MudPaper Class="pa-4" Elevation="2" Style="height: 100%; min-height: 600px;">
+                <MudStack>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h5">
+                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-2" />
+                            Live Preview
+                        </MudText>
+                        <MudStack Row="true" Spacing="2">
+                            <MudButton Variant="Variant.Outlined" 
+                                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                                       Size="Size.Small"
+                                       Disabled="@string.IsNullOrEmpty(_livePreviewCode)"
+                                       OnClick="CopyToClipboard">
+                                Copy
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Download"
+                                       Size="Size.Small"
+                                       Disabled="@string.IsNullOrEmpty(_livePreviewCode)"
+                                       OnClick="DownloadCode">
+                                Download
+                            </MudButton>
                         </MudStack>
-                        
-                        <MudDivider Class="my-3" />
-                        
-                        <MudPaper Class="pa-3" Style="background-color: #1e1e1e; border-radius: 8px; overflow: auto; max-height: 70vh;">
-                            <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 13px;">@_generatedCode</pre>
-                        </MudPaper>
                     </MudStack>
-                </MudPaper>
-            }
-            else
-            {
-                <MudPaper Class="pa-8 text-center" Elevation="0" Style="background-color: #f5f5f5; height: 100%;">
-                    <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Typo="Typo.h6" Class="mt-3">No Code Generated Yet</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Configure your component settings and click "Generate Component" to see the code.
-                    </MudText>
-                </MudPaper>
-            }
+                    
+                    <MudDivider Class="my-3" />
+                    
+                    @if (!string.IsNullOrEmpty(_livePreviewCode))
+                    {
+                        <MudPaper Class="pa-3" Elevation="0" Style="background-color: #1e1e1e; border-radius: 8px; overflow: auto; max-height: calc(100vh - 200px); flex-grow: 1;">
+                            <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 12px; line-height: 1.4;">@_livePreviewCode</pre>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        <MudPaper Class="pa-8 text-center" Elevation="0" Style="background-color: #f5f5f5; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Preview" Size="Size.Large" Color="Color.Secondary" />
+                            <MudText Typo="Typo.h6" Class="mt-3">Live Preview</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Start configuring your component to see a live preview of the generated code.
+                            </MudText>
+                        </MudPaper>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(_previewError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Class="mt-2">
+                            <MudText>@_previewError</MudText>
+                        </MudAlert>
+                    }
+                </MudStack>
+            </MudPaper>
         </MudItem>
     </MudGrid>
     
@@ -164,36 +294,74 @@
     private MudForm _form = null!;
     private bool _isValid;
     private string? _generatedCode;
+    private string? _livePreviewCode;
+    private string? _previewError;
     private string _namespace = "MyApp.Components";
     private string _rootStateType = "AppState";
     private string _componentName = "TodoStateComponent";
     private string _stateSliceName = "Todos";
     private string _stateSliceType = "TodoState";
-    private string _actionsText = "AddTodo|AddTodoAction|id:int,title:string\nToggleTodo|ToggleTodoAction|id:int";
+    
+    private List<MutableActionDescriptor> _actions = new()
+    {
+        new MutableActionDescriptor
+        {
+            ActionName = "AddTodo",
+            ActionType = "AddTodoAction",
+            Parameters = new List<MutableParameterDescriptor>
+            {
+                new MutableParameterDescriptor { ParamName = "id", ParamType = "int" },
+                new MutableParameterDescriptor { ParamName = "title", ParamType = "string" }
+            }
+        },
+        new MutableActionDescriptor
+        {
+            ActionName = "ToggleTodo",
+            ActionType = "ToggleTodoAction", 
+            Parameters = new List<MutableParameterDescriptor>
+            {
+                new MutableParameterDescriptor { ParamName = "id", ParamType = "int" }
+            }
+        }
+    };
+
+    public class MutableActionDescriptor
+    {
+        public string ActionName { get; set; } = string.Empty;
+        public string ActionType { get; set; } = string.Empty;
+        public List<MutableParameterDescriptor> Parameters { get; set; } = new();
+        
+        public ComponentActionDescriptor ToComponentAction()
+        {
+            return new ComponentActionDescriptor
+            {
+                ActionName = ActionName,
+                ActionType = ActionType,
+                Parameters = Parameters.Select(p => new ParameterDescriptor 
+                { 
+                    ParamName = p.ParamName, 
+                    ParamType = p.ParamType 
+                }).ToList()
+            };
+        }
+    }
+
+    public class MutableParameterDescriptor
+    {
+        public string ParamName { get; set; } = string.Empty;
+        public string ParamType { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateLivePreview();
+    }
 
     private async Task GenerateAsync()
     {
         try
         {
-            var actions = ParseActions(_actionsText);
-            
-            var options = new ComponentGeneratorOptions
-            {
-                Namespace = _namespace,
-                RootStateType = _rootStateType,
-                Components = new List<ComponentDescriptor>
-                {
-                    new ComponentDescriptor
-                    {
-                        ComponentName = _componentName,
-                        StateSliceName = _stateSliceName,
-                        StateSliceType = _stateSliceType,
-                        StateSliceProperty = _stateSliceName,
-                        Actions = actions
-                    }
-                }
-            };
-
+            var options = CreateComponentOptions();
             var generator = new ComponentGenerator();
             _generatedCode = await generator.GenerateCodeAsync(options);
             Snackbar.Add("Component generated successfully!", Severity.Success);
@@ -204,67 +372,117 @@
         }
     }
 
-    private List<ComponentActionDescriptor> ParseActions(string actionsText)
+    private async Task UpdateLivePreview()
     {
-        var actions = new List<ComponentActionDescriptor>();
-        
-        if (string.IsNullOrWhiteSpace(actionsText))
-            return actions;
-            
-        var lines = actionsText.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        
-        foreach (var line in lines)
+        try
         {
-            var parts = line.Split('|', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2) continue;
+            _previewError = null;
             
-            var actionName = parts[0].Trim();
-            var actionType = parts[1].Trim();
-            var parameters = new List<ParameterDescriptor>();
-            
-            if (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]))
+            if (string.IsNullOrWhiteSpace(_namespace) || 
+                string.IsNullOrWhiteSpace(_rootStateType) || 
+                string.IsNullOrWhiteSpace(_componentName) ||
+                string.IsNullOrWhiteSpace(_stateSliceName) ||
+                string.IsNullOrWhiteSpace(_stateSliceType))
             {
-                var paramParts = parts[2].Split(',', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var paramPart in paramParts)
-                {
-                    var paramInfo = paramPart.Split(':', StringSplitOptions.RemoveEmptyEntries);
-                    if (paramInfo.Length == 2)
-                    {
-                        parameters.Add(new ParameterDescriptor
-                        {
-                            ParamName = paramInfo[0].Trim(),
-                            ParamType = paramInfo[1].Trim()
-                        });
-                    }
-                }
+                _livePreviewCode = null;
+                StateHasChanged();
+                return;
             }
-            
-            actions.Add(new ComponentActionDescriptor
-            {
-                ActionName = actionName,
-                ActionType = actionType,
-                Parameters = parameters
-            });
+
+            var options = CreateComponentOptions();
+            var generator = new ComponentGenerator();
+            _livePreviewCode = await generator.GenerateCodeAsync(options);
+        }
+        catch (Exception ex)
+        {
+            _previewError = $"Preview error: {ex.Message}";
+            _livePreviewCode = null;
         }
         
-        return actions;
+        StateHasChanged();
     }
+
+    private ComponentGeneratorOptions CreateComponentOptions()
+    {
+        return new ComponentGeneratorOptions
+        {
+            Namespace = _namespace,
+            RootStateType = _rootStateType,
+            Components = new List<ComponentDescriptor>
+            {
+                new ComponentDescriptor
+                {
+                    ComponentName = _componentName,
+                    StateSliceName = _stateSliceName,
+                    StateSliceType = _stateSliceType,
+                    StateSliceProperty = _stateSliceName,
+                    Actions = _actions.Select(a => a.ToComponentAction()).ToList()
+                }
+            }
+        };
+    }
+
+    private async Task AddAction()
+    {
+        _actions.Add(new MutableActionDescriptor
+        {
+            ActionName = $"Action{_actions.Count + 1}",
+            ActionType = $"Action{_actions.Count + 1}Action",
+            Parameters = new List<MutableParameterDescriptor>()
+        });
+        await UpdateLivePreview();
+    }
+
+    private async Task RemoveAction(int index)
+    {
+        if (index >= 0 && index < _actions.Count)
+        {
+            _actions.RemoveAt(index);
+            await UpdateLivePreview();
+        }
+    }
+
+    private async Task AddParameter(int actionIndex)
+    {
+        if (actionIndex >= 0 && actionIndex < _actions.Count)
+        {
+            _actions[actionIndex].Parameters.Add(new MutableParameterDescriptor
+            {
+                ParamName = "param",
+                ParamType = "string"
+            });
+            await UpdateLivePreview();
+        }
+    }
+
+    private async Task RemoveParameter(int actionIndex, int paramIndex)
+    {
+        if (actionIndex >= 0 && actionIndex < _actions.Count &&
+            paramIndex >= 0 && paramIndex < _actions[actionIndex].Parameters.Count)
+        {
+            _actions[actionIndex].Parameters.RemoveAt(paramIndex);
+            await UpdateLivePreview();
+        }
+    }
+
 
     private async Task CopyToClipboard()
     {
-        if (!string.IsNullOrEmpty(_generatedCode))
+        var codeToUse = !string.IsNullOrEmpty(_livePreviewCode) ? _livePreviewCode : _generatedCode;
+        if (!string.IsNullOrEmpty(codeToUse))
         {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedCode);
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", codeToUse);
             Snackbar.Add("Code copied to clipboard!", Severity.Success);
         }
     }
 
     private async Task DownloadCode()
     {
-        if (!string.IsNullOrEmpty(_generatedCode))
+        var codeToUse = !string.IsNullOrEmpty(_livePreviewCode) ? _livePreviewCode : _generatedCode;
+        if (!string.IsNullOrEmpty(codeToUse))
         {
-            var fileName = $"{_componentName}.razor";
-            await JS.InvokeVoidAsync("downloadFile", fileName, _generatedCode);
+            var fileName = $"{_componentName}.cs";
+            await JS.InvokeVoidAsync("downloadFile", fileName, codeToUse);
             Snackbar.Add($"Downloaded {fileName}", Severity.Success);
         }
     }
