@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Ducky.CodeGen.Core;
 
 public class ActionCreatorGeneratorOptions
@@ -6,29 +10,30 @@ public class ActionCreatorGeneratorOptions
 
     public string StateType { get; set; } = "AppState";
 
-    public List<ActionDescriptor> Actions { get; set; } =
-    [
+    public List<ActionDescriptor> Actions { get; set; } = new List<ActionDescriptor>
+    {
         new ActionDescriptor()
         {
             ActionName = "AddTodoAction",
-            Parameters = [
+            Parameters = new List<ParameterDescriptor>
+            {
                 new ParameterDescriptor() { ParamName = "id", ParamType = "int" },
                 new ParameterDescriptor() { ParamName = "title", ParamType = "string" }
-            ]
+            }
         },
         new ActionDescriptor()
         {
             ActionName = "ToggleTodoAction",
-            Parameters = [new ParameterDescriptor() { ParamName = "id", ParamType = "int" }]
+            Parameters = new List<ParameterDescriptor> { new ParameterDescriptor() { ParamName = "id", ParamType = "int" } }
         }
-    ];
+    };
 }
 
 public record ActionDescriptor
 {
-    public required string ActionName { get; init; } // e.g. "AddTodoAction"
+    public string ActionName { get; init; } = string.Empty; // e.g. "AddTodoAction"
 
-    public IEnumerable<ParameterDescriptor> Parameters { get; init; } = [];
+    public IEnumerable<ParameterDescriptor> Parameters { get; init; } = new List<ParameterDescriptor>();
 
     public override string ToString()
     {

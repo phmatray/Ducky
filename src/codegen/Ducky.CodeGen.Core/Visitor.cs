@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -23,8 +26,8 @@ public interface ISyntaxVisitor<T>
 // === Model Classes ===
 public class CompilationUnitElement : ICodeElement
 {
-    public IEnumerable<string> Usings { get; set; } = [];
-    public IEnumerable<NamespaceElement> Namespaces { get; set; } = [];
+    public IEnumerable<string> Usings { get; set; } = Array.Empty<string>();
+    public IEnumerable<NamespaceElement> Namespaces { get; set; } = Array.Empty<NamespaceElement>();
 
     public T Accept<T>(ISyntaxVisitor<T> visitor)
         => visitor.Visit(this);
@@ -33,7 +36,7 @@ public class CompilationUnitElement : ICodeElement
 public class NamespaceElement : ICodeElement
 {
     public string Name { get; set; } = string.Empty;
-    public IEnumerable<ClassElement> Classes { get; set; } = [];
+    public IEnumerable<ClassElement> Classes { get; set; } = Array.Empty<ClassElement>();
 
     public T Accept<T>(ISyntaxVisitor<T> visitor)
         => visitor.Visit(this);
@@ -43,7 +46,8 @@ public class ClassElement : ICodeElement
 {
     public string Name { get; set; } = string.Empty;
     public bool IsStatic { get; set; } = true;
-    public IEnumerable<MethodElement> Methods { get; set; } = [];
+    public bool IsPartial { get; set; } = false;
+    public IEnumerable<MethodElement> Methods { get; set; } = Array.Empty<MethodElement>();
 
     public T Accept<T>(ISyntaxVisitor<T> visitor)
         => visitor.Visit(this);
@@ -66,10 +70,16 @@ public class MethodElement : ICodeElement
     public bool IsPartialDeclaration { get; set; }
 
     // now an ordered list of parameters
-    public IEnumerable<ParameterDescriptor> Parameters { get; set; } = [];
+    public IEnumerable<ParameterDescriptor> Parameters { get; set; } = Array.Empty<ParameterDescriptor>();
 
     // if set, we emit => body
     public ExpressionElement? ExpressionBody { get; set; }
+
+    // XML documentation comments
+    public string XmlDocumentation { get; set; } = string.Empty;
+
+    // Method body for non-expression-bodied methods
+    public ExpressionElement? MethodBody { get; set; }
 
     public T Accept<T>(ISyntaxVisitor<T> visitor) => visitor.Visit(this);
 }
@@ -111,8 +121,14 @@ public class SyntaxFactoryVisitor : ISyntaxVisitor<SyntaxNode>
     public SyntaxNode Visit(ClassElement cls)
     {
         ClassDeclarationSyntax classDecl = ClassDeclaration(cls.Name)
-            .AddModifiers(Token(PublicKeyword))
-            .AddModifiers(cls.IsStatic ? Token(StaticKeyword) : default);
+            .AddModifiers(Token(PublicKeyword));
+        
+        if (cls.IsStatic)
+            classDecl = classDecl.AddModifiers(Token(StaticKeyword));
+            
+        if (cls.IsPartial)
+            classDecl = classDecl.AddModifiers(Token(PartialKeyword));
+            
         MemberDeclarationSyntax[] methods = cls.Methods
             .Select(m => (MemberDeclarationSyntax)m.Accept(this))
             .ToArray();
@@ -153,13 +169,26 @@ public class SyntaxFactoryVisitor : ISyntaxVisitor<SyntaxNode>
                 .WithSemicolonToken(Token(SemicolonToken));
         }
 
-        // 4) Expression-bodied reducer
+        // 4) Add XML documentation if provided
+        if (!string.IsNullOrEmpty(method.XmlDocumentation))
+        {
+            // TODO: Add XML documentation support
+        }
+
+        // 5) Expression-bodied method
         if (method.ExpressionBody is { } exprBody)
         {
             ExpressionSyntax expr = ParseExpression(exprBody.Code);
             return methodDecl
                 .WithExpressionBody(ArrowExpressionClause(expr))
                 .WithSemicolonToken(Token(SemicolonToken));
+        }
+
+        // 6) Method body (block)
+        if (method.MethodBody is { } methodBody)
+        {
+            BlockSyntax block = Block(ParseStatement(methodBody.Code));
+            return methodDecl.WithBody(block);
         }
 
         // fallback (shouldn't happen here)

@@ -39,7 +39,7 @@ public record StateDescriptor
     public override string ToString()
     {
         var propCount = Properties.Count();
-        return $"{StateName} ({propCount} properties)";
+        return $"{StateName} ({propCount.ToString()} properties)";
     }
 }
 

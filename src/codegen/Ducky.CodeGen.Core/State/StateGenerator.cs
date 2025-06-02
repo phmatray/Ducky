@@ -67,7 +67,7 @@ public class StateGenerator : SourceGeneratorBase<StateGeneratorOptions>
 
         if (!string.IsNullOrEmpty(state.BaseClass))
         {
-            inheritance.Add(state.BaseClass);
+            inheritance.Add(state.BaseClass!);
         }
             
         string inheritanceClause = inheritance.Count > 0 ? $" : {string.Join(", ", inheritance)}" : "";

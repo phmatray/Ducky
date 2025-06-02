@@ -41,7 +41,7 @@ public record EffectDescriptor
     public override string ToString()
     {
         var triggerCount = TriggerActions.Count();
-        return $"{EffectName} ({triggerCount} triggers)";
+        return $"{EffectName} ({triggerCount.ToString()} triggers)";
     }
 }
 
