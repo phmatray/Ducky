@@ -1,6 +1,5 @@
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
-using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.ReactiveEffect;
 
 namespace Ducky.Builder;
@@ -15,29 +14,19 @@ internal static class MiddlewareOrderValidator
         [typeof(CorrelationIdMiddleware)] = new MiddlewareOrderRule
         {
             Priority = 100,
-            ShouldComeBefore = new HashSet<Type> {
-                typeof(ExceptionHandlingMiddleware),
-                typeof(AsyncEffectMiddleware),
-                typeof(ReactiveEffectMiddleware) },
-            Reason = "CorrelationId should be set early to track actions through the entire pipeline"
-        },
-        [typeof(ExceptionHandlingMiddleware)] = new MiddlewareOrderRule
-        {
-            Priority = 200,
             ShouldComeBefore = new HashSet<Type> { typeof(AsyncEffectMiddleware), typeof(ReactiveEffectMiddleware) },
-            ShouldComeAfter = new HashSet<Type> { typeof(CorrelationIdMiddleware) },
-            Reason = "ExceptionHandling should wrap effects to catch and handle their errors"
+            Reason = "CorrelationId should be set early to track actions through the entire pipeline"
         },
         [typeof(AsyncEffectMiddleware)] = new MiddlewareOrderRule
         {
-            Priority = 300,
-            ShouldComeAfter = new HashSet<Type> { typeof(CorrelationIdMiddleware), typeof(ExceptionHandlingMiddleware) },
+            Priority = 200,
+            ShouldComeAfter = new HashSet<Type> { typeof(CorrelationIdMiddleware) },
             Reason = "AsyncEffect should run after correlation and error handling are set up"
         },
         [typeof(ReactiveEffectMiddleware)] = new MiddlewareOrderRule
         {
-            Priority = 400,
-            ShouldComeAfter = new HashSet<Type> { typeof(CorrelationIdMiddleware), typeof(ExceptionHandlingMiddleware) },
+            Priority = 300,
+            ShouldComeAfter = new HashSet<Type> { typeof(CorrelationIdMiddleware) },
             Reason = "ReactiveEffect should run after correlation and error handling are set up"
         }
     };

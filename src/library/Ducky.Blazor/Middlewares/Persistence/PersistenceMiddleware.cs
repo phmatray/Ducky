@@ -1,10 +1,8 @@
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Ducky;
 using Ducky.Pipeline;
 
 namespace Ducky.Blazor.Middlewares.Persistence;
@@ -12,7 +10,7 @@ namespace Ducky.Blazor.Middlewares.Persistence;
 /// <summary>
 /// Modern middleware that handles state persistence and hydration with comprehensive features.
 /// </summary>
-public sealed class PersistenceMiddleware : IMiddleware, IDisposable
+public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
 {
     private readonly IEnhancedPersistenceProvider<IRootState> _persistenceProvider;
     private readonly HydrationManager _hydrationManager;
@@ -51,7 +49,7 @@ public sealed class PersistenceMiddleware : IMiddleware, IDisposable
     }
 
     /// <inheritdoc />
-    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _dispatcher = dispatcher;
         _store = store;
@@ -63,12 +61,6 @@ public sealed class PersistenceMiddleware : IMiddleware, IDisposable
         }
 
         return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public void AfterInitializeAllMiddlewares()
-    {
-        // Nothing to do after all middlewares are initialized
     }
 
     /// <summary>
@@ -154,14 +146,7 @@ public sealed class PersistenceMiddleware : IMiddleware, IDisposable
     }
 
     /// <inheritdoc />
-    public bool MayDispatchAction(object action)
-    {
-        // Allow all actions
-        return true;
-    }
-
-    /// <inheritdoc />
-    public void BeforeDispatch(object action)
+    public override void BeforeDispatch(object action)
     {
         // Queue actions during hydration if enabled
         if (!_options.QueueActionsOnHydration || !_hydrationManager.IsHydrating || IsHydrationAction(action))
@@ -173,7 +158,7 @@ public sealed class PersistenceMiddleware : IMiddleware, IDisposable
     }
 
     /// <inheritdoc />
-    public void AfterDispatch(object action)
+    public override void AfterDispatch(object action)
     {
         if (_store is null)
         {
@@ -200,12 +185,6 @@ public sealed class PersistenceMiddleware : IMiddleware, IDisposable
 
         // Schedule persistence based on throttling/debouncing configuration
         SchedulePersistence("action");
-    }
-
-    /// <inheritdoc />
-    public IDisposable BeginInternalMiddlewareChange()
-    {
-        return new DisposableCallback(() => { });
     }
 
     /// <summary>

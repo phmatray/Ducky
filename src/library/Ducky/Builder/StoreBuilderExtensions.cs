@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
-using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.NoOp;
 using Ducky.Middlewares.ReactiveEffect;
 
@@ -25,18 +24,6 @@ public static class StoreBuilderExtensions
     }
 
     /// <summary>
-    /// Adds the exception handling middleware to the store pipeline.
-    /// </summary>
-    /// <param name="builder">The store builder.</param>
-    /// <returns>The store builder for chaining.</returns>
-    public static IStoreBuilder AddExceptionHandlingMiddleware(this IStoreBuilder builder)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        return builder.AddMiddleware<ExceptionHandlingMiddleware>();
-    }
-
-    /// <summary>
     /// Adds the no-op middleware to the store pipeline.
     /// </summary>
     /// <param name="builder">The store builder.</param>
@@ -52,14 +39,17 @@ public static class StoreBuilderExtensions
     /// Adds the async effect middleware to the store pipeline.
     /// </summary>
     /// <param name="builder">The store builder.</param>
+    /// <param name="getEffectsFromServices">Specifies whether to retrieve effects from the service provider.</param>
     /// <returns>The store builder for chaining.</returns>
-    public static IStoreBuilder AddAsyncEffectMiddleware(this IStoreBuilder builder)
+    public static IStoreBuilder AddAsyncEffectMiddleware(
+        this IStoreBuilder builder,
+        bool getEffectsFromServices = true)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder.AddMiddleware<AsyncEffectMiddleware>(sp =>
             new AsyncEffectMiddleware(
-                sp.GetServices<IAsyncEffect>(),
+                getEffectsFromServices ? sp.GetServices<IAsyncEffect>() : [],
                 sp.GetRequiredService<IStoreEventPublisher>()));
     }
 
@@ -67,14 +57,17 @@ public static class StoreBuilderExtensions
     /// Adds the reactive effect middleware to the store pipeline.
     /// </summary>
     /// <param name="builder">The store builder.</param>
+    /// <param name="getEffectsFromServices">Specifies whether to retrieve effects from the service provider.</param>
     /// <returns>The store builder for chaining.</returns>
-    public static IStoreBuilder AddReactiveEffectMiddleware(this IStoreBuilder builder)
+    public static IStoreBuilder AddReactiveEffectMiddleware(
+        this IStoreBuilder builder,
+        bool getEffectsFromServices = true)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder.AddMiddleware<ReactiveEffectMiddleware>(sp =>
             new ReactiveEffectMiddleware(
-                sp.GetServices<IReactiveEffect>(),
+                getEffectsFromServices ? sp.GetServices<IReactiveEffect>() : [],
                 sp.GetRequiredService<IStoreEventPublisher>()));
     }
 
@@ -90,7 +83,6 @@ public static class StoreBuilderExtensions
 
         return builder
             .AddCorrelationIdMiddleware()
-            .AddExceptionHandlingMiddleware()
             .AddAsyncEffectMiddleware()
             .AddReactiveEffectMiddleware();
     }

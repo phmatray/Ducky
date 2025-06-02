@@ -1,7 +1,6 @@
 using Ducky.Builder;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
-using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,19 +21,17 @@ public class StoreBuilderTests
         {
             builder
                 .AddCorrelationIdMiddleware()
-                .AddExceptionHandlingMiddleware()
                 .AddAsyncEffectMiddleware()
                 .AddReactiveEffectMiddleware();
         });
 
         // Assert - Middlewares should be registered as both concrete and interface
         services.Any(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).ShouldBeTrue();
-        services.Any(sd => sd.ServiceType == typeof(ExceptionHandlingMiddleware)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(AsyncEffectMiddleware)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(ReactiveEffectMiddleware)).ShouldBeTrue();
 
         // Check interface registrations
-        services.Where(sd => sd.ServiceType == typeof(IMiddleware)).Count().ShouldBe(4);
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(4);
     }
 
     [Fact]
@@ -54,8 +51,8 @@ public class StoreBuilderTests
         });
 
         // Assert - Should only register once
-        services.Where(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).Count().ShouldBe(1);
-        services.Where(sd => sd.ServiceType == typeof(IMiddleware)).Count().ShouldBe(1);
+        services.Count(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).ShouldBe(1);
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(1);
     }
 
     [Fact]
@@ -65,7 +62,7 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act
-        services.AddDuckyStore(builder => { builder.AddMiddleware<TestMiddleware>(); });
+        services.AddDuckyStore(builder => builder.AddMiddleware<TestMiddleware>());
 
         // Assert
         services.Any(sd => sd.ServiceType == typeof(TestMiddleware)).ShouldBeTrue();
@@ -106,7 +103,7 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act
-        services.AddDuckyStore(builder => { builder.AddSlice<TestState>(); });
+        services.AddDuckyStore(builder => builder.AddSlice<TestState>());
 
         // Assert
         services.Any(sd => sd.ServiceType == typeof(ISlice<TestState>)).ShouldBeTrue();
@@ -142,7 +139,7 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act
-        services.AddDuckyStore(builder => { builder.AddExceptionHandler<TestExceptionHandler>(); });
+        services.AddDuckyStore(builder => builder.AddExceptionHandler<TestExceptionHandler>());
 
         // Assert
         services.Any(sd => sd.ServiceType == typeof(TestExceptionHandler)).ShouldBeTrue();
@@ -194,7 +191,7 @@ public class StoreBuilderTests
         });
 
         // Verify all registrations
-        services.Where(sd => sd.ServiceType == typeof(IMiddleware)).Count().ShouldBe(4); // Default middlewares
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(4); // Default middlewares
         services.Any(sd => sd.ServiceType == typeof(ISlice<TestState>)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IAsyncEffect)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IReactiveEffect)).ShouldBeTrue();
@@ -202,39 +199,9 @@ public class StoreBuilderTests
     }
 
     // Test doubles
-    private class TestMiddleware : IMiddleware
-    {
-        public Task InitializeAsync(IDispatcher dispatcher, IStore store)
-        {
-            return Task.CompletedTask;
-        }
+    private class TestMiddleware : MiddlewareBase;
 
-        public void AfterInitializeAllMiddlewares()
-        {
-        }
-
-        public bool MayDispatchAction(object action)
-        {
-            return true;
-        }
-
-        public void BeforeDispatch(object action)
-        {
-        }
-
-        public void AfterDispatch(object action)
-        {
-        }
-
-        public IDisposable BeginInternalMiddlewareChange()
-        {
-            return new DisposableCallback(() => { });
-        }
-    }
-
-    private class TestState : IState
-    {
-    }
+    private class TestState : IState;
 
     private class TestAsyncEffect : IAsyncEffect
     {

@@ -6,7 +6,10 @@ namespace Ducky.Pipeline;
 public abstract class MiddlewareBase : IMiddleware
 {
     /// <inheritdoc />
-    public abstract Task InitializeAsync(IDispatcher dispatcher, IStore store);
+    public virtual Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public virtual void AfterInitializeAllMiddlewares()
@@ -22,10 +25,16 @@ public abstract class MiddlewareBase : IMiddleware
     }
 
     /// <inheritdoc />
-    public abstract void BeforeDispatch(object action);
+    public virtual void BeforeDispatch(object action)
+    {
+        // Default implementation does nothing
+    }
 
     /// <inheritdoc />
-    public abstract void AfterDispatch(object action);
+    public virtual void AfterDispatch(object action)
+    {
+        // Default implementation does nothing
+    }
 
     /// <inheritdoc />
     public virtual IDisposable BeginInternalMiddlewareChange()

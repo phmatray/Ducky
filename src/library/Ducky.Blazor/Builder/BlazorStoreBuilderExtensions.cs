@@ -24,7 +24,7 @@ public static class BlazorStoreBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         // Register the JS module
-        builder.Services.TryAddScoped<JsConsoleLoggerModule>(sp =>
+        builder.Services.AddScoped<JsConsoleLoggerModule>(sp =>
         {
             IJSRuntime jsRuntime = sp.GetRequiredService<IJSRuntime>();
             return new JsConsoleLoggerModule(jsRuntime);
@@ -55,10 +55,10 @@ public static class BlazorStoreBuilderExtensions
 
         // Register supporting services
         builder.Services.TryAddSingleton<DevToolsStateManager>();
-        builder.Services.TryAddScoped<DevToolsReducer>();
+        builder.Services.AddScoped<DevToolsReducer>();
 
         // Register the DevTools JS module
-        builder.Services.TryAddScoped<ReduxDevToolsModule>(sp =>
+        builder.Services.AddScoped<ReduxDevToolsModule>(sp =>
         {
             IJSRuntime jsRuntime = sp.GetRequiredService<IJSRuntime>();
             IStore store = sp.GetRequiredService<IStore>();
@@ -97,14 +97,14 @@ public static class BlazorStoreBuilderExtensions
         });
 
         // Register the hydration manager
-        builder.Services.TryAddScoped<HydrationManager>();
+        builder.Services.AddScoped<HydrationManager>();
 
         // Register the persistence provider (default to LocalStorage)
-        builder.Services.TryAddScoped(typeof(IPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
-        builder.Services.TryAddScoped(typeof(IEnhancedPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
+        builder.Services.AddScoped(typeof(IPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
+        builder.Services.AddScoped(typeof(IEnhancedPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
         
         // Register the enhanced persistence provider specifically for IRootState
-        builder.Services.TryAddScoped<IEnhancedPersistenceProvider<IRootState>>(sp =>
+        builder.Services.AddScoped<IEnhancedPersistenceProvider<IRootState>>(sp =>
         {
             Blazored.LocalStorage.ILocalStorageService localStorage = sp.GetRequiredService<Blazored.LocalStorage.ILocalStorageService>();
             PersistenceOptions options = sp.GetRequiredService<PersistenceOptions>();

@@ -3,10 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Ducky.Builder;
-using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Pipeline;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Tests.Integration;
 
@@ -31,11 +28,10 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
 
         // Add Ducky services with StoreBuilder
         services.AddDuckyStore(builder => builder
-            .AddExceptionHandlingMiddleware()
             .AddExceptionHandler<TestExceptionHandler>(_ => _exceptionHandler));
 
         // Add test slice
-        services.TryAddScoped<ISlice, TestCounterReducers>();
+        services.AddScoped<ISlice, TestCounterReducers>();
 
         _serviceProvider = services.BuildServiceProvider();
         _store = _serviceProvider.GetRequiredService<IStore>();
@@ -66,32 +62,6 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
         }
 
         errorEvents.ShouldAllBe(evt => evt.IsHandled);
-    }
-
-    [Fact]
-    public void ServiceCollection_ExceptionHandlingExtensions_ShouldRegisterCorrectly()
-    {
-        // Arrange
-        ServiceCollection services = [];
-
-        // Add required dependencies
-        services.AddLogging();
-        services.TryAddScoped<IStoreEventPublisher, StoreEventPublisher>();
-
-        // Act - Add exception handling directly (for testing service registration)
-        services.TryAddScoped<ExceptionHandlingMiddleware>();
-        services.AddScoped<IMiddleware>(sp => sp.GetRequiredService<ExceptionHandlingMiddleware>());
-        services.AddScoped<IExceptionHandler, TestExceptionHandler>();
-
-        ServiceProvider provider = services.BuildServiceProvider();
-
-        // Assert
-        ExceptionHandlingMiddleware? middleware = provider.GetService<ExceptionHandlingMiddleware>();
-        IEnumerable<IExceptionHandler> handlers = provider.GetServices<IExceptionHandler>();
-
-        middleware.ShouldNotBeNull();
-        handlers.Count().ShouldBe(1);
-        handlers.First().ShouldBeOfType<TestExceptionHandler>();
     }
 
     public void Dispose()

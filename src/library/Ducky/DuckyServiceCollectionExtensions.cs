@@ -2,6 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Ducky.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky;
@@ -30,12 +31,12 @@ public static class DuckyServiceCollectionExtensions
     /// </example>
     public static IServiceCollection AddDuckyStore(
         this IServiceCollection services,
-        Action<Builder.IStoreBuilder> configure)
+        Action<IStoreBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
-        Builder.StoreBuilder storeBuilder = new(services);
+        StoreBuilder storeBuilder = new(services);
         configure(storeBuilder);
 
         // Extract middleware types from the builder

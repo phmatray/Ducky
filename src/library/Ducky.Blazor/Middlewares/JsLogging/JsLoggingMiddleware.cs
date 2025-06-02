@@ -6,7 +6,7 @@ namespace Ducky.Blazor.Middlewares.JsLogging;
 /// <summary>
 /// Middleware that logs actions and state changes to the browser console.
 /// </summary>
-public sealed class JsLoggingMiddleware : IMiddleware
+public sealed class JsLoggingMiddleware : MiddlewareBase
 {
     private readonly JsConsoleLoggerModule _loggerModule;
     private IStore? _store;
@@ -22,27 +22,14 @@ public sealed class JsLoggingMiddleware : IMiddleware
     }
 
     /// <inheritdoc />
-    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _store = store;
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public void AfterInitializeAllMiddlewares()
-    {
-        // Nothing to do after all middlewares are initialized
-    }
-
-    /// <inheritdoc />
-    public bool MayDispatchAction(object action)
-    {
-        // Allow all actions
-        return true;
-    }
-
-    /// <inheritdoc />
-    public void BeforeDispatch(object action)
+    public override void BeforeDispatch(object action)
     {
         if (_store is null)
         {
@@ -54,7 +41,7 @@ public sealed class JsLoggingMiddleware : IMiddleware
     }
 
     /// <inheritdoc />
-    public void AfterDispatch(object action)
+    public override void AfterDispatch(object action)
     {
         if (_store is null || !_actionMetadata.TryGetValue(action, out (IRootState prevState, DateTime startTime) metadata))
         {
@@ -81,11 +68,5 @@ public sealed class JsLoggingMiddleware : IMiddleware
             // Clean up metadata
             _actionMetadata.Remove(action);
         }
-    }
-
-    /// <inheritdoc />
-    public IDisposable BeginInternalMiddlewareChange()
-    {
-        return new DisposableCallback(() => { });
     }
 }

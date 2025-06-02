@@ -5,11 +5,7 @@ using Demo.BlazorWasm.AppStore;
 using Demo.BlazorWasm.Features.Feedback;
 using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
-using Ducky;
 using Ducky.Builder;
-using Ducky.Blazor.Builder;
-using Ducky.Diagnostics;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using MudBlazor.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -19,7 +15,7 @@ IServiceCollection services = builder.Services;
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-services.TryAddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 // Add front services
 services.AddMudServices(
@@ -30,42 +26,35 @@ services.AddMudServices(
     });
 
 // Add business services
-services.TryAddScoped<IJsonColorizer, JsonColorizer>();
-services.TryAddScoped<IMoviesService, MoviesService>();
+services.AddScoped<IJsonColorizer, JsonColorizer>();
+services.AddScoped<IMoviesService, MoviesService>();
 
 // Register all application slice reducers
-services.TryAddScoped<ISlice<CounterState>, CounterReducers>();
-services.TryAddScoped<ISlice<GoalState>, GoalsReducers>();
-services.TryAddScoped<ISlice<LayoutState>, LayoutReducers>();
-services.TryAddScoped<ISlice<MessageState>, MessageReducers>();
-services.TryAddScoped<ISlice<MoviesState>, MoviesReducers>();
-services.TryAddScoped<ISlice<NotificationsState>, NotificationsReducers>();
-services.TryAddScoped<ISlice<ProductState>, ProductsReducers>();
-services.TryAddScoped<ISlice<TimerState>, TimerReducers>();
-services.TryAddScoped<ISlice<TodoState>, TodoReducers>();
+// services.AddScoped<ISlice<CounterState>, CounterReducers>();
+// services.AddScoped<ISlice<GoalState>, GoalsReducers>();
+// services.AddScoped<ISlice<LayoutState>, LayoutReducers>();
+// services.AddScoped<ISlice<MessageState>, MessageReducers>();
+// services.AddScoped<ISlice<MoviesState>, MoviesReducers>();
+// services.AddScoped<ISlice<NotificationsState>, NotificationsReducers>();
+// services.AddScoped<ISlice<ProductState>, ProductsReducers>();
+// services.AddScoped<ISlice<TimerState>, TimerReducers>();
+// services.AddScoped<ISlice<TodoState>, TodoReducers>();
 
 // Add Ducky with the new StoreBuilder approach
 services.AddDuckyStore(storeBuilder => storeBuilder
     // Add middlewares in the correct order
     .AddCorrelationIdMiddleware()
-    .AddExceptionHandlingMiddleware()
     .AddAsyncEffectMiddleware()
-    .AddReactiveEffectMiddleware() // Fixed: now uses lazy initialization
+    // .AddReactiveEffectMiddleware() // Fixed: now uses lazy initialization
 
     // Add Redux DevTools for debugging (with simplified API)
-    .AddDevToolsMiddleware(options =>
-    {
-        options.StoreName = "DuckyDemo";
-        options.Enabled = builder.HostEnvironment.IsDevelopment();
-        options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
-        options.MaxAge = 100; // Keep more history for demo
-    })
-
-    // Register async effects
-    .AddEffect<ResetCounterAfter3Sec>()
-    
-    // Register reactive effects (now fixed with lazy initialization)
-    .AddReactiveEffect<StartTimerEffect>()
+    // .AddDevToolsMiddleware(options =>
+    // {
+    //     options.StoreName = "DuckyDemo";
+    //     options.Enabled = builder.HostEnvironment.IsDevelopment();
+    //     options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
+    //     options.MaxAge = 100; // Keep more history for demo
+    // })
 
     // Add exception handler
     .AddExceptionHandler<NotificationExceptionHandler>()

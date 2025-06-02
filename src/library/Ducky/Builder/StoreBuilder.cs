@@ -28,7 +28,7 @@ internal class StoreBuilder : IStoreBuilder
         if (!_middlewareTypes.Contains(middlewareType))
         {
             _middlewareTypes.Add(middlewareType);
-            Services.TryAddScoped<TMiddleware>();
+            Services.AddScoped<TMiddleware>();
             Services.AddScoped<IMiddleware>(sp => sp.GetRequiredService<TMiddleware>());
 
             TrackEffectMiddleware(middlewareType);
@@ -45,7 +45,7 @@ internal class StoreBuilder : IStoreBuilder
         if (!_middlewareTypes.Contains(middlewareType))
         {
             _middlewareTypes.Add(middlewareType);
-            Services.TryAddScoped(implementationFactory);
+            Services.AddScoped(implementationFactory);
             Services.AddScoped<IMiddleware>(sp => sp.GetRequiredService<TMiddleware>());
 
             TrackEffectMiddleware(middlewareType);
@@ -68,7 +68,7 @@ internal class StoreBuilder : IStoreBuilder
         if (!_middlewareTypes.Contains(middlewareType))
         {
             _middlewareTypes.Add(middlewareType);
-            Services.TryAddScoped(middlewareType);
+            Services.AddScoped(middlewareType);
             Services.AddScoped(typeof(IMiddleware), middlewareType);
         }
 
@@ -90,7 +90,7 @@ internal class StoreBuilder : IStoreBuilder
         if (!_middlewareTypes.Contains(middlewareType))
         {
             _middlewareTypes.Add(middlewareType);
-            Services.TryAddScoped(middlewareType, implementationFactory);
+            Services.AddScoped(middlewareType, implementationFactory);
             Services.AddScoped<IMiddleware>(sp => (IMiddleware)implementationFactory(sp));
         }
 
@@ -113,7 +113,7 @@ internal class StoreBuilder : IStoreBuilder
         if (!_sliceTypes.Contains(sliceType))
         {
             _sliceTypes.Add(sliceType);
-            Services.TryAddScoped<ISlice<TState>, SliceReducers<TState>>();
+            Services.AddScoped<ISlice<TState>, SliceReducers<TState>>();
         }
 
         return this;
@@ -130,7 +130,7 @@ internal class StoreBuilder : IStoreBuilder
             _sliceTypes.Add(sliceType);
             // For now, we'll just register the slice type - actual implementation will be provided by the user
             // The SliceReducers is an abstract class, so users need to create their own implementation
-            Services.TryAddScoped(sliceType);
+            Services.AddScoped(sliceType);
         }
 
         return this;
@@ -223,7 +223,7 @@ internal class StoreBuilder : IStoreBuilder
         where TImplementation : class, TService
         where TService : class
     {
-        Services.TryAddScoped<TImplementation>();
+        Services.AddScoped<TImplementation>();
         Services.AddScoped<TService>(sp => sp.GetRequiredService<TImplementation>());
     }
     
@@ -232,7 +232,7 @@ internal class StoreBuilder : IStoreBuilder
         Func<IServiceProvider, TService> serviceFactory)
         where TService : class
     {
-        Services.TryAddScoped(implementationFactory);
+        Services.AddScoped(implementationFactory);
         Services.AddScoped(serviceFactory);
     }
     

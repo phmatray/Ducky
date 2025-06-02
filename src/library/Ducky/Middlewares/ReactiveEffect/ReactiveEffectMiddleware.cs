@@ -6,7 +6,7 @@ namespace Ducky.Middlewares.ReactiveEffect;
 /// <summary>
 /// Middleware that enables reactive side effects in response to actions and state changes.
 /// </summary>
-public sealed class ReactiveEffectMiddleware : IMiddleware, IDisposable
+public sealed class ReactiveEffectMiddleware : MiddlewareBase, IDisposable
 {
     private readonly CompositeDisposable _subscriptions = [];
     private readonly Subject<object> _actions = new();
@@ -99,7 +99,7 @@ public sealed class ReactiveEffectMiddleware : IMiddleware, IDisposable
     }
 
     /// <inheritdoc />
-    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _dispatcher = dispatcher;
         _getState = () => store.CurrentState;
@@ -107,26 +107,19 @@ public sealed class ReactiveEffectMiddleware : IMiddleware, IDisposable
     }
 
     /// <inheritdoc />
-    public void AfterInitializeAllMiddlewares()
-    {
-        // Defer effect initialization to avoid hanging during startup
-        // Effects will be initialized on first action dispatch
-    }
-
-    /// <inheritdoc />
-    public bool MayDispatchAction(object action)
+    public override bool MayDispatchAction(object action)
     {
         return true;
     }
 
     /// <inheritdoc />
-    public void BeforeDispatch(object action)
+    public override void BeforeDispatch(object action)
     {
         EnsureInitialized();
     }
 
     /// <inheritdoc />
-    public void AfterDispatch(object action)
+    public override void AfterDispatch(object action)
     {
         // Emit action to effects and update state after dispatch
         if (_disposed)
@@ -150,12 +143,6 @@ public sealed class ReactiveEffectMiddleware : IMiddleware, IDisposable
         {
             _eventPublisher.Publish(new ReactiveEffectErrorEventArgs(action, ex));
         }
-    }
-
-    /// <inheritdoc />
-    public IDisposable BeginInternalMiddlewareChange()
-    {
-        return new DisposableCallback(() => { });
     }
 
     /// <summary>

@@ -5,11 +5,10 @@ namespace Ducky.Middlewares.AsyncEffect;
 /// <summary>
 /// Middleware that executes asynchronous effects implementing <see cref="IAsyncEffect"/> when they are dispatched.
 /// </summary>
-public sealed class AsyncEffectMiddleware : IMiddleware
+public sealed class AsyncEffectMiddleware : MiddlewareBase
 {
     private readonly IEnumerable<IAsyncEffect> _effects;
     private readonly IStoreEventPublisher _eventPublisher;
-    private IDispatcher? _dispatcher;
     private IStore? _store;
 
     /// <summary>
@@ -29,9 +28,8 @@ public sealed class AsyncEffectMiddleware : IMiddleware
     }
 
     /// <inheritdoc />
-    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        _dispatcher = dispatcher;
         _store = store;
 
         // Inject the dispatcher into each effect
@@ -44,35 +42,18 @@ public sealed class AsyncEffectMiddleware : IMiddleware
     }
 
     /// <inheritdoc />
-    public void AfterInitializeAllMiddlewares()
+    public override bool MayDispatchAction(object action)
     {
-        // Nothing to do after all middlewares are initialized
-    }
-
-    /// <inheritdoc />
-    public bool MayDispatchAction(object action)
-    {
-        // Allow all actions
+        // Allow dispatch if any effect can handle the action
+        // TODO: Fix this logic to properly check if any effect can handle the action
+        // return _effects.Any(effect => effect.CanHandle(action));
         return true;
     }
 
     /// <inheritdoc />
-    public void BeforeDispatch(object action)
-    {
-        // Nothing to do before dispatch
-    }
-
-    /// <inheritdoc />
-    public void AfterDispatch(object action)
+    public override void AfterDispatch(object action)
     {
         TriggerEffects(action);
-    }
-
-    /// <inheritdoc />
-    public IDisposable BeginInternalMiddlewareChange()
-    {
-        // Return a no-op disposable
-        return new DisposableCallback(() => { });
     }
 
     private void TriggerEffects(object action)
@@ -129,7 +110,7 @@ public sealed class AsyncEffectMiddleware : IMiddleware
                     .FirstOrDefault(_ => executedEffects.Any(t => t.Exception?.InnerException == exception))
                     ?.GetType()
                     ?? typeof(IAsyncEffect);
-                    
+
                 EffectErrorEventArgs errorEventArgs = new(exception, effectType, action);
                 _eventPublisher.Publish(errorEventArgs);
             }

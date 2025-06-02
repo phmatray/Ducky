@@ -13,7 +13,6 @@ public static class StoreBuilderPresets
     {
         return builder
             .AddCorrelationIdMiddleware()
-            .AddExceptionHandlingMiddleware()
             .AddAsyncEffectMiddleware()
             .AddReactiveEffectMiddleware();
     }
@@ -39,7 +38,6 @@ public static class StoreBuilderPresets
     public static IStoreBuilder UseTestingPreset(this IStoreBuilder builder)
     {
         return builder
-            .AddExceptionHandlingMiddleware()
             .AddAsyncEffectMiddleware();
     }
 
@@ -51,7 +49,6 @@ public static class StoreBuilderPresets
     {
         return builder
             .AddCorrelationIdMiddleware()
-            .AddExceptionHandlingMiddleware()
             .AddAsyncEffectMiddleware()
             .AddReactiveEffectMiddleware()
             .AddNoOpMiddleware();
@@ -64,11 +61,9 @@ public static class StoreBuilderPresets
     public static IStoreBuilder UseMinimalPreset(this IStoreBuilder builder)
     {
         return builder
-            .AddExceptionHandlingMiddleware()
             .ConfigureOptions(options =>
             {
                 // Minimal configuration
             });
     }
 }
-

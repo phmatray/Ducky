@@ -6,7 +6,7 @@ namespace Ducky.Blazor.Middlewares.DevTools;
 /// Middleware that sends every dispatched action and resulting state to the Redux DevTools browser extension.
 /// This middleware integrates with the Redux DevTools extension to provide time-travel debugging capabilities.
 /// </summary>
-public sealed class DevToolsMiddleware : IMiddleware
+public sealed class DevToolsMiddleware : MiddlewareBase
 {
     private readonly ReduxDevToolsModule _devTools;
     private IStore? _store;
@@ -21,34 +21,14 @@ public sealed class DevToolsMiddleware : IMiddleware
     }
 
     /// <inheritdoc />
-    public Task InitializeAsync(IDispatcher dispatcher, IStore store)
+    public override Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
         _store = store;
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public void AfterInitializeAllMiddlewares()
-    {
-        // Nothing to do after all middlewares are initialized
-    }
-
-    /// <inheritdoc />
-    public bool MayDispatchAction(object action)
-    {
-        // Allow all actions
-        return true;
-    }
-
-    /// <inheritdoc />
-    public void BeforeDispatch(object action)
-    {
-        // DevTools doesn't need to process actions before reduction
-        // Time-travel state restoration is handled via special actions
-    }
-
-    /// <inheritdoc />
-    public void AfterDispatch(object action)
+    public override void AfterDispatch(object action)
     {
         if (_store is null)
         {
@@ -58,11 +38,5 @@ public sealed class DevToolsMiddleware : IMiddleware
         // Send action and state to DevTools after reduction
         // Fire-and-forget to avoid blocking the pipeline
         _ = _devTools.SendAsync(action, _store.CurrentState);
-    }
-
-    /// <inheritdoc />
-    public IDisposable BeginInternalMiddlewareChange()
-    {
-        return new DisposableCallback(() => { });
     }
 }

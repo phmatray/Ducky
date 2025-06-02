@@ -27,10 +27,10 @@ public static class DependencyInjections
         DuckyOptions options)
     {
         // Add Store services
-        services.TryAddScoped<IDispatcher, Dispatcher>();
-        services.TryAddScoped<IStoreEventPublisher, StoreEventPublisher>();
-        services.TryAddScoped<IRootStateSerializer, RootStateSerializer>();
-        services.TryAddScoped<StoreLogger>();
+        services.AddScoped<IDispatcher, Dispatcher>();
+        services.AddScoped<IStoreEventPublisher, StoreEventPublisher>();
+        services.AddScoped<IRootStateSerializer, RootStateSerializer>();
+        services.AddScoped<StoreLogger>();
 
         // Scan and register all Slices, Effects and Middlewares
         services.ScanAndRegister<ISlice>(options.Assemblies);

@@ -20,7 +20,7 @@ public static class DependencyInjections
     /// <returns>The service collection for chaining.</returns>
     internal static IServiceCollection AddBlazorTimeProvider(this IServiceCollection services)
     {
-        services.TryAddScoped<TimeProvider, SynchronizationContextTimeProvider>();
+        services.AddScoped<TimeProvider, SynchronizationContextTimeProvider>();
         return services;
     }
 }
