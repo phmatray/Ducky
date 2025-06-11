@@ -1,7 +1,6 @@
 using Ducky.Builder;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
-using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,17 +20,15 @@ public class StoreBuilderTests
         {
             builder
                 .AddCorrelationIdMiddleware()
-                .AddAsyncEffectMiddleware()
-                .AddReactiveEffectMiddleware();
+                .AddAsyncEffectMiddleware();
         });
 
         // Assert - Middlewares should be registered as both concrete and interface
         services.Any(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(AsyncEffectMiddleware)).ShouldBeTrue();
-        services.Any(sd => sd.ServiceType == typeof(ReactiveEffectMiddleware)).ShouldBeTrue();
 
         // Check interface registrations
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(4);
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3);
     }
 
     [Fact]
@@ -120,16 +117,12 @@ public class StoreBuilderTests
         {
             builder
                 .AddAsyncEffectMiddleware()
-                .AddReactiveEffectMiddleware()
-                .AddEffect<TestAsyncEffect>()
-                .AddReactiveEffect<TestReactiveEffect>();
+                .AddEffect<TestAsyncEffect>();
         });
 
         // Assert
         services.Any(sd => sd.ServiceType == typeof(TestAsyncEffect)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IAsyncEffect)).ShouldBeTrue();
-        services.Any(sd => sd.ServiceType == typeof(TestReactiveEffect)).ShouldBeTrue();
-        services.Any(sd => sd.ServiceType == typeof(IReactiveEffect)).ShouldBeTrue();
     }
 
     [Fact]
@@ -185,16 +178,14 @@ public class StoreBuilderTests
                 .AddDefaultMiddlewares()
                 .AddSlice<TestState>()
                 .AddEffect<TestAsyncEffect>()
-                .AddReactiveEffect<TestReactiveEffect>()
                 .AddExceptionHandler<TestExceptionHandler>()
                 .ConfigureStore(options => options.AssemblyNames = ["TestAssembly"]);
         });
 
         // Verify all registrations
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(4); // Default middlewares
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3); // Default middlewares
         services.Any(sd => sd.ServiceType == typeof(ISlice<TestState>)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IAsyncEffect)).ShouldBeTrue();
-        services.Any(sd => sd.ServiceType == typeof(IReactiveEffect)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IExceptionHandler)).ShouldBeTrue();
     }
 
@@ -217,18 +208,6 @@ public class StoreBuilderTests
         {
             LastAction = action;
             return Task.CompletedTask;
-        }
-    }
-
-    private class TestReactiveEffect : IReactiveEffect
-    {
-        public string GetKey() => GetType().Name;
-
-        public string GetAssemblyName() => GetType().AssemblyQualifiedName ?? GetType().FullName ?? GetType().Name;
-
-        public Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
-        {
-            return Observable.Empty<object>();
         }
     }
 

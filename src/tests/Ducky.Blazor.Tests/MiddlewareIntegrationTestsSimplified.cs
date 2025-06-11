@@ -7,13 +7,11 @@ using Ducky.Diagnostics;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.ExceptionHandling;
-using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Moq;
 using Shouldly;
-using R3;
 
 namespace Ducky.Blazor.Tests;
 

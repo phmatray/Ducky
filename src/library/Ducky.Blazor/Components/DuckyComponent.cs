@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
-using R3;
 
 namespace Ducky.Blazor;
 
@@ -15,7 +14,7 @@ namespace Ducky.Blazor;
 public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
     where TState : notnull
 {
-    private IDisposable? _subscription;
+    private TState? _currentState;
     private bool _disposed;
 
     /// <summary>
@@ -49,22 +48,29 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
     {
         get
         {
-            Task<TState> stateAsync = StateObservable.FirstAsync();
-            stateAsync.Wait();
-            return stateAsync.Result;
+            if (_currentState is null)
+            {
+                UpdateCurrentState();
+            }
+
+            return _currentState!;
         }
     }
 
     /// <summary>
-    /// Gets an observable stream of the state managed by this component.
+    /// Updates the current state from the store.
     /// </summary>
-    private Observable<TState> StateObservable
-        => typeof(TState) == typeof(RootState)
-            ? Store.RootStateObservable
-                .Cast<IRootState, TState>()
-            : Store.RootStateObservable
-                .Select(state => state.GetSliceState<TState>())
-                .DistinctUntilChanged();
+    private void UpdateCurrentState()
+    {
+        if (typeof(TState) == typeof(IRootState))
+        {
+            _currentState = (TState)Store.CurrentState;
+        }
+        else
+        {
+            _currentState = Store.CurrentState.GetSliceState<TState>();
+        }
+    }
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -90,7 +96,7 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
         if (disposing)
         {
             // Dispose managed resources.
-            _subscription?.Dispose();
+            Store.StateChanged -= OnStateChanged;
         }
 
         // Note disposing has been done.
@@ -112,16 +118,12 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
 
         base.OnInitialized();
 
-        if (_subscription is null)
-        {
-            Logger.SubscribingToStateObservable(ComponentName);
-            _subscription = StateObservable.Subscribe(OnNext);
-            OnAfterSubscribed();
-        }
-        else
-        {
-            Logger.SubscriptionAlreadyAssigned(ComponentName);
-        }
+        // Subscribe to state changes
+        Store.StateChanged += OnStateChanged;
+        OnAfterSubscribed();
+
+        // Initialize the current state
+        UpdateCurrentState();
 
         Logger.ComponentInitialized(ComponentName);
     }
@@ -135,13 +137,18 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
         Dispatcher.Dispatch(action);
     }
 
-    private void OnNext(TState state)
+    private void OnStateChanged(object? sender, StateChangedEventArgs e)
     {
+        TState? previousState = _currentState;
+        UpdateCurrentState();
+
+        // Only re-render if the state actually changed
+        if (EqualityComparer<TState>.Default.Equals(previousState, _currentState))
+        {
+            return;
+        }
+
         InvokeAsync(StateHasChanged);
-
-        OnParametersSet();
-        OnParametersSetAsync();
-
         Logger.ComponentRefreshed(ComponentName);
     }
 }

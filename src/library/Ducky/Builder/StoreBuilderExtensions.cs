@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.NoOp;
-using Ducky.Middlewares.ReactiveEffect;
 
 namespace Ducky.Builder;
 
@@ -54,26 +53,8 @@ public static class StoreBuilderExtensions
     }
 
     /// <summary>
-    /// Adds the reactive effect middleware to the store pipeline.
-    /// </summary>
-    /// <param name="builder">The store builder.</param>
-    /// <param name="getEffectsFromServices">Specifies whether to retrieve effects from the service provider.</param>
-    /// <returns>The store builder for chaining.</returns>
-    public static IStoreBuilder AddReactiveEffectMiddleware(
-        this IStoreBuilder builder,
-        bool getEffectsFromServices = true)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        return builder.AddMiddleware<ReactiveEffectMiddleware>(sp =>
-            new ReactiveEffectMiddleware(
-                getEffectsFromServices ? sp.GetServices<IReactiveEffect>() : [],
-                sp.GetRequiredService<IStoreEventPublisher>()));
-    }
-
-    /// <summary>
     /// Adds the default set of middlewares to the store pipeline.
-    /// Includes: CorrelationId, ExceptionHandling, AsyncEffect, and ReactiveEffect middlewares.
+    /// Includes: CorrelationId and AsyncEffect middlewares.
     /// </summary>
     /// <param name="builder">The store builder.</param>
     /// <returns>The store builder for chaining.</returns>
@@ -83,8 +64,7 @@ public static class StoreBuilderExtensions
 
         return builder
             .AddCorrelationIdMiddleware()
-            .AddAsyncEffectMiddleware()
-            .AddReactiveEffectMiddleware();
+            .AddAsyncEffectMiddleware();
     }
 
     /// <summary>

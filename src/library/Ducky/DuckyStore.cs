@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Ducky.Pipeline;
-using R3;
 
 namespace Ducky;
 
@@ -17,7 +16,6 @@ public sealed class DuckyStore : IStore, IDisposable
     private readonly IStoreEventPublisher _eventPublisher;
     private readonly ObservableSlices _slices = new();
     private readonly DateTime _startTime = DateTime.UtcNow;
-    private readonly CompositeDisposable _subscriptions = [];
     private readonly object _syncRoot = new();
     private volatile bool _isDisposed;
     private volatile bool _isDispatching;
@@ -55,13 +53,14 @@ public sealed class DuckyStore : IStore, IDisposable
             _eventPublisher.Publish(new SliceAddedEventArgs(sliceKey, slice.GetType()));
         }
 
+        // Subscribe to slice state changes
+        _slices.RootStateChanged += OnRootStateChanged;
+
         // Initialize the pipeline
         _pipeline.InitializeAsync(_dispatcher, this).Wait();
 
         // Subscribe to action stream and process through pipeline
-        _dispatcher.ActionStream
-            .Subscribe(ProcessActionSafely)
-            .AddTo(_subscriptions);
+        _dispatcher.ActionDispatched += OnActionDispatched;
 
         // Dispatch initial action
         _dispatcher.Dispatch(new StoreInitialized());
@@ -71,12 +70,10 @@ public sealed class DuckyStore : IStore, IDisposable
     }
 
     /// <inheritdoc/>
-    public R3.ReadOnlyReactiveProperty<IRootState> RootStateObservable
-        => _slices.RootStateObservable;
+    public event EventHandler<StateChangedEventArgs>? StateChanged;
 
     /// <inheritdoc/>
-    public IRootState CurrentState
-        => RootStateObservable.CurrentValue;
+    public IRootState CurrentState => _slices.CurrentState;
 
     /// <inheritdoc/>
     public void Dispose()
@@ -89,7 +86,8 @@ public sealed class DuckyStore : IStore, IDisposable
         TimeSpan uptime = DateTime.UtcNow - _startTime;
         _eventPublisher.Publish(new StoreDisposingEventArgs(uptime));
 
-        _subscriptions.Dispose();
+        _dispatcher.ActionDispatched -= OnActionDispatched;
+        _slices.RootStateChanged -= OnRootStateChanged;
         _pipeline.Dispose();
         _slices.Dispose();
 
@@ -130,7 +128,7 @@ public sealed class DuckyStore : IStore, IDisposable
         {
             // Process action through middleware pipeline
             bool shouldProcess = _pipeline.ProcessAction(action);
-            
+
             if (shouldProcess)
             {
                 // Execute slice reducers
@@ -144,5 +142,15 @@ public sealed class DuckyStore : IStore, IDisposable
         {
             _eventPublisher.Publish(new ActionErrorEventArgs(ex, action, null!));
         }
+    }
+
+    private void OnActionDispatched(object? sender, ActionDispatchedEventArgs e)
+    {
+        ProcessActionSafely(e.Action);
+    }
+
+    private void OnRootStateChanged(object? sender, StateChangedEventArgs e)
+    {
+        StateChanged?.Invoke(this, e);
     }
 }

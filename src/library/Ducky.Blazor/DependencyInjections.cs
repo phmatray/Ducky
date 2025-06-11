@@ -2,9 +2,9 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Ducky.Blazor.Middlewares.JsLogging;
+using Ducky.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using R3;
 
 namespace Ducky.Blazor;
 
@@ -14,13 +14,26 @@ namespace Ducky.Blazor;
 public static class DependencyInjections
 {
     /// <summary>
-    /// Registers the Blazor-specific time provider for R3 Observable support.
+    /// Adds Ducky with the recommended middleware configuration for Blazor applications.
+    /// Includes: CorrelationId, JsLogging, AsyncEffect, and ReactiveEffect middlewares.
     /// </summary>
     /// <param name="services">The service collection.</param>
+    /// <param name="configureStore">Optional store builder configuration.</param>
     /// <returns>The service collection for chaining.</returns>
-    internal static IServiceCollection AddBlazorTimeProvider(this IServiceCollection services)
+    public static IServiceCollection AddDuckyBlazor(
+        this IServiceCollection services,
+        Action<IStoreBuilder>? configureStore = null)
     {
-        services.AddScoped<TimeProvider, SynchronizationContextTimeProvider>();
-        return services;
+        return services.AddDuckyStore(builder =>
+        {
+            // Add default Blazor middlewares
+            builder
+                .AddCorrelationIdMiddleware()
+                .AddMiddleware<JsLoggingMiddleware>()
+                .AddAsyncEffectMiddleware();
+
+            // Apply any additional configuration
+            configureStore?.Invoke(builder);
+        });
     }
 }

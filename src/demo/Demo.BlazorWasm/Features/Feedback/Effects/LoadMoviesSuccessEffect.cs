@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Demo.BlazorWasm.AppStore;
-using Ducky.Middlewares.ReactiveEffect;
+using Ducky.Middlewares.AsyncEffect;
 
 namespace Demo.BlazorWasm.Features.Feedback.Effects;
 
@@ -12,21 +12,17 @@ namespace Demo.BlazorWasm.Features.Feedback.Effects;
 /// </summary>
 /// <param name="snackbar">The snackbar service.</param>
 // ReSharper disable once UnusedType.Global
-public class LoadMoviesSuccessEffect(ISnackbar snackbar) : ReactiveEffect
+public class LoadMoviesSuccessEffect(ISnackbar snackbar) : AsyncEffect<LoadMoviesSuccess>
 {
-    /// <inheritdoc />
-    public override Observable<object> Handle(
-        Observable<object> actions, Observable<IRootState> rootState)
+    public override Task HandleAsync(LoadMoviesSuccess action, IRootState rootState)
     {
-        return actions
-            .OfActionType<LoadMoviesSuccess>()
-            .Select(GetSnackBarMessage)
-            .Do(message => snackbar.Add(message, Severity.Success))
-            .Select(object (message) =>
-            {
-                SuccessNotification notification = new(message);
-                return new AddNotification(notification);
-            });
+        string snackBarMessage = GetSnackBarMessage(action);
+        snackbar.Add(snackBarMessage, Severity.Success);
+
+        SuccessNotification notification = new(snackBarMessage);
+        Dispatcher?.Dispatch(new AddNotification(notification));
+
+        return Task.CompletedTask;
     }
 
     private static string GetSnackBarMessage(LoadMoviesSuccess action)

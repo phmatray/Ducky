@@ -1,7 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ducky.Middlewares.AsyncEffect;
-using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Pipeline;
 
 namespace Ducky.Builder;
@@ -11,7 +9,6 @@ internal class StoreBuilder : IStoreBuilder
     private readonly List<Type> _middlewareTypes = [];
     private readonly List<Type> _sliceTypes = [];
     private bool _asyncEffectMiddlewareAdded;
-    private bool _reactiveEffectMiddlewareAdded;
     private bool _validationEnabled = true;
 
     public IServiceCollection Services { get; }
@@ -152,22 +149,6 @@ internal class StoreBuilder : IStoreBuilder
         return this;
     }
 
-    public IStoreBuilder AddReactiveEffect<TEffect>() where TEffect : class, IReactiveEffect
-    {
-        EnsureMiddlewareAdded(_reactiveEffectMiddlewareAdded, typeof(ReactiveEffectMiddleware), "AddReactiveEffectMiddleware()");
-        RegisterService<TEffect, IReactiveEffect>();
-        return this;
-    }
-
-    public IStoreBuilder AddReactiveEffect<TEffect>(Func<IServiceProvider, TEffect> implementationFactory)
-        where TEffect : class, IReactiveEffect
-    {
-        ArgumentNullException.ThrowIfNull(implementationFactory);
-        EnsureMiddlewareAdded(_reactiveEffectMiddlewareAdded, typeof(ReactiveEffectMiddleware), "AddReactiveEffectMiddleware()");
-        RegisterService(implementationFactory, sp => (IReactiveEffect)implementationFactory(sp));
-        return this;
-    }
-
     public IStoreBuilder AddExceptionHandler<TExceptionHandler>() where TExceptionHandler : class, IExceptionHandler
     {
         RegisterService<TExceptionHandler, IExceptionHandler>();
@@ -205,28 +186,28 @@ internal class StoreBuilder : IStoreBuilder
         _validationEnabled = false;
         return this;
     }
-    
+
     private void EnsureMiddlewareAdded(bool isAdded, Type middlewareType, string methodName)
     {
         if (isAdded)
         {
             return;
         }
-            
+
         throw new MissingMiddlewareException(
             typeof(object), // This will be replaced by the actual effect type in the exception
             middlewareType,
             methodName);
     }
-    
-    private void RegisterService<TImplementation, TService>() 
+
+    private void RegisterService<TImplementation, TService>()
         where TImplementation : class, TService
         where TService : class
     {
         Services.AddScoped<TImplementation>();
         Services.AddScoped<TService>(sp => sp.GetRequiredService<TImplementation>());
     }
-    
+
     private void RegisterService<TService>(
         Func<IServiceProvider, TService> implementationFactory,
         Func<IServiceProvider, TService> serviceFactory)
@@ -235,16 +216,14 @@ internal class StoreBuilder : IStoreBuilder
         Services.AddScoped(implementationFactory);
         Services.AddScoped(serviceFactory);
     }
-    
+
     private void TrackEffectMiddleware(Type middlewareType)
     {
-        if (middlewareType == typeof(AsyncEffectMiddleware))
+        if (middlewareType != typeof(AsyncEffectMiddleware))
         {
-            _asyncEffectMiddlewareAdded = true;
+            return;
         }
-        else if (middlewareType == typeof(ReactiveEffectMiddleware))
-        {
-            _reactiveEffectMiddlewareAdded = true;
-        }
+
+        _asyncEffectMiddlewareAdded = true;
     }
 }

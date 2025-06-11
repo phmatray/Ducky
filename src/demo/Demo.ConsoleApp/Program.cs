@@ -7,7 +7,6 @@ using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using R3;
 using Spectre.Console;
 
 AnsiConsole.Write(
@@ -38,16 +37,17 @@ IStore store = serviceProvider.GetRequiredService<IStore>();
 IDispatcher dispatcher = serviceProvider.GetRequiredService<IDispatcher>();
 
 // Subscribe to state changes
-IDisposable subscription = store.RootStateObservable
-    .Subscribe(rootState =>
-    {
-        CounterState counterState = rootState.GetSliceState<CounterState>();
-        TodoState todoState = rootState.GetSliceState<TodoState>();
+void OnStateChanged(object? sender, StateChangedEventArgs e)
+{
+    CounterState counterState = e.NewState.GetSliceState<CounterState>();
+    TodoState todoState = e.NewState.GetSliceState<TodoState>();
 
-        string stateMessage = $"[dim][[State Update]] [/][yellow]Counter: {counterState.Value}[/] | "
-            + $"[green]Todos: {todoState.ActiveCount} active[/], [blue]{todoState.CompletedCount} completed[/]";
-        AnsiConsole.MarkupLine(stateMessage);
-    });
+    string stateMessage = $"[dim][[State Update]] [/][yellow]Counter: {counterState.Value}[/] | "
+        + $"[green]Todos: {todoState.ActiveCount} active[/], [blue]{todoState.CompletedCount} completed[/]";
+    AnsiConsole.MarkupLine(stateMessage);
+}
+
+store.StateChanged += OnStateChanged;
 
 // Interactive menu
 var running = true;
@@ -88,7 +88,7 @@ while (running)
     }
 }
 
-subscription.Dispose();
+store.StateChanged -= OnStateChanged;
 AnsiConsole.MarkupLine("[green]Goodbye![/]");
 
 async Task RunCounterDemo(IDispatcher actionDispatcher, IStore stateStore)

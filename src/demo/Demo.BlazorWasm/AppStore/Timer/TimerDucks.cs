@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Middlewares.ReactiveEffect;
+using Ducky.Middlewares.AsyncEffect;
 
 namespace Demo.BlazorWasm.AppStore;
 
@@ -73,21 +73,6 @@ public record TimerReducers : SliceReducers<TimerState>
 
 #region Effects
 
-// ReSharper disable once UnusedType.Global
-public class StartTimerEffect : ReactiveEffect
-{
-    public override Observable<object> Handle(
-        Observable<object> actions,
-        Observable<IRootState> rootState)
-    {
-        return actions
-            .OfActionType<StartTimer>()
-            .SwitchSelect(_ => Observable
-                .Interval(TimeSpan.FromSeconds(1), TimeProvider)
-                .Select(_ => new Tick())
-                .TakeUntil(actions.OfActionType<StopTimer>())
-                .Cast<Tick, object>());
-    }
-}
+// Timer effects are handled by TimerTickEffect in Features/Feedback/Effects
 
 #endregion

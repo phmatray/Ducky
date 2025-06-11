@@ -60,9 +60,15 @@ public class CorrelationIdMiddlewareTests
         TestAction action = new();
 
         CorrelationIdAssignedEvent? publishedEvent = null;
-        eventPublisher.Events
-            .OfType<StoreEventArgs, CorrelationIdAssignedEvent>()
-            .Subscribe(e => publishedEvent = e);
+        eventPublisher.EventPublished += (sender, args) =>
+        {
+            if (args is not CorrelationIdAssignedEvent evt)
+            {
+                return;
+            }
+
+            publishedEvent = evt;
+        };
 
         // Act
         middleware.BeforeDispatch(action);
@@ -82,9 +88,15 @@ public class CorrelationIdMiddlewareTests
         TestAction action = new();
 
         List<Guid> correlationIds = [];
-        eventPublisher.Events
-            .OfType<StoreEventArgs, CorrelationIdAssignedEvent>()
-            .Subscribe(e => correlationIds.Add(e.CorrelationId));
+        eventPublisher.EventPublished += (sender, args) =>
+        {
+            if (args is not CorrelationIdAssignedEvent evt)
+            {
+                return;
+            }
+
+            correlationIds.Add(evt.CorrelationId);
+        };
 
         // Act - dispatch multiple times
         middleware.BeforeDispatch(action);
@@ -106,7 +118,7 @@ public class CorrelationIdMiddlewareTests
         TestAction action = new();
 
         int eventCount = 0;
-        eventPublisher.Events.Subscribe(_ => eventCount++);
+        eventPublisher.EventPublished += (sender, args) => eventCount++;
 
         // Act
         middleware.AfterDispatch(action);

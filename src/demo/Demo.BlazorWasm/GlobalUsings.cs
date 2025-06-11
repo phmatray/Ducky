@@ -10,4 +10,3 @@ global using Demo.BlazorWasm.Features.JsonColoring.Helpers;
 global using Ducky;
 global using Ducky.Generators;
 global using MudBlazor;
-global using R3;

@@ -3,65 +3,55 @@
 // See the LICENSE file in the project root for full license information.
 
 using Demo.BlazorWasm.AppStore;
-using Ducky.Middlewares.ReactiveEffect;
+using Ducky.Middlewares.AsyncEffect;
 
 namespace Demo.BlazorWasm.Features.Feedback.Effects;
 
 /// <summary>
-/// Effect that handles error recovery actions.
+/// Effect that handles retry of failed operations.
 /// </summary>
-public class ErrorRecoveryEffect : ReactiveEffect
+public class RetryFailedOperationEffect(
+    ILogger<RetryFailedOperationEffect> logger)
+    : AsyncEffect<RetryFailedOperation>
 {
-    private readonly ILogger<ErrorRecoveryEffect> _logger;
-    private readonly IDispatcher _dispatcher;
-
-    public ErrorRecoveryEffect(
-        ILogger<ErrorRecoveryEffect> logger,
-        IDispatcher dispatcher)
+    public override Task HandleAsync(RetryFailedOperation action, IRootState rootState)
     {
-        _logger = logger;
-        _dispatcher = dispatcher;
+        logger.LogInformation(
+            "Retrying failed operation: {ActionType}",
+            action.OriginalAction.GetType().Name);
+
+        // Dispatch the original action again
+        Dispatcher?.Dispatch(action.OriginalAction);
+
+        // Add a notification about the retry
+        InfoNotification notification = new(
+            $"Retrying {action.OriginalAction.GetType().Name}...");
+        Dispatcher?.Dispatch(new AddNotification(notification));
+
+        return Task.CompletedTask;
     }
+}
 
-    public override Observable<object> Handle(
-        Observable<object> actions,
-        Observable<IRootState> rootState)
+/// <summary>
+/// Effect that handles error reporting.
+/// </summary>
+public class ReportErrorEffect(
+    ILogger<ReportErrorEffect> logger)
+    : AsyncEffect<ReportError>
+{
+    public override Task HandleAsync(ReportError action, IRootState rootState)
     {
-        Observable<RetryFailedOperation> retryEffects = actions.OfType<object, RetryFailedOperation>()
-            .Do(action =>
-            {
-                _logger.LogInformation(
-                    "Retrying failed operation: {ActionType}",
-                    action.OriginalAction.GetType().Name);
+        logger.LogError(
+            action.Exception,
+            "Error reported by user. Feedback: {UserFeedback}",
+            action.UserFeedback ?? "No feedback provided");
 
-                // Dispatch the original action again
-                _dispatcher.Dispatch(action.OriginalAction);
+        // In a real application, you would send this to an external logging service
+        // For demo purposes, we'll just add a notification
+        SuccessNotification notification = new(
+            "Error report sent successfully. Thank you for your feedback!");
+        Dispatcher?.Dispatch(new AddNotification(notification));
 
-                // Add a notification about the retry
-                InfoNotification notification = new(
-                    $"Retrying {action.OriginalAction.GetType().Name}...");
-                _dispatcher.Dispatch(new AddNotification(notification));
-            });
-
-        Observable<ReportError> errorReportEffects = actions.OfType<object, ReportError>()
-            .Do(action =>
-            {
-                _logger.LogError(
-                    action.Exception,
-                    "Error reported by user. Feedback: {UserFeedback}",
-                    action.UserFeedback ?? "No feedback provided");
-
-                // In a real application, you would send this to an external logging service
-                // For demo purposes, we'll just add a notification
-                SuccessNotification notification = new(
-                    "Error report sent successfully. Thank you for your feedback!");
-                _dispatcher.Dispatch(new AddNotification(notification));
-            });
-
-        return Observable
-            .Merge(
-                retryEffects.Cast<RetryFailedOperation, object>(),
-                errorReportEffects.Cast<ReportError, object>())
-            .IgnoreElements();
+        return Task.CompletedTask;
     }
 }

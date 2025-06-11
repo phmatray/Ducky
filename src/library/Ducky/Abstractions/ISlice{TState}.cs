@@ -2,8 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using R3;
-
 namespace Ducky;
 
 /// <summary>
@@ -13,10 +11,9 @@ namespace Ducky;
 public interface ISlice<TState> : ISlice
 {
     /// <summary>
-    /// Gets an observable sequence that produces the state of this slice.
+    /// Gets the current state value of this slice.
     /// </summary>
-    /// <value>The observable sequence of the state.</value>
-    Observable<TState> State { get; }
+    TState CurrentState { get; }
 
     /// <summary>
     /// Gets the collection of reducers for this state slice.

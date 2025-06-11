@@ -1,5 +1,4 @@
 using Ducky.Pipeline;
-using R3;
 
 namespace Ducky;
 
@@ -9,9 +8,9 @@ namespace Ducky;
 public interface IStoreEventPublisher
 {
     /// <summary>
-    /// Get an observable for pipeline events.
+    /// Occurs when a store event is published.
     /// </summary>
-    Observable<StoreEventArgs> Events { get; }
+    event EventHandler<StoreEventArgs>? EventPublished;
 
     /// <summary>
     /// Publishes a new pipeline event to all subscribers.

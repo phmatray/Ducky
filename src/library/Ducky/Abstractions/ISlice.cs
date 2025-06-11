@@ -2,8 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using R3;
-
 namespace Ducky;
 
 /// <summary>
@@ -12,10 +10,9 @@ namespace Ducky;
 public interface ISlice
 {
     /// <summary>
-    /// Gets an observable sequence that produces a notification when the state is updated.
+    /// Occurs when the state is updated.
     /// </summary>
-    /// <value>The observable sequence of state updates.</value>
-    Observable<Unit> StateUpdated { get; }
+    event EventHandler? StateUpdated;
 
     /// <summary>
     /// Gets the unique key for this state slice.

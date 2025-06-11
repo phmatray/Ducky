@@ -7,14 +7,13 @@ public static class StoreBuilderPresets
 {
     /// <summary>
     /// Configures the store for production use with essential middlewares.
-    /// Includes: CorrelationId, ExceptionHandling, AsyncEffect, and ReactiveEffect.
+    /// Includes: CorrelationId and AsyncEffect.
     /// </summary>
     public static IStoreBuilder UseProductionPreset(this IStoreBuilder builder)
     {
         return builder
             .AddCorrelationIdMiddleware()
-            .AddAsyncEffectMiddleware()
-            .AddReactiveEffectMiddleware();
+            .AddAsyncEffectMiddleware();
     }
 
     /// <summary>
@@ -50,7 +49,6 @@ public static class StoreBuilderPresets
         return builder
             .AddCorrelationIdMiddleware()
             .AddAsyncEffectMiddleware()
-            .AddReactiveEffectMiddleware()
             .AddNoOpMiddleware();
     }
 

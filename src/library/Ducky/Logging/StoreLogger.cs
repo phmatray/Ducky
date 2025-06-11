@@ -1,19 +1,19 @@
 using Ducky.Pipeline;
 using Microsoft.Extensions.Logging;
-using R3;
 
 namespace Ducky;
 
 /// <summary>
 /// Observes and logs store events.
 /// </summary>
-public class StoreLogger : Observer<StoreEventArgs>
+public class StoreLogger : IDisposable
 {
     private readonly ILogger _logger;
-    private readonly IDisposable _subscription;
+    private readonly IStoreEventPublisher _eventPublisher;
+    private bool _disposed;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="StoreLogger"/> class and subscribes to pipeline events via R3.
+    /// Initializes a new instance of the <see cref="StoreLogger"/> class and subscribes to pipeline events.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="eventPublisher">The pipeline event publisher.</param>
@@ -25,11 +25,11 @@ public class StoreLogger : Observer<StoreEventArgs>
         ArgumentNullException.ThrowIfNull(eventPublisher);
 
         _logger = logger;
-        _subscription = eventPublisher.Events.Subscribe(this);
+        _eventPublisher = eventPublisher;
+        _eventPublisher.EventPublished += OnEventPublished;
     }
 
-    /// <inheritdoc />
-    protected override void OnNextCore(StoreEventArgs e)
+    private void OnEventPublished(object? sender, StoreEventArgs e)
     {
         switch (e)
         {
@@ -108,21 +108,31 @@ public class StoreLogger : Observer<StoreEventArgs>
         }
     }
 
-    /// <inheritdoc />
-    protected override void OnErrorResumeCore(Exception error)
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
+    public void Dispose()
     {
-        _logger.LogError(error, "[EVENT] Error in event stream");
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
-    /// <inheritdoc />
-    protected override void OnCompletedCore(Result result)
+    /// <summary>
+    /// Releases the unmanaged resources used by the <see cref="StoreLogger"/> and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">If true, the method has been called directly or indirectly by a user's code.</param>
+    protected virtual void Dispose(bool disposing)
     {
-        _logger.LogInformation("[EVENT] Event stream completed");
-    }
+        if (_disposed)
+        {
+            return;
+        }
 
-    /// <inheritdoc />
-    protected override void DisposeCore()
-    {
-        _subscription.Dispose();
+        if (disposing)
+        {
+            _eventPublisher.EventPublished -= OnEventPublished;
+        }
+
+        _disposed = true;
     }
 }

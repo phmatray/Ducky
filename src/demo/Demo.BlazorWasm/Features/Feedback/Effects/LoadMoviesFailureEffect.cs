@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Demo.BlazorWasm.AppStore;
-using Ducky.Middlewares.ReactiveEffect;
+using Ducky.Middlewares.AsyncEffect;
 
 namespace Demo.BlazorWasm.Features.Feedback.Effects;
 
@@ -12,19 +12,18 @@ namespace Demo.BlazorWasm.Features.Feedback.Effects;
 /// </summary>
 /// <param name="snackbar">The snackbar service.</param>
 // ReSharper disable once UnusedType.Global
-public class LoadMoviesFailureEffect(ISnackbar snackbar) : ReactiveEffect
+public class LoadMoviesFailureEffect(ISnackbar snackbar) : AsyncEffect<LoadMoviesFailure>
 {
     /// <inheritdoc />
-    public override Observable<object> Handle(
-        Observable<object> actions, Observable<IRootState> rootState)
+    public override Task HandleAsync(LoadMoviesFailure action, IRootState rootState)
     {
-        return actions
-            .OfActionType<LoadMoviesFailure>()
-            .Do(action => snackbar.Add(action.ErrorMessage, Severity.Error))
-            .Select(object (action) =>
-            {
-                ErrorNotification notification = new(action.ErrorMessage);
-                return new AddNotification(notification);
-            });
+        // Show error in snackbar
+        snackbar.Add(action.ErrorMessage, Severity.Error);
+
+        // Create and dispatch error notification
+        ErrorNotification notification = new(action.ErrorMessage);
+        Dispatcher?.Dispatch(new AddNotification(notification));
+
+        return Task.CompletedTask;
     }
 }

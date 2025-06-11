@@ -46,7 +46,6 @@ services.AddDuckyStore(storeBuilder => storeBuilder
     // Add middlewares in the correct order
     .AddCorrelationIdMiddleware()
     .AddAsyncEffectMiddleware()
-    // .AddReactiveEffectMiddleware() // Fixed: now uses lazy initialization
 
     // Add Redux DevTools for debugging (with simplified API)
     // .AddDevToolsMiddleware(options =>

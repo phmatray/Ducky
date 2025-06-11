@@ -7,6 +7,5 @@ global using System.Diagnostics.CodeAnalysis;
 global using Ducky;
 global using Microsoft.Extensions.Time.Testing;
 global using Moq;
-global using R3;
 global using Shouldly;
 global using Xunit;

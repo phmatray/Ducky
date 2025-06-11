@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using R3;
 
 namespace Ducky;
 
@@ -23,15 +22,14 @@ public abstract partial record SliceReducers<TState>
     : ISlice<TState>, IDisposable
 {
     private bool _isInitialized;
-    private readonly ReactiveProperty<TState> _state = new();
-    private readonly Subject<Unit> _stateUpdated = new();
+    private TState? _currentState;
     private bool _disposed;
 
     /// <inheritdoc />
-    public virtual Observable<TState> State => _state;
+    public virtual TState CurrentState => _currentState ?? GetInitialState();
 
     /// <inheritdoc />
-    public virtual Observable<Unit> StateUpdated => _stateUpdated;
+    public virtual event EventHandler? StateUpdated;
 
     /// <summary>
     /// Gets the initial state of the reducer.
@@ -48,10 +46,10 @@ public abstract partial record SliceReducers<TState>
     public virtual string GetKey()
     {
         Type type = GetType();
-        
+
         // Use full name for robustness, but clean it up for readability
         string fullTypeName = type.FullName ?? type.Name;
-        
+
         // Handle generic types by removing generic parameters
         if (type.IsGenericType)
         {
@@ -61,7 +59,7 @@ public abstract partial record SliceReducers<TState>
                 fullTypeName = fullTypeName[..genericIndex];
             }
         }
-        
+
         // Remove common reducer suffixes BEFORE transforming
         if (fullTypeName.EndsWith("Reducers", StringComparison.InvariantCulture))
         {
@@ -71,7 +69,7 @@ public abstract partial record SliceReducers<TState>
         {
             fullTypeName = fullTypeName[..^7];
         }
-        
+
         // Replace namespace dots with dashes for flat key structure
         fullTypeName = fullTypeName.Replace('.', '-');
 
@@ -93,13 +91,13 @@ public abstract partial record SliceReducers<TState>
     {
         if (!_isInitialized)
         {
-            _state.OnNext(GetInitialState());
+            _currentState = GetInitialState();
             _isInitialized = true;
         }
 
-        return _state.Value is null
+        return _currentState is null
             ? throw new DuckyException("State is null.")
-            : _state.Value;
+            : _currentState;
     }
 
     /// <summary>
@@ -133,10 +131,10 @@ public abstract partial record SliceReducers<TState>
         }
 
         // First update the state...
-        _state.OnNext(updatedState);
+        _currentState = updatedState;
 
         // ...then notify subscribers that the state has been updated.
-        _stateUpdated.OnNext(Unit.Default);
+        StateUpdated?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -213,8 +211,7 @@ public abstract partial record SliceReducers<TState>
         if (disposing)
         {
             // Dispose managed resources.
-            _state.Dispose();
-            _stateUpdated.Dispose();
+            StateUpdated = null;
         }
 
         // Note disposing has been done.

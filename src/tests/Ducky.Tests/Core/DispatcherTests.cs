@@ -17,20 +17,22 @@ public sealed class DispatcherTests : IDisposable
     {
         // Arrange
         TestActionWithParameter action = new("Test");
+        object? dispatchedAction = null;
+        _sut.ActionDispatched += (sender, args) => dispatchedAction = args.Action;
 
         // Act
         _sut.Dispatch(action);
 
         // Assert
-        _sut.ActionStream.ShouldNotBeNull();
+        dispatchedAction.ShouldBe(action);
     }
 
     [Fact]
-    public void ActionStream_Should_EmitDispatchedActions()
+    public void ActionDispatched_Should_EmitDispatchedActions()
     {
         // Arrange
         List<object> emittedActions = [];
-        _sut.ActionStream.Subscribe(emittedActions.Add);
+        _sut.ActionDispatched += (sender, args) => emittedActions.Add(args.Action);
 
         // Act
         _sut.Dispatch(_action1);
@@ -60,7 +62,7 @@ public sealed class DispatcherTests : IDisposable
         // Verifies that actions dispatched concurrently are still emitted in the order they were enqueued.
         // Arrange
         List<object> emittedActions = [];
-        _sut.ActionStream.Subscribe(emittedActions.Add);
+        _sut.ActionDispatched += (sender, args) => emittedActions.Add(args.Action);
 
         // Act
         Parallel.Invoke(
@@ -77,16 +79,17 @@ public sealed class DispatcherTests : IDisposable
     }
 
     [Fact]
-    public void UnsubscribingFromActionStream_Should_NotReceiveFurtherActions()
+    public void UnsubscribingFromActionDispatched_Should_NotReceiveFurtherActions()
     {
-        // Tests that unsubscribing from the ActionStream stops receiving further actions.
+        // Tests that unsubscribing from the ActionDispatched event stops receiving further actions.
         // Arrange
         List<object> emittedActions = [];
-        IDisposable subscription = _sut.ActionStream.Subscribe(emittedActions.Add);
+        EventHandler<ActionDispatchedEventArgs> handler = (sender, args) => emittedActions.Add(args.Action);
+        _sut.ActionDispatched += handler;
 
         // Act
         _sut.Dispatch(_action1);
-        subscription.Dispose();
+        _sut.ActionDispatched -= handler;
         _sut.Dispatch(_action2);
 
         // Assert
@@ -106,19 +109,29 @@ public sealed class DispatcherTests : IDisposable
     }
 
     [Fact]
-    public void ActionStream_Should_CompleteWhenDispatcherDisposed()
+    public void ActionDispatched_Should_BeNullWhenDispatcherDisposed()
     {
-        // Verifies that the ActionStream completes when the Dispatcher is disposed,
+        // Verifies that the ActionDispatched event is cleared when the Dispatcher is disposed,
         // ensuring proper resource cleanup.
         // Arrange
-        var completed = false;
-        _sut.ActionStream.Subscribe(_ => { }, _ => completed = true);
+        var eventFired = false;
+        _sut.ActionDispatched += (sender, args) => eventFired = true;
 
         // Act
         _sut.Dispose();
+        
+        // Try to dispatch after dispose (should throw)
+        try 
+        {
+            _sut.Dispatch(_action1);
+        }
+        catch (DuckyException)
+        {
+            // Expected
+        }
 
-        // Assert
-        completed.ShouldBeTrue();
+        // Assert - event should not have fired because dispatch threw
+        eventFired.ShouldBeFalse();
     }
 
     [Fact]

@@ -1,6 +1,5 @@
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
-using Ducky.Middlewares.ReactiveEffect;
 
 namespace Ducky.Builder;
 
@@ -14,7 +13,7 @@ internal static class MiddlewareOrderValidator
         [typeof(CorrelationIdMiddleware)] = new MiddlewareOrderRule
         {
             Priority = 100,
-            ShouldComeBefore = new HashSet<Type> { typeof(AsyncEffectMiddleware), typeof(ReactiveEffectMiddleware) },
+            ShouldComeBefore = new HashSet<Type> { typeof(AsyncEffectMiddleware) },
             Reason = "CorrelationId should be set early to track actions through the entire pipeline"
         },
         [typeof(AsyncEffectMiddleware)] = new MiddlewareOrderRule
@@ -22,12 +21,6 @@ internal static class MiddlewareOrderValidator
             Priority = 200,
             ShouldComeAfter = new HashSet<Type> { typeof(CorrelationIdMiddleware) },
             Reason = "AsyncEffect should run after correlation and error handling are set up"
-        },
-        [typeof(ReactiveEffectMiddleware)] = new MiddlewareOrderRule
-        {
-            Priority = 300,
-            ShouldComeAfter = new HashSet<Type> { typeof(CorrelationIdMiddleware) },
-            Reason = "ReactiveEffect should run after correlation and error handling are set up"
         }
     };
 

@@ -14,8 +14,7 @@ public class DuckyStoreTests
     public void Store_Should_Initialize_With_Default_State()
     {
         // Act
-        ReadOnlyReactiveProperty<IRootState> observable = _sut.RootStateObservable;
-        IRootState rootState = observable.FirstSync();
+        IRootState rootState = _sut.CurrentState;
 
         // Assert
         rootState.ShouldNotBeNull();
@@ -44,23 +43,35 @@ public class DuckyStoreTests
         // Therefore, no additional waiting is needed.
 
         // Get initial state to verify slice is loaded correctly
-        int initialState = store.RootStateObservable
-            .Select(state => state.GetSliceState<int>("ducky-tests-test-models-test-counter"))
-            .FirstSync();
+        int initialState = store.CurrentState.GetSliceState<int>("ducky-tests-test-models-test-counter");
         
         initialState.ShouldBe(10); // Verify initial state
+        
+        // Subscribe to state changes before dispatching
+        var stateChanged = false;
+        int updatedState = initialState;
+        store.StateChanged += (sender, args) =>
+        {
+            updatedState = args.NewState.GetSliceState<int>("ducky-tests-test-models-test-counter");
+            if (updatedState == initialState)
+            {
+                return;
+            }
+
+            stateChanged = true;
+        };
         
         // Act
         dispatcher.Dispatch(new TestIncrementAction());
 
-        // Wait for the state change by observing until we get the expected value
-        // This approach is more reliable than Thread.Sleep as it waits for the actual change
-        int updatedState = store.RootStateObservable
-            .Select(state => state.GetSliceState<int>("ducky-tests-test-models-test-counter"))
-            .Where(value => value != initialState) // Wait for state to change
-            .FirstSync();
+        // Give some time for the state to update
+        for (int i = 0; i < 10 && !stateChanged; i++)
+        {
+            Thread.Sleep(50);
+        }
 
         // Assert
+        stateChanged.ShouldBeTrue();
         updatedState.ShouldBe(11);
     }
 }

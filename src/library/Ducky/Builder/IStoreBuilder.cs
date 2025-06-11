@@ -83,22 +83,6 @@ public interface IStoreBuilder
         where TEffect : class, IAsyncEffect;
 
     /// <summary>
-    /// Adds a reactive effect to the store.
-    /// </summary>
-    /// <typeparam name="TEffect">The type of effect to add.</typeparam>
-    /// <returns>The store builder for chaining.</returns>
-    IStoreBuilder AddReactiveEffect<TEffect>() where TEffect : class, IReactiveEffect;
-
-    /// <summary>
-    /// Adds a reactive effect to the store with a factory function.
-    /// </summary>
-    /// <typeparam name="TEffect">The type of effect to add.</typeparam>
-    /// <param name="implementationFactory">The factory function to create the effect.</param>
-    /// <returns>The store builder for chaining.</returns>
-    IStoreBuilder AddReactiveEffect<TEffect>(Func<IServiceProvider, TEffect> implementationFactory)
-        where TEffect : class, IReactiveEffect;
-
-    /// <summary>
     /// Adds an exception handler to the store.
     /// </summary>
     /// <typeparam name="TExceptionHandler">The type of exception handler to add.</typeparam>

@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Ducky.Builder;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.AsyncEffect;
-using Ducky.Middlewares.ReactiveEffect;
 using Ducky.Pipeline;
 
 namespace Ducky.Tests.Integration;
@@ -23,16 +22,14 @@ public class MiddlewareRegistrationTests
         // Act - Register middlewares using StoreBuilder
         services.AddDuckyStore(builder => builder
             .AddCorrelationIdMiddleware()
-            .AddAsyncEffectMiddleware()
-            .AddReactiveEffectMiddleware());
+            .AddAsyncEffectMiddleware());
 
         // Assert - Middlewares should be registered in the service collection
         services.Any(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(AsyncEffectMiddleware)).ShouldBeTrue();
-        services.Any(sd => sd.ServiceType == typeof(ReactiveEffectMiddleware)).ShouldBeTrue();
 
         // Also check that they are registered as IMiddleware
-        services.Where(sd => sd.ServiceType == typeof(IMiddleware)).Count().ShouldBe(4);
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3);
     }
 
     [Fact]

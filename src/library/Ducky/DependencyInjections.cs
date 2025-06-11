@@ -35,7 +35,6 @@ public static class DependencyInjections
         // Scan and register all Slices, Effects and Middlewares
         services.ScanAndRegister<ISlice>(options.Assemblies);
         services.ScanAndRegister<IAsyncEffect>(options.Assemblies);
-        services.ScanAndRegister<IReactiveEffect>(options.Assemblies);
 
         // Add Store
         services.AddScoped<IStore, DuckyStore>(sp =>

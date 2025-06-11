@@ -39,7 +39,7 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
         _eventPublisher = _serviceProvider.GetRequiredService<IStoreEventPublisher>();
 
         // Subscribe to events
-        _eventPublisher.Events.Subscribe(evt => _publishedEvents.Add(evt));
+        _eventPublisher.EventPublished += (sender, evt) => _publishedEvents.Add(evt);
     }
 
     [Fact]

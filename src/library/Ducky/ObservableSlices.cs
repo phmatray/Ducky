@@ -3,50 +3,41 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using ObservableCollections;
-using R3;
 
 namespace Ducky;
 
 /// <summary>
-/// Manages a collection of observable slices and provides an observable root state.
+/// Manages a collection of slices and provides root state management.
 /// </summary>
 public sealed class ObservableSlices : IDisposable
 {
-    private readonly CompositeDisposable _subscriptions = [];
-    private readonly ObservableDictionary<string, ISlice> _slices = [];
-    private readonly ReactiveProperty<IRootState> _rootState;
+    private readonly Dictionary<string, ISlice> _slices = [];
+    private readonly List<EventHandler> _sliceUpdateHandlers = [];
+    private IRootState _currentState;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ObservableSlices"/> class.
     /// </summary>
     public ObservableSlices()
     {
-        // Create the root state observable
-        _rootState = new ReactiveProperty<IRootState>(CreateRootState());
-
-        // Subscribe to slice changes
-        _slices.ObserveAdd().Select(ev => ev.Value)
-            .Merge(_slices.ObserveRemove().Select(ev => ev.Value))
-            .Merge(_slices.ObserveReplace().Select(ev => ev.NewValue))
-            .Select(IRootState (_) => CreateRootState())
-            .Subscribe(_rootState.AsObserver())
-            .AddTo(_subscriptions);
-
-        // Create the RootStateObservable
-        RootStateObservable = _rootState.ToReadOnlyReactiveProperty();
+        _currentState = CreateRootState();
     }
+
+    /// <summary>
+    /// Occurs when the root state changes.
+    /// </summary>
+    public event EventHandler<StateChangedEventArgs>? RootStateChanged;
 
     /// <summary>
     /// Gets an enumerable collection of all registered slices.
     /// </summary>
     public IEnumerable<ISlice> AllSlices
-        => _slices.Select(pair => pair.Value);
+        => _slices.Values;
 
     /// <summary>
-    /// Gets an observable that emits the root state whenever a slice is added, removed, or replaced.
+    /// Gets the current root state.
     /// </summary>
-    public ReadOnlyReactiveProperty<IRootState> RootStateObservable { get; }
+    public IRootState CurrentState => _currentState;
 
     /// <summary>
     /// Adds a new slice with the specified key and data.
@@ -58,17 +49,32 @@ public sealed class ObservableSlices : IDisposable
 
         _slices[slice.GetKey()] = slice;
 
-        slice.StateUpdated
-            .Subscribe(_ => UpdateRootState())
-            .AddTo(_subscriptions);
+        // Create handler for slice updates
+        EventHandler handler = (sender, e) => UpdateRootState();
+        _sliceUpdateHandlers.Add(handler);
+        slice.StateUpdated += handler;
+        
+        UpdateRootState();
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        _rootState.Dispose();
-        _subscriptions.Dispose();
+        // Unsubscribe all handlers
+        int index = 0;
+        foreach (ISlice slice in _slices.Values)
+        {
+            if (index < _sliceUpdateHandlers.Count)
+            {
+                slice.StateUpdated -= _sliceUpdateHandlers[index];
+            }
+
+            index++;
+        }
+
+        _sliceUpdateHandlers.Clear();
         _slices.Clear();
+        RootStateChanged = null;
     }
 
     /// <summary>
@@ -89,6 +95,8 @@ public sealed class ObservableSlices : IDisposable
     /// </summary>
     private void UpdateRootState()
     {
-        _rootState.OnNext(CreateRootState());
+        IRootState previousState = _currentState;
+        _currentState = CreateRootState();
+        RootStateChanged?.Invoke(this, new StateChangedEventArgs(_currentState, previousState));
     }
 }

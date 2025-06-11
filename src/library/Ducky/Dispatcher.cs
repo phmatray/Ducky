@@ -2,12 +2,10 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using R3;
-
 namespace Ducky;
 
 /// <summary>
-/// A dispatcher that queues and dispatches actions, providing an observable stream of dispatched actions.
+/// A dispatcher that queues and dispatches actions, providing events for dispatched actions.
 /// </summary>
 public sealed class Dispatcher : IDispatcher, IDisposable
 {
@@ -18,13 +16,11 @@ public sealed class Dispatcher : IDispatcher, IDisposable
 #endif
 
     private readonly Queue<object> _queuedActions = [];
-    private readonly Subject<object> _actionSubject = new();
     private volatile bool _isDequeuing;
     private bool _disposed;
 
     /// <inheritdoc />
-    public Observable<object> ActionStream
-        => _actionSubject.AsObservable();
+    public event EventHandler<ActionDispatchedEventArgs>? ActionDispatched;
 
     /// <inheritdoc />
     public object? LastAction { get; private set; }
@@ -60,18 +56,17 @@ public sealed class Dispatcher : IDispatcher, IDisposable
         }
 
         _disposed = true;
-        _actionSubject.OnCompleted();
-        _actionSubject.Dispose();
+        ActionDispatched = null;
     }
 
     /// <summary>
-    /// Dequeues and dispatches actions to the observable stream.
+    /// Dequeues and dispatches actions to event handlers.
     /// </summary>
     private void DequeueActions()
     {
         lock (_syncRoot)
         {
-            if (_isDequeuing || _actionSubject == null!)
+            if (_isDequeuing)
             {
                 return;
             }
@@ -94,9 +89,8 @@ public sealed class Dispatcher : IDispatcher, IDisposable
                 dequeuedAction = _queuedActions.Dequeue();
             }
 
-            _actionSubject.OnNext(dequeuedAction);
-
             LastAction = dequeuedAction;
+            ActionDispatched?.Invoke(this, new ActionDispatchedEventArgs(dequeuedAction));
         }
     }
 }

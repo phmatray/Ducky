@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Middlewares.ReactiveEffect;
+using Ducky.Middlewares.AsyncEffect;
 
 namespace Demo.BlazorWasm.AppStore;
 
@@ -133,43 +133,24 @@ public record MoviesReducers : SliceReducers<MoviesState>
 #region Effects
 
 // ReSharper disable once UnusedType.Global
-public class LoadMoviesEffect(IMoviesService moviesService) : ReactiveEffect
+public class LoadMoviesEffect(IMoviesService moviesService) : AsyncEffect<LoadMovies>
 {
-    public override Observable<object> Handle(
-        Observable<object> actions,
-        Observable<IRootState> rootState)
+    public override async Task HandleAsync(LoadMovies action, IRootState rootState)
     {
-        return actions
-            .OfActionType<LoadMovies>()
-            .LogMessage("Loading movies...")
-            .WithSliceState<MoviesState, LoadMovies>(rootState)
-            .InvokeService(
-                pair => moviesService.GetMoviesAsync(pair.State.Pagination.CurrentPage, 5),
-                response => new LoadMoviesSuccess(response.Movies, response.TotalItems),
-                ex => new LoadMoviesFailure(ex.Message))
-            .LogMessage("Movies loaded.");
+        try
+        {
+            const int pageSize = 5;
+            MoviesState state = rootState.GetSliceState<MoviesState>();
+            int currentPage = state.Pagination.CurrentPage;
 
-        // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE
-        // ============================================================
-        // return actions
-        //     .OfType<object, LoadMovies>()
-        //     .Do(_ => Console.WriteLine("Loading movies..."))
-        //     .WithSliceState<MoviesState, LoadMovies>(rootState)
-        //     .SelectAwait(async (pair, ct) =>
-        //     {
-        //         try
-        //         {
-        //             const int pageSize = 5;
-        //             MoviesState state = pair.State;
-        //             int currentPage = state.Pagination.CurrentPage;
-        //             GetMoviesResponse response = await moviesService.GetMoviesAsync(currentPage, pageSize, ct);
-        //             return new LoadMoviesSuccess(response.Movies, response.TotalItems) as object;
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             return new LoadMoviesFailure(ex);
-        //         }
-        //     });
+            GetMoviesResponse response = await moviesService.GetMoviesAsync(currentPage, pageSize);
+
+            Dispatcher?.Dispatch(new LoadMoviesSuccess(response.Movies, response.TotalItems));
+        }
+        catch (Exception ex)
+        {
+            Dispatcher?.Dispatch(new LoadMoviesFailure(ex.Message));
+        }
     }
 }
 

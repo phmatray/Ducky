@@ -2,7 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Middlewares.ReactiveEffect;
+using Ducky.Middlewares.AsyncEffect;
 
 namespace Demo.BlazorWasm.Features.Feedback.Effects;
 
@@ -11,17 +11,17 @@ namespace Demo.BlazorWasm.Features.Feedback.Effects;
 /// </summary>
 /// <param name="dialog">The dialog service.</param>
 // ReSharper disable once UnusedType.Global
-public class OpenAboutDialogEffect(IDialogService dialog) : ReactiveEffect
+public class OpenAboutDialogEffect(IDialogService dialog) : AsyncEffect<OpenAboutDialog>
 {
     /// <inheritdoc />
-    public override Observable<object> Handle(
-        Observable<object> actions, Observable<IRootState> rootState)
+    public override async Task HandleAsync(OpenAboutDialog action, IRootState rootState)
     {
         DialogOptions options = new() { CloseOnEscapeKey = true };
 
-        return actions
-            .OfActionType<OpenAboutDialog>()
-            .Do(_ => dialog.ShowAsync<AboutDialog>(null, options))
-            .Select(object (_) => new NoOp());
+        // Show the about dialog
+        await dialog.ShowAsync<AboutDialog>(null, options);
+
+        // Optionally dispatch a NoOp action to indicate completion
+        Dispatcher?.Dispatch(new NoOp());
     }
 }

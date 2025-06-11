@@ -14,8 +14,6 @@ public sealed class CounterEffectsTests
 
     public CounterEffectsTests()
     {
-        ObservableSystem.DefaultTimeProvider = _timeProvider;
-
         _sut = new ResetCounterAfter3Sec();
         _sut.SetDispatcher(_dispatcher);
     }
