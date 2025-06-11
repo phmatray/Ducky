@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using Ducky.Builder;
+using Ducky.Diagnostics;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -73,6 +75,63 @@ public static class DependencyInjections
     {
         DuckyOptions options = new();
         configure(options);
+
+        return services.AddDuckyCore(options);
+    }
+
+    /// <summary>
+    /// Adds Ducky services with a store builder for robust configuration.
+    /// This is the recommended way to configure Ducky services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configure">The store builder configuration action.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <example>
+    /// <code>
+    /// services.AddDuckyStore(builder => builder
+    ///     .AddCorrelationIdMiddleware()
+    ///     .AddExceptionHandlingMiddleware()
+    ///     .AddAsyncEffectMiddleware()
+    ///     .AddEffect&lt;MyEffect&gt;()
+    ///     .AddSlice&lt;MyState&gt;());
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddDuckyStore(
+        this IServiceCollection services,
+        Action<IStoreBuilder> configure)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        StoreBuilder storeBuilder = new(services);
+        configure(storeBuilder);
+
+        // Extract middleware types from the builder
+        List<Type> middlewareTypes = storeBuilder.GetMiddlewareTypes();
+        bool diagnosticsEnabled = storeBuilder.IsDiagnosticsEnabled();
+
+        DuckyOptions options = new()
+        {
+            ConfigurePipelineWithServices = (pipeline, serviceProvider) =>
+            {
+                MiddlewareDiagnostics? diagnostics = diagnosticsEnabled
+                    ? serviceProvider.GetService<MiddlewareDiagnostics>()
+                    : null;
+
+                for (int i = 0; i < middlewareTypes.Count; i++)
+                {
+                    Type middlewareType = middlewareTypes[i];
+
+                    if (diagnostics is not null)
+                    {
+                        // Record middleware registration
+                        diagnostics.RecordMiddlewareRegistration(middlewareType, i);
+                    }
+
+                    pipeline.Use(middlewareType);
+                }
+            }
+        };
 
         return services.AddDuckyCore(options);
     }

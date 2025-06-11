@@ -30,17 +30,6 @@ services.AddMudServices(
 services.AddScoped<IJsonColorizer, JsonColorizer>();
 services.AddScoped<IMoviesService, MoviesService>();
 
-// Register all application slice reducers
-// services.AddScoped<ISlice<CounterState>, CounterReducers>();
-// services.AddScoped<ISlice<GoalState>, GoalsReducers>();
-// services.AddScoped<ISlice<LayoutState>, LayoutReducers>();
-// services.AddScoped<ISlice<MessageState>, MessageReducers>();
-// services.AddScoped<ISlice<MoviesState>, MoviesReducers>();
-// services.AddScoped<ISlice<NotificationsState>, NotificationsReducers>();
-// services.AddScoped<ISlice<ProductState>, ProductsReducers>();
-// services.AddScoped<ISlice<TimerState>, TimerReducers>();
-// services.AddScoped<ISlice<TodoState>, TodoReducers>();
-
 // Add Ducky with the new StoreBuilder approach
 services.AddDuckyStore(storeBuilder => storeBuilder
     // Add middlewares in the correct order
