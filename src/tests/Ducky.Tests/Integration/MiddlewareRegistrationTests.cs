@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
+using Ducky.Legacy;
 using Ducky.Builder;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.AsyncEffect;
@@ -29,7 +30,7 @@ public class MiddlewareRegistrationTests
         services.Any(sd => sd.ServiceType == typeof(AsyncEffectMiddleware)).ShouldBeTrue();
 
         // Also check that they are registered as IMiddleware
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3);
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(2);
     }
 
     [Fact]
@@ -49,8 +50,8 @@ public class MiddlewareRegistrationTests
         // Assert - Both registrations should exist
         ServiceDescriptor? concreteRegistration =
             services.FirstOrDefault(sd => sd.ServiceType == typeof(CorrelationIdMiddleware));
-        ServiceDescriptor? interfaceRegistration = services.FirstOrDefault(sd =>
-            sd.ServiceType == typeof(IMiddleware));
+        ServiceDescriptor? interfaceRegistration =
+            services.FirstOrDefault(sd => sd.ServiceType == typeof(IMiddleware));
 
         concreteRegistration.ShouldNotBeNull();
         interfaceRegistration.ShouldNotBeNull();

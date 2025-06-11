@@ -11,7 +11,9 @@ namespace Ducky.Blazor.Builder;
 
 /// <summary>
 /// Blazor-specific extension methods for IStoreBuilder.
+/// For new applications, use the simplified BlazorDuckyBuilder API instead.
 /// </summary>
+[Obsolete("Use the new BlazorDuckyBuilder API from services.AddDuckyBlazor() instead. These methods will be removed in a future version.")]
 public static class BlazorStoreBuilderExtensions
 {
     /// <summary>

@@ -34,7 +34,7 @@ public class DuckyComponentTypeCheckTests
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
-        services.AddDuckyStore(builder => { });
+        services.AddDucky(builder => { });
         ServiceProvider provider = services.BuildServiceProvider();
         IStore store = provider.GetRequiredService<IStore>();
 
@@ -49,7 +49,7 @@ public class DuckyComponentTypeCheckTests
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
-        services.AddDuckyStore(builder => { });
+        services.AddDucky(builder => { });
         ServiceProvider provider = services.BuildServiceProvider();
         IStore store = provider.GetRequiredService<IStore>();
 

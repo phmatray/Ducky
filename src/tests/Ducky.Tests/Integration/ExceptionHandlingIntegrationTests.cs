@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
+using Ducky.Legacy;
+using Ducky.Builder;
 using Ducky.Pipeline;
 
 namespace Ducky.Tests.Integration;

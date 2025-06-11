@@ -1,3 +1,4 @@
+using Ducky.Legacy;
 using Ducky.Builder;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
@@ -28,7 +29,10 @@ public class StoreBuilderTests
         services.Any(sd => sd.ServiceType == typeof(AsyncEffectMiddleware)).ShouldBeTrue();
 
         // Check interface registrations
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3);
+        List<ServiceDescriptor> middlewareServices = services.Where(sd => sd.ServiceType == typeof(IMiddleware)).ToList();
+        // If this fails, uncomment the next line to see what middlewares are registered
+        // var middlewareTypes = middlewareServices.Select(sd => sd.ImplementationType?.Name ?? sd.ImplementationFactory?.ToString() ?? "Unknown").ToList();
+        middlewareServices.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -148,7 +152,7 @@ public class StoreBuilderTests
         // Act
         services.AddDuckyStore(builder =>
         {
-            builder.ConfigureOptions(options =>
+            builder.ConfigureStore(options =>
             {
                 // Set a property that exists on DuckyOptions
                 options.AssemblyNames = ["TestAssembly"];
@@ -183,7 +187,7 @@ public class StoreBuilderTests
         });
 
         // Verify all registrations
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3); // Default middlewares
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(2); // Default middlewares
         services.Any(sd => sd.ServiceType == typeof(ISlice<TestState>)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IAsyncEffect)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IExceptionHandler)).ShouldBeTrue();

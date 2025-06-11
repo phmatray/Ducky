@@ -19,7 +19,7 @@ internal static class Factories
         services.AddScoped<ISlice, TestCounterReducers>();
 
         // Add Ducky store with minimal configuration
-        services.AddDuckyStore(builder => { });
+        services.AddDucky(builder => { });
 
         ServiceProvider provider = services.BuildServiceProvider();
         return provider.GetRequiredService<IStore>();

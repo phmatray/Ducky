@@ -28,7 +28,7 @@ public class DuckyStoreTests
         ServiceCollection services = [];
         services.AddLogging();
         // TestCounterReducers will be automatically registered by assembly scanning
-        services.AddDuckyStore(builder => { });
+        services.AddDucky(builder => { });
 
         ServiceProvider provider = services.BuildServiceProvider();
         IStore store = provider.GetRequiredService<IStore>();
@@ -44,9 +44,9 @@ public class DuckyStoreTests
 
         // Get initial state to verify slice is loaded correctly
         int initialState = store.CurrentState.GetSliceState<int>("ducky-tests-test-models-test-counter");
-        
+
         initialState.ShouldBe(10); // Verify initial state
-        
+
         // Subscribe to state changes before dispatching
         var stateChanged = false;
         int updatedState = initialState;
@@ -60,7 +60,7 @@ public class DuckyStoreTests
 
             stateChanged = true;
         };
-        
+
         // Act
         dispatcher.Dispatch(new TestIncrementAction());
 

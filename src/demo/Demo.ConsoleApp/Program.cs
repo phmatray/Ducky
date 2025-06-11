@@ -1,6 +1,5 @@
 using Demo.ConsoleApp.Counter;
 using Demo.ConsoleApp.Todos;
-using Ducky.Builder;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
@@ -17,14 +16,11 @@ ServiceCollection services = [];
 services.AddScoped<ISlice, CounterReducers>();
 services.AddScoped<ISlice, TodoReducers>();
 
-// Add Ducky store with builder
-services.AddDuckyStore(
-    builder => builder
-        .AddCorrelationIdMiddleware()
-        .AddMiddleware<LoggingMiddleware>()
-        .AddAsyncEffectMiddleware()
-        .AddEffect<DelayedIncrementEffect>()
-        .AddEffect<CounterThresholdEffect>());
+// Add Ducky with simplified API
+services.AddDucky(builder => builder
+    .AddMiddleware<LoggingMiddleware>()
+    .AddEffect<DelayedIncrementEffect>()
+    .AddEffect<CounterThresholdEffect>());
 
 ServiceProvider serviceProvider = services.BuildServiceProvider();
 

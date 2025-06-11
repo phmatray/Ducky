@@ -7,7 +7,9 @@ namespace Ducky.Builder;
 
 /// <summary>
 /// Extension methods for <see cref="IStoreBuilder"/> to provide fluent middleware configuration.
+/// For new applications, use the simplified DuckyBuilder API instead.
 /// </summary>
+[Obsolete("Use the new DuckyBuilder API instead. These methods will be removed in a future version.")]
 public static class StoreBuilderExtensions
 {
     /// <summary>

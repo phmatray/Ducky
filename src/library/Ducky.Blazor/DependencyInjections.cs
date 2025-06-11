@@ -4,13 +4,16 @@
 
 using Ducky.Blazor.Middlewares.JsLogging;
 using Ducky.Builder;
+using Ducky.Legacy;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Ducky.Blazor;
+namespace Ducky.Blazor.Legacy;
 
 /// <summary>
 /// Extension methods for adding Ducky services to the dependency injection container.
+/// For new applications, use services.AddDuckyBlazor() from the Ducky.Blazor namespace instead.
 /// </summary>
+[Obsolete("Use services.AddDuckyBlazor() from the Ducky.Blazor namespace instead. This will be removed in a future version.")]
 public static class DependencyInjections
 {
     /// <summary>

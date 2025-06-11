@@ -5,6 +5,7 @@ using Ducky.Pipeline;
 
 namespace Ducky.Builder;
 
+[Obsolete("StoreBuilder is for internal use only. Use DuckyBuilder instead.")]
 internal class StoreBuilder : IStoreBuilder
 {
     private readonly List<Type> _middlewareTypes = [];

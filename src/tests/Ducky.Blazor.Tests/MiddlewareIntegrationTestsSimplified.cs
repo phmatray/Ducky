@@ -1,4 +1,5 @@
 using Ducky.Blazor.Builder;
+using Ducky.Legacy;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;

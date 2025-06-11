@@ -10,11 +10,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace Ducky;
+namespace Ducky.Legacy;
 
 /// <summary>
-/// Extension methods for adding Ducky services to the dependency injection container.
+/// Legacy extension methods for adding Ducky services to the dependency injection container.
+/// For new applications, use services.AddDucky() instead.
 /// </summary>
+[Obsolete("Use services.AddDucky() from the Ducky namespace instead. This will be removed in a future version.")]
 public static class DependencyInjections
 {
     /// <summary>
