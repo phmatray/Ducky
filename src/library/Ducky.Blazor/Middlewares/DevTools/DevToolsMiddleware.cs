@@ -28,7 +28,7 @@ public sealed class DevToolsMiddleware : MiddlewareBase
     }
 
     /// <inheritdoc />
-    public override void AfterDispatch(object action)
+    public override void AfterReduce(object action)
     {
         if (_store is null)
         {

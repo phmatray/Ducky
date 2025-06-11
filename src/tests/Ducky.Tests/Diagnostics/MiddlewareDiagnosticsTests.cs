@@ -3,7 +3,6 @@ using Ducky.Diagnostics;
 using Ducky.Middlewares.NoOp;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Ducky.Tests.Diagnostics;
 
@@ -168,12 +167,12 @@ public class MiddlewareDiagnosticsTests
 
     private class DelayMiddleware : MiddlewareBase
     {
-        public override void BeforeDispatch(object action)
+        public override void BeforeReduce(object action)
         {
             Thread.Sleep(10);
         }
 
-        public override void AfterDispatch(object action)
+        public override void AfterReduce(object action)
         {
             Thread.Sleep(10);
         }
@@ -181,7 +180,7 @@ public class MiddlewareDiagnosticsTests
 
     private class ErrorMiddleware : MiddlewareBase
     {
-        public override void BeforeDispatch(object action)
+        public override void BeforeReduce(object action)
         {
             throw new InvalidOperationException("Test error");
         }

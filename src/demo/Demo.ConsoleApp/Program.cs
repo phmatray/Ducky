@@ -1,12 +1,8 @@
 using Demo.ConsoleApp.Counter;
 using Demo.ConsoleApp.Todos;
-using Ducky;
 using Ducky.Builder;
-using Ducky.Middlewares.AsyncEffect;
-using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Spectre.Console;
 
 AnsiConsole.Write(
@@ -143,7 +139,7 @@ async Task RunCounterDemo(IDispatcher actionDispatcher, IStore stateStore)
                 await AnsiConsole.Status()
                     .StartAsync(
                         "Starting async increment...",
-                        async ctx => { await Task.Delay(500).ConfigureAwait(false); })
+                        async _ => await Task.Delay(500).ConfigureAwait(false))
                     .ConfigureAwait(false);
                 break;
             }
@@ -355,12 +351,12 @@ public sealed class LoggingMiddleware : IMiddleware
         return true;
     }
 
-    public void BeforeDispatch(object action)
+    public void BeforeReduce(object action)
     {
         AnsiConsole.MarkupLine($"[dim][[Middleware]] Before: {action.GetType().Name}[/]");
     }
 
-    public void AfterDispatch(object action)
+    public void AfterReduce(object action)
     {
         AnsiConsole.MarkupLine($"[dim][[Middleware]] After: {action.GetType().Name}[/]");
     }

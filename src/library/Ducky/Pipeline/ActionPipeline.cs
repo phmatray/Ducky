@@ -133,19 +133,19 @@ public sealed class ActionPipeline : IDisposable
                 }
             }
 
-            // Call BeforeDispatch on all middlewares
+            // Call BeforeReduce on all middlewares
             foreach (IMiddleware middleware in _middlewares)
             {
-                middleware.BeforeDispatch(action);
+                middleware.BeforeReduce(action);
             }
 
             // Action processing happens here (handled by DuckyStore)
             // This is where slice reducers are executed
 
-            // Call AfterDispatch on all middlewares
+            // Call AfterReduce on all middlewares
             foreach (IMiddleware middleware in _middlewares)
             {
-                middleware.AfterDispatch(action);
+                middleware.AfterReduce(action);
             }
 
             _logger.LogTrace("Completed processing action {ActionType}", action.GetType().Name);

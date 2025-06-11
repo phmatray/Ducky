@@ -52,7 +52,7 @@ public class CorrelationIdMiddlewareTests
     }
 
     [Fact]
-    public void BeforeDispatch_ShouldPublishCorrelationIdAssignedEvent()
+    public void BeforeReduce_ShouldPublishCorrelationIdAssignedEvent()
     {
         // Arrange
         StoreEventPublisher eventPublisher = new();
@@ -71,7 +71,7 @@ public class CorrelationIdMiddlewareTests
         };
 
         // Act
-        middleware.BeforeDispatch(action);
+        middleware.BeforeReduce(action);
 
         // Assert
         Assert.NotNull(publishedEvent);
@@ -80,7 +80,7 @@ public class CorrelationIdMiddlewareTests
     }
 
     [Fact]
-    public void BeforeDispatch_ShouldAssignNewCorrelationId()
+    public void BeforeReduce_ShouldAssignNewCorrelationId()
     {
         // Arrange
         StoreEventPublisher eventPublisher = new();
@@ -99,8 +99,8 @@ public class CorrelationIdMiddlewareTests
         };
 
         // Act - dispatch multiple times
-        middleware.BeforeDispatch(action);
-        middleware.BeforeDispatch(action);
+        middleware.BeforeReduce(action);
+        middleware.BeforeReduce(action);
 
         // Assert - each dispatch should get a unique correlation ID
         Assert.Equal(2, correlationIds.Count);
@@ -110,7 +110,7 @@ public class CorrelationIdMiddlewareTests
     }
 
     [Fact]
-    public void AfterDispatch_ShouldDoNothing()
+    public void AfterReduce_ShouldDoNothing()
     {
         // Arrange
         StoreEventPublisher eventPublisher = new();
@@ -121,7 +121,7 @@ public class CorrelationIdMiddlewareTests
         eventPublisher.EventPublished += (sender, args) => eventCount++;
 
         // Act
-        middleware.AfterDispatch(action);
+        middleware.AfterReduce(action);
 
         // Assert - no events should be published
         Assert.Equal(0, eventCount);

@@ -51,7 +51,7 @@ public sealed class AsyncEffectMiddleware : MiddlewareBase
     }
 
     /// <inheritdoc />
-    public override void AfterDispatch(object action)
+    public override void AfterReduce(object action)
     {
         TriggerEffects(action);
     }

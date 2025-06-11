@@ -20,23 +20,23 @@ public interface IMiddleware
     void AfterInitializeAllMiddlewares();
 
     /// <summary>
-    /// Called before each action dispatched
+    /// Called before each action is dispatched
     /// </summary>
     /// <param name="action">The action to be dispatched</param>
     /// <returns>True if the action may proceed, False if it should be prevented</returns>
     bool MayDispatchAction(object action);
 
     /// <summary>
-    /// Called before each action dispatched
+    /// Called before each action is reduced
     /// </summary>
-    /// <param name="action">The action being dispatched</param>
-    void BeforeDispatch(object action);
+    /// <param name="action">The action being reduced</param>
+    void BeforeReduce(object action);
 
     /// <summary>
-    /// Called after each action dispatched
+    /// Called after each action has been reduced
     /// </summary>
-    /// <param name="action">The action that has just been dispatched</param>
-    void AfterDispatch(object action);
+    /// <param name="action">The action that has just been reduced</param>
+    void AfterReduce(object action);
 
     /// <summary>
     /// This should only be called via IStore.BeginInternalMiddlewareChange.

@@ -22,9 +22,9 @@ public sealed class CorrelationIdMiddleware : MiddlewareBase
     }
 
     /// <inheritdoc />
-    public override void BeforeDispatch(object action)
+    public override void BeforeReduce(object action)
     {
-        // Assign correlation ID before dispatch
+        // Assign correlation ID before reduce
         Guid correlationId = Guid.NewGuid();
 
         // Note: Since we can't attach metadata to actions directly,

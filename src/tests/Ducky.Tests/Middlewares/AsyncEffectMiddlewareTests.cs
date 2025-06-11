@@ -1,6 +1,5 @@
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Pipeline;
-using Ducky.Tests.TestModels;
 using Moq;
 
 namespace Ducky.Tests.Middlewares;
@@ -100,32 +99,32 @@ public class AsyncEffectMiddlewareTests
     }
 
     [Fact]
-    public async Task BeforeDispatch_DoesNothing()
+    public async Task BeforeReduce_DoesNothing()
     {
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware();
         TestAction action = new();
 
-        middleware.BeforeDispatch(action);
+        middleware.BeforeReduce(action);
     }
 
     [Fact]
-    public async Task AfterDispatch_WithNoEffects_DoesNotThrow()
+    public async Task AfterReduce_WithNoEffects_DoesNotThrow()
     {
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware();
         TestAction action = new();
 
-        middleware.AfterDispatch(action);
+        middleware.AfterReduce(action);
     }
 
     [Fact]
-    public async Task AfterDispatch_WithEffectThatCannotHandle_DoesNotCallEffect()
+    public async Task AfterReduce_WithEffectThatCannotHandle_DoesNotCallEffect()
     {
         Mock<IAsyncEffect> effectMock = new();
         effectMock.Setup(e => e.CanHandle(It.IsAny<object>())).Returns(false);
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effectMock.Object);
         TestAction action = new();
 
-        middleware.AfterDispatch(action);
+        middleware.AfterReduce(action);
 
         // Wait a short time to ensure async operations complete
         await Task.Delay(50, TestContext.Current.CancellationToken);
@@ -134,7 +133,7 @@ public class AsyncEffectMiddlewareTests
     }
 
     [Fact]
-    public async Task AfterDispatch_WithEffectThatCanHandle_CallsEffect()
+    public async Task AfterReduce_WithEffectThatCanHandle_CallsEffect()
     {
         Mock<IAsyncEffect> effectMock = new();
         effectMock.Setup(e => e.CanHandle(It.IsAny<object>())).Returns(true);
@@ -143,7 +142,7 @@ public class AsyncEffectMiddlewareTests
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effectMock.Object);
         TestAction action = new();
 
-        middleware.AfterDispatch(action);
+        middleware.AfterReduce(action);
 
         // Wait a short time to ensure async operations complete
         await Task.Delay(50, TestContext.Current.CancellationToken);
@@ -152,7 +151,7 @@ public class AsyncEffectMiddlewareTests
     }
 
     [Fact]
-    public async Task AfterDispatch_WithEffectThatThrows_PublishesErrorEvent()
+    public async Task AfterReduce_WithEffectThatThrows_PublishesErrorEvent()
     {
         Mock<IAsyncEffect> effectMock = new();
         TestException testException = new();
@@ -162,7 +161,7 @@ public class AsyncEffectMiddlewareTests
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effectMock.Object);
         TestAction action = new();
 
-        middleware.AfterDispatch(action);
+        middleware.AfterReduce(action);
 
         // Wait a longer time to ensure async operations and error handling complete
         await Task.Delay(100, TestContext.Current.CancellationToken);
@@ -187,7 +186,7 @@ public class AsyncEffectMiddlewareTests
     }
 
     [Fact]
-    public async Task AfterDispatch_FireAndForget_DoesNotBlockExecution()
+    public async Task AfterReduce_FireAndForget_DoesNotBlockExecution()
     {
         Mock<IAsyncEffect> slowEffectMock = new();
         slowEffectMock.Setup(e => e.CanHandle(It.IsAny<object>())).Returns(true);
@@ -199,12 +198,12 @@ public class AsyncEffectMiddlewareTests
 
         // Measure execution time - should return immediately
         DateTime startTime = DateTime.UtcNow;
-        middleware.AfterDispatch(action);
+        middleware.AfterReduce(action);
         TimeSpan executionTime = DateTime.UtcNow - startTime;
 
         // Should complete almost immediately (fire and forget)
         Assert.True(
             executionTime.TotalMilliseconds < 50,
-            $"AfterDispatch took {executionTime.TotalMilliseconds}ms, expected < 50ms");
+            $"AfterReduce took {executionTime.TotalMilliseconds}ms, expected < 50ms");
     }
 }

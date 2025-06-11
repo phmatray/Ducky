@@ -25,13 +25,13 @@ public abstract class MiddlewareBase : IMiddleware
     }
 
     /// <inheritdoc />
-    public virtual void BeforeDispatch(object action)
+    public virtual void BeforeReduce(object action)
     {
         // Default implementation does nothing
     }
 
     /// <inheritdoc />
-    public virtual void AfterDispatch(object action)
+    public virtual void AfterReduce(object action)
     {
         // Default implementation does nothing
     }

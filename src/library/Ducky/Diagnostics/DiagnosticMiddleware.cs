@@ -45,12 +45,12 @@ public class DiagnosticMiddleware : IMiddleware
         => ExecuteWithDiagnostics(() => _innerMiddleware.MayDispatchAction(action), isBeforePhase: true);
 
     /// <inheritdoc />
-    public void BeforeDispatch(object action)
-        => ExecuteWithDiagnostics(() => _innerMiddleware.BeforeDispatch(action), isBeforePhase: true);
+    public void BeforeReduce(object action)
+        => ExecuteWithDiagnostics(() => _innerMiddleware.BeforeReduce(action), isBeforePhase: true);
 
     /// <inheritdoc />
-    public void AfterDispatch(object action)
-        => ExecuteWithDiagnostics(() => _innerMiddleware.AfterDispatch(action), isBeforePhase: false);
+    public void AfterReduce(object action)
+        => ExecuteWithDiagnostics(() => _innerMiddleware.AfterReduce(action), isBeforePhase: false);
     
     private void ExecuteWithDiagnostics(Action action, bool isBeforePhase)
     {

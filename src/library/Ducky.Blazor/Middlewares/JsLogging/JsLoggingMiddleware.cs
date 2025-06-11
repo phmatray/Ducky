@@ -29,7 +29,7 @@ public sealed class JsLoggingMiddleware : MiddlewareBase
     }
 
     /// <inheritdoc />
-    public override void BeforeDispatch(object action)
+    public override void BeforeReduce(object action)
     {
         if (_store is null)
         {
@@ -41,7 +41,7 @@ public sealed class JsLoggingMiddleware : MiddlewareBase
     }
 
     /// <inheritdoc />
-    public override void AfterDispatch(object action)
+    public override void AfterReduce(object action)
     {
         if (_store is null || !_actionMetadata.TryGetValue(action, out (IRootState prevState, DateTime startTime) metadata))
         {

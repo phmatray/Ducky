@@ -13,35 +13,35 @@ namespace Ducky.Tests.Core;
 public sealed class ActionPipelineTests
 {
     [Fact]
-    public async Task Use_Should_Register_Middleware_And_Invoke_BeforeDispatch()
+    public async Task Use_Should_Register_Middleware_And_Invoke_BeforeReduce()
     {
         // Clear static state
         DummyMiddleware.StaticCalls.Clear();
-        
+
         (ActionPipeline pipeline, DummyMiddleware dummyMw, _, _) = await CreatePipelineWithMiddleware();
 
         bool result = pipeline.ProcessAction(new DummyAction());
 
         result.ShouldBeTrue();
         DummyMiddleware.StaticCalls.ShouldContain("before:DummyAction");
-        
+
         // Clean up static state
         DummyMiddleware.StaticCalls.Clear();
     }
 
     [Fact]
-    public async Task Use_Should_Register_Middleware_And_Invoke_AfterDispatch()
+    public async Task Use_Should_Register_Middleware_And_Invoke_AfterReduce()
     {
         // Clear static state
         DummyMiddleware.StaticCalls.Clear();
-        
+
         (ActionPipeline pipeline, DummyMiddleware dummyMw, _, _) = await CreatePipelineWithMiddleware();
 
         bool result = pipeline.ProcessAction(new DummyAction());
 
         result.ShouldBeTrue();
         DummyMiddleware.StaticCalls.ShouldContain("after:DummyAction");
-        
+
         // Clean up static state
         DummyMiddleware.StaticCalls.Clear();
     }
@@ -127,7 +127,7 @@ public sealed class ActionPipelineTests
     }
 
     [Fact]
-    public async Task BeforeDispatch_Should_Be_Called_For_Custom_Middleware()
+    public async Task BeforeReduce_Should_Be_Called_For_Custom_Middleware()
     {
         ServiceCollection services = [];
         services.AddLogging();
@@ -158,7 +158,7 @@ public sealed class ActionPipelineTests
     }
 
     [Fact]
-    public async Task AfterDispatch_Should_Be_Called_For_Custom_Middleware()
+    public async Task AfterReduce_Should_Be_Called_For_Custom_Middleware()
     {
         ServiceCollection services = [];
         services.AddLogging();
@@ -237,8 +237,8 @@ public sealed class ActionPipelineTests
         pipeline.Use(typeof(PreventingMiddleware));
 
         // Reset static state
-        PreventingMiddleware.StaticBeforeDispatchCalled = false;
-        PreventingMiddleware.StaticAfterDispatchCalled = false;
+        PreventingMiddleware.StaticBeforeReduceCalled = false;
+        PreventingMiddleware.StaticAfterReduceCalled = false;
 
         await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
@@ -247,12 +247,12 @@ public sealed class ActionPipelineTests
 
         // Assert
         result.ShouldBeFalse(); // Action should be prevented
-        PreventingMiddleware.StaticBeforeDispatchCalled.ShouldBeFalse(); // Should not reach BeforeDispatch
-        PreventingMiddleware.StaticAfterDispatchCalled.ShouldBeFalse(); // Should not reach AfterDispatch
+        PreventingMiddleware.StaticBeforeReduceCalled.ShouldBeFalse(); // Should not reach BeforeReduce
+        PreventingMiddleware.StaticAfterReduceCalled.ShouldBeFalse(); // Should not reach AfterReduce
 
         // Clean up static state
-        PreventingMiddleware.StaticBeforeDispatchCalled = false;
-        PreventingMiddleware.StaticAfterDispatchCalled = false;
+        PreventingMiddleware.StaticBeforeReduceCalled = false;
+        PreventingMiddleware.StaticAfterReduceCalled = false;
     }
 
     [Fact]
@@ -336,14 +336,14 @@ public class DummyMiddleware : IMiddleware
         return true; // Allow all actions
     }
 
-    public void BeforeDispatch(object action)
+    public void BeforeReduce(object action)
     {
         string call = $"before:{action.GetType().Name}";
         Calls.Add(call);
         StaticCalls.Add(call);
     }
 
-    public void AfterDispatch(object action)
+    public void AfterReduce(object action)
     {
         string call = $"after:{action.GetType().Name}";
         Calls.Add(call);
@@ -393,12 +393,12 @@ public class OrderTrackingMiddleware : IMiddleware
         return true;
     }
 
-    public void BeforeDispatch(object action)
+    public void BeforeReduce(object action)
     {
         _executionOrder.Add($"Before:{_name}");
     }
 
-    public void AfterDispatch(object action)
+    public void AfterReduce(object action)
     {
         _executionOrder.Add($"After:{_name}");
     }
@@ -433,13 +433,13 @@ public class MetadataMiddleware : IMiddleware
         return true;
     }
 
-    public void BeforeDispatch(object action)
+    public void BeforeReduce(object action)
     {
         BeforeTimestamp = DateTimeOffset.UtcNow;
         StaticBeforeTimestamp = BeforeTimestamp;
     }
 
-    public void AfterDispatch(object action)
+    public void AfterReduce(object action)
     {
         AfterTimestamp = DateTimeOffset.UtcNow;
         StaticAfterTimestamp = AfterTimestamp;
@@ -453,12 +453,12 @@ public class MetadataMiddleware : IMiddleware
 
 public class PreventingMiddleware : IMiddleware
 {
-    public bool BeforeDispatchCalled { get; private set; }
-    public bool AfterDispatchCalled { get; private set; }
+    public bool BeforeReduceCalled { get; private set; }
+    public bool AfterReduceCalled { get; private set; }
 
     // Static fields for testing
-    public static bool StaticBeforeDispatchCalled { get; set; }
-    public static bool StaticAfterDispatchCalled { get; set; }
+    public static bool StaticBeforeReduceCalled { get; set; }
+    public static bool StaticAfterReduceCalled { get; set; }
 
     public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
@@ -475,16 +475,16 @@ public class PreventingMiddleware : IMiddleware
         return false; // Prevent all actions
     }
 
-    public void BeforeDispatch(object action)
+    public void BeforeReduce(object action)
     {
-        BeforeDispatchCalled = true;
-        StaticBeforeDispatchCalled = true;
+        BeforeReduceCalled = true;
+        StaticBeforeReduceCalled = true;
     }
 
-    public void AfterDispatch(object action)
+    public void AfterReduce(object action)
     {
-        AfterDispatchCalled = true;
-        StaticAfterDispatchCalled = true;
+        AfterReduceCalled = true;
+        StaticAfterReduceCalled = true;
     }
 
     public IDisposable BeginInternalMiddlewareChange()
@@ -529,12 +529,12 @@ public class CallbackMiddleware : IMiddleware
         return true;
     }
 
-    public void BeforeDispatch(object action)
+    public void BeforeReduce(object action)
     {
         _beforeCallback();
     }
 
-    public void AfterDispatch(object action)
+    public void AfterReduce(object action)
     {
         _afterCallback();
     }

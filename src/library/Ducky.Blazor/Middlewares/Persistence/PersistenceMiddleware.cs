@@ -146,7 +146,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     }
 
     /// <inheritdoc />
-    public override void BeforeDispatch(object action)
+    public override void BeforeReduce(object action)
     {
         // Queue actions during hydration if enabled
         if (!_options.QueueActionsOnHydration || !_hydrationManager.IsHydrating || IsHydrationAction(action))
@@ -158,7 +158,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     }
 
     /// <inheritdoc />
-    public override void AfterDispatch(object action)
+    public override void AfterReduce(object action)
     {
         if (_store is null)
         {
