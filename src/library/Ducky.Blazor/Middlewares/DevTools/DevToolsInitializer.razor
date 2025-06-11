@@ -1,4 +1,3 @@
-@using Ducky.Blazor.Middlewares.DevTools
 @using Microsoft.Extensions.DependencyInjection
 @using Microsoft.Extensions.Logging
 @inject IServiceProvider ServiceProvider
@@ -8,6 +7,7 @@
 @code {
     private ReduxDevToolsModule? _devTools;
 
+    /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -28,12 +28,14 @@
             }
             else
             {
-                Logger.LogWarning("ReduxDevToolsModule not found in DI container. DevTools will not be available. " +
-                                  "To enable DevTools, add .AddDevToolsMiddleware() to your store configuration.");
+                Logger.LogWarning(
+                    "ReduxDevToolsModule not found in DI container. DevTools will not be available. " +
+                    "To enable DevTools, add .AddDevToolsMiddleware() to your store configuration.");
             }
         }
     }
 
+    /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         // Clean up if needed
