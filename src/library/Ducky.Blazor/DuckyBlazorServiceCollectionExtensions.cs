@@ -43,13 +43,13 @@ public static class DuckyBlazorServiceCollectionExtensions
         {
             // Apply default middlewares
             builder.UseDefaultMiddlewares();
-            
+
             // Create Blazor-specific builder wrapper
             BlazorDuckyBuilder blazorBuilder = new(builder, services);
-            
+
             // Apply Blazor defaults
             blazorBuilder.UseBlazorDefaults();
-            
+
             // Apply user configuration
             configure?.Invoke(blazorBuilder);
         });
