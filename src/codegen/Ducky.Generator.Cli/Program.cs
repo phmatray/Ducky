@@ -1,7 +1,7 @@
 ﻿using Ducky.CodeGen.Core;
 using Spectre.Console;
 
-namespace Ducky.CodeGen.Cli;
+namespace Ducky.Generator.Cli;
 
 internal static class Program
 {

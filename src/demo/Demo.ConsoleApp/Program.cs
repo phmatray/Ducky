@@ -116,7 +116,7 @@ async Task RunCounterDemo(IDispatcher actionDispatcher, IStore stateStore)
         {
             case "Increment (+1)":
             {
-                actionDispatcher.Increment();
+                actionDispatcher.Increment(1);
                 break;
             }
             case "Increment (+5)":
@@ -126,7 +126,7 @@ async Task RunCounterDemo(IDispatcher actionDispatcher, IStore stateStore)
             }
             case "Decrement (-1)":
             {
-                actionDispatcher.Decrement();
+                actionDispatcher.Decrement(1);
                 break;
             }
             case "Async Increment (+3 after 2s)":
@@ -227,7 +227,7 @@ async Task RunTodoDemo(IDispatcher actionDispatcher, IStore stateStore)
                     new TextPrompt<string>("Enter todo title:")
                         .ValidationErrorMessage("[red]Title cannot be empty[/]")
                         .Validate(t => !string.IsNullOrWhiteSpace(t)));
-                actionDispatcher.AddTodo(title);
+                actionDispatcher.AddTodo(title, Guid.CreateVersion7().ToString());
                 break;
             }
             case "Toggle Todo":

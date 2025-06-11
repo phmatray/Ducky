@@ -30,11 +30,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.BlazorWasm.E2E.Tests",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "codegen", "codegen", "{528D097C-AE8D-4838-A498-566BDA94EE75}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ducky.CodeGen.Core", "src\codegen\Ducky.CodeGen.Core\Ducky.CodeGen.Core.csproj", "{06E72824-1646-4019-AB34-FE26BD4C3662}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ducky.Generator.Core", "src\codegen\Ducky.Generator.Core\Ducky.Generator.Core.csproj", "{06E72824-1646-4019-AB34-FE26BD4C3662}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ducky.CodeGen.Cli", "src\codegen\Ducky.CodeGen.Cli\Ducky.CodeGen.Cli.csproj", "{8532E966-158B-42AD-B17D-8A88D1D8B662}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ducky.Generator.Cli", "src\codegen\Ducky.Generator.Cli\Ducky.Generator.Cli.csproj", "{8532E966-158B-42AD-B17D-8A88D1D8B662}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ducky.CodeGen.WebApp", "src\codegen\Ducky.CodeGen.WebApp\Ducky.CodeGen.WebApp.csproj", "{E95495B2-829E-4F35-8C95-69A3F6312ABC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ducky.Generator.WebApp", "src\codegen\Ducky.Generator.WebApp\Ducky.Generator.WebApp.csproj", "{E95495B2-829E-4F35-8C95-69A3F6312ABC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ducky.Blazor.Tests", "src\tests\Ducky.Blazor.Tests\Ducky.Blazor.Tests.csproj", "{DF62F5A4-0AD3-44E7-AC90-4592010F845D}"
 EndProject

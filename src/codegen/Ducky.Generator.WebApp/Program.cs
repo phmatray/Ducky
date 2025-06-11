@@ -1,7 +1,7 @@
 using Ducky.CodeGen.Core;
-using Ducky.CodeGen.WebApp.Components;
-using Ducky.CodeGen.WebApp.Data;
-using Ducky.CodeGen.WebApp.Services;
+using Ducky.Generator.WebApp.Components;
+using Ducky.Generator.WebApp.Data;
+using Ducky.Generator.WebApp.Services;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Extensions;
 using MudBlazor.Services;

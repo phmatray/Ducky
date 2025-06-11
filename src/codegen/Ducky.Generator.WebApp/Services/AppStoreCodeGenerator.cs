@@ -1,8 +1,8 @@
-using Ducky.CodeGen.WebApp.Models;
 using System.Text;
 using System.Text.Json;
+using Ducky.Generator.WebApp.Models;
 
-namespace Ducky.CodeGen.WebApp.Services;
+namespace Ducky.Generator.WebApp.Services;
 
 public interface IAppStoreCodeGenerator
 {

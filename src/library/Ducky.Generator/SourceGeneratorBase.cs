@@ -2,7 +2,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Ducky.Generator.Core;
+namespace Ducky.Generator;
 
 /// <summary>
 /// A base class for source generators.

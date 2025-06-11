@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ducky.CodeGen.Core\Ducky.CodeGen.Core.csproj" />
+    <ProjectReference Include="..\Ducky.Generator.Core\Ducky.Generator.Core.csproj" />
   </ItemGroup>
 
 </Project>

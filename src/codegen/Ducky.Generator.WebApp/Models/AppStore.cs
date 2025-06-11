@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Ducky.CodeGen.WebApp.Models;
+namespace Ducky.Generator.WebApp.Models;
 
 public class AppStore
 {

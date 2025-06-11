@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Ducky.CodeGen.WebApp.Data;
-using Ducky.CodeGen.WebApp.Models;
 using System.Text.Json;
+using Ducky.Generator.WebApp.Data;
+using Ducky.Generator.WebApp.Models;
 
-namespace Ducky.CodeGen.WebApp.Services;
+namespace Ducky.Generator.WebApp.Services;
 
 public interface IAppStoreService
 {

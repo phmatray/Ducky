@@ -1,5 +1,6 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
-using Ducky.Generator.Core;
+using System.Linq;
 using Ducky.Generator.Sources;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -80,11 +81,131 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
             SemanticModel semanticModel = compilation.GetSemanticModel(recordSyntax.SyntaxTree);
             if (semanticModel.GetDeclaredSymbol(recordSyntax) is INamedTypeSymbol recordSymbol)
             {
-                ActionDispatcherSource dispatcherSource = new(semanticModel, recordSyntax, recordSymbol);
+                // Extract parameters from the symbol
+                List<ParameterDescriptor> parameters =
+                    ExtractParametersFromSymbol(semanticModel, recordSyntax, recordSymbol);
+
+                // Generate the code
+                string generatedCode = GenerateActionDispatcherCode(
+                    recordSymbol.Name,
+                    recordSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    parameters);
 
                 string hintName = $"ActionDispatcher.{recordSymbol.Name}.g.cs";
-                AddSource(context, hintName, dispatcherSource.ToString());
+                AddSource(context, hintName, generatedCode);
             }
         }
+    }
+
+    private static List<ParameterDescriptor> ExtractParametersFromSymbol(
+        SemanticModel semanticModel,
+        RecordDeclarationSyntax recordSyntax,
+        INamedTypeSymbol recordSymbol)
+    {
+        List<ParameterDescriptor> parameters = [];
+
+        // Process parameters if record declaration has a parameter list
+        if (recordSyntax.ParameterList is not null)
+        {
+            foreach (ParameterSyntax parameter in recordSyntax.ParameterList.Parameters)
+            {
+                if (parameter.Type is not null)
+                {
+                    TypeInfo typeInfo = semanticModel.GetTypeInfo(parameter.Type);
+                    string typeStr = typeInfo.Type?.ToDisplayString() ?? parameter.Type.ToString();
+                    string originalName = parameter.Identifier.Text;
+                    string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
+
+                    parameters.Add(new ParameterDescriptor
+                    {
+                        ParamName = paramName,
+                        ParamType = typeStr
+                    });
+                }
+            }
+        }
+        else
+        {
+            // Retrieve parameters from the first non-implicit constructor
+            List<IMethodSymbol> ctors = recordSymbol.InstanceConstructors
+                .Where(c => !c.IsImplicitlyDeclared && c.Parameters.Length > 0)
+                .ToList();
+
+            if (ctors.Count > 0)
+            {
+                IMethodSymbol ctor = ctors[0];
+                foreach (IParameterSymbol parameter in ctor.Parameters)
+                {
+                    string originalName = parameter.Name;
+                    string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);
+
+                    parameters.Add(new ParameterDescriptor
+                    {
+                        ParamName = paramName,
+                        ParamType = parameter.Type.ToDisplayString()
+                    });
+                }
+            }
+        }
+
+        return parameters;
+    }
+
+    private static string GenerateActionDispatcherCode(
+        string actionName,
+        string actionFullyQualifiedName,
+        List<ParameterDescriptor> parameters)
+    {
+        System.Text.StringBuilder sb = new();
+
+        // Using directives
+        sb.AppendLine("using System;");
+        sb.AppendLine();
+
+        // Class declaration
+        sb.AppendLine("public static partial class ActionDispatcher");
+        sb.AppendLine("{");
+
+        // XML documentation
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine($"    /// Dispatches a new {actionName} action.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    /// <param name=\"dispatcher\">The dispatcher instance.</param>");
+
+        // Add parameter documentation
+        foreach (ParameterDescriptor parameter in parameters)
+        {
+            sb.AppendLine(
+                $"    /// <param name=\"{parameter.ParamName}\">The {parameter.ParamName} parameter.</param>");
+        }
+
+        // Method signature
+        sb.Append($"    public static void {actionName}(");
+        sb.AppendLine();
+        sb.Append("        this Ducky.IDispatcher dispatcher");
+
+        foreach (ParameterDescriptor parameter in parameters)
+        {
+            sb.AppendLine(",");
+            sb.Append($"        {parameter.ParamType} {parameter.ParamName}");
+        }
+
+        sb.AppendLine(")");
+        sb.AppendLine("    {");
+
+        // Method body
+        sb.AppendLine("        if (dispatcher is null)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            throw new System.ArgumentNullException(nameof(dispatcher));");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+
+        string argumentList = string.Join(", ", parameters.Select(p => p.ParamName));
+        sb.AppendLine($"        dispatcher.Dispatch(new {actionFullyQualifiedName}({argumentList}));");
+
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        return sb.ToString();
     }
 }

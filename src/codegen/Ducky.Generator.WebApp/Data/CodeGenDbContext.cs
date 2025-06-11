@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Ducky.CodeGen.WebApp.Models;
+using Ducky.Generator.WebApp.Models;
 
-namespace Ducky.CodeGen.WebApp.Data;
+namespace Ducky.Generator.WebApp.Data;
 
 public class CodeGenDbContext : DbContext
 {
