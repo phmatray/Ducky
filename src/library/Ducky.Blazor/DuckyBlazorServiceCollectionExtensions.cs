@@ -5,6 +5,7 @@ using Ducky.Blazor.Middlewares.Persistence;
 using Ducky.Builder;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.JSInterop;
 
 namespace Ducky.Blazor;
@@ -100,8 +101,8 @@ public class BlazorDuckyBuilder
         if (!_devToolsEnabled)
         {
             _devToolsEnabled = true;
-            _innerBuilder.AddMiddleware<DevToolsMiddleware>();
 
+            // Register options first
             _services.AddSingleton<DevToolsOptions>(_ =>
             {
                 DevToolsOptions options = new();
@@ -109,8 +110,23 @@ public class BlazorDuckyBuilder
                 return options;
             });
 
-            _services.AddScoped<ReduxDevToolsModule>();
             _services.AddScoped<DevToolsStateManager>();
+            _services.AddScoped<ReduxDevToolsModule>();
+
+            // Register middleware after dependencies
+            _innerBuilder.AddMiddleware<DevToolsMiddleware>();
+        }
+        else if (configure is not null)
+        {
+            // If DevTools is already enabled but we have new configuration,
+            // replace the options registration
+            _services.RemoveAll<DevToolsOptions>();
+            _services.AddSingleton<DevToolsOptions>(_ =>
+            {
+                DevToolsOptions options = new();
+                configure.Invoke(options);
+                return options;
+            });
         }
 
         return this;

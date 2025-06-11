@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Ducky.Blazor.Middlewares.DevTools;
 
 /// <summary>
@@ -58,4 +60,41 @@ public class DevToolsOptions
     /// If null, all actions (except excluded types) will be sent.
     /// </summary>
     public Func<object, bool>? ShouldLogAction { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether stack traces should be captured and sent to DevTools.
+    /// </summary>
+    public bool StackTraceEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the maximum number of stack frames to capture.
+    /// 0 means unlimited.
+    /// </summary>
+    public int StackTraceLimit { get; set; } = 10;
+
+    /// <summary>
+    /// Gets or sets a regex pattern to filter stack trace frames.
+    /// Only frames matching this pattern will be included.
+    /// Default excludes System, Microsoft, and Ducky internals.
+    /// </summary>
+    public Regex? StackTraceFilterRegex { get; set; } = new(
+        @"^(?!.*(System|Microsoft|Ducky\.Pipeline|Ducky\.Abstractions)).*$",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Gets or sets the latency in milliseconds for batching DevTools updates.
+    /// </summary>
+    public int Latency { get; set; } = 500;
+
+    /// <summary>
+    /// Gets or sets custom action sanitizer function.
+    /// Can be used to remove sensitive data from actions before sending to DevTools.
+    /// </summary>
+    public Func<object, object>? ActionSanitizer { get; set; }
+
+    /// <summary>
+    /// Gets or sets custom state sanitizer function.
+    /// Can be used to remove sensitive data from state before sending to DevTools.
+    /// </summary>
+    public Func<object, object>? StateSanitizer { get; set; }
 }

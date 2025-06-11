@@ -36,13 +36,13 @@ services.AddDuckyBlazor(ducky => ducky
     // Add exception handler
     .AddExceptionHandler<NotificationExceptionHandler>()
 
-    // // Enable DevTools with configuration
-    // .EnableDevTools(options =>
-    // {
-    //     options.StoreName = "DuckyDemo";
-    //     options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
-    //     options.MaxAge = 100; // Keep more history for demo
-    // })
+    // Enable DevTools with configuration
+    .EnableDevTools(options =>
+    {
+        options.StoreName = "DuckyDemo";
+        options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
+        options.MaxAge = 100; // Keep more history for demo
+    })
 );
 
 await builder.Build().RunAsync();
