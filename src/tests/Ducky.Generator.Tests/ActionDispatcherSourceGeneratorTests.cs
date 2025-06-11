@@ -137,16 +137,20 @@ public class ActionDispatcherSourceGeneratorTests
         driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
         GeneratorDriverRunResult runResult = driver.GetRunResult();
 
+        // Check if any files were generated
+        Assert.NotEmpty(runResult.GeneratedTrees);
+        
         // Find the generated file for the Increment action.
         SyntaxTree generatedTree = runResult.GeneratedTrees
             .Single(tree => tree.FilePath.EndsWith("ActionDispatcher.Increment.g.cs"));
 
         string generatedText = generatedTree
             .GetText(TestContext.Current.CancellationToken)
-            .ToString();
+            .ToString()
+            .Replace("\r\n", "\n");  // Normalize line endings
 
         // Assert
-        Assert.Equal(ExpectedIncrementDispatcher, generatedText, ignoreLineEndingDifferences: true);
+        Assert.Equal(ExpectedIncrementDispatcher, generatedText);
     }
 
     [Fact]
@@ -169,15 +173,19 @@ public class ActionDispatcherSourceGeneratorTests
         driver = driver.RunGenerators(compilation, TestContext.Current.CancellationToken);
         GeneratorDriverRunResult runResult = driver.GetRunResult();
 
+        // Check if any files were generated
+        Assert.NotEmpty(runResult.GeneratedTrees);
+        
         // Find the generated file for the CreateTodo action.
         SyntaxTree generatedTree = runResult.GeneratedTrees
             .Single(tree => tree.FilePath.EndsWith("ActionDispatcher.CreateTodo.g.cs"));
 
         string generatedText = generatedTree
             .GetText(TestContext.Current.CancellationToken)
-            .ToString();
+            .ToString()
+            .Replace("\r\n", "\n");  // Normalize line endings
 
         // Assert
-        Assert.Equal(ExpectedCreateTodoDispatcher, generatedText, ignoreLineEndingDifferences: true);
+        Assert.Equal(ExpectedCreateTodoDispatcher, generatedText);
     }
 }

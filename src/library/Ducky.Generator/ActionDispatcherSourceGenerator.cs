@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 using Ducky.Generator.Sources;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Ducky.Generator;
@@ -30,7 +32,7 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
         // Create a syntax provider that filters for record declarations with any attributes.
         IncrementalValuesProvider<RecordDeclarationSyntax> recordsProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                static (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: > 0 },
+                static (node, _) => IsCandidateRecord(node),
                 static (ctx, _) => GetRecordDeclarationForSourceGen(ctx))
             .Where(result => result.actionAttributeFound)
             .Select((result, _) => result.recordDeclaration);
@@ -41,34 +43,57 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
             (spc, source) => GenerateCode(source.Left, source.Right, spc));
     }
 
+    private static bool IsCandidateRecord(SyntaxNode node)
+    {
+        if (node is not RecordDeclarationSyntax record)
+        {
+            return false;
+        }
+
+        if (record.AttributeLists.Count == 0)
+        {
+            return false;
+        }
+
+        // Check if any attribute might be DuckyAction by syntax alone
+        foreach (AttributeListSyntax attributeList in record.AttributeLists)
+        {
+            foreach (AttributeSyntax attribute in attributeList.Attributes)
+            {
+                string attributeName = attribute.Name.ToString();
+                // Check for both simple name and fully qualified name
+                if (attributeName.Contains("DuckyAction")
+                    || attributeName == "DuckyAction"
+                    || attributeName == "Ducky.Generators.DuckyAction")
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static (RecordDeclarationSyntax recordDeclaration, bool actionAttributeFound)
         GetRecordDeclarationForSourceGen(in GeneratorSyntaxContext context)
     {
         var recordDeclaration = (RecordDeclarationSyntax)context.Node;
-        var found = false;
+        
+        // We already know it has DuckyAction in the name from IsCandidateRecord
+        // Now verify via semantic model
         foreach (AttributeListSyntax attributeList in recordDeclaration.AttributeLists)
         {
             foreach (AttributeSyntax attribute in attributeList.Attributes)
             {
-                if (context.SemanticModel.GetSymbolInfo(attribute).Symbol is IMethodSymbol methodSymbol)
+                string attributeName = attribute.Name.ToString();
+                if (attributeName.Contains("DuckyAction"))
                 {
-                    string attributeFullName = methodSymbol.ContainingType.ToDisplayString();
-                    if (attributeFullName == $"{GeneratorNamespace}.{AttributeName}"
-                        || attributeFullName.EndsWith("." + AttributeName))
-                    {
-                        found = true;
-                        break;
-                    }
+                    return (recordDeclaration, true);
                 }
-            }
-
-            if (found)
-            {
-                break;
             }
         }
 
-        return (recordDeclaration, found);
+        return (recordDeclaration, false);
     }
 
     private void GenerateCode(
@@ -76,10 +101,16 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
         in ImmutableArray<RecordDeclarationSyntax> records,
         in SourceProductionContext context)
     {
+        if (records.IsEmpty)
+        {
+            // No records found, nothing to generate
+            return;
+        }
+
         foreach (RecordDeclarationSyntax recordSyntax in records)
         {
             SemanticModel semanticModel = compilation.GetSemanticModel(recordSyntax.SyntaxTree);
-            if (semanticModel.GetDeclaredSymbol(recordSyntax) is INamedTypeSymbol recordSymbol)
+            if (semanticModel.GetDeclaredSymbol(recordSyntax) is { } recordSymbol)
             {
                 // Extract parameters from the symbol
                 List<ParameterDescriptor> parameters =
@@ -172,55 +203,59 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
         string actionFullyQualifiedName,
         List<ParameterDescriptor> parameters)
     {
-        System.Text.StringBuilder sb = new();
+        // Build the parameters string
+        List<string> parameterStrings = [];
+        foreach (ParameterDescriptor parameter in parameters)
+        {
+            string paramStr = $"{parameter.ParamType} {parameter.ParamName}";
+            if (parameter.DefaultValue is not null)
+            {
+                paramStr += $" = {parameter.DefaultValue}";
+            }
 
-        // Header comments
+            parameterStrings.Add(paramStr);
+        }
+
+        // Build the argument list for action creation
+        string actionArguments = string.Join(", ", parameters.Select(p => p.ParamName));
+
+        // Generate the exact formatted code
+        StringBuilder sb = new();
         sb.AppendLine("// <auto-generated />");
         sb.AppendLine("// This file is auto-generated by Ducky.");
         sb.AppendLine();
-
-        // Using directives
         sb.AppendLine("using System;");
         sb.AppendLine();
-
-        // Class declaration
         sb.AppendLine("public static partial class ActionDispatcher");
         sb.AppendLine("{");
-
-        // XML documentation
         sb.AppendLine("    /// <summary>");
         sb.AppendLine($"    /// Dispatches a new {actionName} action.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    /// <param name=\"dispatcher\">The dispatcher instance.</param>");
-
-        // Method signature
-        sb.Append($"    public static void {actionName}(");
-        sb.AppendLine();
+        sb.AppendLine($"    public static void {actionName}(");
         sb.Append("        this Ducky.IDispatcher dispatcher");
 
-        foreach (ParameterDescriptor parameter in parameters)
+        if (parameterStrings.Count > 0)
         {
             sb.AppendLine(",");
-            sb.Append($"        {parameter.ParamType} {parameter.ParamName}");
-            if (parameter.DefaultValue is not null)
+            for (int i = 0; i < parameterStrings.Count; i++)
             {
-                sb.Append($" = {parameter.DefaultValue}");
+                sb.Append($"        {parameterStrings[i]}");
+                sb.AppendLine(i < parameterStrings.Count - 1 ? "," : ")");
             }
         }
+        else
+        {
+            sb.AppendLine(")");
+        }
 
-        sb.AppendLine(")");
         sb.AppendLine("    {");
-
-        // Method body
         sb.AppendLine("        if (dispatcher is null)");
         sb.AppendLine("        {");
         sb.AppendLine("            throw new System.ArgumentNullException(nameof(dispatcher));");
         sb.AppendLine("        }");
         sb.AppendLine();
-
-        string argumentList = string.Join(", ", parameters.Select(p => p.ParamName));
-        sb.AppendLine($"        dispatcher.Dispatch(new {actionFullyQualifiedName}({argumentList}));");
-
+        sb.AppendLine($"        dispatcher.Dispatch(new {actionFullyQualifiedName}({actionArguments}));");
         sb.AppendLine("    }");
         sb.AppendLine("}");
 

@@ -100,58 +100,6 @@ public sealed class ActionPipeline : IDisposable
     }
 
     /// <summary>
-    /// Processes an action through all middleware lifecycle events.
-    /// </summary>
-    /// <param name="action">The action to process.</param>
-    /// <returns>True if the action was processed, false if it was prevented.</returns>
-    /// <remarks>
-    /// This method is now deprecated. The DuckyStore should call the individual
-    /// MayDispatchAction, BeforeReduce, and AfterReduce methods directly to have
-    /// proper control over when reducers are executed.
-    /// </remarks>
-    [Obsolete("Use MayDispatchAction, BeforeReduce, and AfterReduce methods directly")]
-    public bool ProcessAction(object action)
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException(nameof(ActionPipeline));
-        }
-
-        if (!_initialized)
-        {
-            throw new InvalidOperationException("Pipeline must be initialized before processing actions");
-        }
-
-        _logger.LogTrace("Processing action {ActionType} through pipeline", action.GetType().Name);
-
-        try
-        {
-            // Check if any middleware wants to prevent this action
-            if (!MayDispatchAction(action))
-            {
-                return false;
-            }
-
-            // Call BeforeReduce on all middlewares
-            BeforeReduce(action);
-
-            // Action processing happens here (handled by DuckyStore)
-            // This is where slice reducers are executed
-
-            // Call AfterReduce on all middlewares
-            AfterReduce(action);
-
-            _logger.LogTrace("Completed processing action {ActionType}", action.GetType().Name);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing action {ActionType}", action.GetType().Name);
-            throw;
-        }
-    }
-
-    /// <summary>
     /// Checks if the action may be dispatched.
     /// </summary>
     /// <param name="action">The action to check.</param>
@@ -195,22 +143,6 @@ public sealed class ActionPipeline : IDisposable
         {
             middleware.AfterReduce(action);
         }
-    }
-
-    /// <summary>
-    /// Begins an internal middleware change for all middlewares.
-    /// </summary>
-    /// <returns>A disposable that ends the change when disposed.</returns>
-    public IDisposable BeginInternalMiddlewareChange()
-    {
-        List<IDisposable> disposables = _middlewares.Select(m => m.BeginInternalMiddlewareChange()).ToList();
-        return new DisposableCallback(() =>
-        {
-            foreach (IDisposable disposable in disposables)
-            {
-                disposable.Dispose();
-            }
-        });
     }
 
     /// <inheritdoc />

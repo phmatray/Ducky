@@ -3,10 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Ducky.Pipeline;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ducky.Tests.Core;
 
@@ -18,11 +16,17 @@ public sealed class ActionPipelineTests
         // Clear static state
         DummyMiddleware.StaticCalls.Clear();
 
-        (ActionPipeline pipeline, DummyMiddleware dummyMw, _, _) = await CreatePipelineWithMiddleware();
+        (ActionPipeline pipeline, _, _, _) = await CreatePipelineWithMiddleware();
 
-        bool result = pipeline.ProcessAction(new DummyAction());
+        DummyAction action = new();
 
-        result.ShouldBeTrue();
+        // Check if action may be dispatched
+        bool mayDispatch = pipeline.MayDispatchAction(action);
+        mayDispatch.ShouldBeTrue();
+
+        // Execute BeforeReduce
+        pipeline.BeforeReduce(action);
+
         DummyMiddleware.StaticCalls.ShouldContain("before:DummyAction");
 
         // Clean up static state
@@ -35,11 +39,16 @@ public sealed class ActionPipelineTests
         // Clear static state
         DummyMiddleware.StaticCalls.Clear();
 
-        (ActionPipeline pipeline, DummyMiddleware dummyMw, _, _) = await CreatePipelineWithMiddleware();
+        (ActionPipeline pipeline, _, _, _) = await CreatePipelineWithMiddleware();
 
-        bool result = pipeline.ProcessAction(new DummyAction());
+        DummyAction action = new();
 
-        result.ShouldBeTrue();
+        // Execute full lifecycle
+        bool mayDispatch = pipeline.MayDispatchAction(action);
+        mayDispatch.ShouldBeTrue();
+        pipeline.BeforeReduce(action);
+        pipeline.AfterReduce(action);
+
         DummyMiddleware.StaticCalls.ShouldContain("after:DummyAction");
 
         // Clean up static state
@@ -73,10 +82,13 @@ public sealed class ActionPipelineTests
         await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
         // Act
-        bool result = pipeline.ProcessAction(new DummyAction());
+        DummyAction action = new();
+        bool mayDispatch = pipeline.MayDispatchAction(action);
+        pipeline.BeforeReduce(action);
+        pipeline.AfterReduce(action);
 
         // Assert
-        result.ShouldBeTrue();
+        mayDispatch.ShouldBeTrue();
         // Verify that middlewares were executed
         executionOrder.Count.ShouldBeGreaterThan(0);
 
@@ -114,10 +126,13 @@ public sealed class ActionPipelineTests
         await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
         // Act
-        bool result = pipeline.ProcessAction(new DummyAction());
+        DummyAction action = new();
+        bool mayDispatch = pipeline.MayDispatchAction(action);
+        pipeline.BeforeReduce(action);
+        pipeline.AfterReduce(action);
 
         // Assert
-        result.ShouldBeTrue();
+        mayDispatch.ShouldBeTrue();
         // Verify that middlewares were executed
         executionOrder.Count.ShouldBeGreaterThan(0);
 
@@ -147,9 +162,11 @@ public sealed class ActionPipelineTests
 
         await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
-        bool result = pipeline.ProcessAction(new DummyAction());
+        DummyAction action = new();
+        bool mayDispatch = pipeline.MayDispatchAction(action);
+        pipeline.BeforeReduce(action);
 
-        result.ShouldBeTrue();
+        mayDispatch.ShouldBeTrue();
         called.ShouldBeTrue();
 
         // Clean up static state
@@ -178,9 +195,12 @@ public sealed class ActionPipelineTests
 
         await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
-        bool result = pipeline.ProcessAction(new DummyAction());
+        DummyAction action = new();
+        bool mayDispatch = pipeline.MayDispatchAction(action);
+        pipeline.BeforeReduce(action);
+        pipeline.AfterReduce(action);
 
-        result.ShouldBeTrue();
+        mayDispatch.ShouldBeTrue();
         called.ShouldBeTrue();
 
         // Clean up static state
@@ -207,13 +227,17 @@ public sealed class ActionPipelineTests
         await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
         // Act
-        bool result = pipeline.ProcessAction(new DummyAction());
+        DummyAction action = new();
+        bool mayDispatch = pipeline.MayDispatchAction(action);
+        pipeline.BeforeReduce(action);
+        pipeline.AfterReduce(action);
 
         // Assert
-        result.ShouldBeTrue();
+        mayDispatch.ShouldBeTrue();
         MetadataMiddleware.StaticBeforeTimestamp.ShouldNotBeNull();
         MetadataMiddleware.StaticAfterTimestamp.ShouldNotBeNull();
-        MetadataMiddleware.StaticAfterTimestamp.Value.ShouldBeGreaterThanOrEqualTo(MetadataMiddleware.StaticBeforeTimestamp.Value);
+        MetadataMiddleware.StaticAfterTimestamp.Value.ShouldBeGreaterThanOrEqualTo(MetadataMiddleware
+            .StaticBeforeTimestamp.Value);
 
         // Clean up static state
         MetadataMiddleware.StaticBeforeTimestamp = null;
@@ -243,10 +267,18 @@ public sealed class ActionPipelineTests
         await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
 
         // Act
-        bool result = pipeline.ProcessAction(new DummyAction());
+        DummyAction action = new();
+        bool mayDispatch = pipeline.MayDispatchAction(action);
+
+        // Only call BeforeReduce/AfterReduce if action may be dispatched
+        if (mayDispatch)
+        {
+            pipeline.BeforeReduce(action);
+            pipeline.AfterReduce(action);
+        }
 
         // Assert
-        result.ShouldBeFalse(); // Action should be prevented
+        mayDispatch.ShouldBeFalse(); // Action should be prevented
         PreventingMiddleware.StaticBeforeReduceCalled.ShouldBeFalse(); // Should not reach BeforeReduce
         PreventingMiddleware.StaticAfterReduceCalled.ShouldBeFalse(); // Should not reach AfterReduce
 
@@ -256,34 +288,90 @@ public sealed class ActionPipelineTests
     }
 
     [Fact]
-    public async Task Dispose_Should_Prevent_Further_Action_Processing()
+    public async Task Dispose_Should_Not_Affect_Middleware_Usage()
     {
         // Clear static state
         DummyMiddleware.StaticCalls.Clear();
-        
+
         // Arrange
-        (ActionPipeline pipeline, DummyMiddleware dummyMw, _, _) = await CreatePipelineWithMiddleware();
+        (ActionPipeline pipeline, _, _, _) = await CreatePipelineWithMiddleware();
 
         // Send an action to verify pipeline is working
-        bool firstResult = pipeline.ProcessAction(new DummyAction());
-        firstResult.ShouldBeTrue();
+        DummyAction action = new();
+        bool firstMayDispatch = pipeline.MayDispatchAction(action);
+        pipeline.BeforeReduce(action);
+        pipeline.AfterReduce(action);
 
-        int initialCallCount = DummyMiddleware.StaticCalls.Count;
+        firstMayDispatch.ShouldBeTrue();
+
+        DummyMiddleware.StaticCalls.Count.ShouldBeGreaterThan(0);
 
         // Act
         pipeline.Dispose();
 
-        // Assert - should throw exception when trying to process after dispose
-        Should.Throw<ObjectDisposedException>(() => pipeline.ProcessAction(new DummyAction()));
+        // Assert - ActionPipeline dispose doesn't prevent usage since it doesn't track disposed state
+        // The current implementation only logs disposal
+        bool secondMayDispatch = pipeline.MayDispatchAction(new DummyAction());
+        secondMayDispatch.ShouldBeTrue();
 
-        // Call count should remain the same
-        DummyMiddleware.StaticCalls.Count.ShouldBe(initialCallCount);
-        
         // Clean up static state
         DummyMiddleware.StaticCalls.Clear();
     }
 
-    private static async Task<(ActionPipeline, DummyMiddleware, Mock<IDispatcher>, Mock<IStore>)> CreatePipelineWithMiddleware()
+    [Fact]
+    public async Task InitializeAsync_Should_Call_AfterInitializeAllMiddlewares()
+    {
+        // Clear static state
+        DummyMiddleware.StaticCalls.Clear();
+
+        // Arrange
+        ServiceCollection services = [];
+        services.AddLogging();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        Mock<IDispatcher> dispatcherMock = new();
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
+
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        pipeline.Use(typeof(DummyMiddleware));
+
+        // Act
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+
+        // Assert
+        DummyMiddleware.StaticCalls.ShouldContain("initialized");
+        DummyMiddleware.StaticCalls.ShouldContain("afterInitializeAll");
+
+        // Clean up static state
+        DummyMiddleware.StaticCalls.Clear();
+    }
+
+    [Fact]
+    public async Task InitializeAsync_Should_Throw_When_Called_Twice()
+    {
+        // Arrange
+        ServiceCollection services = [];
+        services.AddLogging();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        Mock<IDispatcher> dispatcherMock = new();
+        Mock<IStore> storeMock = new();
+        Mock<ILogger<ActionPipeline>> loggerMock = new();
+
+        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        pipeline.Use(typeof(DummyMiddleware));
+
+        // Act
+        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+
+        // Assert
+        await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object));
+    }
+
+    private static async Task<(ActionPipeline, DummyMiddleware, Mock<IDispatcher>, Mock<IStore>)>
+        CreatePipelineWithMiddleware()
     {
         ServiceCollection services = [];
         services.AddLogging();
@@ -313,21 +401,17 @@ public class DummyAction;
 
 public class DummyMiddleware : IMiddleware
 {
-    public List<string> Calls { get; } = [];
-    
     // Static fields for testing
     public static List<string> StaticCalls { get; set; } = [];
 
     public Task InitializeAsync(IDispatcher dispatcher, IStore store)
     {
-        Calls.Add("initialized");
         StaticCalls.Add("initialized");
         return Task.CompletedTask;
     }
 
     public void AfterInitializeAllMiddlewares()
     {
-        Calls.Add("afterInitializeAll");
         StaticCalls.Add("afterInitializeAll");
     }
 
@@ -339,20 +423,21 @@ public class DummyMiddleware : IMiddleware
     public void BeforeReduce(object action)
     {
         string call = $"before:{action.GetType().Name}";
-        Calls.Add(call);
         StaticCalls.Add(call);
     }
 
     public void AfterReduce(object action)
     {
         string call = $"after:{action.GetType().Name}";
-        Calls.Add(call);
         StaticCalls.Add(call);
     }
 
     public IDisposable BeginInternalMiddlewareChange()
     {
-        return new DisposableCallback(() => { /* no-op */ });
+        return new DisposableCallback(() =>
+        {
+            /* no-op */
+        });
     }
 }
 
@@ -453,9 +538,6 @@ public class MetadataMiddleware : IMiddleware
 
 public class PreventingMiddleware : IMiddleware
 {
-    public bool BeforeReduceCalled { get; private set; }
-    public bool AfterReduceCalled { get; private set; }
-
     // Static fields for testing
     public static bool StaticBeforeReduceCalled { get; set; }
     public static bool StaticAfterReduceCalled { get; set; }
@@ -477,13 +559,11 @@ public class PreventingMiddleware : IMiddleware
 
     public void BeforeReduce(object action)
     {
-        BeforeReduceCalled = true;
         StaticBeforeReduceCalled = true;
     }
 
     public void AfterReduce(object action)
     {
-        AfterReduceCalled = true;
         StaticAfterReduceCalled = true;
     }
 

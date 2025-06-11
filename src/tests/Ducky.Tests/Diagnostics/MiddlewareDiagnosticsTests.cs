@@ -104,7 +104,15 @@ public class MiddlewareDiagnosticsTests
         MiddlewareDiagnostics diagnostics = provider.GetRequiredService<MiddlewareDiagnostics>();
 
         // Act
-        dispatcher.Dispatch(new TestAction());
+        try
+        {
+            dispatcher.Dispatch(new TestAction());
+        }
+        catch (InvalidOperationException)
+        {
+            // Expected - the error should be recorded even though it propagates
+        }
+        
         await Task.Delay(100, TestContext.Current.CancellationToken); // Allow time for error processing
 
         MiddlewareDiagnosticReport report = diagnostics.GetReport();
@@ -181,6 +189,12 @@ public class MiddlewareDiagnosticsTests
     {
         public override void BeforeReduce(object action)
         {
+            // Only throw for TestAction, not for system actions like StoreInitialized
+            if (action is not TestAction)
+            {
+                return;
+            }
+            
             throw new InvalidOperationException("Test error");
         }
     }
