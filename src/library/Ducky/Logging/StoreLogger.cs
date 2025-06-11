@@ -70,33 +70,6 @@ public class StoreLogger : IDisposable
                     completed.Context.Action.GetType().Name);
                 break;
             }
-            case MiddlewareStartedEvent startedMw:
-            {
-                _logger.LogInformation(
-                    "[EVENT] Middleware {Phase} started: {Middleware} for {ActionType}",
-                    startedMw.Phase,
-                    startedMw.Middleware.GetType().Name,
-                    startedMw.Action.GetType().Name);
-                break;
-            }
-            case MiddlewareCompletedEventArgs completedMw:
-            {
-                _logger.LogInformation(
-                    "[EVENT] Middleware {Phase} completed: {Middleware} for {ActionType}",
-                    completedMw.Phase,
-                    completedMw.Middleware.GetType().Name,
-                    completedMw.Action.GetType().Name);
-                break;
-            }
-            case MiddlewareErroredEventArgs erroredMw:
-            {
-                _logger.LogError(
-                    "[EVENT] Middleware {Phase} error: {Middleware}: {Exception}",
-                    erroredMw.Phase,
-                    erroredMw.Middleware.GetType().Name,
-                    erroredMw.Exception);
-                break;
-            }
             case ActionAbortedEventArgs aborted:
             {
                 _logger.LogWarning(

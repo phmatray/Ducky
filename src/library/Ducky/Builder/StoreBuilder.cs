@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Ducky.Diagnostics;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Pipeline;
 
@@ -10,6 +11,7 @@ internal class StoreBuilder : IStoreBuilder
     private readonly List<Type> _sliceTypes = [];
     private bool _asyncEffectMiddlewareAdded;
     private bool _validationEnabled = true;
+    private bool _diagnosticsEnabled;
 
     public IServiceCollection Services { get; }
 
@@ -18,7 +20,8 @@ internal class StoreBuilder : IStoreBuilder
         Services = services ?? throw new ArgumentNullException(nameof(services));
     }
 
-    public IStoreBuilder AddMiddleware<TMiddleware>() where TMiddleware : class, IMiddleware
+    public IStoreBuilder AddMiddleware<TMiddleware>()
+        where TMiddleware : class, IMiddleware
     {
         Type middlewareType = typeof(TMiddleware);
 
@@ -103,7 +106,8 @@ internal class StoreBuilder : IStoreBuilder
         return this;
     }
 
-    public IStoreBuilder AddSlice<TState>() where TState : class, IState, new()
+    public IStoreBuilder AddSlice<TState>()
+        where TState : class, IState, new()
     {
         Type sliceType = typeof(ISlice<TState>);
 
@@ -116,7 +120,8 @@ internal class StoreBuilder : IStoreBuilder
         return this;
     }
 
-    public IStoreBuilder AddSlice<TState>(Func<IServiceProvider, TState> stateFactory) where TState : class, IState
+    public IStoreBuilder AddSlice<TState>(Func<IServiceProvider, TState> stateFactory)
+        where TState : class, IState
     {
         ArgumentNullException.ThrowIfNull(stateFactory);
 
@@ -133,7 +138,8 @@ internal class StoreBuilder : IStoreBuilder
         return this;
     }
 
-    public IStoreBuilder AddEffect<TEffect>() where TEffect : class, IAsyncEffect
+    public IStoreBuilder AddEffect<TEffect>()
+        where TEffect : class, IAsyncEffect
     {
         EnsureMiddlewareAdded(_asyncEffectMiddlewareAdded, typeof(AsyncEffectMiddleware), "AddAsyncEffectMiddleware()");
         RegisterService<TEffect, IAsyncEffect>();
@@ -149,7 +155,8 @@ internal class StoreBuilder : IStoreBuilder
         return this;
     }
 
-    public IStoreBuilder AddExceptionHandler<TExceptionHandler>() where TExceptionHandler : class, IExceptionHandler
+    public IStoreBuilder AddExceptionHandler<TExceptionHandler>()
+        where TExceptionHandler : class, IExceptionHandler
     {
         RegisterService<TExceptionHandler, IExceptionHandler>();
         return this;
@@ -178,12 +185,28 @@ internal class StoreBuilder : IStoreBuilder
         return new List<Type>(_middlewareTypes);
     }
 
+    internal bool IsDiagnosticsEnabled()
+    {
+        return _diagnosticsEnabled;
+    }
+
     /// <summary>
     /// Disables middleware order validation (useful for testing or advanced scenarios).
     /// </summary>
     public IStoreBuilder DisableOrderValidation()
     {
         _validationEnabled = false;
+        return this;
+    }
+
+    public IStoreBuilder EnableDiagnostics()
+    {
+        if (!_diagnosticsEnabled)
+        {
+            _diagnosticsEnabled = true;
+            Services.AddSingleton<MiddlewareDiagnostics>();
+        }
+
         return this;
     }
 

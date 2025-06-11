@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Ducky.Builder;
+using Ducky.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky;
@@ -41,13 +42,26 @@ public static class DuckyServiceCollectionExtensions
 
         // Extract middleware types from the builder
         List<Type> middlewareTypes = storeBuilder.GetMiddlewareTypes();
+        bool diagnosticsEnabled = storeBuilder.IsDiagnosticsEnabled();
 
         DuckyOptions options = new()
         {
-            ConfigurePipelineWithServices = (pipeline, _) =>
+            ConfigurePipelineWithServices = (pipeline, serviceProvider) =>
             {
-                foreach (Type middlewareType in middlewareTypes)
+                MiddlewareDiagnostics? diagnostics = diagnosticsEnabled
+                    ? serviceProvider.GetService<MiddlewareDiagnostics>()
+                    : null;
+
+                for (int i = 0; i < middlewareTypes.Count; i++)
                 {
+                    Type middlewareType = middlewareTypes[i];
+
+                    if (diagnostics is not null)
+                    {
+                        // Record middleware registration
+                        diagnostics.RecordMiddlewareRegistration(middlewareType, i);
+                    }
+
                     pipeline.Use(middlewareType);
                 }
             }

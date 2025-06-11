@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Ducky.Diagnostics;
 
 namespace Ducky.Pipeline;
 
@@ -70,10 +71,20 @@ public sealed class ActionPipeline : IDisposable
 
         _logger.LogDebug("Initializing action pipeline with {MiddlewareCount} middlewares", _middlewareTypes.Count);
 
+        // Check if diagnostics are enabled
+        MiddlewareDiagnostics? diagnostics = _serviceProvider.GetService<MiddlewareDiagnostics>();
+
         // Create middleware instances
         foreach (Type middlewareType in _middlewareTypes)
         {
             var middleware = (IMiddleware)ActivatorUtilities.CreateInstance(_serviceProvider, middlewareType);
+
+            // Wrap with diagnostic middleware if diagnostics are enabled
+            if (diagnostics is not null)
+            {
+                middleware = new DiagnosticMiddleware(middleware, diagnostics);
+            }
+
             _middlewares.Add(middleware);
             await middleware.InitializeAsync(dispatcher, store).ConfigureAwait(false);
         }

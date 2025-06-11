@@ -97,4 +97,10 @@ public interface IStoreBuilder
     /// <returns>The store builder for chaining.</returns>
     IStoreBuilder AddExceptionHandler<TExceptionHandler>(Func<IServiceProvider, TExceptionHandler> implementationFactory)
         where TExceptionHandler : class, IExceptionHandler;
+
+    /// <summary>
+    /// Enables middleware diagnostics for performance monitoring.
+    /// </summary>
+    /// <returns>The store builder for chaining.</returns>
+    IStoreBuilder EnableDiagnostics();
 }
