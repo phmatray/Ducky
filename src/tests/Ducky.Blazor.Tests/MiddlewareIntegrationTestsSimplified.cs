@@ -1,14 +1,7 @@
-using Bunit;
-using Ducky.Builder;
 using Ducky.Blazor.Builder;
-using Ducky.Blazor.Middlewares.DevTools;
-using Ducky.Blazor.Middlewares.JsLogging;
-using Ducky.Diagnostics;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
-using Ducky.Middlewares.ExceptionHandling;
 using Ducky.Pipeline;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Moq;
 using Shouldly;
@@ -21,7 +14,7 @@ namespace Ducky.Blazor.Tests;
 public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
 {
     private readonly Mock<IJSRuntime> _jsRuntimeMock;
-    
+
     public MiddlewareIntegrationTestsSimplified()
     {
         _jsRuntimeMock = new Mock<IJSRuntime>();
@@ -42,24 +35,22 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
 
         // Assert
         using IServiceScope scope = serviceProvider.CreateScope();
-        
+
         // Verify core services are registered
         IStore store = scope.ServiceProvider.GetRequiredService<IStore>();
         store.ShouldNotBeNull();
-        
+
         IDispatcher dispatcher = scope.ServiceProvider.GetRequiredService<IDispatcher>();
         dispatcher.ShouldNotBeNull();
-        
+
         // Verify middleware registrations
-        IEnumerable<IMiddleware> middlewares = scope.ServiceProvider.GetServices<IMiddleware>();
+        IMiddleware[] middlewares = scope.ServiceProvider.GetServices<IMiddleware>().ToArray();
         middlewares.ShouldNotBeEmpty();
-        middlewares.Count().ShouldBeGreaterThanOrEqualTo(4); // At least the 4 production middlewares
-        
+        middlewares.Length.ShouldBeGreaterThanOrEqualTo(2); // At least the 2 production middlewares
+
         // Verify specific middleware types are registered
-        middlewares.ShouldContain(m => m.GetType() == typeof(CorrelationIdMiddleware));
-        middlewares.ShouldContain(m => m.GetType() == typeof(ExceptionHandlingMiddleware));
-        middlewares.ShouldContain(m => m.GetType() == typeof(AsyncEffectMiddleware));
-        middlewares.ShouldContain(m => m.GetType() == typeof(ReactiveEffectMiddleware));
+        middlewares.ShouldContain(m => m is CorrelationIdMiddleware);
+        middlewares.ShouldContain(m => m is AsyncEffectMiddleware);
     }
 
     [Fact]
@@ -69,11 +60,10 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
         Should.Throw<MiddlewareOrderException>(() =>
         {
             Services.AddDuckyStore(builder => builder
-                .AddAsyncEffectMiddleware()     // Should come after CorrelationId
-                .AddCorrelationIdMiddleware()   // Should come first
-                .AddExceptionHandlingMiddleware() // Should come after CorrelationId but before AsyncEffect
+                .AddAsyncEffectMiddleware() // Should come after CorrelationId
+                .AddCorrelationIdMiddleware() // Should come first
             );
-            
+
             Services.BuildServiceProvider();
         });
     }
@@ -95,7 +85,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
         exception.Message.ShouldContain("Middleware order violations detected");
         exception.Message.ShouldContain("Suggested order:");
         exception.Violations.ShouldNotBeEmpty();
-        
+
         MiddlewareOrderViolation violation = exception.Violations.First();
         violation.ViolationType.ShouldBe(OrderViolationType.ShouldComeBefore);
         violation.MiddlewareType.ShouldBe(typeof(CorrelationIdMiddleware));
@@ -103,48 +93,22 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
     }
 
     [Fact]
-    public void MiddlewareOrderValidation_CanBeDisabled()
-    {
-        // Arrange & Act - Should not throw when validation is disabled
-        Services.AddDuckyStore(builder =>
-        {
-            // Cast to concrete type to access DisableOrderValidation
-            if (builder is StoreBuilder storeBuilder)
-            {
-                storeBuilder.DisableOrderValidation();
-            }
-            
-            return builder
-                .AddAsyncEffectMiddleware()     // Invalid order, but validation disabled
-                .AddCorrelationIdMiddleware()
-                .AddExceptionHandlingMiddleware();
-        });
-
-        ServiceProvider serviceProvider = Services.BuildServiceProvider();
-
-        // Assert
-        using IServiceScope scope = serviceProvider.CreateScope();
-        IStore store = scope.ServiceProvider.GetRequiredService<IStore>();
-        store.ShouldNotBeNull();
-    }
-
-    [Fact]
     public void StoreBuilderPresets_ShouldConfigureCorrectMiddlewares()
     {
         // Test Production Preset
         TestPreset(
-            builder => builder.UseProductionPreset(), 
-            expectedMiddlewareCount: 4);
+            builder => builder.UseProductionPreset(),
+            expectedMiddlewareCount: 2);
 
         // Test Development Preset  
         TestPreset(
             builder => builder.UseDevelopmentPreset(),
-            expectedMiddlewareCount: 4); // Same as production
+            expectedMiddlewareCount: 2); // Same as production
 
         // Test Testing Preset
         TestPreset(
             builder => builder.UseTestingPreset(),
-            expectedMiddlewareCount: 2); // Just ExceptionHandling + AsyncEffect
+            expectedMiddlewareCount: 1); // Just AsyncEffect
     }
 
     private void TestPreset(Func<IStoreBuilder, IStoreBuilder> configurePreset, int expectedMiddlewareCount)
@@ -152,18 +116,17 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
         ServiceCollection tempServices = [];
         tempServices.AddSingleton(_jsRuntimeMock.Object);
         tempServices.AddLogging();
-        
+
         tempServices.AddDuckyStore(builder => configurePreset(builder));
         ServiceProvider serviceProvider = tempServices.BuildServiceProvider();
 
         using IServiceScope scope = serviceProvider.CreateScope();
-        IEnumerable<IMiddleware> middlewares = scope.ServiceProvider.GetServices<IMiddleware>();
-        
-        middlewares.Count().ShouldBeGreaterThanOrEqualTo(expectedMiddlewareCount);
-        
-        // All presets should have at least CorrelationId and ExceptionHandling
-        middlewares.ShouldContain(m => m.GetType() == typeof(CorrelationIdMiddleware));
-        middlewares.ShouldContain(m => m.GetType() == typeof(ExceptionHandlingMiddleware));
+        IMiddleware[] middlewares = scope.ServiceProvider.GetServices<IMiddleware>().ToArray();
+
+        middlewares.Length.ShouldBeGreaterThanOrEqualTo(expectedMiddlewareCount);
+
+        // All presets should have at least CorrelationId
+        middlewares.ShouldContain(m => m is CorrelationIdMiddleware);
     }
 
     [Fact]
@@ -173,19 +136,17 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
         Services.AddDuckyStore(builder => builder
             .UseDevelopmentPreset()
         );
-        
+
         ServiceProvider serviceProvider = Services.BuildServiceProvider();
 
         // Act - Just creating the store should register middleware
         using IServiceScope scope = serviceProvider.CreateScope();
         IStore store = scope.ServiceProvider.GetRequiredService<IStore>();
-        
+
         // Assert - verify development preset includes all production middleware
-        IEnumerable<IMiddleware> middlewares = scope.ServiceProvider.GetServices<IMiddleware>();
-        middlewares.ShouldContain(m => m.GetType() == typeof(CorrelationIdMiddleware));
-        middlewares.ShouldContain(m => m.GetType() == typeof(ExceptionHandlingMiddleware));
-        middlewares.ShouldContain(m => m.GetType() == typeof(AsyncEffectMiddleware));
-        middlewares.ShouldContain(m => m.GetType() == typeof(ReactiveEffectMiddleware));
+        IMiddleware[] middlewares = scope.ServiceProvider.GetServices<IMiddleware>().ToArray();
+        middlewares.ShouldContain(m => m is CorrelationIdMiddleware);
+        middlewares.ShouldContain(m => m is AsyncEffectMiddleware);
     }
 
     [Fact]
@@ -200,22 +161,22 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
         Services.AddDuckyStore(builder => builder
             .UseProductionPreset()
             .AddJsLoggingMiddleware()
-            .AddDevToolsMiddleware(options => 
+            .AddDevToolsMiddleware(options =>
             {
                 options.StoreName = "TestStore";
                 options.Enabled = true;
             })
         );
-        
+
         ServiceProvider serviceProvider = Services.BuildServiceProvider();
 
         // Assert
         using IServiceScope scope = serviceProvider.CreateScope();
-        
+
         // Verify Blazor-specific services are registered
         scope.ServiceProvider.GetService<JsConsoleLoggerModule>().ShouldNotBeNull();
         scope.ServiceProvider.GetService<ReduxDevToolsModule>().ShouldNotBeNull();
-        
+
         DevToolsOptions devToolsOptions = scope.ServiceProvider.GetRequiredService<DevToolsOptions>();
         devToolsOptions.StoreName.ShouldBe("TestStore");
         devToolsOptions.Enabled.ShouldBeTrue();
@@ -229,7 +190,6 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
         {
             Services.AddDuckyStore(builder => builder
                 .AddCorrelationIdMiddleware()
-                .AddExceptionHandlingMiddleware()
                 // Missing AsyncEffectMiddleware but adding an effect
                 .AddEffect<TestAsyncEffect>()
             );
@@ -251,16 +211,16 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
         Services.AddDuckyStore(builder => builder
             .UseAllMiddlewares()
         );
-        
+
         ServiceProvider serviceProvider = Services.BuildServiceProvider();
 
         // Assert
         using IServiceScope scope = serviceProvider.CreateScope();
         IStore store = scope.ServiceProvider.GetRequiredService<IStore>();
         store.ShouldNotBeNull();
-        
+
         IEnumerable<IMiddleware> middlewares = scope.ServiceProvider.GetServices<IMiddleware>();
-        middlewares.Count().ShouldBeGreaterThan(4); // Should have all middlewares
+        middlewares.Count().ShouldBeGreaterThan(2); // Should have all middlewares
     }
 
     [Fact]
@@ -271,7 +231,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
             .UseProductionPreset()
             .AddExceptionHandler<TestExceptionHandler>()
         );
-        
+
         ServiceProvider serviceProvider = Services.BuildServiceProvider();
 
         // Assert
