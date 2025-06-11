@@ -28,7 +28,7 @@ public class DuckyStoreTests
         ServiceCollection services = [];
         services.AddLogging();
         // TestCounterReducers will be automatically registered by assembly scanning
-        services.AddDucky();
+        services.AddDucky(builder => builder.ScanAssemblies(typeof(TestCounterReducers).Assembly));
 
         ServiceProvider provider = services.BuildServiceProvider();
         IStore store = provider.GetRequiredService<IStore>();
