@@ -102,7 +102,7 @@ public class BlazorDuckyBuilder
             _devToolsEnabled = true;
             _innerBuilder.AddMiddleware<DevToolsMiddleware>();
 
-            _services.AddSingleton<DevToolsOptions>(sp =>
+            _services.AddSingleton<DevToolsOptions>(_ =>
             {
                 DevToolsOptions options = new();
                 configure?.Invoke(options);
@@ -126,7 +126,7 @@ public class BlazorDuckyBuilder
             _persistenceEnabled = true;
             _innerBuilder.AddMiddleware<PersistenceMiddleware>();
 
-            _services.AddSingleton<PersistenceOptions>(sp =>
+            _services.AddSingleton<PersistenceOptions>(_ =>
             {
                 PersistenceOptions options = new();
                 configure?.Invoke(options);
@@ -165,7 +165,7 @@ public class BlazorDuckyBuilder
             IJSRuntime jsRuntime = sp.GetRequiredService<IJSRuntime>();
             return new JsConsoleLoggerModule(jsRuntime);
         });
-        
+
         // Add the middleware
         _innerBuilder.AddMiddleware<JsLoggingMiddleware>();
         return this;

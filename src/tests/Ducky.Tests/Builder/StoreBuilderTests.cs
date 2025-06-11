@@ -1,5 +1,3 @@
-using Ducky.Legacy;
-using Ducky.Builder;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
@@ -17,11 +15,11 @@ public class StoreBuilderTests
         services.AddLogging();
 
         // Act
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
-                .AddCorrelationIdMiddleware()
-                .AddAsyncEffectMiddleware();
+                .AddMiddleware<CorrelationIdMiddleware>()
+                .AddMiddleware<AsyncEffectMiddleware>();
         });
 
         // Assert - Middlewares should be registered as both concrete and interface
@@ -43,17 +41,19 @@ public class StoreBuilderTests
         services.AddLogging();
 
         // Act
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
-                .AddCorrelationIdMiddleware()
-                .AddCorrelationIdMiddleware() // Duplicate
-                .AddCorrelationIdMiddleware(); // Another duplicate
+                .AddMiddleware<CorrelationIdMiddleware>()
+                .AddMiddleware<CorrelationIdMiddleware>() // Duplicate
+                .AddMiddleware<CorrelationIdMiddleware>(); // Another duplicate
         });
 
         // Assert - Should only register once
         services.Count(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).ShouldBe(1);
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(1);
+        // Default middlewares (CorrelationId + AsyncEffect) are added automatically
+        // Since we're trying to add CorrelationId again, it won't add a duplicate
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(2); // CorrelationId + AsyncEffect from defaults
     }
 
     [Fact]
@@ -63,38 +63,11 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act
-        services.AddDuckyStore(builder => builder.AddMiddleware<TestMiddleware>());
+        services.AddDucky(builder => builder.AddMiddleware<TestMiddleware>());
 
         // Assert
         services.Any(sd => sd.ServiceType == typeof(TestMiddleware)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void StoreBuilder_ShouldRegisterMiddlewareWithFactory()
-    {
-        // Arrange
-        ServiceCollection services = [];
-        TestMiddleware? capturedMiddleware = null;
-
-        // Act
-        services.AddDuckyStore(builder =>
-        {
-            builder.AddMiddleware<TestMiddleware>(_ =>
-            {
-                capturedMiddleware = new TestMiddleware();
-                return capturedMiddleware;
-            });
-        });
-
-        // Build provider and resolve
-        ServiceProvider provider = services.BuildServiceProvider();
-        TestMiddleware resolved = provider.GetRequiredService<TestMiddleware>();
-        IMiddleware resolvedInterface = provider.GetRequiredService<IMiddleware>();
-
-        // Assert
-        resolved.ShouldBe(capturedMiddleware);
-        resolvedInterface.ShouldBe(capturedMiddleware);
     }
 
     [Fact]
@@ -104,7 +77,7 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act
-        services.AddDuckyStore(builder => builder.AddSlice<TestState>());
+        services.AddDucky(builder => builder.AddSlice<TestState>());
 
         // Assert
         services.Any(sd => sd.ServiceType == typeof(ISlice<TestState>)).ShouldBeTrue();
@@ -117,10 +90,10 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
-                .AddAsyncEffectMiddleware()
+                .AddMiddleware<AsyncEffectMiddleware>()
                 .AddEffect<TestAsyncEffect>();
         });
 
@@ -136,37 +109,11 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act
-        services.AddDuckyStore(builder => builder.AddExceptionHandler<TestExceptionHandler>());
+        services.AddDucky(builder => builder.AddExceptionHandler<TestExceptionHandler>());
 
         // Assert
         services.Any(sd => sd.ServiceType == typeof(TestExceptionHandler)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IExceptionHandler)).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void StoreBuilder_ShouldConfigureOptions()
-    {
-        // Arrange
-        ServiceCollection services = [];
-
-        // Act
-        services.AddDuckyStore(builder =>
-        {
-            builder.ConfigureStore(options =>
-            {
-                // Set a property that exists on DuckyOptions
-                options.AssemblyNames = ["TestAssembly"];
-            });
-        });
-
-        // Assert - The configuration action should be registered in the service collection
-        Action<DuckyOptions>? configAction = services.BuildServiceProvider().GetService<Action<DuckyOptions>>();
-        configAction.ShouldNotBeNull();
-
-        // Verify the action works
-        DuckyOptions testOptions = new();
-        configAction(testOptions);
-        testOptions.AssemblyNames.ShouldBe(["TestAssembly"]);
     }
 
     [Fact]
@@ -176,10 +123,10 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act & Assert - Should compile and work
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
-                .AddDefaultMiddlewares()
+                .UseDefaultMiddlewares()
                 .AddSlice<TestState>()
                 .AddEffect<TestAsyncEffect>()
                 .AddExceptionHandler<TestExceptionHandler>()

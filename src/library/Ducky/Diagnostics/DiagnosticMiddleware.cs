@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Ducky.Builder;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -91,24 +90,10 @@ public class DiagnosticMiddleware : IMiddleware
 }
 
 /// <summary>
-/// Extension methods for enabling diagnostics.
+/// Extension methods for getting middleware diagnostics.
 /// </summary>
 public static class DiagnosticExtensions
 {
-    /// <summary>
-    /// Enables diagnostic collection for all middlewares.
-    /// </summary>
-    public static IStoreBuilder EnableDiagnostics(this IStoreBuilder builder)
-    {
-        // Register the diagnostics service
-        builder.Services.AddSingleton<MiddlewareDiagnostics>();
-
-        // Mark that diagnostics are enabled
-        builder.Services.AddSingleton<DiagnosticsMarker>();
-
-        return builder;
-    }
-
     /// <summary>
     /// Gets the middleware diagnostics from the service provider.
     /// </summary>
@@ -121,6 +106,4 @@ public static class DiagnosticExtensions
 /// <summary>
 /// Marker class to indicate that diagnostics are enabled.
 /// </summary>
-internal class DiagnosticsMarker
-{
-}
+internal class DiagnosticsMarker;

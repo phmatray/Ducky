@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Ducky.Legacy;
-using Ducky.Builder;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Pipeline;
@@ -21,9 +19,9 @@ public class MiddlewareRegistrationTests
         services.AddLogging();
 
         // Act - Register middlewares using StoreBuilder
-        services.AddDuckyStore(builder => builder
-            .AddCorrelationIdMiddleware()
-            .AddAsyncEffectMiddleware());
+        services.AddDucky(builder => builder
+            .AddMiddleware<CorrelationIdMiddleware>()
+            .AddMiddleware<AsyncEffectMiddleware>());
 
         // Assert - Middlewares should be registered in the service collection
         services.Any(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).ShouldBeTrue();
@@ -44,8 +42,8 @@ public class MiddlewareRegistrationTests
         services.AddLogging();
 
         // Act
-        services.AddDuckyStore(builder => builder
-            .AddCorrelationIdMiddleware());
+        services.AddDucky(builder => builder
+            .AddMiddleware<CorrelationIdMiddleware>());
 
         // Assert - Both registrations should exist
         ServiceDescriptor? concreteRegistration =

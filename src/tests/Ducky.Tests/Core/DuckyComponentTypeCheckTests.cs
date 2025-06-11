@@ -24,7 +24,7 @@ public class DuckyComponentTypeCheckTests
 
         // Test 4: Simulate the type check in DuckyComponent.UpdateCurrentState()
         Type tState = typeof(RootState);
-        bool shouldUseRootState = (tState == typeof(IRootState) || tState == typeof(RootState));
+        bool shouldUseRootState = tState == typeof(IRootState) || tState == typeof(RootState);
         shouldUseRootState.ShouldBeTrue();
     }
 
@@ -34,7 +34,7 @@ public class DuckyComponentTypeCheckTests
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
-        services.AddDucky(builder => { });
+        services.AddDucky();
         ServiceProvider provider = services.BuildServiceProvider();
         IStore store = provider.GetRequiredService<IStore>();
 
@@ -49,7 +49,7 @@ public class DuckyComponentTypeCheckTests
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
-        services.AddDucky(builder => { });
+        services.AddDucky();
         ServiceProvider provider = services.BuildServiceProvider();
         IStore store = provider.GetRequiredService<IStore>();
 

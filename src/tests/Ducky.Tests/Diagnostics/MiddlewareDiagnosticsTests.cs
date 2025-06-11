@@ -1,5 +1,3 @@
-using Ducky.Legacy;
-using Ducky.Builder;
 using Ducky.Diagnostics;
 using Ducky.Middlewares.NoOp;
 using Ducky.Pipeline;
@@ -17,9 +15,9 @@ public class MiddlewareDiagnosticsTests
         services.AddLogging();
 
         // Act
-        services.AddDuckyStore(builder => builder
+        services.AddDucky(builder => builder
             .EnableDiagnostics()
-            .AddNoOpMiddleware());
+            .AddMiddleware<NoOpMiddleware>());
 
         ServiceProvider provider = services.BuildServiceProvider();
 
@@ -34,9 +32,9 @@ public class MiddlewareDiagnosticsTests
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
-        services.AddDuckyStore(builder => builder
+        services.AddDucky(builder => builder
             .EnableDiagnostics()
-            .AddNoOpMiddleware()
+            .AddMiddleware<NoOpMiddleware>()
             .ConfigureStore(options => options.AssemblyNames = ["Ducky.Tests"]));
 
         ServiceProvider provider = services.BuildServiceProvider();
@@ -51,7 +49,7 @@ public class MiddlewareDiagnosticsTests
         // Assert
         MiddlewareDiagnosticReport report = diagnostics.GetReport();
         Assert.NotNull(report);
-        Assert.Equal(1, report.TotalMiddlewares);
+        Assert.Equal(3, report.TotalMiddlewares); // Default 2 + NoOp
         Assert.True(report.TotalExecutions > 0);
 
         MiddlewareReport? noOpReport = report.Middlewares.FirstOrDefault(m => m.Info.Type == typeof(NoOpMiddleware));
@@ -65,7 +63,7 @@ public class MiddlewareDiagnosticsTests
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
-        services.AddDuckyStore(builder => builder
+        services.AddDucky(builder => builder
             .EnableDiagnostics()
             .AddMiddleware<DelayMiddleware>()
             .ConfigureStore(options => options.AssemblyNames = ["Ducky.Tests"]));
@@ -95,7 +93,7 @@ public class MiddlewareDiagnosticsTests
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
-        services.AddDuckyStore(builder => builder
+        services.AddDucky(builder => builder
             .EnableDiagnostics()
             .AddMiddleware<ErrorMiddleware>()
             .ConfigureStore(options => options.AssemblyNames = ["Ducky.Tests"]));
@@ -125,9 +123,9 @@ public class MiddlewareDiagnosticsTests
         // Arrange
         ServiceCollection services = [];
         services.AddLogging();
-        services.AddDuckyStore(builder => builder
+        services.AddDucky(builder => builder
             .EnableDiagnostics()
-            .AddNoOpMiddleware()
+            .AddMiddleware<NoOpMiddleware>()
             .AddMiddleware<DelayMiddleware>()
             .ConfigureStore(options => options.AssemblyNames = ["Ducky.Tests"]));
 
@@ -144,14 +142,16 @@ public class MiddlewareDiagnosticsTests
 
         // Assert
         Assert.NotNull(report);
-        Assert.Equal(2, report.TotalMiddlewares);
-        Assert.Equal(2, report.Middlewares.Count);
+        Assert.Equal(4, report.TotalMiddlewares); // Default 2 + NoOp + Delay
+        Assert.Equal(4, report.Middlewares.Count);
         Assert.True(report.GeneratedAt <= DateTimeOffset.UtcNow);
         Assert.Equal(0, report.TotalErrors);
 
-        // Check middleware ordering
-        Assert.Equal(0, report.Middlewares[0].Info.Order);
-        Assert.Equal(1, report.Middlewares[1].Info.Order);
+        // Check that middlewares are ordered
+        for (int i = 0; i < report.Middlewares.Count - 1; i++)
+        {
+            Assert.True(report.Middlewares[i].Info.Order <= report.Middlewares[i + 1].Info.Order);
+        }
     }
 
     // Test helpers

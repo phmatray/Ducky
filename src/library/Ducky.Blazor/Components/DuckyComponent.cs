@@ -64,7 +64,7 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
     {
         if (typeof(TState) == typeof(IRootState) || typeof(TState) == typeof(RootState))
         {
-            _currentState = (TState)(object)Store.CurrentState;
+            _currentState = (TState)Store.CurrentState;
         }
         else
         {

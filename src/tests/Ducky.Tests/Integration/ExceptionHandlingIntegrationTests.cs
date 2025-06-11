@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Ducky.Legacy;
-using Ducky.Builder;
 using Ducky.Pipeline;
 
 namespace Ducky.Tests.Integration;
@@ -29,8 +27,12 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
         services.AddLogging();
 
         // Add Ducky services with StoreBuilder
-        services.AddDuckyStore(builder => builder
-            .AddExceptionHandler<TestExceptionHandler>(_ => _exceptionHandler));
+        services.AddDucky(builder => builder
+            .UseDefaultMiddlewares()
+            .AddExceptionHandler<TestExceptionHandler>());
+        
+        // Register the test exception handler instance manually
+        services.AddScoped<TestExceptionHandler>(_ => _exceptionHandler);
 
         // Add test slice
         services.AddScoped<ISlice, TestCounterReducers>();
@@ -41,7 +43,7 @@ public sealed class ExceptionHandlingIntegrationTests : IDisposable
         _eventPublisher = _serviceProvider.GetRequiredService<IStoreEventPublisher>();
 
         // Subscribe to events
-        _eventPublisher.EventPublished += (sender, evt) => _publishedEvents.Add(evt);
+        _eventPublisher.EventPublished += (_, evt) => _publishedEvents.Add(evt);
     }
 
     [Fact]
