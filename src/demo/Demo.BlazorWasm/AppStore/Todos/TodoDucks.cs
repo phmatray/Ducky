@@ -58,7 +58,7 @@ public sealed record ToggleTodo
     : Fsa<ToggleTodo.ActionPayload, ToggleTodo.ActionMeta>
 {
     // Action creators are represented as constructors.
-    public ToggleTodo(in Guid id)
+    public ToggleTodo(Guid id)
         : base(new ActionPayload(id), new ActionMeta(DateTime.UtcNow))
     {
     }
@@ -79,7 +79,8 @@ public sealed record DeleteTodo
 {
     // Action creators are represented as constructors.
     // You can also use the ActionMeta.Create() method from Ducky to create a timestamp.
-    public DeleteTodo(in Guid id)
+#pragma warning disable RCS1231 // Make parameter ref read-only
+    public DeleteTodo(Guid id)
         : base(new ActionPayload(id), ActionMeta.Create())
     {
     }

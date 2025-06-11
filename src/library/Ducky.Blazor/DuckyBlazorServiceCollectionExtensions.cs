@@ -5,7 +5,6 @@ using Ducky.Blazor.Middlewares.Persistence;
 using Ducky.Builder;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.JSInterop;
 
 namespace Ducky.Blazor;
@@ -119,8 +118,13 @@ public class BlazorDuckyBuilder
         else if (configure is not null)
         {
             // If DevTools is already enabled but we have new configuration,
-            // replace the options registration
-            _services.RemoveAll<DevToolsOptions>();
+            // we need to update the existing registration
+            ServiceDescriptor? existingDescriptor = _services.FirstOrDefault(d => d.ServiceType == typeof(DevToolsOptions));
+            if (existingDescriptor is not null)
+            {
+                _services.Remove(existingDescriptor);
+            }
+
             _services.AddSingleton<DevToolsOptions>(_ =>
             {
                 DevToolsOptions options = new();

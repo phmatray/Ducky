@@ -7,7 +7,7 @@ namespace Ducky.Tests.Extensions.FluxStandardActions.Models;
 public sealed record TestDeleteTodo
     : Fsa<TestDeleteTodo.ActionPayload, TestDeleteTodo.ActionMeta>
 {
-    public TestDeleteTodo(in Guid id)
+    public TestDeleteTodo(Guid id)
         : base(new ActionPayload(id), new ActionMeta(DateTime.UtcNow))
     {
     }

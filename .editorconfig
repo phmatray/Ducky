@@ -786,7 +786,7 @@ dotnet_diagnostic.rcs1229.severity = suggestion
 dotnet_diagnostic.rcs1230.severity = suggestion
 
 # Make parameter ref read-only
-dotnet_diagnostic.rcs1231.severity = warning
+dotnet_diagnostic.rcs1231.severity = none
 
 # Order elements in documentation comment
 dotnet_diagnostic.rcs1232.severity = suggestion
