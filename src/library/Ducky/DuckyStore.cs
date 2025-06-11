@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
@@ -124,23 +124,44 @@ public sealed class DuckyStore : IStore, IDisposable
 
     private void ProcessAction(object action)
     {
+        ActionContext? context = null;
+
         try
         {
-            // Process action through middleware pipeline
-            bool shouldProcess = _pipeline.ProcessAction(action);
+            // Create action context
+            context = new ActionContext(action) { RootState = _slices.CurrentState };
 
-            if (shouldProcess)
+            // First, check if any middleware wants to prevent this action
+            if (!_pipeline.MayDispatchAction(action))
             {
-                // Execute slice reducers
-                foreach (ISlice slice in _slices.AllSlices)
-                {
-                    slice.OnDispatch(action);
-                }
+                _eventPublisher.Publish(new ActionAbortedEventArgs(context, "Prevented by middleware"));
+                return;
             }
+
+            // Publish action started event
+            _eventPublisher.Publish(new ActionStartedEventArgs(context));
+
+            // Call BeforeReduce on all middlewares
+            _pipeline.BeforeReduce(action);
+
+            // Execute slice reducers
+            foreach (ISlice slice in _slices.AllSlices)
+            {
+                slice.OnDispatch(action);
+            }
+
+            // Call AfterReduce on all middlewares
+            _pipeline.AfterReduce(action);
+
+            // Publish action completed event
+            _eventPublisher.Publish(new ActionCompletedEventArgs(context));
         }
         catch (Exception ex)
         {
-            _eventPublisher.Publish(new ActionErrorEventArgs(ex, action, null!));
+            // Create a context if we don't have one yet (error occurred during context creation)
+            context ??= new ActionContext(action) { RootState = _slices.CurrentState };
+            _eventPublisher.Publish(new ActionErrorEventArgs(ex, action, context));
+            throw; // Re-throw to maintain existing behavior
         }
     }
 

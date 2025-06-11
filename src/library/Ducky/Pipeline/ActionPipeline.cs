@@ -104,6 +104,12 @@ public sealed class ActionPipeline : IDisposable
     /// </summary>
     /// <param name="action">The action to process.</param>
     /// <returns>True if the action was processed, false if it was prevented.</returns>
+    /// <remarks>
+    /// This method is now deprecated. The DuckyStore should call the individual
+    /// MayDispatchAction, BeforeReduce, and AfterReduce methods directly to have
+    /// proper control over when reducers are executed.
+    /// </remarks>
+    [Obsolete("Use MayDispatchAction, BeforeReduce, and AfterReduce methods directly")]
     public bool ProcessAction(object action)
     {
         if (_disposed)
@@ -121,32 +127,19 @@ public sealed class ActionPipeline : IDisposable
         try
         {
             // Check if any middleware wants to prevent this action
-            foreach (IMiddleware middleware in _middlewares)
+            if (!MayDispatchAction(action))
             {
-                if (!middleware.MayDispatchAction(action))
-                {
-                    _logger.LogDebug(
-                        "Action {ActionType} was prevented by middleware {MiddlewareType}",
-                        action.GetType().Name,
-                        middleware.GetType().Name);
-                    return false;
-                }
+                return false;
             }
 
             // Call BeforeReduce on all middlewares
-            foreach (IMiddleware middleware in _middlewares)
-            {
-                middleware.BeforeReduce(action);
-            }
+            BeforeReduce(action);
 
             // Action processing happens here (handled by DuckyStore)
             // This is where slice reducers are executed
 
             // Call AfterReduce on all middlewares
-            foreach (IMiddleware middleware in _middlewares)
-            {
-                middleware.AfterReduce(action);
-            }
+            AfterReduce(action);
 
             _logger.LogTrace("Completed processing action {ActionType}", action.GetType().Name);
             return true;
@@ -155,6 +148,52 @@ public sealed class ActionPipeline : IDisposable
         {
             _logger.LogError(ex, "Error processing action {ActionType}", action.GetType().Name);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Checks if the action may be dispatched.
+    /// </summary>
+    /// <param name="action">The action to check.</param>
+    /// <returns>True if all middlewares allow the action, false if any middleware prevents it.</returns>
+    public bool MayDispatchAction(object action)
+    {
+        foreach (IMiddleware middleware in _middlewares)
+        {
+            if (!middleware.MayDispatchAction(action))
+            {
+                _logger.LogDebug(
+                    "Action {ActionType} was prevented by middleware {MiddlewareType}",
+                    action.GetType().Name,
+                    middleware.GetType().Name);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Calls BeforeReduce on all middlewares.
+    /// </summary>
+    /// <param name="action">The action being reduced.</param>
+    public void BeforeReduce(object action)
+    {
+        foreach (IMiddleware middleware in _middlewares)
+        {
+            middleware.BeforeReduce(action);
+        }
+    }
+
+    /// <summary>
+    /// Calls AfterReduce on all middlewares.
+    /// </summary>
+    /// <param name="action">The action that has been reduced.</param>
+    public void AfterReduce(object action)
+    {
+        foreach (IMiddleware middleware in _middlewares)
+        {
+            middleware.AfterReduce(action);
         }
     }
 
