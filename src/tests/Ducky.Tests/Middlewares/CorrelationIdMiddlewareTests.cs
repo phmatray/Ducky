@@ -1,6 +1,5 @@
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
-using Moq;
 
 namespace Ducky.Tests.Middlewares;
 

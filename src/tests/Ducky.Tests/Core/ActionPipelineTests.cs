@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using Ducky.Pipeline;
 
 namespace Ducky.Tests.Core;

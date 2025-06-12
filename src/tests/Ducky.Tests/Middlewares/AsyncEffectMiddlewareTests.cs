@@ -1,6 +1,5 @@
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Pipeline;
-using Moq;
 
 namespace Ducky.Tests.Middlewares;
 

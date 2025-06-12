@@ -265,7 +265,7 @@ dotnet_diagnostic.rcs0053.severity = warning
 dotnet_diagnostic.rcs0054.severity = warning
 
 # Fix formatting of a binary expression chain
-dotnet_diagnostic.rcs0055.severity = warning
+dotnet_diagnostic.rcs0055.severity = none
 
 # A line is too long
 dotnet_diagnostic.rcs0056.severity = warning
@@ -1321,3 +1321,18 @@ roslynator_compiler_diagnostic_fix.cs8767.enabled = true
 # Authors of compiler extensions are encouraged to use the stricter 
 # (and faster) analyzer RS1038 instead of this rule.
 roslyn_correctness.assembly_reference_validation = relaxed
+
+# Test-specific settings
+[**/tests/**/*.cs]
+
+# Asynchronous method name should end with 'Async' - Disabled for test projects
+dotnet_diagnostic.rcs1046.severity = none
+
+# Simplify object creation - Disabled for test projects
+dotnet_diagnostic.rcs1250.severity = none
+
+# Normalize whitespace at the end of a file - Disabled for test projects
+dotnet_diagnostic.rcs0058.severity = none
+
+# Place new line before binary operator - Disabled for test projects  
+dotnet_diagnostic.rcs0027.severity = none

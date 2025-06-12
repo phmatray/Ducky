@@ -130,6 +130,22 @@ public class DuckyBuilder
     }
 
     /// <summary>
+    /// Adds an async effect group that contains multiple related effects.
+    /// </summary>
+    public DuckyBuilder AddEffectGroup<TEffectGroup>() where TEffectGroup : AsyncEffectGroup
+    {
+        // Auto-add AsyncEffectMiddleware if adding effects
+        if (!_middlewareTypes.Contains(typeof(AsyncEffectMiddleware)))
+        {
+            AddMiddleware<AsyncEffectMiddleware>();
+        }
+
+        _services.AddScoped<TEffectGroup>();
+        _services.AddScoped<IAsyncEffect>(sp => sp.GetRequiredService<TEffectGroup>());
+        return this;
+    }
+
+    /// <summary>
     /// Adds an exception handler.
     /// </summary>
     public DuckyBuilder AddExceptionHandler<THandler>() where THandler : class, IExceptionHandler

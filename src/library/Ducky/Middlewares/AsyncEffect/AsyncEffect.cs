@@ -14,7 +14,7 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
     /// <summary>
     /// Gets the dispatcher.
     /// </summary>
-    public IDispatcher Dispatcher { get; private set; } = null!;
+    public IDispatcher Dispatcher { get; internal set; } = null!;
 
     /// <inheritdoc />
     public void SetDispatcher(IDispatcher dispatcher)

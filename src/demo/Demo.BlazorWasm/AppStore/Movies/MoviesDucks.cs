@@ -129,29 +129,3 @@ public record MoviesReducers : SliceReducers<MoviesState>
 }
 
 #endregion
-
-#region Effects
-
-// ReSharper disable once UnusedType.Global
-public class LoadMoviesEffect(IMoviesService moviesService) : AsyncEffect<LoadMovies>
-{
-    public override async Task HandleAsync(LoadMovies action, IRootState rootState)
-    {
-        try
-        {
-            const int pageSize = 5;
-            MoviesState state = rootState.GetSliceState<MoviesState>();
-            int currentPage = state.Pagination.CurrentPage;
-
-            GetMoviesResponse response = await moviesService.GetMoviesAsync(currentPage, pageSize);
-
-            Dispatcher.LoadMoviesSuccess(response.Movies, response.TotalItems);
-        }
-        catch (Exception ex)
-        {
-            Dispatcher.LoadMoviesFailure(ex.Message);
-        }
-    }
-}
-
-#endregion
