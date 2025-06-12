@@ -19,7 +19,7 @@
     => State.SelectUnreadNotificationCount();
   
   private bool NotificationBadgeVisible
-    => State.SelectUnreadNotificationCount() > 0;
+    => UnreadNotificationCount > 0;
   
   private void ToggleNotifications()
     => Dispatcher.ToggleNotifications();

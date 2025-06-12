@@ -1,0 +1,143 @@
+@page "/multi-slice"
+@inherits DuckySelectorComponent<PageMultiSlice.DashboardViewModel>
+
+<PageTitle>Multi-Slice Example</PageTitle>
+
+<MudContainer>
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h3" GutterBottom="true">Multi-Slice Example</MudText>
+            <MudText Typo="Typo.body1" GutterBottom="true">
+                This page demonstrates the DuckySelectorComponent that efficiently accesses multiple state slices.
+            </MudText>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Counter</MudText>
+                    <MudText Typo="Typo.h3" Color="Color.Primary" Class="my-4">@ViewModel.Count</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="IncrementCounter">
+                        Increment
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Movies</MudText>
+                    <MudText Typo="Typo.h3" Color="Color.Secondary" Class="my-4">@ViewModel.MovieCount</MudText>
+                    @if (ViewModel.IsLoadingMovies)
+                    {
+                        <MudProgressLinear Color="Color.Secondary" Indeterminate="true" />
+                    }
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Secondary" 
+                               @onclick="LoadMovies"
+                               Disabled="@ViewModel.IsLoadingMovies">
+                        @if (ViewModel.IsLoadingMovies)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <span>Loading...</span>
+                        }
+                        else
+                        {
+                            <span>Load Movies</span>
+                        }
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Notifications</MudText>
+                    <div class="d-flex align-center my-4">
+                        <MudText Typo="Typo.h3" Color="@(ViewModel.HasNotifications ? Color.Warning : Color.Default)">
+                            @ViewModel.UnreadNotifications
+                        </MudText>
+                        @if (ViewModel.HasNotifications)
+                        {
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Class="ml-2">Unread</MudChip>
+                        }
+                    </div>
+                    @if (!ViewModel.HasNotifications)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Inherit">All notifications read</MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Component Features</MudText>
+                <MudList T="string">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Speed">
+                        Efficient multi-slice access with single subscription
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Memory">
+                        Custom memoization prevents unnecessary re-renders
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Code">
+                        Type-safe view model pattern for clean component code
+                    </MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    // Define the view model that combines data from multiple slices
+    public record DashboardViewModel(
+        int Count,
+        int MovieCount,
+        bool IsLoadingMovies,
+        int UnreadNotifications,
+        bool HasNotifications);
+
+    // Select data from multiple state slices
+    protected override DashboardViewModel Select(IRootState rootState)
+    {
+        var counterState = rootState.GetSliceState<CounterState>();
+        var moviesState = rootState.GetSliceState<MoviesState>();
+        var notificationsState = rootState.GetSliceState<NotificationsState>();
+
+        return new DashboardViewModel(
+            Count: counterState.Value,
+            MovieCount: moviesState.Movies.Count,
+            IsLoadingMovies: moviesState.IsLoading,
+            UnreadNotifications: notificationsState.Notifications.Count(n => !n.IsRead),
+            HasNotifications: notificationsState.Notifications.Any(n => !n.IsRead)
+        );
+    }
+
+    // Optional: Custom equality logic for better performance
+    protected override bool ShouldRender(DashboardViewModel? previous, DashboardViewModel current)
+    {
+        // Could implement custom logic here to ignore certain changes
+        // For example, only re-render if Count or MovieCount changed
+        return previous?.Count != current.Count ||
+               previous?.MovieCount != current.MovieCount ||
+               previous?.IsLoadingMovies != current.IsLoadingMovies ||
+               previous?.UnreadNotifications != current.UnreadNotifications;
+    }
+
+    private void IncrementCounter()
+    {
+        Dispatch(new Increment());
+    }
+
+    private void LoadMovies()
+    {
+        Dispatch(new LoadMovies());
+    }
+}

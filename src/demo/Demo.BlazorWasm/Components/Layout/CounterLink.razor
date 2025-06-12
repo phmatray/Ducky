@@ -4,23 +4,5 @@
   Href="counter"
   Match="NavLinkMatch.Prefix"
   Icon="@Icons.Material.Filled.Add">
-  Counter = @_counterValue
+  Counter = @State.Value
 </MudNavLink>
-
-@code {
-    private int _counterValue;
-
-    protected override void OnAfterSubscribed()
-    {
-        // Get the initial state safely
-        var rootState = Store.CurrentState;
-        _counterValue = rootState.GetSliceState<CounterState>().Value;
-    }
-
-    protected override void OnParametersSet()
-    {
-        // Update when state changes
-        var rootState = Store.CurrentState;
-        _counterValue = rootState.GetSliceState<CounterState>().Value;
-    }
-}
