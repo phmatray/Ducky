@@ -22,7 +22,7 @@ public class LoadMoviesFailureEffect(ISnackbar snackbar) : AsyncEffect<LoadMovie
 
         // Create and dispatch error notification
         ErrorNotification notification = new(action.ErrorMessage);
-        Dispatcher?.Dispatch(new AddNotification(notification));
+        Dispatcher.AddNotification(notification);
 
         return Task.CompletedTask;
     }

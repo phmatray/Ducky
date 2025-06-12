@@ -145,11 +145,11 @@ public class LoadMoviesEffect(IMoviesService moviesService) : AsyncEffect<LoadMo
 
             GetMoviesResponse response = await moviesService.GetMoviesAsync(currentPage, pageSize);
 
-            Dispatcher?.Dispatch(new LoadMoviesSuccess(response.Movies, response.TotalItems));
+            Dispatcher.LoadMoviesSuccess(response.Movies, response.TotalItems);
         }
         catch (Exception ex)
         {
-            Dispatcher?.Dispatch(new LoadMoviesFailure(ex.Message));
+            Dispatcher.LoadMoviesFailure(ex.Message);
         }
     }
 }

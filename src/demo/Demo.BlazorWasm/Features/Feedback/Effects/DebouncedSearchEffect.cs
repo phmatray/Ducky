@@ -52,7 +52,7 @@ public class DebouncedSearchEffect : AsyncEffect<SearchMovies>
                         || m.Director.Contains(action.Query, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-            Dispatcher?.Dispatch(new LoadMoviesSuccess(filteredMovies, filteredMovies.Count));
+            Dispatcher.LoadMoviesSuccess(filteredMovies, filteredMovies.Count);
         }
         catch (OperationCanceledException)
         {
@@ -62,7 +62,7 @@ public class DebouncedSearchEffect : AsyncEffect<SearchMovies>
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching movies");
-            Dispatcher?.Dispatch(new LoadMoviesFailure(ex.Message));
+            Dispatcher.LoadMoviesFailure(ex.Message);
         }
     }
 }

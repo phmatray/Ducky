@@ -21,12 +21,12 @@ public class RetryFailedOperationEffect(
             action.OriginalAction.GetType().Name);
 
         // Dispatch the original action again
-        Dispatcher?.Dispatch(action.OriginalAction);
+        Dispatcher.Dispatch(action.OriginalAction);
 
         // Add a notification about the retry
         InfoNotification notification = new(
             $"Retrying {action.OriginalAction.GetType().Name}...");
-        Dispatcher?.Dispatch(new AddNotification(notification));
+        Dispatcher.AddNotification(notification);
 
         return Task.CompletedTask;
     }
@@ -50,7 +50,7 @@ public class ReportErrorEffect(
         // For demo purposes, we'll just add a notification
         SuccessNotification notification = new(
             "Error report sent successfully. Thank you for your feedback!");
-        Dispatcher?.Dispatch(new AddNotification(notification));
+        Dispatcher.AddNotification(notification);
 
         return Task.CompletedTask;
     }

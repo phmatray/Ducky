@@ -9,16 +9,17 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
 {
     /// <inheritdoc />
     public object? LastAction
-        => Dispatcher?.LastAction;
+        => Dispatcher.LastAction;
 
     /// <summary>
     /// Gets the dispatcher.
     /// </summary>
-    public IDispatcher? Dispatcher { get; private set; }
+    public IDispatcher Dispatcher { get; private set; } = null!;
 
     /// <inheritdoc />
     public void SetDispatcher(IDispatcher dispatcher)
     {
+        ArgumentNullException.ThrowIfNull(dispatcher);
         Dispatcher = dispatcher;
     }
 

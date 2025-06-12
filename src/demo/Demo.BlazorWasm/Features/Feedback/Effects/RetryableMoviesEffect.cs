@@ -39,7 +39,7 @@ public sealed class RetryableMoviesEffect : AsyncEffect<LoadMovies>
 
             GetMoviesResponse response = await _moviesService.GetMoviesAsync(currentPage, pageSize);
 
-            Dispatcher?.Dispatch(new LoadMoviesSuccess(response.Movies, response.TotalItems));
+            Dispatcher.LoadMoviesSuccess(response.Movies, response.TotalItems);
         }
         catch (Exception ex)
         {

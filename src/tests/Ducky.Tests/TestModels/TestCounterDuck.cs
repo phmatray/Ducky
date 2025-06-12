@@ -47,7 +47,7 @@ public sealed class TestIncrementEffect : AsyncEffect<TestIncrementAction>
         }
 
         await Task.Delay(TimeSpan.FromSeconds(3));
-        Dispatcher?.Dispatch(new TestResetAction());
+        Dispatcher.Dispatch(new TestResetAction());
     }
 }
 

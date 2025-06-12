@@ -20,7 +20,7 @@ public class LoadMoviesSuccessEffect(ISnackbar snackbar) : AsyncEffect<LoadMovie
         snackbar.Add(snackBarMessage, Severity.Success);
 
         SuccessNotification notification = new(snackBarMessage);
-        Dispatcher?.Dispatch(new AddNotification(notification));
+        Dispatcher.AddNotification(notification);
 
         return Task.CompletedTask;
     }

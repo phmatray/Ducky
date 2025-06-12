@@ -22,6 +22,6 @@ public class OpenAboutDialogEffect(IDialogService dialog) : AsyncEffect<OpenAbou
         await dialog.ShowAsync<AboutDialog>(null, options);
 
         // Optionally dispatch a NoOp action to indicate completion
-        Dispatcher?.Dispatch(new NoOp());
+        Dispatcher.NoOp();
     }
 }

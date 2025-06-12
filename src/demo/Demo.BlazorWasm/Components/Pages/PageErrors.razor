@@ -111,11 +111,11 @@
   private void SimulateActionError()
   {
     // Dispatch an action that will fail
-    Dispatcher.Dispatch(new TestErrorAction());
+    Dispatcher.TestErrorAction();
   }
 
   private void ClearErrors()
   {
-    Dispatcher.Dispatch(new ClearErrorNotifications());
+    Dispatcher.ClearErrorNotifications();
   }
 }

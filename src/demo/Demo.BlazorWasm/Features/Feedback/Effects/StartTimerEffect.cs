@@ -40,12 +40,12 @@ public class StartTimerEffect : AsyncEffect<StartTimer>
                             // Check if timer is still running
                             if (timerState.IsRunning)
                             {
-                                Dispatcher?.Dispatch(new Tick());
+                                Dispatcher.Tick();
 
                                 // Check if timer reached zero (optional: auto-stop at zero)
                                 if (timerState.Time >= 60) // Stop at 60 seconds
                                 {
-                                    Dispatcher?.Dispatch(new StopTimer());
+                                    Dispatcher.StopTimer();
                                     break;
                                 }
                             }
