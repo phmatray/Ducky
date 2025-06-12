@@ -1,0 +1,4 @@
+[*.cs]
+# Disable RCS1046: Add suffix 'Async' to asynchronous method name
+# This is intentional for Observable extension methods which are not truly async
+dotnet_diagnostic.RCS1046.severity = none
