@@ -1,8 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Ducky.Pipeline;
-using Ducky.Reactive.Middlewares.ReactiveEffects;
 
-// ReSharper disable once CheckNamespace
 namespace Ducky.Reactive;
 
 /// <summary>

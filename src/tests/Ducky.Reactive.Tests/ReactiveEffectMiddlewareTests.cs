@@ -2,9 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using Ducky.Reactive.Middlewares.ReactiveEffects;
-using Microsoft.Extensions.Time.Testing;
-
 namespace Ducky.Reactive.Tests;
 
 public class ReactiveEffectMiddlewareTests
@@ -13,7 +10,6 @@ public class ReactiveEffectMiddlewareTests
     private readonly Mock<IDispatcher> _dispatcherMock;
     private readonly Mock<IStore> _storeMock;
     private readonly Mock<IRootState> _rootStateMock;
-    private readonly FakeTimeProvider _timeProvider;
 
     public ReactiveEffectMiddlewareTests()
     {
@@ -21,8 +17,7 @@ public class ReactiveEffectMiddlewareTests
         _dispatcherMock = new Mock<IDispatcher>();
         _storeMock = new Mock<IStore>();
         _rootStateMock = new Mock<IRootState>();
-        _timeProvider = new FakeTimeProvider();
-        
+
         _storeMock.Setup(s => s.CurrentState).Returns(_rootStateMock.Object);
     }
 
@@ -30,8 +25,7 @@ public class ReactiveEffectMiddlewareTests
     public async Task InitializeAsync_WithNoEffects_ShouldInitializeSuccessfully()
     {
         // Arrange
-        List<ReactiveEffect> effects = [];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock.Object);
 
         // Act
         await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
@@ -83,7 +77,8 @@ public class ReactiveEffectMiddlewareTests
         TestReactiveEffect effect = new();
         List<ReactiveEffect> effects = [effect];
         ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
-        object[] testActions = [
+        object[] testActions =
+        [
             new { Type = "ACTION_1" },
             new { Type = "ACTION_2" },
             new { Type = "ACTION_3" }
@@ -157,7 +152,7 @@ public class ReactiveEffectMiddlewareTests
         StateTrackingReactiveEffect effect = new();
         List<ReactiveEffect> effects = [effect];
         ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
-        
+
         Mock<IRootState> newStateMock = new();
         _storeMock.Setup(s => s.CurrentState).Returns(newStateMock.Object);
 
@@ -177,15 +172,14 @@ public class ReactiveEffectMiddlewareTests
     public void BeginInternalMiddlewareChange_ShouldReturnDisposable()
     {
         // Arrange
-        List<ReactiveEffect> effects = [];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock.Object);
 
         // Act
         IDisposable disposable = middleware.BeginInternalMiddlewareChange();
 
         // Assert
         disposable.ShouldNotBeNull();
-        
+
         // Should not throw when disposed
         Should.NotThrow(() => disposable.Dispose());
     }
@@ -199,10 +193,10 @@ public class ReactiveEffectMiddlewareTests
         public override IObservable<object> Handle(IObservable<object> actions, IObservable<IRootState> rootState)
         {
             WasHandleCalled = true;
-            
+
             // Track all received actions
             actions.Subscribe(action => ReceivedActions.Add(action));
-            
+
             return Observable.Empty<object>();
         }
     }

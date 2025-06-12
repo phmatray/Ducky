@@ -47,4 +47,28 @@ public static class DuckyServiceCollectionExtensions
         // Build and return
         return builder.Build();
     }
+
+    /// <summary>
+    /// Adds Ducky services with the builder pattern (alias for AddDucky).
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configure">Configuration action for the store builder.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <example>
+    /// <code>
+    /// services.AddDuckyStore(builder => builder
+    ///     .UseDefaultMiddlewares()
+    ///     .AddSlice&lt;MyState&gt;()
+    ///     .AddEffect&lt;MyEffect&gt;());
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddDuckyStore(
+        this IServiceCollection services,
+        Action<DuckyBuilder> configure)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        return services.AddDucky(configure);
+    }
 }

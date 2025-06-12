@@ -94,7 +94,7 @@ public class StateActionPairTests
         // Arrange
         TestState state = new("state", 42);
         TestAction action = new("action");
-        
+
         StateActionPair<TestState, TestAction> pair1 = new(state, action);
         StateActionPair<TestState, TestAction> pair2 = new(state, action);
 
@@ -149,14 +149,15 @@ public class StateActionPairTests
 
     // Test helper types
     private record TestState(string Name, int Value);
+
     private record TestAction(string Type);
-    
+
     private record ComplexState
     {
         public required List<string> Items { get; init; }
         public required Dictionary<string, object> Metadata { get; init; }
     }
-    
+
     private record ComplexAction
     {
         public required object Payload { get; init; }
