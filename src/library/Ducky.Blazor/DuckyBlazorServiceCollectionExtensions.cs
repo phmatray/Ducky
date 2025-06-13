@@ -145,7 +145,7 @@ public class BlazorDuckyBuilder
         if (!_persistenceEnabled)
         {
             _persistenceEnabled = true;
-            _innerBuilder.AddMiddleware<PersistenceMiddleware>();
+            _innerBuilder.AddMiddleware<SimplePersistenceMiddleware>();
 
             _services.AddSingleton<PersistenceOptions>(_ =>
             {
@@ -156,10 +156,6 @@ public class BlazorDuckyBuilder
 
             // Add Blazored.LocalStorage services
             _services.AddBlazoredLocalStorage();
-
-            _services.AddScoped(typeof(IPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
-            _services.AddScoped(typeof(IEnhancedPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
-            _services.AddScoped<HydrationManager>();
         }
 
         return this;

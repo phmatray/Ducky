@@ -47,7 +47,9 @@ services.AddDuckyBlazor(ducky => ducky
     // Enable persistence to local storage
     .EnablePersistence(options =>
     {
-        options.AutoHydrate = false; // Disable auto-hydration for Blazor WebAssembly
+        options.AutoHydrate = false; // Manual hydration for Blazor WebAssembly
+        options.EnableLogging = true; // Enable logging to see what's happening
+        options.DebounceDelayMs = 1000; // Debounce saves by 1 second
     })
 );
 

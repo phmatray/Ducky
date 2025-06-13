@@ -2,6 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Ducky.Blazor.Middlewares.Persistence;
 using Ducky.Middlewares.AsyncEffect;
 
 namespace Demo.BlazorWasm.AppStore;
@@ -38,6 +39,7 @@ public record CounterReducers : SliceReducers<CounterState>
         On<Decrement>(Reduce);
         On<Reset>(GetInitialState);
         On<SetValue>(Reduce);
+        On<HydrateSliceAction>(HandleHydration);
     }
 
     public override CounterState GetInitialState()
@@ -51,6 +53,30 @@ public record CounterReducers : SliceReducers<CounterState>
 
     private static CounterState Reduce(CounterState _, SetValue action)
         => new(action.Value);
+
+    private CounterState HandleHydration(CounterState state, HydrateSliceAction action)
+    {
+        // Check if this hydration is for our slice
+        if (action.SliceKey != GetKey())
+            return state;
+
+        // Deserialize the state
+        if (action.State is System.Text.Json.JsonElement jsonElement)
+        {
+            try
+            {
+                var hydratedState = jsonElement.Deserialize<CounterState>();
+                return hydratedState ?? state;
+            }
+            catch
+            {
+                // If deserialization fails, return current state
+                return state;
+            }
+        }
+
+        return state;
+    }
 }
 
 #endregion

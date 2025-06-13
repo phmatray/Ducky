@@ -9,8 +9,8 @@
     {
         if (firstRender)
         {
-            // Try to get PersistenceMiddleware from DI container
-            var persistenceMiddleware = ServiceProvider.GetService<PersistenceMiddleware>();
+            // Try to get SimplePersistenceMiddleware from DI container
+            var persistenceMiddleware = ServiceProvider.GetService<SimplePersistenceMiddleware>();
             
             if (persistenceMiddleware != null)
             {
