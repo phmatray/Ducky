@@ -95,7 +95,7 @@ public class ComponentSourceGenerator : SourceGeneratorBase
         foreach (ClassDeclarationSyntax classSyntax in classes)
         {
             SemanticModel semanticModel = compilation.GetSemanticModel(classSyntax.SyntaxTree);
-            if (semanticModel.GetDeclaredSymbol(classSyntax) is not INamedTypeSymbol classSymbol)
+            if (semanticModel.GetDeclaredSymbol(classSyntax) is not { } classSymbol)
             {
                 continue;
             }

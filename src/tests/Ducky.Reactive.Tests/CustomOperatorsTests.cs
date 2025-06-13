@@ -117,7 +117,7 @@ public class CustomOperatorsTests
         // Act
         source
             .Select(x => x.Length > 5 ? x : throw new InvalidOperationException("Too short"))
-            .CatchAction(ex => "Error handled")
+            .CatchAction(_ => "Error handled")
             .Subscribe(results.Add);
 
         source.OnNext("hello world");
@@ -142,7 +142,7 @@ public class CustomOperatorsTests
             .InvokeService(
                 action => ValueTask.FromResult($"Result: {action.Message}"),
                 result => new { Type = "SUCCESS", Result = result },
-                error => new { Type = "ERROR", Message = error.Message })
+                error => new { Type = "ERROR", error.Message })
             .Subscribe(results.Add);
 
         source.OnNext(new TestAction("test"));
@@ -169,7 +169,7 @@ public class CustomOperatorsTests
             .InvokeService(
                 action => ValueTask.FromException<string>(new InvalidOperationException("Service failed")),
                 result => new { Type = "SUCCESS", Result = result },
-                error => new { Type = "ERROR", Message = error.Message })
+                error => new { Type = "ERROR", error.Message })
             .Subscribe(results.Add);
 
         source.OnNext(new TestAction("test"));

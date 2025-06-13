@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Options;
 
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 /// <summary>
 /// Base class for Roslyn-based generators.

@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 /// <summary>
 /// Generates strongly-typed component base classes for specific state slices.

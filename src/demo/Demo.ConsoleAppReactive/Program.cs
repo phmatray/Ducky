@@ -9,7 +9,7 @@ using Demo.ConsoleAppReactive.Services;
 // Configure services for Ducky.Reactive demo
 ServiceCollection services = [];
 
-services.AddLogging(builder => 
+services.AddLogging(builder =>
     builder.AddConsole()
         .SetMinimumLevel(LogLevel.Warning)
         .AddFilter("Ducky", LogLevel.None)
@@ -63,7 +63,6 @@ string choice = "Weather Polling Effect - Start real-time weather updates";
 // Interactive demo loop would go here, but we're testing directly
 if (true)
 {
-
     switch (choice)
     {
         case "Weather Polling Effect - Start real-time weather updates":
@@ -125,7 +124,7 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
 
     // Initialize weather state
     dispatcher.Dispatch(new StartWeatherPolling("New York"));
-    
+
     // Debug: Check if weather state is available
     try
     {
@@ -139,22 +138,22 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
         // Add some debugging to see what slices are available
         return;
     }
-    
+
     var weatherService = serviceProvider.GetRequiredService<IWeatherService>();
     var cancellationTokenSource = new CancellationTokenSource();
-    
+
     // Do an initial fetch immediately
     try
     {
         AnsiConsole.MarkupLine("[yellow]Dispatching WeatherLoading...[/]");
         dispatcher.Dispatch(new WeatherLoading());
-        
+
         AnsiConsole.MarkupLine("[yellow]Calling weather service...[/]");
         var (temperature, condition) = await weatherService.GetWeatherAsync("New York");
-        
+
         AnsiConsole.MarkupLine($"[yellow]Dispatching WeatherLoaded: {temperature}°C, {condition}[/]");
         dispatcher.Dispatch(new WeatherLoaded("New York", temperature, condition));
-        
+
         AnsiConsole.MarkupLine("[yellow]Weather loaded successfully![/]");
     }
     catch (Exception ex)
@@ -162,7 +161,7 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
         AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]");
         dispatcher.Dispatch(new WeatherError(ex.Message));
     }
-    
+
     // Start background polling task for subsequent updates
     var pollingTask = Task.Run(async () =>
     {
@@ -170,13 +169,13 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
         {
             // Wait initial delay before first poll
             await Task.Delay(3000, cancellationTokenSource.Token);
-            
+
             while (!cancellationTokenSource.Token.IsCancellationRequested)
             {
                 try
                 {
                     dispatcher.Dispatch(new WeatherLoading());
-                    
+
                     var (temperature, condition) = await weatherService.GetWeatherAsync("New York");
                     dispatcher.Dispatch(new WeatherLoaded("New York", temperature, condition));
                 }
@@ -184,7 +183,7 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
                 {
                     dispatcher.Dispatch(new WeatherError(ex.Message));
                 }
-                
+
                 await Task.Delay(3000, cancellationTokenSource.Token);
             }
         }
@@ -193,7 +192,7 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
             // Expected when cancelled
         }
     });
-    
+
     // Show live updates for 20 seconds (to see multiple polling cycles)
     Panel weatherPanel = new("Initializing weather polling...")
     {
@@ -208,7 +207,7 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
         for (int i = 0; i < 40; i++) // 40 * 500ms = 20 seconds
         {
             WeatherState state = store.CurrentState.GetSliceState<WeatherState>();
-            
+
             if (state.IsLoading)
             {
                 weatherPanel = new Panel(new Markup("[yellow]Fetching weather data...[/]"))
@@ -250,11 +249,11 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
                     BorderStyle = Style.Parse("cyan")
                 };
             }
-            
+
             ctx.Refresh();
             await Task.Delay(500).ConfigureAwait(false); // More frequent updates
-            }
-        }).ConfigureAwait(false);
+        }
+    }).ConfigureAwait(false);
 #pragma warning restore RCS0054 // Fix formatting of a call chain
 
     // Stop polling
@@ -267,6 +266,7 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
     {
         // Expected
     }
+
     AnsiConsole.MarkupLine("[green]Weather polling stopped.[/]");
 }
 

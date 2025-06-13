@@ -303,7 +303,6 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
                 JsonValueKind.Number => "int",
                 JsonValueKind.True or JsonValueKind.False => "bool",
                 JsonValueKind.Array => "ImmutableList<object>",
-                JsonValueKind.Object => "object",
                 _ => "object"
             },
             string => "string",

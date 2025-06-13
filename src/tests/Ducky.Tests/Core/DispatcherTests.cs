@@ -18,7 +18,7 @@ public sealed class DispatcherTests : IDisposable
         // Arrange
         TestActionWithParameter action = new("Test");
         object? dispatchedAction = null;
-        _sut.ActionDispatched += (sender, args) => dispatchedAction = args.Action;
+        _sut.ActionDispatched += (_, args) => dispatchedAction = args.Action;
 
         // Act
         _sut.Dispatch(action);
@@ -32,7 +32,7 @@ public sealed class DispatcherTests : IDisposable
     {
         // Arrange
         List<object> emittedActions = [];
-        _sut.ActionDispatched += (sender, args) => emittedActions.Add(args.Action);
+        _sut.ActionDispatched += (_, args) => emittedActions.Add(args.Action);
 
         // Act
         _sut.Dispatch(_action1);
@@ -62,7 +62,7 @@ public sealed class DispatcherTests : IDisposable
         // Verifies that actions dispatched concurrently are still emitted in the order they were enqueued.
         // Arrange
         List<object> emittedActions = [];
-        _sut.ActionDispatched += (sender, args) => emittedActions.Add(args.Action);
+        _sut.ActionDispatched += (_, args) => emittedActions.Add(args.Action);
 
         // Act
         Parallel.Invoke(
@@ -84,7 +84,7 @@ public sealed class DispatcherTests : IDisposable
         // Tests that unsubscribing from the ActionDispatched event stops receiving further actions.
         // Arrange
         List<object> emittedActions = [];
-        EventHandler<ActionDispatchedEventArgs> handler = (sender, args) => emittedActions.Add(args.Action);
+        EventHandler<ActionDispatchedEventArgs> handler = (_, args) => emittedActions.Add(args.Action);
         _sut.ActionDispatched += handler;
 
         // Act
@@ -115,7 +115,7 @@ public sealed class DispatcherTests : IDisposable
         // ensuring proper resource cleanup.
         // Arrange
         var eventFired = false;
-        _sut.ActionDispatched += (sender, args) => eventFired = true;
+        _sut.ActionDispatched += (_, _) => eventFired = true;
 
         // Act
         _sut.Dispose();

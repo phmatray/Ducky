@@ -1,4 +1,4 @@
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 public class ActionCreatorGeneratorOptions
 {

@@ -1,5 +1,5 @@
 @page "/generator/profiling"
-@using Ducky.CodeGen.Core
+@using Ducky.Generator.Core
 @inject ProfilingGenerator Generator
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
@@ -37,7 +37,7 @@
                 <MudForm @ref="_form" @bind-IsValid="@_isValid">
                     <MudStack Spacing="3">
                         <!-- Placeholder Configuration -->
-                        <MudTextField @bind-Value="_namespace" 
+                        <MudTextField @bind-Value="@_namespace" 
                                       Label="Namespace" 
                                       Variant="Variant.Outlined"
                                       HelperText="The C# namespace for generated profiling code"
@@ -162,7 +162,7 @@ services.AddDuckyStore(builder =>
     {
         if (!string.IsNullOrEmpty(_generatedCode))
         {
-            var fileName = "ProfilingCode.cs";
+            const string fileName = "ProfilingCode.cs";
             await JS.InvokeVoidAsync("downloadFile", fileName, _generatedCode);
             Snackbar.Add($"Downloaded {fileName}", Severity.Success);
         }

@@ -43,6 +43,12 @@ services.AddDuckyBlazor(ducky => ducky
         options.ExcludedActionTypes = ["Tick"]; // Exclude noisy timer ticks
         options.MaxAge = 100; // Keep more history for demo
     })
+    
+    // Enable persistence to local storage
+    .EnablePersistence(options =>
+    {
+        options.AutoHydrate = false; // Disable auto-hydration for Blazor WebAssembly
+    })
 );
 
 await builder.Build().RunAsync();

@@ -32,7 +32,6 @@ public class MissingMiddlewareException : InvalidOperationException
     /// Initializes a new instance of the MissingMiddlewareException class.
     /// </summary>
     public MissingMiddlewareException()
-        : base()
     {
         EffectType = typeof(object);
         RequiredMiddlewareType = typeof(object);

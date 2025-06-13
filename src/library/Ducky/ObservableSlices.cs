@@ -50,7 +50,7 @@ public sealed class ObservableSlices : IDisposable
         _slices[slice.GetKey()] = slice;
 
         // Create handler for slice updates
-        EventHandler handler = (sender, e) => UpdateRootState();
+        EventHandler handler = (_, _) => UpdateRootState();
         _sliceUpdateHandlers.Add(handler);
         slice.StateUpdated += handler;
         

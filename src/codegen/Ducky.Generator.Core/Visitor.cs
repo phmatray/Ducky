@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxKind;
 
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 // === Model Interfaces ===
 public interface ICodeElement

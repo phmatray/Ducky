@@ -3,11 +3,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Ducky.Builder;
 using Ducky.Reactive.Patterns;
-using System.Reactive.Linq;
 using Ducky.Reactive.Monitoring;
-using Ducky.Reactive.Middlewares.ReactiveEffects;
 
 namespace Ducky.Reactive.Tests;
 

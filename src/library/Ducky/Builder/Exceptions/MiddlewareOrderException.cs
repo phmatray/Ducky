@@ -24,7 +24,6 @@ public class MiddlewareOrderException : InvalidOperationException
     /// Initializes a new instance of the MiddlewareOrderException class.
     /// </summary>
     public MiddlewareOrderException()
-        : base()
     {
         Violations = new List<MiddlewareOrderViolation>();
     }

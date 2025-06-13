@@ -325,10 +325,10 @@
             stateDefinition);
 
         // Add common CRUD actions
-        await AppStoreService.AddActionAsync(slice.Id, "AddTodo", "Add a new todo item", "{ Id: int, Title: string }", false);
-        await AppStoreService.AddActionAsync(slice.Id, "ToggleTodo", "Toggle todo completion", "{ Id: int }", false);
-        await AppStoreService.AddActionAsync(slice.Id, "DeleteTodo", "Delete a todo item", "{ Id: int }", false);
-        await AppStoreService.AddActionAsync(slice.Id, "SetFilter", "Change the todo filter", "{ Filter: TodoFilter }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "AddTodo", "Add a new todo item", "{ Id: int, Title: string }");
+        await AppStoreService.AddActionAsync(slice.Id, "ToggleTodo", "Toggle todo completion", "{ Id: int }");
+        await AppStoreService.AddActionAsync(slice.Id, "DeleteTodo", "Delete a todo item", "{ Id: int }");
+        await AppStoreService.AddActionAsync(slice.Id, "SetFilter", "Change the todo filter", "{ Filter: TodoFilter }");
         await AppStoreService.AddActionAsync(slice.Id, "LoadTodos", "Load todos from API", "{}", true);
         
         // Add API effect
@@ -350,8 +350,8 @@
             appStore.Id, "Products", "Product catalog management", productsState);
 
         await AppStoreService.AddActionAsync(productsSlice.Id, "LoadProducts", "Load products from API", "{}", true);
-        await AppStoreService.AddActionAsync(productsSlice.Id, "SearchProducts", "Search products", "{ Query: string }", false);
-        await AppStoreService.AddActionAsync(productsSlice.Id, "FilterByCategory", "Filter by category", "{ CategoryId: int }", false);
+        await AppStoreService.AddActionAsync(productsSlice.Id, "SearchProducts", "Search products", "{ Query: string }");
+        await AppStoreService.AddActionAsync(productsSlice.Id, "FilterByCategory", "Filter by category", "{ CategoryId: int }");
 
         // Cart slice
         var cartState = new Dictionary<string, object>
@@ -364,9 +364,9 @@
         var cartSlice = await AppStoreService.AddStateSliceAsync(
             appStore.Id, "Cart", "Shopping cart management", cartState);
 
-        await AppStoreService.AddActionAsync(cartSlice.Id, "AddToCart", "Add item to cart", "{ ProductId: int, Quantity: int }", false);
-        await AppStoreService.AddActionAsync(cartSlice.Id, "RemoveFromCart", "Remove item from cart", "{ ProductId: int }", false);
-        await AppStoreService.AddActionAsync(cartSlice.Id, "UpdateQuantity", "Update item quantity", "{ ProductId: int, Quantity: int }", false);
+        await AppStoreService.AddActionAsync(cartSlice.Id, "AddToCart", "Add item to cart", "{ ProductId: int, Quantity: int }");
+        await AppStoreService.AddActionAsync(cartSlice.Id, "RemoveFromCart", "Remove item from cart", "{ ProductId: int }");
+        await AppStoreService.AddActionAsync(cartSlice.Id, "UpdateQuantity", "Update item quantity", "{ ProductId: int, Quantity: int }");
         await AppStoreService.AddActionAsync(cartSlice.Id, "Checkout", "Start checkout process", "{}", true);
     }
 
@@ -384,7 +384,7 @@
             appStore.Id, "Analytics", "Dashboard analytics data", analyticsState);
 
         await AppStoreService.AddActionAsync(analyticsSlice.Id, "LoadMetrics", "Load dashboard metrics", "{}", true);
-        await AppStoreService.AddActionAsync(analyticsSlice.Id, "SetDateRange", "Set date range", "{ DateRange: DateRange }", false);
+        await AppStoreService.AddActionAsync(analyticsSlice.Id, "SetDateRange", "Set date range", "{ DateRange: DateRange }");
         await AppStoreService.AddActionAsync(analyticsSlice.Id, "RefreshData", "Refresh all dashboard data", "{}", true);
         
         await AppStoreService.AddEffectAsync(analyticsSlice.Id, "AnalyticsEffect", "Handles analytics data loading", "AsyncEffect", new List<string> { "LoadMetrics", "RefreshData" });

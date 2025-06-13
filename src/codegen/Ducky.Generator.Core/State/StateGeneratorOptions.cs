@@ -1,9 +1,9 @@
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 public class StateGeneratorOptions
 {
     public string Namespace { get; set; } = "Ducky.States";
-    
+
     public List<StateDescriptor> States { get; set; } = new()
     {
         new StateDescriptor

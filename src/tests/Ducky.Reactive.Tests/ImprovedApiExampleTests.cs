@@ -3,14 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Ducky.Reactive.Patterns;
 using Ducky.Reactive.Testing;
-using Ducky.Reactive.Middlewares.ReactiveEffects;
 using System.Collections.Immutable;
-using System.Reactive;
-using System.Reactive.Linq;
-using Microsoft.Reactive.Testing;
 
 namespace Ducky.Reactive.Tests;
 
@@ -108,7 +103,7 @@ public class ImprovedApiExampleTests
     public void Example3_EnhancedBaseClasses()
     {
         // Arrange & Act
-        var scheduler = new Microsoft.Reactive.Testing.TestScheduler();
+        var scheduler = new TestScheduler();
         var effect = new TypedStateEffect();
 
         TestScenarioResult result = ReactiveEffectTestHelper.CreateScenario(scheduler)

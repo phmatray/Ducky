@@ -59,7 +59,7 @@ public class CorrelationIdMiddlewareTests
         TestAction action = new();
 
         CorrelationIdAssignedEvent? publishedEvent = null;
-        eventPublisher.EventPublished += (sender, args) =>
+        eventPublisher.EventPublished += (_, args) =>
         {
             if (args is not CorrelationIdAssignedEvent evt)
             {
@@ -87,7 +87,7 @@ public class CorrelationIdMiddlewareTests
         TestAction action = new();
 
         List<Guid> correlationIds = [];
-        eventPublisher.EventPublished += (sender, args) =>
+        eventPublisher.EventPublished += (_, args) =>
         {
             if (args is not CorrelationIdAssignedEvent evt)
             {
@@ -117,7 +117,7 @@ public class CorrelationIdMiddlewareTests
         TestAction action = new();
 
         int eventCount = 0;
-        eventPublisher.EventPublished += (sender, args) => eventCount++;
+        eventPublisher.EventPublished += (_, _) => eventCount++;
 
         // Act
         middleware.AfterReduce(action);

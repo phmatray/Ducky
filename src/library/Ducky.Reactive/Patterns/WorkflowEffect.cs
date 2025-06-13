@@ -2,8 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace Ducky.Reactive.Patterns;
 
 /// <summary>
@@ -78,7 +76,9 @@ public abstract class WorkflowEffect<TStartAction> : ReactiveEffectBase
     /// <returns>An observable of actions from all branches.</returns>
     protected IObservable<object> Parallel(params Func<IObservable<object>>[] branches)
     {
-        return Observable.Merge(branches.Select(branch => branch()));
+        return branches
+            .Select(branch => branch())
+            .Merge();
     }
 
     /// <summary>

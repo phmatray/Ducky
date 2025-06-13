@@ -39,7 +39,7 @@ public class DemoErrorHandler : IReactiveEffectErrorHandler
             }
         }
 
-        if (error is ArgumentException || error is InvalidOperationException)
+        if (error is ArgumentException or InvalidOperationException)
         {
             // Don't retry on logical errors
             return Task.FromResult(ErrorHandlingResult.Continue());

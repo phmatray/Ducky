@@ -14,8 +14,8 @@ public sealed class DevToolsMiddleware : MiddlewareBase
     private readonly object _syncRoot = new();
     private IStore? _store;
     private Task _tailTask = Task.CompletedTask;
-    private int _sequenceNumberOfCurrentState = 0;
-    private int _sequenceNumberOfLatestState = 0;
+    private int _sequenceNumberOfCurrentState;
+    private int _sequenceNumberOfLatestState;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DevToolsMiddleware"/> class.

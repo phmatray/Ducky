@@ -184,7 +184,7 @@ public static class ExampleReactiveEffects
                         .Select(_ => (object)new LongRunningTaskCancelled())
                         .Take(1);
 
-                    return Observable.Merge(progress, cancelled);
+                    return progress.Merge(cancelled);
                 });
         }
     }

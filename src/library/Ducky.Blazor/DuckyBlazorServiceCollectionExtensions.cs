@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using Ducky.Blazor.CrossTabSync;
 using Ducky.Blazor.Middlewares.DevTools;
 using Ducky.Blazor.Middlewares.JsLogging;
@@ -153,7 +154,11 @@ public class BlazorDuckyBuilder
                 return options;
             });
 
+            // Add Blazored.LocalStorage services
+            _services.AddBlazoredLocalStorage();
+
             _services.AddScoped(typeof(IPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
+            _services.AddScoped(typeof(IEnhancedPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
             _services.AddScoped<HydrationManager>();
         }
 

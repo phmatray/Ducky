@@ -24,7 +24,6 @@ public class CircularDependencyException : InvalidOperationException
     /// Initializes a new instance of the CircularDependencyException class.
     /// </summary>
     public CircularDependencyException()
-        : base()
     {
         DependencyChain = new List<Type>();
     }

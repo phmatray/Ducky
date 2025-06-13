@@ -1,4 +1,4 @@
-﻿using Ducky.CodeGen.Core;
+﻿using Ducky.Generator.Core;
 using Spectre.Console;
 
 namespace Ducky.Generator.Cli;

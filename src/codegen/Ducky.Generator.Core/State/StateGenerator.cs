@@ -1,4 +1,4 @@
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 /// <summary>
 /// Generates immutable state record classes for Ducky state management.

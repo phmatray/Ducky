@@ -1,4 +1,4 @@
-using Ducky.CodeGen.Core;
+using Ducky.Generator.Core;
 using Ducky.Generator.WebApp.Components;
 using Ducky.Generator.WebApp.Data;
 using Ducky.Generator.WebApp.Services;

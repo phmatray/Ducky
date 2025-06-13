@@ -1,4 +1,3 @@
-using Ducky.Reactive;
 using Demo.ConsoleAppReactive.Services;
 
 namespace Demo.ConsoleAppReactive.Effects;

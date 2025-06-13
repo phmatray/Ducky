@@ -160,7 +160,7 @@ public sealed class SliceReducersTests : IDisposable
     {
         // Arrange
         var stateUpdatedEmitted = false;
-        _sut.StateUpdated += (sender, args) => stateUpdatedEmitted = true;
+        _sut.StateUpdated += (_, _) => stateUpdatedEmitted = true;
 
         // Act
         _sut.OnDispatch(new TestIncrementAction());

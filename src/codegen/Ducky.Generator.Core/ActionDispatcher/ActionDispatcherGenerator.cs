@@ -1,4 +1,4 @@
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 /// <summary>
 /// Generates ActionDispatcher extension methods for dispatching actions directly on IDispatcher instances.

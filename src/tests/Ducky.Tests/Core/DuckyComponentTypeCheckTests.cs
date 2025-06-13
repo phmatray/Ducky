@@ -16,13 +16,10 @@ public class DuckyComponentTypeCheckTests
         // Test 1: Verify RootState implements IRootState
         typeof(RootState).GetInterfaces().ShouldContain(typeof(IRootState));
 
-        // Test 2: Verify typeof(RootState) == typeof(RootState)
-        (typeof(RootState) == typeof(RootState)).ShouldBeTrue();
-
-        // Test 3: Verify typeof(RootState) != typeof(IRootState)
+        // Test 2: Verify typeof(RootState) != typeof(IRootState)
         (typeof(RootState) == typeof(IRootState)).ShouldBeFalse();
 
-        // Test 4: Simulate the type check in DuckyComponent.UpdateCurrentState()
+        // Test 3: Simulate the type check in DuckyComponent.UpdateCurrentState()
         Type tState = typeof(RootState);
         bool shouldUseRootState = tState == typeof(IRootState) || tState == typeof(RootState);
         shouldUseRootState.ShouldBeTrue();

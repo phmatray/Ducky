@@ -1,4 +1,4 @@
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 /// <summary>
 /// Generates effect classes for handling side effects in Ducky applications.

@@ -1,7 +1,4 @@
 using Ducky.Middlewares.AsyncEffect;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Shouldly;
 
 namespace Ducky.Tests.Middlewares;
 

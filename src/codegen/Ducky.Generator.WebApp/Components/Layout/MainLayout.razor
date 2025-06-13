@@ -1,5 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@inject NavigationManager Navigation
 
 <MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -45,11 +44,11 @@
 
 @code {
     private bool _drawerOpen = true;
-    private bool _isDarkMode = false;
+    private bool _isDarkMode;
     
     private MudTheme _theme = new()
     {
-        PaletteLight = new PaletteLight()
+        PaletteLight = new PaletteLight
         {
             Primary = Colors.Blue.Default,
             Secondary = Colors.Teal.Default,

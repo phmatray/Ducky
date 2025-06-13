@@ -1,5 +1,5 @@
 @page "/generator/state"
-@using Ducky.CodeGen.Core
+@using Ducky.Generator.Core
 @inject StateGenerator Generator
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
@@ -24,7 +24,7 @@
                 
                 <MudDivider Class="my-4" />
                 
-                <MudForm @ref="_form" @bind-IsValid="@_isValid">
+                <MudForm @ref="@_form" @bind-IsValid="@_isValid">
                     <MudStack Spacing="3">
                         <!-- Basic Configuration -->
                         <MudTextField @bind-Value="_options.Namespace" 

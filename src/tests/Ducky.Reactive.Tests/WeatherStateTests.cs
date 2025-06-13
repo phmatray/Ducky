@@ -1,7 +1,6 @@
 #pragma warning disable RCS1264 // Use explicit type instead of 'var'
 
 using Demo.ConsoleAppReactive.States;
-using Ducky;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

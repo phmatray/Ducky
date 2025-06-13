@@ -1,6 +1,5 @@
 @using Ducky.Generator.WebApp.Models
 @using Ducky.Generator.WebApp.Services
-@using System.Text.Json
 @inject IAppStoreService AppStoreService
 @inject ISnackbar Snackbar
 
@@ -597,10 +596,10 @@
             stateDefinition);
 
         // Add actions
-        await AppStoreService.AddActionAsync(slice.Id, "AddTodo", "Add a new todo item", "{ Id: int, Title: string }", false);
-        await AppStoreService.AddActionAsync(slice.Id, "ToggleTodo", "Toggle todo completion", "{ Id: int }", false);
-        await AppStoreService.AddActionAsync(slice.Id, "DeleteTodo", "Delete a todo item", "{ Id: int }", false);
-        await AppStoreService.AddActionAsync(slice.Id, "SetFilter", "Change the todo filter", "{ Filter: TodoFilter }", false);
+        await AppStoreService.AddActionAsync(slice.Id, "AddTodo", "Add a new todo item", "{ Id: int, Title: string }");
+        await AppStoreService.AddActionAsync(slice.Id, "ToggleTodo", "Toggle todo completion", "{ Id: int }");
+        await AppStoreService.AddActionAsync(slice.Id, "DeleteTodo", "Delete a todo item", "{ Id: int }");
+        await AppStoreService.AddActionAsync(slice.Id, "SetFilter", "Change the todo filter", "{ Filter: TodoFilter }");
         await AppStoreService.AddActionAsync(slice.Id, "LoadTodos", "Load todos from API", "{}", true);
         
         // Add effects

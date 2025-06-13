@@ -49,7 +49,7 @@ public sealed class ReactiveEffectsBuilder
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        _services.AddScoped<TEffect>(factory);
+        _services.AddScoped(factory);
         _services.AddScoped<ReactiveEffect>(sp => sp.GetRequiredService<TEffect>());
         return this;
     }
@@ -133,7 +133,7 @@ public sealed class ReactiveEffectsBuilder
     {
         ArgumentNullException.ThrowIfNull(configure);
 
-        _services.Configure<ReactiveEffectOptions>(configure);
+        _services.Configure(configure);
         return this;
     }
 

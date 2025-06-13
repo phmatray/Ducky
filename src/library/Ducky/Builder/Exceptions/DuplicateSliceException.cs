@@ -45,7 +45,6 @@ public class Combined{sliceType.Name}Slice : SliceReducers<{sliceType.Name}>
     /// Initializes a new instance of the DuplicateSliceException class.
     /// </summary>
     public DuplicateSliceException()
-        : base()
     {
         SliceType = typeof(object);
     }

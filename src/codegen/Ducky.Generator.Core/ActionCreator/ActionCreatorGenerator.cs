@@ -1,4 +1,4 @@
-namespace Ducky.CodeGen.Core;
+namespace Ducky.Generator.Core;
 
 /// <summary>
 /// Encapsulates the logic to generate ActionCreator classes using the visitor pattern.

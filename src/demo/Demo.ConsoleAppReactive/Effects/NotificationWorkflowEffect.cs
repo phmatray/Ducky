@@ -20,29 +20,28 @@ public class NotificationWorkflowEffect : WorkflowEffect<StartNotificationWorkfl
     {
         Guid notificationId = Guid.NewGuid();
 
-        return Observable.Concat<object>(
-            // Step 1: Create notification
-            StepAsync(
-                "Create notification",
-                () =>
-                {
-                    _dispatcher.Dispatch(new NotificationCreated(
-                        notificationId,
-                        startAction.Title,
-                        startAction.Message,
-                        startAction.Type));
-                    return new object();
-                }),
-
-            // Step 2: Process notification  
-            StepAsync(
-                "Process notification",
-                async () =>
-                {
-                    await Task.Delay(500).ConfigureAwait(false); // Simulate processing
-                    return (object)new NotificationProcessed(notificationId);
-                })
-        );
+        return StepAsync(
+            "Create notification",
+            () =>
+            {
+                _dispatcher.Dispatch(new NotificationCreated(
+                    notificationId,
+                    startAction.Title,
+                    startAction.Message,
+                    startAction.Type));
+                return new object();
+            })
+            .Concat(
+                // Step 1: Create notification
+                // Step 2: Process notification  
+                StepAsync(
+                    "Process notification",
+                    async () =>
+                    {
+                        await Task.Delay(500).ConfigureAwait(false); // Simulate processing
+                        return (object)new NotificationProcessed(notificationId);
+                    })
+                );
     }
 
     private IObservable<T> StepAsync<T>(string name, Func<T> action)
