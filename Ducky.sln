@@ -48,6 +48,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ducky reactive", "ducky rea
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ducky.Reactive.Tests", "src\tests\Ducky.Reactive.Tests\Ducky.Reactive.Tests.csproj", "{435CDE54-0EC5-4A5F-B178-5D84D16AE5CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.ConsoleAppReactive", "src\demo\Demo.ConsoleAppReactive\Demo.ConsoleAppReactive.csproj", "{EACE9076-8E4E-4248-AEE0-4660E89C0D45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -248,6 +250,18 @@ Global
 		{435CDE54-0EC5-4A5F-B178-5D84D16AE5CC}.Release|x64.Build.0 = Release|Any CPU
 		{435CDE54-0EC5-4A5F-B178-5D84D16AE5CC}.Release|x86.ActiveCfg = Release|Any CPU
 		{435CDE54-0EC5-4A5F-B178-5D84D16AE5CC}.Release|x86.Build.0 = Release|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Debug|x64.Build.0 = Debug|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Debug|x86.Build.0 = Debug|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Release|x64.ActiveCfg = Release|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Release|x64.Build.0 = Release|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Release|x86.ActiveCfg = Release|Any CPU
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -275,5 +289,6 @@ Global
 		{A80BA424-7CE3-412F-AD41-4830C0C900BF} = {FF46F5B6-15DB-4167-B156-BC4F2575D176}
 		{A9C79AD5-D0F9-488E-BF28-D83093C05E3C} = {A80BA424-7CE3-412F-AD41-4830C0C900BF}
 		{435CDE54-0EC5-4A5F-B178-5D84D16AE5CC} = {A80BA424-7CE3-412F-AD41-4830C0C900BF}
+		{EACE9076-8E4E-4248-AEE0-4660E89C0D45} = {37F515BB-17BC-42A3-B888-8EEBD6AEB54E}
 	EndGlobalSection
 EndGlobal

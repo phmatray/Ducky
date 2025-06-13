@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\library\Ducky.Reactive\Ducky.Reactive.csproj" />
+    <ProjectReference Include="..\..\demo\Demo.ConsoleAppReactive\Demo.ConsoleAppReactive.csproj" />
   </ItemGroup>
 
 </Project>
