@@ -22,7 +22,7 @@ public class DuckyStoreTests
     }
 
     [Fact]
-    public void Store_Should_Add_Slice_And_Propagate_State_Changes()
+    public async Task Store_Should_Add_Slice_And_Propagate_State_Changes()
     {
         // Arrange
         ServiceCollection services = [];
@@ -33,11 +33,12 @@ public class DuckyStoreTests
         ServiceProvider provider = services.BuildServiceProvider();
         IStore store = provider.GetRequiredService<IStore>();
         IDispatcher dispatcher = provider.GetRequiredService<IDispatcher>();
-
-        // IMPORTANT: The store is fully initialized when GetRequiredService<IStore>() returns
-        // because DuckyStore constructor:
-        // 1. Registers all slices synchronously
-        // 2. Calls pipeline.InitializeAsync(...).Wait() - blocking until complete
+        
+        // Initialize store if it's a DuckyStore
+        if (store is DuckyStore duckyStore && !duckyStore.IsInitialized)
+        {
+            await duckyStore.InitializeAsync();
+        }
         // 3. Dispatches StoreInitialized action
         // 4. Publishes StoreInitializedEventArgs event
         // Therefore, no additional waiting is needed.

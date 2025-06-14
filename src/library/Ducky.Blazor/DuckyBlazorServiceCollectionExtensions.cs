@@ -3,6 +3,7 @@ using Ducky.Blazor.CrossTabSync;
 using Ducky.Blazor.Middlewares.DevTools;
 using Ducky.Blazor.Middlewares.JsLogging;
 using Ducky.Blazor.Middlewares.Persistence;
+using Ducky.Blazor.Services;
 using Ducky.Builder;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
@@ -81,6 +82,9 @@ public class BlazorDuckyBuilder
     /// </summary>
     internal BlazorDuckyBuilder UseBlazorDefaults()
     {
+        // Register StoreInitializer service
+        _services.AddScoped<DuckyStoreInitializer>();
+
         // Auto-enable DevTools in development
         string? environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
             ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
@@ -160,6 +164,7 @@ public class BlazorDuckyBuilder
             _services.AddScoped(typeof(IPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
             _services.AddScoped(typeof(IEnhancedPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
             _services.AddScoped<HydrationManager>();
+            _services.AddScoped<IPersistenceService, PersistenceService>();
         }
 
         return this;

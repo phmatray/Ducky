@@ -1,4 +1,13 @@
-@using Microsoft.Extensions.DependencyInjection
-@using Microsoft.Extensions.Logging
-@inject IServiceProvider ServiceProvider
-@inject ILogger<PersistenceInitializer> Logger
+@if (IsHydrating && LoadingContent != null)
+{
+    @LoadingContent
+}
+else if (IsHydrated && ChildContent != null)
+{
+    @ChildContent
+}
+else if (!IsHydrating && !IsHydrated && ChildContent != null)
+{
+    @* Render content before hydration if not auto-hydrating *@
+    @ChildContent
+}

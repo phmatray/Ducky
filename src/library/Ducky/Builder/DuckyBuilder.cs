@@ -202,6 +202,13 @@ public class DuckyBuilder
     /// </summary>
     internal IServiceCollection Build()
     {
+        // Validate middleware order
+        List<MiddlewareOrderViolation> violations = MiddlewareOrderValidator.Validate(_middlewareTypes);
+        if (violations.Count > 0)
+        {
+            throw new MiddlewareOrderException(violations);
+        }
+
         // Register core services
         _services.AddScoped<IDispatcher, Dispatcher>();
         _services.AddScoped<IStoreEventPublisher, StoreEventPublisher>();
@@ -222,6 +229,14 @@ public class DuckyBuilder
             IStoreEventPublisher eventPublisher = sp.GetRequiredService<IStoreEventPublisher>();
             IEnumerable<ISlice> slices = sp.GetServices<ISlice>();
             ILogger<ActionPipeline> logger = sp.GetRequiredService<ILogger<ActionPipeline>>();
+
+            // Check for effects and validate middleware requirements
+            IEnumerable<IAsyncEffect> effects = sp.GetServices<IAsyncEffect>();
+            if (effects.Any() && !_middlewareTypes.Contains(typeof(AsyncEffectMiddleware)))
+            {
+                throw new MissingMiddlewareException(
+                    "AsyncEffectMiddleware is required when using async effects. Add it with builder.AddMiddleware<AsyncEffectMiddleware>()");
+            }
 
             // Create pipeline
             ActionPipeline pipeline = new(sp, logger);

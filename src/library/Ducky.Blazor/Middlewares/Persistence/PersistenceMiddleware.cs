@@ -27,6 +27,16 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     private string? _lastPersistedStateHash;
 
     /// <summary>
+    /// Gets a value indicating whether hydration has completed.
+    /// </summary>
+    public bool IsHydrated => _isHydrated;
+
+    /// <summary>
+    /// Gets a value indicating whether persistence is enabled.
+    /// </summary>
+    public bool IsEnabled => _isEnabled;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="PersistenceMiddleware"/> class.
     /// </summary>
     /// <param name="persistenceProvider">The enhanced persistence provider.</param>
@@ -238,7 +248,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// Persists the current state.
     /// </summary>
     /// <param name="trigger">What triggered the persistence.</param>
-    private async Task PersistCurrentStateAsync(string trigger)
+    public async Task PersistCurrentStateAsync(string trigger)
     {
         if (!_isEnabled || _dispatcher is null || _store is null)
         {

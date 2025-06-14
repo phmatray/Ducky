@@ -20,6 +20,7 @@ public sealed class DuckyStore : IStore, IDisposable
     private readonly object _syncRoot = new();
     private volatile bool _isDisposed;
     private volatile bool _isDispatching;
+    private List<string> _sliceKeys = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DuckyStore"/> class.
@@ -57,9 +58,27 @@ public sealed class DuckyStore : IStore, IDisposable
         // Subscribe to slice state changes
         _slices.SliceStateChanged += OnSliceStateChanged;
 
-        // Initialize the pipeline
-        _pipeline.InitializeAsync(_dispatcher, this).Wait();
+        // Store the slice keys for later use during initialization
+        _sliceKeys = sliceKeys;
 
+        // For Blazor WebAssembly compatibility, we defer pipeline initialization
+        // The store will be initialized via InitializeAsync method
+    }
+
+    /// <summary>
+    /// Initializes the store asynchronously. This method must be called after construction.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous initialization operation.</returns>
+    public async Task InitializeAsync()
+    {
+        if (IsInitialized)
+        {
+            return;
+        }
+
+        // Initialize the pipeline
+        await _pipeline.InitializeAsync(_dispatcher, this).ConfigureAwait(false);
+        
         // Subscribe to action stream and process through pipeline
         _dispatcher.ActionDispatched += OnActionDispatched;
 
@@ -67,7 +86,7 @@ public sealed class DuckyStore : IStore, IDisposable
         _dispatcher.Dispatch(new StoreInitialized());
 
         // Publish store initialized event
-        _eventPublisher.Publish(new StoreInitializedEventArgs(sliceKeys.Count, sliceKeys));
+        _eventPublisher.Publish(new StoreInitializedEventArgs(_sliceKeys.Count, _sliceKeys));
 
         // Mark as initialized
         IsInitialized = true;

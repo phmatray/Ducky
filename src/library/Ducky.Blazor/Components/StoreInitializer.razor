@@ -1,0 +1,90 @@
+@using Microsoft.Extensions.Logging
+@using Ducky.Blazor.Services
+@implements IDisposable
+@inject DuckyStoreInitializer Initializer
+@inject ILogger<StoreInitializer> Logger
+
+@if (_isInitialized)
+{
+    @ChildContent
+}
+else if (_initializationFailed)
+{
+    @if (ErrorContent is not null)
+    {
+        @ErrorContent(_initializationError!)
+    }
+    else
+    {
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">Store Initialization Failed</h4>
+            <p>@_initializationError?.Message</p>
+        </div>
+    }
+}
+else
+{
+    @if (LoadingContent is not null)
+    {
+        @LoadingContent
+    }
+    else
+    {
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Initializing store...</span>
+        </div>
+    }
+}
+
+@code {
+    private bool _isInitialized;
+    private bool _initializationFailed;
+    private Exception? _initializationError;
+
+    /// <summary>
+    /// Gets or sets the content to render while the store is initializing.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? LoadingContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the content to render after the store is initialized.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the content to render if initialization fails.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<Exception>? ErrorContent { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            await Initializer.InitializeAsync().ConfigureAwait(false);
+            _isInitialized = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to initialize store");
+            _initializationError = ex;
+            _initializationFailed = true;
+            StateHasChanged();
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        // Nothing to dispose
+    }
+}

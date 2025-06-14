@@ -1,0 +1,180 @@
+@page "/persistence"
+@inherits ComponentBase
+@inject IPersistenceService PersistenceService
+@inject ISnackbar Snackbar
+
+<PageTitle>Persistence Demo</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h4" GutterBottom="true">State Persistence</MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">
+                    Manage how your application state is saved and restored from browser local storage.
+                </MudText>
+                
+                <MudDivider Class="my-4" />
+                
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudCard>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">Persistence Status</MudText>
+                                <MudText Typo="Typo.body2" Class="mt-2">
+                                    <MudChip T="string" Color="@(PersistenceService.IsEnabled ? Color.Success : Color.Error)" Size="Size.Small">
+                                        @(PersistenceService.IsEnabled ? "Enabled" : "Disabled")
+                                    </MudChip>
+                                    <MudChip T="string" Color="@(PersistenceService.IsHydrated ? Color.Success : Color.Warning)" Size="Size.Small">
+                                        @(PersistenceService.IsHydrated ? "Hydrated" : "Not Hydrated")
+                                    </MudChip>
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="6">
+                        <MudCard>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">Actions</MudText>
+                                <MudStack Row="true" Class="mt-2">
+                                    <MudButton 
+                                        Color="Color.Primary" 
+                                        Variant="Variant.Filled" 
+                                        OnClick="HydrateState"
+                                        Disabled="@(PersistenceService.IsHydrated || !PersistenceService.IsEnabled)">
+                                        Hydrate State
+                                    </MudButton>
+                                    
+                                    <MudButton 
+                                        Color="Color.Secondary" 
+                                        Variant="Variant.Outlined" 
+                                        OnClick="SaveState"
+                                        Disabled="@(!PersistenceService.IsEnabled)">
+                                        Save State
+                                    </MudButton>
+                                    
+                                    <MudButton 
+                                        Color="Color.Error" 
+                                        Variant="Variant.Text" 
+                                        OnClick="ClearState"
+                                        Disabled="@(!PersistenceService.IsEnabled)">
+                                        Clear Storage
+                                    </MudButton>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.h6" GutterBottom="true">Usage Examples</MudText>
+                
+                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                    <MudTabPanel Text="Auto-Hydration">
+                        <MudText Typo="Typo.body2" GutterBottom="true">
+                            Enable auto-hydration in your Program.cs:
+                        </MudText>
+                        <MudPaper Class="pa-2" Elevation="0" Style="background-color: #f5f5f5;">
+                            <pre><code>services.AddDuckyBlazor(ducky => ducky
+    .EnablePersistence(options =>
+    {
+        options.AutoHydrate = true; // Enable auto-hydration
+        options.StorageKey = "my-app-state";
+    })
+);</code></pre>
+                        </MudPaper>
+                    </MudTabPanel>
+                    
+                    <MudTabPanel Text="Manual Hydration">
+                        <MudText Typo="Typo.body2" GutterBottom="true">
+                            Manually hydrate state in your component:
+                        </MudText>
+                        <MudPaper Class="pa-2" Elevation="0" Style="background-color: #f5f5f5;">
+                            <pre><code>@@inject IPersistenceService PersistenceService
+
+@@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await PersistenceService.HydrateAsync();
+        }
+    }
+}</code></pre>
+                        </MudPaper>
+                    </MudTabPanel>
+                    
+                    <MudTabPanel Text="Conditional Hydration">
+                        <MudText Typo="Typo.body2" GutterBottom="true">
+                            Use PersistenceInitializer with custom loading UI:
+                        </MudText>
+                        <MudPaper Class="pa-2" Elevation="0" Style="background-color: #f5f5f5;">
+                            <pre><code>&lt;PersistenceInitializer AutoHydrate="false" @@ref="persistenceInit"&gt;
+    &lt;LoadingContent&gt;
+        &lt;MudProgressCircular Indeterminate="true" /&gt;
+        &lt;MudText&gt;Loading saved state...&lt;/MudText&gt;
+    &lt;/LoadingContent&gt;
+    &lt;ChildContent&gt;
+        &lt;YourApp /&gt;
+    &lt;/ChildContent&gt;
+&lt;/PersistenceInitializer&gt;
+
+@@code {
+    private PersistenceInitializer persistenceInit;
+    
+    private async Task RestoreState()
+    {
+        await persistenceInit.HydrateAsync();
+    }
+}</code></pre>
+                        </MudPaper>
+                    </MudTabPanel>
+                </MudTabs>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private async Task HydrateState()
+    {
+        try
+        {
+            await PersistenceService.HydrateAsync();
+            Snackbar.Add("State restored from local storage", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to restore state: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveState()
+    {
+        try
+        {
+            await PersistenceService.PersistAsync();
+            Snackbar.Add("State saved to local storage", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save state: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ClearState()
+    {
+        try
+        {
+            await PersistenceService.ClearAsync();
+            Snackbar.Add("Local storage cleared", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to clear storage: {ex.Message}", Severity.Error);
+        }
+    }
+}

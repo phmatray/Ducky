@@ -166,37 +166,43 @@ public class ReactiveSelectorExtensionsTests
     {
         // Arrange
         Subject<string> commands = new();
-        List<string> results = [];
 
         // Simulate different command processing strategies
         var switchResults = new List<string>();
         var concatResults = new List<string>();
         var mergeResults = new List<string>();
 
-        // Act - Setup different processing pipelines
+        // Act - Setup different processing pipelines with deterministic subjects
+        var command1Subject = new Subject<string>();
+        var command2Subject = new Subject<string>();
+        
         commands
-            .SwitchSelect(cmd => ProcessCommandAsync(cmd, "switch"))
+            .SwitchSelect(cmd => cmd == "first" ? command1Subject : command2Subject)
             .Subscribe(switchResults.Add);
 
         commands
-            .ConcatSelect(cmd => ProcessCommandAsync(cmd, "concat"))
+            .ConcatSelect(cmd => ProcessCommandSync(cmd, "concat"))
             .Subscribe(concatResults.Add);
 
         commands
-            .MergeSelect(cmd => ProcessCommandAsync(cmd, "merge"))
+            .MergeSelect(cmd => ProcessCommandSync(cmd, "merge"))
             .Subscribe(mergeResults.Add);
 
         // Send commands
-        commands.OnNext("fast");
-        commands.OnNext("slow");
+        commands.OnNext("first");
+        command1Subject.OnNext("switch-first-1");
+        
+        // Switch to second command (should cancel first)
+        commands.OnNext("second");
+        command1Subject.OnNext("switch-first-2"); // This should be ignored
+        command2Subject.OnNext("switch-second-1");
+        command2Subject.OnNext("switch-second-2");
+        
         commands.OnCompleted();
 
-        // Wait for processing
-        Thread.Sleep(200);
-
         // Assert
-        // Switch: only processes the last command fully
-        switchResults.Count.ShouldBeLessThanOrEqualTo(2);
+        // Switch: only processes the second command after switching
+        switchResults.ShouldBe(["switch-first-1", "switch-second-1", "switch-second-2"]);
 
         // Concat: processes all commands in order
         concatResults.Count.ShouldBe(4); // 2 commands × 2 results each
@@ -211,5 +217,11 @@ public class ReactiveSelectorExtensionsTests
         return Observable.Range(1, 2)
             .Select(i => $"{mode}-{command}-{i}")
             .SelectMany(x => Observable.Return(x).Delay(TimeSpan.FromMilliseconds(delay)));
+    }
+
+    private static IObservable<string> ProcessCommandSync(string command, string mode)
+    {
+        return Observable.Range(1, 2)
+            .Select(i => $"{mode}-{command}-{i}");
     }
 }

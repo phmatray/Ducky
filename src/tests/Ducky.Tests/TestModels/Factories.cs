@@ -22,7 +22,15 @@ internal static class Factories
         services.AddDucky();
 
         ServiceProvider provider = services.BuildServiceProvider();
-        return provider.GetRequiredService<IStore>();
+        IStore store = provider.GetRequiredService<IStore>();
+        
+        // Initialize store if it's a DuckyStore
+        if (store is DuckyStore duckyStore && !duckyStore.IsInitialized)
+        {
+            duckyStore.InitializeAsync().GetAwaiter().GetResult();
+        }
+        
+        return store;
     }
 
     public static RootState CreateTestRootState()

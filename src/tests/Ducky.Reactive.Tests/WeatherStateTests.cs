@@ -79,7 +79,7 @@ public class WeatherStateTests
     }
 
     [Fact]
-    public void Store_Integration_Should_Handle_Weather_Actions()
+    public async Task Store_Integration_Should_Handle_Weather_Actions()
     {
         // Arrange - Use DuckyStore services but register slice manually
         var services = new ServiceCollection();
@@ -96,6 +96,12 @@ public class WeatherStateTests
         var serviceProvider = services.BuildServiceProvider();
         var dispatcher = serviceProvider.GetRequiredService<IDispatcher>();
         var store = serviceProvider.GetRequiredService<IStore>();
+        
+        // Initialize store if it's a DuckyStore
+        if (store is DuckyStore duckyStore && !duckyStore.IsInitialized)
+        {
+            await duckyStore.InitializeAsync();
+        }
 
         // Act & Assert - Start Weather Polling
         dispatcher.Dispatch(new StartWeatherPolling("Test City"));

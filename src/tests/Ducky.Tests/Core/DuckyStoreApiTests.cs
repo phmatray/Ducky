@@ -21,6 +21,14 @@ public class DuckyStoreApiTests : IDisposable
         _provider = services.BuildServiceProvider();
         _store = _provider.GetRequiredService<IStore>();
         _dispatcher = _provider.GetRequiredService<IDispatcher>();
+        
+        // Initialize store if it's a DuckyStore
+        if (_store is not DuckyStore duckyStore || duckyStore.IsInitialized)
+        {
+            return;
+        }
+            
+        duckyStore.InitializeAsync().GetAwaiter().GetResult();
     }
 
     [Fact]
