@@ -12,7 +12,7 @@ namespace Ducky.Blazor.Middlewares.Persistence;
 /// </summary>
 public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
 {
-    private readonly IEnhancedPersistenceProvider<IRootState> _persistenceProvider;
+    private readonly IEnhancedPersistenceProvider<IStateProvider> _persistenceProvider;
     private readonly HydrationManager _hydrationManager;
     private readonly PersistenceOptions _options;
     private IDispatcher? _dispatcher;
@@ -33,7 +33,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <param name="hydrationManager">The hydration manager.</param>
     /// <param name="options">Configuration options for persistence.</param>
     public PersistenceMiddleware(
-        IEnhancedPersistenceProvider<IRootState> persistenceProvider,
+        IEnhancedPersistenceProvider<IStateProvider> persistenceProvider,
         HydrationManager hydrationManager,
         PersistenceOptions options)
     {
@@ -81,11 +81,11 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
             _hydrationManager.StartHydrating();
             _dispatcher.Dispatch(new HydrationStartedAction("persistence", hydrationId));
 
-            PersistedStateContainer<IRootState>? container = await LoadPersistedStateWithRetryAsync().ConfigureAwait(false);
+            PersistedStateContainer<IStateProvider>? container = await LoadPersistedStateWithRetryAsync().ConfigureAwait(false);
 
             if (container?.State is not null)
             {
-                IRootState state = container.State;
+                IStateProvider state = container.State;
 
                 // Apply hydration transformation if configured
                 if (_options.TransformStateForHydration is not null)
@@ -94,7 +94,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
                 }
 
                 // Dispatch enhanced hydrate action
-                _dispatcher.Dispatch(new EnhancedHydrateAction<IRootState>(
+                _dispatcher.Dispatch(new EnhancedHydrateAction<IStateProvider>(
                     state,
                     container.Metadata,
                     "persistence",
@@ -178,8 +178,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
         }
 
         // Check if state should be persisted
-        StateProviderAdapter rootState = new(_store);
-        if (!ShouldPersistState(rootState))
+        if (!ShouldPersistState(_store))
         {
             return;
         }
@@ -253,10 +252,10 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
         {
             _dispatcher.Dispatch(new PersistenceTriggeredAction(trigger, persistenceId));
 
-            IRootState currentState = new StateProviderAdapter(_store);
+            IStateProvider currentState = _store;
 
             // Apply filtering based on whitelist/blacklist
-            IRootState filteredState = ApplyStateFiltering(currentState);
+            IStateProvider filteredState = ApplyStateFiltering(currentState);
 
             // Apply persistence transformation if configured
             if (_options.TransformStateForPersistence is not null)
@@ -315,7 +314,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <summary>
     /// Loads persisted state with retry logic.
     /// </summary>
-    private async Task<PersistedStateContainer<IRootState>?> LoadPersistedStateWithRetryAsync()
+    private async Task<PersistedStateContainer<IStateProvider>?> LoadPersistedStateWithRetryAsync()
     {
         int retryCount = 0;
 
@@ -345,7 +344,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <summary>
     /// Applies whitelist/blacklist filtering to state.
     /// </summary>
-    private IRootState ApplyStateFiltering(IRootState state)
+    private IStateProvider ApplyStateFiltering(IStateProvider state)
     {
         ImmutableSortedDictionary<string, object> stateDict = state.GetStateDictionary();
         ImmutableSortedDictionary<string, object>.Builder filteredDict = stateDict.ToBuilder();
@@ -374,7 +373,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <summary>
     /// Computes a hash of the state for change detection.
     /// </summary>
-    private static string ComputeStateHash(IRootState state)
+    private static string ComputeStateHash(IStateProvider state)
     {
         string json = JsonSerializer.Serialize(state.GetStateDictionary());
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(json));
@@ -400,7 +399,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <summary>
     /// Determines if the current state should be persisted.
     /// </summary>
-    private bool ShouldPersistState(IRootState state)
+    private bool ShouldPersistState(IStateProvider state)
     {
         return _options.ShouldPersistState?.Invoke(state) ?? true;
     }
@@ -410,8 +409,8 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// </summary>
     private static bool IsHydrationAction(object action)
     {
-        return action is HydrateAction<IRootState> or
-               EnhancedHydrateAction<IRootState> or
+        return action is HydrateAction<IStateProvider> or
+               EnhancedHydrateAction<IStateProvider> or
                HydrationStartedAction or
                HydrationCompletedAction or
                HydrationFailedAction;

@@ -40,7 +40,7 @@ public class RootStateSerializerTests
     public void Deserialize_Should_Work_Correctly()
     {
         // Act
-        IRootState deserializedState = _sut.Deserialize(JsonString);
+        RootState deserializedState = _sut.Deserialize(JsonString);
 
         // Assert
         deserializedState.ContainsKey(Key).ShouldBeTrue();
@@ -52,7 +52,7 @@ public class RootStateSerializerTests
     {
         // Act
         string json = _sut.Serialize(_rootState);
-        IRootState deserializedState = _sut.Deserialize(json);
+        RootState deserializedState = _sut.Deserialize(json);
 
         // Assert
         deserializedState.ContainsKey(Key).ShouldBeTrue();

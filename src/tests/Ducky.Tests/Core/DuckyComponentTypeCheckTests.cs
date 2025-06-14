@@ -2,6 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky.Tests.Core;
@@ -13,16 +14,15 @@ public class DuckyComponentTypeCheckTests
     {
         // This test verifies the fix for DuckyComponent<RootState>
 
-        // Test 1: Verify RootState implements IRootState
-        typeof(RootState).GetInterfaces().ShouldContain(typeof(IRootState));
+        // Test 1: Verify RootState implements IStateProvider
+        typeof(RootState).GetInterfaces().ShouldContain(typeof(IStateProvider));
 
-        // Test 2: Verify typeof(RootState) != typeof(IRootState)
-        (typeof(RootState) == typeof(IRootState)).ShouldBeFalse();
+        // Test 2: Verify typeof(RootState) != typeof(IStateProvider)
+        (typeof(RootState) == typeof(IStateProvider)).ShouldBeFalse();
 
-        // Test 3: Simulate the type check in DuckyComponent.UpdateCurrentState()
-        Type tState = typeof(RootState);
-        bool shouldUseRootState = tState == typeof(IRootState) || tState == typeof(RootState);
-        shouldUseRootState.ShouldBeTrue();
+        // Test 3: Verify RootState can be used as IStateProvider
+        IStateProvider stateProvider = new RootState(ImmutableSortedDictionary<string, object>.Empty);
+        stateProvider.ShouldNotBeNull();
     }
 
     [Fact]
@@ -37,11 +37,11 @@ public class DuckyComponentTypeCheckTests
 
         // Act & Assert - calling GetSlice<RootState>() should throw
         InvalidOperationException exception = Should.Throw<InvalidOperationException>(() => store.GetSlice<RootState>());
-        exception.Message.ShouldContain("Slice of type 'RootState' not found");
+        exception.Message.ShouldContain("Slice of type RootState not found", Case.Insensitive);
     }
 
     [Fact]
-    public void Store_CurrentState_Should_Be_RootState()
+    public void Store_Should_Implement_IStateProvider()
     {
         // Arrange
         ServiceCollection services = [];
@@ -51,7 +51,6 @@ public class DuckyComponentTypeCheckTests
         IStore store = provider.GetRequiredService<IStore>();
 
         // Act & Assert
-        store.CurrentState().ShouldBeOfType<RootState>();
-        store.CurrentState().ShouldBeAssignableTo<IRootState>();
+        store.ShouldBeAssignableTo<IStateProvider>();
     }
 }

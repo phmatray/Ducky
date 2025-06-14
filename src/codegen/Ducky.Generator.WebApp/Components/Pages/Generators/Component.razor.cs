@@ -18,7 +18,7 @@ public partial class Component
     private string? _livePreviewCode;
     private string? _previewError;
     private string _namespace = "MyApp.Components";
-    private string _rootStateType = "AppState";
+    private string _rootStateType = "IStateProvider";
     private string _componentName = "TodoStateComponent";
     private string _stateSliceName = "Todos";
     private string _stateSliceType = "TodoState";

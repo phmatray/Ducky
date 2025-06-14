@@ -22,7 +22,9 @@ public class DuckyComponentTests : Bunit.TestContext
                 .Add("test", new TestState { Value = 42 });
         _rootState = new RootState(stateDict);
 
-        A.CallTo(() => _storeMock.CurrentState()).Returns(_rootState);
+        // Note: Can't mock CurrentState() as it's an extension method
+        // But we can mock GetSlice for specific state types
+        A.CallTo(() => _storeMock.GetSlice<TestState>()).Returns(new TestState { Value = 42 });
 
         Services.AddSingleton(_storeMock);
         Services.AddSingleton(_dispatcherMock);
@@ -57,11 +59,8 @@ public class DuckyComponentTests : Bunit.TestContext
         int renderCount = component.RenderCount;
 
         // Act - simulate state change
-        ImmutableSortedDictionary<string, object> newStateDict =
-            ImmutableSortedDictionary<string, object>.Empty
-                .Add("test", new TestState { Value = 100 });
-        RootState newRootState = new(newStateDict);
-        A.CallTo(() => _storeMock.CurrentState()).Returns(newRootState);
+        // Update the mocked GetSlice to return new value
+        A.CallTo(() => _storeMock.GetSlice<TestState>()).Returns(new TestState { Value = 100 });
 
         _storeMock.StateChanged += Raise.FreeForm<EventHandler<StateChangedEventArgs>>
             .With(

@@ -11,15 +11,14 @@ public class AsyncEffectMiddlewareTests
     private readonly IStoreEventPublisher _eventPublisher;
     private readonly IDispatcher _dispatcher;
     private readonly IStore _store;
-    private readonly RootState _rootState;
 
     public AsyncEffectMiddlewareTests()
     {
         _eventPublisher = A.Fake<IStoreEventPublisher>();
         _dispatcher = A.Fake<IDispatcher>();
         _store = A.Fake<IStore>();
-        _rootState = Factories.CreateTestRootState();
-        A.CallTo(() => _store.CurrentState()).Returns(_rootState);
+        // Note: We can't mock the CurrentState() extension method since it's static,
+        // but the Store itself implements IStateProvider, so we can mock those methods directly
     }
 
     private async Task<AsyncEffectMiddleware> CreateInitializedMiddleware(params IAsyncEffect[] effects)

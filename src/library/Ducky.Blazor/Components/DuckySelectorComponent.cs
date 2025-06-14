@@ -58,12 +58,12 @@ public abstract class DuckySelectorComponent<TViewModel> : ComponentBase, IDispo
     }
 
     /// <summary>
-    /// Selects and constructs a view model from the current root state.
+    /// Selects and constructs a view model from the current state provider.
     /// This method should be implemented to specify which state slices to use.
     /// </summary>
-    /// <param name="rootState">The current root state containing all slices.</param>
+    /// <param name="stateProvider">The current state provider containing all slices.</param>
     /// <returns>The view model constructed from the selected state slices.</returns>
-    protected abstract TViewModel Select(IRootState rootState);
+    protected abstract TViewModel Select(IStateProvider stateProvider);
 
     /// <summary>
     /// Determines whether the component should re-render based on view model changes.
@@ -83,7 +83,7 @@ public abstract class DuckySelectorComponent<TViewModel> : ComponentBase, IDispo
     /// </summary>
     private void UpdateViewModel()
     {
-        _currentViewModel = Select(Store.CurrentState());
+        _currentViewModel = Select(Store);
     }
 
     /// <summary>

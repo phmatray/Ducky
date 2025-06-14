@@ -11,11 +11,11 @@ public partial class PageMultiSlice
         int UnreadNotifications,
         bool HasNotifications);
 
-    protected override DashboardViewModel Select(IRootState rootState)
+    protected override DashboardViewModel Select(IStateProvider stateProvider)
     {
-        CounterState counterState = rootState.GetSlice<CounterState>();
-        MoviesState moviesState = rootState.GetSlice<MoviesState>();
-        NotificationsState notificationsState = rootState.GetSlice<NotificationsState>();
+        CounterState counterState = stateProvider.GetSlice<CounterState>();
+        MoviesState moviesState = stateProvider.GetSlice<MoviesState>();
+        NotificationsState notificationsState = stateProvider.GetSlice<NotificationsState>();
 
         return new DashboardViewModel(
             Count: counterState.Value,

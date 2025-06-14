@@ -9,7 +9,7 @@ namespace Ducky;
 /// <summary>
 /// Represents the root state of the application, managing slice states.
 /// </summary>
-public sealed record RootState : IRootState
+public sealed record RootState : IStateProvider
 {
     private readonly ImmutableSortedDictionary<string, object> _state;
 
@@ -47,7 +47,9 @@ public sealed record RootState : IRootState
             : throw new DuckyException($"State with key '{key}' is not of type '{typeof(TState).Name}'.");
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the state of a specific slice by its type (from IRootState).
+    /// </summary>
     /// <exception cref="DuckyException">Thrown when the state is not found.</exception>
     public TState GetSlice<TState>()
         where TState : notnull
@@ -61,7 +63,86 @@ public sealed record RootState : IRootState
             }
         }
 
-        throw new DuckyException($"State of type '{typeof(TState).Name}' not found.");
+        throw new DuckyException($"Slice of type {typeof(TState).Name} not found.");
+    }
+
+    /// <summary>
+    /// Gets the state of a specific slice by its type (from IStateProvider).
+    /// </summary>
+    TState IStateProvider.GetSlice<TState>()
+    {
+        // take the first state of the specified type
+        foreach (object value in _state.Values)
+        {
+            if (value is TState state)
+            {
+                return state;
+            }
+        }
+
+        throw new DuckyException($"Slice of type {typeof(TState).Name} not found.");
+    }
+
+    /// <summary>
+    /// Gets the state of a specific slice by its key (from IStateProvider).
+    /// </summary>
+    TState IStateProvider.GetSliceByKey<TState>(string key)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+
+        return _state.TryGetValue(key, out object? value) && value is TState state
+            ? state
+            : throw new DuckyException($"State with key '{key}' is not of type '{typeof(TState).Name}'.");
+    }
+
+    /// <summary>
+    /// Attempts to get the state of a specific slice by its type (from IStateProvider).
+    /// </summary>
+    public bool TryGetSlice<TState>(out TState? state)
+    {
+        foreach (object value in _state.Values)
+        {
+            if (value is TState foundState)
+            {
+                state = foundState;
+                return true;
+            }
+        }
+
+        state = default;
+        return false;
+    }
+
+    /// <summary>
+    /// Checks whether a slice of the specified type exists (from IStateProvider).
+    /// </summary>
+    public bool HasSlice<TState>()
+    {
+        return _state.Values.OfType<TState>().Any();
+    }
+
+    /// <summary>
+    /// Checks whether a slice with the specified key exists (from IStateProvider).
+    /// </summary>
+    public bool HasSliceByKey(string key)
+    {
+        return _state.ContainsKey(key);
+    }
+
+    /// <summary>
+    /// Gets all slice keys (from IStateProvider).
+    /// </summary>
+    public IReadOnlyCollection<string> GetSliceKeys()
+    {
+        return _state.Keys.ToList();
+    }
+
+    /// <summary>
+    /// Gets all slices as key-value pairs (from IStateProvider).
+    /// </summary>
+    public IReadOnlyDictionary<string, object> GetAllSlices()
+    {
+        return _state;
     }
 
     /// <inheritdoc/>

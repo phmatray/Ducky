@@ -89,7 +89,7 @@ public class ReduxDevToolsModule : JsModule
     /// Initializes the DevTools connection and dispatches @@INIT.
     /// </summary>
     /// <param name="initialState">Initial state of the Redux store.</param>
-    public async Task InitAsync(IRootState? initialState = null)
+    public async Task InitAsync(IStateProvider? initialState = null)
     {
         // Don't initialize if disabled in configuration
         if (!_options.Enabled)
@@ -107,7 +107,7 @@ public class ReduxDevToolsModule : JsModule
             // Dispatch the @@INIT action with initial state
             if (_enabled && _store is not null)
             {
-                IRootState state = initialState ?? _store.CurrentState();
+                IStateProvider state = initialState ?? _store;
 
                 // Store initial state for reset operations
                 ImmutableSortedDictionary<string, object> stateDict = state.GetStateDictionary();
@@ -186,7 +186,7 @@ public class ReduxDevToolsModule : JsModule
     /// </summary>
     /// <param name="actionType">Action type (string).</param>
     /// <param name="state">The state after the action.</param>
-    public async Task SendAsync(string actionType, IRootState state)
+    public async Task SendAsync(string actionType, IStateProvider state)
     {
         if (!_enabled || IsActionTypeExcluded(actionType))
         {
@@ -381,7 +381,7 @@ public class ReduxDevToolsModule : JsModule
             // Update the initial state to the current state
             if (_store is not null)
             {
-                _stateManager.SetInitialState(_store.CurrentState().GetStateDictionary());
+                _stateManager.SetInitialState(_store.GetStateDictionary());
             }
 
             // Invoke the callback if set

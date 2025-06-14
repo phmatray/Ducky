@@ -343,11 +343,4 @@ public record TestCounterSliceReducers : SliceReducers<TestCounterState>
 
 public record AppState;
 
-public record TestRootState(object State) : IRootState
-{
-    public TState GetSlice<TState>() where TState : notnull => (TState)State;
-    public TState GetSlice<TState>(string key) where TState : notnull => (TState)State;
-    public bool ContainsKey(string key) => true;
-    public ImmutableSortedSet<string> GetKeys() => ImmutableSortedSet<string>.Empty;
-    public ImmutableSortedDictionary<string, object> GetStateDictionary() => ImmutableSortedDictionary<string, object>.Empty;
-}
+// TestRootState removed - no longer needed as IRootState is being phased out

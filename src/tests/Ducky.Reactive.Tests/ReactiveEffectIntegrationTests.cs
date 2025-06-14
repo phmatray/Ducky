@@ -13,7 +13,7 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
     private readonly IStoreEventPublisher _eventPublisherMock;
     private readonly IDispatcher _dispatcherMock;
     private readonly IStore _storeMock;
-    private readonly IRootState _rootStateMock;
+    private readonly IStateProvider _stateProviderMock;
 
     public ReactiveEffectIntegrationTests()
     {
@@ -21,9 +21,9 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         _eventPublisherMock = A.Fake<IStoreEventPublisher>();
         _dispatcherMock = A.Fake<IDispatcher>();
         _storeMock = A.Fake<IStore>();
-        _rootStateMock = A.Fake<IRootState>();
+        _stateProviderMock = A.Fake<IStateProvider>();
 
-        A.CallTo(() => _storeMock.CurrentState()).Returns(_rootStateMock);
+        // Note: Can't mock CurrentState() as it's an extension method
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
 
         // Setup initial state
         CounterState initialState = new(0);
-        A.CallTo(() => _rootStateMock.GetSlice<CounterState>()).Returns(initialState);
+        A.CallTo(() => _stateProviderMock.GetSlice<CounterState>()).Returns(initialState);
 
         await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
@@ -129,8 +129,8 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         for (int i = 1; i <= 12; i++)
         {
             CounterState newState = new(i);
-            A.CallTo(() => _rootStateMock.GetSlice<CounterState>()).Returns(newState);
-            A.CallTo(() => _storeMock.CurrentState()).Returns(_rootStateMock);
+            A.CallTo(() => _stateProviderMock.GetSlice<CounterState>()).Returns(newState);
+            A.CallTo(() => _storeMock.GetSlice<CounterState>()).Returns(newState);
 
             middleware.AfterReduce(new { Type = "INCREMENT" });
         }
@@ -258,7 +258,8 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
 
         // Setup state
         CounterState state = new(5);
-        A.CallTo(() => _rootStateMock.GetSlice<CounterState>()).Returns(state);
+        A.CallTo(() => _stateProviderMock.GetSlice<CounterState>()).Returns(state);
+        A.CallTo(() => _storeMock.GetSlice<CounterState>()).Returns(state);
 
         await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 

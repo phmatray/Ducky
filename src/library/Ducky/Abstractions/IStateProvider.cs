@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
+
 namespace Ducky;
 
 /// <summary>
@@ -59,4 +61,16 @@ public interface IStateProvider
     /// </summary>
     /// <returns>A read-only dictionary of slice keys and their states.</returns>
     IReadOnlyDictionary<string, object> GetAllSlices();
+
+    /// <summary>
+    /// Gets the underlying state dictionary for serialization purposes.
+    /// </summary>
+    /// <returns>The state dictionary.</returns>
+    ImmutableSortedDictionary<string, object> GetStateDictionary();
+
+    /// <summary>
+    /// Gets the keys of the state.
+    /// </summary>
+    /// <returns>The keys of the state.</returns>
+    ImmutableSortedSet<string> GetKeys();
 }

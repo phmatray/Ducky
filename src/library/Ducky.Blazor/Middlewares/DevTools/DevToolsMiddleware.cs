@@ -111,7 +111,7 @@ public sealed class DevToolsMiddleware : MiddlewareBase
             return;
         }
 
-        await _devTools.InitAsync(new StateProviderAdapter(_store)).ConfigureAwait(false);
+        await _devTools.InitAsync(_store).ConfigureAwait(false);
     }
 
     /// <summary>

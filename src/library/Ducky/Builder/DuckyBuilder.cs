@@ -205,7 +205,7 @@ public class DuckyBuilder
         // Register core services
         _services.AddScoped<IDispatcher, Dispatcher>();
         _services.AddScoped<IStoreEventPublisher, StoreEventPublisher>();
-        _services.AddScoped<IRootStateSerializer, RootStateSerializer>();
+        _services.AddScoped<IStateSerializer, RootStateSerializer>();
         _services.AddScoped<DuckyStoreLogger>();
 
         // Scan assemblies for slices and effects

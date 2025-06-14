@@ -8,9 +8,9 @@ using System.Text.Json;
 namespace Ducky;
 
 /// <summary>
-/// Provides methods for serializing and deserializing <see cref="RootState"/> instances.
+/// Provides methods for serializing and deserializing state instances.
 /// </summary>
-public sealed class RootStateSerializer : IRootStateSerializer
+public sealed class RootStateSerializer : IStateSerializer
 {
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -20,11 +20,11 @@ public sealed class RootStateSerializer : IRootStateSerializer
     };
 
     /// <inheritdoc />
-    public string Serialize(IRootState rootState)
+    public string Serialize(IStateProvider stateProvider)
     {
-        ArgumentNullException.ThrowIfNull(rootState);
+        ArgumentNullException.ThrowIfNull(stateProvider);
 
-        ImmutableSortedDictionary<string, object> stateDictionary = rootState.GetStateDictionary();
+        ImmutableSortedDictionary<string, object> stateDictionary = stateProvider.GetStateDictionary();
         var typedDictionary = stateDictionary.ToDictionary(
             kvp => kvp.Key,
             kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value });
@@ -33,12 +33,12 @@ public sealed class RootStateSerializer : IRootStateSerializer
     }
 
     /// <inheritdoc />
-    public string Serialize(IRootState rootState, string key)
+    public string Serialize(IStateProvider stateProvider, string key)
     {
-        ArgumentNullException.ThrowIfNull(rootState);
+        ArgumentNullException.ThrowIfNull(stateProvider);
         ArgumentNullException.ThrowIfNull(key);
 
-        ImmutableSortedDictionary<string, object> stateDictionary = rootState.GetStateDictionary();
+        ImmutableSortedDictionary<string, object> stateDictionary = stateProvider.GetStateDictionary();
         var typedDictionary = stateDictionary.ToDictionary(
             kvp => kvp.Key,
             kvp => new { Type = kvp.Value.GetType().AssemblyQualifiedName, kvp.Value });
@@ -47,7 +47,7 @@ public sealed class RootStateSerializer : IRootStateSerializer
     }
 
     /// <inheritdoc />
-    public IRootState Deserialize(string json)
+    public RootState Deserialize(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
 

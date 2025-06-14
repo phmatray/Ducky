@@ -1,6 +1,8 @@
 ﻿@page "/"
-@inherits DuckyComponent<RootState>
-@inject IRootStateSerializer RootStateSerializer
+@inherits ComponentBase
+@implements IDisposable
+@inject IStateSerializer StateSerializer
+@inject IStore Store
 
 <PageTitle>Ducky</PageTitle>
 
@@ -23,10 +25,10 @@
 
   <MudItem xs="12">
     <MudExpansionPanels MultiExpansion="true">
-      @foreach (var key in State.GetKeys())
+      @foreach (var key in Store.GetKeys())
       {
         <MudExpansionPanel Text="@key" Style="overflow: hidden;">
-          <JsonMarkup Data="@RootStateSerializer.Serialize(State, key)"/>
+          <JsonMarkup Data="@StateSerializer.Serialize(Store, key)"/>
         </MudExpansionPanel>
       }
     </MudExpansionPanels>

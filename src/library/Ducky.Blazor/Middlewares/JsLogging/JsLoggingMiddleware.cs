@@ -10,7 +10,7 @@ public sealed class JsLoggingMiddleware : MiddlewareBase
 {
     private readonly JsConsoleLoggerModule _loggerModule;
     private IStore? _store;
-    private readonly Dictionary<object, (IRootState prevState, DateTime startTime)> _actionMetadata = [];
+    private readonly Dictionary<object, (IStateProvider prevState, DateTime startTime)> _actionMetadata = [];
 
     // Configuration options
     private readonly HashSet<string> _excludedActionTypes =
@@ -52,24 +52,24 @@ public sealed class JsLoggingMiddleware : MiddlewareBase
         }
 
         // Capture previous state and time before action is processed
-        _actionMetadata[action] = (_store.CurrentState(), DateTime.Now);
+        _actionMetadata[action] = (_store, DateTime.Now);
     }
 
     /// <inheritdoc />
     public override void AfterReduce(object action)
     {
         if (_store is null
-            || !_actionMetadata.TryGetValue(action, out (IRootState prevState, DateTime startTime) metadata))
+            || !_actionMetadata.TryGetValue(action, out (IStateProvider prevState, DateTime startTime) metadata))
         {
             return;
         }
 
         try
         {
-            (IRootState prevState, DateTime startTime) = metadata;
+            (IStateProvider prevState, DateTime startTime) = metadata;
             double duration = (DateTime.Now - startTime).TotalMilliseconds;
             string timestamp = startTime.ToString("HH:mm:ss.fff");
-            IRootState newState = _store.CurrentState();
+            IStateProvider newState = _store;
 
             // Get state dictionaries
             System.Collections.Immutable.ImmutableSortedDictionary<string, object> prevStateDict = prevState.GetStateDictionary();

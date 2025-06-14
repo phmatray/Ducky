@@ -73,19 +73,19 @@ public class PersistenceOptions
     /// Gets or sets a custom predicate to determine if the current state should be persisted.
     /// Useful for conditional persistence based on state content.
     /// </summary>
-    public Func<IRootState, bool>? ShouldPersistState { get; set; }
+    public Func<IStateProvider, bool>? ShouldPersistState { get; set; }
 
     /// <summary>
     /// Gets or sets a custom state transformation function for persistence.
     /// Allows modifying the state before it's persisted (e.g., removing sensitive data).
     /// </summary>
-    public Func<IRootState, IRootState>? TransformStateForPersistence { get; set; }
+    public Func<IStateProvider, IStateProvider>? TransformStateForPersistence { get; set; }
 
     /// <summary>
     /// Gets or sets a custom state transformation function for hydration.
     /// Allows modifying the persisted state during hydration (e.g., data migration).
     /// </summary>
-    public Func<IRootState, IRootState>? TransformStateForHydration { get; set; }
+    public Func<IStateProvider, IStateProvider>? TransformStateForHydration { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to persist initial state immediately after hydration.

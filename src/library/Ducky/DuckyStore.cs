@@ -2,6 +2,7 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
 using Ducky.Pipeline;
 
 namespace Ducky;
@@ -202,6 +203,12 @@ public sealed class DuckyStore : IStore, IDisposable
 
     /// <inheritdoc/>
     public IReadOnlyDictionary<string, object> GetAllSlices() => _slices.GetAllSlices();
+
+    /// <inheritdoc/>
+    public ImmutableSortedDictionary<string, object> GetStateDictionary() => _slices.GetStateDictionary();
+
+    /// <inheritdoc/>
+    public ImmutableSortedSet<string> GetKeys() => _slices.GetKeys();
 
     #endregion
 

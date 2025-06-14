@@ -25,7 +25,7 @@ public class DevToolsReducer
     /// <param name="currentState">The current root state.</param>
     /// <param name="action">The action to process.</param>
     /// <returns>New root state or the current state if action is not handled.</returns>
-    public IRootState Reduce(IRootState currentState, object action)
+    public IStateProvider Reduce(IStateProvider currentState, object action)
     {
         return action switch
         {
@@ -57,7 +57,7 @@ public class DevToolsReducer
     /// </summary>
     /// <param name="stateDict">The state dictionary.</param>
     /// <returns>A new root state instance.</returns>
-    private static IRootState CreateRootState(ImmutableSortedDictionary<string, object> stateDict)
+    private static IStateProvider CreateRootState(ImmutableSortedDictionary<string, object> stateDict)
     {
         return new RootState(stateDict);
     }
@@ -70,7 +70,7 @@ public class DevToolsReducer
     /// <param name="currentState">The current state.</param>
     /// <param name="jumpAction">The jump action.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IRootState HandleJumpToAction(IRootState currentState, DevToolsActions.JumpToAction jumpAction)
+    private static IStateProvider HandleJumpToAction(IStateProvider currentState, DevToolsActions.JumpToAction jumpAction)
     {
         Console.WriteLine($"DevTools: Jump to action {jumpAction.ActionIndex} ({jumpAction.ActionType})");
 
@@ -91,7 +91,7 @@ public class DevToolsReducer
     /// <param name="currentState">The current state.</param>
     /// <param name="replayAction">The replay action.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IRootState HandleReplayActions(IRootState currentState, DevToolsActions.ReplayActions replayAction)
+    private static IStateProvider HandleReplayActions(IStateProvider currentState, DevToolsActions.ReplayActions replayAction)
     {
         Console.WriteLine($"DevTools: Replay actions from {replayAction.FromActionIndex} to {replayAction.ToActionIndex}");
 
@@ -110,7 +110,7 @@ public class DevToolsReducer
     /// </summary>
     /// <param name="currentState">The current state.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IRootState HandleCommitState(IRootState currentState)
+    private static IStateProvider HandleCommitState(IStateProvider currentState)
     {
         Console.WriteLine("DevTools: Commit state handled in reducer");
 
@@ -125,7 +125,7 @@ public class DevToolsReducer
     /// </summary>
     /// <param name="currentState">The current state.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IRootState HandleRollbackToCommitted(IRootState currentState)
+    private static IStateProvider HandleRollbackToCommitted(IStateProvider currentState)
     {
         Console.WriteLine("DevTools: Rollback to committed state");
 
@@ -143,7 +143,7 @@ public class DevToolsReducer
     /// </summary>
     /// <param name="currentState">The current state.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IRootState HandleSweepSkippedActions(IRootState currentState)
+    private static IStateProvider HandleSweepSkippedActions(IStateProvider currentState)
     {
         Console.WriteLine("DevTools: Sweep skipped actions");
 
@@ -163,7 +163,7 @@ public class DevToolsReducer
     /// <param name="currentState">The current state.</param>
     /// <param name="toggleAction">The toggle action.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IRootState HandleToggleAction(IRootState currentState, DevToolsActions.ToggleAction toggleAction)
+    private static IStateProvider HandleToggleAction(IStateProvider currentState, DevToolsActions.ToggleAction toggleAction)
     {
         Console.WriteLine($"DevTools: Toggle action at index {toggleAction.ActionIndex}");
 
@@ -183,7 +183,7 @@ public class DevToolsReducer
     /// <param name="currentState">The current state.</param>
     /// <param name="recordingAction">The recording control action.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IRootState HandleRecordingControl(IRootState currentState, DevToolsActions.RecordingControl recordingAction)
+    private static IStateProvider HandleRecordingControl(IStateProvider currentState, DevToolsActions.RecordingControl recordingAction)
     {
         string status = recordingAction.IsPaused ? "paused" : recordingAction.IsLocked ? "locked" : "resumed";
         Console.WriteLine($"DevTools: Recording {status}");

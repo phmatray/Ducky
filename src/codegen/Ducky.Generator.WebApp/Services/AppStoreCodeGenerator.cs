@@ -184,7 +184,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
                 sb.AppendLine($"public class {effect.Name} : AsyncEffect");
                 sb.AppendLine("{");
                 sb.AppendLine("    public override async Task<object?> Handle(");
-                sb.AppendLine("        object action, IRootState rootState, CancellationToken cancellationToken)");
+                sb.AppendLine("        object action, IStateProvider stateProvider, CancellationToken cancellationToken)");
                 sb.AppendLine("    {");
                 sb.AppendLine("        // TODO: Implement async effect logic");
                 sb.AppendLine("        return null;");

@@ -5,29 +5,29 @@
 namespace Ducky;
 
 /// <summary>
-/// Provides methods for serializing and deserializing <see cref="IRootState"/> instances.
+/// Provides methods for serializing and deserializing state instances.
 /// </summary>
-public interface IRootStateSerializer
+public interface IStateSerializer
 {
     /// <summary>
-    /// Serializes the specified <see cref="IRootState"/> to a JSON string.
+    /// Serializes the specified state provider to a JSON string.
     /// </summary>
-    /// <param name="rootState">The <see cref="IRootState"/> to serialize.</param>
+    /// <param name="stateProvider">The state provider to serialize.</param>
     /// <returns>The JSON string representation of the state.</returns>
-    string Serialize(IRootState rootState);
+    string Serialize(IStateProvider stateProvider);
 
     /// <summary>
     /// Serializes the slice state associated with the specified key to a JSON string.
     /// </summary>
-    /// <param name="rootState">The <see cref="IRootState"/> to serialize.</param>
+    /// <param name="stateProvider">The state provider to serialize.</param>
     /// <param name="key">The key of the slice state to serialize.</param>
     /// <returns>The JSON string representation of the slice state.</returns>
-    string Serialize(IRootState rootState, string key);
+    string Serialize(IStateProvider stateProvider, string key);
 
     /// <summary>
-    /// Deserializes a <see cref="IRootState"/> from a JSON string.
+    /// Deserializes state from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string representation of the state.</param>
-    /// <returns>A new instance of <see cref="IRootState"/> with the deserialized state.</returns>
-    IRootState Deserialize(string json);
+    /// <returns>A new instance of <see cref="RootState"/> with the deserialized state.</returns>
+    RootState Deserialize(string json);
 }

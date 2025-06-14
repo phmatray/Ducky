@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
+
 namespace Ducky;
 
 /// <summary>
@@ -136,6 +138,20 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
         return _slices.ToDictionary(
             kvp => kvp.Key,
             kvp => kvp.Value.GetState());
+    }
+
+    /// <inheritdoc />
+    public ImmutableSortedDictionary<string, object> GetStateDictionary()
+    {
+        return _slices.ToImmutableSortedDictionary(
+            kvp => kvp.Key,
+            kvp => kvp.Value.GetState());
+    }
+
+    /// <inheritdoc />
+    public ImmutableSortedSet<string> GetKeys()
+    {
+        return _slices.Keys.ToImmutableSortedSet();
     }
 
     #endregion

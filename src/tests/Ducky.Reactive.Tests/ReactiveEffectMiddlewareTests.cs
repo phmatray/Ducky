@@ -9,16 +9,19 @@ public class ReactiveEffectMiddlewareTests
     private readonly IStoreEventPublisher _eventPublisherMock;
     private readonly IDispatcher _dispatcherMock;
     private readonly IStore _storeMock;
-    private readonly IRootState _rootStateMock;
+    private readonly IStateProvider _stateProviderMock;
 
     public ReactiveEffectMiddlewareTests()
     {
         _eventPublisherMock = A.Fake<IStoreEventPublisher>();
         _dispatcherMock = A.Fake<IDispatcher>();
         _storeMock = A.Fake<IStore>();
-        _rootStateMock = A.Fake<IRootState>();
+        _stateProviderMock = A.Fake<IStateProvider>();
 
-        A.CallTo(() => _storeMock.CurrentState()).Returns(_rootStateMock);
+        // Set up store to implement IStateProvider directly
+        A.CallTo(() => _storeMock.GetSlice<object>()).Returns(_stateProviderMock.GetSlice<object>());
+        A.CallTo(() => _storeMock.GetSliceByKey<object>(A<string>.Ignored))
+            .ReturnsLazily(call => _stateProviderMock.GetSliceByKey<object>(call.Arguments[0] as string ?? string.Empty));
     }
 
     [Fact]
@@ -153,8 +156,10 @@ public class ReactiveEffectMiddlewareTests
         List<ReactiveEffect> effects = [effect];
         ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
-        IRootState newStateMock = A.Fake<IRootState>();
-        A.CallTo(() => _storeMock.CurrentState()).Returns(newStateMock);
+        IStateProvider newStateProviderMock = A.Fake<IStateProvider>();
+        A.CallTo(() => _storeMock.GetSlice<object>()).Returns(newStateProviderMock.GetSlice<object>());
+        A.CallTo(() => _storeMock.GetSliceByKey<object>(A<string>.Ignored))
+            .ReturnsLazily(call => newStateProviderMock.GetSliceByKey<object>(call.Arguments[0] as string ?? string.Empty));
 
         await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 

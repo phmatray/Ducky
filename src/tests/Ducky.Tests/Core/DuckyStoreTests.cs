@@ -14,11 +14,11 @@ public class DuckyStoreTests
     public void Store_Should_Initialize_With_Default_State()
     {
         // Act
-        IRootState rootState = _sut.CurrentState();
+        IStateProvider stateProvider = _sut;
 
         // Assert
-        rootState.ShouldNotBeNull();
-        rootState.ShouldBeOfType<RootState>();
+        stateProvider.ShouldNotBeNull();
+        stateProvider.ShouldBeOfType<DuckyStore>();
     }
 
     [Fact]

@@ -62,14 +62,7 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
     /// </summary>
     private void UpdateCurrentState()
     {
-        if (typeof(TState) == typeof(IRootState) || typeof(TState) == typeof(RootState))
-        {
-            _currentState = (TState)Store.CurrentState();
-        }
-        else
-        {
-            _currentState = Store.GetSlice<TState>();
-        }
+        _currentState = Store.GetSlice<TState>();
     }
 
     /// <summary>
