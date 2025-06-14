@@ -7,20 +7,20 @@ namespace AppStore.Tests.Movies;
 
 public class MoviesEffectGroupTests
 {
-    private readonly Mock<IMoviesService> _moviesServiceMock = new();
-    private readonly Mock<ILogger<MoviesEffectGroup>> _loggerMock = new();
-    private readonly Mock<ISnackbar> _snackbarMock = new();
-    private readonly Mock<IDispatcher> _dispatcherMock = new();
-    private readonly Mock<IRootState> _rootStateMock = new();
+    private readonly IMoviesService _moviesService = A.Fake<IMoviesService>();
+    private readonly ILogger<MoviesEffectGroup> _logger = A.Fake<ILogger<MoviesEffectGroup>>();
+    private readonly ISnackbar _snackbar = A.Fake<ISnackbar>();
+    private readonly IDispatcher _dispatcher = A.Fake<IDispatcher>();
+    private readonly IRootState _rootState = A.Fake<IRootState>();
     private readonly MoviesEffectGroup _effectGroup;
 
     public MoviesEffectGroupTests()
     {
         _effectGroup = new MoviesEffectGroup(
-            _moviesServiceMock.Object,
-            _loggerMock.Object,
-            _snackbarMock.Object);
-        _effectGroup.SetDispatcher(_dispatcherMock.Object);
+            _moviesService,
+            _logger,
+            _snackbar);
+        _effectGroup.SetDispatcher(_dispatcher);
     }
 
     [Fact]
@@ -94,18 +94,17 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 1, TotalPages = 2, TotalItems = 10 }
         };
 
-        _rootStateMock.Setup(x => x.GetSliceState<MoviesState>()).Returns(moviesState);
-        _moviesServiceMock.Setup(x => x.GetMoviesAsync(1, 5, default)).ReturnsAsync(response);
+        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _dispatcherMock.Verify(
-            x => x.Dispatch(
-                It.Is<LoadMoviesSuccess>(a =>
-                    a.Movies.Count == 2 && a.TotalItems == 10)),
-            Times.Once);
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<LoadMoviesSuccess>.That.Matches(a =>
+                a.Movies.Count == 2 && a.TotalItems == 10)))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -122,17 +121,16 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 1, TotalPages = 1, TotalItems = 0 }
         };
 
-        _rootStateMock.Setup(x => x.GetSliceState<MoviesState>()).Returns(moviesState);
-        _moviesServiceMock.Setup(x => x.GetMoviesAsync(1, 5, default)).ThrowsAsync(exception);
+        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Throws(exception);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _dispatcherMock.Verify(
-            x => x.Dispatch(
-                It.Is<LoadMoviesFailure>(a => a.ErrorMessage == "Service error")),
-            Times.Once);
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<LoadMoviesFailure>.That.Matches(a => a.ErrorMessage == "Service error")))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -155,20 +153,20 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 1, TotalPages = 1, TotalItems = 3 }
         };
 
-        _rootStateMock.Setup(x => x.GetSliceState<MoviesState>()).Returns(moviesState);
-        _moviesServiceMock.Setup(x => x.GetMoviesAsync(1, 5, default)).ReturnsAsync(response);
+        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _dispatcherMock.Verify(
-            x => x.Dispatch(It.Is<LoadMoviesSuccess>(a =>
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<LoadMoviesSuccess>.That.Matches(a =>
                 a.Movies.Count == 2
                 && a.Movies.Any(movie => movie.Title == "Movie 1")
                 && a.Movies.Any(movie => movie.Director == "Movie 1 Director")
-                && a.TotalItems == 2)),
-            Times.Once);
+                && a.TotalItems == 2)))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -190,18 +188,17 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 1, TotalPages = 1, TotalItems = 2 }
         };
 
-        _rootStateMock.Setup(x => x.GetSliceState<MoviesState>()).Returns(moviesState);
-        _moviesServiceMock.Setup(x => x.GetMoviesAsync(1, 5, default)).ReturnsAsync(response);
+        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _dispatcherMock.Verify(
-            x => x.Dispatch(
-                It.Is<LoadMoviesSuccess>(a =>
-                    a.Movies.Count == 2 && a.TotalItems == 2)),
-            Times.Once);
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<LoadMoviesSuccess>.That.Matches(a =>
+                a.Movies.Count == 2 && a.TotalItems == 2)))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -216,22 +213,20 @@ public class MoviesEffectGroupTests
         LoadMoviesSuccess action = new(movies, 10);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _snackbarMock.Verify(
-            x => x.Add(
-                "Loaded 2 movies from the server.",
-                Severity.Success,
-                It.IsAny<Action<SnackbarOptions>>(),
-                It.IsAny<string>()),
-            Times.Once);
+        A.CallTo(() => _snackbar.Add(
+            "Loaded 2 movies from the server.",
+            Severity.Success,
+            A<Action<SnackbarOptions>>.Ignored,
+            A<string>.Ignored))
+            .MustHaveHappenedOnceExactly();
 
-        _dispatcherMock.Verify(
-            x => x.Dispatch(
-                It.Is<AddNotification>(a =>
-                    a.Notification is SuccessNotification && a.Notification.Message == "Loaded 2 movies from the server.")),
-            Times.Once);
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<AddNotification>.That.Matches(a =>
+                a.Notification is SuccessNotification && a.Notification.Message == "Loaded 2 movies from the server.")))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -241,22 +236,20 @@ public class MoviesEffectGroupTests
         LoadMoviesFailure action = new("Failed to load movies");
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _snackbarMock.Verify(
-            x => x.Add(
-                "Failed to load movies",
-                Severity.Error,
-                It.IsAny<Action<SnackbarOptions>>(),
-                It.IsAny<string>()),
-            Times.Once);
+        A.CallTo(() => _snackbar.Add(
+            "Failed to load movies",
+            Severity.Error,
+            A<Action<SnackbarOptions>>.Ignored,
+            A<string>.Ignored))
+            .MustHaveHappenedOnceExactly();
 
-        _dispatcherMock.Verify(
-            x => x.Dispatch(
-                It.Is<AddNotification>(a =>
-                    a.Notification is ErrorNotification && a.Notification.Message == "Failed to load movies")),
-            Times.Once);
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<AddNotification>.That.Matches(a =>
+                a.Notification is ErrorNotification && a.Notification.Message == "Failed to load movies")))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -275,16 +268,17 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 2, TotalPages = 1, TotalItems = 1 }
         };
 
-        _rootStateMock.Setup(x => x.GetSliceState<MoviesState>()).Returns(moviesState);
-        _moviesServiceMock.Setup(x => x.GetMoviesAsync(2, 5, default)).ReturnsAsync(response);
+        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _moviesService.GetMoviesAsync(2, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(loadAction, _rootStateMock.Object);
-        await _effectGroup.HandleAsync(searchAction, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(loadAction, _rootState);
+        await _effectGroup.HandleAsync(searchAction, _rootState);
 
         // Assert
         // Both handlers should use the same pagination info (page 2)
-        _moviesServiceMock.Verify(x => x.GetMoviesAsync(2, 5, default), Times.Exactly(2));
+        A.CallTo(() => _moviesService.GetMoviesAsync(2, 5, A<CancellationToken>.Ignored))
+            .MustHaveHappenedTwiceExactly();
     }
 
     private static Movie CreateTestMovie(

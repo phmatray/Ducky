@@ -11,8 +11,8 @@ public class CorrelationIdMiddlewareTests
         // Arrange
         StoreEventPublisher eventPublisher = new();
         CorrelationIdMiddleware middleware = new(eventPublisher);
-        IDispatcher dispatcher = new Mock<IDispatcher>().Object;
-        IStore store = new Mock<IStore>().Object;
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
 
         // Act
         await middleware.InitializeAsync(dispatcher, store);

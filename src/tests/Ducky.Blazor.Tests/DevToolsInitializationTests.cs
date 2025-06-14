@@ -1,5 +1,5 @@
+using FakeItEasy;
 using Microsoft.JSInterop;
-using Moq;
 
 namespace Ducky.Blazor.Tests;
 
@@ -9,12 +9,12 @@ public class DevToolsInitializationTests
     public void ReduxDevToolsModule_CanBeCreated_WithoutStoreAndDispatcher()
     {
         // Arrange
-        Mock<IJSRuntime> mockJsRuntime = new();
+        IJSRuntime mockJsRuntime = A.Fake<IJSRuntime>();
         DevToolsStateManager stateManager = new();
         DevToolsOptions options = new();
 
         // Act
-        ReduxDevToolsModule devTools = new(mockJsRuntime.Object, stateManager, options);
+        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, options);
 
         // Assert
         Assert.NotNull(devTools);
@@ -25,37 +25,36 @@ public class DevToolsInitializationTests
     public async Task ReduxDevToolsModule_InitAsync_ReturnsWhenDisabledAsync()
     {
         // Arrange
-        Mock<IJSRuntime> mockJsRuntime = new();
+        IJSRuntime mockJsRuntime = A.Fake<IJSRuntime>();
         DevToolsStateManager stateManager = new();
         DevToolsOptions options = new() { Enabled = false };
-        ReduxDevToolsModule devTools = new(mockJsRuntime.Object, stateManager, options);
+        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, options);
 
         // Act
         await devTools.InitAsync().ConfigureAwait(true);
 
         // Assert
         Assert.False(devTools.IsEnabled);
-        mockJsRuntime.Verify(
-            x => x.InvokeAsync<IJSObjectReference>(
-                It.IsAny<string>(),
-                It.IsAny<object[]>()),
-            Times.Never);
+        A.CallTo(() => mockJsRuntime.InvokeAsync<IJSObjectReference>(
+            A<string>.Ignored,
+            A<object[]>.Ignored))
+            .MustNotHaveHappened();
     }
 
     [Fact]
     public void DevToolsMiddleware_CanInitialize_WithDevTools()
     {
         // Arrange
-        Mock<IJSRuntime> mockJsRuntime = new();
+        IJSRuntime mockJsRuntime = A.Fake<IJSRuntime>();
         DevToolsStateManager stateManager = new();
-        ReduxDevToolsModule devTools = new(mockJsRuntime.Object, stateManager);
+        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager);
         DevToolsMiddleware middleware = new(devTools);
 
-        Mock<IStore> mockStore = new();
-        Mock<IDispatcher> mockDispatcher = new();
+        IStore mockStore = A.Fake<IStore>();
+        IDispatcher mockDispatcher = A.Fake<IDispatcher>();
 
         // Act & Assert (should not throw)
-        Task task = middleware.InitializeAsync(mockDispatcher.Object, mockStore.Object);
+        Task task = middleware.InitializeAsync(mockDispatcher, mockStore);
         Assert.NotNull(task);
         Assert.True(task.IsCompletedSuccessfully);
     }
@@ -67,7 +66,7 @@ public class DevToolsInitializationTests
         ServiceCollection services = [];
 
         // Add required dependencies
-        services.AddSingleton(new Mock<IJSRuntime>().Object);
+        services.AddSingleton(A.Fake<IJSRuntime>());
 
         // Save original environment variables
         string? originalAspNetCoreEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");

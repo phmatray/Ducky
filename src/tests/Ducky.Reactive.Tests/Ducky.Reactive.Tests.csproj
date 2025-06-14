@@ -6,15 +6,14 @@
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);AD0001;RCS1046;RCS1090</NoWarn>
     <RootNamespace>Ducky.Reactive.Tests</RootNamespace>
-
-    <!-- To enable the Microsoft Testing Platform 'dotnet test' experience -->
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <!-- To enable the Microsoft Testing Platform native command line experience -->
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <TestingPlatformCaptureOutput>true</TestingPlatformCaptureOutput>
   </PropertyGroup>
 
   <ItemGroup>
     <Using Include="Xunit"/>
+    <Using Include="Shouldly" />
   </ItemGroup>
 
   <ItemGroup>

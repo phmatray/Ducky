@@ -6,29 +6,29 @@ namespace Ducky.Reactive.Tests;
 
 public class ReactiveEffectMiddlewareTests
 {
-    private readonly Mock<IStoreEventPublisher> _eventPublisherMock;
-    private readonly Mock<IDispatcher> _dispatcherMock;
-    private readonly Mock<IStore> _storeMock;
-    private readonly Mock<IRootState> _rootStateMock;
+    private readonly IStoreEventPublisher _eventPublisherMock;
+    private readonly IDispatcher _dispatcherMock;
+    private readonly IStore _storeMock;
+    private readonly IRootState _rootStateMock;
 
     public ReactiveEffectMiddlewareTests()
     {
-        _eventPublisherMock = new Mock<IStoreEventPublisher>();
-        _dispatcherMock = new Mock<IDispatcher>();
-        _storeMock = new Mock<IStore>();
-        _rootStateMock = new Mock<IRootState>();
+        _eventPublisherMock = A.Fake<IStoreEventPublisher>();
+        _dispatcherMock = A.Fake<IDispatcher>();
+        _storeMock = A.Fake<IStore>();
+        _rootStateMock = A.Fake<IRootState>();
 
-        _storeMock.Setup(s => s.CurrentState).Returns(_rootStateMock.Object);
+        A.CallTo(() => _storeMock.CurrentState).Returns(_rootStateMock);
     }
 
     [Fact]
     public async Task InitializeAsync_WithNoEffects_ShouldInitializeSuccessfully()
     {
         // Arrange
-        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock);
 
         // Act
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Assert - No exceptions thrown
         true.ShouldBeTrue();
@@ -40,10 +40,10 @@ public class ReactiveEffectMiddlewareTests
         // Arrange
         TestReactiveEffect effect = new();
         List<ReactiveEffect> effects = [effect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
         // Act
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Assert
         effect.WasHandleCalled.ShouldBeTrue();
@@ -55,10 +55,10 @@ public class ReactiveEffectMiddlewareTests
         // Arrange
         TestReactiveEffect effect = new();
         List<ReactiveEffect> effects = [effect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
         object testAction = new { Type = "TEST_ACTION" };
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act
         middleware.AfterReduce(testAction);
@@ -76,7 +76,7 @@ public class ReactiveEffectMiddlewareTests
         // Arrange
         TestReactiveEffect effect = new();
         List<ReactiveEffect> effects = [effect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
         object[] testActions =
         [
             new { Type = "ACTION_1" },
@@ -84,7 +84,7 @@ public class ReactiveEffectMiddlewareTests
             new { Type = "ACTION_3" }
         ];
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act
         foreach (object action in testActions)
@@ -109,10 +109,10 @@ public class ReactiveEffectMiddlewareTests
         // Arrange
         DispatchingReactiveEffect effect = new();
         List<ReactiveEffect> effects = [effect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
         object triggerAction = new { Type = "TRIGGER" };
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act
         middleware.AfterReduce(triggerAction);
@@ -121,7 +121,7 @@ public class ReactiveEffectMiddlewareTests
         await Task.Delay(50, TestContext.Current.CancellationToken);
 
         // Assert
-        _dispatcherMock.Verify(d => d.Dispatch(It.IsAny<object>()), Times.Once);
+        A.CallTo(() => _dispatcherMock.Dispatch(A<object>.Ignored)).MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -130,10 +130,10 @@ public class ReactiveEffectMiddlewareTests
         // Arrange
         ErrorThrowingReactiveEffect effect = new();
         List<ReactiveEffect> effects = [effect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
         object triggerAction = new { Type = "TRIGGER" };
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act
         middleware.AfterReduce(triggerAction);
@@ -142,7 +142,7 @@ public class ReactiveEffectMiddlewareTests
         await Task.Delay(50, TestContext.Current.CancellationToken);
 
         // Assert
-        _eventPublisherMock.Verify(e => e.Publish(It.IsAny<EffectErrorEventArgs>()), Times.Once);
+        A.CallTo(() => _eventPublisherMock.Publish(A<EffectErrorEventArgs>.Ignored)).MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -151,12 +151,12 @@ public class ReactiveEffectMiddlewareTests
         // Arrange
         StateTrackingReactiveEffect effect = new();
         List<ReactiveEffect> effects = [effect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
-        Mock<IRootState> newStateMock = new();
-        _storeMock.Setup(s => s.CurrentState).Returns(newStateMock.Object);
+        IRootState newStateMock = A.Fake<IRootState>();
+        A.CallTo(() => _storeMock.CurrentState).Returns(newStateMock);
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act
         middleware.AfterReduce(new { Type = "UPDATE_STATE" });
@@ -165,14 +165,14 @@ public class ReactiveEffectMiddlewareTests
         await Task.Delay(50, TestContext.Current.CancellationToken);
 
         // Assert
-        effect.ReceivedStates.ShouldContain(newStateMock.Object);
+        effect.ReceivedStates.ShouldContain(newStateMock);
     }
 
     [Fact]
     public void BeginInternalMiddlewareChange_ShouldReturnDisposable()
     {
         // Arrange
-        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new([], _eventPublisherMock);
 
         // Act
         IDisposable disposable = middleware.BeginInternalMiddlewareChange();

@@ -4,13 +4,13 @@ namespace Ducky.Tests.Middlewares;
 
 public class AsyncEffectGroupTests
 {
-    private readonly Mock<IDispatcher> _dispatcherMock = new();
-    private readonly Mock<IRootState> _rootStateMock = new();
-    private readonly Mock<ILogger<TestEffectGroup>> _loggerMock = new();
+    private readonly IDispatcher _dispatcher = A.Fake<IDispatcher>();
+    private readonly IRootState _rootState = A.Fake<IRootState>();
+    private readonly ILogger<TestEffectGroup> _logger = A.Fake<ILogger<TestEffectGroup>>();
 
-    private IDispatcher Dispatcher => _dispatcherMock.Object;
-    private IRootState RootState => _rootStateMock.Object;
-    private ILogger<TestEffectGroup> Logger => _loggerMock.Object;
+    private IDispatcher Dispatcher => _dispatcher;
+    private IRootState RootState => _rootState;
+    private ILogger<TestEffectGroup> Logger => _logger;
 
     [Fact]
     public void Constructor_Should_NotThrow()
@@ -126,7 +126,7 @@ public class AsyncEffectGroupTests
         var effectGroup = new TestEffectGroup(Logger);
         effectGroup.SetDispatcher(Dispatcher);
         var expectedAction = new TestAction1();
-        _dispatcherMock.Setup(x => x.LastAction).Returns(expectedAction);
+        A.CallTo(() => _dispatcher.LastAction).Returns(expectedAction);
 
         // Act
         object? result = effectGroup.LastAction;

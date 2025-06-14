@@ -6,6 +6,6 @@ global using System.Collections.Immutable;
 global using System.Diagnostics.CodeAnalysis;
 global using Ducky;
 global using Microsoft.Extensions.Time.Testing;
-global using Moq;
+global using FakeItEasy;
 global using Shouldly;
 global using Xunit;

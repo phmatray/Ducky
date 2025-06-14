@@ -5,6 +5,6 @@
 global using System.Collections.Immutable;
 global using Ducky.Tests.TestModels;
 global using Microsoft.Extensions.Logging;
-global using Moq;
+global using FakeItEasy;
 global using Shouldly;
 global using Xunit;

@@ -6,15 +6,14 @@
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);AD0001</NoWarn>
     <RootNamespace>Ducky.Generator.Tests</RootNamespace>
-
-    <!-- To enable the Microsoft Testing Platform 'dotnet test' experience -->
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <!-- To enable the Microsoft Testing Platform native command line experience -->
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <TestingPlatformCaptureOutput>true</TestingPlatformCaptureOutput>
   </PropertyGroup>
 
   <ItemGroup>
     <Using Include="Xunit"/>
+    <Using Include="Shouldly" />
   </ItemGroup>
 
   <ItemGroup>

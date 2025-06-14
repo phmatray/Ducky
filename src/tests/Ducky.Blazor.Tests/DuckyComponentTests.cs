@@ -1,6 +1,6 @@
 using Bunit;
 using Microsoft.AspNetCore.Components.Rendering;
-using Moq;
+using FakeItEasy;
 using Shouldly;
 using System.Collections.Immutable;
 
@@ -8,14 +8,14 @@ namespace Ducky.Blazor.Tests;
 
 public class DuckyComponentTests : Bunit.TestContext
 {
-    private readonly Mock<IStore> _storeMock;
-    private readonly Mock<IDispatcher> _dispatcherMock;
+    private readonly IStore _storeMock;
+    private readonly IDispatcher _dispatcherMock;
     private readonly RootState _rootState;
 
     public DuckyComponentTests()
     {
-        _storeMock = new Mock<IStore>();
-        _dispatcherMock = new Mock<IDispatcher>();
+        _storeMock = A.Fake<IStore>();
+        _dispatcherMock = A.Fake<IDispatcher>();
 
         // Create a root state with some test data
         ImmutableSortedDictionary<string, object> stateDict =
@@ -23,10 +23,10 @@ public class DuckyComponentTests : Bunit.TestContext
                 .Add("test", new TestState { Value = 42 });
         _rootState = new RootState(stateDict);
 
-        _storeMock.Setup(s => s.CurrentState).Returns(_rootState);
+        A.CallTo(() => _storeMock.CurrentState).Returns(_rootState);
 
-        Services.AddSingleton(_storeMock.Object);
-        Services.AddSingleton(_dispatcherMock.Object);
+        Services.AddSingleton(_storeMock);
+        Services.AddSingleton(_dispatcherMock);
         Services.AddLogging();
     }
 
@@ -62,11 +62,10 @@ public class DuckyComponentTests : Bunit.TestContext
             ImmutableSortedDictionary<string, object>.Empty
                 .Add("test", new TestState { Value = 100 });
         RootState newRootState = new(newStateDict);
-        _storeMock.Setup(s => s.CurrentState).Returns(newRootState);
+        A.CallTo(() => _storeMock.CurrentState).Returns(newRootState);
 
-        _storeMock.Raise(
-            s => s.StateChanged += null,
-            new StateChangedEventArgs(_rootState, newRootState));
+        _storeMock.StateChanged += Raise.FreeForm<EventHandler<StateChangedEventArgs>>
+            .With(_storeMock, new StateChangedEventArgs(newRootState, _rootState));
 
         // Assert
         component.RenderCount.ShouldBeGreaterThan(renderCount);

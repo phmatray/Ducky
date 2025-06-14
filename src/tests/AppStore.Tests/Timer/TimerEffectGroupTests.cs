@@ -6,15 +6,15 @@ namespace AppStore.Tests.Timer;
 
 public class TimerEffectGroupTests
 {
-    private readonly Mock<ILogger<TimerEffectGroup>> _loggerMock = new();
-    private readonly Mock<IDispatcher> _dispatcherMock = new();
-    private readonly Mock<IRootState> _rootStateMock = new();
+    private readonly ILogger<TimerEffectGroup> _logger = A.Fake<ILogger<TimerEffectGroup>>();
+    private readonly IDispatcher _dispatcher = A.Fake<IDispatcher>();
+    private readonly IRootState _rootState = A.Fake<IRootState>();
     private readonly TimerEffectGroup _effectGroup;
 
     public TimerEffectGroupTests()
     {
-        _effectGroup = new TimerEffectGroup(_loggerMock.Object);
-        _effectGroup.SetDispatcher(_dispatcherMock.Object);
+        _effectGroup = new TimerEffectGroup(_logger);
+        _effectGroup.SetDispatcher(_dispatcher);
     }
 
     [Fact]
@@ -46,23 +46,19 @@ public class TimerEffectGroupTests
         // Arrange
         StartTimer action = new();
         TimerState timerState = new() { IsRunning = true, Time = 0 };
-        _rootStateMock.Setup(x => x.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        _ = _effectGroup.HandleAsync(action, _rootState);
 
         // Wait a bit for the timer to start
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("Starting timer")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        A.CallTo(_logger).Where(call => call.Method.Name == "Log"
+            && call.GetArgument<LogLevel>(0) == LogLevel.Information
+            && call.GetArgument<object>(2)!.ToString()!.Contains("Starting timer"))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -72,24 +68,20 @@ public class TimerEffectGroupTests
         StartTimer startAction = new();
         StopTimer stopAction = new();
         TimerState timerState = new() { IsRunning = true, Time = 0 };
-        _rootStateMock.Setup(x => x.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
 
         // Start timer first
-        _ = _effectGroup.HandleAsync(startAction, _rootStateMock.Object);
+        _ = _effectGroup.HandleAsync(startAction, _rootState);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
-        await _effectGroup.HandleAsync(stopAction, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(stopAction, _rootState);
 
         // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("Stopping timer")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        A.CallTo(_logger).Where(call => call.Method.Name == "Log"
+            && call.GetArgument<LogLevel>(0) == LogLevel.Information
+            && call.GetArgument<object>(2)!.ToString()!.Contains("Stopping timer"))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -99,17 +91,13 @@ public class TimerEffectGroupTests
         ResetTimer action = new();
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("Resetting timer")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        A.CallTo(_logger).Where(call => call.Method.Name == "Log"
+            && call.GetArgument<LogLevel>(0) == LogLevel.Information
+            && call.GetArgument<object>(2)!.ToString()!.Contains("Resetting timer"))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -118,27 +106,22 @@ public class TimerEffectGroupTests
         // Arrange
         Tick action = new();
         TimerState timerState = new() { IsRunning = true, Time = 10 };
-        _rootStateMock.Setup(x => x.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Debug,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("Timer tick: 10s")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        A.CallTo(_logger).Where(call => call.Method.Name == "Log"
+            && call.GetArgument<LogLevel>(0) == LogLevel.Debug
+            && call.GetArgument<object>(2)!.ToString()!.Contains("Timer tick: 10s"))
+            .MustHaveHappenedOnceExactly();
 
-        _dispatcherMock.Verify(
-            x => x.Dispatch(
-                It.Is<AddNotification>(a =>
-                    a.Notification is InfoNotification &&
-                    a.Notification.Message == "Timer: 10 seconds")),
-            Times.Once);
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<AddNotification>.That.Matches(a =>
+                a.Notification is InfoNotification &&
+                a.Notification.Message == "Timer: 10 seconds")))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -147,16 +130,15 @@ public class TimerEffectGroupTests
         // Arrange
         Tick action = new();
         TimerState timerState = new() { IsRunning = true, Time = 7 }; // Not divisible by 10
-        _rootStateMock.Setup(x => x.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _dispatcherMock.Verify(
-            x => x.Dispatch(
-                It.Is<AddNotification>(a => a.Notification is InfoNotification)),
-            Times.Never);
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<AddNotification>.That.Matches(a => a.Notification is InfoNotification)))
+            .MustNotHaveHappened();
     }
 
     [Fact]
@@ -165,16 +147,15 @@ public class TimerEffectGroupTests
         // Arrange
         Tick action = new();
         TimerState timerState = new() { IsRunning = true, Time = 0 };
-        _rootStateMock.Setup(x => x.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(action, _rootState);
 
         // Assert
-        _dispatcherMock.Verify(
-            x => x.Dispatch(
-                It.Is<AddNotification>(a => a.Notification is InfoNotification)),
-            Times.Never);
+        A.CallTo(() => _dispatcher.Dispatch(
+            A<AddNotification>.That.Matches(a => a.Notification is InfoNotification)))
+            .MustNotHaveHappened();
     }
 
     [Fact]
@@ -185,20 +166,22 @@ public class TimerEffectGroupTests
         TimerState runningState = new() { IsRunning = true, Time = 59 };
         TimerState atLimitState = new() { IsRunning = true, Time = 60 };
 
-        _rootStateMock.SetupSequence(x => x.GetSliceState<TimerState>())
-            .Returns(runningState)  // First check when timer starts
-            .Returns(runningState)  // During first tick
-            .Returns(atLimitState)  // When timer reaches 60 seconds
-            .Returns(atLimitState); // Subsequent checks
+        A.CallTo(() => _rootState.GetSliceState<TimerState>())
+            .ReturnsNextFromSequence(
+                runningState,  // First check when timer starts
+                runningState,  // During first tick
+                atLimitState,  // When timer reaches 60 seconds
+                atLimitState); // Subsequent checks
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        _ = _effectGroup.HandleAsync(action, _rootState);
 
         // Wait for timer to process multiple ticks
         await Task.Delay(3000, TestContext.Current.CancellationToken);
 
         // Assert
-        _dispatcherMock.Verify(x => x.Dispatch(It.IsAny<StopTimer>()), Times.AtLeastOnce);
+        A.CallTo(() => _dispatcher.Dispatch(A<StopTimer>.Ignored))
+            .MustHaveHappened();
     }
 
     [Fact]
@@ -207,24 +190,20 @@ public class TimerEffectGroupTests
         // Arrange
         StartTimer action = new();
         TimerState timerState = new() { IsRunning = true, Time = 0 };
-        _rootStateMock.Setup(x => x.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        _ = _effectGroup.HandleAsync(action, _rootState);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
-        _ = _effectGroup.HandleAsync(action, _rootStateMock.Object);
+        _ = _effectGroup.HandleAsync(action, _rootState);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("Starting timer")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Exactly(2));
+        A.CallTo(_logger).Where(call => call.Method.Name == "Log"
+            && call.GetArgument<LogLevel>(0) == LogLevel.Information
+            && call.GetArgument<object>(2)!.ToString()!.Contains("Starting timer"))
+            .MustHaveHappenedTwiceExactly();
     }
 
     [Fact]
@@ -236,17 +215,19 @@ public class TimerEffectGroupTests
         TimerState runningState = new() { IsRunning = true, Time = 0 };
         TimerState stoppedState = new() { IsRunning = false, Time = 1 };
 
-        _rootStateMock.SetupSequence(x => x.GetSliceState<TimerState>())
-            .Returns(runningState)  // When timer starts
-            .Returns(stoppedState); // After timer is stopped
+        A.CallTo(() => _rootState.GetSliceState<TimerState>())
+            .ReturnsNextFromSequence(
+                runningState,  // When timer starts
+                stoppedState); // After timer is stopped
 
         // Act - Start timer then immediately stop it
-        _ = _effectGroup.HandleAsync(startAction, _rootStateMock.Object);
+        _ = _effectGroup.HandleAsync(startAction, _rootState);
         await Task.Delay(100, TestContext.Current.CancellationToken); // Brief delay to let timer start
-        await _effectGroup.HandleAsync(stopAction, _rootStateMock.Object);
+        await _effectGroup.HandleAsync(stopAction, _rootState);
         await Task.Delay(1500, TestContext.Current.CancellationToken); // Wait to ensure no ticks after stop
 
         // Assert
-        _dispatcherMock.Verify(x => x.Dispatch(It.IsAny<Tick>()), Times.Never);
+        A.CallTo(() => _dispatcher.Dispatch(A<Tick>.Ignored))
+            .MustNotHaveHappened();
     }
 }

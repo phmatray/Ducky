@@ -64,11 +64,11 @@ public sealed class ActionPipelineTests
 
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
 
         // Set static properties for testing
         OrderTrackingMiddleware.Name = "MW1";
@@ -78,7 +78,7 @@ public sealed class ActionPipelineTests
         pipeline.Use(typeof(OrderTrackingMiddleware));
         pipeline.Use(typeof(OrderTrackingMiddleware));
 
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         // Act
         DummyAction action = new();
@@ -106,11 +106,11 @@ public sealed class ActionPipelineTests
 
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
 
         // Set static properties for testing
         OrderTrackingMiddleware.Name = "MW";
@@ -122,7 +122,7 @@ public sealed class ActionPipelineTests
             pipeline.Use(typeof(OrderTrackingMiddleware));
         }
 
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         // Act
         DummyAction action = new();
@@ -147,11 +147,11 @@ public sealed class ActionPipelineTests
         services.AddLogging();
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
 
         var called = false;
         CallbackMiddleware.BeforeAction = () => called = true;
@@ -159,7 +159,7 @@ public sealed class ActionPipelineTests
 
         pipeline.Use(typeof(CallbackMiddleware));
 
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         DummyAction action = new();
         bool mayDispatch = pipeline.MayDispatchAction(action);
@@ -180,11 +180,11 @@ public sealed class ActionPipelineTests
         services.AddLogging();
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
 
         var called = false;
         CallbackMiddleware.BeforeAction = () => { };
@@ -192,7 +192,7 @@ public sealed class ActionPipelineTests
 
         pipeline.Use(typeof(CallbackMiddleware));
 
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         DummyAction action = new();
         bool mayDispatch = pipeline.MayDispatchAction(action);
@@ -216,14 +216,14 @@ public sealed class ActionPipelineTests
 
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
         pipeline.Use(typeof(MetadataMiddleware));
 
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         // Act
         DummyAction action = new();
@@ -252,18 +252,18 @@ public sealed class ActionPipelineTests
 
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
         pipeline.Use(typeof(PreventingMiddleware));
 
         // Reset static state
         PreventingMiddleware.StaticBeforeReduceCalled = false;
         PreventingMiddleware.StaticAfterReduceCalled = false;
 
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         // Act
         DummyAction action = new();
@@ -328,15 +328,15 @@ public sealed class ActionPipelineTests
         services.AddLogging();
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
         pipeline.Use(typeof(DummyMiddleware));
 
         // Act
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         // Assert
         DummyMiddleware.StaticCalls.ShouldContain("initialized");
@@ -354,22 +354,22 @@ public sealed class ActionPipelineTests
         services.AddLogging();
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
         pipeline.Use(typeof(DummyMiddleware));
 
         // Act
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         // Assert
         await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object));
+            await pipeline.InitializeAsync(dispatcher, store));
     }
 
-    private static async Task<(ActionPipeline, DummyMiddleware, Mock<IDispatcher>, Mock<IStore>)>
+    private static async Task<(ActionPipeline, DummyMiddleware, IDispatcher, IStore)>
         CreatePipelineWithMiddleware()
     {
         ServiceCollection services = [];
@@ -379,20 +379,20 @@ public sealed class ActionPipelineTests
         // We'll create the pipeline with a type registration and then get the middleware by checking static state
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        Mock<IDispatcher> dispatcherMock = new();
-        Mock<IStore> storeMock = new();
-        Mock<ILogger<ActionPipeline>> loggerMock = new();
+        IDispatcher dispatcher = A.Fake<IDispatcher>();
+        IStore store = A.Fake<IStore>();
+        ILogger<ActionPipeline> logger = A.Fake<ILogger<ActionPipeline>>();
 
-        ActionPipeline pipeline = new(serviceProvider, loggerMock.Object);
+        ActionPipeline pipeline = new(serviceProvider, logger);
         pipeline.Use(typeof(DummyMiddleware));
 
-        await pipeline.InitializeAsync(dispatcherMock.Object, storeMock.Object);
+        await pipeline.InitializeAsync(dispatcher, store);
 
         // Create a dummy middleware to return (this won't be the one used by the pipeline)
         // But since DummyMiddleware doesn't need static state, we can return any instance
         DummyMiddleware dummyMw = new();
 
-        return (pipeline, dummyMw, dispatcherMock, storeMock);
+        return (pipeline, dummyMw, dispatcher, store);
     }
 }
 

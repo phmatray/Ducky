@@ -8,6 +8,6 @@ global using Ducky.Pipeline;
 global using Ducky.Reactive;
 global using Ducky.Reactive.Middlewares.ReactiveEffects;
 global using Microsoft.Reactive.Testing;
-global using Moq;
+global using FakeItEasy;
 global using Shouldly;
 global using Xunit;

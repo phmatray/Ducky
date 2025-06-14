@@ -10,20 +10,20 @@ namespace Ducky.Reactive.Tests;
 public class ReactiveEffectIntegrationTests : ReactiveTest
 {
     private readonly TestScheduler _scheduler;
-    private readonly Mock<IStoreEventPublisher> _eventPublisherMock;
-    private readonly Mock<IDispatcher> _dispatcherMock;
-    private readonly Mock<IStore> _storeMock;
-    private readonly Mock<IRootState> _rootStateMock;
+    private readonly IStoreEventPublisher _eventPublisherMock;
+    private readonly IDispatcher _dispatcherMock;
+    private readonly IStore _storeMock;
+    private readonly IRootState _rootStateMock;
 
     public ReactiveEffectIntegrationTests()
     {
         _scheduler = new TestScheduler();
-        _eventPublisherMock = new Mock<IStoreEventPublisher>();
-        _dispatcherMock = new Mock<IDispatcher>();
-        _storeMock = new Mock<IStore>();
-        _rootStateMock = new Mock<IRootState>();
+        _eventPublisherMock = A.Fake<IStoreEventPublisher>();
+        _dispatcherMock = A.Fake<IDispatcher>();
+        _storeMock = A.Fake<IStore>();
+        _rootStateMock = A.Fake<IRootState>();
 
-        _storeMock.Setup(s => s.CurrentState).Returns(_rootStateMock.Object);
+        A.CallTo(() => _storeMock.CurrentState).Returns(_rootStateMock);
     }
 
     [Fact]
@@ -31,14 +31,14 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
     {
         // Arrange
         List<object> dispatchedActions = [];
-        _dispatcherMock.Setup(d => d.Dispatch(It.IsAny<object>()))
-            .Callback<object>(action => dispatchedActions.Add(action));
+        A.CallTo(() => _dispatcherMock.Dispatch(A<object>.Ignored))
+            .Invokes((object action) => dispatchedActions.Add(action));
 
         ExampleReactiveEffects.TimerEffect timerEffect = new(_scheduler);
         List<ReactiveEffect> effects = [timerEffect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act - Start the timer
         middleware.AfterReduce(new StartTimer());
@@ -71,14 +71,14 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
     {
         // Arrange
         List<object> dispatchedActions = [];
-        _dispatcherMock.Setup(d => d.Dispatch(It.IsAny<object>()))
-            .Callback<object>(action => dispatchedActions.Add(action));
+        A.CallTo(() => _dispatcherMock.Dispatch(A<object>.Ignored))
+            .Invokes((object action) => dispatchedActions.Add(action));
 
         ExampleReactiveEffects.DebouncedSearchEffect searchEffect = new(_scheduler);
         List<ReactiveEffect> effects = [searchEffect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act - Rapid typing simulation
         middleware.AfterReduce(new SearchTextChanged("h"));
@@ -112,25 +112,25 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
     {
         // Arrange
         List<object> dispatchedActions = [];
-        _dispatcherMock.Setup(d => d.Dispatch(It.IsAny<object>()))
-            .Callback<object>(action => dispatchedActions.Add(action));
+        A.CallTo(() => _dispatcherMock.Dispatch(A<object>.Ignored))
+            .Invokes((object action) => dispatchedActions.Add(action));
 
         ExampleReactiveEffects.StateMonitoringEffect stateEffect = new();
         List<ReactiveEffect> effects = [stateEffect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
         // Setup initial state
         CounterState initialState = new(0);
-        _rootStateMock.Setup(x => x.GetSliceState<CounterState>()).Returns(initialState);
+        A.CallTo(() => _rootStateMock.GetSliceState<CounterState>()).Returns(initialState);
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act - Simulate counter increments
         for (int i = 1; i <= 12; i++)
         {
             CounterState newState = new(i);
-            _rootStateMock.Setup(x => x.GetSliceState<CounterState>()).Returns(newState);
-            _storeMock.Setup(x => x.CurrentState).Returns(_rootStateMock.Object);
+            A.CallTo(() => _rootStateMock.GetSliceState<CounterState>()).Returns(newState);
+            A.CallTo(() => _storeMock.CurrentState).Returns(_rootStateMock);
 
             middleware.AfterReduce(new { Type = "INCREMENT" });
         }
@@ -151,8 +151,8 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         List<object> dispatchedActions = [];
         ReactiveEffectMiddleware? middleware = null;
 
-        _dispatcherMock.Setup(d => d.Dispatch(It.IsAny<object>()))
-            .Callback<object>(action =>
+        A.CallTo(() => _dispatcherMock.Dispatch(A<object>.Ignored))
+            .Invokes((object action) =>
             {
                 dispatchedActions.Add(action);
                 // Re-dispatch workflow step actions to simulate real behavior
@@ -170,9 +170,9 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
 
         ExampleReactiveEffects.ComplexWorkflowEffect workflowEffect = new(_scheduler);
         List<ReactiveEffect> effects = [workflowEffect];
-        middleware = new ReactiveEffectMiddleware(effects, _eventPublisherMock.Object);
+        middleware = new ReactiveEffectMiddleware(effects, _eventPublisherMock);
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act
         middleware.AfterReduce(new StartWorkflow());
@@ -198,14 +198,14 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
     {
         // Arrange
         List<object> dispatchedActions = [];
-        _dispatcherMock.Setup(d => d.Dispatch(It.IsAny<object>()))
-            .Callback<object>(action => dispatchedActions.Add(action));
+        A.CallTo(() => _dispatcherMock.Dispatch(A<object>.Ignored))
+            .Invokes((object action) => dispatchedActions.Add(action));
 
         ExampleReactiveEffects.CancellableEffect cancellableEffect = new(_scheduler);
         List<ReactiveEffect> effects = [cancellableEffect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act - Start long-running task
         middleware.AfterReduce(new StartLongRunningTask());
@@ -247,20 +247,20 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
     {
         // Arrange
         List<object> dispatchedActions = [];
-        _dispatcherMock.Setup(d => d.Dispatch(It.IsAny<object>()))
-            .Callback<object>(action => dispatchedActions.Add(action));
+        A.CallTo(() => _dispatcherMock.Dispatch(A<object>.Ignored))
+            .Invokes((object action) => dispatchedActions.Add(action));
 
         // Create multiple effects
         ExampleReactiveEffects.TimerEffect timerEffect = new(_scheduler);
         ExampleReactiveEffects.StateMonitoringEffect stateEffect = new();
         List<ReactiveEffect> effects = [timerEffect, stateEffect];
-        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
         // Setup state
         CounterState state = new(5);
-        _rootStateMock.Setup(x => x.GetSliceState<CounterState>()).Returns(state);
+        A.CallTo(() => _rootStateMock.GetSliceState<CounterState>()).Returns(state);
 
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
         // Act - Trigger actions that both effects should handle
         middleware.AfterReduce(new StartTimer());

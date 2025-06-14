@@ -8,24 +8,24 @@ namespace Ducky.Tests.Middlewares;
 /// </summary>
 public class AsyncEffectMiddlewareTests
 {
-    private readonly Mock<IStoreEventPublisher> _eventPublisherMock;
-    private readonly Mock<IDispatcher> _dispatcherMock;
-    private readonly Mock<IStore> _storeMock;
+    private readonly IStoreEventPublisher _eventPublisher;
+    private readonly IDispatcher _dispatcher;
+    private readonly IStore _store;
     private readonly RootState _rootState;
 
     public AsyncEffectMiddlewareTests()
     {
-        _eventPublisherMock = new Mock<IStoreEventPublisher>();
-        _dispatcherMock = new Mock<IDispatcher>();
-        _storeMock = new Mock<IStore>();
+        _eventPublisher = A.Fake<IStoreEventPublisher>();
+        _dispatcher = A.Fake<IDispatcher>();
+        _store = A.Fake<IStore>();
         _rootState = Factories.CreateTestRootState();
-        _storeMock.Setup(s => s.CurrentState).Returns(_rootState);
+        A.CallTo(() => _store.CurrentState).Returns(_rootState);
     }
 
     private async Task<AsyncEffectMiddleware> CreateInitializedMiddleware(params IAsyncEffect[] effects)
     {
-        AsyncEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
-        await middleware.InitializeAsync(_dispatcherMock.Object, _storeMock.Object);
+        AsyncEffectMiddleware middleware = new(effects, _eventPublisher);
+        await middleware.InitializeAsync(_dispatcher, _store);
         return middleware;
     }
 
@@ -33,7 +33,7 @@ public class AsyncEffectMiddlewareTests
     public void Constructor_WithNullEffects_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            new AsyncEffectMiddleware(null!, _eventPublisherMock.Object));
+            new AsyncEffectMiddleware(null!, _eventPublisher));
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class AsyncEffectMiddlewareTests
     {
         IAsyncEffect[] effects = [];
 
-        AsyncEffectMiddleware middleware = new(effects, _eventPublisherMock.Object);
+        AsyncEffectMiddleware middleware = new(effects, _eventPublisher);
 
         Assert.NotNull(middleware);
     }
@@ -58,14 +58,14 @@ public class AsyncEffectMiddlewareTests
     [Fact]
     public async Task InitializeAsync_SetsDispatcherOnAllEffects()
     {
-        Mock<IAsyncEffect> effect1Mock = new();
-        Mock<IAsyncEffect> effect2Mock = new();
-        IAsyncEffect[] effects = [effect1Mock.Object, effect2Mock.Object];
+        IAsyncEffect effect1 = A.Fake<IAsyncEffect>();
+        IAsyncEffect effect2 = A.Fake<IAsyncEffect>();
+        IAsyncEffect[] effects = [effect1, effect2];
 
         await CreateInitializedMiddleware(effects);
 
-        effect1Mock.Verify(e => e.SetDispatcher(_dispatcherMock.Object), Times.Once);
-        effect2Mock.Verify(e => e.SetDispatcher(_dispatcherMock.Object), Times.Once);
+        A.CallTo(() => effect1.SetDispatcher(_dispatcher)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => effect2.SetDispatcher(_dispatcher)).MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -118,9 +118,9 @@ public class AsyncEffectMiddlewareTests
     [Fact]
     public async Task AfterReduce_WithEffectThatCannotHandle_DoesNotCallEffect()
     {
-        Mock<IAsyncEffect> effectMock = new();
-        effectMock.Setup(e => e.CanHandle(It.IsAny<object>())).Returns(false);
-        AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effectMock.Object);
+        IAsyncEffect effect = A.Fake<IAsyncEffect>();
+        A.CallTo(() => effect.CanHandle(A<object>.Ignored)).Returns(false);
+        AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effect);
         TestAction action = new();
 
         middleware.AfterReduce(action);
@@ -128,17 +128,17 @@ public class AsyncEffectMiddlewareTests
         // Wait a short time to ensure async operations complete
         await Task.Delay(50, TestContext.Current.CancellationToken);
 
-        effectMock.Verify(e => e.HandleAsync(It.IsAny<object>(), It.IsAny<IRootState>()), Times.Never);
+        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IRootState>.Ignored)).MustNotHaveHappened();
     }
 
     [Fact]
     public async Task AfterReduce_WithEffectThatCanHandle_CallsEffect()
     {
-        Mock<IAsyncEffect> effectMock = new();
-        effectMock.Setup(e => e.CanHandle(It.IsAny<object>())).Returns(true);
-        effectMock.Setup(e => e.HandleAsync(It.IsAny<object>(), It.IsAny<IRootState>()))
+        IAsyncEffect effect = A.Fake<IAsyncEffect>();
+        A.CallTo(() => effect.CanHandle(A<object>.Ignored)).Returns(true);
+        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IRootState>.Ignored))
             .Returns(Task.CompletedTask);
-        AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effectMock.Object);
+        AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effect);
         TestAction action = new();
 
         middleware.AfterReduce(action);
@@ -146,18 +146,18 @@ public class AsyncEffectMiddlewareTests
         // Wait a short time to ensure async operations complete
         await Task.Delay(50, TestContext.Current.CancellationToken);
 
-        effectMock.Verify(e => e.HandleAsync(action, _rootState), Times.Once);
+        A.CallTo(() => effect.HandleAsync(action, _rootState)).MustHaveHappenedOnceExactly();
     }
 
     [Fact]
     public async Task AfterReduce_WithEffectThatThrows_PublishesErrorEvent()
     {
-        Mock<IAsyncEffect> effectMock = new();
+        IAsyncEffect effect = A.Fake<IAsyncEffect>();
         TestException testException = new();
-        effectMock.Setup(e => e.CanHandle(It.IsAny<object>())).Returns(true);
-        effectMock.Setup(e => e.HandleAsync(It.IsAny<object>(), It.IsAny<IRootState>()))
+        A.CallTo(() => effect.CanHandle(A<object>.Ignored)).Returns(true);
+        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IRootState>.Ignored))
             .ThrowsAsync(testException);
-        AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effectMock.Object);
+        AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effect);
         TestAction action = new();
 
         middleware.AfterReduce(action);
@@ -165,12 +165,11 @@ public class AsyncEffectMiddlewareTests
         // Wait a longer time to ensure async operations and error handling complete
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
-        _eventPublisherMock.Verify(
-            ep => ep.Publish(It.Is<EffectErrorEventArgs>(args =>
-                ReferenceEquals(args.Exception, testException)
-                    && args.EffectType == effectMock.Object.GetType()
-                    && ReferenceEquals(args.Action, action))),
-            Times.Once);
+        A.CallTo(() => _eventPublisher.Publish(A<EffectErrorEventArgs>.That.Matches(args =>
+            ReferenceEquals(args.Exception, testException)
+                && args.EffectType == effect.GetType()
+                && ReferenceEquals(args.Action, action))))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -187,12 +186,12 @@ public class AsyncEffectMiddlewareTests
     [Fact]
     public async Task AfterReduce_FireAndForget_DoesNotBlockExecution()
     {
-        Mock<IAsyncEffect> slowEffectMock = new();
-        slowEffectMock.Setup(e => e.CanHandle(It.IsAny<object>())).Returns(true);
-        slowEffectMock.Setup(e => e.HandleAsync(It.IsAny<object>(), It.IsAny<IRootState>()))
-            .Returns(async () => await Task.Delay(200, TestContext.Current.CancellationToken));
+        IAsyncEffect slowEffect = A.Fake<IAsyncEffect>();
+        A.CallTo(() => slowEffect.CanHandle(A<object>.Ignored)).Returns(true);
+        A.CallTo(() => slowEffect.HandleAsync(A<object>.Ignored, A<IRootState>.Ignored))
+            .ReturnsLazily(async () => await Task.Delay(200, TestContext.Current.CancellationToken));
 
-        AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(slowEffectMock.Object);
+        AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(slowEffect);
         TestAction action = new();
 
         // Measure execution time - should return immediately

@@ -2,7 +2,7 @@ using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
 using Microsoft.JSInterop;
-using Moq;
+using FakeItEasy;
 using Shouldly;
 
 namespace Ducky.Blazor.Tests;
@@ -12,12 +12,12 @@ namespace Ducky.Blazor.Tests;
 /// </summary>
 public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
 {
-    private readonly Mock<IJSRuntime> _jsRuntimeMock;
+    private readonly IJSRuntime _jsRuntimeMock;
 
     public MiddlewareIntegrationTestsSimplified()
     {
-        _jsRuntimeMock = new Mock<IJSRuntime>();
-        Services.AddSingleton(_jsRuntimeMock.Object);
+        _jsRuntimeMock = A.Fake<IJSRuntime>();
+        Services.AddSingleton(_jsRuntimeMock);
         Services.AddLogging();
     }
 
@@ -110,7 +110,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
     private void TestPreset(Func<DuckyBuilder, DuckyBuilder> configurePreset, int expectedMiddlewareCount)
     {
         ServiceCollection tempServices = [];
-        tempServices.AddSingleton(_jsRuntimeMock.Object);
+        tempServices.AddSingleton(_jsRuntimeMock);
         tempServices.AddLogging();
 
         tempServices.AddDucky(builder => configurePreset(builder));
@@ -128,7 +128,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
     private void TestPresetWithSingleMiddleware()
     {
         ServiceCollection tempServices = [];
-        tempServices.AddSingleton(_jsRuntimeMock.Object);
+        tempServices.AddSingleton(_jsRuntimeMock);
         tempServices.AddLogging();
 
         tempServices.AddDucky(builder => builder
@@ -167,8 +167,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
     public void BlazorMiddlewares_ShouldRegisterCorrectly()
     {
         // Arrange
-        _jsRuntimeMock
-            .Setup(js => js.InvokeAsync<object>("console.log", It.IsAny<object[]>()))
+        A.CallTo(() => _jsRuntimeMock.InvokeAsync<object>("console.log", A<object[]>.Ignored))
             .Returns(ValueTask.FromResult<object>(null!));
 
         // Act

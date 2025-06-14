@@ -33,7 +33,14 @@
       "Bash(timeout:*)",
       "Bash(node:*)",
       "Bash(rg:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git checkout:*)",
+      "Bash(cat:*)",
+      "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests --help)",
+      "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests --list-tests)",
+      "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests --timeout 30s)",
+      "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests:*)",
+      "WebFetch(domain:introtorx.com)"
     ],
     "deny": []
   },
