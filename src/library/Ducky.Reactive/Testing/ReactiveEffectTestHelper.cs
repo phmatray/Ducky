@@ -13,7 +13,7 @@ public class ReactiveEffectTestHelper
 {
     private readonly TestScheduler _scheduler;
     private readonly List<Recorded<Notification<object>>> _actions;
-    private readonly List<Recorded<Notification<IRootState>>> _states;
+    private readonly List<Recorded<Notification<IStateProvider>>> _states;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ReactiveEffectTestHelper"/> class.
@@ -23,7 +23,7 @@ public class ReactiveEffectTestHelper
     {
         _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
         _actions = new List<Recorded<Notification<object>>>();
-        _states = new List<Recorded<Notification<IRootState>>>();
+        _states = new List<Recorded<Notification<IStateProvider>>>();
     }
 
     /// <summary>
@@ -44,9 +44,9 @@ public class ReactiveEffectTestHelper
     /// <param name="time">The virtual time to emit the state.</param>
     /// <param name="state">The state to emit.</param>
     /// <returns>The helper for chaining.</returns>
-    public ReactiveEffectTestHelper EmitState(long time, IRootState state)
+    public ReactiveEffectTestHelper EmitState(long time, IStateProvider state)
     {
-        _states.Add(new Recorded<Notification<IRootState>>(time, Notification.CreateOnNext(state)));
+        _states.Add(new Recorded<Notification<IStateProvider>>(time, Notification.CreateOnNext(state)));
         return this;
     }
 
@@ -68,7 +68,7 @@ public class ReactiveEffectTestHelper
     /// <returns>The helper for chaining.</returns>
     public ReactiveEffectTestHelper CompleteStates(long time)
     {
-        _states.Add(new Recorded<Notification<IRootState>>(time, Notification.CreateOnCompleted<IRootState>()));
+        _states.Add(new Recorded<Notification<IStateProvider>>(time, Notification.CreateOnCompleted<IStateProvider>()));
         return this;
     }
 
@@ -85,7 +85,7 @@ public class ReactiveEffectTestHelper
         long disposeAt = 1000)
     {
         ITestableObservable<object> actionsObservable = _scheduler.CreateHotObservable(_actions.ToArray());
-        ITestableObservable<IRootState> statesObservable = _scheduler.CreateHotObservable(_states.ToArray());
+        ITestableObservable<IStateProvider> statesObservable = _scheduler.CreateHotObservable(_states.ToArray());
 
         IObservable<object> output = effect.Handle(actionsObservable, statesObservable);
         ITestableObserver<object> observer = _scheduler.CreateObserver<object>();
@@ -147,9 +147,9 @@ public class TestScenarioBuilder
     /// </summary>
     /// <param name="states">The states with their emission times.</param>
     /// <returns>The builder for chaining.</returns>
-    public TestScenarioBuilder WithStates(params (long time, IRootState state)[] states)
+    public TestScenarioBuilder WithStates(params (long time, IStateProvider state)[] states)
     {
-        foreach ((long time, IRootState state) in states)
+        foreach ((long time, IStateProvider state) in states)
         {
             _helper.EmitState(time, state);
         }

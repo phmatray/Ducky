@@ -112,14 +112,21 @@ public class ImprovedApiExampleTests
                 (200, new IncrementCounter()),
                 (300, new ResetCounter()))
             .WithStates(
-                (0, new TestRootState(new TestCounterState { Value = 0 })),
-                (150, new TestRootState(new TestCounterState { Value = 1 })),
-                (250, new TestRootState(new TestCounterState { Value = 2 })),
-                (350, new TestRootState(new TestCounterState { Value = 0 })))
+                (0, CreateMockStateProvider(new TestCounterState { Value = 0 })),
+                (150, CreateMockStateProvider(new TestCounterState { Value = 1 })),
+                (250, CreateMockStateProvider(new TestCounterState { Value = 2 })),
+                (350, CreateMockStateProvider(new TestCounterState { Value = 0 })))
             .Run(effect);
 
         // Assert
         result.Actions.Count().ShouldBeGreaterThan(0); // At least one event
+    }
+
+    private static IStateProvider CreateMockStateProvider(TestCounterState counterState)
+    {
+        IStateProvider mock = A.Fake<IStateProvider>();
+        A.CallTo(() => mock.GetSlice<TestCounterState>()).Returns(counterState);
+        return mock;
     }
 
     /// <summary>
@@ -201,7 +208,7 @@ public class SimpleCounterEffect : ReactiveEffectBase
 {
     protected override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return actions
             .OfActionType<IncrementCounter>()
@@ -215,10 +222,10 @@ public class AdvancedCounterEffect : ReactiveEffectBase
 
     protected override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
-        return rootState
-            .Select(state => state.GetSliceState<TestCounterState>())
+        return stateProvider
+            .Select(state => state.GetSlice<TestCounterState>())
             .Where(state => state.Value >= Threshold)
             .Take(1)
             .Select(_ => new CounterThresholdReached());
@@ -244,7 +251,7 @@ public class SearchDebouncedEffect()
 {
     protected override IObservable<object> ProcessDebouncedAction(
         SearchQuery action,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return Observable.Return(new SearchExecuted(action.Query));
     }
@@ -269,7 +276,7 @@ public class UserWorkflowEffect : WorkflowEffect<StartUserRegistration>
     protected override IObservable<object> ExecuteWorkflow(
         StartUserRegistration startAction,
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return Observable.Concat(
             Step("Validate", () => Observable.Return(new ValidationCompleted())),
@@ -338,8 +345,8 @@ public record AppState;
 
 public record TestRootState(object State) : IRootState
 {
-    public TState GetSliceState<TState>() where TState : notnull => (TState)State;
-    public TState GetSliceState<TState>(string key) where TState : notnull => (TState)State;
+    public TState GetSlice<TState>() where TState : notnull => (TState)State;
+    public TState GetSlice<TState>(string key) where TState : notnull => (TState)State;
     public bool ContainsKey(string key) => true;
     public ImmutableSortedSet<string> GetKeys() => ImmutableSortedSet<string>.Empty;
     public ImmutableSortedDictionary<string, object> GetStateDictionary() => ImmutableSortedDictionary<string, object>.Empty;

@@ -27,22 +27,22 @@ public static class CustomOperators
     /// <typeparam name="TState">The type of the state.</typeparam>
     /// <typeparam name="TAction">The type of the action.</typeparam>
     /// <param name="source">The source observable sequence.</param>
-    /// <param name="rootStateObs">The observable sequence of the root state.</param>
+    /// <param name="stateProviderObs">The observable sequence of the state provider.</param>
     /// <param name="sliceKey">The key of the slice to select.</param>
     /// <returns>An observable sequence of StateActionPair.</returns>
     public static IObservable<StateActionPair<TState, TAction>> WithSliceState<TState, TAction>(
         this IObservable<TAction> source,
-        IObservable<IRootState> rootStateObs,
+        IObservable<IStateProvider> stateProviderObs,
         string? sliceKey = null)
         where TState : notnull
     {
         return source.WithLatestFrom(
-            rootStateObs,
-            (action, rootState) =>
+            stateProviderObs,
+            (action, stateProvider) =>
             {
                 TState sliceState = sliceKey is null
-                    ? rootState.GetSliceState<TState>()
-                    : rootState.GetSliceState<TState>(sliceKey);
+                    ? stateProvider.GetSlice<TState>()
+                    : stateProvider.GetSliceByKey<TState>(sliceKey);
 
                 return new StateActionPair<TState, TAction>(sliceState, action);
             });

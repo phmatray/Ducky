@@ -16,7 +16,7 @@ public class NotificationWorkflowEffect : WorkflowEffect<StartNotificationWorkfl
     protected override IObservable<object> ExecuteWorkflow(
         StartNotificationWorkflow startAction,
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         Guid notificationId = Guid.NewGuid();
 

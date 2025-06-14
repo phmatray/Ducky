@@ -38,11 +38,11 @@ public abstract class ReactiveEffect
     /// Handles a stream of actions and produces a stream of resulting actions.
     /// </summary>
     /// <param name="actions">The source observable sequence of actions.</param>
-    /// <param name="rootState">The source observable sequence of the root state.</param>
+    /// <param name="stateProvider">The source observable sequence of the state provider.</param>
     /// <returns>An observable sequence of resulting actions.</returns>
     public virtual IObservable<object> Handle(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return Observable.Empty<object>();
     }

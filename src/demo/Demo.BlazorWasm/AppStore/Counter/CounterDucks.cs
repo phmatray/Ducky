@@ -59,9 +59,9 @@ public record CounterReducers : SliceReducers<CounterState>
 
 public class ResetCounterAfter3Sec : AsyncEffect<Increment>
 {
-    public override async Task HandleAsync(Increment action, IRootState rootState)
+    public override async Task HandleAsync(Increment action, IStateProvider stateProvider)
     {
-        CounterState counterState = rootState.GetSliceState<CounterState>();
+        CounterState counterState = stateProvider.GetSlice<CounterState>();
 
         // if the Value is greater than 15, then reset the counter
         if (counterState.Value <= 15)

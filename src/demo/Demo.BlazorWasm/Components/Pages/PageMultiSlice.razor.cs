@@ -13,9 +13,9 @@ public partial class PageMultiSlice
 
     protected override DashboardViewModel Select(IRootState rootState)
     {
-        CounterState counterState = rootState.GetSliceState<CounterState>();
-        MoviesState moviesState = rootState.GetSliceState<MoviesState>();
-        NotificationsState notificationsState = rootState.GetSliceState<NotificationsState>();
+        CounterState counterState = rootState.GetSlice<CounterState>();
+        MoviesState moviesState = rootState.GetSlice<MoviesState>();
+        NotificationsState notificationsState = rootState.GetSlice<NotificationsState>();
 
         return new DashboardViewModel(
             Count: counterState.Value,

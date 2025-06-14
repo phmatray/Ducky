@@ -99,19 +99,19 @@ public class WeatherStateTests
 
         // Act & Assert - Start Weather Polling
         dispatcher.Dispatch(new StartWeatherPolling("Test City"));
-        var state1 = store.CurrentState.GetSliceState<WeatherState>();
+        var state1 = store.GetSlice<WeatherState>();
         state1.Location.ShouldBe("Test City");
         state1.IsLoading.ShouldBeFalse();
 
         // Act & Assert - Weather Loading
         dispatcher.Dispatch(new WeatherLoading());
-        var state2 = store.CurrentState.GetSliceState<WeatherState>();
+        var state2 = store.GetSlice<WeatherState>();
         state2.IsLoading.ShouldBeTrue();
         state2.Location.ShouldBe("Test City");
 
         // Act & Assert - Weather Loaded
         dispatcher.Dispatch(new WeatherLoaded("Test City", 20.0, "Cloudy"));
-        var state3 = store.CurrentState.GetSliceState<WeatherState>();
+        var state3 = store.GetSlice<WeatherState>();
         state3.IsLoading.ShouldBeFalse();
         state3.Location.ShouldBe("Test City");
         state3.Temperature.ShouldBe(20.0);
@@ -120,7 +120,7 @@ public class WeatherStateTests
 
         // Act & Assert - Weather Error
         dispatcher.Dispatch(new WeatherError("Test error"));
-        var state4 = store.CurrentState.GetSliceState<WeatherState>();
+        var state4 = store.GetSlice<WeatherState>();
         state4.IsLoading.ShouldBeFalse();
         state4.Error.ShouldBe("Test error");
     }

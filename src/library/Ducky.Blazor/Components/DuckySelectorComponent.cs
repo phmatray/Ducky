@@ -83,7 +83,7 @@ public abstract class DuckySelectorComponent<TViewModel> : ComponentBase, IDispo
     /// </summary>
     private void UpdateViewModel()
     {
-        _currentViewModel = Select(Store.CurrentState);
+        _currentViewModel = Select(Store.CurrentState());
     }
 
     /// <summary>

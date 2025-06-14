@@ -30,23 +30,23 @@ public abstract class DebouncedEffect<TAction> : ReactiveEffectBase
     /// </summary>
     protected sealed override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return actions
             .OfActionType<TAction>()
             .Throttle(_debounceTime, _scheduler)
-            .SwitchSelect(action => ProcessDebouncedAction(action, rootState));
+            .SwitchSelect(action => ProcessDebouncedAction(action, stateProvider));
     }
 
     /// <summary>
     /// Processes a debounced action.
     /// </summary>
     /// <param name="action">The debounced action to process.</param>
-    /// <param name="rootState">The current root state observable.</param>
+    /// <param name="stateProvider">The current state provider observable.</param>
     /// <returns>An observable of new actions to dispatch.</returns>
     protected abstract IObservable<object> ProcessDebouncedAction(
         TAction action,
-        IObservable<IRootState> rootState);
+        IObservable<IStateProvider> stateProvider);
 }
 
 /// <summary>

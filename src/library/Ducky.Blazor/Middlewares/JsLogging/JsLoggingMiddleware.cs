@@ -52,7 +52,7 @@ public sealed class JsLoggingMiddleware : MiddlewareBase
         }
 
         // Capture previous state and time before action is processed
-        _actionMetadata[action] = (_store.CurrentState, DateTime.Now);
+        _actionMetadata[action] = (_store.CurrentState(), DateTime.Now);
     }
 
     /// <inheritdoc />
@@ -69,7 +69,7 @@ public sealed class JsLoggingMiddleware : MiddlewareBase
             (IRootState prevState, DateTime startTime) = metadata;
             double duration = (DateTime.Now - startTime).TotalMilliseconds;
             string timestamp = startTime.ToString("HH:mm:ss.fff");
-            IRootState newState = _store.CurrentState;
+            IRootState newState = _store.CurrentState();
 
             // Get state dictionaries
             System.Collections.Immutable.ImmutableSortedDictionary<string, object> prevStateDict = prevState.GetStateDictionary();

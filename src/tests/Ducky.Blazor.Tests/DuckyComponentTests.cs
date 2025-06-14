@@ -22,7 +22,7 @@ public class DuckyComponentTests : Bunit.TestContext
                 .Add("test", new TestState { Value = 42 });
         _rootState = new RootState(stateDict);
 
-        A.CallTo(() => _storeMock.CurrentState).Returns(_rootState);
+        A.CallTo(() => _storeMock.CurrentState()).Returns(_rootState);
 
         Services.AddSingleton(_storeMock);
         Services.AddSingleton(_dispatcherMock);
@@ -61,10 +61,16 @@ public class DuckyComponentTests : Bunit.TestContext
             ImmutableSortedDictionary<string, object>.Empty
                 .Add("test", new TestState { Value = 100 });
         RootState newRootState = new(newStateDict);
-        A.CallTo(() => _storeMock.CurrentState).Returns(newRootState);
+        A.CallTo(() => _storeMock.CurrentState()).Returns(newRootState);
 
         _storeMock.StateChanged += Raise.FreeForm<EventHandler<StateChangedEventArgs>>
-            .With(_storeMock, new StateChangedEventArgs(newRootState, _rootState));
+            .With(
+                _storeMock,
+                new StateChangedEventArgs(
+                    "test",
+                    typeof(TestState),
+                    new TestState { Value = 100 },
+                    new TestState { Value = 42 }));
 
         // Assert
         component.RenderCount.ShouldBeGreaterThan(renderCount);

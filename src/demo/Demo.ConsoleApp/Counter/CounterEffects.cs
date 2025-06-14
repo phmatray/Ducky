@@ -5,7 +5,7 @@ namespace Demo.ConsoleApp.Counter;
 
 public sealed class DelayedIncrementEffect : AsyncEffect<IncrementAsync>
 {
-    public override async Task HandleAsync(IncrementAsync action, IRootState rootState)
+    public override async Task HandleAsync(IncrementAsync action, IStateProvider stateProvider)
     {
         AnsiConsole.MarkupLine(
             $"[cyan][[Effect]][/] Starting delayed increment of [yellow]{action.Amount}[/] after [blue]{action.DelayMs}ms[/]...");
@@ -19,9 +19,9 @@ public sealed class DelayedIncrementEffect : AsyncEffect<IncrementAsync>
 
 public sealed class CounterThresholdEffect : AsyncEffect<Increment>
 {
-    public override async Task HandleAsync(Increment action, IRootState rootState)
+    public override async Task HandleAsync(Increment action, IStateProvider stateProvider)
     {
-        CounterState counterState = rootState.GetSliceState<CounterState>();
+        CounterState counterState = stateProvider.GetSlice<CounterState>();
 
         if (counterState.Value >= 10)
         {

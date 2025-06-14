@@ -21,9 +21,9 @@ public sealed class ActionContext
     public bool IsAborted { get; private set; }
 
     /// <summary>
-    /// The current root state of the store.
+    /// The current state provider for accessing store state.
     /// </summary>
-    public IRootState RootState { get; set; } = null!;
+    public IStateProvider StateProvider { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ActionContext"/> class with the specified action.

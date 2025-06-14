@@ -19,7 +19,7 @@ public class AsyncEffectMiddlewareTests
         _dispatcher = A.Fake<IDispatcher>();
         _store = A.Fake<IStore>();
         _rootState = Factories.CreateTestRootState();
-        A.CallTo(() => _store.CurrentState).Returns(_rootState);
+        A.CallTo(() => _store.CurrentState()).Returns(_rootState);
     }
 
     private async Task<AsyncEffectMiddleware> CreateInitializedMiddleware(params IAsyncEffect[] effects)
@@ -128,7 +128,7 @@ public class AsyncEffectMiddlewareTests
         // Wait a short time to ensure async operations complete
         await Task.Delay(50, TestContext.Current.CancellationToken);
 
-        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IRootState>.Ignored)).MustNotHaveHappened();
+        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IStateProvider>.Ignored)).MustNotHaveHappened();
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public class AsyncEffectMiddlewareTests
     {
         IAsyncEffect effect = A.Fake<IAsyncEffect>();
         A.CallTo(() => effect.CanHandle(A<object>.Ignored)).Returns(true);
-        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IRootState>.Ignored))
+        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IStateProvider>.Ignored))
             .Returns(Task.CompletedTask);
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effect);
         TestAction action = new();
@@ -146,7 +146,7 @@ public class AsyncEffectMiddlewareTests
         // Wait a short time to ensure async operations complete
         await Task.Delay(50, TestContext.Current.CancellationToken);
 
-        A.CallTo(() => effect.HandleAsync(action, _rootState)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => effect.HandleAsync(action, A<IStateProvider>.That.Matches(sp => sp == _store))).MustHaveHappenedOnceExactly();
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public class AsyncEffectMiddlewareTests
         IAsyncEffect effect = A.Fake<IAsyncEffect>();
         TestException testException = new();
         A.CallTo(() => effect.CanHandle(A<object>.Ignored)).Returns(true);
-        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IRootState>.Ignored))
+        A.CallTo(() => effect.HandleAsync(A<object>.Ignored, A<IStateProvider>.Ignored))
             .ThrowsAsync(testException);
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effect);
         TestAction action = new();
@@ -188,7 +188,7 @@ public class AsyncEffectMiddlewareTests
     {
         IAsyncEffect slowEffect = A.Fake<IAsyncEffect>();
         A.CallTo(() => slowEffect.CanHandle(A<object>.Ignored)).Returns(true);
-        A.CallTo(() => slowEffect.HandleAsync(A<object>.Ignored, A<IRootState>.Ignored))
+        A.CallTo(() => slowEffect.HandleAsync(A<object>.Ignored, A<IStateProvider>.Ignored))
             .ReturnsLazily(async () => await Task.Delay(200, TestContext.Current.CancellationToken));
 
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(slowEffect);

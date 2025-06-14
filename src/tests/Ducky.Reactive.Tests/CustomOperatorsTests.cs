@@ -32,19 +32,19 @@ public class CustomOperatorsTests
     {
         // Arrange
         Subject<TestAction> actionSubject = new();
-        Subject<IRootState> stateSubject = new();
+        Subject<IStateProvider> stateSubject = new();
         List<StateActionPair<TestState, TestAction>> results = [];
 
         TestState testState = new("test-state");
-        IRootState rootStateMock = A.Fake<IRootState>();
-        A.CallTo(() => rootStateMock.GetSliceState<TestState>()).Returns(testState);
+        IStateProvider stateProviderMock = A.Fake<IStateProvider>();
+        A.CallTo(() => stateProviderMock.GetSlice<TestState>()).Returns(testState);
 
         // Act
         actionSubject
             .WithSliceState<TestState, TestAction>(stateSubject)
             .Subscribe(results.Add);
 
-        stateSubject.OnNext(rootStateMock);
+        stateSubject.OnNext(stateProviderMock);
         actionSubject.OnNext(new TestAction("action1"));
         actionSubject.OnNext(new TestAction("action2"));
 
@@ -61,26 +61,26 @@ public class CustomOperatorsTests
     {
         // Arrange
         Subject<TestAction> actionSubject = new();
-        Subject<IRootState> stateSubject = new();
+        Subject<IStateProvider> stateSubject = new();
         List<StateActionPair<TestState, TestAction>> results = [];
 
         TestState testState = new("keyed-state");
-        IRootState rootStateMock = A.Fake<IRootState>();
-        A.CallTo(() => rootStateMock.GetSliceState<TestState>("customKey")).Returns(testState);
+        IStateProvider stateProviderMock = A.Fake<IStateProvider>();
+        A.CallTo(() => stateProviderMock.GetSliceByKey<TestState>("customKey")).Returns(testState);
 
         // Act
         actionSubject
             .WithSliceState<TestState, TestAction>(stateSubject, "customKey")
             .Subscribe(results.Add);
 
-        stateSubject.OnNext(rootStateMock);
+        stateSubject.OnNext(stateProviderMock);
         actionSubject.OnNext(new TestAction("action1"));
 
         // Assert
         results.Count.ShouldBe(1);
         results[0].State.ShouldBe(testState);
         results[0].Action.Message.ShouldBe("action1");
-        A.CallTo(() => rootStateMock.GetSliceState<TestState>("customKey")).MustHaveHappenedOnceExactly();
+        A.CallTo(() => stateProviderMock.GetSliceByKey<TestState>("customKey")).MustHaveHappenedOnceExactly();
     }
 
     [Fact]

@@ -33,7 +33,7 @@ public abstract class PollingEffect : ReactiveEffectBase
     /// </summary>
     protected sealed override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         IObservable<object> startSignal = GetStartSignal(actions);
         IObservable<object> stopSignal = GetStopSignal(actions);
@@ -45,7 +45,7 @@ public abstract class PollingEffect : ReactiveEffectBase
                     .Interval(_pollingInterval, _scheduler)
                     .StartWith(StartImmediately ? 0 : -1)
                     .Where(i => i >= 0)
-                    .WithLatestFrom(rootState, (_, state) => state)
+                    .WithLatestFrom(stateProvider, (_, state) => state)
                     .SwitchSelect(Poll)
                     .TakeUntil(stopSignal);
 
@@ -76,9 +76,9 @@ public abstract class PollingEffect : ReactiveEffectBase
     /// <summary>
     /// Performs the polling operation.
     /// </summary>
-    /// <param name="rootState">The current root state.</param>
+    /// <param name="stateProvider">The current state provider.</param>
     /// <returns>An observable of actions to dispatch.</returns>
-    protected abstract IObservable<object> Poll(IRootState rootState);
+    protected abstract IObservable<object> Poll(IStateProvider stateProvider);
 }
 
 /// <summary>

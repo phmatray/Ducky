@@ -25,7 +25,7 @@ public class TimerEffectGroup : AsyncEffectGroup
         On<Tick>(HandleTickAsync);
     }
 
-    private async Task HandleStartTimerAsync(StartTimer action, IRootState rootState)
+    private async Task HandleStartTimerAsync(StartTimer action, IStateProvider stateProvider)
     {
         _logger.LogInformation("Starting timer");
 
@@ -45,12 +45,12 @@ public class TimerEffectGroup : AsyncEffectGroup
                     {
                         await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
-                        if (!cancellationToken.IsCancellationRequested && IsTimerRunning(rootState))
+                        if (!cancellationToken.IsCancellationRequested && IsTimerRunning(stateProvider))
                         {
                             Dispatcher.Tick();
 
                             // Auto-stop at 60 seconds
-                            if (GetCurrentTime(rootState) >= 60)
+                            if (GetCurrentTime(stateProvider) >= 60)
                             {
                                 Dispatcher.StopTimer();
                                 break;
@@ -66,14 +66,14 @@ public class TimerEffectGroup : AsyncEffectGroup
             cancellationToken);
     }
 
-    private Task HandleStopTimerAsync(StopTimer action, IRootState rootState)
+    private Task HandleStopTimerAsync(StopTimer action, IStateProvider stateProvider)
     {
         _logger.LogInformation("Stopping timer");
         StopCurrentTimer();
         return Task.CompletedTask;
     }
 
-    private Task HandleResetTimerAsync(ResetTimer action, IRootState rootState)
+    private Task HandleResetTimerAsync(ResetTimer action, IStateProvider stateProvider)
     {
         _logger.LogInformation("Resetting timer");
         StopCurrentTimer();
@@ -81,9 +81,9 @@ public class TimerEffectGroup : AsyncEffectGroup
         return Task.CompletedTask;
     }
 
-    private Task HandleTickAsync(Tick action, IRootState rootState)
+    private Task HandleTickAsync(Tick action, IStateProvider stateProvider)
     {
-        TimerState timerState = rootState.GetSliceState<TimerState>();
+        TimerState timerState = stateProvider.GetSlice<TimerState>();
         _logger.LogDebug("Timer tick: {Time}s", timerState.Time);
 
         // Could add additional logic here like notifications at certain intervals
@@ -104,15 +104,15 @@ public class TimerEffectGroup : AsyncEffectGroup
         _timerCancellationTokenSource = null;
     }
 
-    private static bool IsTimerRunning(IRootState rootState)
+    private static bool IsTimerRunning(IStateProvider stateProvider)
     {
-        TimerState timerState = rootState.GetSliceState<TimerState>();
+        TimerState timerState = stateProvider.GetSlice<TimerState>();
         return timerState.IsRunning;
     }
 
-    private static int GetCurrentTime(IRootState rootState)
+    private static int GetCurrentTime(IStateProvider stateProvider)
     {
-        TimerState timerState = rootState.GetSliceState<TimerState>();
+        TimerState timerState = stateProvider.GetSlice<TimerState>();
         return timerState.Time;
     }
 }

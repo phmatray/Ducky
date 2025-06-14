@@ -67,7 +67,7 @@ public abstract class ReactiveEffectBase : ReactiveEffect, IDisposable
     /// </summary>
     public sealed override IObservable<object> Handle(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return Observable.Create<object>(async observer =>
         {
@@ -85,7 +85,7 @@ public abstract class ReactiveEffectBase : ReactiveEffect, IDisposable
                 }
             }
 
-            IDisposable subscription = HandleCore(actions, rootState)
+            IDisposable subscription = HandleCore(actions, stateProvider)
                 .Catch<object, Exception>(error =>
                 {
                     if (OnError(error))
@@ -105,11 +105,11 @@ public abstract class ReactiveEffectBase : ReactiveEffect, IDisposable
     /// Core effect implementation. Override this method to implement your effect logic.
     /// </summary>
     /// <param name="actions">The stream of actions.</param>
-    /// <param name="rootState">The stream of root state.</param>
+    /// <param name="stateProvider">The stream of state provider.</param>
     /// <returns>An observable of new actions to dispatch.</returns>
     protected abstract IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState);
+        IObservable<IStateProvider> stateProvider);
 
     /// <summary>
     /// Disposes the effect and performs cleanup.

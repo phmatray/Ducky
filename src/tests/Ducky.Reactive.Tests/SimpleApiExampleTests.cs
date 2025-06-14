@@ -93,7 +93,7 @@ public class SimpleApiExampleTests
         // Arrange
         LifecycleAwareEffect effect = new();
         IObservable<object> actions = Observable.Never<object>();
-        IObservable<IRootState> states = Observable.Never<IRootState>();
+        IObservable<IStateProvider> states = Observable.Never<IStateProvider>();
 
         // Act
         IObservable<object> result = effect.Handle(actions, states);
@@ -147,7 +147,7 @@ public class SimpleLogEffect : ReactiveEffectBase
 {
     protected override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return actions
             .Where(action => action is LogAction)
@@ -171,7 +171,7 @@ public class LifecycleAwareEffect : ReactiveEffectBase
 
     protected override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return Observable.Empty<object>();
     }
@@ -186,7 +186,7 @@ public class SimpleDebounceEffect : DebouncedEffect<SearchAction>
 
     protected override IObservable<object> ProcessDebouncedAction(
         SearchAction action,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return Observable.Return(new SearchProcessed(action.Query));
     }
@@ -205,7 +205,7 @@ public class SimplePollingEffect : PollingEffect
         return actions.Where(a => a is StopPollingAction);
     }
 
-    protected override IObservable<object> Poll(IRootState rootState)
+    protected override IObservable<object> Poll(IStateProvider stateProvider)
     {
         return Observable.Return(new PollCompleted(DateTime.UtcNow));
     }

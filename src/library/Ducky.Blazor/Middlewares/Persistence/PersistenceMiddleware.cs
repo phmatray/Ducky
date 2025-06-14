@@ -178,7 +178,8 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
         }
 
         // Check if state should be persisted
-        if (!ShouldPersistState(_store.CurrentState))
+        StateProviderAdapter rootState = new(_store);
+        if (!ShouldPersistState(rootState))
         {
             return;
         }
@@ -252,7 +253,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
         {
             _dispatcher.Dispatch(new PersistenceTriggeredAction(trigger, persistenceId));
 
-            IRootState currentState = _store.CurrentState;
+            IRootState currentState = new StateProviderAdapter(_store);
 
             // Apply filtering based on whitelist/blacklist
             IRootState filteredState = ApplyStateFiltering(currentState);

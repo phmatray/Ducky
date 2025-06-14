@@ -17,7 +17,7 @@ public class SearchDebouncedEffect : DebouncedEffect<SearchQuery>
 
     protected override IObservable<object> ProcessDebouncedAction(
         SearchQuery action,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return Observable.FromAsync(async () =>
         {

@@ -2,42 +2,26 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Immutable;
-
 namespace Ducky;
 
 /// <summary>
-/// Manages a collection of slices and provides root state management.
+/// Manages a collection of slices and provides state management.
 /// </summary>
-public sealed class ObservableSlices : IDisposable
+public sealed class ObservableSlices : IStateProvider, IDisposable
 {
     private readonly Dictionary<string, ISlice> _slices = [];
     private readonly List<EventHandler> _sliceUpdateHandlers = [];
-    private IRootState _currentState;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ObservableSlices"/> class.
+    /// Occurs when any slice state changes.
     /// </summary>
-    public ObservableSlices()
-    {
-        _currentState = CreateRootState();
-    }
-
-    /// <summary>
-    /// Occurs when the root state changes.
-    /// </summary>
-    public event EventHandler<StateChangedEventArgs>? RootStateChanged;
+    public event EventHandler<StateChangedEventArgs>? SliceStateChanged;
 
     /// <summary>
     /// Gets an enumerable collection of all registered slices.
     /// </summary>
     public IEnumerable<ISlice> AllSlices
         => _slices.Values;
-
-    /// <summary>
-    /// Gets the current root state.
-    /// </summary>
-    public IRootState CurrentState => _currentState;
 
     /// <summary>
     /// Adds a new slice with the specified key and data.
@@ -50,11 +34,23 @@ public sealed class ObservableSlices : IDisposable
         _slices[slice.GetKey()] = slice;
 
         // Create handler for slice updates
-        EventHandler handler = (_, _) => UpdateRootState();
+        EventHandler handler = (sender, _) =>
+        {
+            if (sender is not ISlice updatedSlice)
+            {
+                return;
+            }
+
+            object newState = updatedSlice.GetState();
+            SliceStateChanged?.Invoke(
+                this,
+                new StateChangedEventArgs(
+                    updatedSlice.GetKey(),
+                    newState.GetType(),
+                    newState));
+        };
         _sliceUpdateHandlers.Add(handler);
         slice.StateUpdated += handler;
-        
-        UpdateRootState();
     }
 
     /// <inheritdoc />
@@ -74,29 +70,73 @@ public sealed class ObservableSlices : IDisposable
 
         _sliceUpdateHandlers.Clear();
         _slices.Clear();
-        RootStateChanged = null;
+        SliceStateChanged = null;
     }
 
-    /// <summary>
-    /// Creates a new root state based on the current slices.
-    /// </summary>
-    /// <returns>A new <see cref="RootState"/> object.</returns>
-    private RootState CreateRootState()
+    #region IStateProvider Implementation
+
+    /// <inheritdoc />
+    public TState GetSlice<TState>()
     {
-        ImmutableSortedDictionary<string, object> state = _slices.ToImmutableSortedDictionary(
+        ISlice? slice = _slices.Values.FirstOrDefault(s => s.GetState() is TState);
+        if (slice is null)
+        {
+            throw new InvalidOperationException($"Slice of type {typeof(TState).Name} not found.");
+        }
+
+        return (TState)slice.GetState();
+    }
+
+    /// <inheritdoc />
+    public TState GetSliceByKey<TState>(string key)
+    {
+        if (!_slices.TryGetValue(key, out ISlice? slice))
+        {
+            throw new KeyNotFoundException($"Slice with key '{key}' not found.");
+        }
+
+        return (TState)slice.GetState();
+    }
+
+    /// <inheritdoc />
+    public bool TryGetSlice<TState>(out TState? state)
+    {
+        ISlice? slice = _slices.Values.FirstOrDefault(s => s.GetState() is TState);
+        if (slice is not null)
+        {
+            state = (TState)slice.GetState();
+            return true;
+        }
+
+        state = default;
+        return false;
+    }
+
+    /// <inheritdoc />
+    public bool HasSlice<TState>()
+    {
+        return _slices.Values.Any(s => s.GetState() is TState);
+    }
+
+    /// <inheritdoc />
+    public bool HasSliceByKey(string key)
+    {
+        return _slices.ContainsKey(key);
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<string> GetSliceKeys()
+    {
+        return _slices.Keys.ToList().AsReadOnly();
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<string, object> GetAllSlices()
+    {
+        return _slices.ToDictionary(
             kvp => kvp.Key,
             kvp => kvp.Value.GetState());
-
-        return new RootState(state);
     }
 
-    /// <summary>
-    /// Updates the root state.
-    /// </summary>
-    private void UpdateRootState()
-    {
-        IRootState previousState = _currentState;
-        _currentState = CreateRootState();
-        RootStateChanged?.Invoke(this, new StateChangedEventArgs(_currentState, previousState));
-    }
+    #endregion
 }

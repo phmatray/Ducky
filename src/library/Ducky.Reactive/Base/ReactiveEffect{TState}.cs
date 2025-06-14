@@ -16,10 +16,10 @@ public abstract class ReactiveEffect<TState> : ReactiveEffectBase
     /// </summary>
     protected sealed override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
-        IObservable<TState> typedState = rootState
-            .Select(state => state.GetSliceState<TState>())
+        IObservable<TState> typedState = stateProvider
+            .Select(state => state.GetSlice<TState>())
             .DistinctUntilChanged();
 
         return HandleTyped(actions, typedState);

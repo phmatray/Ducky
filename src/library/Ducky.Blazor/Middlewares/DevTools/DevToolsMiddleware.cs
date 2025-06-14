@@ -75,7 +75,7 @@ public sealed class DevToolsMiddleware : MiddlewareBase
         lock (_syncRoot)
         {
             _tailTask = _tailTask
-                .ContinueWith(_ => SendToDevToolsAsync(action, _store.CurrentState, stackTrace))
+                .ContinueWith(_ => SendToDevToolsAsync(action, _store, stackTrace))
                 .Unwrap();
         }
 
@@ -111,7 +111,7 @@ public sealed class DevToolsMiddleware : MiddlewareBase
             return;
         }
 
-        await _devTools.InitAsync(_store.CurrentState).ConfigureAwait(false);
+        await _devTools.InitAsync(new StateProviderAdapter(_store)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -134,12 +134,12 @@ public sealed class DevToolsMiddleware : MiddlewareBase
         return Task.CompletedTask;
     }
 
-    private async Task SendToDevToolsAsync(object action, IRootState state, string? stackTrace)
+    private async Task SendToDevToolsAsync(object action, IStateProvider stateProvider, string? stackTrace)
     {
         try
         {
-            // Convert IRootState to its dictionary representation for DevTools
-            object stateDict = state.GetStateDictionary();
+            // Convert IStateProvider to its dictionary representation for DevTools
+            object stateDict = stateProvider.GetAllSlices();
             await _devTools.SendAsync(action, stateDict, stackTrace).ConfigureAwait(false);
         }
         catch (Exception ex)

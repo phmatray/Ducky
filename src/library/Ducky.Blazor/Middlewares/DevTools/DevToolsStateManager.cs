@@ -36,15 +36,15 @@ public class DevToolsStateManager
     }
 
     /// <summary>
-    /// Serializes a root state to JSON for DevTools.
+    /// Serializes a state provider to JSON for DevTools.
     /// </summary>
-    /// <param name="rootState">The root state to serialize.</param>
+    /// <param name="stateProvider">The state provider to serialize.</param>
     /// <returns>JSON representation of the state.</returns>
-    public string SerializeState(IRootState rootState)
+    public string SerializeState(IStateProvider stateProvider)
     {
         try
         {
-            ImmutableSortedDictionary<string, object> stateDict = rootState.GetStateDictionary();
+            IReadOnlyDictionary<string, object> stateDict = stateProvider.GetAllSlices();
             return JsonSerializer.Serialize(stateDict, _jsonOptions);
         }
         catch (Exception ex)

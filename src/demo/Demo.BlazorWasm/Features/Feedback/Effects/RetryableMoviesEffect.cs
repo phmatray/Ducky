@@ -20,7 +20,7 @@ public sealed class RetryableMoviesEffect : AsyncEffect<LoadMovies>
         _logger = logger;
     }
 
-    public override async Task HandleAsync(LoadMovies action, IRootState rootState)
+    public override async Task HandleAsync(LoadMovies action, IStateProvider stateProvider)
     {
         try
         {
@@ -33,7 +33,7 @@ public sealed class RetryableMoviesEffect : AsyncEffect<LoadMovies>
             }
 
             // Get current pagination from state
-            MoviesState moviesState = rootState.GetSliceState<MoviesState>();
+            MoviesState moviesState = stateProvider.GetSlice<MoviesState>();
             int currentPage = moviesState.Pagination.CurrentPage;
             const int pageSize = 5;
 

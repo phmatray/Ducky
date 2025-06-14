@@ -14,7 +14,7 @@ namespace Demo.BlazorWasm.Features.Feedback.Effects;
 public class OpenAboutDialogEffect(IDialogService dialog) : AsyncEffect<OpenAboutDialog>
 {
     /// <inheritdoc />
-    public override async Task HandleAsync(OpenAboutDialog action, IRootState rootState)
+    public override async Task HandleAsync(OpenAboutDialog action, IStateProvider stateProvider)
     {
         DialogOptions options = new() { CloseOnEscapeKey = true };
 

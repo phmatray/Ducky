@@ -23,7 +23,7 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         _storeMock = A.Fake<IStore>();
         _rootStateMock = A.Fake<IRootState>();
 
-        A.CallTo(() => _storeMock.CurrentState).Returns(_rootStateMock);
+        A.CallTo(() => _storeMock.CurrentState()).Returns(_rootStateMock);
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
 
         // Setup initial state
         CounterState initialState = new(0);
-        A.CallTo(() => _rootStateMock.GetSliceState<CounterState>()).Returns(initialState);
+        A.CallTo(() => _rootStateMock.GetSlice<CounterState>()).Returns(initialState);
 
         await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
@@ -129,8 +129,8 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         for (int i = 1; i <= 12; i++)
         {
             CounterState newState = new(i);
-            A.CallTo(() => _rootStateMock.GetSliceState<CounterState>()).Returns(newState);
-            A.CallTo(() => _storeMock.CurrentState).Returns(_rootStateMock);
+            A.CallTo(() => _rootStateMock.GetSlice<CounterState>()).Returns(newState);
+            A.CallTo(() => _storeMock.CurrentState()).Returns(_rootStateMock);
 
             middleware.AfterReduce(new { Type = "INCREMENT" });
         }
@@ -258,7 +258,7 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
 
         // Setup state
         CounterState state = new(5);
-        A.CallTo(() => _rootStateMock.GetSliceState<CounterState>()).Returns(state);
+        A.CallTo(() => _rootStateMock.GetSlice<CounterState>()).Returns(state);
 
         await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 

@@ -195,7 +195,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
             {
                 sb.AppendLine($"public class {effect.Name} : ReactiveEffect");
                 sb.AppendLine("{");
-                sb.AppendLine($"    public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)");
+                sb.AppendLine($"    public override Observable<object> Handle(Observable<object> actions, Observable<IStateProvider> stateProvider)");
                 sb.AppendLine("    {");
                 List<string>? triggerActions = JsonSerializer.Deserialize<List<string>>(effect.TriggerActions);
                 sb.AppendLine("        return actions");

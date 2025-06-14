@@ -14,7 +14,7 @@ public class RetryFailedOperationEffect(
     ILogger<RetryFailedOperationEffect> logger)
     : AsyncEffect<RetryFailedOperation>
 {
-    public override Task HandleAsync(RetryFailedOperation action, IRootState rootState)
+    public override Task HandleAsync(RetryFailedOperation action, IStateProvider stateProvider)
     {
         logger.LogInformation(
             "Retrying failed operation: {ActionType}",
@@ -39,7 +39,7 @@ public class ReportErrorEffect(
     ILogger<ReportErrorEffect> logger)
     : AsyncEffect<ReportError>
 {
-    public override Task HandleAsync(ReportError action, IRootState rootState)
+    public override Task HandleAsync(ReportError action, IStateProvider stateProvider)
     {
         logger.LogError(
             action.Exception,

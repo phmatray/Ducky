@@ -255,7 +255,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
 
 public class TestAsyncEffect : AsyncEffect<TestAction>
 {
-    public override Task HandleAsync(TestAction action, IRootState rootState)
+    public override Task HandleAsync(TestAction action, IStateProvider stateProvider)
     {
         return Task.CompletedTask;
     }

@@ -107,7 +107,7 @@ public class ReduxDevToolsModule : JsModule
             // Dispatch the @@INIT action with initial state
             if (_enabled && _store is not null)
             {
-                IRootState state = initialState ?? _store.CurrentState;
+                IRootState state = initialState ?? _store.CurrentState();
 
                 // Store initial state for reset operations
                 ImmutableSortedDictionary<string, object> stateDict = state.GetStateDictionary();
@@ -381,7 +381,7 @@ public class ReduxDevToolsModule : JsModule
             // Update the initial state to the current state
             if (_store is not null)
             {
-                _stateManager.SetInitialState(_store.CurrentState.GetStateDictionary());
+                _stateManager.SetInitialState(_store.CurrentState().GetStateDictionary());
             }
 
             // Invoke the callback if set

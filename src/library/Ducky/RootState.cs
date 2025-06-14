@@ -37,7 +37,7 @@ public sealed record RootState : IRootState
 
     /// <inheritdoc/>
     /// <exception cref="DuckyException">Thrown when the state is not of the expected type.</exception>
-    public TState GetSliceState<TState>(string key)
+    public TState GetSlice<TState>(string key)
         where TState : notnull
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -49,7 +49,7 @@ public sealed record RootState : IRootState
 
     /// <inheritdoc/>
     /// <exception cref="DuckyException">Thrown when the state is not found.</exception>
-    public TState GetSliceState<TState>()
+    public TState GetSlice<TState>()
         where TState : notnull
     {
         // take the first state of the specified type

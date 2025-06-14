@@ -128,7 +128,7 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
     // Debug: Check if weather state is available
     try
     {
-        WeatherState initialState = store.CurrentState.GetSliceState<WeatherState>();
+        WeatherState initialState = store.GetSlice<WeatherState>();
         AnsiConsole.MarkupLine($"[green]Weather state initialized: {initialState.Location}[/]");
     }
     catch (Exception ex)
@@ -206,7 +206,7 @@ static async Task RunWeatherPollingDemo(IDispatcher dispatcher, IStore store, Se
         // Update display every 500ms for more responsive updates
         for (int i = 0; i < 40; i++) // 40 * 500ms = 20 seconds
         {
-            WeatherState state = store.CurrentState.GetSliceState<WeatherState>();
+            WeatherState state = store.GetSlice<WeatherState>();
 
             if (state.IsLoading)
             {
@@ -297,7 +297,7 @@ static async Task RunStockStreamingDemo(IDispatcher dispatcher, IStore store)
             {
                 table.Rows.Clear();
 
-                StockState stockState = store.CurrentState.GetSliceState<StockState>();
+                StockState stockState = store.GetSlice<StockState>();
 
                 foreach (StockPrice stock in stockState.Stocks.Values)
                 {
@@ -368,7 +368,7 @@ static async Task RunNotificationWorkflowDemo(IDispatcher dispatcher, IStore sto
         })
         .ConfigureAwait(false);
 
-    NotificationState notificationState = store.CurrentState.GetSliceState<NotificationState>();
+    NotificationState notificationState = store.GetSlice<NotificationState>();
     AnsiConsole.MarkupLine($"[green]Workflow completed! {notificationState.Notifications.Count} notifications processed.[/]");
 }
 
@@ -440,7 +440,7 @@ static void ViewAllStates(IStore store)
 
     try
     {
-        WeatherState weather = store.CurrentState.GetSliceState<WeatherState>();
+        WeatherState weather = store.GetSlice<WeatherState>();
         TreeNode weatherNode = tree.AddNode("[cyan]Weather State[/]");
         weatherNode.AddNode($"Location: {weather.Location}");
         weatherNode.AddNode($"Temperature: {weather.Temperature:F1}°C");
@@ -454,7 +454,7 @@ static void ViewAllStates(IStore store)
 
     try
     {
-        StockState stocks = store.CurrentState.GetSliceState<StockState>();
+        StockState stocks = store.GetSlice<StockState>();
         TreeNode stockNode = tree.AddNode("[cyan]Stock State[/]");
         stockNode.AddNode($"Watching: {stocks.Stocks.Count} stocks");
         foreach (StockPrice stock in stocks.Stocks.Values.Take(3))
@@ -469,7 +469,7 @@ static void ViewAllStates(IStore store)
 
     try
     {
-        SearchState search = store.CurrentState.GetSliceState<SearchState>();
+        SearchState search = store.GetSlice<SearchState>();
         TreeNode searchNode = tree.AddNode("[cyan]Search State[/]");
         searchNode.AddNode($"Query: '{search.Query}'");
         searchNode.AddNode($"Results: {search.ResultCount}");

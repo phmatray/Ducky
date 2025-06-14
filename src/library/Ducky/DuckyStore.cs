@@ -54,7 +54,7 @@ public sealed class DuckyStore : IStore, IDisposable
         }
 
         // Subscribe to slice state changes
-        _slices.RootStateChanged += OnRootStateChanged;
+        _slices.SliceStateChanged += OnSliceStateChanged;
 
         // Initialize the pipeline
         _pipeline.InitializeAsync(_dispatcher, this).Wait();
@@ -75,8 +75,6 @@ public sealed class DuckyStore : IStore, IDisposable
     /// <inheritdoc/>
     public event EventHandler<StateChangedEventArgs>? StateChanged;
 
-    /// <inheritdoc/>
-    public IRootState CurrentState => _slices.CurrentState;
 
     /// <inheritdoc/>
     public bool IsInitialized { get; private set; }
@@ -99,7 +97,7 @@ public sealed class DuckyStore : IStore, IDisposable
         _eventPublisher.Publish(new StoreDisposingEventArgs(uptime));
 
         _dispatcher.ActionDispatched -= OnActionDispatched;
-        _slices.RootStateChanged -= OnRootStateChanged;
+        _slices.SliceStateChanged -= OnSliceStateChanged;
         _pipeline.Dispose();
         _slices.Dispose();
 
@@ -141,7 +139,7 @@ public sealed class DuckyStore : IStore, IDisposable
         try
         {
             // Create action context
-            context = new ActionContext(action) { RootState = _slices.CurrentState };
+            context = new ActionContext(action) { StateProvider = _slices };
 
             // First, check if any middleware wants to prevent this action
             if (!_pipeline.MayDispatchAction(action))
@@ -171,7 +169,7 @@ public sealed class DuckyStore : IStore, IDisposable
         catch (Exception ex)
         {
             // Create a context if we don't have one yet (error occurred during context creation)
-            context ??= new ActionContext(action) { RootState = _slices.CurrentState };
+            context ??= new ActionContext(action) { StateProvider = _slices };
             _eventPublisher.Publish(new ActionErrorEventArgs(ex, action, context));
             throw; // Re-throw to maintain existing behavior
         }
@@ -182,57 +180,30 @@ public sealed class DuckyStore : IStore, IDisposable
         ProcessActionSafely(e.Action);
     }
 
-    /// <inheritdoc/>
-    public TState GetSlice<TState>()
-    {
-        Type stateType = typeof(TState);
-        ISlice? slice = _slices.AllSlices.FirstOrDefault(s => s.GetStateType() == stateType);
-
-        if (slice is null)
-        {
-            throw new InvalidOperationException($"No slice found for type {stateType.Name}");
-        }
-
-        return (TState)slice.GetState();
-    }
+    #region IStateProvider Implementation (delegated to _slices)
 
     /// <inheritdoc/>
-    public TState GetSliceByKey<TState>(string key)
-    {
-        ArgumentNullException.ThrowIfNull(key);
-
-        ISlice? slice = _slices.AllSlices.FirstOrDefault(s => s.GetKey() == key);
-
-        if (slice is null)
-        {
-            throw new KeyNotFoundException($"No slice found with key '{key}'");
-        }
-
-        return (TState)slice.GetState();
-    }
+    public TState GetSlice<TState>() => _slices.GetSlice<TState>();
 
     /// <inheritdoc/>
-    public bool TryGetSlice<TState>(out TState? state)
-    {
-        Type stateType = typeof(TState);
-        ISlice? slice = _slices.AllSlices.FirstOrDefault(s => s.GetStateType() == stateType);
-
-        if (slice is not null)
-        {
-            state = (TState)slice.GetState();
-            return true;
-        }
-
-        state = default;
-        return false;
-    }
+    public TState GetSliceByKey<TState>(string key) => _slices.GetSliceByKey<TState>(key);
 
     /// <inheritdoc/>
-    public bool HasSlice<TState>()
-    {
-        Type stateType = typeof(TState);
-        return _slices.AllSlices.Any(s => s.GetStateType() == stateType);
-    }
+    public bool TryGetSlice<TState>(out TState? state) => _slices.TryGetSlice(out state);
+
+    /// <inheritdoc/>
+    public bool HasSlice<TState>() => _slices.HasSlice<TState>();
+
+    /// <inheritdoc/>
+    public bool HasSliceByKey(string key) => _slices.HasSliceByKey(key);
+
+    /// <inheritdoc/>
+    public IReadOnlyCollection<string> GetSliceKeys() => _slices.GetSliceKeys();
+
+    /// <inheritdoc/>
+    public IReadOnlyDictionary<string, object> GetAllSlices() => _slices.GetAllSlices();
+
+    #endregion
 
     /// <inheritdoc/>
     public IReadOnlyList<string> GetSliceNames()
@@ -284,7 +255,7 @@ public sealed class DuckyStore : IStore, IDisposable
         return WhenSliceChanges<TState>(state => callback(selector(state)));
     }
 
-    private void OnRootStateChanged(object? sender, StateChangedEventArgs e)
+    private void OnSliceStateChanged(object? sender, StateChangedEventArgs e)
     {
         StateChanged?.Invoke(this, e);
     }

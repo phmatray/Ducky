@@ -5,11 +5,11 @@ namespace Ducky.Tests.Middlewares;
 public class AsyncEffectGroupTests
 {
     private readonly IDispatcher _dispatcher = A.Fake<IDispatcher>();
-    private readonly IRootState _rootState = A.Fake<IRootState>();
+    private readonly IStateProvider _stateProvider = A.Fake<IStateProvider>();
     private readonly ILogger<TestEffectGroup> _logger = A.Fake<ILogger<TestEffectGroup>>();
 
     private IDispatcher Dispatcher => _dispatcher;
-    private IRootState RootState => _rootState;
+    private IStateProvider StateProvider => _stateProvider;
     private ILogger<TestEffectGroup> Logger => _logger;
 
     [Fact]
@@ -81,7 +81,7 @@ public class AsyncEffectGroupTests
         TestAction1 action = new() { Value = "test" };
 
         // Act
-        await effectGroup.HandleAsync(action, RootState);
+        await effectGroup.HandleAsync(action, StateProvider);
 
         // Assert
         effectGroup.HandledActions.ShouldContain(action);
@@ -96,7 +96,7 @@ public class AsyncEffectGroupTests
         UnregisteredAction action = new();
 
         // Act & Assert
-        await Should.NotThrowAsync(() => effectGroup.HandleAsync(action, RootState));
+        await Should.NotThrowAsync(() => effectGroup.HandleAsync(action, StateProvider));
         effectGroup.HandledActions.ShouldBeEmpty();
     }
 
@@ -110,8 +110,8 @@ public class AsyncEffectGroupTests
         TestAction2 action2 = new() { Number = 42 };
 
         // Act
-        await effectGroup.HandleAsync(action1, RootState);
-        await effectGroup.HandleAsync(action2, RootState);
+        await effectGroup.HandleAsync(action1, StateProvider);
+        await effectGroup.HandleAsync(action2, StateProvider);
 
         // Assert
         effectGroup.HandledActions.Count.ShouldBe(2);
@@ -145,8 +145,8 @@ public class AsyncEffectGroupTests
         TestAction2 action2 = new() { Number = 10 };
 
         // Act
-        await effectGroup.HandleAsync(action1, RootState);
-        await effectGroup.HandleAsync(action2, RootState);
+        await effectGroup.HandleAsync(action1, StateProvider);
+        await effectGroup.HandleAsync(action2, StateProvider);
 
         // Assert
         effectGroup.SharedCounter.ShouldBe(2); // Both handlers increment the shared counter
@@ -172,7 +172,7 @@ public class AsyncEffectGroupTests
             On<TestAction2>(HandleTestAction2Async);
         }
 
-        private Task HandleTestAction1Async(TestAction1 action, IRootState rootState)
+        private Task HandleTestAction1Async(TestAction1 action, IStateProvider stateProvider)
         {
             _logger.LogInformation("Handling TestAction1: {Value}", action.Value);
             HandledActions.Add(action);
@@ -180,7 +180,7 @@ public class AsyncEffectGroupTests
             return Task.CompletedTask;
         }
 
-        private Task HandleTestAction2Async(TestAction2 action, IRootState rootState)
+        private Task HandleTestAction2Async(TestAction2 action, IStateProvider stateProvider)
         {
             _logger.LogInformation("Handling TestAction2: {Number}", action.Number);
             HandledActions.Add(action);

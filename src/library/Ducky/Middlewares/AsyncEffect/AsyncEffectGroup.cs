@@ -41,11 +41,11 @@ public abstract class AsyncEffectGroup : IAsyncEffect
     }
 
     /// <inheritdoc />
-    public Task HandleAsync(object action, IRootState rootState)
+    public Task HandleAsync(object action, IStateProvider stateProvider)
     {
         if (_effects.TryGetValue(action.GetType(), out IAsyncEffect? effect))
         {
-            return effect.HandleAsync(action, rootState);
+            return effect.HandleAsync(action, stateProvider);
         }
 
         return Task.CompletedTask;
@@ -56,7 +56,7 @@ public abstract class AsyncEffectGroup : IAsyncEffect
     /// </summary>
     /// <typeparam name="TAction">The type of action to handle.</typeparam>
     /// <param name="handler">The async handler function.</param>
-    protected void On<TAction>(Func<TAction, IRootState, Task> handler)
+    protected void On<TAction>(Func<TAction, IStateProvider, Task> handler)
     {
         DelegateAsyncEffect<TAction> effect = new(handler, this);
         _effects[typeof(TAction)] = effect;
@@ -66,15 +66,15 @@ public abstract class AsyncEffectGroup : IAsyncEffect
     /// Internal effect implementation that delegates to a handler function.
     /// </summary>
     private class DelegateAsyncEffect<TAction>(
-        Func<TAction, IRootState, Task> handler,
+        Func<TAction, IStateProvider, Task> handler,
         AsyncEffectGroup parent)
         : AsyncEffect<TAction>
     {
-        public override Task HandleAsync(TAction action, IRootState rootState)
+        public override Task HandleAsync(TAction action, IStateProvider stateProvider)
         {
             // Use parent's dispatcher so all effects in the group share the same dispatcher
             Dispatcher = parent.Dispatcher;
-            return handler(action, rootState);
+            return handler(action, stateProvider);
         }
     }
 }

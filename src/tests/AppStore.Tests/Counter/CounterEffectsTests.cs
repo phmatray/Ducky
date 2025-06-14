@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Demo.BlazorWasm.AppStore;
+using FakeItEasy;
 
 namespace AppStore.Tests.Counter;
 
@@ -22,10 +23,12 @@ public sealed class CounterEffectsTests
     public async Task IncrementEffect_ShouldEmitResetAction_WhenValueGreaterThan15Async()
     {
         // Arrange
-        RootState rootState = GetRootState(16);
+        // Create a mock state provider
+        IStateProvider stateProvider = A.Fake<IStateProvider>();
+        A.CallTo(() => stateProvider.GetSlice<CounterState>()).Returns(new CounterState(16));
 
         // Act
-        Task handleTask = _sut.HandleAsync(new Increment(), rootState);
+        Task handleTask = _sut.HandleAsync(new Increment(), stateProvider);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
         await handleTask;
 
@@ -37,10 +40,12 @@ public sealed class CounterEffectsTests
     public async Task IncrementEffect_ShouldNotEmitResetAction_WhenValueIs15OrLessAsync()
     {
         // Arrange
-        RootState rootState = GetRootState(15);
+        // Create a mock state provider
+        IStateProvider stateProvider = A.Fake<IStateProvider>();
+        A.CallTo(() => stateProvider.GetSlice<CounterState>()).Returns(new CounterState(15));
 
         // Act
-        Task handleTask = _sut.HandleAsync(new Increment(), rootState);
+        Task handleTask = _sut.HandleAsync(new Increment(), stateProvider);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
         await handleTask;
 

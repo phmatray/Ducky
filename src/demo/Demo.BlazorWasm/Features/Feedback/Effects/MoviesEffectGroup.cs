@@ -31,11 +31,11 @@ public class MoviesEffectGroup : AsyncEffectGroup
         On<LoadMoviesFailure>(HandleLoadMoviesFailureAsync);
     }
 
-    private async Task HandleLoadMoviesAsync(LoadMovies action, IRootState rootState)
+    private async Task HandleLoadMoviesAsync(LoadMovies action, IStateProvider stateProvider)
     {
         try
         {
-            (int currentPage, int pageSize) = GetPaginationInfo(rootState);
+            (int currentPage, int pageSize) = GetPaginationInfo(stateProvider);
             GetMoviesResponse response = await LoadMoviesFromServiceAsync(currentPage, pageSize);
 
             Dispatcher.LoadMoviesSuccess(response.Movies, response.TotalItems);
@@ -46,11 +46,11 @@ public class MoviesEffectGroup : AsyncEffectGroup
         }
     }
 
-    private async Task HandleSearchMoviesAsync(SearchMovies action, IRootState rootState)
+    private async Task HandleSearchMoviesAsync(SearchMovies action, IStateProvider stateProvider)
     {
         try
         {
-            (int currentPage, int pageSize) = GetPaginationInfo(rootState);
+            (int currentPage, int pageSize) = GetPaginationInfo(stateProvider);
             GetMoviesResponse response = await LoadMoviesFromServiceAsync(currentPage, pageSize);
 
             List<Movie> filteredMovies = FilterMovies(response.Movies, action.Query);
@@ -63,23 +63,23 @@ public class MoviesEffectGroup : AsyncEffectGroup
         }
     }
 
-    private Task HandleLoadMoviesSuccessAsync(LoadMoviesSuccess action, IRootState rootState)
+    private Task HandleLoadMoviesSuccessAsync(LoadMoviesSuccess action, IStateProvider stateProvider)
     {
         string message = $"Loaded {action.Movies.Count} movies from the server.";
         ShowSuccessNotification(message);
         return Task.CompletedTask;
     }
 
-    private Task HandleLoadMoviesFailureAsync(LoadMoviesFailure action, IRootState rootState)
+    private Task HandleLoadMoviesFailureAsync(LoadMoviesFailure action, IStateProvider stateProvider)
     {
         ShowErrorNotification(action.ErrorMessage);
         return Task.CompletedTask;
     }
 
     // Shared helper methods
-    private (int currentPage, int pageSize) GetPaginationInfo(IRootState rootState)
+    private (int currentPage, int pageSize) GetPaginationInfo(IStateProvider stateProvider)
     {
-        MoviesState moviesState = rootState.GetSliceState<MoviesState>();
+        MoviesState moviesState = stateProvider.GetSlice<MoviesState>();
         return (moviesState.Pagination.CurrentPage, 5);
     }
 

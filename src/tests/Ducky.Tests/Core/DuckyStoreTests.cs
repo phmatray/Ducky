@@ -14,7 +14,7 @@ public class DuckyStoreTests
     public void Store_Should_Initialize_With_Default_State()
     {
         // Act
-        IRootState rootState = _sut.CurrentState;
+        IRootState rootState = _sut.CurrentState();
 
         // Assert
         rootState.ShouldNotBeNull();
@@ -43,7 +43,7 @@ public class DuckyStoreTests
         // Therefore, no additional waiting is needed.
 
         // Get initial state to verify slice is loaded correctly
-        int initialState = store.CurrentState.GetSliceState<int>("ducky-tests-test-models-test-counter");
+        int initialState = store.GetSliceByKey<int>("ducky-tests-test-models-test-counter");
 
         initialState.ShouldBe(10); // Verify initial state
 
@@ -52,7 +52,7 @@ public class DuckyStoreTests
         int updatedState = initialState;
         store.StateChanged += (_, args) =>
         {
-            updatedState = args.NewState.GetSliceState<int>("ducky-tests-test-models-test-counter");
+            updatedState = store.GetSliceByKey<int>("ducky-tests-test-models-test-counter");
             if (updatedState == initialState)
             {
                 return;

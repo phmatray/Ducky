@@ -12,7 +12,7 @@ namespace Demo.BlazorWasm.Features.Feedback.Effects;
 public class TestErrorEffect : AsyncEffect<TestErrorAction>
 {
     /// <inheritdoc />
-    public override Task HandleAsync(TestErrorAction action, IRootState rootState)
+    public override Task HandleAsync(TestErrorAction action, IStateProvider stateProvider)
     {
         // Simulate an error by throwing an exception
         throw new ApplicationException(action.ErrorMessage);

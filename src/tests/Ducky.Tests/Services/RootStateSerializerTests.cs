@@ -44,7 +44,7 @@ public class RootStateSerializerTests
 
         // Assert
         deserializedState.ContainsKey(Key).ShouldBeTrue();
-        deserializedState.GetSliceState<TestState>(Key).ShouldBeEquivalentTo(_initialState);
+        deserializedState.GetSlice<TestState>(Key).ShouldBeEquivalentTo(_initialState);
     }
 
     [Fact]
@@ -56,6 +56,6 @@ public class RootStateSerializerTests
 
         // Assert
         deserializedState.ContainsKey(Key).ShouldBeTrue();
-        deserializedState.GetSliceState<TestState>(Key).ShouldBeEquivalentTo(_initialState);
+        deserializedState.GetSlice<TestState>(Key).ShouldBeEquivalentTo(_initialState);
     }
 }

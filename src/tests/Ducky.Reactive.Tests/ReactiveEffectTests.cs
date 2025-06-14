@@ -38,11 +38,11 @@ public class ReactiveEffectTests
         // Arrange
         BaseTestEffect effect = new();
         IObservable<object> actions = Observable.Never<object>();
-        IObservable<IRootState> rootState = Observable.Never<IRootState>();
+        IObservable<IStateProvider> stateProvider = Observable.Never<IStateProvider>();
         List<object> results = [];
 
         // Act
-        IObservable<object> result = effect.Handle(actions, rootState);
+        IObservable<object> result = effect.Handle(actions, stateProvider);
         result.Subscribe(results.Add);
 
         // Wait a bit to ensure nothing is emitted
@@ -126,7 +126,7 @@ public class ReactiveEffectTests
     {
         public bool WasInitialized { get; private set; }
 
-        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IRootState> rootState)
+        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IStateProvider> stateProvider)
         {
             WasInitialized = true;
             return Observable.Empty<object>();

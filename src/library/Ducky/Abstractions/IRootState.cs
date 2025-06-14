@@ -29,7 +29,7 @@ public interface IRootState
     /// <typeparam name="TState">The type of the state to select.</typeparam>
     /// <param name="key">The key of the state to select.</param>
     /// <returns>The state associated with the specified key.</returns>
-    TState GetSliceState<TState>(string key)
+    TState GetSlice<TState>(string key)
         where TState : notnull;
 
     /// <summary>
@@ -37,7 +37,7 @@ public interface IRootState
     /// </summary>
     /// <typeparam name="TState">The type of the state to select.</typeparam>
     /// <returns>The state of the specified type.</returns>
-    TState GetSliceState<TState>()
+    TState GetSlice<TState>()
         where TState : notnull;
 
     /// <summary>

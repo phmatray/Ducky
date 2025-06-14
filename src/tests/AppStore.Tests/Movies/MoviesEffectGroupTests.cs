@@ -11,7 +11,7 @@ public class MoviesEffectGroupTests
     private readonly ILogger<MoviesEffectGroup> _logger = A.Fake<ILogger<MoviesEffectGroup>>();
     private readonly ISnackbar _snackbar = A.Fake<ISnackbar>();
     private readonly IDispatcher _dispatcher = A.Fake<IDispatcher>();
-    private readonly IRootState _rootState = A.Fake<IRootState>();
+    private readonly IStateProvider _stateProvider = A.Fake<IStateProvider>();
     private readonly MoviesEffectGroup _effectGroup;
 
     public MoviesEffectGroupTests()
@@ -94,11 +94,11 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 1, TotalPages = 2, TotalItems = 10 }
         };
 
-        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _stateProvider.GetSlice<MoviesState>()).Returns(moviesState);
         A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -121,11 +121,11 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 1, TotalPages = 1, TotalItems = 0 }
         };
 
-        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _stateProvider.GetSlice<MoviesState>()).Returns(moviesState);
         A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Throws(exception);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -153,11 +153,11 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 1, TotalPages = 1, TotalItems = 3 }
         };
 
-        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _stateProvider.GetSlice<MoviesState>()).Returns(moviesState);
         A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -188,11 +188,11 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 1, TotalPages = 1, TotalItems = 2 }
         };
 
-        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _stateProvider.GetSlice<MoviesState>()).Returns(moviesState);
         A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -213,7 +213,7 @@ public class MoviesEffectGroupTests
         LoadMoviesSuccess action = new(movies, 10);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(() => _snackbar.Add(
@@ -236,7 +236,7 @@ public class MoviesEffectGroupTests
         LoadMoviesFailure action = new("Failed to load movies");
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(() => _snackbar.Add(
@@ -268,12 +268,12 @@ public class MoviesEffectGroupTests
             Pagination = new Pagination { CurrentPage = 2, TotalPages = 1, TotalItems = 1 }
         };
 
-        A.CallTo(() => _rootState.GetSliceState<MoviesState>()).Returns(moviesState);
+        A.CallTo(() => _stateProvider.GetSlice<MoviesState>()).Returns(moviesState);
         A.CallTo(() => _moviesService.GetMoviesAsync(2, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(loadAction, _rootState);
-        await _effectGroup.HandleAsync(searchAction, _rootState);
+        await _effectGroup.HandleAsync(loadAction, _stateProvider);
+        await _effectGroup.HandleAsync(searchAction, _stateProvider);
 
         // Assert
         // Both handlers should use the same pagination info (page 2)

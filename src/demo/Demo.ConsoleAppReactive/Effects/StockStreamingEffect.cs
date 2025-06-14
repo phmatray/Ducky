@@ -17,7 +17,7 @@ public class StockStreamingEffect : ReactiveEffectBase
 
     protected override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         // Start streaming when stock is added to watch list
         IObservable<object> startStreaming = actions

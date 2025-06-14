@@ -106,7 +106,7 @@ public class EffectsGenerator : SourceGeneratorBase<EffectsGeneratorOptions>
             Parameters = new List<ParameterDescriptor>
             {
                 new() { ParamName = "actions", ParamType = "Observable<object>" },
-                new() { ParamName = "rootState", ParamType = "Observable<IRootState>" }
+                new() { ParamName = "stateProvider", ParamType = "Observable<IStateProvider>" }
             },
             ExpressionBody = new ExpressionElement
             {
@@ -124,7 +124,7 @@ public class EffectsGenerator : SourceGeneratorBase<EffectsGeneratorOptions>
             Parameters = new List<ParameterDescriptor>
             {
                 new() { ParamName = "action", ParamType = "object" },
-                new() { ParamName = "rootState", ParamType = "IRootState" }
+                new() { ParamName = "stateProvider", ParamType = "IStateProvider" }
             },
             ExpressionBody = new ExpressionElement
             {

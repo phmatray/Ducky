@@ -31,7 +31,7 @@ public interface IAsyncEffect
     /// Handles the specified action and dispatches new actions.
     /// </summary>
     /// <param name="action">The action to handle.</param>
-    /// <param name="rootState">The root state of the application.</param>
+    /// <param name="stateProvider">The provider for accessing application state.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task HandleAsync(object action, IRootState rootState);
+    Task HandleAsync(object action, IStateProvider stateProvider);
 }

@@ -14,8 +14,7 @@ public partial class AboutDialog
     protected override void OnAfterSubscribed()
     {
         // Get the initial state safely
-        IRootState rootState = Store.CurrentState;
-        LayoutState layoutState = rootState.GetSliceState<LayoutState>();
+        LayoutState layoutState = Store.GetSlice<LayoutState>();
         _fullTitle = layoutState.SelectFullTitle();
         _version = layoutState.Version;
     }
@@ -23,8 +22,7 @@ public partial class AboutDialog
     protected override void OnParametersSet()
     {
         // Update when state changes
-        IRootState rootState = Store.CurrentState;
-        LayoutState layoutState = rootState.GetSliceState<LayoutState>();
+        LayoutState layoutState = Store.GetSlice<LayoutState>();
         _fullTitle = layoutState.SelectFullTitle();
         _version = layoutState.Version;
     }

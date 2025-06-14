@@ -30,16 +30,16 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
     }
 
     /// <inheritdoc />
-    public Task HandleAsync(object action, IRootState rootState)
+    public Task HandleAsync(object action, IStateProvider stateProvider)
     {
-        return HandleAsync((TAction)action, rootState);
+        return HandleAsync((TAction)action, stateProvider);
     }
 
     /// <summary>
     /// Handles the specified action and dispatches new actions.
     /// </summary>
     /// <param name="action">The action to handle.</param>
-    /// <param name="rootState">The current root state of the application.</param>
+    /// <param name="stateProvider">The provider for accessing application state.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task HandleAsync(TAction action, IRootState rootState);
+    public abstract Task HandleAsync(TAction action, IStateProvider stateProvider);
 }

@@ -83,7 +83,7 @@ public sealed class AsyncEffectMiddleware : MiddlewareBase
         {
             try
             {
-                executedEffects.Add(effect.HandleAsync(action, _store?.CurrentState!));
+                executedEffects.Add(effect.HandleAsync(action, _store!));
             }
             catch (Exception exception)
             {

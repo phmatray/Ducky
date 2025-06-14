@@ -16,11 +16,11 @@ public abstract class WorkflowEffect<TStartAction> : ReactiveEffectBase
     /// </summary>
     protected sealed override IObservable<object> HandleCore(
         IObservable<object> actions,
-        IObservable<IRootState> rootState)
+        IObservable<IStateProvider> stateProvider)
     {
         return actions
             .OfActionType<TStartAction>()
-            .SwitchSelect(startAction => ExecuteWorkflow(startAction, actions, rootState));
+            .SwitchSelect(startAction => ExecuteWorkflow(startAction, actions, stateProvider));
     }
 
     /// <summary>
@@ -28,12 +28,12 @@ public abstract class WorkflowEffect<TStartAction> : ReactiveEffectBase
     /// </summary>
     /// <param name="startAction">The action that started the workflow.</param>
     /// <param name="actions">The stream of all actions.</param>
-    /// <param name="rootState">The stream of root state.</param>
+    /// <param name="stateProvider">The stream of state provider.</param>
     /// <returns>An observable of actions produced by the workflow.</returns>
     protected abstract IObservable<object> ExecuteWorkflow(
         TStartAction startAction,
         IObservable<object> actions,
-        IObservable<IRootState> rootState);
+        IObservable<IStateProvider> stateProvider);
 
     /// <summary>
     /// Creates a workflow step that executes sequentially.

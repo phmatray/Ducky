@@ -10,7 +10,7 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
     private readonly IEnumerable<ReactiveEffect> _effects;
     private readonly IStoreEventPublisher _eventPublisher;
     private readonly Subject<object> _actions = new();
-    private readonly BehaviorSubject<IRootState> _rootState;
+    private readonly BehaviorSubject<IStateProvider> _stateProvider;
     private readonly CompositeDisposable _subscriptions = [];
     private IDispatcher? _dispatcher;
     private IStore? _store;
@@ -30,7 +30,7 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
 
         _effects = effects;
         _eventPublisher = eventPublisher;
-        _rootState = new BehaviorSubject<IRootState>(null!);
+        _stateProvider = new BehaviorSubject<IStateProvider>(null!);
     }
 
     /// <inheritdoc />
@@ -39,18 +39,15 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
         _dispatcher = dispatcher;
         _store = store;
 
-        // Initialize root state
-        if (store.CurrentState is not null)
-        {
-            _rootState.OnNext(store.CurrentState);
-        }
+        // Initialize state provider
+        _stateProvider.OnNext(store);
 
         // Subscribe to all effects
         foreach (ReactiveEffect effect in _effects)
         {
             try
             {
-                IObservable<object> effectObservable = effect.Handle(_actions.AsObservable(), _rootState.AsObservable());
+                IObservable<object> effectObservable = effect.Handle(_actions.AsObservable(), _stateProvider.AsObservable());
 
                 IDisposable subscription = effectObservable.Subscribe(
                     onNext: action =>
@@ -82,9 +79,9 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
     public override void AfterReduce(object action)
     {
         // Update state after reduction
-        if (_store?.CurrentState is not null)
+        if (_store is not null)
         {
-            _rootState.OnNext(_store.CurrentState);
+            _stateProvider.OnNext(_store);
         }
 
         // Stream the action to all effects
@@ -104,7 +101,7 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
 
             _isDisposed = true;
             _actions.OnCompleted();
-            _rootState.OnCompleted();
+            _stateProvider.OnCompleted();
             _subscriptions.Dispose();
         });
     }

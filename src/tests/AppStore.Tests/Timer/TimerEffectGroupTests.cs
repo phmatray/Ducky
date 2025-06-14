@@ -8,7 +8,7 @@ public class TimerEffectGroupTests
 {
     private readonly ILogger<TimerEffectGroup> _logger = A.Fake<ILogger<TimerEffectGroup>>();
     private readonly IDispatcher _dispatcher = A.Fake<IDispatcher>();
-    private readonly IRootState _rootState = A.Fake<IRootState>();
+    private readonly IStateProvider _stateProvider = A.Fake<IStateProvider>();
     private readonly TimerEffectGroup _effectGroup;
 
     public TimerEffectGroupTests()
@@ -46,10 +46,10 @@ public class TimerEffectGroupTests
         // Arrange
         StartTimer action = new();
         TimerState timerState = new() { IsRunning = true, Time = 0 };
-        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _rootState);
+        _ = _effectGroup.HandleAsync(action, _stateProvider);
 
         // Wait a bit for the timer to start
         await Task.Delay(100, TestContext.Current.CancellationToken);
@@ -68,14 +68,14 @@ public class TimerEffectGroupTests
         StartTimer startAction = new();
         StopTimer stopAction = new();
         TimerState timerState = new() { IsRunning = true, Time = 0 };
-        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Start timer first
-        _ = _effectGroup.HandleAsync(startAction, _rootState);
+        _ = _effectGroup.HandleAsync(startAction, _stateProvider);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
-        await _effectGroup.HandleAsync(stopAction, _rootState);
+        await _effectGroup.HandleAsync(stopAction, _stateProvider);
 
         // Assert
         A.CallTo(_logger).Where(call => call.Method.Name == "Log"
@@ -91,7 +91,7 @@ public class TimerEffectGroupTests
         ResetTimer action = new();
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(_logger).Where(call => call.Method.Name == "Log"
@@ -106,10 +106,10 @@ public class TimerEffectGroupTests
         // Arrange
         Tick action = new();
         TimerState timerState = new() { IsRunning = true, Time = 10 };
-        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(_logger).Where(call => call.Method.Name == "Log"
@@ -130,10 +130,10 @@ public class TimerEffectGroupTests
         // Arrange
         Tick action = new();
         TimerState timerState = new() { IsRunning = true, Time = 7 }; // Not divisible by 10
-        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -147,10 +147,10 @@ public class TimerEffectGroupTests
         // Arrange
         Tick action = new();
         TimerState timerState = new() { IsRunning = true, Time = 0 };
-        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _rootState);
+        await _effectGroup.HandleAsync(action, _stateProvider);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -166,7 +166,7 @@ public class TimerEffectGroupTests
         TimerState runningState = new() { IsRunning = true, Time = 59 };
         TimerState atLimitState = new() { IsRunning = true, Time = 60 };
 
-        A.CallTo(() => _rootState.GetSliceState<TimerState>())
+        A.CallTo(() => _stateProvider.GetSlice<TimerState>())
             .ReturnsNextFromSequence(
                 runningState,  // First check when timer starts
                 runningState,  // During first tick
@@ -174,7 +174,7 @@ public class TimerEffectGroupTests
                 atLimitState); // Subsequent checks
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _rootState);
+        _ = _effectGroup.HandleAsync(action, _stateProvider);
 
         // Wait for timer to process multiple ticks
         await Task.Delay(3000, TestContext.Current.CancellationToken);
@@ -190,13 +190,13 @@ public class TimerEffectGroupTests
         // Arrange
         StartTimer action = new();
         TimerState timerState = new() { IsRunning = true, Time = 0 };
-        A.CallTo(() => _rootState.GetSliceState<TimerState>()).Returns(timerState);
+        A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _rootState);
+        _ = _effectGroup.HandleAsync(action, _stateProvider);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
-        _ = _effectGroup.HandleAsync(action, _rootState);
+        _ = _effectGroup.HandleAsync(action, _stateProvider);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Assert
@@ -215,15 +215,15 @@ public class TimerEffectGroupTests
         TimerState runningState = new() { IsRunning = true, Time = 0 };
         TimerState stoppedState = new() { IsRunning = false, Time = 1 };
 
-        A.CallTo(() => _rootState.GetSliceState<TimerState>())
+        A.CallTo(() => _stateProvider.GetSlice<TimerState>())
             .ReturnsNextFromSequence(
                 runningState,  // When timer starts
                 stoppedState); // After timer is stopped
 
         // Act - Start timer then immediately stop it
-        _ = _effectGroup.HandleAsync(startAction, _rootState);
+        _ = _effectGroup.HandleAsync(startAction, _stateProvider);
         await Task.Delay(100, TestContext.Current.CancellationToken); // Brief delay to let timer start
-        await _effectGroup.HandleAsync(stopAction, _rootState);
+        await _effectGroup.HandleAsync(stopAction, _stateProvider);
         await Task.Delay(1500, TestContext.Current.CancellationToken); // Wait to ensure no ticks after stop
 
         // Assert

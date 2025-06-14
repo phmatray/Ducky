@@ -31,8 +31,8 @@ IDispatcher dispatcher = serviceProvider.GetRequiredService<IDispatcher>();
 // Subscribe to state changes
 void OnStateChanged(object? sender, StateChangedEventArgs e)
 {
-    CounterState counterState = e.NewState.GetSliceState<CounterState>();
-    TodoState todoState = e.NewState.GetSliceState<TodoState>();
+    CounterState counterState = store.GetSlice<CounterState>();
+    TodoState todoState = store.GetSlice<TodoState>();
 
     string stateMessage = $"[dim][[State Update]] [/][yellow]Counter: {counterState.Value}[/] | "
         + $"[green]Todos: {todoState.ActiveCount} active[/], [blue]{todoState.CompletedCount} completed[/]";
@@ -67,7 +67,7 @@ while (running)
         }
         case "Show Current State":
         {
-            ShowCurrentState(store.CurrentState);
+            ShowCurrentState(store);
             AnsiConsole.Prompt(new TextPrompt<string>("[grey]Press Enter to continue...[/]")
                 .AllowEmpty());
             break;
@@ -91,7 +91,7 @@ async Task RunCounterDemo(IDispatcher actionDispatcher, IStore stateStore)
         AnsiConsole.Clear();
 
         // Get fresh state each time we display
-        CounterState counterState = stateStore.CurrentState.GetSliceState<CounterState>();
+        CounterState counterState = stateStore.GetSlice<CounterState>();
 
         Panel panel = new Panel($"[bold yellow]Current Value: {counterState.Value}[/]")
             .Header("[blue]Counter Demo[/]")
@@ -173,7 +173,7 @@ async Task RunTodoDemo(IDispatcher actionDispatcher, IStore stateStore)
     {
         AnsiConsole.Clear();
 
-        TodoState todoState = stateStore.CurrentState.GetSliceState<TodoState>();
+        TodoState todoState = stateStore.GetSlice<TodoState>();
 
         Rule rule = new("[blue]Todo List Demo[/]");
         AnsiConsole.Write(rule);
@@ -289,10 +289,10 @@ async Task RunTodoDemo(IDispatcher actionDispatcher, IStore stateStore)
     }
 }
 
-void ShowCurrentState(IRootState rootState)
+void ShowCurrentState(IStore store)
 {
-    CounterState counterState = rootState.GetSliceState<CounterState>();
-    TodoState todoState = rootState.GetSliceState<TodoState>();
+    CounterState counterState = store.GetSlice<CounterState>();
+    TodoState todoState = store.GetSlice<TodoState>();
 
     Panel statePanel = new Panel(
         new Rows(

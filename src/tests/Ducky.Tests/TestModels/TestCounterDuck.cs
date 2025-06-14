@@ -37,10 +37,10 @@ public sealed record TestCounterReducers : SliceReducers<int>
 // Effects
 public sealed class TestIncrementEffect : AsyncEffect<TestIncrementAction>
 {
-    public override async Task HandleAsync(TestIncrementAction action, IRootState rootState)
+    public override async Task HandleAsync(TestIncrementAction action, IStateProvider stateProvider)
     {
         // if the Value is greater than 15, then reset the counter
-        int state = rootState.GetSliceState<int>();
+        int state = stateProvider.GetSlice<int>();
         if (state <= 15)
         {
             return;

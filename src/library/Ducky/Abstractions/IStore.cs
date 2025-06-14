@@ -7,17 +7,12 @@ namespace Ducky;
 /// <summary>
 /// Represents a store that manages application state and handles actions.
 /// </summary>
-public interface IStore
+public interface IStore : IStateProvider
 {
     /// <summary>
-    /// Occurs when the root state changes.
+    /// Occurs when the state changes.
     /// </summary>
     event EventHandler<StateChangedEventArgs>? StateChanged;
-
-    /// <summary>
-    /// Gets the current root state of the application.
-    /// </summary>
-    IRootState CurrentState { get; }
 
     /// <summary>
     /// Gets a value indicating whether the store has been initialized.
@@ -33,38 +28,6 @@ public interface IStore
     /// Gets the number of registered slices.
     /// </summary>
     int SliceCount { get; }
-
-    /// <summary>
-    /// Gets the state of a specific slice by its type.
-    /// </summary>
-    /// <typeparam name="TState">The type of the slice state.</typeparam>
-    /// <returns>The current state of the slice.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the slice is not found.</exception>
-    TState GetSlice<TState>();
-
-    /// <summary>
-    /// Gets the state of a specific slice by its key.
-    /// </summary>
-    /// <typeparam name="TState">The type of the slice state.</typeparam>
-    /// <param name="key">The slice key.</param>
-    /// <returns>The current state of the slice.</returns>
-    /// <exception cref="KeyNotFoundException">Thrown when the slice key is not found.</exception>
-    TState GetSliceByKey<TState>(string key);
-
-    /// <summary>
-    /// Attempts to get the state of a specific slice by its type.
-    /// </summary>
-    /// <typeparam name="TState">The type of the slice state.</typeparam>
-    /// <param name="state">When this method returns, contains the state of the slice if found; otherwise, the default value.</param>
-    /// <returns><c>true</c> if the slice was found; otherwise, <c>false</c>.</returns>
-    bool TryGetSlice<TState>(out TState? state);
-
-    /// <summary>
-    /// Checks whether a slice of the specified type exists in the store.
-    /// </summary>
-    /// <typeparam name="TState">The type of the slice state.</typeparam>
-    /// <returns><c>true</c> if the slice exists; otherwise, <c>false</c>.</returns>
-    bool HasSlice<TState>();
 
     /// <summary>
     /// Gets the names of all registered slices.
@@ -97,22 +60,36 @@ public interface IStore
 public class StateChangedEventArgs : EventArgs
 {
     /// <summary>
-    /// Gets the new state.
+    /// Gets the key of the slice that changed.
     /// </summary>
-    public IRootState NewState { get; }
+    public string SliceKey { get; }
 
     /// <summary>
-    /// Gets the previous state.
+    /// Gets the type of the slice that changed.
     /// </summary>
-    public IRootState? PreviousState { get; }
+    public Type SliceType { get; }
+
+    /// <summary>
+    /// Gets the new state of the slice.
+    /// </summary>
+    public object NewState { get; }
+
+    /// <summary>
+    /// Gets the previous state of the slice.
+    /// </summary>
+    public object? PreviousState { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StateChangedEventArgs"/> class.
     /// </summary>
-    /// <param name="newState">The new state.</param>
-    /// <param name="previousState">The previous state.</param>
-    public StateChangedEventArgs(IRootState newState, IRootState? previousState = null)
+    /// <param name="sliceKey">The key of the slice that changed.</param>
+    /// <param name="sliceType">The type of the slice that changed.</param>
+    /// <param name="newState">The new state of the slice.</param>
+    /// <param name="previousState">The previous state of the slice.</param>
+    public StateChangedEventArgs(string sliceKey, Type sliceType, object newState, object? previousState = null)
     {
+        SliceKey = sliceKey;
+        SliceType = sliceType;
         NewState = newState;
         PreviousState = previousState;
     }

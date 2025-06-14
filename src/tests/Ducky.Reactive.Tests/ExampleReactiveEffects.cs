@@ -23,7 +23,7 @@ public static class ExampleReactiveEffects
             _scheduler = scheduler ?? new EventLoopScheduler();
         }
 
-        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IRootState> rootState)
+        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IStateProvider> stateProvider)
         {
             return actions
                 .OfActionType<StartTimer>()
@@ -46,7 +46,7 @@ public static class ExampleReactiveEffects
             _scheduler = scheduler ?? Scheduler.Default;
         }
 
-        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IRootState> rootState)
+        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IStateProvider> stateProvider)
         {
             return actions
                 .OfActionType<SearchTextChanged>()
@@ -73,7 +73,7 @@ public static class ExampleReactiveEffects
     {
         private const int MaxRetries = 3;
 
-        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IRootState> rootState)
+        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IStateProvider> stateProvider)
         {
             return actions
                 .OfActionType<ApiRequest>()
@@ -113,10 +113,10 @@ public static class ExampleReactiveEffects
     /// </summary>
     public class StateMonitoringEffect : ReactiveEffect
     {
-        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IRootState> rootState)
+        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IStateProvider> stateProvider)
         {
-            return rootState
-                .Select(state => state.GetSliceState<CounterState>())
+            return stateProvider
+                .Select(state => state.GetSlice<CounterState>())
                 .DistinctUntilChanged(state => state.Value)
                 .Where(state => state.Value % 5 == 0 && state.Value > 0)
                 .Select(state => (object)new ThresholdReached(state.Value));
@@ -135,7 +135,7 @@ public static class ExampleReactiveEffects
             _scheduler = scheduler ?? Scheduler.Default;
         }
 
-        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IRootState> rootState)
+        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IStateProvider> stateProvider)
         {
             return actions
                 .OfActionType<StartWorkflow>()
@@ -167,7 +167,7 @@ public static class ExampleReactiveEffects
             _scheduler = scheduler ?? Scheduler.Default;
         }
 
-        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IRootState> rootState)
+        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IStateProvider> stateProvider)
         {
             return actions
                 .OfActionType<StartLongRunningTask>()
