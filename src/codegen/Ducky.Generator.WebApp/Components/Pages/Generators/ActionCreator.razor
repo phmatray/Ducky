@@ -2,7 +2,7 @@
 @using Ducky.Generator.Core
 @inject ActionCreatorGenerator Generator
 @inject ISnackbar Snackbar
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 <PageTitle>Action Creator Generator - Ducky Code Generator</PageTitle>
 
@@ -125,13 +125,13 @@
                             <MudStack Row="true" Spacing="2">
                                 <MudButton Variant="Variant.Outlined" 
                                            StartIcon="@Icons.Material.Filled.ContentCopy"
-                                           OnClick="CopyToClipboard">
+                                           OnClick="CopyToClipboardAsync">
                                     Copy
                                 </MudButton>
                                 <MudButton Variant="Variant.Filled" 
                                            Color="Color.Secondary"
                                            StartIcon="@Icons.Material.Filled.Download"
-                                           OnClick="DownloadCode">
+                                           OnClick="DownloadCodeAsync">
                                     Download
                                 </MudButton>
                             </MudStack>
@@ -175,131 +175,3 @@ store.Dispatch(toggleAction);</pre>
         </MudPaper>
     </MudPaper>
 </MudContainer>
-
-@code {
-    private readonly List<BreadcrumbItem> _breadcrumbs = new()
-    {
-        new BreadcrumbItem("Home", href: "/", icon: Icons.Material.Filled.Home),
-        new BreadcrumbItem("Generators", href: "#", icon: Icons.Material.Filled.Build),
-        new BreadcrumbItem("Action Creator", href: null, disabled: true)
-    };
-    
-    private MudForm _form = null!;
-    private bool _isValid;
-    private readonly ActionCreatorGeneratorOptions _options = new();
-    private string? _generatedCode;
-
-    protected override void OnInitialized()
-    {
-        // Set some better defaults
-        _options.Namespace = "MyApp.Actions";
-        _options.StateType = "AppState";
-        _options.Actions = new List<ActionDescriptor>
-        {
-            new ActionDescriptor
-            {
-                ActionName = "IncrementCounter",
-                Parameters = new List<ParameterDescriptor>
-                {
-                    new() { ParamType = "int", ParamName = "amount" }
-                }
-            }
-        };
-    }
-
-    private void UpdateActionName(ActionDescriptor action, string newValue)
-    {
-        var index = _options.Actions.IndexOf(action);
-        _options.Actions[index] = action with { ActionName = newValue };
-    }
-    
-    private void UpdateParameterType(ActionDescriptor action, ParameterDescriptor parameter, string newValue)
-    {
-        var parameters = action.Parameters.ToList();
-        var paramIndex = parameters.IndexOf(parameter);
-        parameters[paramIndex] = parameter with { ParamType = newValue };
-        
-        var index = _options.Actions.IndexOf(action);
-        _options.Actions[index] = action with { Parameters = parameters };
-    }
-    
-    private void UpdateParameterName(ActionDescriptor action, ParameterDescriptor parameter, string newValue)
-    {
-        var parameters = action.Parameters.ToList();
-        var paramIndex = parameters.IndexOf(parameter);
-        parameters[paramIndex] = parameter with { ParamName = newValue };
-        
-        var index = _options.Actions.IndexOf(action);
-        _options.Actions[index] = action with { Parameters = parameters };
-    }
-
-    private void AddAction()
-    {
-        _options.Actions.Add(new ActionDescriptor
-        {
-            ActionName = $"NewAction{_options.Actions.Count + 1}",
-            Parameters = new List<ParameterDescriptor>()
-        });
-    }
-
-    private void RemoveAction(ActionDescriptor action)
-    {
-        _options.Actions.Remove(action);
-    }
-
-    private void AddParameter(ActionDescriptor action)
-    {
-        var parameters = action.Parameters.ToList();
-        parameters.Add(new ParameterDescriptor 
-        { 
-            ParamType = "string", 
-            ParamName = $"param{parameters.Count + 1}" 
-        });
-        
-        // Update the action with new parameters list
-        var index = _options.Actions.IndexOf(action);
-        _options.Actions[index] = action with { Parameters = parameters };
-    }
-
-    private void RemoveParameter(ActionDescriptor action, ParameterDescriptor parameter)
-    {
-        var parameters = action.Parameters.ToList();
-        parameters.Remove(parameter);
-        
-        // Update the action with new parameters list
-        var index = _options.Actions.IndexOf(action);
-        _options.Actions[index] = action with { Parameters = parameters };
-    }
-
-    private async Task GenerateAsync()
-    {
-        try
-        {
-            _generatedCode = await Generator.GenerateCodeAsync(_options);
-            Snackbar.Add("Action creators generated successfully!", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error generating code: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async Task CopyToClipboard()
-    {
-        if (!string.IsNullOrEmpty(_generatedCode))
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _generatedCode);
-            Snackbar.Add("Code copied to clipboard!", Severity.Success);
-        }
-    }
-
-    private async Task DownloadCode()
-    {
-        if (!string.IsNullOrEmpty(_generatedCode))
-        {
-            var fileName = $"{_options.StateType}ActionCreators.cs";
-            await JS.InvokeVoidAsync("downloadFile", fileName, _generatedCode);
-            Snackbar.Add($"Downloaded {fileName}", Severity.Success);
-        }
-    }
-}

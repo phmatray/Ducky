@@ -1,6 +1,0 @@
-<Project>
-  <!-- Continuous Integration -->
-  <PropertyGroup Label="Deterministic Build">
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-  </PropertyGroup>
-</Project>

@@ -44,7 +44,7 @@ public class DuckyStoreApiTests : IDisposable
     public void TryGetSlice_Should_Return_True_When_Slice_Exists()
     {
         // Act
-        bool result = _store.TryGetSlice<int>(out int counterState);
+        bool result = _store.TryGetSlice(out int counterState);
 
         // Assert
         result.ShouldBeTrue();
@@ -55,7 +55,7 @@ public class DuckyStoreApiTests : IDisposable
     public void TryGetSlice_Should_Return_False_When_Slice_Not_Found()
     {
         // Act
-        bool result = _store.TryGetSlice<string>(out string? state);
+        bool result = _store.TryGetSlice(out string? state);
 
         // Assert
         result.ShouldBeFalse();

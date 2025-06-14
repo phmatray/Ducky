@@ -5,17 +5,3 @@
     @_dataColorized
   </pre>
 </code>
-
-@code {
-  
-  private MarkupString _dataColorized;
-  
-  [Parameter, EditorRequired]
-  public required string Data { get; set; }
-  
-  protected override void OnInitialized()
-  {
-    _dataColorized = (MarkupString)JsonColorizer.ColorizeJson(Data);
-  }
-  
-}

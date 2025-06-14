@@ -1,0 +1,13 @@
+# EditorConfig for test projects
+# This file overrides the root .editorconfig for test projects
+
+[*.cs]
+# Disable CS1591: Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1591.severity = none
+
+# Disable ConfigureAwait warnings in test projects
+# CA2007: Do not directly await a Task
+dotnet_diagnostic.CA2007.severity = none
+
+# RCS1090: Call 'ConfigureAwait(false)'
+dotnet_diagnostic.RCS1090.severity = none

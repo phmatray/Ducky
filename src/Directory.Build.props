@@ -1,9 +1,114 @@
 <Project>
-  <Import Project="build/dotnet/common.props"/>
-  <Import Project="build/dotnet/dependencies.props"/>
-  <Import Project="build/dotnet/code-analysis.props"/>
-  <Import Project="build/dotnet/continuous-integration.props"/>
-  <Import Project="build/dotnet/packaging.props"/>
-  <Import Project="build/dotnet/source-link.props"/>
-  <Import Project="build/dotnet/file-inclusion.props"/>
+  <!-- General -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <!-- Code Analysis -->
+  <PropertyGroup>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>AllDisabledByDefault</AnalysisMode>
+  </PropertyGroup>
+
+  <!-- Continuous Integration -->
+  <PropertyGroup Label="Deterministic Build">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!-- Configuration for Documentation -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Packaging -->
+  <PropertyGroup Label="Package Information">
+    <EnablePackageValidation>true</EnablePackageValidation>
+
+    <Description>
+      Ducky is a state management library designed for Blazor applications, inspired by the Redux pattern commonly
+      used in JavaScript applications. It provides a predictable state container for .NET, ensuring that the
+      application state is managed in a clear, consistent, and centralized manner.
+    </Description>
+    <Authors>Philippe Matray</Authors>
+    <Copyright>Atypical Consulting SRL</Copyright>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/phmatray/Ducky</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/phmatray/Ducky</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/phmatray/Ducky/releases</PackageReleaseNotes>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageTags>blazor, redux, state management, state container, .NET, C#</PackageTags>
+  </PropertyGroup>
+
+  <!-- Source Link -->
+  <PropertyGroup Label="Source Link">
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <!-- Dependencies custom properties -->
+  <PropertyGroup>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">false</IsTestProject>
+    <IsConsoleProject Condition="'$(IsConsoleProject)' == ''">false</IsConsoleProject>
+    <IncludeAnalyzers Condition="'$(IncludeAnalyzers)' == ''">true</IncludeAnalyzers>
+  </PropertyGroup>
+
+  <!-- Central Package Version Management -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Indicate to NuGet that Directory.Packages.props isn't being used since this repo is using Directory.Build.props instead -->
+    <CentralPackageVersionsFileImported>true</CentralPackageVersionsFileImported>
+  </PropertyGroup>
+
+  <!-- Conditional Package Versions for Analyzers -->
+  <ItemGroup Condition="'$(IncludeAnalyzers)' == 'true'">
+    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.CodeAnalysis.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.Formatting.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Universal Development Dependencies -->
+  <!-- These dependencies are used in both production and test projects -->
+  <ItemGroup>
+    <PackageReference Include="DotNet.ReproducibleBuilds" PrivateAssets="all"/>
+  </ItemGroup>
+
+  <!-- Library-Specific Dependencies -->
+  <!-- These dependencies are only used in production projects -->
+  <ItemGroup Condition="'$(IsTestProject)' != 'true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- Test-Specific Dependencies -->
+  <!-- These dependencies are only used in test projects -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="FakeItEasy" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <!-- File inclusion -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../logo.png" Pack="true" PackagePath="\" Link="Properties/logo.png" />
+    <None Include="$(MSBuildThisFileDirectory)../LICENSE" Pack="true" PackagePath="\" Link="Properties/LICENSE" />
+    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath="\" Link="Properties/README.md" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)../.editorconfig" Link="Properties/.editorconfig" />
+  </ItemGroup>
 </Project>

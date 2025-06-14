@@ -1,4 +1,3 @@
-@using Ducky.Generator.WebApp.Models
 @using Ducky.Generator.WebApp.Services
 @using System.Text.Json
 @inject IAppStoreService AppStoreService
@@ -6,7 +5,7 @@
 
 <MudDialog>
     <DialogContent>
-        @if (appStore == null)
+        @if (_appStore == null)
         {
             <MudProgressCircular Indeterminate="true" />
         }
@@ -15,18 +14,18 @@
             <MudTabs Elevation="2" Rounded="true" PanelClass="pa-6">
                 <!-- App Store Details Tab -->
                 <MudTabPanel Text="Details">
-                    <MudForm @bind-IsValid="@isValid">
-                        <MudTextField @bind-Value="appStore.Name" 
+                    <MudForm @bind-IsValid="@_isValid">
+                        <MudTextField @bind-Value="_appStore.Name" 
                                       Label="App Store Name" 
                                       Required="true"
                                       MaxLength="100" />
                         
-                        <MudTextField @bind-Value="appStore.Description" 
+                        <MudTextField @bind-Value="_appStore.Description" 
                                       Label="Description" 
                                       Lines="3"
                                       MaxLength="500" />
                         
-                        <MudTextField @bind-Value="appStore.Namespace" 
+                        <MudTextField @bind-Value="_appStore.Namespace" 
                                       Label="Namespace" 
                                       Required="true"
                                       MaxLength="100" />
@@ -40,12 +39,12 @@
                             <MudText Typo="Typo.h6">State Slices</MudText>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                                        StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="AddStateSlice">
+                                       OnClick="AddStateSliceAsync">
                                 Add State Slice
                             </MudButton>
                         </MudStack>
 
-                        @if (!appStore.StateSlices.Any())
+                        @if (!_appStore.StateSlices.Any())
                         {
                             <MudPaper Class="pa-4 text-center">
                                 <MudText Typo="Typo.body2" Color="Color.Secondary">
@@ -55,7 +54,7 @@
                         }
                         else
                         {
-                            @foreach (var slice in appStore.StateSlices)
+                            @foreach (var slice in _appStore.StateSlices)
                             {
                                 <MudExpansionPanels>
                                     <MudExpansionPanel Text="@slice.Name">
@@ -112,7 +111,7 @@
                                                 }
                                                 <MudButton Variant="Variant.Outlined" Size="Size.Small" 
                                                            StartIcon="@Icons.Material.Filled.Add"
-                                                           OnClick="@(() => AddAction(slice))">
+                                                           OnClick="@(() => AddActionAsync(slice))">
                                                     Add Action
                                                 </MudButton>
 
@@ -154,7 +153,7 @@
                                                 }
                                                 <MudButton Variant="Variant.Outlined" Size="Size.Small" 
                                                            StartIcon="@Icons.Material.Filled.Add"
-                                                           OnClick="@(() => AddEffect(slice))">
+                                                           OnClick="@(() => AddEffectAsync(slice))">
                                                     Add Effect
                                                 </MudButton>
                                             </MudStack>
@@ -172,9 +171,9 @@
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" 
                    Variant="Variant.Filled" 
-                   OnClick="Save"
-                   Disabled="@(!isValid || isSaving)">
-            @if (isSaving)
+                   OnClick="SaveAsync"
+                   Disabled="@(!_isValid || _isSaving)">
+            @if (_isSaving)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
                 <span style="margin-left: 8px;">Saving...</span>
@@ -186,117 +185,3 @@
         </MudButton>
     </DialogActions>
 </MudDialog>
-
-@code {
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public int AppStoreId { get; set; }
-
-    private AppStore? appStore;
-    private bool isValid = true;
-    private bool isSaving;
-
-    protected override async Task OnInitializedAsync()
-    {
-        appStore = await AppStoreService.GetAppStoreByIdAsync(AppStoreId);
-    }
-
-    private void Cancel() => MudDialog.Cancel();
-
-    private async Task Save()
-    {
-        if (!isValid || appStore == null) return;
-
-        isSaving = true;
-        StateHasChanged();
-
-        try
-        {
-            await AppStoreService.UpdateAppStoreAsync(appStore);
-            MudDialog.Close(DialogResult.Ok(appStore));
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error saving app store: {ex.Message}", Severity.Error);
-            isSaving = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task AddStateSlice()
-    {
-        if (appStore == null) return;
-
-        // Simple inline creation for now - could be expanded to a dialog
-        var name = $"NewSlice{appStore.StateSlices.Count + 1}";
-        var stateDefinition = new Dictionary<string, object>
-        {
-            { "Loading", false },
-            { "Data", new List<object>() },
-            { "Error", string.Empty }
-        };
-
-        try
-        {
-            var newSlice = await AppStoreService.AddStateSliceAsync(
-                appStore.Id, 
-                name, 
-                "New state slice", 
-                stateDefinition);
-
-            appStore.StateSlices.Add(newSlice);
-            StateHasChanged();
-            Snackbar.Add("State slice added successfully!", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error adding state slice: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async Task AddAction(StateSlice slice)
-    {
-        try
-        {
-            var actionName = $"NewAction{slice.Actions.Count + 1}";
-            var newAction = await AppStoreService.AddActionAsync(
-                slice.Id,
-                actionName,
-                "New action",
-                "object"); // Default payload type
-
-            slice.Actions.Add(newAction);
-            StateHasChanged();
-            Snackbar.Add("Action added successfully!", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error adding action: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async Task AddEffect(StateSlice slice)
-    {
-        try
-        {
-            var effectName = $"NewEffect{slice.Effects.Count + 1}";
-            var triggerActions = slice.Actions.Any() ? 
-                new List<string> { slice.Actions.First().Name } : 
-                new List<string>();
-
-            var newEffect = await AppStoreService.AddEffectAsync(
-                slice.Id,
-                effectName,
-                "New effect",
-                "AsyncEffect", // Default to AsyncEffect
-                triggerActions);
-
-            slice.Effects.Add(newEffect);
-            StateHasChanged();
-            Snackbar.Add("Effect added successfully!", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error adding effect: {ex.Message}", Severity.Error);
-        }
-    }
-}

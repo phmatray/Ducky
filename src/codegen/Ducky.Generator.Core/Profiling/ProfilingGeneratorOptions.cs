@@ -1,6 +1,6 @@
 namespace Ducky.Generator.Core;
 
-public class ProfilingGeneratorOptions
-{
-
-}
+/// <summary>
+/// Options for configuring the ProfilingGenerator.
+/// </summary>
+public class ProfilingGeneratorOptions;

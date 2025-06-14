@@ -331,6 +331,7 @@ dotnet_diagnostic.rcs1018.severity = warning
 
 # Order modifiers
 dotnet_diagnostic.rcs1019.severity = warning
+roslynator_accessibility_modifier_order = public|private|protected|internal|static|extern|new|virtual|abstract|sealed|override|readonly|unsafe|volatile|async
 
 # Simplify Nullable<T> to T?
 dotnet_diagnostic.rcs1020.severity = suggestion

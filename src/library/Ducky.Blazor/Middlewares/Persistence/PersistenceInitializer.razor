@@ -2,37 +2,3 @@
 @using Microsoft.Extensions.Logging
 @inject IServiceProvider ServiceProvider
 @inject ILogger<PersistenceInitializer> Logger
-
-@code {
-    /// <inheritdoc />
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            // Try to get PersistenceMiddleware from DI container
-            var persistenceMiddleware = ServiceProvider.GetService<PersistenceMiddleware>();
-            
-            if (persistenceMiddleware != null)
-            {
-                Logger.LogInformation("PersistenceMiddleware resolved successfully. Starting hydration...");
-                
-                try
-                {
-                    // Manually trigger hydration after the first render
-                    // This ensures the JS runtime is ready for LocalStorage access
-                    await persistenceMiddleware.HydrateAsync();
-                    
-                    Logger.LogInformation("Store hydration completed successfully.");
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, "Failed to hydrate store from persistence.");
-                }
-            }
-            else
-            {
-                Logger.LogDebug("PersistenceMiddleware not found in DI container. Persistence hydration skipped.");
-            }
-        }
-    }
-}

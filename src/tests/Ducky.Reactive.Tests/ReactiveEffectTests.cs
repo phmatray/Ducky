@@ -115,9 +115,7 @@ public class ReactiveEffectTests
     }
 
     // Test helper classes
-    private class TestEffect : ReactiveEffect
-    {
-    }
+    private class TestEffect : ReactiveEffect;
 
     private class BaseTestEffect : ReactiveEffect
     {

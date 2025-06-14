@@ -82,7 +82,7 @@ public class MoviesEffectGroupTests
         LoadMovies action = new();
         List<Movie> movies =
         [
-            CreateTestMovie(1, "Movie 1", "Director 1", 2023),
+            CreateTestMovie(1, "Movie 1", "Director 1"),
             CreateTestMovie(2, "Movie 2", "Director 2", 2024)
         ];
         GetMoviesResponse response = new(movies, 10);
@@ -140,7 +140,7 @@ public class MoviesEffectGroupTests
         SearchMovies action = new("Movie 1");
         List<Movie> movies =
         [
-            CreateTestMovie(1, "Movie 1", "Director 1", 2023),
+            CreateTestMovie(1, "Movie 1", "Director 1"),
             CreateTestMovie(2, "Movie 2", "Director 2", 2024),
             CreateTestMovie(3, "Another Film", "Movie 1 Director", 2025)
         ];
@@ -176,7 +176,7 @@ public class MoviesEffectGroupTests
         SearchMovies action = new(string.Empty);
         List<Movie> movies =
         [
-            CreateTestMovie(1, "Movie 1", "Director 1", 2023),
+            CreateTestMovie(1, "Movie 1", "Director 1"),
             CreateTestMovie(2, "Movie 2", "Director 2", 2024)
         ];
         GetMoviesResponse response = new(movies, 2);
@@ -207,7 +207,7 @@ public class MoviesEffectGroupTests
         // Arrange
         List<Movie> movies =
         [
-            CreateTestMovie(1, "Movie 1", "Director 1", 2023),
+            CreateTestMovie(1, "Movie 1", "Director 1"),
             CreateTestMovie(2, "Movie 2", "Director 2", 2024)
         ];
         LoadMoviesSuccess action = new(movies, 10);

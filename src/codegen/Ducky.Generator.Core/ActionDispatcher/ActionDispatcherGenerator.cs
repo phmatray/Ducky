@@ -5,6 +5,11 @@ namespace Ducky.Generator.Core;
 /// </summary>
 public class ActionDispatcherGenerator : SourceGeneratorBase<ActionDispatcherGeneratorOptions>
 {
+    /// <summary>
+    /// Builds the model representing the compilation unit for action dispatcher generation.
+    /// </summary>
+    /// <param name="opts">The options containing configuration for action dispatcher generation.</param>
+    /// <returns>A <see cref="CompilationUnitElement"/> representing the generated code structure.</returns>
     protected override CompilationUnitElement BuildModel(ActionDispatcherGeneratorOptions opts)
     {
         return new CompilationUnitElement
@@ -36,6 +41,11 @@ public class ActionDispatcherGenerator : SourceGeneratorBase<ActionDispatcherGen
         };
     }
 
+    /// <summary>
+    /// Builds a method element for dispatching a specific action.
+    /// </summary>
+    /// <param name="opts">The options containing action details and parameters.</param>
+    /// <returns>A <see cref="MethodElement"/> representing the dispatcher extension method.</returns>
     private static MethodElement BuildDispatcherMethod(ActionDispatcherGeneratorOptions opts)
     {
         var parameters = new List<ParameterDescriptor>

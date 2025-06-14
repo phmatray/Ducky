@@ -34,18 +34,3 @@
     </MudStack>
   </MudStack>
 </MudAlert>
-
-@code {
-  
-  private const string Separator = "•";
-
-  [Parameter, EditorRequired]
-  public required Notification Notification { get; set; }
-
-  [Parameter]
-  public string SearchTerm { get; set; } = "";
-
-  private void MarkNotificationAsRead(Guid id)
-    => Dispatcher.MarkNotificationAsRead(id);
-  
-}

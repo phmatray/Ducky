@@ -17,6 +17,11 @@ namespace Ducky.Generator.Core;
 /// </summary>
 public abstract class SourceGeneratorBase<TOptions>
 {
+    /// <summary>
+    /// Generates source code based on the provided options.
+    /// </summary>
+    /// <param name="opts">The options to configure code generation.</param>
+    /// <returns>The generated source code as a formatted string.</returns>
     public string GenerateCode(TOptions opts)
     {
         // 1) Build the model
@@ -33,6 +38,11 @@ public abstract class SourceGeneratorBase<TOptions>
         return formatted.ToFullString();
     }
 
+    /// <summary>
+    /// Asynchronously generates source code based on the provided options.
+    /// </summary>
+    /// <param name="opts">The options to configure code generation.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the generated source code as a formatted string.</returns>
     public Task<string> GenerateCodeAsync(TOptions opts)
         => Task.FromResult(GenerateCode(opts));
 

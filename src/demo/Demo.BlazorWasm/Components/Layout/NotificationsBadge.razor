@@ -12,16 +12,3 @@
     OnClick="ToggleNotifications"
     Class="mt-n2"/>
 </MudBadge>
-
-@code {
-  
-  private int UnreadNotificationCount
-    => State.SelectUnreadNotificationCount();
-  
-  private bool NotificationBadgeVisible
-    => UnreadNotificationCount > 0;
-  
-  private void ToggleNotifications()
-    => Dispatcher.ToggleNotifications();
-  
-}

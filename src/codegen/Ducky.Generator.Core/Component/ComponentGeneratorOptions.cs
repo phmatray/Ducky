@@ -1,5 +1,8 @@
 namespace Ducky.Generator.Core;
 
+/// <summary>
+/// Options for configuring the ComponentGenerator.
+/// </summary>
 public class ComponentGeneratorOptions
 {
     /// <summary>
@@ -141,6 +144,10 @@ public record ComponentDescriptor
     /// </summary>
     public IEnumerable<ComponentActionDescriptor> Actions { get; init; } = new List<ComponentActionDescriptor>();
 
+    /// <summary>
+    /// Returns a string representation of the component descriptor.
+    /// </summary>
+    /// <returns>A string containing the component name and action count.</returns>
     public override string ToString()
     {
         var actionCount = Actions.Count();
@@ -168,6 +175,10 @@ public record ComponentActionDescriptor
     /// </summary>
     public IEnumerable<ParameterDescriptor> Parameters { get; init; } = new List<ParameterDescriptor>();
 
+    /// <summary>
+    /// Returns a string representation of the action descriptor.
+    /// </summary>
+    /// <returns>A string containing the action name, type, and parameter count.</returns>
     public override string ToString()
     {
         var paramCount = Parameters.Count();

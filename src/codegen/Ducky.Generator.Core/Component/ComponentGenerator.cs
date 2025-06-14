@@ -6,6 +6,11 @@ namespace Ducky.Generator.Core;
 /// </summary>
 public class ComponentGenerator : SourceGeneratorBase<ComponentGeneratorOptions>
 {
+    /// <summary>
+    /// Builds the model representing the compilation unit for component generation.
+    /// </summary>
+    /// <param name="opts">The options containing configuration for component generation.</param>
+    /// <returns>A <see cref="CompilationUnitElement"/> representing the generated code structure.</returns>
     protected override CompilationUnitElement BuildModel(ComponentGeneratorOptions opts)
     {
         return new CompilationUnitElement

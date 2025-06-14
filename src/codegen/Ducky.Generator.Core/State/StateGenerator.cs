@@ -5,6 +5,11 @@ namespace Ducky.Generator.Core;
 /// </summary>
 public class StateGenerator : SourceGeneratorBase<StateGeneratorOptions>
 {
+    /// <summary>
+    /// Builds the model representing the compilation unit for state generation.
+    /// </summary>
+    /// <param name="opts">The options containing configuration for state generation.</param>
+    /// <returns>A <see cref="CompilationUnitElement"/> representing the generated code structure.</returns>
     protected override CompilationUnitElement BuildModel(StateGeneratorOptions opts)
     {
         return new CompilationUnitElement

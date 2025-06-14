@@ -21,8 +21,8 @@ public class AppStore
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
     // Navigation properties
-    public List<StateSlice> StateSlices { get; set; } = new();
-    public List<GeneratedFile> GeneratedFiles { get; set; } = new();
+    public List<StateSlice> StateSlices { get; set; } = [];
+    public List<GeneratedFile> GeneratedFiles { get; set; } = [];
 }
 
 public class StateSlice
@@ -45,8 +45,8 @@ public class StateSlice
     
     // Navigation properties
     public AppStore AppStore { get; set; } = null!;
-    public List<ActionDefinition> Actions { get; set; } = new();
-    public List<EffectDefinition> Effects { get; set; } = new();
+    public List<ActionDefinition> Actions { get; set; } = [];
+    public List<EffectDefinition> Effects { get; set; } = [];
 }
 
 public class ActionDefinition

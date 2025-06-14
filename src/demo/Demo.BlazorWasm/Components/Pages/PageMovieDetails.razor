@@ -62,13 +62,3 @@
     }
   </MudItem>
 </MudGrid>
-
-@code {
-  
-  [Parameter] 
-  public required int Id { get; set; }
-  
-  private Movie? SelectedMovie
-    => State.SelectMovieById(Id);
-  
-}

@@ -5,6 +5,11 @@ namespace Ducky.Generator.Core;
 /// </summary>
 public class EffectsGenerator : SourceGeneratorBase<EffectsGeneratorOptions>
 {
+    /// <summary>
+    /// Builds the model representing the compilation unit for effects generation.
+    /// </summary>
+    /// <param name="opts">The options containing configuration for effects generation.</param>
+    /// <returns>A <see cref="CompilationUnitElement"/> representing the generated code structure.</returns>
     protected override CompilationUnitElement BuildModel(EffectsGeneratorOptions opts)
     {
         return new CompilationUnitElement

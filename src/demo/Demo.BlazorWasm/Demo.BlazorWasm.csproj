@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);RCS1090</NoWarn>
     <RunAOTCompilation>true</RunAOTCompilation>
     <GHPages>true</GHPages>

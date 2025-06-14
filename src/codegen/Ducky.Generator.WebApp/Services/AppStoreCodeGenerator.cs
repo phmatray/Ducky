@@ -13,9 +13,9 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
 {
     public List<GeneratedFile> GenerateAppStore(AppStore appStore)
     {
-        var files = new List<GeneratedFile>();
+        List<GeneratedFile> files = new();
 
-        foreach (var slice in appStore.StateSlices)
+        foreach (StateSlice slice in appStore.StateSlices)
         {
             // Generate state class
             files.Add(GenerateStateClass(slice, appStore.Namespace));
@@ -27,7 +27,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
             files.Add(GenerateReducersClass(slice, appStore.Namespace));
             
             // Generate effects if any
-            if (slice.Effects.Any())
+            if (slice.Effects.Count > 0)
             {
                 files.Add(GenerateEffectsClass(slice, appStore.Namespace));
             }
@@ -44,7 +44,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
 
     private GeneratedFile GenerateStateClass(StateSlice slice, string namespaceName)
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         
         sb.AppendLine("using System.Collections.Immutable;");
         sb.AppendLine("using Ducky;");
@@ -52,15 +52,15 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
         sb.AppendLine();
         sb.AppendLine($"namespace {namespaceName}.AppStore.{slice.Name};");
         sb.AppendLine();
-        
+
         // Parse state definition to generate proper state record
-        var stateDefinition = JsonSerializer.Deserialize<Dictionary<string, object>>(slice.StateDefinition);
+        Dictionary<string, object>? stateDefinition = JsonSerializer.Deserialize<Dictionary<string, object>>(slice.StateDefinition);
         sb.AppendLine($"public record {slice.Name}State(");
         
-        var properties = new List<string>();
-        foreach (var prop in stateDefinition!)
+        List<string> properties = [];
+        foreach (KeyValuePair<string, object> prop in stateDefinition!)
         {
-            var propType = InferTypeFromValue(prop.Value);
+            string propType = InferTypeFromValue(prop.Value);
             properties.Add($"    {propType} {prop.Key}");
         }
         
@@ -77,14 +77,14 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
 
     private GeneratedFile GenerateActionsClass(StateSlice slice, string namespaceName)
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         
         sb.AppendLine("using Ducky.FluxStandardActions;");
         sb.AppendLine();
         sb.AppendLine($"namespace {namespaceName}.AppStore.{slice.Name};");
         sb.AppendLine();
         
-        foreach (var action in slice.Actions)
+        foreach (ActionDefinition action in slice.Actions)
         {
             if (action.PayloadType == "void" || string.IsNullOrEmpty(action.PayloadType))
             {
@@ -94,6 +94,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
             {
                 sb.AppendLine($"public record {action.Name}({action.PayloadType} Payload);");
             }
+            
             sb.AppendLine();
         }
 
@@ -107,7 +108,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
 
     private GeneratedFile GenerateReducersClass(StateSlice slice, string namespaceName)
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         
         sb.AppendLine("using Ducky;");
         sb.AppendLine();
@@ -118,24 +119,24 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
         sb.AppendLine($"    public {slice.Name}Reducers() : base(GetInitialState())");
         sb.AppendLine("    {");
         
-        foreach (var action in slice.Actions)
+        foreach (ActionDefinition action in slice.Actions)
         {
             sb.AppendLine($"        On<{action.Name}>(Handle{action.Name});");
         }
         
         sb.AppendLine("    }");
         sb.AppendLine();
-        
+
         // Generate initial state
-        var stateDefinition = JsonSerializer.Deserialize<Dictionary<string, object>>(slice.StateDefinition);
+        Dictionary<string, object>? stateDefinition = JsonSerializer.Deserialize<Dictionary<string, object>>(slice.StateDefinition);
         sb.AppendLine($"    private static {slice.Name}State GetInitialState()");
         sb.AppendLine("    {");
         sb.AppendLine($"        return new {slice.Name}State(");
         
-        var initialValues = new List<string>();
-        foreach (var prop in stateDefinition!)
+        List<string> initialValues = [];
+        foreach (KeyValuePair<string, object> prop in stateDefinition!)
         {
-            var defaultValue = GetDefaultValue(prop.Value);
+            string defaultValue = GetDefaultValue(prop.Value);
             initialValues.Add($"            {prop.Key}: {defaultValue}");
         }
         
@@ -145,7 +146,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
         sb.AppendLine();
         
         // Generate reducer methods
-        foreach (var action in slice.Actions)
+        foreach (ActionDefinition action in slice.Actions)
         {
             sb.AppendLine($"    private static {slice.Name}State Handle{action.Name}({slice.Name}State state, {action.Name} action)");
             sb.AppendLine("    {");
@@ -167,7 +168,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
 
     private GeneratedFile GenerateEffectsClass(StateSlice slice, string namespaceName)
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         
         sb.AppendLine("using Ducky.Middlewares.AsyncEffect;");
         sb.AppendLine("using Ducky.Middlewares.ReactiveEffect;");
@@ -176,13 +177,14 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
         sb.AppendLine($"namespace {namespaceName}.AppStore.{slice.Name};");
         sb.AppendLine();
         
-        foreach (var effect in slice.Effects)
+        foreach (EffectDefinition effect in slice.Effects)
         {
             if (effect.ImplementationType == "AsyncEffect")
             {
                 sb.AppendLine($"public class {effect.Name} : AsyncEffect");
                 sb.AppendLine("{");
-                sb.AppendLine($"    public override async Task<object?> Handle(object action, IRootState rootState, CancellationToken cancellationToken)");
+                sb.AppendLine("    public override async Task<object?> Handle(");
+                sb.AppendLine("        object action, IRootState rootState, CancellationToken cancellationToken)");
                 sb.AppendLine("    {");
                 sb.AppendLine("        // TODO: Implement async effect logic");
                 sb.AppendLine("        return null;");
@@ -195,12 +197,13 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
                 sb.AppendLine("{");
                 sb.AppendLine($"    public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)");
                 sb.AppendLine("    {");
-                var triggerActions = JsonSerializer.Deserialize<List<string>>(effect.TriggerActions);
+                List<string>? triggerActions = JsonSerializer.Deserialize<List<string>>(effect.TriggerActions);
                 sb.AppendLine("        return actions");
-                foreach (var triggerAction in triggerActions!)
+                foreach (string triggerAction in triggerActions!)
                 {
                     sb.AppendLine($"            .OfActionType<{triggerAction}>()");
                 }
+
                 sb.AppendLine("            .Select(action => {");
                 sb.AppendLine("                // TODO: Implement reactive effect logic");
                 sb.AppendLine("                return new object(); // Replace with actual action");
@@ -208,6 +211,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
                 sb.AppendLine("    }");
                 sb.AppendLine("}");
             }
+
             sb.AppendLine();
         }
 
@@ -221,7 +225,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
 
     private GeneratedFile GenerateDuckFile(StateSlice slice, string namespaceName)
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         
         sb.AppendLine("using Ducky;");
         sb.AppendLine();
@@ -245,16 +249,17 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
 
     private GeneratedFile GenerateAppStoreConfiguration(AppStore appStore)
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new();
         
         sb.AppendLine("using Ducky;");
         sb.AppendLine("using Ducky.Builder;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         sb.AppendLine();
-        foreach (var slice in appStore.StateSlices)
+        foreach (StateSlice slice in appStore.StateSlices)
         {
             sb.AppendLine($"using {appStore.Namespace}.AppStore.{slice.Name};");
         }
+        
         sb.AppendLine();
         sb.AppendLine($"namespace {appStore.Namespace}.AppStore;");
         sb.AppendLine();
@@ -267,11 +272,11 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
         sb.AppendLine("            builder");
         sb.AppendLine("                .AddDefaultMiddlewares()");
         
-        foreach (var slice in appStore.StateSlices)
+        foreach (StateSlice slice in appStore.StateSlices)
         {
             sb.AppendLine($"                .AddSlice<{slice.Name}State>()");
             
-            foreach (var effect in slice.Effects)
+            foreach (EffectDefinition effect in slice.Effects)
             {
                 sb.AppendLine($"                .AddEffect<{effect.Name}>()");
             }

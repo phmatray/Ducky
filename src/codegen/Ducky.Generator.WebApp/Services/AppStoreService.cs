@@ -30,32 +30,32 @@ public class AppStoreService : IAppStoreService
         _codeGenerator = codeGenerator;
     }
 
-    public async Task<List<AppStore>> GetAllAppStoresAsync()
+    public Task<List<AppStore>> GetAllAppStoresAsync()
     {
-        return await _context.AppStores
+        return _context.AppStores
             .Include(a => a.StateSlices)
-                .ThenInclude(s => s.Actions)
+            .ThenInclude(s => s.Actions)
             .Include(a => a.StateSlices)
-                .ThenInclude(s => s.Effects)
+            .ThenInclude(s => s.Effects)
             .Include(a => a.GeneratedFiles)
             .OrderByDescending(a => a.UpdatedAt)
             .ToListAsync();
     }
 
-    public async Task<AppStore?> GetAppStoreByIdAsync(int id)
+    public Task<AppStore?> GetAppStoreByIdAsync(int id)
     {
-        return await _context.AppStores
+        return _context.AppStores
             .Include(a => a.StateSlices)
-                .ThenInclude(s => s.Actions)
+            .ThenInclude(s => s.Actions)
             .Include(a => a.StateSlices)
-                .ThenInclude(s => s.Effects)
+            .ThenInclude(s => s.Effects)
             .Include(a => a.GeneratedFiles)
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
     public async Task<AppStore> CreateAppStoreAsync(string name, string? description, string namespaceName)
     {
-        var appStore = new AppStore
+        AppStore appStore = new()
         {
             Name = name,
             Description = description,
@@ -79,17 +79,19 @@ public class AppStoreService : IAppStoreService
 
     public async Task DeleteAppStoreAsync(int id)
     {
-        var appStore = await _context.AppStores.FindAsync(id);
-        if (appStore != null)
+        AppStore? appStore = await _context.AppStores.FindAsync(id);
+        if (appStore is null)
         {
-            _context.AppStores.Remove(appStore);
-            await _context.SaveChangesAsync();
+            return;
         }
+
+        _context.AppStores.Remove(appStore);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<StateSlice> AddStateSliceAsync(int appStoreId, string name, string description, object stateDefinition)
     {
-        var stateSlice = new StateSlice
+        StateSlice stateSlice = new()
         {
             AppStoreId = appStoreId,
             Name = name,
@@ -103,8 +105,8 @@ public class AppStoreService : IAppStoreService
         await _context.SaveChangesAsync();
 
         // Update parent app store timestamp
-        var appStore = await _context.AppStores.FindAsync(appStoreId);
-        if (appStore != null)
+        AppStore? appStore = await _context.AppStores.FindAsync(appStoreId);
+        if (appStore is not null)
         {
             appStore.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -115,32 +117,36 @@ public class AppStoreService : IAppStoreService
 
     public async Task DeleteStateSliceAsync(int stateSliceId)
     {
-        var stateSlice = await _context.StateSlices
+        StateSlice? stateSlice = await _context.StateSlices
             .Include(s => s.Actions)
             .Include(s => s.Effects)
             .FirstOrDefaultAsync(s => s.Id == stateSliceId);
 
-        if (stateSlice != null)
+        if (stateSlice is null)
         {
-            var appStoreId = stateSlice.AppStoreId;
-            
-            // Remove related actions and effects (EF Core should handle this with cascade delete)
-            _context.StateSlices.Remove(stateSlice);
-            await _context.SaveChangesAsync();
-
-            // Update parent app store timestamp
-            var appStore = await _context.AppStores.FindAsync(appStoreId);
-            if (appStore != null)
-            {
-                appStore.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-            }
+            return;
         }
+
+        int appStoreId = stateSlice.AppStoreId;
+
+        // Remove related actions and effects (EF Core should handle this with cascade delete)
+        _context.StateSlices.Remove(stateSlice);
+        await _context.SaveChangesAsync();
+
+        // Update parent app store timestamp
+        AppStore? appStore = await _context.AppStores.FindAsync(appStoreId);
+        if (appStore is null)
+        {
+            return;
+        }
+
+        appStore.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
     }
 
     public async Task<ActionDefinition> AddActionAsync(int stateSliceId, string name, string description, string payloadType, bool isAsync = false)
     {
-        var action = new ActionDefinition
+        ActionDefinition action = new()
         {
             StateSliceId = stateSliceId,
             Name = name,
@@ -161,7 +167,7 @@ public class AppStoreService : IAppStoreService
 
     public async Task<EffectDefinition> AddEffectAsync(int stateSliceId, string name, string description, string implementationType, List<string> triggerActions)
     {
-        var effect = new EffectDefinition
+        EffectDefinition effect = new()
         {
             StateSliceId = stateSliceId,
             Name = name,
@@ -182,23 +188,23 @@ public class AppStoreService : IAppStoreService
 
     public async Task<List<GeneratedFile>> GenerateFilesAsync(int appStoreId)
     {
-        var appStore = await GetAppStoreByIdAsync(appStoreId);
-        if (appStore == null)
+        AppStore? appStore = await GetAppStoreByIdAsync(appStoreId);
+        if (appStore is null)
         {
             throw new ArgumentException($"AppStore with ID {appStoreId} not found");
         }
 
         // Remove existing generated files
-        var existingFiles = await _context.GeneratedFiles
+        List<GeneratedFile> existingFiles = await _context.GeneratedFiles
             .Where(f => f.AppStoreId == appStoreId)
             .ToListAsync();
         _context.GeneratedFiles.RemoveRange(existingFiles);
 
         // Generate new files
-        var generatedFiles = _codeGenerator.GenerateAppStore(appStore);
+        List<GeneratedFile> generatedFiles = _codeGenerator.GenerateAppStore(appStore);
 
         // Save to database
-        foreach (var file in generatedFiles)
+        foreach (GeneratedFile file in generatedFiles)
         {
             file.AppStoreId = appStoreId;
             file.GeneratedAt = DateTime.UtcNow;
@@ -212,15 +218,17 @@ public class AppStoreService : IAppStoreService
 
     private async Task UpdateParentTimestampsAsync(int stateSliceId)
     {
-        var slice = await _context.StateSlices
+        StateSlice? slice = await _context.StateSlices
             .Include(s => s.AppStore)
             .FirstOrDefaultAsync(s => s.Id == stateSliceId);
 
-        if (slice != null)
+        if (slice is null)
         {
-            slice.UpdatedAt = DateTime.UtcNow;
-            slice.AppStore.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            return;
         }
+
+        slice.UpdatedAt = DateTime.UtcNow;
+        slice.AppStore.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
     }
 }

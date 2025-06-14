@@ -1,6 +1,4 @@
-@using System.Text
-@using Ducky.Generator.WebApp.Models
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -28,13 +26,13 @@
                         <MudButton Variant="Variant.Filled" 
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Download"
-                                   OnClick="DownloadAll">
+                                   OnClick="DownloadAllAsync">
                             Download All
                         </MudButton>
                         <MudButton Variant="Variant.Outlined" 
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.ContentCopy"
-                                   OnClick="CopyAllToClipboard">
+                                   OnClick="CopyAllToClipboardAsync">
                             Copy All
                         </MudButton>
                     </MudStack>
@@ -69,12 +67,12 @@
                                                     <MudTooltip Text="Copy to clipboard">
                                                         <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" 
                                                                        Size="Size.Small"
-                                                                       OnClick="@(() => CopyToClipboard(file.Content, file.FileName))" />
+                                                                       OnClick="@(() => CopyToClipboardAsync(file.Content, file.FileName))" />
                                                     </MudTooltip>
                                                     <MudTooltip Text="Download file">
                                                         <MudIconButton Icon="@Icons.Material.Filled.Download" 
                                                                        Size="Size.Small"
-                                                                       OnClick="@(() => DownloadFile(file))" />
+                                                                       OnClick="@(() => DownloadFileAsync(file))" />
                                                     </MudTooltip>
                                                 </MudStack>
                                             </MudStack>
@@ -98,114 +96,3 @@
         <MudButton OnClick="Close">Close</MudButton>
     </DialogActions>
 </MudDialog>
-
-@code {
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public List<GeneratedFile> GeneratedFiles { get; set; } = new();
-    [Parameter] public string AppStoreName { get; set; } = string.Empty;
-
-    private void Close() => MudDialog.Close();
-
-    private Color GetFileTypeColor(string fileType) => fileType switch
-    {
-        "State" => Color.Info,
-        "Actions" => Color.Success,
-        "Reducers" => Color.Primary,
-        "Effects" => Color.Warning,
-        "Duck" => Color.Secondary,
-        "Configuration" => Color.Tertiary,
-        _ => Color.Default
-    };
-
-    private string GetFileTypeIcon(string fileType) => fileType switch
-    {
-        "State" => Icons.Material.Filled.DataObject,
-        "Actions" => Icons.Material.Filled.PlayArrow,
-        "Reducers" => Icons.Material.Filled.Transform,
-        "Effects" => Icons.Material.Filled.Bolt,
-        "Duck" => Icons.Material.Filled.Category,
-        "Configuration" => Icons.Material.Filled.Settings,
-        _ => Icons.Material.Filled.Description
-    };
-
-    private string GetFileIcon(string fileName) => fileName.EndsWith(".cs") switch
-    {
-        true => Icons.Material.Filled.Code,
-        _ => Icons.Material.Filled.Description
-    };
-
-    private int GetFileTypeOrder(string fileType) => fileType switch
-    {
-        "State" => 1,
-        "Actions" => 2,
-        "Reducers" => 3,
-        "Effects" => 4,
-        "Duck" => 5,
-        "Configuration" => 6,
-        _ => 99
-    };
-
-    private string GetFileTypeDisplay(string fileType) => fileType switch
-    {
-        "Duck" => "Ducks",
-        _ => fileType
-    };
-
-    private async Task CopyToClipboard(string content, string fileName)
-    {
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", content);
-        Snackbar.Add($"Copied {fileName} to clipboard!", Severity.Success);
-    }
-
-    private async Task CopyAllToClipboard()
-    {
-        var allContent = CreateCombinedContent();
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", allContent);
-        Snackbar.Add($"Copied all {GeneratedFiles.Count} files to clipboard!", Severity.Success);
-    }
-
-    private async Task DownloadFile(GeneratedFile file)
-    {
-        await JS.InvokeVoidAsync("downloadFile", file.FileName, file.Content);
-        Snackbar.Add($"Downloaded {file.FileName}", Severity.Success);
-    }
-
-    private async Task DownloadAll()
-    {
-        var combinedContent = CreateCombinedContent();
-        var fileName = $"{AppStoreName}_Generated_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
-        
-        await JS.InvokeVoidAsync("downloadFile", fileName, combinedContent);
-        Snackbar.Add($"Downloaded all files as {fileName}", Severity.Success);
-    }
-
-    private string CreateCombinedContent()
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine($"// Generated Ducky Code for: {AppStoreName}");
-        sb.AppendLine($"// Generated on: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine($"// Total files: {GeneratedFiles.Count}");
-        sb.AppendLine(new string('=', 80));
-        sb.AppendLine();
-        
-        foreach (var fileGroup in GeneratedFiles.GroupBy(f => f.FileType).OrderBy(g => GetFileTypeOrder(g.Key)))
-        {
-            sb.AppendLine($"// {fileGroup.Key} Files");
-            sb.AppendLine(new string('-', 40));
-            
-            foreach (var file in fileGroup.OrderBy(f => f.FileName))
-            {
-                sb.AppendLine();
-                sb.AppendLine($"// File: {file.FileName}");
-                sb.AppendLine($"// Type: {file.FileType}");
-                sb.AppendLine(new string('-', 40));
-                sb.AppendLine(file.Content);
-                sb.AppendLine();
-            }
-            
-            sb.AppendLine();
-        }
-        
-        return sb.ToString();
-    }
-}

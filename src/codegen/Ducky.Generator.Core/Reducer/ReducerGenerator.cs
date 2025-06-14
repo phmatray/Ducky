@@ -1,7 +1,15 @@
 namespace Ducky.Generator.Core;
 
+/// <summary>
+/// Generates reducer classes with partial methods for handling state changes based on actions.
+/// </summary>
 public class ReducerGenerator : SourceGeneratorBase<ReducerGeneratorOptions>
 {
+    /// <summary>
+    /// Builds the model representing the compilation unit for reducer generation.
+    /// </summary>
+    /// <param name="opts">The options containing configuration for reducer generation.</param>
+    /// <returns>A <see cref="CompilationUnitElement"/> representing the generated code structure.</returns>
     protected override CompilationUnitElement BuildModel(ReducerGeneratorOptions opts)
     {
         return new CompilationUnitElement()

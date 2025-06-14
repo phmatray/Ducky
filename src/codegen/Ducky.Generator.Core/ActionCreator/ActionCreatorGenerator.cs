@@ -5,6 +5,11 @@ namespace Ducky.Generator.Core;
 /// </summary>
 public class ActionCreatorGenerator : SourceGeneratorBase<ActionCreatorGeneratorOptions>
 {
+    /// <summary>
+    /// Builds the model representing the compilation unit for action creator generation.
+    /// </summary>
+    /// <param name="opts">The options containing configuration for action creator generation.</param>
+    /// <returns>A <see cref="CompilationUnitElement"/> representing the generated code structure.</returns>
     protected override CompilationUnitElement BuildModel(ActionCreatorGeneratorOptions opts)
     {
         return new CompilationUnitElement

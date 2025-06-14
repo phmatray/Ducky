@@ -1,0 +1,20 @@
+# EditorConfig for Ducky.Generator.WebApp project
+
+[*.cs]
+# Disable RCS1090: Add/remove 'ConfigureAwait(false)' call
+dotnet_diagnostic.RCS1090.severity = none
+
+# Disable RCS0056: A line is too long
+dotnet_diagnostic.RCS0056.severity = none
+
+# Disable RCS1250: Simplify object creation
+dotnet_diagnostic.RCS1250.severity = none
+
+# Disable RCS0053: Fix formatting of arguments
+dotnet_diagnostic.RCS0053.severity = none
+
+# Disable RCS0029: Put constructor initializer on its own line
+dotnet_diagnostic.RCS0029.severity = none
+
+# Disable RCS1248: Use pattern matching to check for null
+dotnet_diagnostic.RCS1248.severity = none

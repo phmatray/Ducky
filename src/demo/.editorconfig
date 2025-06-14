@@ -1,0 +1,10 @@
+# EditorConfig for demo projects
+# This file overrides the root .editorconfig for demo projects
+
+# Disable CS1591: Missing XML comment for publicly visible type or member
+[*.cs]
+dotnet_diagnostic.CS1573.severity = none
+dotnet_diagnostic.CS1591.severity = none
+
+# Disable RCS1090: Add/remove 'ConfigureAwait(false)' call
+dotnet_diagnostic.RCS1090.severity = none

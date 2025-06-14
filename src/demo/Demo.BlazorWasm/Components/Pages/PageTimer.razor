@@ -40,37 +40,3 @@
     </MudStack>
   </MudItem>
 </MudGrid>
-
-@code {
-
-  private int Time
-    => State.Time;
-  
-  private bool IsRunning
-    => State.IsRunning;
-
-  protected override void OnAfterSubscribed()
-  {
-    if (IsRunning)
-    {
-      StartTimer();
-    }
-  }
-  
-  private void ResetTimer()
-  {
-    StopTimer();
-    Dispatcher.ResetTimer();
-  }
-
-  private void StartTimer()
-  {
-    Dispatcher.StartTimer();
-  }
-
-  private void StopTimer()
-  {
-    Dispatcher.StopTimer();
-  }
-
-}

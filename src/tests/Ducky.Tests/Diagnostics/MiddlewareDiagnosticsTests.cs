@@ -2,7 +2,6 @@ using Ducky.Diagnostics;
 using Ducky.Middlewares.NoOp;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
 
 namespace Ducky.Tests.Diagnostics;
 

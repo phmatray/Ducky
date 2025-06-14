@@ -10,8 +10,9 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add database
 builder.Services.AddDbContext<CodeGenDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-                      "Data Source=codegen.db"));
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection") ??
+        "Data Source=codegen.db"));
 
 // Add services to the container.
 builder.Services.AddScoped<ActionCreatorGenerator>();
@@ -31,9 +32,9 @@ builder.Services.AddMudExtensions();
 WebApplication app = builder.Build();
 
 // Initialize database
-using (var scope = app.Services.CreateScope())
+using (IServiceScope scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<CodeGenDbContext>();
+    CodeGenDbContext context = scope.ServiceProvider.GetRequiredService<CodeGenDbContext>();
     context.Database.EnsureCreated();
 }
 
