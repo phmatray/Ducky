@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Ducky.Diagnostics;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
@@ -17,7 +16,6 @@ public class DuckyBuilder
     private readonly IServiceCollection _services;
     private readonly List<Type> _middlewareTypes = [];
     private readonly HashSet<Assembly> _assembliesToScan = [];
-    private bool _diagnosticsEnabled;
     private bool _defaultMiddlewaresAdded;
     private Action<DuckyOptions>? _configureOptions;
 
@@ -189,15 +187,6 @@ public class DuckyBuilder
         return this;
     }
 
-    /// <summary>
-    /// Enables middleware performance diagnostics.
-    /// </summary>
-    public DuckyBuilder EnableDiagnostics()
-    {
-        _diagnosticsEnabled = true;
-        _services.AddSingleton<MiddlewareDiagnostics>();
-        return this;
-    }
 
     /// <summary>
     /// Configures advanced store options.
@@ -217,7 +206,7 @@ public class DuckyBuilder
         _services.AddScoped<IDispatcher, Dispatcher>();
         _services.AddScoped<IStoreEventPublisher, StoreEventPublisher>();
         _services.AddScoped<IRootStateSerializer, RootStateSerializer>();
-        _services.AddScoped<StoreLogger>();
+        _services.AddScoped<DuckyStoreLogger>();
 
         // Scan assemblies for slices and effects
         foreach (Assembly assembly in _assembliesToScan)
@@ -238,24 +227,14 @@ public class DuckyBuilder
             ActionPipeline pipeline = new(sp, logger);
 
             // Configure pipeline with middlewares
-            MiddlewareDiagnostics? diagnostics = _diagnosticsEnabled
-                ? sp.GetService<MiddlewareDiagnostics>()
-                : null;
-
             for (int i = 0; i < _middlewareTypes.Count; i++)
             {
                 Type middlewareType = _middlewareTypes[i];
-
-                if (diagnostics is not null)
-                {
-                    diagnostics.RecordMiddlewareRegistration(middlewareType, i);
-                }
-
                 pipeline.Use(middlewareType);
             }
 
             // Create store
-            _ = sp.GetRequiredService<StoreLogger>(); // Ensure logger is created
+            _ = sp.GetRequiredService<DuckyStoreLogger>(); // Ensure logger is created
             return new DuckyStore(dispatcher, pipeline, eventPublisher, slices);
         });
 

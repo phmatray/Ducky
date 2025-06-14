@@ -6,19 +6,19 @@ namespace Ducky;
 /// <summary>
 /// Observes and logs store events.
 /// </summary>
-public class StoreLogger : IDisposable
+public class DuckyStoreLogger : IDisposable
 {
     private readonly ILogger _logger;
     private readonly IStoreEventPublisher _eventPublisher;
     private bool _disposed;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="StoreLogger"/> class and subscribes to pipeline events.
+    /// Initializes a new instance of the <see cref="DuckyStoreLogger"/> class and subscribes to pipeline events.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="eventPublisher">The pipeline event publisher.</param>
-    public StoreLogger(
-        ILogger<StoreLogger> logger,
+    public DuckyStoreLogger(
+        ILogger<DuckyStoreLogger> logger,
         IStoreEventPublisher eventPublisher)
     {
         ArgumentNullException.ThrowIfNull(logger);
@@ -91,7 +91,7 @@ public class StoreLogger : IDisposable
     }
 
     /// <summary>
-    /// Releases the unmanaged resources used by the <see cref="StoreLogger"/> and optionally releases the managed resources.
+    /// Releases the unmanaged resources used by the <see cref="DuckyStoreLogger"/> and optionally releases the managed resources.
     /// </summary>
     /// <param name="disposing">If true, the method has been called directly or indirectly by a user's code.</param>
     protected virtual void Dispose(bool disposing)

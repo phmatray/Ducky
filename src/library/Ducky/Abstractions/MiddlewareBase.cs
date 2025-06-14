@@ -1,4 +1,4 @@
-namespace Ducky.Pipeline;
+namespace Ducky;
 
 /// <summary>
 /// Base class for middleware implementations that provides common functionality.

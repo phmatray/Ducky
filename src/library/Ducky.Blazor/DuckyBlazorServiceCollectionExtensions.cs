@@ -250,14 +250,4 @@ public class BlazorDuckyBuilder
         _innerBuilder.ScanAssemblies(assemblyNames);
         return this;
     }
-
-    /// <summary>
-    /// Enables middleware performance diagnostics.
-    /// </summary>
-    /// <returns>The builder for chaining.</returns>
-    public BlazorDuckyBuilder EnableDiagnostics()
-    {
-        _innerBuilder.EnableDiagnostics();
-        return this;
-    }
 }

@@ -1,4 +1,4 @@
-namespace Ducky.Pipeline;
+namespace Ducky;
 
 /// <summary>
 /// An interface for implementing middleware
