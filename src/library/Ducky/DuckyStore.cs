@@ -67,6 +67,9 @@ public sealed class DuckyStore : IStore, IDisposable
 
         // Publish store initialized event
         _eventPublisher.Publish(new StoreInitializedEventArgs(sliceKeys.Count, sliceKeys));
+
+        // Mark as initialized
+        IsInitialized = true;
     }
 
     /// <inheritdoc/>
@@ -74,6 +77,15 @@ public sealed class DuckyStore : IStore, IDisposable
 
     /// <inheritdoc/>
     public IRootState CurrentState => _slices.CurrentState;
+
+    /// <inheritdoc/>
+    public bool IsInitialized { get; private set; }
+
+    /// <inheritdoc/>
+    public DateTime StartTime => _startTime;
+
+    /// <inheritdoc/>
+    public int SliceCount => _slices.AllSlices.Count();
 
     /// <inheritdoc/>
     public void Dispose()
@@ -170,8 +182,132 @@ public sealed class DuckyStore : IStore, IDisposable
         ProcessActionSafely(e.Action);
     }
 
+    /// <inheritdoc/>
+    public TState GetSlice<TState>()
+    {
+        Type stateType = typeof(TState);
+        ISlice? slice = _slices.AllSlices.FirstOrDefault(s => s.GetStateType() == stateType);
+
+        if (slice is null)
+        {
+            throw new InvalidOperationException($"No slice found for type {stateType.Name}");
+        }
+
+        return (TState)slice.GetState();
+    }
+
+    /// <inheritdoc/>
+    public TState GetSliceByKey<TState>(string key)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+
+        ISlice? slice = _slices.AllSlices.FirstOrDefault(s => s.GetKey() == key);
+
+        if (slice is null)
+        {
+            throw new KeyNotFoundException($"No slice found with key '{key}'");
+        }
+
+        return (TState)slice.GetState();
+    }
+
+    /// <inheritdoc/>
+    public bool TryGetSlice<TState>(out TState? state)
+    {
+        Type stateType = typeof(TState);
+        ISlice? slice = _slices.AllSlices.FirstOrDefault(s => s.GetStateType() == stateType);
+
+        if (slice is not null)
+        {
+            state = (TState)slice.GetState();
+            return true;
+        }
+
+        state = default;
+        return false;
+    }
+
+    /// <inheritdoc/>
+    public bool HasSlice<TState>()
+    {
+        Type stateType = typeof(TState);
+        return _slices.AllSlices.Any(s => s.GetStateType() == stateType);
+    }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> GetSliceNames()
+    {
+        return _slices.AllSlices.Select(s => s.GetKey()).ToList().AsReadOnly();
+    }
+
+    /// <inheritdoc/>
+    public IDisposable WhenSliceChanges<TState>(Action<TState> callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        Type stateType = typeof(TState);
+        TState? previousState = default;
+        var hasPreviousState = false;
+
+        void Handler(object? sender, StateChangedEventArgs e)
+        {
+            ISlice? slice = _slices.AllSlices.FirstOrDefault(s => s.GetStateType() == stateType);
+            if (slice is null)
+            {
+                return;
+            }
+
+            var currentState = (TState)slice.GetState();
+
+            // Only notify if state actually changed
+            if (hasPreviousState && EqualityComparer<TState>.Default.Equals(previousState, currentState))
+            {
+                return;
+            }
+
+            callback(currentState);
+            previousState = currentState;
+            hasPreviousState = true;
+        }
+
+        StateChanged += Handler;
+
+        return new SliceChangeSubscription(() => StateChanged -= Handler);
+    }
+
+    /// <inheritdoc/>
+    public IDisposable WhenSliceChanges<TState, TResult>(Func<TState, TResult> selector, Action<TResult> callback)
+    {
+        ArgumentNullException.ThrowIfNull(selector);
+        ArgumentNullException.ThrowIfNull(callback);
+
+        return WhenSliceChanges<TState>(state => callback(selector(state)));
+    }
+
     private void OnRootStateChanged(object? sender, StateChangedEventArgs e)
     {
         StateChanged?.Invoke(this, e);
+    }
+
+    private sealed class SliceChangeSubscription : IDisposable
+    {
+        private readonly Action _dispose;
+        private bool _disposed;
+
+        public SliceChangeSubscription(Action dispose)
+        {
+            _dispose = dispose;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _dispose();
+            _disposed = true;
+        }
     }
 }
