@@ -1,7 +1,6 @@
 using Bunit;
 using Microsoft.AspNetCore.Components.Rendering;
 using FakeItEasy;
-using Shouldly;
 using System.Collections.Immutable;
 
 namespace Ducky.Blazor.Tests;

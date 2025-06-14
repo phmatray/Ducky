@@ -18,7 +18,7 @@ public class CorrelationIdMiddlewareTests
         await middleware.InitializeAsync(dispatcher, store);
 
         // Assert - just verify no exception is thrown
-        Assert.True(true);
+        true.ShouldBeTrue();
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class CorrelationIdMiddlewareTests
         middleware.AfterInitializeAllMiddlewares();
 
         // Assert - just verify no exception is thrown
-        Assert.True(true);
+        true.ShouldBeTrue();
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class CorrelationIdMiddlewareTests
         bool result = middleware.MayDispatchAction(action);
 
         // Assert
-        Assert.True(result);
+        result.ShouldBeTrue();
     }
 
     [Fact]
@@ -73,9 +73,9 @@ public class CorrelationIdMiddlewareTests
         middleware.BeforeReduce(action);
 
         // Assert
-        Assert.NotNull(publishedEvent);
-        Assert.Equal(action, publishedEvent.Action);
-        Assert.NotEqual(Guid.Empty, publishedEvent.CorrelationId);
+        publishedEvent.ShouldNotBeNull();
+        publishedEvent.Action.ShouldBe(action);
+        publishedEvent.CorrelationId.ShouldNotBe(Guid.Empty);
     }
 
     [Fact]
@@ -102,10 +102,10 @@ public class CorrelationIdMiddlewareTests
         middleware.BeforeReduce(action);
 
         // Assert - each dispatch should get a unique correlation ID
-        Assert.Equal(2, correlationIds.Count);
-        Assert.NotEqual(correlationIds[0], correlationIds[1]);
-        Assert.NotEqual(Guid.Empty, correlationIds[0]);
-        Assert.NotEqual(Guid.Empty, correlationIds[1]);
+        correlationIds.Count.ShouldBe(2);
+        correlationIds[0].ShouldNotBe(correlationIds[1]);
+        correlationIds[0].ShouldNotBe(Guid.Empty);
+        correlationIds[1].ShouldNotBe(Guid.Empty);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class CorrelationIdMiddlewareTests
         middleware.AfterReduce(action);
 
         // Assert - no events should be published
-        Assert.Equal(0, eventCount);
+        eventCount.ShouldBe(0);
     }
 
     [Fact]
@@ -137,8 +137,8 @@ public class CorrelationIdMiddlewareTests
         IDisposable result = middleware.BeginInternalMiddlewareChange();
 
         // Assert
-        Assert.NotNull(result);
-        Assert.IsAssignableFrom<IDisposable>(result);
+        result.ShouldNotBeNull();
+        result.ShouldBeAssignableTo<IDisposable>();
 
         // Verify dispose doesn't throw
         result.Dispose();
@@ -148,6 +148,6 @@ public class CorrelationIdMiddlewareTests
     public void Constructor_WithNullEventPublisher_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new CorrelationIdMiddleware(null!));
+        Should.Throw<ArgumentNullException>(() => new CorrelationIdMiddleware(null!));
     }
 }

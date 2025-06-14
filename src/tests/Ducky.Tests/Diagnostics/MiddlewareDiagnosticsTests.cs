@@ -2,6 +2,7 @@ using Ducky.Diagnostics;
 using Ducky.Middlewares.NoOp;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 
 namespace Ducky.Tests.Diagnostics;
 
@@ -23,7 +24,7 @@ public class MiddlewareDiagnosticsTests
 
         // Assert
         MiddlewareDiagnostics? diagnostics = provider.GetService<MiddlewareDiagnostics>();
-        Assert.NotNull(diagnostics);
+        diagnostics.ShouldNotBeNull();
     }
 
     [Fact]
@@ -48,13 +49,13 @@ public class MiddlewareDiagnosticsTests
 
         // Assert
         MiddlewareDiagnosticReport report = diagnostics.GetReport();
-        Assert.NotNull(report);
-        Assert.Equal(3, report.TotalMiddlewares); // Default 2 + NoOp
-        Assert.True(report.TotalExecutions > 0);
+        report.ShouldNotBeNull();
+        report.TotalMiddlewares.ShouldBe(3); // Default 2 + NoOp
+        report.TotalExecutions.ShouldBeGreaterThan(0);
 
         MiddlewareReport? noOpReport = report.Middlewares.FirstOrDefault(m => m.Info.Type == typeof(NoOpMiddleware));
-        Assert.NotNull(noOpReport);
-        Assert.True(noOpReport.Metrics.TotalExecutions > 0);
+        noOpReport.ShouldNotBeNull();
+        noOpReport.Metrics.TotalExecutions.ShouldBeGreaterThan(0);
     }
 
     [Fact]
@@ -81,10 +82,10 @@ public class MiddlewareDiagnosticsTests
         MiddlewareDiagnosticReport report = diagnostics.GetReport();
         MiddlewareReport? delayReport = report.Middlewares.FirstOrDefault(m => m.Info.Type == typeof(DelayMiddleware));
 
-        Assert.NotNull(delayReport);
-        Assert.True(delayReport.Metrics.TotalExecutionTime > TimeSpan.Zero);
-        Assert.True(delayReport.Metrics.AverageBeforeReduceTime > TimeSpan.Zero);
-        Assert.True(delayReport.Metrics.AverageAfterReduceTime > TimeSpan.Zero);
+        delayReport.ShouldNotBeNull();
+        delayReport.Metrics.TotalExecutionTime.ShouldBeGreaterThan(TimeSpan.Zero);
+        delayReport.Metrics.AverageBeforeReduceTime.ShouldBeGreaterThan(TimeSpan.Zero);
+        delayReport.Metrics.AverageAfterReduceTime.ShouldBeGreaterThan(TimeSpan.Zero);
     }
 
     [Fact]
@@ -118,11 +119,11 @@ public class MiddlewareDiagnosticsTests
         MiddlewareDiagnosticReport report = diagnostics.GetReport();
         MiddlewareReport? errorReport = report.Middlewares.FirstOrDefault(m => m.Info.Type == typeof(ErrorMiddleware));
 
-        Assert.NotNull(errorReport);
+        errorReport.ShouldNotBeNull();
         // The error might be recorded multiple times (BeforeReduce/AfterReduce)
-        Assert.True(errorReport.Metrics.Errors >= 1);
-        Assert.NotNull(errorReport.Metrics.LastError);
-        Assert.Equal("Test error", errorReport.Metrics.LastError.Exception.Message);
+        errorReport.Metrics.Errors.ShouldBeGreaterThanOrEqualTo(1);
+        errorReport.Metrics.LastError.ShouldNotBeNull();
+        errorReport.Metrics.LastError.Exception.Message.ShouldBe("Test error");
     }
 
     [Fact]
@@ -149,16 +150,16 @@ public class MiddlewareDiagnosticsTests
         MiddlewareDiagnosticReport report = diagnostics.GetReport();
 
         // Assert
-        Assert.NotNull(report);
-        Assert.Equal(4, report.TotalMiddlewares); // Default 2 + NoOp + Delay
-        Assert.Equal(4, report.Middlewares.Count);
-        Assert.True(report.GeneratedAt <= DateTimeOffset.UtcNow);
-        Assert.Equal(0, report.TotalErrors);
+        report.ShouldNotBeNull();
+        report.TotalMiddlewares.ShouldBe(4); // Default 2 + NoOp + Delay
+        report.Middlewares.Count.ShouldBe(4);
+        report.GeneratedAt.ShouldBeLessThanOrEqualTo(DateTimeOffset.UtcNow);
+        report.TotalErrors.ShouldBe(0);
 
         // Check that middlewares are ordered
         for (int i = 0; i < report.Middlewares.Count - 1; i++)
         {
-            Assert.True(report.Middlewares[i].Info.Order <= report.Middlewares[i + 1].Info.Order);
+            report.Middlewares[i].Info.Order.ShouldBeLessThanOrEqualTo(report.Middlewares[i + 1].Info.Order);
         }
     }
 

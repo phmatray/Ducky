@@ -3,7 +3,6 @@ using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
 using Microsoft.JSInterop;
 using FakeItEasy;
-using Shouldly;
 
 namespace Ducky.Blazor.Tests;
 

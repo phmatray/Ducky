@@ -20,9 +20,9 @@ public class WeatherStateTests
         var newState = reducer.Reduce(initialState, action);
 
         // Assert
-        Assert.Equal("New York", newState.Location);
-        Assert.False(newState.IsLoading);
-        Assert.Null(newState.Error);
+        newState.Location.ShouldBe("New York");
+        newState.IsLoading.ShouldBeFalse();
+        newState.Error.ShouldBeNull();
     }
 
     [Fact]
@@ -37,9 +37,9 @@ public class WeatherStateTests
         var newState = reducer.Reduce(initialState, action);
 
         // Assert
-        Assert.True(newState.IsLoading);
-        Assert.Null(newState.Error);
-        Assert.Equal("New York", newState.Location);
+        newState.IsLoading.ShouldBeTrue();
+        newState.Error.ShouldBeNull();
+        newState.Location.ShouldBe("New York");
     }
 
     [Fact]
@@ -54,11 +54,11 @@ public class WeatherStateTests
         var newState = reducer.Reduce(initialState, action);
 
         // Assert
-        Assert.False(newState.IsLoading);
-        Assert.Null(newState.Error);
-        Assert.Equal("New York", newState.Location);
-        Assert.Equal(25.5, newState.Temperature);
-        Assert.Equal("Sunny", newState.Condition);
+        newState.IsLoading.ShouldBeFalse();
+        newState.Error.ShouldBeNull();
+        newState.Location.ShouldBe("New York");
+        newState.Temperature.ShouldBe(25.5);
+        newState.Condition.ShouldBe("Sunny");
     }
 
     [Fact]
@@ -73,9 +73,9 @@ public class WeatherStateTests
         var newState = reducer.Reduce(initialState, action);
 
         // Assert
-        Assert.False(newState.IsLoading);
-        Assert.Equal("Network error", newState.Error);
-        Assert.Equal("New York", newState.Location);
+        newState.IsLoading.ShouldBeFalse();
+        newState.Error.ShouldBe("Network error");
+        newState.Location.ShouldBe("New York");
     }
 
     [Fact]
@@ -100,28 +100,28 @@ public class WeatherStateTests
         // Act & Assert - Start Weather Polling
         dispatcher.Dispatch(new StartWeatherPolling("Test City"));
         var state1 = store.CurrentState.GetSliceState<WeatherState>();
-        Assert.Equal("Test City", state1.Location);
-        Assert.False(state1.IsLoading);
+        state1.Location.ShouldBe("Test City");
+        state1.IsLoading.ShouldBeFalse();
 
         // Act & Assert - Weather Loading
         dispatcher.Dispatch(new WeatherLoading());
         var state2 = store.CurrentState.GetSliceState<WeatherState>();
-        Assert.True(state2.IsLoading);
-        Assert.Equal("Test City", state2.Location);
+        state2.IsLoading.ShouldBeTrue();
+        state2.Location.ShouldBe("Test City");
 
         // Act & Assert - Weather Loaded
         dispatcher.Dispatch(new WeatherLoaded("Test City", 20.0, "Cloudy"));
         var state3 = store.CurrentState.GetSliceState<WeatherState>();
-        Assert.False(state3.IsLoading);
-        Assert.Equal("Test City", state3.Location);
-        Assert.Equal(20.0, state3.Temperature);
-        Assert.Equal("Cloudy", state3.Condition);
-        Assert.Null(state3.Error);
+        state3.IsLoading.ShouldBeFalse();
+        state3.Location.ShouldBe("Test City");
+        state3.Temperature.ShouldBe(20.0);
+        state3.Condition.ShouldBe("Cloudy");
+        state3.Error.ShouldBeNull();
 
         // Act & Assert - Weather Error
         dispatcher.Dispatch(new WeatherError("Test error"));
         var state4 = store.CurrentState.GetSliceState<WeatherState>();
-        Assert.False(state4.IsLoading);
-        Assert.Equal("Test error", state4.Error);
+        state4.IsLoading.ShouldBeFalse();
+        state4.Error.ShouldBe("Test error");
     }
 }

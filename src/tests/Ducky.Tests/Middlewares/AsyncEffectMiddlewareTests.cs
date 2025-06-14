@@ -32,7 +32,7 @@ public class AsyncEffectMiddlewareTests
     [Fact]
     public void Constructor_WithNullEffects_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        Should.Throw<ArgumentNullException>(() =>
             new AsyncEffectMiddleware(null!, _eventPublisher));
     }
 
@@ -41,7 +41,7 @@ public class AsyncEffectMiddlewareTests
     {
         IAsyncEffect[] effects = [];
 
-        Assert.Throws<ArgumentNullException>(() =>
+        Should.Throw<ArgumentNullException>(() =>
             new AsyncEffectMiddleware(effects, null!));
     }
 
@@ -52,7 +52,7 @@ public class AsyncEffectMiddlewareTests
 
         AsyncEffectMiddleware middleware = new(effects, _eventPublisher);
 
-        Assert.NotNull(middleware);
+        middleware.ShouldNotBeNull();
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class AsyncEffectMiddlewareTests
 
         AsyncEffectMiddleware middleware = await CreateInitializedMiddleware(effects);
 
-        Assert.NotNull(middleware);
+        middleware.ShouldNotBeNull();
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class AsyncEffectMiddlewareTests
 
         bool result = middleware.MayDispatchAction(action);
 
-        Assert.True(result);
+        result.ShouldBeTrue();
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class AsyncEffectMiddlewareTests
 
         IDisposable disposable = middleware.BeginInternalMiddlewareChange();
 
-        Assert.NotNull(disposable);
+        disposable.ShouldNotBeNull();
         disposable.Dispose(); // Should not throw
     }
 
@@ -200,8 +200,7 @@ public class AsyncEffectMiddlewareTests
         TimeSpan executionTime = DateTime.UtcNow - startTime;
 
         // Should complete almost immediately (fire and forget)
-        Assert.True(
-            executionTime.TotalMilliseconds < 50,
-            $"AfterReduce took {executionTime.TotalMilliseconds}ms, expected < 50ms");
+        executionTime.TotalMilliseconds
+            .ShouldBeLessThan(50, $"AfterReduce took {executionTime.TotalMilliseconds}ms, expected < 50ms");
     }
 }

@@ -17,8 +17,8 @@ public class DevToolsInitializationTests
         ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, options);
 
         // Assert
-        Assert.NotNull(devTools);
-        Assert.False(devTools.IsEnabled);
+        devTools.ShouldNotBeNull();
+        devTools.IsEnabled.ShouldBeFalse();
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class DevToolsInitializationTests
         await devTools.InitAsync().ConfigureAwait(true);
 
         // Assert
-        Assert.False(devTools.IsEnabled);
+        devTools.IsEnabled.ShouldBeFalse();
         A.CallTo(() => mockJsRuntime.InvokeAsync<IJSObjectReference>(
             A<string>.Ignored,
             A<object[]>.Ignored))
@@ -55,8 +55,8 @@ public class DevToolsInitializationTests
 
         // Act & Assert (should not throw)
         Task task = middleware.InitializeAsync(mockDispatcher, mockStore);
-        Assert.NotNull(task);
-        Assert.True(task.IsCompletedSuccessfully);
+        task.ShouldNotBeNull();
+        task.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     [Fact]
@@ -91,10 +91,10 @@ public class DevToolsInitializationTests
             ReduxDevToolsModule? devToolsModule = provider.GetService<ReduxDevToolsModule>();
             DevToolsOptions? devToolsOptions = provider.GetService<DevToolsOptions>();
 
-            Assert.NotNull(devToolsModule);
-            Assert.NotNull(devToolsOptions);
-            Assert.Equal("TestStore", devToolsOptions.StoreName);
-            Assert.False(devToolsOptions.Enabled);
+            devToolsModule.ShouldNotBeNull();
+            devToolsOptions.ShouldNotBeNull();
+            devToolsOptions.StoreName.ShouldBe("TestStore");
+            devToolsOptions.Enabled.ShouldBeFalse();
         }
         finally
         {

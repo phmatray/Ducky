@@ -138,7 +138,7 @@ public class ActionDispatcherSourceGeneratorTests
         GeneratorDriverRunResult runResult = driver.GetRunResult();
 
         // Check if any files were generated
-        Assert.NotEmpty(runResult.GeneratedTrees);
+        runResult.GeneratedTrees.ShouldNotBeEmpty();
         
         // Find the generated file for the Increment action.
         SyntaxTree generatedTree = runResult.GeneratedTrees
@@ -150,7 +150,7 @@ public class ActionDispatcherSourceGeneratorTests
             .Replace("\r\n", "\n");  // Normalize line endings
 
         // Assert
-        Assert.Equal(ExpectedIncrementDispatcher, generatedText);
+        generatedText.ShouldBe(ExpectedIncrementDispatcher);
     }
 
     [Fact]
@@ -174,7 +174,7 @@ public class ActionDispatcherSourceGeneratorTests
         GeneratorDriverRunResult runResult = driver.GetRunResult();
 
         // Check if any files were generated
-        Assert.NotEmpty(runResult.GeneratedTrees);
+        runResult.GeneratedTrees.ShouldNotBeEmpty();
         
         // Find the generated file for the CreateTodo action.
         SyntaxTree generatedTree = runResult.GeneratedTrees
@@ -186,6 +186,6 @@ public class ActionDispatcherSourceGeneratorTests
             .Replace("\r\n", "\n");  // Normalize line endings
 
         // Assert
-        Assert.Equal(ExpectedCreateTodoDispatcher, generatedText);
+        generatedText.ShouldBe(ExpectedCreateTodoDispatcher);
     }
 }
