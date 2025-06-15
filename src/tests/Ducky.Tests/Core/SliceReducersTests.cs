@@ -95,19 +95,6 @@ public sealed class SliceReducersTests : IDisposable
         state.ShouldBe(10);
     }
 
-    [Fact]
-    public void GetJson_Should_Return_Json_Object()
-    {
-        // Act
-        JsonObject json = _sut.GetJson();
-
-        // Assert
-        json.ShouldNotBeNull();
-        json.ContainsKey("key").ShouldBeTrue();
-        json.ContainsKey("state").ShouldBeTrue();
-        json["key"]!.GetValue<string>().ShouldBe("ducky-tests-test-models-test-counter");
-        json["state"]!.GetValue<int>().ShouldBe(10);
-    }
 
     [Fact]
     public void OnDispatch_Should_Increment_State()

@@ -29,15 +29,6 @@ public sealed class ActionPipeline : IDisposable
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    /// <summary>
-    /// Adds a middleware type to the pipeline.
-    /// </summary>
-    /// <typeparam name="TMiddleware">The type of middleware to add.</typeparam>
-    /// <returns>The current pipeline for chaining.</returns>
-    public ActionPipeline Use<TMiddleware>() where TMiddleware : class, IMiddleware
-    {
-        return Use(typeof(TMiddleware));
-    }
 
     /// <summary>
     /// Adds a middleware type to the pipeline.

@@ -34,8 +34,6 @@ public abstract partial record SliceReducers<TState>
         RegisterHydrationHandler();
     }
 
-    /// <inheritdoc />
-    public virtual TState CurrentState => _currentState ?? GetInitialState();
 
     /// <inheritdoc />
     public virtual event EventHandler? StateUpdated;
@@ -109,20 +107,8 @@ public abstract partial record SliceReducers<TState>
             : _currentState;
     }
 
-    /// <summary>
-    /// Converts the slice to a JSON object.
-    /// </summary>
-    /// <returns>The JSON object representing the slice.</returns>
-    public virtual JsonObject GetJson()
-    {
-        JsonObject json = new()
-        {
-            ["key"] = GetKey(),
-            ["state"] = JsonSerializer.SerializeToNode(GetState())
-        };
-
-        return json;
-    }
+    /// <inheritdoc />
+    public virtual TState CurrentState => _currentState ?? GetInitialState();
 
     /// <inheritdoc />
     public void OnDispatch(object action)
@@ -179,6 +165,7 @@ public abstract partial record SliceReducers<TState>
         ArgumentNullException.ThrowIfNull(reducer);
         Reducers[typeof(TAction)] = (_, _) => reducer();
     }
+
 
     /// <summary>
     /// Reduces the state using the appropriate reducer for the given action.
