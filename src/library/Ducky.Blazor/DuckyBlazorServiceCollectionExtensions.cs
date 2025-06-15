@@ -8,6 +8,7 @@ using Ducky.Builder;
 using Ducky.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
+using System.Reflection;
 
 namespace Ducky.Blazor;
 
@@ -161,9 +162,12 @@ public class BlazorDuckyBuilder
             // Add Blazored.LocalStorage services
             _services.AddBlazoredLocalStorage();
 
-            _services.AddScoped(typeof(IPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
-            _services.AddScoped(typeof(IEnhancedPersistenceProvider<>), typeof(LocalStoragePersistenceProvider<>));
+            // Use our typed persistence provider for state dictionaries
+            _services.AddScoped<IEnhancedPersistenceProvider<Dictionary<string, object>>, TypedLocalStoragePersistenceProvider>();
             _services.AddScoped<HydrationManager>();
+            
+            // Register PersistenceMiddleware itself so PersistenceService can access it
+            _services.AddScoped<PersistenceMiddleware>();
             _services.AddScoped<IPersistenceService, PersistenceService>();
         }
 
@@ -253,6 +257,17 @@ public class BlazorDuckyBuilder
     public BlazorDuckyBuilder ScanAssemblies(params string[] assemblyNames)
     {
         _innerBuilder.ScanAssemblies(assemblyNames);
+        return this;
+    }
+    
+    /// <summary>
+    /// Scans assemblies for slices and effects.
+    /// </summary>
+    /// <param name="assemblies">The assemblies to scan.</param>
+    /// <returns>The builder for chaining.</returns>
+    public BlazorDuckyBuilder ScanAssemblies(params Assembly[] assemblies)
+    {
+        _innerBuilder.ScanAssemblies(assemblies);
         return this;
     }
 }

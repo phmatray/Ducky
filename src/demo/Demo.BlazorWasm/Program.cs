@@ -7,6 +7,7 @@ using Demo.BlazorWasm.Features.JsonColoring;
 using Demo.BlazorWasm.Features.JsonColoring.Services;
 using Ducky.Blazor;
 using MudBlazor.Services;
+using System.Reflection;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 IServiceCollection services = builder.Services;
@@ -30,6 +31,9 @@ services.AddScoped<IMoviesService, MoviesService>();
 
 // Add Ducky with simplified Blazor API
 services.AddDuckyBlazor(ducky => ducky
+    // Scan the demo assembly for slices and effects
+    .ScanAssemblies(typeof(Program).Assembly)
+    
     // Enable JS console logging
     .EnableJsLogging()
 
@@ -50,6 +54,8 @@ services.AddDuckyBlazor(ducky => ducky
         options.AutoHydrate = true; // Enable auto-hydration
         options.StorageKey = "ducky-demo-state"; // Custom storage key
         options.ThrottleDelayMs = 1000; // Save at most once per second
+        options.DebounceDelayMs = 0; // Disable debouncing
+        options.EnableLogging = false; // Disable debug logging to prevent console spam
     })
 );
 

@@ -1,27 +1,6 @@
 namespace Ducky.Blazor.Middlewares.Persistence;
 
 /// <summary>
-/// Action used to hydrate the store with persisted state.
-/// </summary>
-/// <typeparam name="TState">The type of the state.</typeparam>
-public sealed record HydrateAction<TState>(TState State)
-    where TState : class;
-
-/// <summary>
-/// Enhanced hydrate action with metadata and source information.
-/// </summary>
-/// <param name="State">The state to hydrate with.</param>
-/// <param name="Metadata">Metadata associated with the persisted state.</param>
-/// <param name="Source">The source of the hydration (e.g., "localStorage", "sessionStorage").</param>
-/// <param name="HydrationId">Unique identifier for this hydration operation.</param>
-/// <typeparam name="TState">The type of the state.</typeparam>
-public sealed record EnhancedHydrateAction<TState>(
-    TState State,
-    PersistenceMetadata Metadata,
-    string Source,
-    string HydrationId) where TState : class;
-
-/// <summary>
 /// Action dispatched when hydration starts.
 /// </summary>
 /// <param name="Source">The source of the hydration.</param>

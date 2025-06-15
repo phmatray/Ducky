@@ -12,7 +12,7 @@ namespace Ducky.Blazor.Middlewares.Persistence;
 /// </summary>
 public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
 {
-    private readonly IEnhancedPersistenceProvider<IStateProvider> _persistenceProvider;
+    private readonly IEnhancedPersistenceProvider<Dictionary<string, object>> _persistenceProvider;
     private readonly HydrationManager _hydrationManager;
     private readonly PersistenceOptions _options;
     private IDispatcher? _dispatcher;
@@ -43,7 +43,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <param name="hydrationManager">The hydration manager.</param>
     /// <param name="options">Configuration options for persistence.</param>
     public PersistenceMiddleware(
-        IEnhancedPersistenceProvider<IStateProvider> persistenceProvider,
+        IEnhancedPersistenceProvider<Dictionary<string, object>> persistenceProvider,
         HydrationManager hydrationManager,
         PersistenceOptions options)
     {
@@ -64,12 +64,12 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
         _dispatcher = dispatcher;
         _store = store;
 
-        // Start auto-hydration if enabled
-        if (_options.AutoHydrate)
-        {
-            return HydrateAsync();
-        }
-
+        LogIfEnabled($"[InitializeAsync] PersistenceMiddleware initialized with store: {store?.GetType().Name}");
+        
+        // In Blazor apps, hydration should be handled by PersistenceInitializer component
+        // to ensure proper timing after the store is fully initialized
+        // We don't auto-hydrate here to avoid race conditions
+        
         return Task.CompletedTask;
     }
 
@@ -91,26 +91,25 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
             _hydrationManager.StartHydrating();
             _dispatcher.Dispatch(new HydrationStartedAction("persistence", hydrationId));
 
-            PersistedStateContainer<IStateProvider>? container = await LoadPersistedStateWithRetryAsync().ConfigureAwait(false);
+            PersistedStateContainer<Dictionary<string, object>>? container = await LoadPersistedStateWithRetryAsync().ConfigureAwait(false);
 
             if (container?.State is not null)
             {
-                IStateProvider state = container.State;
+                Dictionary<string, object> stateDict = container.State;
+                LogIfEnabled($"Loaded state dictionary with {stateDict.Count} slices");
 
-                // Apply hydration transformation if configured
-                if (_options.TransformStateForHydration is not null)
+                // Dispatch hydrate actions for each slice
+                Dictionary<string, object> slices = stateDict;
+                LogIfEnabled($"Found {slices.Count} slices to hydrate");
+                foreach ((string sliceKey, object sliceState) in slices)
                 {
-                    state = _options.TransformStateForHydration(state);
+                    LogIfEnabled($"Dispatching HydrateSliceAction for slice '{sliceKey}' with state type {sliceState.GetType().Name}");
+                    _dispatcher.Dispatch(new HydrateSliceAction(sliceKey, sliceState));
+                    LogIfEnabled($"Hydrated slice '{sliceKey}' with type {sliceState.GetType().Name}");
                 }
 
-                // Dispatch enhanced hydrate action
-                _dispatcher.Dispatch(new EnhancedHydrateAction<IStateProvider>(
-                    state,
-                    container.Metadata,
-                    "persistence",
-                    hydrationId));
-
-                LogIfEnabled($"Hydrated state from version {container.Metadata.Version} (persisted at {container.Metadata.Timestamp})");
+                LogIfEnabled($"Hydrated {slices.Count} slices from version {container.Metadata.Version} "
+                    + $"(persisted at {container.Metadata.Timestamp})");
 
                 _dispatcher.Dispatch(new HydrationCompletedAction("persistence", hydrationId, true, stopwatch.Elapsed));
             }
@@ -170,29 +169,38 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <inheritdoc />
     public override void AfterReduce(object action)
     {
+        LogIfEnabled($"[AfterReduce] Action: {action.GetType().Name}");
+        
         if (_store is null)
         {
+            LogIfEnabled("[AfterReduce] Store is null, skipping persistence");
             return;
         }
 
         // Skip persistence during hydration or for hydration actions
         if (!_isEnabled || _hydrationManager.IsHydrating || IsHydrationAction(action))
         {
+            LogIfEnabled($"[AfterReduce] Skipping - Enabled: {_isEnabled}, "
+                + $"IsHydrating: {_hydrationManager.IsHydrating}, "
+                + $"IsHydrationAction: {IsHydrationAction(action)}");
             return;
         }
 
         // Check if action should trigger persistence
         if (!ShouldPersistForAction(action))
         {
+            LogIfEnabled($"[AfterReduce] Action {action.GetType().Name} should not trigger persistence");
             return;
         }
 
         // Check if state should be persisted
         if (!ShouldPersistState(_store))
         {
+            LogIfEnabled("[AfterReduce] State should not be persisted");
             return;
         }
 
+        LogIfEnabled($"[AfterReduce] Scheduling persistence for action {action.GetType().Name}");
         // Schedule persistence based on throttling/debouncing configuration
         SchedulePersistence("action");
     }
@@ -212,6 +220,8 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
             {
                 if (now - _lastPersistenceTime < TimeSpan.FromMilliseconds(_options.ThrottleDelayMs))
                 {
+                    LogIfEnabled($"[SchedulePersistence] Throttled - Last: {_lastPersistenceTime}, "
+                        + $"Now: {now}, Delay: {_options.ThrottleDelayMs}ms");
                     return; // Skip this persistence due to throttling
                 }
             }
@@ -219,10 +229,12 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
             // Apply debouncing
             if (_options.DebounceDelayMs > 0)
             {
+                LogIfEnabled($"[SchedulePersistence] Debouncing with {_options.DebounceDelayMs}ms delay");
                 _debounceTimer.Change(_options.DebounceDelayMs, Timeout.Infinite);
                 return;
             }
 
+            LogIfEnabled($"[SchedulePersistence] Immediate persistence triggered by: {trigger}");
             // Immediate persistence
             _ = Task.Run(() => PersistCurrentStateAsync(trigger));
         }
@@ -252,6 +264,8 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     {
         if (!_isEnabled || _dispatcher is null || _store is null)
         {
+            LogIfEnabled($"[PersistCurrentStateAsync] Cannot persist - Enabled: {_isEnabled}, "
+                + $"Dispatcher: {_dispatcher is not null}, Store: {_store is not null}");
             return;
         }
 
@@ -267,14 +281,10 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
             // Apply filtering based on whitelist/blacklist
             IStateProvider filteredState = ApplyStateFiltering(currentState);
 
-            // Apply persistence transformation if configured
-            if (_options.TransformStateForPersistence is not null)
-            {
-                filteredState = _options.TransformStateForPersistence(filteredState);
-            }
-
+            // Get the state dictionary from the filtered state
+            Dictionary<string, object> stateDict = filteredState.GetStateDictionary().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             // Check if state has actually changed
-            string stateHash = ComputeStateHash(filteredState);
+            string stateHash = ComputeStateHash(stateDict);
             if (stateHash == _lastPersistedStateHash)
             {
                 LogIfEnabled("State unchanged, skipping persistence");
@@ -291,8 +301,10 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
                 Checksum = stateHash
             };
 
-            // Persist the state
-            PersistenceResult result = await _persistenceProvider.SaveWithMetadataAsync(filteredState, metadata).ConfigureAwait(false);
+            LogIfEnabled($"Persisting {stateDict.Count} slices to storage");
+            
+            // Persist the state dictionary
+            PersistenceResult result = await _persistenceProvider.SaveWithMetadataAsync(stateDict, metadata).ConfigureAwait(false);
 
             if (result.Success)
             {
@@ -324,7 +336,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <summary>
     /// Loads persisted state with retry logic.
     /// </summary>
-    private async Task<PersistedStateContainer<IStateProvider>?> LoadPersistedStateWithRetryAsync()
+    private async Task<PersistedStateContainer<Dictionary<string, object>>?> LoadPersistedStateWithRetryAsync()
     {
         int retryCount = 0;
 
@@ -377,15 +389,16 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
             }
         }
 
-        return new RootState(filteredDict.ToImmutable());
+        // Return a filtered state provider wrapper
+        return new FilteredStateProvider(_store!, filteredDict.ToImmutable());
     }
 
     /// <summary>
     /// Computes a hash of the state for change detection.
     /// </summary>
-    private static string ComputeStateHash(IStateProvider state)
+    private static string ComputeStateHash(Dictionary<string, object> stateDict)
     {
-        string json = JsonSerializer.Serialize(state.GetStateDictionary());
+        string json = JsonSerializer.Serialize(stateDict);
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(json));
         return Convert.ToBase64String(hash);
     }
@@ -398,12 +411,17 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
         // Use custom predicate if provided
         if (_options.ShouldPersistAction is not null)
         {
-            return _options.ShouldPersistAction(action);
+            bool result = _options.ShouldPersistAction(action);
+            LogIfEnabled($"[ShouldPersistForAction] Custom predicate for {action.GetType().Name}: {result}");
+            return result;
         }
 
         // Check excluded action types
         string actionType = action.GetType().Name;
-        return !_options.ExcludedActionTypes.Contains(actionType, StringComparer.OrdinalIgnoreCase);
+        bool isExcluded = _options.ExcludedActionTypes.Contains(actionType, StringComparer.OrdinalIgnoreCase);
+        LogIfEnabled($"[ShouldPersistForAction] Action {actionType} excluded: {isExcluded}, "
+            + $"ExcludedTypes: [{string.Join(", ", _options.ExcludedActionTypes)}]");
+        return !isExcluded;
     }
 
     /// <summary>
@@ -419,11 +437,13 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// </summary>
     private static bool IsHydrationAction(object action)
     {
-        return action is HydrateAction<IStateProvider> or
-               EnhancedHydrateAction<IStateProvider> or
+        return action is HydrateSliceAction or
                HydrationStartedAction or
                HydrationCompletedAction or
-               HydrationFailedAction;
+               HydrationFailedAction or
+               PersistenceTriggeredAction or
+               PersistenceCompletedAction or
+               PersistenceFailedAction;
     }
 
     /// <summary>

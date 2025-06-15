@@ -25,6 +25,15 @@ public abstract partial record SliceReducers<TState>
     private TState? _currentState;
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SliceReducers{TState}"/> class.
+    /// </summary>
+    protected SliceReducers()
+    {
+        // Register hydration handler
+        RegisterHydrationHandler();
+    }
+
     /// <inheritdoc />
     public virtual TState CurrentState => _currentState ?? GetInitialState();
 
@@ -220,4 +229,34 @@ public abstract partial record SliceReducers<TState>
 
     [GeneratedRegex("([a-z])([A-Z])", RegexOptions.Compiled)]
     private static partial Regex LowerCharUpperCharRegex();
+
+    /// <summary>
+    /// Registers the hydration handler to support state persistence.
+    /// </summary>
+    private void RegisterHydrationHandler()
+    {
+        Type hydrateActionType = typeof(HydrateSliceAction);
+        
+        Reducers[hydrateActionType] = (state, action) =>
+        {
+            if (action is HydrateSliceAction hydrateAction)
+            {
+                string myKey = GetKey();
+                bool keysMatch = hydrateAction.SliceKey == myKey;
+                bool isCorrectType = hydrateAction.State is TState;
+                
+                Console.WriteLine($"[SliceReducers] Hydration handler called for {GetType().Name}:");
+                Console.WriteLine($"  - My key: '{myKey}', Action key: '{hydrateAction.SliceKey}', Match: {keysMatch}");
+                Console.WriteLine($"  - State type: {hydrateAction.State?.GetType().Name}, Is TState: {isCorrectType}");
+                
+                if (keysMatch && hydrateAction.State is TState hydratedState)
+                {
+                    Console.WriteLine($"  - Hydrating with state: {hydratedState}");
+                    return hydratedState;
+                }
+            }
+
+            return state;
+        };
+    }
 }

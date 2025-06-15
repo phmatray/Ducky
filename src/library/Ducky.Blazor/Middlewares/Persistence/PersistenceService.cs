@@ -12,7 +12,7 @@ namespace Ducky.Blazor.Middlewares.Persistence;
 public class PersistenceService : IPersistenceService
 {
     private readonly PersistenceMiddleware? _persistenceMiddleware;
-    private readonly IEnhancedPersistenceProvider<IStateProvider>? _persistenceProvider;
+    private readonly IEnhancedPersistenceProvider<Dictionary<string, object>>? _persistenceProvider;
     private readonly ILogger<PersistenceService> _logger;
 
     /// <summary>
@@ -27,7 +27,7 @@ public class PersistenceService : IPersistenceService
         // Try to get PersistenceMiddleware from DI container
         _persistenceMiddleware = serviceProvider.GetService(typeof(PersistenceMiddleware)) as PersistenceMiddleware;
         _persistenceProvider = serviceProvider.GetService(
-            typeof(IEnhancedPersistenceProvider<IStateProvider>)) as IEnhancedPersistenceProvider<IStateProvider>;
+            typeof(IEnhancedPersistenceProvider<Dictionary<string, object>>)) as IEnhancedPersistenceProvider<Dictionary<string, object>>;
     }
 
     /// <inheritdoc />

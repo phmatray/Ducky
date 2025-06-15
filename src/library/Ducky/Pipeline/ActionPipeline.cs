@@ -73,7 +73,9 @@ public sealed class ActionPipeline : IDisposable
         // Create middleware instances
         foreach (Type middlewareType in _middlewareTypes)
         {
-            var middleware = (IMiddleware)ActivatorUtilities.CreateInstance(_serviceProvider, middlewareType);
+            // First try to get from DI container, fall back to creating new instance
+            IMiddleware middleware = _serviceProvider.GetService(middlewareType) as IMiddleware 
+                ?? (IMiddleware)ActivatorUtilities.CreateInstance(_serviceProvider, middlewareType);
             _middlewares.Add(middleware);
             await middleware.InitializeAsync(dispatcher, store).ConfigureAwait(false);
         }

@@ -13,6 +13,7 @@ public class PersistenceOptions
     /// <summary>
     /// Gets or sets the storage key for persisted state.
     /// If null, a default key based on the state type will be used.
+    /// Note: This is used by TypedLocalStoragePersistenceProvider, not the middleware.
     /// </summary>
     public string? StorageKey { get; set; }
 
@@ -54,6 +55,7 @@ public class PersistenceOptions
 
     /// <summary>
     /// Gets or sets a value indicating whether to automatically hydrate on initialization.
+    /// Note: This is used by PersistenceInitializer component, not the middleware.
     /// </summary>
     public bool AutoHydrate { get; set; } = true;
 
@@ -74,18 +76,6 @@ public class PersistenceOptions
     /// Useful for conditional persistence based on state content.
     /// </summary>
     public Func<IStateProvider, bool>? ShouldPersistState { get; set; }
-
-    /// <summary>
-    /// Gets or sets a custom state transformation function for persistence.
-    /// Allows modifying the state before it's persisted (e.g., removing sensitive data).
-    /// </summary>
-    public Func<IStateProvider, IStateProvider>? TransformStateForPersistence { get; set; }
-
-    /// <summary>
-    /// Gets or sets a custom state transformation function for hydration.
-    /// Allows modifying the persisted state during hydration (e.g., data migration).
-    /// </summary>
-    public Func<IStateProvider, IStateProvider>? TransformStateForHydration { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to persist initial state immediately after hydration.
