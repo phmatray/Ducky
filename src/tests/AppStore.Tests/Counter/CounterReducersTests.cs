@@ -52,7 +52,7 @@ public sealed class CounterReducersTests : IDisposable
         Dictionary<Type, Func<CounterState, object, CounterState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Count.ShouldBe(4);
+        reducers.Count.ShouldBe(5); // Including hydration handler
     }
 
     [Fact]

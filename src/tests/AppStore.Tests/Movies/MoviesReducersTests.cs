@@ -64,7 +64,7 @@ public sealed class MoviesReducersTests : IDisposable
         Dictionary<Type, Func<MoviesState, object, MoviesState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Count.ShouldBe(4);
+        reducers.Count.ShouldBe(5); // Including hydration handler
     }
 
     [Fact]

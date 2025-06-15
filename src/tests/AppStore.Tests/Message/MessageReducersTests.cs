@@ -52,7 +52,7 @@ public sealed class MessageReducersTests : IDisposable
         Dictionary<Type, Func<MessageState, object, MessageState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Count.ShouldBe(3);
+        reducers.Count.ShouldBe(4); // Including hydration handler
     }
 
     [Fact]

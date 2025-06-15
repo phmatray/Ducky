@@ -60,7 +60,7 @@ public sealed class TodoReducersTests : IDisposable
         Dictionary<Type, Func<TodoState, object, TodoState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Count.ShouldBe(3);
+        reducers.Count.ShouldBe(4); // Including hydration handler
     }
 
     [Fact]

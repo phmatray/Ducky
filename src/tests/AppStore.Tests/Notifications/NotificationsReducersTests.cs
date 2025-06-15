@@ -64,7 +64,7 @@ public sealed class NotificationsReducersTests : IDisposable
         Dictionary<Type, Func<NotificationsState, object, NotificationsState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Count.ShouldBe(4);
+        reducers.Count.ShouldBe(5); // Including hydration handler
     }
 
     [Fact]

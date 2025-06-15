@@ -52,7 +52,7 @@ public sealed class TimerReducersTests : IDisposable
         Dictionary<Type, Func<TimerState, object, TimerState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Count.ShouldBe(4);
+        reducers.Count.ShouldBe(5); // Including hydration handler
     }
 
     [Fact]

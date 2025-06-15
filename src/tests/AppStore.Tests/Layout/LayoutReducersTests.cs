@@ -64,7 +64,7 @@ public sealed class LayoutReducersTests : IDisposable
         Dictionary<Type, Func<LayoutState, object, LayoutState>> reducers = _sut.Reducers;
 
         // Assert
-        reducers.Count.ShouldBe(4);
+        reducers.Count.ShouldBe(5); // 4 custom reducers + 1 hydration handler
     }
 
     [Fact]
