@@ -37,24 +37,6 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
         };
     }
 
-    /// <inheritdoc />
-    public async Task<Dictionary<string, object>?> LoadAsync()
-    {
-        PersistedStateContainer<Dictionary<string, object>>? container = await LoadWithMetadataAsync().ConfigureAwait(false);
-        return container?.State;
-    }
-
-    /// <inheritdoc />
-    public async Task SaveAsync(Dictionary<string, object> state)
-    {
-        PersistenceMetadata metadata = new()
-        {
-            Version = 1,
-            Timestamp = DateTime.UtcNow
-        };
-
-        await SaveWithMetadataAsync(state, metadata).ConfigureAwait(false);
-    }
 
     /// <inheritdoc />
     public async Task<PersistedStateContainer<Dictionary<string, object>>?> LoadWithMetadataAsync(
@@ -186,81 +168,4 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
         }
     }
 
-    /// <inheritdoc />
-    public async Task<bool> ExistsAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return await _localStorage.ContainKeyAsync(_key, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Failed to check existence: {ex.Message}");
-            return false;
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task<long> GetSizeAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            PersistedStateDictionary? dict = await _localStorage
-                .GetItemAsync<PersistedStateDictionary>(_key, cancellationToken)
-                .ConfigureAwait(false);
-            
-            if (dict is null)
-            {
-                return 0;
-            }
-
-            string json = JsonSerializer.Serialize(dict, _jsonOptions);
-            return Encoding.UTF8.GetByteCount(json);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Failed to get size: {ex.Message}");
-            return -1;
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task<PersistenceResult> MigrateAsync(
-        int fromVersion,
-        int toVersion,
-        Func<Dictionary<string, object>, Dictionary<string, object>> migrationFunc,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            PersistedStateContainer<Dictionary<string, object>>? container = await LoadWithMetadataAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            if (container?.State is null)
-            {
-                return PersistenceResult.Failed("No state to migrate");
-            }
-
-            if (container.Metadata.Version != fromVersion)
-            {
-                return PersistenceResult.Failed($"Expected version {fromVersion}, found {container.Metadata.Version}");
-            }
-
-            // Apply migration
-            Dictionary<string, object> migratedState = migrationFunc(container.State);
-
-            // Update metadata
-            container.Metadata.Version = toVersion;
-            container.Metadata.Timestamp = DateTime.UtcNow;
-
-            // Save migrated state
-            return await SaveWithMetadataAsync(migratedState, container.Metadata, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Failed to migrate: {ex.Message}");
-            return PersistenceResult.Failed(ex.Message);
-        }
-    }
 }

@@ -26,11 +26,6 @@ public class PersistenceMetadata
     public string? UserAgent { get; set; }
 
     /// <summary>
-    /// Gets or sets custom metadata as key-value pairs.
-    /// </summary>
-    public Dictionary<string, object> CustomMetadata { get; set; } = [];
-
-    /// <summary>
     /// Gets or sets the checksum of the persisted state for integrity verification.
     /// </summary>
     public string? Checksum { get; set; }
@@ -67,11 +62,6 @@ public class PersistenceResult
     /// Gets or sets the error message if the operation failed.
     /// </summary>
     public string? Error { get; set; }
-
-    /// <summary>
-    /// Gets or sets additional context about the operation.
-    /// </summary>
-    public Dictionary<string, object> Context { get; set; } = [];
 
     /// <summary>
     /// Creates a successful result.
