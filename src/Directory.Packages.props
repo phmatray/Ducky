@@ -17,7 +17,7 @@
     <MicrosoftExtensionsVersion>9.0.6</MicrosoftExtensionsVersion>
     <CodeAnalysisVersion>4.14.0</CodeAnalysisVersion>
     <RoslynatorVersion>4.13.1</RoslynatorVersion>
-    <MudBlazorVersion>8.7.0</MudBlazorVersion>
+    <MudBlazorVersion>8.9.0</MudBlazorVersion>
     <SerilogVersion>9.0.0</SerilogVersion>
     <TestSdkVersion>17.14.1</TestSdkVersion>
   </PropertyGroup>
@@ -29,9 +29,9 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(AspNetCoreVersion)" PrivateAssets="all" />
     <PackageVersion Include="MudBlazor" Version="$(MudBlazorVersion)" />
-    <PackageVersion Include="MudBlazor.Extensions" Version="$(MudBlazorVersion)" />
-    <PackageVersion Include="PublishSPAforGitHubPages.Build" Version="3.0.0" PrivateAssets="all" />
-
+    <PackageVersion Include="MudBlazor.Extensions" Version="8.8.0" />
+    <PackageVersion Include="PublishSPAforGitHubPages.Build" Version="3.0.1" PrivateAssets="all" />
+    
     <!-- Microsoft Extensions -->
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(MicrosoftExtensionsVersion)" />
@@ -67,7 +67,7 @@
     <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="$(RoslynatorVersion)" PrivateAssets="all" />
 
     <!-- Testing -->
-    <PackageVersion Include="bunit" Version="1.39.5" />
+    <PackageVersion Include="bunit" Version="1.40.0" />
     <PackageVersion Include="FakeItEasy" Version="8.3.0" />
     <PackageVersion Include="Microsoft.CodeCoverage" Version="$(TestSdkVersion)" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.6.0" />

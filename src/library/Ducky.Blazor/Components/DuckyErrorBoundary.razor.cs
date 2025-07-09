@@ -9,18 +9,8 @@ namespace Ducky.Blazor.Components;
 /// </summary>
 public partial class DuckyErrorBoundary
 {
-    /// <summary>
-    /// Gets or sets the child content to be rendered inside the error boundary.
-    /// </summary>
-    [Parameter]
-    public new RenderFragment? ChildContent { get; set; }
-
-    /// <summary>
-    /// Gets or sets the error content to be rendered when an exception occurs.
-    /// If not provided, a default error UI will be displayed.
-    /// </summary>
-    [Parameter]
-    public new RenderFragment<Exception>? ErrorContent { get; set; }
+    // Note: ChildContent and ErrorContent are inherited from ErrorBoundary base class
+    // We don't need to redeclare them as that causes parameter conflicts
 
     /// <summary>
     /// Gets or sets whether to show detailed error information in the default error UI.
