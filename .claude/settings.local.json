@@ -40,7 +40,22 @@
       "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests --list-tests)",
       "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests --timeout 30s)",
       "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests:*)",
-      "WebFetch(domain:introtorx.com)"
+      "WebFetch(domain:introtorx.com)",
+      "Bash(-e 's/\\.Should()\\.NotBeNull()/\\.ShouldNotBeNull()/g' )",
+      "Bash(-e 's/\\.Should()\\.BeNull()/\\.ShouldBeNull()/g' )",
+      "Bash(-e 's/\\.Should()\\.BeTrue()/\\.ShouldBeTrue()/g' )",
+      "Bash(-e 's/\\.Should()\\.BeFalse()/\\.ShouldBeFalse()/g' )",
+      "Bash(-e 's/\\.Should()\\.Be(/\\.ShouldBe(/g' )",
+      "Bash(-e 's/\\.Should()\\.NotBe(/\\.ShouldNotBe(/g' )",
+      "Bash(-e 's/\\.Should()\\.BeEmpty()/\\.ShouldBeEmpty()/g' )",
+      "Bash(-e 's/\\.Should()\\.NotBeEmpty()/\\.ShouldNotBeEmpty()/g' )",
+      "Bash(-e 's/\\.Should()\\.Contain(/\\.ShouldContain(/g' )",
+      "Bash(-e 's/\\.Should()\\.NotContain(/\\.ShouldNotContain(/g' )",
+      "Bash(-e 's/\\.Should()\\.HaveCount(/\\.Count.ShouldBe(/g' )",
+      "Bash(-e 's/\\.Should()\\.ContainKey(/\\.ShouldContainKey(/g' )",
+      "Bash(-e 's/\\.Should()\\.NotContainKey(/\\.ShouldNotContainKey(/g' )",
+      "Bash(-e 's/\\.Should()\\.BeSameAs(/\\.ShouldBeSameAs(/g' )",
+      "Bash({} ;)"
     ],
     "deny": []
   },
