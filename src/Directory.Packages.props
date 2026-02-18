@@ -12,9 +12,9 @@
     <WarningsAsErrors>$(WarningsAsErrors);NU1605</WarningsAsErrors>
     
     <!-- Define common versions as properties for related packages -->
-    <AspNetCoreVersion>9.0.6</AspNetCoreVersion>
-    <EntityFrameworkCoreVersion>9.0.6</EntityFrameworkCoreVersion>
-    <MicrosoftExtensionsVersion>9.0.6</MicrosoftExtensionsVersion>
+    <AspNetCoreVersion>9.0.7</AspNetCoreVersion>
+    <EntityFrameworkCoreVersion>9.0.7</EntityFrameworkCoreVersion>
+    <MicrosoftExtensionsVersion>9.0.7</MicrosoftExtensionsVersion>
     <CodeAnalysisVersion>4.14.0</CodeAnalysisVersion>
     <RoslynatorVersion>4.13.1</RoslynatorVersion>
     <MudBlazorVersion>8.9.0</MudBlazorVersion>
@@ -70,7 +70,7 @@
     <PackageVersion Include="bunit" Version="1.40.0" />
     <PackageVersion Include="FakeItEasy" Version="8.3.0" />
     <PackageVersion Include="Microsoft.CodeCoverage" Version="$(TestSdkVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.6.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.7.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.52.0" />
     <PackageVersion Include="Microsoft.Reactive.Testing" Version="6.0.1" />

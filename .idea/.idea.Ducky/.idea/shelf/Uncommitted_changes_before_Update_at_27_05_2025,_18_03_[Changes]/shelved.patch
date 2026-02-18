@@ -1,0 +1,451 @@
+Index: src/demo/Demo.ConsoleApp/Program.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>using Demo.ConsoleApp.Counter;\nusing Demo.ConsoleApp.Todos;\nusing Ducky.Middlewares.AsyncEffect;\nusing Ducky.Middlewares.CorrelationId;\nusing Ducky.Pipeline;\nusing Microsoft.Extensions.DependencyInjection;\nusing R3;\nusing Spectre.Console;\n\nAnsiConsole.Write(\n    new FigletText(\"Ducky Demo\")\n        .Centered()\n        .Color(Color.Blue));\n\n// Setup dispatcher and store\nDispatcher dispatcher = new();\n\n// Create reducers\nCounterReducers counterReducers = new();\nTodoReducers todoReducers = new();\n\n// Setup services for async effects\nServiceCollection services = [];\nservices.AddSingleton<IAsyncEffect, DelayedIncrementEffect>();\nservices.AddSingleton<IAsyncEffect, CounterThresholdEffect>();\nservices.AddSingleton<IStoreEventPublisher, StoreEventPublisher>();\n\nServiceProvider serviceProvider = services.BuildServiceProvider();\n\n// Create a variable to hold the store reference\nDuckyStore? storeRef = null;\n\n// Create store with middleware pipeline\nDuckyStore store = DuckyStoreFactory.CreateStore(\n    dispatcher,\n    [counterReducers, todoReducers],\n    pipeline =>\n    {\n        IStoreEventPublisher eventPublisher = serviceProvider.GetRequiredService<IStoreEventPublisher>();\n        pipeline.Use(new CorrelationIdMiddleware(eventPublisher));\n        pipeline.Use(new LoggingMiddleware());\n        pipeline.Use(new AsyncEffectMiddleware(\n            serviceProvider,\n            () => storeRef!.CurrentState,\n            dispatcher));\n    });\n\n// Set the store reference\nstoreRef = store;\n\n// Subscribe to state changes\nIDisposable subscription = store.RootStateObservable\n    .Subscribe(rootState =>\n    {\n        CounterState counterState = rootState.GetSliceState<CounterState>();\n        TodoState todoState = rootState.GetSliceState<TodoState>();\n\n        string stateMessage = $\"[dim][[State Update]] [/][yellow]Counter: {counterState.Value}[/] | \"\n            + $\"[green]Todos: {todoState.ActiveCount} active[/], [blue]{todoState.CompletedCount} completed[/]\";\n        AnsiConsole.MarkupLine(stateMessage);\n    });\n\n// Interactive menu\nvar running = true;\nwhile (running)\n{\n    AnsiConsole.Clear();\n    \n    string choice = AnsiConsole.Prompt(\n        new SelectionPrompt<string>()\n            .Title(\"[bold blue]Main Menu[/]\")\n            .PageSize(10)\n            .AddChoices(\"Counter Demo\", \"Todo List Demo\", \"Show Current State\", \"Exit\"));\n\n    switch (choice)\n    {\n        case \"Counter Demo\":\n        {\n            await RunCounterDemo(dispatcher, store).ConfigureAwait(false);\n            break;\n        }\n        case \"Todo List Demo\":\n        {\n            await RunTodoDemo(dispatcher, store).ConfigureAwait(false);\n            break;\n        }\n        case \"Show Current State\":\n        {\n            ShowCurrentState(store.CurrentState);\n            AnsiConsole.Prompt(new TextPrompt<string>(\"[grey]Press Enter to continue...[/]\")\n                .AllowEmpty());\n            break;\n        }\n        case \"Exit\":\n        {\n            running = false;\n            break;\n        }\n    }\n}\n\nsubscription.Dispose();\nAnsiConsole.MarkupLine(\"[green]Goodbye![/]\");\n\nasync Task RunCounterDemo(IDispatcher dispatcher, DuckyStore store)\n{\n    var counterRunning = true;\n    while (counterRunning)\n    {\n        AnsiConsole.Clear();\n\n        // Get fresh state each time we display\n        CounterState counterState = store.CurrentState.GetSliceState<CounterState>();\n\n        Panel panel = new Panel($\"[bold yellow]Current Value: {counterState.Value}[/]\")\n            .Header(\"[blue]Counter Demo[/]\")\n            .BorderColor(Color.Blue);\n        AnsiConsole.Write(panel);\n\n        string choice = AnsiConsole.Prompt(\n            new SelectionPrompt<string>()\n                .Title(\"[bold]Select an action:[/]\")\n                .AddChoices(new[]\n                {\n                    \"Increment (+1)\",\n                    \"Increment (+5)\",\n                    \"Decrement (-1)\",\n                    \"Async Increment (+3 after 2s)\",\n                    \"Set Value\",\n                    \"Reset\",\n                    \"Back to main menu\"\n                }));\n\n        switch (choice)\n        {\n            case \"Increment (+1)\":\n            {\n                dispatcher.Increment();\n                break;\n            }\n            case \"Increment (+5)\":\n            {\n                dispatcher.Increment(5);\n                break;\n            }\n            case \"Decrement (-1)\":\n            {\n                dispatcher.Decrement();\n                break;\n            }\n            case \"Async Increment (+3 after 2s)\":\n            {\n                dispatcher.IncrementAsync(3, 2000);\n                await AnsiConsole.Status()\n                    .StartAsync(\n                        \"Starting async increment...\",\n                        async ctx => { await Task.Delay(500).ConfigureAwait(false); })\n                    .ConfigureAwait(false);\n                break;\n            }\n            case \"Set Value\":\n            {\n                int value = AnsiConsole.Prompt(\n                    new TextPrompt<int>(\"Enter value:\")\n                        .ValidationErrorMessage(\"[red]That's not a valid number[/]\"));\n                dispatcher.SetValue(value);\n                break;\n            }\n            case \"Reset\":\n            {\n                dispatcher.Reset();\n                break;\n            }\n            case \"Back to main menu\":\n            {\n                counterRunning = false;\n                break;\n            }\n        }\n\n        if (counterRunning)\n        {\n            await Task.Delay(100).ConfigureAwait(false);\n        }\n    }\n}\n\nasync Task RunTodoDemo(IDispatcher dispatcher, DuckyStore store)\n{\n    var todoRunning = true;\n    while (todoRunning)\n    {\n        AnsiConsole.Clear();\n\n        TodoState todoState = store.CurrentState.GetSliceState<TodoState>();\n\n        Rule rule = new(\"[blue]Todo List Demo[/]\");\n        AnsiConsole.Write(rule);\n\n        AnsiConsole.MarkupLine(\n            $\"[green]Active: {todoState.ActiveCount}[/] | [blue]Completed: {todoState.CompletedCount}[/]\\n\");\n\n        ValueCollection<TodoItem> todos = todoState.SelectEntities();\n        if (todos.IsEmpty)\n        {\n            AnsiConsole.MarkupLine(\"[grey]No todos yet[/]\");\n        }\n        else\n        {\n            Table table = new();\n            table.AddColumn(\"Status\");\n            table.AddColumn(\"ID\");\n            table.AddColumn(\"Title\");\n            table.Border(TableBorder.Rounded);\n\n            foreach (TodoItem todo in todos)\n            {\n                string status = todo.IsCompleted ? \"[green]✓[/]\" : \"[red]○[/]\";\n                string title = todo.IsCompleted\n                    ? $\"[strikethrough grey]{todo.Title}[/]\"\n                    : todo.Title;\n                table.AddRow(status, $\"[dim]{todo.Id}[/]\", title);\n            }\n\n            AnsiConsole.Write(table);\n        }\n\n        string choice = AnsiConsole.Prompt(\n            new SelectionPrompt<string>()\n                .Title(\"\\n[bold]Select an action:[/]\")\n                .AddChoices(new[]\n                {\n                    \"Add Todo\",\n                    \"Toggle Todo\",\n                    \"Remove Todo\",\n                    \"Clear Completed\",\n                    \"Toggle All\",\n                    \"Back to main menu\"\n                }));\n\n        switch (choice)\n        {\n            case \"Add Todo\":\n            {\n                string title = AnsiConsole.Prompt(\n                    new TextPrompt<string>(\"Enter todo title:\")\n                        .ValidationErrorMessage(\"[red]Title cannot be empty[/]\")\n                        .Validate(t => !string.IsNullOrWhiteSpace(t)));\n                dispatcher.AddTodo(title);\n                break;\n            }\n            case \"Toggle Todo\":\n            {\n                if (!todos.IsEmpty)\n                {\n                    string toggleId = AnsiConsole.Prompt(\n                        new TextPrompt<string>(\"Enter todo ID to toggle:\")\n                            .ValidationErrorMessage(\"[red]ID cannot be empty[/]\"));\n                    dispatcher.ToggleTodo(toggleId);\n                }\n                else\n                {\n                    AnsiConsole.MarkupLine(\"[red]No todos to toggle[/]\");\n                    await Task.Delay(1000).ConfigureAwait(false);\n                }\n\n                break;\n            }\n            case \"Remove Todo\":\n            {\n                if (!todos.IsEmpty)\n                {\n                    string removeId = AnsiConsole.Prompt(\n                        new TextPrompt<string>(\"Enter todo ID to remove:\")\n                            .ValidationErrorMessage(\"[red]ID cannot be empty[/]\"));\n                    dispatcher.RemoveTodo(removeId);\n                }\n                else\n                {\n                    AnsiConsole.MarkupLine(\"[red]No todos to remove[/]\");\n                    await Task.Delay(1000).ConfigureAwait(false);\n                }\n\n                break;\n            }\n            case \"Clear Completed\":\n            {\n                dispatcher.ClearCompleted();\n                break;\n            }\n            case \"Toggle All\":\n            {\n                bool markCompleted = AnsiConsole.Confirm(\"Mark all as completed?\");\n                dispatcher.ToggleAll(markCompleted);\n                break;\n            }\n            case \"Back to main menu\":\n            {\n                todoRunning = false;\n                break;\n            }\n        }\n\n        if (todoRunning)\n        {\n            await Task.Delay(100).ConfigureAwait(false);\n        }\n    }\n}\n\nvoid ShowCurrentState(IRootState rootState)\n{\n    CounterState counterState = rootState.GetSliceState<CounterState>();\n    TodoState todoState = rootState.GetSliceState<TodoState>();\n\n    Panel statePanel = new Panel(\n        new Rows(\n            new Markup($\"[yellow]Counter Value:[/] {counterState.Value}\"),\n            new Markup($\"[green]Active Todos:[/] {todoState.ActiveCount}\"),\n            new Markup($\"[blue]Completed Todos:[/] {todoState.CompletedCount}\")))\n        .Header(\"[bold]Current State[/]\")\n        .BorderColor(Color.Green);\n\n    AnsiConsole.Write(statePanel);\n\n    ValueCollection<TodoItem> todos = todoState.SelectEntities();\n    if (todos.IsEmpty)\n    {\n        return;\n    }\n\n    AnsiConsole.WriteLine();\n    Table todoTable = new();\n    todoTable.Title(\"[underline]Todo Items[/]\");\n    todoTable.AddColumn(\"Status\");\n    todoTable.AddColumn(\"Title\");\n    todoTable.Border(TableBorder.Simple);\n\n    foreach (TodoItem todo in todos)\n    {\n        string status = todo.IsCompleted ? \"[green]✓[/]\" : \"[red]○[/]\";\n        string title = todo.IsCompleted\n            ? $\"[strikethrough grey]{todo.Title}[/]\"\n            : todo.Title;\n        todoTable.AddRow(status, title);\n    }\n\n    AnsiConsole.Write(todoTable);\n}\n\n// Custom middleware for demonstration\npublic sealed class LoggingMiddleware : IActionMiddleware\n{\n    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)\n    {\n        return actions.Do(context =>\n        {\n            string correlationId = context.Metadata.TryGetValue(CorrelationIdMiddleware.CorrelationIdKey, out object? id) && id is Guid guid\n                ? guid.ToString()[..8]\n                : \"unknown\";\n            AnsiConsole.MarkupLine($\"[dim][[Middleware]] Before: {context.Action.GetType().Name} (CorrelationId: {correlationId})[/]\");\n        });\n    }\n\n    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)\n    {\n        return actions.Do(context =>\n        {\n            string correlationId = context.Metadata.TryGetValue(CorrelationIdMiddleware.CorrelationIdKey, out object? id) && id is Guid guid\n                ? guid.ToString()[..8]\n                : \"unknown\";\n            AnsiConsole.MarkupLine($\"[dim][[Middleware]] After: {context.Action.GetType().Name} (CorrelationId: {correlationId})[/]\");\n        });\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.ConsoleApp/Program.cs b/src/demo/Demo.ConsoleApp/Program.cs
+--- a/src/demo/Demo.ConsoleApp/Program.cs	(revision 10f07c048224cc90db9f1d41d5eb2fe261a2bb57)
++++ b/src/demo/Demo.ConsoleApp/Program.cs	(date 1748277752698)
+@@ -1,7 +1,9 @@
+ using Demo.ConsoleApp.Counter;
+ using Demo.ConsoleApp.Todos;
++using Ducky;
+ using Ducky.Middlewares.AsyncEffect;
+ using Ducky.Middlewares.CorrelationId;
++using Ducky.Middlewares.ReactiveEffect;
+ using Ducky.Pipeline;
+ using Microsoft.Extensions.DependencyInjection;
+ using R3;
+@@ -23,7 +25,9 @@
+ ServiceCollection services = [];
+ services.AddSingleton<IAsyncEffect, DelayedIncrementEffect>();
+ services.AddSingleton<IAsyncEffect, CounterThresholdEffect>();
++services.AddSingleton<IReactiveEffect, CounterMonitorEffect>();
+ services.AddSingleton<IStoreEventPublisher, StoreEventPublisher>();
++services.AddSingleton<IDispatcher>(dispatcher);
+ 
+ ServiceProvider serviceProvider = services.BuildServiceProvider();
+ 
+@@ -39,6 +43,11 @@
+         IStoreEventPublisher eventPublisher = serviceProvider.GetRequiredService<IStoreEventPublisher>();
+         pipeline.Use(new CorrelationIdMiddleware(eventPublisher));
+         pipeline.Use(new LoggingMiddleware());
++        pipeline.Use(new ReactiveEffectMiddleware(
++            serviceProvider,
++            dispatcher,
++            () => storeRef!.CurrentState,
++            eventPublisher));
+         pipeline.Use(new AsyncEffectMiddleware(
+             serviceProvider,
+             () => storeRef!.CurrentState,
+Index: src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectServiceCollectionExtensions.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// using Microsoft.Extensions.DependencyInjection;\n//\n// namespace Ducky.Middlewares.ReactiveEffect;\n//\n// /// <summary>\n// /// Provides extension methods for registering the ReactiveEffect middleware and related services.\n// /// </summary>\n// public static class ReactiveEffectServiceCollectionExtensions\n// {\n//     /// <summary>\n//     /// Registers the ReactiveEffect middleware for the given state type.\n//     /// </summary>\n//     /// <typeparam name=\"TState\">The type of the state to use with the middleware.</typeparam>\n//     /// <param name=\"services\">The service collection.</param>\n//     /// <returns>The service collection for chaining.</returns>\n//     public static IServiceCollection AddReactiveEffectMiddleware<TState>(this IServiceCollection services)\n//         where TState : class\n//     {\n//         services.AddSingleton<ReactiveEffectMiddleware<TState>>();\n//         return services;\n//     }\n// }\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectServiceCollectionExtensions.cs b/src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectServiceCollectionExtensions.cs
+--- a/src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectServiceCollectionExtensions.cs	(revision 10f07c048224cc90db9f1d41d5eb2fe261a2bb57)
++++ b/src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectServiceCollectionExtensions.cs	(date 1748277528791)
+@@ -1,22 +1,33 @@
+-// using Microsoft.Extensions.DependencyInjection;
+-//
+-// namespace Ducky.Middlewares.ReactiveEffect;
+-//
+-// /// <summary>
+-// /// Provides extension methods for registering the ReactiveEffect middleware and related services.
+-// /// </summary>
+-// public static class ReactiveEffectServiceCollectionExtensions
+-// {
+-//     /// <summary>
+-//     /// Registers the ReactiveEffect middleware for the given state type.
+-//     /// </summary>
+-//     /// <typeparam name="TState">The type of the state to use with the middleware.</typeparam>
+-//     /// <param name="services">The service collection.</param>
+-//     /// <returns>The service collection for chaining.</returns>
+-//     public static IServiceCollection AddReactiveEffectMiddleware<TState>(this IServiceCollection services)
+-//         where TState : class
+-//     {
+-//         services.AddSingleton<ReactiveEffectMiddleware<TState>>();
+-//         return services;
+-//     }
+-// }
++using Ducky.Pipeline;
++using Microsoft.Extensions.DependencyInjection;
++
++namespace Ducky.Middlewares.ReactiveEffect;
++
++/// <summary>
++/// Provides extension methods for registering the ReactiveEffect middleware and related services.
++/// </summary>
++public static class ReactiveEffectServiceCollectionExtensions
++{
++    /// <summary>
++    /// Registers the ReactiveEffect middleware.
++    /// </summary>
++    /// <param name="services">The service collection.</param>
++    /// <returns>The service collection for chaining.</returns>
++    public static IServiceCollection AddReactiveEffectMiddleware(this IServiceCollection services)
++    {
++        services.AddSingleton<IActionMiddleware>(sp =>
++        {
++            IDispatcher dispatcher = sp.GetRequiredService<IDispatcher>();
++            IStore store = sp.GetRequiredService<IStore>();
++            IStoreEventPublisher eventPublisher = sp.GetRequiredService<IStoreEventPublisher>();
++            
++            return new ReactiveEffectMiddleware(
++                sp,
++                dispatcher,
++                () => store.CurrentState,
++                eventPublisher);
++        });
++        
++        return services;
++    }
++}
+Index: src/demo/Demo.BlazorWasm/Program.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>using Microsoft.AspNetCore.Components.Web;\nusing Microsoft.AspNetCore.Components.WebAssembly.Hosting;\nusing Demo.BlazorWasm;\nusing Demo.BlazorWasm.AppStore;\nusing Demo.BlazorWasm.Features.JsonColoring;\nusing Demo.BlazorWasm.Features.JsonColoring.Services;\nusing Ducky.Blazor;\nusing Ducky.Blazor.Middlewares.JsLogging;\nusing Ducky.Middlewares.AsyncEffect;\nusing Ducky.Middlewares.CorrelationId;\nusing Ducky.Middlewares.NoOp;\nusing MudBlazor.Services;\n\nWebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);\nWebAssemblyHostConfiguration configuration = builder.Configuration;\nIServiceCollection services = builder.Services;\n\nbuilder.RootComponents.Add<App>(\"#app\");\nbuilder.RootComponents.Add<HeadOutlet>(\"head::after\");\n\nservices.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });\n\n// Add front services\nservices.AddMudServices(\n    config =>\n    {\n        config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;\n        config.SnackbarConfiguration.ShowCloseIcon = true;\n    });\n\n// Add business services\nservices.AddScoped<IJsonColorizer, JsonColorizer>();\nservices.AddTransient<IMoviesService, MoviesService>();\n\n// Register ducky middlewares\nservices.AddNoOpMiddleware();\nservices.AddJsLoggingMiddleware();\nservices.AddCorrelationIdMiddleware();\nservices.AddAsyncEffectMiddleware();\nIServiceProvider serviceProvider = services.BuildServiceProvider();\n\n// Add Ducky\nservices.AddDucky(\n    configuration,\n    options =>\n    {\n        // Compose the middleware pipeline IN THE ORDER YOU WANT:\n        options.ConfigurePipeline = pipeline =>\n        {\n            pipeline.Use(serviceProvider.GetRequiredService<NoOpMiddleware>());\n            pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());\n            pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());\n            pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());\n        };\n    });\n\nawait builder.Build().RunAsync();\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Program.cs b/src/demo/Demo.BlazorWasm/Program.cs
+--- a/src/demo/Demo.BlazorWasm/Program.cs	(revision 10f07c048224cc90db9f1d41d5eb2fe261a2bb57)
++++ b/src/demo/Demo.BlazorWasm/Program.cs	(date 1748277617543)
+@@ -4,11 +4,14 @@
+ using Demo.BlazorWasm.AppStore;
+ using Demo.BlazorWasm.Features.JsonColoring;
+ using Demo.BlazorWasm.Features.JsonColoring.Services;
++using Demo.BlazorWasm.Features.ReactiveEffects;
++using Ducky;
+ using Ducky.Blazor;
+ using Ducky.Blazor.Middlewares.JsLogging;
+ using Ducky.Middlewares.AsyncEffect;
+ using Ducky.Middlewares.CorrelationId;
+ using Ducky.Middlewares.NoOp;
++using Ducky.Middlewares.ReactiveEffect;
+ using MudBlazor.Services;
+ 
+ WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
+@@ -32,11 +35,16 @@
+ services.AddScoped<IJsonColorizer, JsonColorizer>();
+ services.AddTransient<IMoviesService, MoviesService>();
+ 
++// Register reactive effects
++services.AddScoped<IReactiveEffect, NotificationEffect>();
++services.AddScoped<IReactiveEffect, MovieLoadingEffect>();
++
+ // Register ducky middlewares
+ services.AddNoOpMiddleware();
+ services.AddJsLoggingMiddleware();
+ services.AddCorrelationIdMiddleware();
+ services.AddAsyncEffectMiddleware();
++services.AddReactiveEffectMiddleware();
+ IServiceProvider serviceProvider = services.BuildServiceProvider();
+ 
+ // Add Ducky
+@@ -50,6 +58,7 @@
+             pipeline.Use(serviceProvider.GetRequiredService<NoOpMiddleware>());
+             pipeline.Use(serviceProvider.GetRequiredService<CorrelationIdMiddleware>());
+             pipeline.Use(serviceProvider.GetRequiredService<JsLoggingMiddleware>());
++            pipeline.Use(serviceProvider.GetRequiredService<ReactiveEffectMiddleware>());
+             pipeline.Use(serviceProvider.GetRequiredService<AsyncEffectMiddleware>());
+         };
+     });
+Index: src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectMiddleware.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// using Ducky.Pipeline;\n// using R3;\n//\n// namespace Ducky.Middlewares.ReactiveEffect;\n//\n// /// <summary>\n// /// Middleware that enables reactive side effects in response to actions and state changes.\n// /// </summary>\n// /// <typeparam name=\"TState\">The type of the Redux state.</typeparam>\n// public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposable\n//     where TState : class\n// {\n//     private readonly List<IDisposable> _subscriptions = [];\n//     private readonly Subject<object> _actions = new();\n//     private readonly BehaviorSubject<object> _state;\n//     private bool _disposed;\n//     private readonly IEnumerable<ReactiveEffectGroup<TState>> _groups;\n//\n//     /// <summary>\n//     /// Initializes a new instance of <see cref=\"ReactiveEffectMiddleware{TState}\"/>.\n//     /// </summary>\n//     /// <param name=\"groups\">The reactive effect groups to activate.</param>\n//     /// <param name=\"initialState\">The initial state of the store.</param>\n//     public ReactiveEffectMiddleware(\n//         IEnumerable<ReactiveEffectGroup<TState>> groups,\n//         TState initialState)\n//     {\n//         _state = new BehaviorSubject<object>(initialState ?? throw new ArgumentNullException(nameof(initialState)));\n//         _groups = groups;\n//     }\n//\n//     /// <inheritdoc />\n//     public override async Task InitializeAsync(IDispatcher dispatcher, IStore store, IPipelineEventPublisher publisher)\n//     {\n//         await base.InitializeAsync(dispatcher, store, publisher).ConfigureAwait(false);\n//\n//         Observable<object> actions = _actions.AsObservable();\n//         Observable<object> state = _state.AsObservable();\n//\n//         foreach (ReactiveEffectGroup<TState> group in _groups)\n//         {\n//             foreach (Observable<object> obs in group.Activate(actions, state))\n//             {\n//                 IDisposable sub = obs\n//                     .Where(action => action is not null)\n//                     .Subscribe(\n//                         action =>\n//                         {\n//                             try\n//                             {\n//                                 Dispatcher.Dispatch(action);\n//                                 PublishReactiveEffectDispatchedEvent(action);\n//                             }\n//                             catch (Exception ex)\n//                             {\n//                                 PublishReactiveEffectErrorEvent(action, ex);\n//                             }\n//                         }\n//                     );\n//                 _subscriptions.Add(sub);\n//             }\n//         }\n//\n//         await Task.CompletedTask.ConfigureAwait(false);\n//     }\n//\n//     /// <inheritdoc />\n//     public override async Task AfterDispatchAsync<TAction>(\n//         ActionContext<TAction> context,\n//         CancellationToken cancellationToken = default)\n//     {\n//         // Defensive: Only push if not disposed\n//         if (_disposed)\n//         {\n//             return;\n//         }\n//\n//         _actions.OnNext(context.Action!);\n//\n//         // Push new state if available\n//         try\n//         {\n//             _state.OnNext(Store.CurrentState);\n//         }\n//         catch (Exception ex)\n//         {\n//             PublishReactiveEffectErrorEvent(context.Action, ex);\n//         }\n//\n//         await Task.CompletedTask.ConfigureAwait(false);\n//     }\n//\n//     /// <summary>\n//     /// Disposes of all effect subscriptions and subject resources.\n//     /// </summary>\n//     public void Dispose()\n//     {\n//         if (_disposed)\n//         {\n//             return;\n//         }\n//\n//         _disposed = true;\n//\n//         foreach (IDisposable sub in _subscriptions)\n//         {\n//             sub.Dispose();\n//         }\n//\n//         _subscriptions.Clear();\n//         _actions.OnCompleted();\n//         _actions.Dispose();\n//         _state.OnCompleted();\n//         _state.Dispose();\n//     }\n//\n//     private void PublishReactiveEffectDispatchedEvent(object action)\n//     {\n//         Events.Publish(new ReactiveEffectDispatchedEventArgs(action));\n//     }\n//\n//     private void PublishReactiveEffectErrorEvent(object? action, Exception ex)\n//     {\n//         Events.Publish(new ReactiveEffectErrorEventArgs(action, ex));\n//     }\n// }\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectMiddleware.cs b/src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectMiddleware.cs
+--- a/src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectMiddleware.cs	(revision 10f07c048224cc90db9f1d41d5eb2fe261a2bb57)
++++ b/src/library/Ducky/Middlewares/ReactiveEffect/ReactiveEffectMiddleware.cs	(date 1748277511240)
+@@ -1,126 +1,156 @@
+-// using Ducky.Pipeline;
+-// using R3;
+-//
+-// namespace Ducky.Middlewares.ReactiveEffect;
+-//
+-// /// <summary>
+-// /// Middleware that enables reactive side effects in response to actions and state changes.
+-// /// </summary>
+-// /// <typeparam name="TState">The type of the Redux state.</typeparam>
+-// public sealed class ReactiveEffectMiddleware<TState> : StoreMiddleware, IDisposable
+-//     where TState : class
+-// {
+-//     private readonly List<IDisposable> _subscriptions = [];
+-//     private readonly Subject<object> _actions = new();
+-//     private readonly BehaviorSubject<object> _state;
+-//     private bool _disposed;
+-//     private readonly IEnumerable<ReactiveEffectGroup<TState>> _groups;
+-//
+-//     /// <summary>
+-//     /// Initializes a new instance of <see cref="ReactiveEffectMiddleware{TState}"/>.
+-//     /// </summary>
+-//     /// <param name="groups">The reactive effect groups to activate.</param>
+-//     /// <param name="initialState">The initial state of the store.</param>
+-//     public ReactiveEffectMiddleware(
+-//         IEnumerable<ReactiveEffectGroup<TState>> groups,
+-//         TState initialState)
+-//     {
+-//         _state = new BehaviorSubject<object>(initialState ?? throw new ArgumentNullException(nameof(initialState)));
+-//         _groups = groups;
+-//     }
+-//
+-//     /// <inheritdoc />
+-//     public override async Task InitializeAsync(IDispatcher dispatcher, IStore store, IPipelineEventPublisher publisher)
+-//     {
+-//         await base.InitializeAsync(dispatcher, store, publisher).ConfigureAwait(false);
+-//
+-//         Observable<object> actions = _actions.AsObservable();
+-//         Observable<object> state = _state.AsObservable();
+-//
+-//         foreach (ReactiveEffectGroup<TState> group in _groups)
+-//         {
+-//             foreach (Observable<object> obs in group.Activate(actions, state))
+-//             {
+-//                 IDisposable sub = obs
+-//                     .Where(action => action is not null)
+-//                     .Subscribe(
+-//                         action =>
+-//                         {
+-//                             try
+-//                             {
+-//                                 Dispatcher.Dispatch(action);
+-//                                 PublishReactiveEffectDispatchedEvent(action);
+-//                             }
+-//                             catch (Exception ex)
+-//                             {
+-//                                 PublishReactiveEffectErrorEvent(action, ex);
+-//                             }
+-//                         }
+-//                     );
+-//                 _subscriptions.Add(sub);
+-//             }
+-//         }
+-//
+-//         await Task.CompletedTask.ConfigureAwait(false);
+-//     }
+-//
+-//     /// <inheritdoc />
+-//     public override async Task AfterDispatchAsync<TAction>(
+-//         ActionContext<TAction> context,
+-//         CancellationToken cancellationToken = default)
+-//     {
+-//         // Defensive: Only push if not disposed
+-//         if (_disposed)
+-//         {
+-//             return;
+-//         }
+-//
+-//         _actions.OnNext(context.Action!);
+-//
+-//         // Push new state if available
+-//         try
+-//         {
+-//             _state.OnNext(Store.CurrentState);
+-//         }
+-//         catch (Exception ex)
+-//         {
+-//             PublishReactiveEffectErrorEvent(context.Action, ex);
+-//         }
+-//
+-//         await Task.CompletedTask.ConfigureAwait(false);
+-//     }
+-//
+-//     /// <summary>
+-//     /// Disposes of all effect subscriptions and subject resources.
+-//     /// </summary>
+-//     public void Dispose()
+-//     {
+-//         if (_disposed)
+-//         {
+-//             return;
+-//         }
+-//
+-//         _disposed = true;
+-//
+-//         foreach (IDisposable sub in _subscriptions)
+-//         {
+-//             sub.Dispose();
+-//         }
+-//
+-//         _subscriptions.Clear();
+-//         _actions.OnCompleted();
+-//         _actions.Dispose();
+-//         _state.OnCompleted();
+-//         _state.Dispose();
+-//     }
+-//
+-//     private void PublishReactiveEffectDispatchedEvent(object action)
+-//     {
+-//         Events.Publish(new ReactiveEffectDispatchedEventArgs(action));
+-//     }
+-//
+-//     private void PublishReactiveEffectErrorEvent(object? action, Exception ex)
+-//     {
+-//         Events.Publish(new ReactiveEffectErrorEventArgs(action, ex));
+-//     }
+-// }
++using Ducky.Pipeline;
++using Microsoft.Extensions.DependencyInjection;
++using R3;
++
++namespace Ducky.Middlewares.ReactiveEffect;
++
++/// <summary>
++/// Middleware that enables reactive side effects in response to actions and state changes.
++/// </summary>
++public sealed class ReactiveEffectMiddleware : IActionMiddleware, IDisposable
++{
++    private readonly IDispatcher _dispatcher;
++    private readonly Func<IRootState> _getState;
++    private readonly IStoreEventPublisher _eventPublisher;
++    private readonly List<IDisposable> _subscriptions = [];
++    private readonly Subject<object> _actions = new();
++    private readonly BehaviorSubject<IRootState> _state;
++    private readonly IReactiveEffect[] _effects;
++    private bool _disposed;
++
++    /// <summary>
++    /// Initializes a new instance of <see cref="ReactiveEffectMiddleware"/>.
++    /// </summary>
++    /// <param name="serviceProvider">The service provider to resolve effects.</param>
++    /// <param name="dispatcher">The dispatcher for actions.</param>
++    /// <param name="getState">Function to get the current state.</param>
++    /// <param name="eventPublisher">The event publisher.</param>
++    public ReactiveEffectMiddleware(
++        IServiceProvider serviceProvider,
++        IDispatcher dispatcher,
++        Func<IRootState> getState,
++        IStoreEventPublisher eventPublisher)
++    {
++        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
++        _getState = getState ?? throw new ArgumentNullException(nameof(getState));
++        _eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
++        
++        // Initialize state with current state
++        _state = new BehaviorSubject<IRootState>(_getState());
++        
++        // Resolve all registered reactive effects
++        _effects = serviceProvider.GetServices<IReactiveEffect>().ToArray();
++        
++        // Initialize all effects
++        InitializeEffects();
++    }
++
++    /// <inheritdoc />
++    public Observable<ActionContext> InvokeBeforeReduce(Observable<ActionContext> actions)
++    {
++        return actions;
++    }
++
++    /// <inheritdoc />
++    public Observable<ActionContext> InvokeAfterReduce(Observable<ActionContext> actions)
++    {
++        return actions.Do(context =>
++        {
++            if (_disposed)
++            {
++                return;
++            }
++            
++            // Push action to the actions subject
++            _actions.OnNext(context.Action);
++            
++            // Push updated state
++            try
++            {
++                IRootState currentState = _getState();
++                _state.OnNext(currentState);
++            }
++            catch (Exception ex)
++            {
++                PublishReactiveEffectErrorEvent(context.Action, ex);
++            }
++        });
++    }
++
++    /// <summary>
++    /// Initializes all registered effects.
++    /// </summary>
++    private void InitializeEffects()
++    {
++        Observable<object> actions = _actions.AsObservable();
++        Observable<IRootState> state = _state.AsObservable();
++
++        foreach (IReactiveEffect effect in _effects)
++        {
++            try
++            {
++                Observable<object> effectStream = effect.Handle(actions, state);
++                
++                IDisposable subscription = effectStream
++                    .Subscribe(
++                        action =>
++                        {
++                            try
++                            {
++                                _dispatcher.Dispatch(action);
++                                PublishReactiveEffectDispatchedEvent(action);
++                            }
++                            catch (Exception ex)
++                            {
++                                PublishReactiveEffectErrorEvent(action, ex);
++                            }
++                        },
++                        error =>
++                        {
++                            Exception ex = error.Exception ?? new Exception($"Reactive effect error: {error}");
++                            PublishReactiveEffectErrorEvent(null, ex);
++                        });
++                
++                _subscriptions.Add(subscription);
++            }
++            catch (Exception ex)
++            {
++                PublishReactiveEffectErrorEvent(null, ex);
++            }
++        }
++    }
++
++    /// <summary>
++    /// Disposes of all effect subscriptions and subject resources.
++    /// </summary>
++    public void Dispose()
++    {
++        if (_disposed)
++        {
++            return;
++        }
++
++        _disposed = true;
++
++        foreach (IDisposable sub in _subscriptions)
++        {
++            sub.Dispose();
++        }
++
++        _subscriptions.Clear();
++        _actions.OnCompleted();
++        _actions.Dispose();
++        _state.OnCompleted();
++        _state.Dispose();
++    }
++
++    private void PublishReactiveEffectDispatchedEvent(object action)
++    {
++        _eventPublisher.Publish(new ReactiveEffectDispatchedEventArgs(action));
++    }
++
++    private void PublishReactiveEffectErrorEvent(object? action, Exception ex)
++    {
++        _eventPublisher.Publish(new ReactiveEffectErrorEventArgs(action, ex));
++    }
++}

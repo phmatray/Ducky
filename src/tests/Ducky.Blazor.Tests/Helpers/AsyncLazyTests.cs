@@ -9,7 +9,7 @@ public class AsyncLazyTests
     public async Task AsyncLazy_WithSyncFactory_ShouldInitializeOnlyOnce()
     {
         // Arrange
-        var callCount = 0;
+        int callCount = 0;
         var asyncLazy = new AsyncLazy<int>(() =>
         {
             callCount++;
@@ -17,9 +17,9 @@ public class AsyncLazyTests
         });
 
         // Act
-        var value1 = await asyncLazy.Value;
-        var value2 = await asyncLazy.Value;
-        var value3 = await asyncLazy.Value;
+        int value1 = await asyncLazy.Value;
+        int value2 = await asyncLazy.Value;
+        int value3 = await asyncLazy.Value;
 
         // Assert
         value1.ShouldBe(42);
@@ -32,7 +32,7 @@ public class AsyncLazyTests
     public async Task AsyncLazy_WithAsyncFactory_ShouldInitializeOnlyOnce()
     {
         // Arrange
-        var callCount = 0;
+        int callCount = 0;
         var asyncLazy = new AsyncLazy<string>(async () =>
         {
             callCount++;
@@ -41,9 +41,9 @@ public class AsyncLazyTests
         });
 
         // Act
-        var value1 = await asyncLazy.Value;
-        var value2 = await asyncLazy.Value;
-        var value3 = await asyncLazy.Value;
+        string value1 = await asyncLazy.Value;
+        string value2 = await asyncLazy.Value;
+        string value3 = await asyncLazy.Value;
 
         // Assert
         value1.ShouldBe("test");
@@ -56,7 +56,7 @@ public class AsyncLazyTests
     public async Task AsyncLazy_WithException_ShouldPropagateException()
     {
         // Arrange
-        var asyncLazy = new AsyncLazy<int>(() => throw new InvalidOperationException("Test error"));
+        var asyncLazy = new AsyncLazy<int>((Func<int>)(() => throw new InvalidOperationException("Test error")));
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(async () => await asyncLazy.Value);
@@ -80,7 +80,7 @@ public class AsyncLazyTests
     public async Task AsyncLazy_ConcurrentAccess_ShouldInitializeOnlyOnce()
     {
         // Arrange
-        var callCount = 0;
+        int callCount = 0;
         var semaphore = new SemaphoreSlim(0);
         
         var asyncLazy = new AsyncLazy<int>(async () =>
@@ -91,9 +91,9 @@ public class AsyncLazyTests
         });
 
         // Act - Start multiple concurrent tasks
-        var task1 = Task.Run(async () => await asyncLazy.Value);
-        var task2 = Task.Run(async () => await asyncLazy.Value);
-        var task3 = Task.Run(async () => await asyncLazy.Value);
+        Task<int> task1 = Task.Run(() => asyncLazy.Value);
+        Task<int> task2 = Task.Run(() => asyncLazy.Value);
+        Task<int> task3 = Task.Run(() => asyncLazy.Value);
 
         // Give tasks time to start
         await Task.Delay(50);
@@ -101,7 +101,7 @@ public class AsyncLazyTests
         // Release the semaphore to complete initialization
         semaphore.Release();
 
-        var results = await Task.WhenAll(task1, task2, task3);
+        int[] results = await Task.WhenAll(task1, task2, task3);
 
         // Assert
         results.ShouldAllBe(v => v == 100);
@@ -116,8 +116,8 @@ public class AsyncLazyTests
 
         // Act & Assert
         asyncLazy.IsValueCreated.ShouldBeFalse();
-        
-        var _ = asyncLazy.Value; // Access value
+
+        Task<string> _ = asyncLazy.Value; // Access value
         
         asyncLazy.IsValueCreated.ShouldBeTrue();
     }
@@ -126,10 +126,10 @@ public class AsyncLazyTests
     public async Task AsyncLazy_WithNullReturnValue_ShouldHandleCorrectly()
     {
         // Arrange
-        var asyncLazy = new AsyncLazy<string?>(() => null);
+        var asyncLazy = new AsyncLazy<string?>(() => (string?)null);
 
         // Act
-        var result = await asyncLazy.Value;
+        string? result = await asyncLazy.Value;
 
         // Assert
         result.ShouldBeNull();
@@ -150,7 +150,7 @@ public class AsyncLazyTests
         });
 
         // Act
-        var result = await asyncLazy.Value;
+        Dictionary<string, int> result = await asyncLazy.Value;
 
         // Assert
         result.ShouldNotBeNull();

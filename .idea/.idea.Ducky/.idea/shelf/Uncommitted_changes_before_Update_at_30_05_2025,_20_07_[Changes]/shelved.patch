@@ -1,0 +1,32 @@
+Index: src/library/Ducky/Middlewares/AsyncEffectRetry/AsyncEffectRetryServiceCollectionExtensions.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>using Microsoft.Extensions.DependencyInjection;\n\nnamespace Ducky.Middlewares.AsyncEffectRetry;\n\n/// <summary>\n/// Provides extension methods for registering the AsyncEffectRetry middleware and related services.\n/// </summary>\npublic static class AsyncEffectRetryServiceCollectionExtensions\n{\n    /// <summary>\n    /// Registers the AsyncEffectRetry middleware.\n    /// </summary>\n    /// <param name=\"services\">The service collection.</param>\n    /// <returns>The service collection for chaining.</returns>\n    public static IServiceCollection AddAsyncEffectRetryMiddleware(this IServiceCollection services)\n    {\n        services.AddSingleton<AsyncEffectRetryMiddleware>();\n        return services;\n    }\n}\n
+===================================================================
+diff --git a/src/library/Ducky/Middlewares/AsyncEffectRetry/AsyncEffectRetryServiceCollectionExtensions.cs b/src/library/Ducky/Middlewares/AsyncEffectRetry/AsyncEffectRetryServiceCollectionExtensions.cs
+--- a/src/library/Ducky/Middlewares/AsyncEffectRetry/AsyncEffectRetryServiceCollectionExtensions.cs	(revision 64e4288895a5bc2ab46f4f2ec99d7d77cc139c89)
++++ b/src/library/Ducky/Middlewares/AsyncEffectRetry/AsyncEffectRetryServiceCollectionExtensions.cs	(date 1748363280074)
+@@ -1,4 +1,5 @@
+ using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Logging;
+ 
+ namespace Ducky.Middlewares.AsyncEffectRetry;
+ 
+@@ -14,7 +15,16 @@
+     /// <returns>The service collection for chaining.</returns>
+     public static IServiceCollection AddAsyncEffectRetryMiddleware(this IServiceCollection services)
+     {
+-        services.AddSingleton<AsyncEffectRetryMiddleware>();
++        services.AddScoped<AsyncEffectRetryMiddleware>(sp =>
++        {
++            return new AsyncEffectRetryMiddleware(
++                sp.GetRequiredService<ILogger<AsyncEffectRetryMiddleware>>(),
++                sp.GetRequiredService<IStoreEventPublisher>(),
++                sp,
++                () => sp.GetRequiredService<DuckyStore>().CurrentState,
++                sp.GetRequiredService<IDispatcher>()
++            );
++        });
+         return services;
+     }
+ }

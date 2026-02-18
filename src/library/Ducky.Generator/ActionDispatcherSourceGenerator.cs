@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using Ducky.Generator.Descriptors;
 using Ducky.Generator.Sources;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;

@@ -1,0 +1,1358 @@
+Index: src/demo/Demo.BlazorWasm/Components/Layout/NavMenu.razor
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Layout/NavMenu.razor b/src/demo/Demo.BlazorWasm/Components/Layout/NavMenu.razor
+deleted file mode 100644
+--- a/src/demo/Demo.BlazorWasm/Components/Layout/NavMenu.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ /dev/null	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
+@@ -1,14 +0,0 @@
+-<MudNavMenu Bordered="true" Color="Color.Info">
+-  <MudNavGroup Expanded Title="System">
+-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+-    <MudNavLink Href="errors" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Error">Errors</MudNavLink>
+-  </MudNavGroup>
+-  <MudNavGroup Expanded Title="Demos">
+-    <CounterLink/>
+-    <MudNavLink Href="message" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Message">Message</MudNavLink>
+-    <MudNavLink Href="todo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Task">Todo</MudNavLink>
+-    <MudNavLink Href="timer" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Timer">Timer</MudNavLink>
+-    <MudNavLink Href="movies" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Movie">Movies</MudNavLink>
+-    <MudNavLink Href="products" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ShoppingCart">Products</MudNavLink>
+-  </MudNavGroup>
+-</MudNavMenu>
+Index: src/demo/Demo.BlazorWasm/Components/Shared/AnalogClock.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@inherits DuckyComponent<TimerState>\n\n<svg\n  xmlns=\"http://www.w3.org/2000/svg\"\n  width=\"400px\"\n  height=\"400px\"\n  viewBox=\"0 0 400 400\"\n  preserveAspectRatio=\"xMidYMid meet\">\n  <circle\n    cx=\"200\"\n    cy=\"200\"\n    r=\"190\"\n    fill=\"none\"\n    stroke=\"var(--mud-palette-primary)\"\n    stroke-width=\"20\" />\n  <line\n    x1=\"200\"\n    y1=\"200\"\n    x2=\"200\"\n    y2=\"40\"\n    stroke=\"var(--mud-palette-secondary)\"\n    stroke-width=\"20\"\n    stroke-linecap=\"round\"\n    style=\"@ClockHandStyle\" />\n</svg>\n\n@code {\n  \n  private string ClockHandStyle\n    => new StyleBuilder()\n      .AddStyle(\"rotate\", State.SelectAngle())\n      .AddStyle(\"transform-origin\", \"50% 50%\")\n      .AddStyle(\"transition\", \"transform 1s\")\n      .Build();\n  \n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Shared/AnalogClock.razor b/src/demo/Demo.BlazorWasm/Components/Shared/AnalogClock.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Shared/AnalogClock.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Shared/AnalogClock.razor	(date 1744908268753)
+@@ -1,4 +1,5 @@
+-@inherits DuckyComponent<TimerState>
++@inherits DuckyComponent
++@inject TimerState State
+ 
+ <svg
+   xmlns="http://www.w3.org/2000/svg"
+Index: src/demo/Demo.BlazorWasm/AppStore/Layout/LayoutDucks.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record LayoutState\n{\n    public required string Title { get; init; }\n\n    public required string Version { get; init; }\n\n    public required bool IsDarkMode { get; init; }\n\n    public required bool IsDrawerOpen { get; init; }\n\n    public required bool IsNotificationOpen { get; init; }\n\n    // Selectors\n    public string SelectFullTitle()\n        => $\"{Title} - {Version}\";\n}\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic record SetTitle(string Title);\n\n[DuckyAction]\npublic record ToggleDarkMode;\n\n[DuckyAction]\npublic record ToggleDrawer;\n\n[DuckyAction]\npublic record ToggleNotifications;\n\n#endregion\n\n#region Reducers\n\npublic record LayoutReducers : SliceReducers<LayoutState>\n{\n    public LayoutReducers()\n    {\n        On<SetTitle>(Reduce);\n        On<ToggleDarkMode>(Reduce);\n        On<ToggleDrawer>(Reduce);\n        On<ToggleNotifications>(Reduce);\n    }\n\n    public override LayoutState GetInitialState()\n        => new()\n        {\n            Title = \"Ducky\",\n            Version = DuckyVersioning.GetVersion().ToString(),\n            IsDarkMode = true,\n            IsDrawerOpen = true,\n            IsNotificationOpen = false\n        };\n\n    private static LayoutState Reduce(LayoutState state, SetTitle action)\n        => state with { Title = action.Title };\n\n    private static LayoutState Reduce(LayoutState state, ToggleDarkMode _)\n        => state with { IsDarkMode = !state.IsDarkMode };\n\n    private static LayoutState Reduce(LayoutState state, ToggleDrawer _)\n        => state with { IsDrawerOpen = !state.IsDrawerOpen };\n\n    private static LayoutState Reduce(LayoutState state, ToggleNotifications _)\n        => state with { IsNotificationOpen = !state.IsNotificationOpen };\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Layout/LayoutDucks.cs b/src/demo/Demo.BlazorWasm/AppStore/Layout/LayoutDucks.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Layout/LayoutDucks.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Layout/LayoutDucks.cs	(date 1744909750530)
+@@ -6,6 +6,7 @@
+ 
+ #region State
+ 
++[DuckyState]
+ public record LayoutState
+ {
+     public required string Title { get; init; }
+Index: src/demo/Demo.BlazorWasm/AppStore/Movies/MoviesDucks.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record Pagination\n{\n    public int CurrentPage { get; init; }\n\n    public int TotalPages { get; init; }\n\n    public int TotalItems { get; init; }\n}\n\npublic record MoviesState\n{\n    public required ImmutableDictionary<int, Movie> Movies { get; init; }\n\n    public required bool IsLoading { get; init; }\n\n    public required string? ErrorMessage { get; init; }\n\n    public required Pagination Pagination { get; init; }\n\n    // Selectors\n    // ==========\n    // We can define selectors as methods in the state record\n    // to encapsulate the logic of selecting data from the state.\n    // Each method should begin with the word \"Select\".\n    public int SelectMovieCount()\n        => Movies.Count;\n\n    public Movie? SelectMovieById(int id)\n        => Movies.GetValueOrDefault(id);\n\n    public ImmutableDictionary<int, Movie> SelectMoviesByYear()\n        => Movies\n            .OrderByDescending(pair => pair.Value.Year)\n            .ToImmutableDictionary();\n}\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic record LoadMovies;\n\n[DuckyAction]\npublic record LoadMoviesSuccess(ValueCollection<Movie> Movies, int TotalItems);\n\n[DuckyAction]\npublic record LoadMoviesFailure(Exception Error);\n\n[DuckyAction]\npublic record SetCurrentPage(int CurrentPage);\n\n#endregion\n\n#region Reducers\n\npublic record MoviesReducers : SliceReducers<MoviesState>\n{\n    public MoviesReducers()\n    {\n        On<LoadMovies>(Reduce);\n        On<LoadMoviesSuccess>(Reduce);\n        On<LoadMoviesFailure>(Reduce);\n        On<SetCurrentPage>(Reduce);\n    }\n\n    public override MoviesState GetInitialState()\n        => new()\n        {\n            Movies = ImmutableDictionary<int, Movie>.Empty,\n            IsLoading = false,\n            ErrorMessage = null,\n            Pagination = new Pagination\n            {\n                CurrentPage = 1,\n                TotalPages = 1,\n                TotalItems = 0\n            }\n        };\n\n    private static MoviesState Reduce(MoviesState state, LoadMovies _)\n        => state with\n        {\n            IsLoading = true,\n            ErrorMessage = null\n        };\n\n    private static MoviesState Reduce(MoviesState state, LoadMoviesSuccess action)\n        => state with\n        {\n            Movies = action.Movies.ToImmutableDictionary(movie => movie.Id),\n            IsLoading = false,\n            Pagination = state.Pagination with\n            {\n                TotalItems = action.TotalItems,\n                TotalPages = (int)Math.Ceiling(action.TotalItems / 5.0)\n            }\n        };\n\n    private static MoviesState Reduce(MoviesState state, LoadMoviesFailure action)\n        => state with\n        {\n            Movies = ImmutableDictionary<int, Movie>.Empty,\n            ErrorMessage = action.Error.Message,\n            IsLoading = false\n        };\n\n    private static MoviesState Reduce(MoviesState state, SetCurrentPage action)\n        => state with\n        {\n            Pagination = state.Pagination with\n            {\n                CurrentPage = action.CurrentPage\n            }\n        };\n}\n\n#endregion\n\n#region Effects\n\n// ReSharper disable once UnusedType.Global\npublic class LoadMoviesEffect(IMoviesService moviesService) : ReactiveEffect\n{\n    public override Observable<object> Handle(\n        Observable<object> actions,\n        Observable<IRootState> rootState)\n    {\n        return actions\n            .OfActionType<LoadMovies>()\n            .LogMessage(\"Loading movies...\")\n            .WithSliceState<MoviesState, LoadMovies>(rootState)\n            .InvokeService(\n                pair => moviesService.GetMoviesAsync(pair.State.Pagination.CurrentPage, 5),\n                response => new LoadMoviesSuccess(response.Movies, response.TotalItems),\n                ex => new LoadMoviesFailure(ex))\n            .LogMessage(\"Movies loaded.\");\n\n        // THE FOLLOWING CODE WORKS AS AN ALTERNATIVE TO THE ABOVE CODE\n        // ============================================================\n        // return actions\n        //     .OfType<object, LoadMovies>()\n        //     .Do(_ => Console.WriteLine(\"Loading movies...\"))\n        //     .WithSliceState<MoviesState, LoadMovies>(rootState)\n        //     .SelectAwait(async (pair, ct) =>\n        //     {\n        //         try\n        //         {\n        //             const int pageSize = 5;\n        //             MoviesState state = pair.State;\n        //             int currentPage = state.Pagination.CurrentPage;\n        //             GetMoviesResponse response = await moviesService.GetMoviesAsync(currentPage, pageSize, ct);\n        //             return new LoadMoviesSuccess(response.Movies, response.TotalItems) as object;\n        //         }\n        //         catch (Exception ex)\n        //         {\n        //             return new LoadMoviesFailure(ex);\n        //         }\n        //     });\n    }\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Movies/MoviesDucks.cs b/src/demo/Demo.BlazorWasm/AppStore/Movies/MoviesDucks.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Movies/MoviesDucks.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Movies/MoviesDucks.cs	(date 1744910914350)
+@@ -15,7 +15,8 @@
+     public int TotalItems { get; init; }
+ }
+ 
+-public record MoviesState
++[DuckyState]
++public record MovieState
+ {
+     public required ImmutableDictionary<int, Movie> Movies { get; init; }
+ 
+@@ -62,7 +63,7 @@
+ 
+ #region Reducers
+ 
+-public record MoviesReducers : SliceReducers<MoviesState>
++public record MoviesReducers : SliceReducers<MovieState>
+ {
+     public MoviesReducers()
+     {
+@@ -72,7 +73,7 @@
+         On<SetCurrentPage>(Reduce);
+     }
+ 
+-    public override MoviesState GetInitialState()
++    public override MovieState GetInitialState()
+         => new()
+         {
+             Movies = ImmutableDictionary<int, Movie>.Empty,
+@@ -86,14 +87,14 @@
+             }
+         };
+ 
+-    private static MoviesState Reduce(MoviesState state, LoadMovies _)
++    private static MovieState Reduce(MovieState state, LoadMovies _)
+         => state with
+         {
+             IsLoading = true,
+             ErrorMessage = null
+         };
+ 
+-    private static MoviesState Reduce(MoviesState state, LoadMoviesSuccess action)
++    private static MovieState Reduce(MovieState state, LoadMoviesSuccess action)
+         => state with
+         {
+             Movies = action.Movies.ToImmutableDictionary(movie => movie.Id),
+@@ -105,7 +106,7 @@
+             }
+         };
+ 
+-    private static MoviesState Reduce(MoviesState state, LoadMoviesFailure action)
++    private static MovieState Reduce(MovieState state, LoadMoviesFailure action)
+         => state with
+         {
+             Movies = ImmutableDictionary<int, Movie>.Empty,
+@@ -113,7 +114,7 @@
+             IsLoading = false
+         };
+ 
+-    private static MoviesState Reduce(MoviesState state, SetCurrentPage action)
++    private static MovieState Reduce(MovieState state, SetCurrentPage action)
+         => state with
+         {
+             Pagination = state.Pagination with
+@@ -137,7 +138,7 @@
+         return actions
+             .OfActionType<LoadMovies>()
+             .LogMessage("Loading movies...")
+-            .WithSliceState<MoviesState, LoadMovies>(rootState)
++            .WithSliceState<MovieState, LoadMovies>(rootState)
+             .InvokeService(
+                 pair => moviesService.GetMoviesAsync(pair.State.Pagination.CurrentPage, 5),
+                 response => new LoadMoviesSuccess(response.Movies, response.TotalItems),
+Index: src/demo/Demo.BlazorWasm/AppStore/Notifications/NotificationsDucks.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record NotificationsState\n{\n    public required ValueCollection<Notification> Notifications { get; init; }\n\n    // Selectors\n    public ValueCollection<Notification> SelectUnreadNotifications()\n        =>\n        [\n            ..Notifications\n                .Where(n => !n.IsRead)\n                .Reverse()\n        ];\n\n    public bool SelectHasUnreadNotifications()\n        => !SelectUnreadNotifications().IsEmpty;\n\n    public int SelectUnreadNotificationCount()\n        => SelectUnreadNotifications().Count;\n\n    public ValueCollection<Notification> SelectNotificationsBySeverity(NotificationSeverity severity)\n        => SelectUnreadNotifications()\n            .Where(n => n.Severity == severity)\n            .ToValueCollection();\n\n    public ValueCollection<Notification> SelectErrorNotifications()\n        => SelectNotificationsBySeverity(NotificationSeverity.Error);\n}\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic record AddNotification(Notification Notification);\n\n[DuckyAction]\npublic record MarkNotificationAsRead(Guid NotificationId);\n\n[DuckyAction]\npublic record MarkAllNotificationsAsRead;\n\n#endregion\n\n#region Reducers\n\npublic record NotificationsReducers : SliceReducers<NotificationsState>\n{\n    public NotificationsReducers()\n    {\n        On<AddNotification>(Reduce);\n        On<MarkNotificationAsRead>(Reduce);\n        On<MarkAllNotificationsAsRead>(Reduce);\n    }\n\n    public override NotificationsState GetInitialState()\n        => new()\n        {\n            Notifications = new ValueCollection<Notification>\n            {\n                new SuccessNotification(\"Welcome to Ducky!\"),\n                new WarningNotification(\"This is a warning.\"),\n                new ErrorNotification(\"This is an error.\")\n            }\n        };\n\n    private static NotificationsState Reduce(NotificationsState state, AddNotification action)\n        => new() { Notifications = state.Notifications.Add(action.Notification) };\n\n    private static NotificationsState Reduce(NotificationsState state, MarkNotificationAsRead action)\n        => new()\n        {\n            Notifications = state.Notifications\n                .Select(n => (n.Id == action.NotificationId)\n                    ? n with { IsRead = true }\n                    : n)\n                .ToValueCollection()\n        };\n\n    private static NotificationsState Reduce(NotificationsState state, MarkAllNotificationsAsRead action)\n        => new()\n        {\n            Notifications = state.Notifications\n                .Select(n => n with { IsRead = true })\n                .ToValueCollection()\n        };\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Notifications/NotificationsDucks.cs b/src/demo/Demo.BlazorWasm/AppStore/Notifications/NotificationsDucks.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Notifications/NotificationsDucks.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Notifications/NotificationsDucks.cs	(date 1744910919242)
+@@ -6,7 +6,8 @@
+ 
+ #region State
+ 
+-public record NotificationsState
++[DuckyState]
++public record NotificationState
+ {
+     public required ValueCollection<Notification> Notifications { get; init; }
+ 
+@@ -51,7 +52,7 @@
+ 
+ #region Reducers
+ 
+-public record NotificationsReducers : SliceReducers<NotificationsState>
++public record NotificationsReducers : SliceReducers<NotificationState>
+ {
+     public NotificationsReducers()
+     {
+@@ -60,7 +61,7 @@
+         On<MarkAllNotificationsAsRead>(Reduce);
+     }
+ 
+-    public override NotificationsState GetInitialState()
++    public override NotificationState GetInitialState()
+         => new()
+         {
+             Notifications = new ValueCollection<Notification>
+@@ -71,10 +72,10 @@
+             }
+         };
+ 
+-    private static NotificationsState Reduce(NotificationsState state, AddNotification action)
++    private static NotificationState Reduce(NotificationState state, AddNotification action)
+         => new() { Notifications = state.Notifications.Add(action.Notification) };
+ 
+-    private static NotificationsState Reduce(NotificationsState state, MarkNotificationAsRead action)
++    private static NotificationState Reduce(NotificationState state, MarkNotificationAsRead action)
+         => new()
+         {
+             Notifications = state.Notifications
+@@ -84,7 +85,7 @@
+                 .ToValueCollection()
+         };
+ 
+-    private static NotificationsState Reduce(NotificationsState state, MarkAllNotificationsAsRead action)
++    private static NotificationState Reduce(NotificationState state, MarkAllNotificationsAsRead action)
+         => new()
+         {
+             Notifications = state.Notifications
+Index: src/demo/Demo.BlazorWasm/Components/Shared/ExceptionDetailsAlert.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@inherits DuckyComponent<LayoutState>\n\n<MudAlert\n  id=\"@Notification.Id\"\n  Severity=\"@Notification.Severity.ToMudSeverity()\"\n  CloseIconClicked=\"() => MarkNotificationAsRead(Notification.Id)\">\n  <MudStack Spacing=\"0\" StretchItems=\"StretchItems.All\">\n    <MudText>\n      <MudHighlighter Text=\"@Notification.Message\" HighlightedText=\"@SearchTerm\"/>\n    </MudText>\n    <MudText Typo=\"Typo.caption\">\n      Raised at <b>@Notification.Timestamp</b> @Separator @Notification.Timestamp.Humanize()\n    </MudText>\n    @if (Notification is ExceptionNotification error)\n    {\n    <MudText Class=\"mt-4\">in Assembly: @error.Source</MudText>\n    <MudPaper Class=\"mb-2\">\n      <MudText Typo=\"Typo.body2\" Class=\"pa-4\">\n        <MudHighlighter\n          Markup\n          Text=\"@error.StackTrace?.Replace(\"\\n\", \"<br>\")\"\n          HighlightedText=\"@SearchTerm\"/>\n      </MudText>\n    </MudPaper>\n    }\n    <MudStack AlignItems=\"AlignItems.Start\">\n      <MudButton\n        Variant=\"Variant.Outlined\"\n        Class=\"mt-2\"\n        OnClick=\"() => MarkNotificationAsRead(Notification.Id)\"\n        StartIcon=\"@Icons.Material.Filled.MarkChatRead\">\n        Marks as Read\n      </MudButton>\n    </MudStack>\n  </MudStack>\n</MudAlert>\n\n@code {\n  \n  private const string Separator = \"•\";\n\n  [Parameter, EditorRequired]\n  public required Notification Notification { get; set; }\n\n  [Parameter]\n  public string SearchTerm { get; set; } = \"\";\n\n  private void MarkNotificationAsRead(Guid id)\n    => Dispatcher.MarkNotificationAsRead(id);\n  \n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Shared/ExceptionDetailsAlert.razor b/src/demo/Demo.BlazorWasm/Components/Shared/ExceptionDetailsAlert.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Shared/ExceptionDetailsAlert.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Shared/ExceptionDetailsAlert.razor	(date 1744908274989)
+@@ -1,4 +1,5 @@
+-@inherits DuckyComponent<LayoutState>
++@inherits DuckyComponent
++@inject LayoutState State
+ 
+ <MudAlert
+   id="@Notification.Id"
+Index: src/library/Ducky.Generator/Sources/StateAttributeSource.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/library/Ducky.Generator/Sources/StateAttributeSource.cs b/src/library/Ducky.Generator/Sources/StateAttributeSource.cs
+new file mode 100644
+--- /dev/null	(date 1744909971837)
++++ b/src/library/Ducky.Generator/Sources/StateAttributeSource.cs	(date 1744909971837)
+@@ -0,0 +1,31 @@
++using Ducky.Generator.Core;
++
++namespace Ducky.Generator.Sources;
++
++/// <summary>
++/// Represents the generated source for the DuckyState attribute.
++/// </summary>
++/// <param name="generatorNamespace">The namespace for the generated code.</param>
++/// <param name="attributeName">The name of the attribute.</param>
++public class StateAttributeSource(
++    string generatorNamespace,
++    string attributeName)
++    : GeneratedSource
++{
++    /// <inheritdoc/>
++    protected override void Build()
++    {
++        // The auto-generated header is already appended by PreBuild.
++        Builder.Line($"namespace {generatorNamespace}");
++        Builder.Braces(() =>
++        {
++            Builder.Summary("An attribute that marks a record as a state that can be managed.");
++            Builder.Line("[System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct)]");
++            Builder.Line($"public class {attributeName} : System.Attribute");
++            Builder.Braces(() =>
++            {
++                // Optionally, insert members or leave the body empty.
++            });
++        });
++    }
++}
+Index: src/library/Ducky.Generator/Sources/ActionDispatcherSource.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>using System.Collections.Generic;\nusing System.Linq;\nusing Ducky.Generator.Core;\nusing Microsoft.CodeAnalysis;\nusing Microsoft.CodeAnalysis.CSharp.Syntax;\n\nnamespace Ducky.Generator.Sources;\n\n/// <summary>\n/// Represents the generated source for an ActionDispatcher extension method.\n/// </summary>\npublic class ActionDispatcherSource : GeneratedSource\n{\n    private const string DispatcherParameter = \"this IDispatcher dispatcher\";\n\n    private readonly string _recordName;\n    private readonly string _recordNameFullyQualified;\n    private readonly string _methodName;\n    private readonly List<string> _methodParameters = [DispatcherParameter];\n    private readonly string _argumentList;\n\n    /// <summary>\n    /// Initializes a new instance of the <see cref=\"ActionDispatcherSource\"/> class.\n    /// </summary>\n    /// <param name=\"semanticModel\">The semantic model used to resolve types.</param>\n    /// <param name=\"recordSyntax\">The syntax node representing the record declaration.</param>\n    /// <param name=\"recordSymbol\">The symbol representing the record type.</param>\n    public ActionDispatcherSource(\n        SemanticModel semanticModel,\n        RecordDeclarationSyntax recordSyntax,\n        INamedTypeSymbol recordSymbol)\n    {\n        _recordName = recordSymbol.Name;\n        _recordNameFullyQualified = recordSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);\n        _methodName = _recordName;\n\n        List<string> argListBuilder = [];\n\n        // Helper to process a record parameter.\n        void ProcessRecordParameter(ParameterSyntax parameter)\n        {\n            if (parameter.Type is null)\n            {\n                return;\n            }\n\n            TypeInfo typeInfo = semanticModel.GetTypeInfo(parameter.Type);\n            string typeStr = typeInfo.Type?.ToDisplayString() ?? parameter.Type.ToString();\n            string originalName = parameter.Identifier.Text;\n            string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);\n            string defaultText = (parameter.Default is not null) ? \" = \" + parameter.Default.Value : string.Empty;\n\n            _methodParameters.Add($\"{typeStr} {paramName}{defaultText}\");\n            argListBuilder.Add(paramName);\n        }\n\n        // Process parameters if record declaration has a parameter list.\n        if (recordSyntax.ParameterList is not null)\n        {\n            foreach (ParameterSyntax parameter in recordSyntax.ParameterList.Parameters)\n            {\n                ProcessRecordParameter(parameter);\n            }\n        }\n        else\n        {\n            // Retrieve parameters from the first non-implicit constructor.\n            List<IMethodSymbol> ctors = recordSymbol.InstanceConstructors\n                .Where(c => !c.IsImplicitlyDeclared && c.Parameters.Length > 0)\n                .ToList();\n\n            if (ctors.Count > 0)\n            {\n                IMethodSymbol ctor = ctors[0];\n                foreach (IParameterSymbol parameter in ctor.Parameters)\n                {\n                    string originalName = parameter.Name;\n                    string paramName = char.ToLower(originalName[0]) + originalName.Substring(1);\n                    string defaultText = (parameter.HasExplicitDefaultValue)\n                        ? (parameter.ExplicitDefaultValue is string)\n                            ? \" = \\\"\" + parameter.ExplicitDefaultValue + \"\\\"\"\n                            : \" = \" + parameter.ExplicitDefaultValue\n                        : string.Empty;\n\n                    _methodParameters.Add($\"{parameter.Type.ToDisplayString()} {paramName}{defaultText}\");\n                    argListBuilder.Add(paramName);\n                }\n            }\n        }\n\n        _argumentList = string.Join(\", \", argListBuilder);\n    }\n\n    /// <inheritdoc/>\n    protected override void Build()\n    {\n        // Using directives.\n        Builder.Line(\"using System;\");\n        Builder.EmptyLine();\n        Builder.Line(\"public static partial class ActionDispatcher\");\n        Builder.Braces(() =>\n        {\n            Builder.Summary($\"Dispatches a new {_recordName} action.\");\n            Builder.SummaryParam(\"dispatcher\", \"The dispatcher instance.\");\n            // Additional parameter summaries can be inserted here.\n\n            Builder.Line($\"public static void {_methodName}(\");\n            Builder.Indent(() =>\n            {\n                // Append each parameter on its own indented line.\n                for (int i = 0; i < _methodParameters.Count; i++)\n                {\n                    string parameter = _methodParameters[i].Replace(\"IDispatcher\", \"Ducky.IDispatcher\");\n                    Builder.Line((i < _methodParameters.Count - 1) ? $\"{parameter},\" : $\"{parameter})\");\n                }\n            });\n\n            Builder.Braces(() =>\n            {\n                Builder.Line(\"if (dispatcher is null)\");\n                Builder.Braces(() => Builder.Line(\"throw new System.ArgumentNullException(nameof(dispatcher));\"));\n                Builder.EmptyLine();\n                Builder.Line($\"dispatcher.Dispatch(new {_recordNameFullyQualified}({_argumentList}));\");\n            });\n        });\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/library/Ducky.Generator/Sources/ActionDispatcherSource.cs b/src/library/Ducky.Generator/Sources/ActionDispatcherSource.cs
+--- a/src/library/Ducky.Generator/Sources/ActionDispatcherSource.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/library/Ducky.Generator/Sources/ActionDispatcherSource.cs	(date 1744914611290)
+@@ -114,7 +114,6 @@
+                     Builder.Line((i < _methodParameters.Count - 1) ? $"{parameter}," : $"{parameter})");
+                 }
+             });
+-
+             Builder.Braces(() =>
+             {
+                 Builder.Line("if (dispatcher is null)");
+Index: src/demo/Demo.BlazorWasm/Components/Shared/Goal.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@inherits DuckyComponent<GoalState>\n\n<MudListItem\n  T=\"string\"\n  Icon=\"@Icons.Material.Filled.Check\"\n  IconColor=\"@GetGoalColor(IsConditionMet)\">\n  @ChildContent\n</MudListItem>\n\n@code {\n  [Parameter, EditorRequired]\n  public RenderFragment? ChildContent { get; set; }\n\n  [Parameter, EditorRequired]\n  public Func<bool> Condition { get; set; } = () => false;\n\n  [Parameter, EditorRequired]\n  public string ConditionKey { get; set; } = string.Empty;\n\n  private bool IsConditionMet\n    => State.SelectIsGoalMet(ConditionKey) || Condition();\n\n  protected override void OnParametersSet()\n  {\n    base.OnParametersSet();\n\n    if (Condition())\n    {\n      Dispatcher.SetGoalMet(ConditionKey);\n    }\n  }\n\n  private static Color GetGoalColor(bool conditionMet)\n    => conditionMet ? Color.Success : Color.Inherit;\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Shared/Goal.razor b/src/demo/Demo.BlazorWasm/Components/Shared/Goal.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Shared/Goal.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Shared/Goal.razor	(date 1744911781858)
+@@ -1,4 +1,5 @@
+-@inherits DuckyComponent<GoalState>
++@inherits DuckyComponent
++@inject GoalState State
+ 
+ <MudListItem
+   T="string"
+@@ -20,15 +21,15 @@
+   private bool IsConditionMet
+     => State.SelectIsGoalMet(ConditionKey) || Condition();
+ 
+-  protected override void OnParametersSet()
+-  {
+-    base.OnParametersSet();
+-
+-    if (Condition())
+-    {
+-      Dispatcher.SetGoalMet(ConditionKey);
+-    }
+-  }
++  // protected override void OnParametersSet()
++  // {
++  //   base.OnParametersSet();
++  //
++  //   if (Condition())
++  //   {
++  //     Dispatcher.SetGoalMet(ConditionKey);
++  //   }
++  // }
+ 
+   private static Color GetGoalColor(bool conditionMet)
+     => conditionMet ? Color.Success : Color.Inherit;
+Index: src/tests/AppStore.Tests/Movies/MoviesReducersTests.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nusing Demo.BlazorWasm.AppStore;\n\nnamespace AppStore.Tests.Movies;\n\npublic sealed class MoviesReducersTests : IDisposable\n{\n    private const string Key = \"movies\";\n\n    private readonly MoviesReducers _sut = new();\n\n    private readonly MoviesState _initialState = new()\n    {\n        Movies = ImmutableDictionary<int, Movie>.Empty,\n        IsLoading = false,\n        ErrorMessage = null,\n        Pagination = new Pagination\n        {\n            CurrentPage = 1,\n            TotalPages = 1,\n            TotalItems = 0\n        }\n    };\n\n    private bool _disposed;\n\n    [Fact]\n    public void MovieReducers_Should_Return_Initial_State()\n    {\n        // Act\n        MoviesState initialState = _sut.GetInitialState();\n\n        // Assert\n        initialState.ShouldBeEquivalentTo(_initialState);\n    }\n\n    [Fact]\n    public void MovieReducers_Should_Return_Key()\n    {\n        // Act\n        string key = _sut.GetKey();\n\n        // Assert\n        key.ShouldBe(Key);\n    }\n\n    [Fact]\n    public void MovieReducers_Should_Return_Correct_State_Type()\n    {\n        // Act\n        Type stateType = _sut.GetStateType();\n\n        // Assert\n        stateType.FullName.ShouldBe(typeof(MoviesState).FullName);\n    }\n\n    [Fact]\n    public void MovieReducers_Should_Return_Reducers()\n    {\n        // Act\n        Dictionary<Type, Func<MoviesState, object, MoviesState>> reducers = _sut.Reducers;\n\n        // Assert\n        reducers.Count.ShouldBe(4);\n    }\n\n    [Fact]\n    public void LoadMovies_ShouldSetIsLoadingToTrue()\n    {\n        // Act\n        MoviesState newState = _sut.Reduce(_initialState, new LoadMovies());\n\n        // Assert\n        newState.IsLoading.ShouldBeTrue();\n        newState.ErrorMessage.ShouldBeNull();\n    }\n\n    [Fact]\n    public void LoadMoviesSuccess_ShouldSetMoviesAndIsLoadingToFalse()\n    {\n        // Arrange\n        ValueCollection<Movie> movies = [MoviesExamples.Movies[0]];\n\n        // Act\n        MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Count));\n\n        // Assert\n        newState.Movies.ShouldBeEquivalentTo(movies.ToImmutableDictionary(movie => movie.Id));\n        newState.IsLoading.ShouldBeFalse();\n        newState.ErrorMessage.ShouldBeNull();\n    }\n\n    [Fact]\n    public void LoadMoviesFailure_ShouldSetErrorMessageAndIsLoadingToFalse()\n    {\n        // Arrange\n        const string errorMessage = \"Failed to load movies.\";\n        DuckyException exception = new(errorMessage);\n\n        // Act\n        MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesFailure(exception));\n\n        // Assert\n        newState.ErrorMessage.ShouldBe(errorMessage);\n        newState.IsLoading.ShouldBeFalse();\n        newState.Movies.ShouldBeEmpty();\n    }\n\n    [Fact]\n    public void SelectMovieCount_ShouldReturnCorrectCount()\n    {\n        // Arrange\n        MoviesState state = _initialState with\n        {\n            Movies = ImmutableDictionary<int, Movie>.Empty\n                .Add(1, MoviesExamples.Movies[0])\n                .Add(2, MoviesExamples.Movies[1])\n        };\n\n        // Act\n        int movieCount = state.SelectMovieCount();\n\n        // Assert\n        movieCount.ShouldBe(2);\n    }\n\n    [Fact]\n    public void SelectMoviesByYear_ShouldReturnMoviesSortedByYearDescending()\n    {\n        // Arrange\n        MoviesState state = _initialState with\n        {\n            Movies = ImmutableDictionary<int, Movie>.Empty\n                .Add(1, MoviesExamples.Movies[0])\n                .Add(2, MoviesExamples.Movies[1])\n        };\n\n        // Act\n        IEnumerable<Movie> sortedMovies = state.SelectMoviesByYear().Values;\n\n        // Assert\n        sortedMovies.Select(movie => movie.Year).ShouldBeInOrder(SortDirection.Descending);\n    }\n\n    public void Dispose()\n    {\n        Dispose(true);\n    }\n\n    private void Dispose(bool disposing)\n    {\n        if (_disposed)\n        {\n            return;\n        }\n\n        if (disposing)\n        {\n            _sut.Dispose();\n        }\n\n        _disposed = true;\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/tests/AppStore.Tests/Movies/MoviesReducersTests.cs b/src/tests/AppStore.Tests/Movies/MoviesReducersTests.cs
+--- a/src/tests/AppStore.Tests/Movies/MoviesReducersTests.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/tests/AppStore.Tests/Movies/MoviesReducersTests.cs	(date 1744910912625)
+@@ -12,7 +12,7 @@
+ 
+     private readonly MoviesReducers _sut = new();
+ 
+-    private readonly MoviesState _initialState = new()
++    private readonly MovieState _initialState = new()
+     {
+         Movies = ImmutableDictionary<int, Movie>.Empty,
+         IsLoading = false,
+@@ -31,7 +31,7 @@
+     public void MovieReducers_Should_Return_Initial_State()
+     {
+         // Act
+-        MoviesState initialState = _sut.GetInitialState();
++        MovieState initialState = _sut.GetInitialState();
+ 
+         // Assert
+         initialState.ShouldBeEquivalentTo(_initialState);
+@@ -54,14 +54,14 @@
+         Type stateType = _sut.GetStateType();
+ 
+         // Assert
+-        stateType.FullName.ShouldBe(typeof(MoviesState).FullName);
++        stateType.FullName.ShouldBe(typeof(MovieState).FullName);
+     }
+ 
+     [Fact]
+     public void MovieReducers_Should_Return_Reducers()
+     {
+         // Act
+-        Dictionary<Type, Func<MoviesState, object, MoviesState>> reducers = _sut.Reducers;
++        Dictionary<Type, Func<MovieState, object, MovieState>> reducers = _sut.Reducers;
+ 
+         // Assert
+         reducers.Count.ShouldBe(4);
+@@ -71,7 +71,7 @@
+     public void LoadMovies_ShouldSetIsLoadingToTrue()
+     {
+         // Act
+-        MoviesState newState = _sut.Reduce(_initialState, new LoadMovies());
++        MovieState newState = _sut.Reduce(_initialState, new LoadMovies());
+ 
+         // Assert
+         newState.IsLoading.ShouldBeTrue();
+@@ -85,7 +85,7 @@
+         ValueCollection<Movie> movies = [MoviesExamples.Movies[0]];
+ 
+         // Act
+-        MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Count));
++        MovieState newState = _sut.Reduce(_initialState, new LoadMoviesSuccess(movies, movies.Count));
+ 
+         // Assert
+         newState.Movies.ShouldBeEquivalentTo(movies.ToImmutableDictionary(movie => movie.Id));
+@@ -101,7 +101,7 @@
+         DuckyException exception = new(errorMessage);
+ 
+         // Act
+-        MoviesState newState = _sut.Reduce(_initialState, new LoadMoviesFailure(exception));
++        MovieState newState = _sut.Reduce(_initialState, new LoadMoviesFailure(exception));
+ 
+         // Assert
+         newState.ErrorMessage.ShouldBe(errorMessage);
+@@ -113,7 +113,7 @@
+     public void SelectMovieCount_ShouldReturnCorrectCount()
+     {
+         // Arrange
+-        MoviesState state = _initialState with
++        MovieState state = _initialState with
+         {
+             Movies = ImmutableDictionary<int, Movie>.Empty
+                 .Add(1, MoviesExamples.Movies[0])
+@@ -131,7 +131,7 @@
+     public void SelectMoviesByYear_ShouldReturnMoviesSortedByYearDescending()
+     {
+         // Arrange
+-        MoviesState state = _initialState with
++        MovieState state = _initialState with
+         {
+             Movies = ImmutableDictionary<int, Movie>.Empty
+                 .Add(1, MoviesExamples.Movies[0])
+Index: src/demo/Demo.BlazorWasm/Components/Layout/MainLayout.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@inherits DuckyLayout<LayoutState>\n\n<MudThemeProvider Theme=\"@_theme\" IsDarkMode=\"@IsDarkMode\" />\n\n<MudPopoverProvider/>\n<MudDialogProvider/>\n<MudSnackbarProvider/>\n\n<MudLayout>\n  <MudAppBar Elevation=\"1\">\n    <MudIconButton\n      Icon=\"@Icons.Material.Filled.Menu\"\n      Color=\"Color.Inherit\" \n      Edge=\"Edge.Start\"\n      OnClick=\"ToggleDrawer\" />\n    <MudText Typo=\"Typo.h5\" Class=\"ml-3\">\n      @FullTitle\n    </MudText>\n    <MudSpacer />\n    <MudIconButton\n      Icon=\"@DarkLightModeButtonIcon\"\n      Color=\"Color.Inherit\"\n      OnClick=\"ToggleDarkMode\" />\n    <MudIconButton\n      Icon=\"@Icons.Material.Filled.Info\"\n      Color=\"Color.Inherit\"\n      OnClick=\"OpenAboutDialog\" />\n    <NotificationsBadge/>\n  </MudAppBar>\n  <MudDrawer\n    Open=\"IsDrawerOpen\"\n    ClipMode=\"DrawerClipMode.Always\"\n    Elevation=\"2\">\n    <NavMenu />\n  </MudDrawer>\n  <NotificationsDrawer IsOpen=\"IsNotificationOpen\"/>\n  <MudMainContent Class=\"mt-16 pa-4\">\n    @Body\n  </MudMainContent>\n</MudLayout>\n\n@code {\n\n  private readonly AppTheme _theme = new();\n  \n  private string FullTitle\n    => State.SelectFullTitle();\n  \n  private bool IsDrawerOpen\n    => State.IsDrawerOpen;\n\n  private bool IsNotificationOpen\n    => State.IsNotificationOpen;\n\n  private bool IsDarkMode\n    => State.IsDarkMode;\n\n  private string DarkLightModeButtonIcon\n    => AppTheme.GetDarkLightModeButtonIcon(State.IsDarkMode);\n  \n  private void ToggleDrawer()\n    => Dispatcher.ToggleDrawer();\n\n  private void ToggleDarkMode()\n    => Dispatcher.ToggleDarkMode();\n  \n  private void OpenAboutDialog()\n    => Dispatcher.OpenAboutDialog();\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Layout/MainLayout.razor b/src/demo/Demo.BlazorWasm/Components/Layout/MainLayout.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Layout/MainLayout.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Layout/MainLayout.razor	(date 1744908395823)
+@@ -1,4 +1,5 @@
+-@inherits DuckyLayout<LayoutState>
++@inherits DuckyLayout
++@inject LayoutState State
+ 
+ <MudThemeProvider Theme="@_theme" IsDarkMode="@IsDarkMode" />
+ 
+@@ -31,7 +32,20 @@
+     Open="IsDrawerOpen"
+     ClipMode="DrawerClipMode.Always"
+     Elevation="2">
+-    <NavMenu />
++    <MudNavMenu Bordered="true" Color="Color.Info">
++      <MudNavGroup Expanded Title="System">
++        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
++        <MudNavLink Href="errors" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Error">Errors</MudNavLink>
++      </MudNavGroup>
++      <MudNavGroup Expanded Title="Demos">
++        <CounterLink/>
++        <MudNavLink Href="message" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Message">Message</MudNavLink>
++        <MudNavLink Href="todo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Task">Todo</MudNavLink>
++        <MudNavLink Href="timer" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Timer">Timer</MudNavLink>
++        <MudNavLink Href="movies" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Movie">Movies</MudNavLink>
++        <MudNavLink Href="products" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ShoppingCart">Products</MudNavLink>
++      </MudNavGroup>
++    </MudNavMenu>
+   </MudDrawer>
+   <NotificationsDrawer IsOpen="IsNotificationOpen"/>
+   <MudMainContent Class="mt-16 pa-4">
+Index: src/demo/Demo.BlazorWasm/Components/Pages/PageMessage.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/message\"\n@inherits DuckyComponent<MessageState>\n\n<PageTitle>Ducky - Message</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">Example</MudText>\n      <MudText Typo=\"Typo.h3\">Message</MudText>\n      <MudText Typo=\"Typo.body1\">\n        Creates a simple message example using the Ducky state management library for predictable state handling,<br/>\n        featuring a button to set a new message.\n      </MudText>\n      <MudList T=\"string\" Dense=\"true\">\n        <Goal Condition=\"() => State.Message.Length > 42\" ConditionKey=\"message-exceeds-10\">\n          The message exceeds 42 characters.\n        </Goal>\n      </MudList>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    <MudButtonGroup Variant=\"Variant.Outlined\">\n      <MudButton OnClick=\"SetMessage\">Set New Message</MudButton>\n      <MudButton OnClick=\"AppendMessage\">Append Message</MudButton>\n      <MudButton OnClick=\"ClearMessage\">Clear Message</MudButton>\n    </MudButtonGroup>\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    <MudSimpleTable>\n      <tbody>\n      <tr>\n        <td style=\"width: 25%\">Message</td>\n        <td><b>@Message</b></td>\n      </tr>\n      <tr>\n        <td>Character count</td>\n        <td><b>@MessageLength</b></td>\n      </tr>\n      <tr>\n        <td>Reverse</td>\n        <td><b>@MessageInReverse</b></td>\n      </tr>\n      <tr>\n        <td>Uppercase</td>\n        <td><b>@MessageInUpperCase</b></td>\n      </tr>\n      </tbody>\n    </MudSimpleTable>\n  </MudItem>\n</MudGrid>\n\n@code {\n  \n  private string Message\n    => State.Message;\n  \n  private int MessageLength\n    => State.SelectMessageLength();\n  \n  private string MessageInReverse\n    => State.SelectMessageInReverse();\n  \n  private string MessageInUpperCase\n    => State.SelectMessageInUpperCase();\n\n  private void SetMessage()\n  {\n    Dispatcher.SetMessage(\"New message from Blazor!\");\n  }\n\n  private void AppendMessage()\n  {\n    Dispatcher.AppendMessage(\" Appended text\");\n  }\n\n  private void ClearMessage()\n  {\n    Dispatcher.ClearMessage();\n  }\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/PageMessage.razor b/src/demo/Demo.BlazorWasm/Components/Pages/PageMessage.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/PageMessage.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/PageMessage.razor	(date 1744906029324)
+@@ -1,5 +1,6 @@
+ @page "/message"
+-@inherits DuckyComponent<MessageState>
++@inherits DuckyComponent
++@inject MessageState State
+ 
+ <PageTitle>Ducky - Message</PageTitle>
+ 
+Index: src/demo/Demo.BlazorWasm/Components/Pages/PageMovies.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/movies\"\n@inherits DuckyComponent<MoviesState>\n@inject NavigationManager Navigation\n\n<PageTitle>Ducky - Movies</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">Example</MudText>\n      <MudText Typo=\"Typo.h3\">Movies</MudText>\n      <MudText Typo=\"Typo.body1\">\n        Creates a simple movie example using the Ducky state management library for predictable state handling,<br/>\n        featuring loading state and error handling for displaying movies.\n      </MudText>\n      <MudList T=\"string\" Dense=\"true\">\n        <Goal Condition=\"() => State.SelectMovieCount() > 0\" ConditionKey=\"movies-exist\">\n          Movies loaded successfully.\n        </Goal>\n      </MudList>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    @if (IsLoading)\n    {\n      <MudButton Variant=\"Variant.Outlined\" Disabled>Please wait...</MudButton>\n    }\n    else\n    {\n      <MudButton Variant=\"Variant.Outlined\" OnClick=\"LoadMovies\">Reload Movies</MudButton>\n    }\n  </MudItem>\n  \n  <MudItem xs=\"12\">\n    @if (ErrorMessage != null)\n    {\n      <MudText Color=\"Color.Error\"><strong>@ErrorMessage</strong></MudText>\n    }\n    else if (IsLoading)\n    {\n      <MudText><strong>Loading movies...</strong></MudText>\n      \n      <MudProgressLinear\n        Color=\"Color.Primary\"\n        Size=\"Size.Large\"\n        Rounded\n        Indeterminate/>\n    }\n    else\n    {\n      <MudSimpleTable>\n        <thead>\n        <tr>\n          <th>Title</th>\n          <th>Director</th>\n          <th>Year</th>\n          <th>Duration</th>\n          <th>Score</th>\n        </tr>\n        </thead>\n        <tbody>\n        @foreach (var movie in Movies.Values)\n        {\n          <tr>\n            <td>@movie.Title</td>\n            <td>@movie.Director</td>\n            <td>@movie.Year</td>\n            <td>@movie.Duration</td>\n            <td>\n              <MudStack Row AlignItems=\"AlignItems.Baseline\">\n                <MudRating SelectedValue=\"@movie.Score\" ReadOnly/>\n                <MudIconButton \n                  Icon=\"@Icons.Material.Filled.Info\"\n                  OnClick=\"() => GoToMovieDetails(movie.Id)\"/>\n              </MudStack>\n            </td>\n          </tr>\n        }\n        </tbody>\n      </MudSimpleTable>\n    }\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    <MudStack Row Justify=\"Justify.Center\">\n      <MudPagination\n        SelectedChanged=\"SetCurrentPage\"\n        Variant=\"Variant.Filled\"\n        Count=\"@TotalPages\"\n        ShowFirstButton=\"true\"\n        ShowLastButton=\"true\"/>\n    </MudStack>\n  </MudItem>\n</MudGrid>\n\n@code {\n  \n  // TODO: Master/Detail view with selected movie details.\n  \n  private ImmutableDictionary<int, Movie> Movies\n    => State.SelectMoviesByYear();\n  \n  private bool IsLoading\n    => State.IsLoading;\n  \n  private string? ErrorMessage\n    => State.ErrorMessage;\n  \n  private int TotalPages\n    => State.Pagination.TotalPages;\n\n  protected override void OnAfterSubscribed()\n  {\n    if (Movies.Count == 0)\n    {\n      LoadMovies();\n    }\n  }\n  \n  private void LoadMovies()\n  {\n    Dispatcher.LoadMovies();\n  }\n\n  private void SetCurrentPage(int page)\n  {\n    Dispatcher.SetCurrentPage(page);\n    Dispatcher.LoadMovies();\n  }\n  \n  private void GoToMovieDetails(int movieId)\n  {\n    Navigation.NavigateTo($\"/movies/{movieId}\");\n  }\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/PageMovies.razor b/src/demo/Demo.BlazorWasm/Components/Pages/PageMovies.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/PageMovies.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/PageMovies.razor	(date 1744910912628)
+@@ -1,5 +1,6 @@
+ @page "/movies"
+-@inherits DuckyComponent<MoviesState>
++@inherits DuckyComponent
++@inject MovieState State
+ @inject NavigationManager Navigation
+ 
+ <PageTitle>Ducky - Movies</PageTitle>
+Index: src/tests/AppStore.Tests/Movies/MoviesEffectsTests.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nusing Demo.BlazorWasm.AppStore;\n\nnamespace AppStore.Tests.Movies;\n\n[SuppressMessage(\"Roslynator\", \"RCS1046:Asynchronous method name should end with \\'Async\\'\")]\npublic sealed class MoviesEffectsTests : IDisposable\n{\n    private readonly FakeTimeProvider _timeProvider = new();\n    private readonly CompositeDisposable _disposables = [];\n    private readonly Subject<object> _actionsSubject = new();\n    private readonly Subject<IRootState> _rootStateSubject = new();\n    private readonly List<object> _actualActions = [];\n    private readonly Mock<IMoviesService> _moviesServiceMock = new();\n\n    public MoviesEffectsTests()\n    {\n        ObservableSystem.DefaultTimeProvider = _timeProvider;\n\n        new LoadMoviesEffect(_moviesServiceMock.Object)\n            .Handle(_actionsSubject, _rootStateSubject)\n            .Subscribe(_actualActions.Add)\n            .AddTo(_disposables);\n    }\n\n    public void Dispose()\n    {\n        _disposables.Dispose();\n        _actionsSubject.Dispose();\n        _rootStateSubject.Dispose();\n    }\n\n    [Fact]\n    public void LoadMoviesEffect_ShouldEmitLoadMoviesSuccess_WhenServiceCallSucceeds()\n    {\n        // Arrange\n        SetupRootState();\n        List<Movie> movies = [MoviesExamples.Movies[0], MoviesExamples.Movies[1]];\n        ValueCollection<Movie> immutableMovies = [..movies];\n        _moviesServiceMock\n            .Setup(service => service.GetMoviesAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None))\n            .ReturnsAsync(new GetMoviesResponse(immutableMovies, movies.Count));\n\n        // Act\n        _actionsSubject.OnNext(new LoadMovies());\n        _timeProvider.Advance(TimeSpan.FromSeconds(1));\n\n        // Assert\n        _actualActions.Count.ShouldBe(1);\n        _actualActions[0].ShouldBeOfType<LoadMoviesSuccess>().Movies.ShouldBeEquivalentTo(immutableMovies);\n    }\n\n    [Fact]\n    public void LoadMoviesEffect_ShouldEmitLoadMoviesFailure_WhenServiceCallFails()\n    {\n        // Arrange\n        SetupRootState();\n        const string exceptionMessage = \"Service call failed\";\n        _moviesServiceMock\n            .Setup(service => service.GetMoviesAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None))\n            .ThrowsAsync(new MovieException(exceptionMessage));\n\n        // Act\n        _actionsSubject.OnNext(new LoadMovies());\n        _timeProvider.Advance(TimeSpan.FromSeconds(1));\n\n        // Assert\n        _actualActions.ShouldHaveSingleItem(); // One for failure\n        _actualActions[0].ShouldBeOfType<LoadMoviesFailure>().Error.Message.ShouldBe(exceptionMessage);\n    }\n\n    private void SetupRootState()\n    {\n        ImmutableSortedDictionary<string, object> dictionary = ImmutableSortedDictionary\n            .Create<string, object>()\n            .Add(\n                \"movies\",\n                new MoviesState\n                {\n                    Movies = ImmutableDictionary<int, Movie>.Empty,\n                    IsLoading = false,\n                    ErrorMessage = null,\n                    Pagination = new Pagination\n                    {\n                        CurrentPage = 1,\n                        TotalPages = 1,\n                        TotalItems = 0\n                    }\n                });\n\n        RootState rootState = new(dictionary);\n        _rootStateSubject.OnNext(rootState);\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/tests/AppStore.Tests/Movies/MoviesEffectsTests.cs b/src/tests/AppStore.Tests/Movies/MoviesEffectsTests.cs
+--- a/src/tests/AppStore.Tests/Movies/MoviesEffectsTests.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/tests/AppStore.Tests/Movies/MoviesEffectsTests.cs	(date 1744910912629)
+@@ -78,7 +78,7 @@
+             .Create<string, object>()
+             .Add(
+                 "movies",
+-                new MoviesState
++                new MovieState
+                 {
+                     Movies = ImmutableDictionary<int, Movie>.Empty,
+                     IsLoading = false,
+Index: src/demo/Demo.BlazorWasm/AppStore/Message/MessageDuck.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record MessageState\n{\n    public required string Message { get; init; }\n\n    // Selectors\n    public int SelectMessageLength()\n        => Message.Length;\n\n    public string SelectMessageInReverse()\n        => string.Concat(Message.Reverse());\n\n    public string SelectMessageInUpperCase()\n        => Message.ToUpper(CultureInfo.InvariantCulture);\n}\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic record SetMessage(string Message);\n\n[DuckyAction]\npublic record AppendMessage(string Message);\n\n[DuckyAction]\npublic record ClearMessage;\n\n#endregion\n\n#region Reducers\n\npublic record MessageReducers : SliceReducers<MessageState>\n{\n    public MessageReducers()\n    {\n        On<SetMessage>(Reduce);\n        On<AppendMessage>(Reduce);\n        On<ClearMessage>(Reduce);\n    }\n\n    public override MessageState GetInitialState()\n        => new() { Message = \"Hello, Blazor!\" };\n\n    private static MessageState Reduce(MessageState _, SetMessage action)\n        => new() { Message = action.Message };\n\n    private static MessageState Reduce(MessageState state, AppendMessage action)\n        => new() { Message = state.Message + action.Message };\n\n    private static MessageState Reduce(MessageState state, ClearMessage action)\n        => new() { Message = string.Empty };\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Message/MessageDuck.cs b/src/demo/Demo.BlazorWasm/AppStore/Message/MessageDuck.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Message/MessageDuck.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Message/MessageDuck.cs	(date 1744909757569)
+@@ -6,6 +6,7 @@
+ 
+ #region State
+ 
++[DuckyState]
+ public record MessageState
+ {
+     public required string Message { get; init; }
+Index: src/library/Ducky.Generator/StateAttributeSourceGenerator.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/library/Ducky.Generator/StateAttributeSourceGenerator.cs b/src/library/Ducky.Generator/StateAttributeSourceGenerator.cs
+new file mode 100644
+--- /dev/null	(date 1744918948782)
++++ b/src/library/Ducky.Generator/StateAttributeSourceGenerator.cs	(date 1744918948782)
+@@ -0,0 +1,90 @@
++using System.Collections.Generic;
++using System.Collections.Immutable;
++using System.Linq;
++using Ducky.Generator.Core;
++using Ducky.Generator.Sources;
++using Microsoft.CodeAnalysis;
++using Microsoft.CodeAnalysis.CSharp.Syntax;
++
++namespace Ducky.Generator;
++
++/// <summary>
++/// A source generator that injects the [DuckyState] attribute and then
++/// builds a RootState class combining all marked state records.
++/// </summary>
++[Generator]
++public class StateAttributeSourceGenerator : SourceGeneratorBase
++{
++    private const string GeneratorNamespace = "Ducky.Generators";
++    private const string AttributeName = "DuckyStateAttribute";
++
++    /// <inheritdoc/>
++    public override void Initialize(IncrementalGeneratorInitializationContext context)
++    {
++        // 1) Inject [DuckyState] marker attribute
++        context.RegisterPostInitializationOutput(ctx =>
++        {
++            StateAttributeSource attributeSource = new(GeneratorNamespace, AttributeName);
++            ctx.AddSource($"{AttributeName}.g.cs", attributeSource.ToSourceText());
++        });
++
++        // 2) Find all record declarations with any attributes,
++        //    then filter to those annotated with [DuckyState]
++        IncrementalValuesProvider<RecordDeclarationSyntax> statesProvider = context.SyntaxProvider
++            .CreateSyntaxProvider(
++                predicate: static (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: > 0 },
++                transform: static (ctx, _) => GetRecordDeclarationForSourceGen(ctx))
++            .Where(result => result.stateAttributeFound)
++            .Select((result, _) => result.recordDeclaration);
++
++        // 3) Combine the compilation + all the collected state‑records
++        context.RegisterSourceOutput(
++            context.CompilationProvider.Combine(statesProvider.Collect()),
++            (spc, source) => GenerateRootState(spc, source.Left, source.Right));
++    }
++
++    private static (RecordDeclarationSyntax recordDeclaration, bool stateAttributeFound)
++        GetRecordDeclarationForSourceGen(in GeneratorSyntaxContext context)
++    {
++        var recordDecl = (RecordDeclarationSyntax)context.Node;
++        var found = false;
++
++        foreach (AttributeListSyntax list in recordDecl.AttributeLists)
++        {
++            foreach (AttributeSyntax attr in list.Attributes)
++            {
++                if (context.SemanticModel.GetSymbolInfo(attr).Symbol is IMethodSymbol ms)
++                {
++                    string fullName = ms.ContainingType.ToDisplayString();
++                    if (fullName == $"{GeneratorNamespace}.{AttributeName}"
++                        || fullName.EndsWith("." + AttributeName))
++                    {
++                        found = true;
++                        break;
++                    }
++                }
++            }
++
++            if (found)
++            {
++                break;
++            }
++        }
++
++        return (recordDecl, found);
++    }
++
++    private void GenerateRootState(
++        in SourceProductionContext context,
++        Compilation compilation,
++        in ImmutableArray<RecordDeclarationSyntax> records)
++    {
++        if (records.IsDefaultOrEmpty)
++        {
++            return;
++        }
++
++        RootStateSource rootSource = new(compilation, records);
++        AddSource(context, "RootState.g.cs", rootSource.ToString());
++    }
++}
+Index: src/demo/Demo.BlazorWasm/Program.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>using Microsoft.AspNetCore.Components.Web;\nusing Microsoft.AspNetCore.Components.WebAssembly.Hosting;\nusing Demo.BlazorWasm;\nusing Demo.BlazorWasm.AppStore;\nusing Demo.BlazorWasm.Features.JsonColoring;\nusing Demo.BlazorWasm.Features.JsonColoring.Services;\nusing Ducky.Blazor;\nusing MudBlazor.Services;\n\nWebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);\nWebAssemblyHostConfiguration configuration = builder.Configuration;\nIServiceCollection services = builder.Services;\n\nbuilder.RootComponents.Add<App>(\"#app\");\nbuilder.RootComponents.Add<HeadOutlet>(\"head::after\");\n\nservices.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });\n\n// Add front services\nservices.AddMudServices(\n    config =>\n    {\n        config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;\n        config.SnackbarConfiguration.ShowCloseIcon = true;\n    });\n\n// Add business services\nservices.AddScoped<IJsonColorizer, JsonColorizer>();\nservices.AddTransient<IMoviesService, MoviesService>();\n\n// Add Ducky\nservices.AddDucky(configuration);\n\nawait builder.Build().RunAsync();\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Program.cs b/src/demo/Demo.BlazorWasm/Program.cs
+--- a/src/demo/Demo.BlazorWasm/Program.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Program.cs	(date 1744911875146)
+@@ -28,6 +28,19 @@
+ services.AddScoped<IJsonColorizer, JsonColorizer>();
+ services.AddTransient<IMoviesService, MoviesService>();
+ 
++// Add States
++services.AddSingleton<CounterState>();
++services.AddSingleton<GoalState>();
++services.AddSingleton<LayoutState>();
++services.AddSingleton<MessageState>();
++services.AddSingleton<MovieState>();
++services.AddSingleton<NotificationState>();
++services.AddSingleton<ProductState>();
++services.AddSingleton<TimerState>();
++services.AddSingleton<TodoState>();
++
++services.AddSingleton<RootState>();
++
+ // Add Ducky
+ services.AddDucky(configuration);
+ 
+Index: src/tests/AppStore.Tests/Notifications/NotificationsReducersTests.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nusing Demo.BlazorWasm.AppStore;\n\nnamespace AppStore.Tests.Notifications;\n\npublic sealed class NotificationsReducersTests : IDisposable\n{\n    private const string Key = \"notifications\";\n\n    private readonly NotificationsReducers _sut = new();\n\n    private readonly NotificationsState _initialState = new()\n    {\n        Notifications = new ValueCollection<Notification>\n        {\n            new SuccessNotification(\"Welcome to Ducky!\"),\n            new WarningNotification(\"This is a warning.\"),\n            new ErrorNotification(\"This is an error.\")\n        }\n    };\n\n    private bool _disposed;\n\n    [Fact]\n    public void NotificationsReducers_Should_Return_Initial_State()\n    {\n        // Act\n        NotificationsState initialState = _sut.GetInitialState();\n\n        // Assert\n        initialState.Notifications.Count.ShouldBe(3);\n        initialState.Notifications[0].Message.ShouldBe(\"Welcome to Ducky!\");\n        initialState.Notifications[1].Message.ShouldBe(\"This is a warning.\");\n        initialState.Notifications[2].Message.ShouldBe(\"This is an error.\");\n    }\n\n    [Fact]\n    public void NotificationsReducers_Should_Return_Key()\n    {\n        // Act\n        string key = _sut.GetKey();\n\n        // Assert\n        key.ShouldBe(Key);\n    }\n\n    [Fact]\n    public void NotificationsReducers_Should_Return_Correct_State_Type()\n    {\n        // Act\n        Type stateType = _sut.GetStateType();\n\n        // Assert\n        stateType.FullName.ShouldBe(typeof(NotificationsState).FullName);\n    }\n\n    [Fact]\n    public void NotificationsReducers_Should_Return_Reducers()\n    {\n        // Act\n        Dictionary<Type, Func<NotificationsState, object, NotificationsState>> reducers = _sut.Reducers;\n\n        // Assert\n        reducers.Count.ShouldBe(3);\n    }\n\n    [Fact]\n    public void AddNotification_Should_Add_Notification()\n    {\n        // Arrange\n        InfoNotification notification = new(\"This is an info notification.\");\n        AddNotification action = new(notification);\n\n        // Act\n        NotificationsState state = _sut.Reduce(_initialState, action);\n\n        // Assert\n        state.Notifications.Count.ShouldBe(4);\n        state.Notifications[3].Message.ShouldBe(\"This is an info notification.\");\n    }\n\n    [Fact]\n    public void MarkNotificationAsRead_Should_Mark_Notification_As_Read()\n    {\n        // Arrange\n        Guid notificationId = _initialState.Notifications[1].Id;\n        MarkNotificationAsRead action = new(notificationId);\n\n        // Act\n        NotificationsState state = _sut.Reduce(_initialState, action);\n\n        // Assert\n        state.Notifications[1].IsRead.ShouldBeTrue();\n    }\n\n    public void Dispose()\n    {\n        Dispose(true);\n    }\n\n    private void Dispose(bool disposing)\n    {\n        if (_disposed)\n        {\n            return;\n        }\n\n        if (disposing)\n        {\n            _sut.Dispose();\n        }\n\n        _disposed = true;\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/tests/AppStore.Tests/Notifications/NotificationsReducersTests.cs b/src/tests/AppStore.Tests/Notifications/NotificationsReducersTests.cs
+--- a/src/tests/AppStore.Tests/Notifications/NotificationsReducersTests.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/tests/AppStore.Tests/Notifications/NotificationsReducersTests.cs	(date 1744910919245)
+@@ -12,7 +12,7 @@
+ 
+     private readonly NotificationsReducers _sut = new();
+ 
+-    private readonly NotificationsState _initialState = new()
++    private readonly NotificationState _initialState = new()
+     {
+         Notifications = new ValueCollection<Notification>
+         {
+@@ -28,7 +28,7 @@
+     public void NotificationsReducers_Should_Return_Initial_State()
+     {
+         // Act
+-        NotificationsState initialState = _sut.GetInitialState();
++        NotificationState initialState = _sut.GetInitialState();
+ 
+         // Assert
+         initialState.Notifications.Count.ShouldBe(3);
+@@ -54,14 +54,14 @@
+         Type stateType = _sut.GetStateType();
+ 
+         // Assert
+-        stateType.FullName.ShouldBe(typeof(NotificationsState).FullName);
++        stateType.FullName.ShouldBe(typeof(NotificationState).FullName);
+     }
+ 
+     [Fact]
+     public void NotificationsReducers_Should_Return_Reducers()
+     {
+         // Act
+-        Dictionary<Type, Func<NotificationsState, object, NotificationsState>> reducers = _sut.Reducers;
++        Dictionary<Type, Func<NotificationState, object, NotificationState>> reducers = _sut.Reducers;
+ 
+         // Assert
+         reducers.Count.ShouldBe(3);
+@@ -75,7 +75,7 @@
+         AddNotification action = new(notification);
+ 
+         // Act
+-        NotificationsState state = _sut.Reduce(_initialState, action);
++        NotificationState state = _sut.Reduce(_initialState, action);
+ 
+         // Assert
+         state.Notifications.Count.ShouldBe(4);
+@@ -90,7 +90,7 @@
+         MarkNotificationAsRead action = new(notificationId);
+ 
+         // Act
+-        NotificationsState state = _sut.Reduce(_initialState, action);
++        NotificationState state = _sut.Reduce(_initialState, action);
+ 
+         // Assert
+         state.Notifications[1].IsRead.ShouldBeTrue();
+Index: src/library/Ducky.Blazor/DuckyLayout.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nusing System.Diagnostics.CodeAnalysis;\nusing Microsoft.AspNetCore.Components;\n\nnamespace Ducky.Blazor;\n\n/// <summary>\n/// A base layout class for Ducky components that manages state and dispatches actions.\n/// </summary>\n/// <typeparam name=\"TState\">The type of the state managed by this component.</typeparam>\npublic abstract class DuckyLayout<TState> : DuckyComponent<TState>\n    where TState : notnull\n{\n    /// <summary>\n    /// Gets or sets the content to be rendered inside the layout.\n    /// </summary>\n    [Parameter]\n    public RenderFragment? Body { get; set; }\n\n    /// <inheritdoc />\n    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(LayoutComponentBase))]\n    public override Task SetParametersAsync(ParameterView parameters)\n    {\n        return base.SetParametersAsync(parameters);\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/library/Ducky.Blazor/DuckyLayout.cs b/src/library/Ducky.Blazor/DuckyLayout.cs
+--- a/src/library/Ducky.Blazor/DuckyLayout.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/library/Ducky.Blazor/DuckyLayout.cs	(date 1744911116711)
+@@ -10,9 +10,7 @@
+ /// <summary>
+ /// A base layout class for Ducky components that manages state and dispatches actions.
+ /// </summary>
+-/// <typeparam name="TState">The type of the state managed by this component.</typeparam>
+-public abstract class DuckyLayout<TState> : DuckyComponent<TState>
+-    where TState : notnull
++public abstract class DuckyLayout : DuckyComponent
+ {
+     /// <summary>
+     /// Gets or sets the content to be rendered inside the layout.
+@@ -20,10 +18,10 @@
+     [Parameter]
+     public RenderFragment? Body { get; set; }
+ 
+-    /// <inheritdoc />
+-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(LayoutComponentBase))]
+-    public override Task SetParametersAsync(ParameterView parameters)
+-    {
+-        return base.SetParametersAsync(parameters);
+-    }
++    // /// <inheritdoc />
++    // [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(LayoutComponentBase))]
++    // public override Task SetParametersAsync(ParameterView parameters)
++    // {
++    //     return base.SetParametersAsync(parameters);
++    // }
+ }
+Index: src/library/Ducky.Generator/Sources/RootStateSource.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/library/Ducky.Generator/Sources/RootStateSource.cs b/src/library/Ducky.Generator/Sources/RootStateSource.cs
+new file mode 100644
+--- /dev/null	(date 1744919974451)
++++ b/src/library/Ducky.Generator/Sources/RootStateSource.cs	(date 1744919974451)
+@@ -0,0 +1,98 @@
++using System.Collections.Generic;
++using System.Linq;
++using Ducky.Generator.Core;
++using Microsoft.CodeAnalysis;
++using Microsoft.CodeAnalysis.CSharp.Syntax;
++
++namespace Ducky.Generator.Sources;
++
++/// <summary>
++/// Generates the source for the RootState class, injecting each state record.
++/// </summary>
++public class RootStateSource : GeneratedSource
++{
++    private readonly List<string> _stateNames = [];
++    private readonly List<string> _stateFullyQualifiedNames = [];
++
++    /// <summary>
++    /// Initializes a new instance of the <see cref="RootStateSource"/> class.
++    /// Collects all record declarations marked with [DuckyState].
++    /// </summary>
++    /// <param name="compilation">The compilation context.</param>
++    /// <param name="recordSyntaxes">The syntax nodes for each state record.</param>
++ 
++    public RootStateSource(
++        Compilation compilation,
++        IEnumerable<RecordDeclarationSyntax> recordSyntaxes)
++    {
++        foreach (RecordDeclarationSyntax syntax in recordSyntaxes)
++        {
++            SemanticModel model = compilation.GetSemanticModel(syntax.SyntaxTree);
++            if (model.GetDeclaredSymbol(syntax) is INamedTypeSymbol symbol)
++            {
++                _stateNames.Add(symbol.Name);
++                _stateFullyQualifiedNames.Add(
++                    symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
++            }
++        }
++    }
++
++    /// <inheritdoc/>
++    protected override void Build()
++    {
++        // Standard usings
++        Builder.Line("using System;");
++        Builder.Line("using Ducky;");
++
++        // Usings for each state namespace
++        IEnumerable<string> namespaces = _stateFullyQualifiedNames
++            .Select(fqn => fqn.Replace("global::", string.Empty))
++            .Select(fqn => (fqn.Contains('.')) ? fqn.Substring(0, fqn.LastIndexOf('.')) : string.Empty)
++            .Where(ns => !string.IsNullOrEmpty(ns))
++            .Distinct();
++
++        foreach (string ns in namespaces)
++        {
++            Builder.Line($"using {ns};");
++        }
++
++        Builder.EmptyLine();
++
++        // RootState class declaration
++        Builder.Line("public partial class RootState : IRootState");
++        Builder.Braces(() =>
++        {
++            // Properties for each state
++            foreach (string stateName in _stateNames)
++            {
++                Builder.Line($"public {stateName} {stateName} {{ get; }}");
++            }
++
++            Builder.EmptyLine();
++
++            // Constructor signature
++            Builder.Line("public RootState(");
++            Builder.Indent(() =>
++            {
++                for (int i = 0; i < _stateNames.Count; i++)
++                {
++                    string type = _stateNames[i];
++                    string paramName = char.ToLower(type[0]) + type.Substring(1);
++                    string comma = (i < _stateNames.Count - 1) ? "," : string.Empty;
++                    Builder.Line($"{type} {paramName}{comma}");
++                }
++            });
++            Builder.Line(")");
++            Builder.Braces(() =>
++            {
++                // Assignments with null-checks
++                foreach (string stateName in _stateNames)
++                {
++                    string paramName = char.ToLower(stateName[0]) + stateName.Substring(1);
++                    Builder.Line(
++                        $"this.{stateName} = {paramName} ?? throw new ArgumentNullException(nameof({paramName}));");
++                }
++            });
++        });
++    }
++}
+Index: src/library/Ducky.Blazor/DuckyComponent.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nusing Microsoft.AspNetCore.Components;\nusing Microsoft.Extensions.Logging;\nusing R3;\n\nnamespace Ducky.Blazor;\n\n/// <summary>\n/// A base component class for Ducky components that manages state and dispatches actions.\n/// </summary>\n/// <typeparam name=\"TState\">The type of the state managed by this component.</typeparam>\npublic abstract class DuckyComponent<TState> : ComponentBase, IDisposable\n    where TState : notnull\n{\n    private IDisposable? _subscription;\n    private bool _disposed;\n\n    /// <summary>\n    /// Gets or sets the store that manages the application state.\n    /// </summary>\n    [Inject]\n    public required DuckyStore Store { get; set; }\n\n    /// <summary>\n    /// Gets or sets the dispatcher used to dispatch actions to the store.\n    /// </summary>\n    [Inject]\n    public required IDispatcher Dispatcher { get; set; }\n\n    /// <summary>\n    /// Gets or sets the logger used for logging information.\n    /// </summary>\n    [Inject]\n    public required ILogger<DuckyComponent<object>> Logger { get; set; }\n\n    /// <summary>\n    /// Gets the name of the component.\n    /// </summary>\n    protected string ComponentName\n        => GetType().Name;\n\n    /// <summary>\n    /// Gets the current state of the component.\n    /// </summary>\n    protected TState State\n    {\n        get\n        {\n            Task<TState> stateAsync = StateObservable.FirstAsync();\n            stateAsync.Wait();\n            return stateAsync.Result;\n        }\n    }\n\n    /// <summary>\n    /// Gets an observable stream of the state managed by this component.\n    /// </summary>\n    private Observable<TState> StateObservable\n        => (typeof(TState) == typeof(RootState))\n            ? Store.RootStateObservable\n                .Cast<IRootState, TState>()\n            : Store.RootStateObservable\n                .Select(state => state.GetSliceState<TState>())\n                .DistinctUntilChanged();\n\n    /// <summary>\n    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.\n    /// </summary>\n    public void Dispose()\n    {\n        // Do not change this code. Put cleanup code in Dispose(bool disposing) above.\n        Dispose(true);\n        GC.SuppressFinalize(this);\n    }\n\n    /// <summary>\n    /// Releases the unmanaged resources used by the <see cref=\"DuckyComponent{TState}\"/> and optionally releases the managed resources.\n    /// </summary>\n    /// <param name=\"disposing\">If true, the method has been called directly or indirectly by a user's code. Managed and unmanaged resources can be disposed. If false, the method has been called by the runtime from inside the finalizer and only unmanaged resources can be disposed.</param>\n    protected virtual void Dispose(bool disposing)\n    {\n        if (_disposed)\n        {\n            return;\n        }\n\n        if (disposing)\n        {\n            // Dispose managed resources.\n            _subscription?.Dispose();\n        }\n\n        // Note disposing has been done.\n        _disposed = true;\n    }\n\n    /// <summary>\n    /// Invoked after the state subscription has been established.\n    /// This method is intended to be overridden by derived classes.\n    /// </summary>\n    protected virtual void OnAfterSubscribed()\n    {\n    }\n\n    /// <inheritdoc />\n    protected sealed override void OnInitialized()\n    {\n        Logger.ComponentInitializing(ComponentName);\n\n        base.OnInitialized();\n\n        if (_subscription is null)\n        {\n            Logger.SubscribingToStateObservable(ComponentName);\n            _subscription = StateObservable.Subscribe(OnNext);\n            OnAfterSubscribed();\n        }\n        else\n        {\n            Logger.SubscriptionAlreadyAssigned(ComponentName);\n        }\n\n        Logger.ComponentInitialized(ComponentName);\n    }\n\n    /// <summary>\n    /// Dispatches an action to the store.\n    /// </summary>\n    /// <param name=\"action\">The action to dispatch.</param>\n    protected void Dispatch(object action)\n    {\n        Dispatcher.Dispatch(action);\n    }\n\n    private void OnNext(TState state)\n    {\n        InvokeAsync(StateHasChanged);\n\n        OnParametersSet();\n        OnParametersSetAsync();\n\n        Logger.ComponentRefreshed(ComponentName);\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/library/Ducky.Blazor/DuckyComponent.cs b/src/library/Ducky.Blazor/DuckyComponent.cs
+--- a/src/library/Ducky.Blazor/DuckyComponent.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/library/Ducky.Blazor/DuckyComponent.cs	(date 1744911821856)
+@@ -11,12 +11,10 @@
+ /// <summary>
+ /// A base component class for Ducky components that manages state and dispatches actions.
+ /// </summary>
+-/// <typeparam name="TState">The type of the state managed by this component.</typeparam>
+-public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
+-    where TState : notnull
++public abstract class DuckyComponent : ComponentBase //, IDisposable
+ {
+-    private IDisposable? _subscription;
+-    private bool _disposed;
++    // private IDisposable? _subscription;
++    // private bool _disposed;
+ 
+     /// <summary>
+     /// Gets or sets the store that manages the application state.
+@@ -34,7 +32,7 @@
+     /// Gets or sets the logger used for logging information.
+     /// </summary>
+     [Inject]
+-    public required ILogger<DuckyComponent<object>> Logger { get; set; }
++    public required ILogger<DuckyComponent> Logger { get; set; }
+ 
+     /// <summary>
+     /// Gets the name of the component.
+@@ -42,60 +40,60 @@
+     protected string ComponentName
+         => GetType().Name;
+ 
+-    /// <summary>
+-    /// Gets the current state of the component.
+-    /// </summary>
+-    protected TState State
+-    {
+-        get
+-        {
+-            Task<TState> stateAsync = StateObservable.FirstAsync();
+-            stateAsync.Wait();
+-            return stateAsync.Result;
+-        }
+-    }
+-
+-    /// <summary>
+-    /// Gets an observable stream of the state managed by this component.
+-    /// </summary>
+-    private Observable<TState> StateObservable
+-        => (typeof(TState) == typeof(RootState))
+-            ? Store.RootStateObservable
+-                .Cast<IRootState, TState>()
+-            : Store.RootStateObservable
+-                .Select(state => state.GetSliceState<TState>())
+-                .DistinctUntilChanged();
++    // /// <summary>
++    // /// Gets the current state of the component.
++    // /// </summary>
++    // protected TState State
++    // {
++    //     get
++    //     {
++    //         Task<TState> stateAsync = StateObservable.FirstAsync();
++    //         stateAsync.Wait();
++    //         return stateAsync.Result;
++    //     }
++    // }
+ 
+-    /// <summary>
+-    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+-    /// </summary>
+-    public void Dispose()
+-    {
+-        // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+-        Dispose(true);
+-        GC.SuppressFinalize(this);
+-    }
++    // /// <summary>
++    // /// Gets an observable stream of the state managed by this component.
++    // /// </summary>
++    // private Observable<TState> StateObservable
++    //     => (typeof(TState) == typeof(RootState))
++    //         ? Store.RootStateObservable
++    //             .Cast<IRootState, TState>()
++    //         : Store.RootStateObservable
++    //             .Select(state => state.GetSliceState<TState>())
++    //             .DistinctUntilChanged();
+ 
+-    /// <summary>
+-    /// Releases the unmanaged resources used by the <see cref="DuckyComponent{TState}"/> and optionally releases the managed resources.
+-    /// </summary>
+-    /// <param name="disposing">If true, the method has been called directly or indirectly by a user's code. Managed and unmanaged resources can be disposed. If false, the method has been called by the runtime from inside the finalizer and only unmanaged resources can be disposed.</param>
+-    protected virtual void Dispose(bool disposing)
+-    {
+-        if (_disposed)
+-        {
+-            return;
+-        }
++    // /// <summary>
++    // /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
++    // /// </summary>
++    // public void Dispose()
++    // {
++    //     // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
++    //     Dispose(true);
++    //     GC.SuppressFinalize(this);
++    // }
+ 
+-        if (disposing)
+-        {
+-            // Dispose managed resources.
+-            _subscription?.Dispose();
+-        }
+-
+-        // Note disposing has been done.
+-        _disposed = true;
+-    }
++    // /// <summary>
++    // /// Releases the unmanaged resources used by the <see cref="DuckyComponent"/> and optionally releases the managed resources.
++    // /// </summary>
++    // /// <param name="disposing">If true, the method has been called directly or indirectly by a user's code. Managed and unmanaged resources can be disposed. If false, the method has been called by the runtime from inside the finalizer and only unmanaged resources can be disposed.</param>
++    // protected virtual void Dispose(bool disposing)
++    // {
++    //     if (_disposed)
++    //     {
++    //         return;
++    //     }
++    //
++    //     if (disposing)
++    //     {
++    //         // Dispose managed resources.
++    //         _subscription?.Dispose();
++    //     }
++    //
++    //     // Note disposing has been done.
++    //     _disposed = true;
++    // }
+ 
+     /// <summary>
+     /// Invoked after the state subscription has been established.
+@@ -105,26 +103,26 @@
+     {
+     }
+ 
+-    /// <inheritdoc />
+-    protected sealed override void OnInitialized()
+-    {
+-        Logger.ComponentInitializing(ComponentName);
+-
+-        base.OnInitialized();
+-
+-        if (_subscription is null)
+-        {
+-            Logger.SubscribingToStateObservable(ComponentName);
+-            _subscription = StateObservable.Subscribe(OnNext);
+-            OnAfterSubscribed();
+-        }
+-        else
+-        {
+-            Logger.SubscriptionAlreadyAssigned(ComponentName);
+-        }
+-
+-        Logger.ComponentInitialized(ComponentName);
+-    }
++    // /// <inheritdoc />
++    // protected sealed override void OnInitialized()
++    // {
++    //     Logger.ComponentInitializing(ComponentName);
++    //
++    //     base.OnInitialized();
++    //
++    //     if (_subscription is null)
++    //     {
++    //         Logger.SubscribingToStateObservable(ComponentName);
++    //         _subscription = StateObservable.Subscribe(OnNext);
++    //         OnAfterSubscribed();
++    //     }
++    //     else
++    //     {
++    //         Logger.SubscriptionAlreadyAssigned(ComponentName);
++    //     }
++    //
++    //     Logger.ComponentInitialized(ComponentName);
++    // }
+ 
+     /// <summary>
+     /// Dispatches an action to the store.
+@@ -135,13 +133,13 @@
+         Dispatcher.Dispatch(action);
+     }
+ 
+-    private void OnNext(TState state)
+-    {
+-        InvokeAsync(StateHasChanged);
+-
+-        OnParametersSet();
+-        OnParametersSetAsync();
+-
+-        Logger.ComponentRefreshed(ComponentName);
+-    }
++    // private void OnNext(TState state)
++    // {
++    //     InvokeAsync(StateHasChanged);
++    //
++    //     OnParametersSet();
++    //     OnParametersSetAsync();
++    //
++    //     Logger.ComponentRefreshed(ComponentName);
++    // }
+ }
+Index: src/demo/Demo.BlazorWasm/AppStore/Todos/TodoDucks.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record TodoState\n    : NormalizedState<Guid, TodoItem, TodoState>\n{\n    // Selectors\n    public ValueCollection<TodoItem> SelectCompletedTodos()\n        => SelectEntities(todo => todo.IsCompleted);\n\n    public int SelectCompletedTodosCount()\n        => SelectCompletedTodos().Count;\n\n    public bool SelectHasCompletedTodos()\n        => !SelectCompletedTodos().IsEmpty;\n\n    public ValueCollection<TodoItem> SelectActiveTodos()\n        => SelectEntities(todo => !todo.IsCompleted);\n\n    public int SelectActiveTodosCount()\n        => SelectActiveTodos().Count;\n\n    public bool SelectHasActiveTodos()\n        => !SelectActiveTodos().IsEmpty;\n}\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic sealed record CreateTodo\n    : Fsa<CreateTodo.ActionPayload, CreateTodo.ActionMeta>\n{\n    // Action creators are represented as constructors.\n    public CreateTodo(string title)\n        : base(new ActionPayload(title), new ActionMeta(DateTime.UtcNow))\n    {\n    }\n\n    // [Recommended] Write Action Types as domain/eventName\n    public override string TypeKey => \"todos/create\";\n\n    // Optionally, you can use models defined within the action or external models like TodoItem.\n    public sealed record ActionPayload(string Title);\n\n    // Meta information can store additional data such as a timestamp.\n    public sealed record ActionMeta(DateTime TimeStamp);\n}\n\n[DuckyAction]\npublic sealed record ToggleTodo\n    : Fsa<ToggleTodo.ActionPayload, ToggleTodo.ActionMeta>\n{\n    // Action creators are represented as constructors.\n    public ToggleTodo(in Guid id)\n        : base(new ActionPayload(id), new ActionMeta(DateTime.UtcNow))\n    {\n    }\n\n    // [Recommended] Write Action Types as domain/eventName\n    public override string TypeKey => \"todos/toggle\";\n\n    // Payload containing the ID of the todo to be toggled.\n    public sealed record ActionPayload(Guid Id);\n\n    // Meta information can store additional data such as a timestamp.\n    public sealed record ActionMeta(DateTime TimeStamp);\n}\n\n[DuckyAction]\npublic sealed record DeleteTodo\n    : Fsa<DeleteTodo.ActionPayload, ActionMeta>\n{\n    // Action creators are represented as constructors.\n    // You can also use the ActionMeta.Create() method from Ducky to create a timestamp.\n    public DeleteTodo(in Guid id)\n        : base(new ActionPayload(id), ActionMeta.Create())\n    {\n    }\n\n    // [Recommended] Write Action Types as domain/eventName\n    public override string TypeKey => \"todos/delete\";\n\n    // Payload containing the ID of the todo to be deleted.\n    public sealed record ActionPayload(Guid Id);\n}\n\n#endregion\n\n#region Reducers\n\npublic record TodoReducers : SliceReducers<TodoState>\n{\n    public TodoReducers()\n    {\n        On<CreateTodo>(Reduce);\n        On<ToggleTodo>(Reduce);\n        On<DeleteTodo>(Reduce);\n    }\n\n    public override TodoState GetInitialState()\n        => TodoState.Create([\n            new TodoItem(SampleIds.Id1, \"Learn Blazor\", true),\n            new TodoItem(SampleIds.Id2, \"Learn Redux\"),\n            new TodoItem(SampleIds.Id3, \"Learn Reactive Programming\"),\n            new TodoItem(SampleIds.Id4, \"Create a Todo App\", true),\n            new TodoItem(SampleIds.Id5, \"Publish a NuGet package\")\n        ]);\n\n    private static TodoState Reduce(TodoState state, CreateTodo action)\n        => state.SetOne(new TodoItem(action.Payload.Title));\n\n    private static TodoState Reduce(TodoState state, ToggleTodo action)\n        => state.UpdateOne(action.Payload.Id, todo => todo.IsCompleted = !todo.IsCompleted);\n\n    private static TodoState Reduce(TodoState state, DeleteTodo action)\n        => state.RemoveOne(action.Payload.Id);\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Todos/TodoDucks.cs b/src/demo/Demo.BlazorWasm/AppStore/Todos/TodoDucks.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Todos/TodoDucks.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Todos/TodoDucks.cs	(date 1744909822952)
+@@ -6,6 +6,7 @@
+ 
+ #region State
+ 
++[DuckyState]
+ public record TodoState
+     : NormalizedState<Guid, TodoItem, TodoState>
+ {
+Index: src/demo/Demo.BlazorWasm/AppStore/Counter/CounterDucks.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record CounterState(int Value);\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic record Increment(int Amount = 1);\n\n[DuckyAction]\npublic record Decrement(int Amount = 1);\n\n[DuckyAction]\npublic record Reset;\n\n[DuckyAction]\npublic record SetValue(int Value);\n\n#endregion\n\n#region Reducers\n\npublic record CounterReducers : SliceReducers<CounterState>\n{\n    public CounterReducers()\n    {\n        On<Increment>(Reduce);\n        On<Decrement>(Reduce);\n        On<Reset>(GetInitialState);\n        On<SetValue>(Reduce);\n    }\n\n    public override CounterState GetInitialState()\n        => new(10);\n\n    private static CounterState Reduce(CounterState state, Increment action)\n        => new(state.Value + action.Amount);\n\n    private static CounterState Reduce(CounterState state, Decrement action)\n        => new(state.Value - action.Amount);\n\n    private static CounterState Reduce(CounterState _, SetValue action)\n        => new(action.Value);\n}\n\n#endregion\n\n#region Effects\n\npublic class ResetCounterAfter3Sec : AsyncEffect<Increment>\n{\n    public override async Task HandleAsync(Increment action, IRootState rootState)\n    {\n        CounterState counterState = rootState.GetSliceState<CounterState>();\n\n        // if the Value is greater than 15, then reset the counter\n        if (counterState.Value > 15)\n        {\n            await Task.Delay(TimeSpan.FromSeconds(3), ObservableSystem.DefaultTimeProvider);\n            Dispatcher.Reset();\n        }\n\n        await Task.CompletedTask;\n    }\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Counter/CounterDucks.cs b/src/demo/Demo.BlazorWasm/AppStore/Counter/CounterDucks.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Counter/CounterDucks.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Counter/CounterDucks.cs	(date 1744920036940)
+@@ -6,6 +6,7 @@
+ 
+ #region State
+ 
++[DuckyState]
+ public record CounterState(int Value);
+ 
+ #endregion
+Index: src/demo/Demo.BlazorWasm/AppStore/Goals/GoalsDucks.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record GoalState\n{\n    public required ImmutableSortedDictionary<string, bool> Goals { get; init; }\n\n    // Selectors\n    public bool SelectIsGoalMet(string goalKey)\n        => Goals.TryGetValue(goalKey, out bool isMet) && isMet;\n}\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic record SetGoalMet(string GoalKey);\n\n#endregion\n\n#region Reducers\n\npublic record GoalsReducers : SliceReducers<GoalState>\n{\n    public GoalsReducers()\n    {\n        On<SetGoalMet>(Reduce);\n    }\n\n    public override GoalState GetInitialState()\n        => new() { Goals = ImmutableSortedDictionary<string, bool>.Empty };\n\n    private static GoalState Reduce(GoalState state, SetGoalMet action)\n        => new() { Goals = state.Goals.SetItem(action.GoalKey, true) };\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Goals/GoalsDucks.cs b/src/demo/Demo.BlazorWasm/AppStore/Goals/GoalsDucks.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Goals/GoalsDucks.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Goals/GoalsDucks.cs	(date 1744909746004)
+@@ -6,6 +6,7 @@
+ 
+ #region State
+ 
++[DuckyState]
+ public record GoalState
+ {
+     public required ImmutableSortedDictionary<string, bool> Goals { get; init; }
+Index: src/demo/Demo.BlazorWasm/AppStore/Products/ProductsDucks.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record ProductState : NormalizedState<Guid, Product, ProductState>\n{\n    private readonly Func<ProductState, ValueCollection<Product>> _selectElectronics;\n    private readonly Func<ProductState, ValueCollection<Product>> _selectClothing;\n    private readonly Func<ProductState, decimal> _selectTotalPriceOfElectronics;\n    private readonly Func<ProductState, decimal> _selectTotalPriceOfClothing;\n\n    public ProductState()\n    {\n        _selectElectronics = MemoizedSelector.Create<ProductState, ValueCollection<Product>>(\n            state => state.SelectEntities(product => product.Category == \"Electronics\"),\n            state => state.ById);\n\n        _selectClothing = MemoizedSelector.Create<ProductState, ValueCollection<Product>>(\n            state => state.SelectEntities(product => product.Category == \"Clothing\"),\n            state => state.ById);\n\n        _selectTotalPriceOfElectronics = MemoizedSelector.Compose(\n            _selectElectronics,\n            products => products.Sum(product => product.Price),\n            state => state.ById);\n\n        _selectTotalPriceOfClothing = MemoizedSelector.Compose(\n            _selectClothing,\n            products => products.Sum(product => product.Price),\n            state => state.ById);\n    }\n\n    // Memoized Selectors\n    public ValueCollection<Product> SelectElectronics()\n        => _selectElectronics(this);\n\n    public ValueCollection<Product> SelectClothing()\n        => _selectClothing(this);\n\n    public decimal SelectTotalPriceOfElectronics()\n        => _selectTotalPriceOfElectronics(this);\n\n    public decimal SelectTotalPriceOfClothing()\n        => _selectTotalPriceOfClothing(this);\n}\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic sealed record AddProduct\n    : Fsa<AddProduct.ActionPayload, ActionMeta>\n{\n    public AddProduct(Product product)\n        : base(new ActionPayload(product), ActionMeta.Create())\n    {\n    }\n\n    public override string TypeKey => \"products/add\";\n\n    public sealed record ActionPayload(Product Product);\n}\n\n[DuckyAction]\npublic sealed record RemoveProduct\n    : Fsa<RemoveProduct.ActionPayload, ActionMeta>\n{\n    public RemoveProduct(in Guid productId)\n        : base(new ActionPayload(productId), ActionMeta.Create())\n    {\n    }\n\n    public override string TypeKey => \"products/remove\";\n\n    public sealed record ActionPayload(Guid ProductId);\n}\n\n#endregion\n\n#region Reducers\n\npublic record ProductsReducers : SliceReducers<ProductState>\n{\n    public ProductsReducers()\n    {\n        On<AddProduct>(Reduce);\n        On<RemoveProduct>(Reduce);\n    }\n\n    public override ProductState GetInitialState()\n        => ProductState.Create([\n            new Product(SampleIds.Id1, \"iPhone 12\", 799.99m, \"Electronics\"),\n            new Product(SampleIds.Id2, \"MacBook Pro\", 1299.99m, \"Electronics\"),\n            new Product(SampleIds.Id3, \"Nike Air Max\", 129, \"Clothing\"),\n            new Product(SampleIds.Id4, \"Adidas Original\", 99, \"Clothing\"),\n            new Product(SampleIds.Id5, \"Samsung Galaxy S21\", 699.99m, \"Electronics\"),\n            new Product(SampleIds.Id6, \"Bag Louis Vuitton\", 1999.99m, \"Clothing\")\n        ]);\n\n    private static ProductState Reduce(ProductState state, AddProduct action)\n        => state.SetOne(action.Payload.Product);\n\n    private static ProductState Reduce(ProductState state, RemoveProduct action)\n        => state.RemoveOne(action.Payload.ProductId);\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Products/ProductsDucks.cs b/src/demo/Demo.BlazorWasm/AppStore/Products/ProductsDucks.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Products/ProductsDucks.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Products/ProductsDucks.cs	(date 1744909798033)
+@@ -6,6 +6,7 @@
+ 
+ #region State
+ 
++[DuckyState]
+ public record ProductState : NormalizedState<Guid, Product, ProductState>
+ {
+     private readonly Func<ProductState, ValueCollection<Product>> _selectElectronics;
+Index: src/demo/Demo.BlazorWasm/Components/Pages/PageCounter.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/counter\"\n@inherits DuckyComponent<CounterState>\n\n<PageTitle>Ducky - Counter</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">Example</MudText>\n      <MudText Typo=\"Typo.h3\">Counter <strong>@CounterValue</strong></MudText>\n      <MudText Typo=\"Typo.body1\">\n        Creates an interactive counter using the Ducky state management library for predictable state handling,<br/>\n        featuring increment, decrement, and reset buttons to manage the counter state.\n      </MudText>\n      <MudList T=\"string\" Dense=\"true\">\n        <Goal Condition=\"() => IsEffectTriggered\" ConditionKey=\"counter-exceeds-15\">\n          The counter exceeds 15 (an effect will be triggered to reset the counter to 10 after 3 seconds.)\n        </Goal>\n        <Goal Condition=\"() => IsDisabled\" ConditionKey=\"counter-reaches-zero\">\n          The counter reaches zero (the decrement button will be disabled.)\n        </Goal>\n      </MudList>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    <MudStack Justify=\"Justify.FlexStart\" AlignItems=\"AlignItems.Start\">\n      <MudNumericField @bind-Value=\"Amount\" FullWidth=\"@false\" Min=\"1\" Max=\"10\" Variant=\"Variant.Outlined\"/>\n      <MudButtonGroup Variant=\"Variant.Outlined\">\n        <MudButton OnClick=\"Decrement\" Disabled=\"@IsDisabled\">Decrement</MudButton>\n        <MudButton OnClick=\"Reset\">Set to 10</MudButton>\n        <MudButton OnClick=\"Increment\">Increment</MudButton>\n      </MudButtonGroup>\n    </MudStack>\n  </MudItem>\n  \n  <MudItem xs=\"12\">\n    <MudProgressLinear\n      Color=\"Color.Primary\"\n      Size=\"Size.Large\"\n      Rounded\n      Indeterminate=\"@IsEffectTriggered\"\n      Value=\"@CounterValue\"\n      Max=\"15\"/>\n  </MudItem>\n</MudGrid>\n\n@code {\n\n  private int Amount { get; set; } = 2;\n\n  private int CounterValue\n    => State.Value;\n  \n  private bool IsDisabled\n    => State.Value <= 0;\n  \n  private bool IsEffectTriggered\n    => State.Value > 15;\n\n  private void Increment()\n  {\n    Dispatcher.Increment(Amount);\n  }\n\n  private void Decrement()\n  {\n    Dispatcher.Decrement(Amount);\n  }\n\n  private void Reset()\n  {\n    Dispatcher.Reset();\n  }\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/PageCounter.razor b/src/demo/Demo.BlazorWasm/Components/Pages/PageCounter.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/PageCounter.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/PageCounter.razor	(date 1744905958725)
+@@ -1,5 +1,6 @@
+ @page "/counter"
+-@inherits DuckyComponent<CounterState>
++@inherits DuckyComponent
++@inject CounterState State
+ 
+ <PageTitle>Ducky - Counter</PageTitle>
+ 
+Index: src/demo/Demo.BlazorWasm/Components/Pages/PageProducts.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/products\"\n@inherits DuckyComponent<ProductState>\n\n<PageTitle>Ducky - Product Catalog</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">Example</MudText>\n      <MudText Typo=\"Typo.h3\">Product Catalog</MudText>\n      <MudText Typo=\"Typo.body1\">\n        This page demonstrates a product catalog using the Ducky state management library for predictable state handling.<br/>\n        It features functionality to add and remove products, and calculates the total price of products by category efficiently using memoized selectors.\n      </MudText>\n      <MudList T=\"string\" Dense=\"true\">\n        <Goal Condition=\"() => State.SelectTotalPriceOfElectronics() > 10000\" ConditionKey=\"products-electronics-exceeds-100\">\n          The total price of electronics exceeds $10000.\n        </Goal>\n        <Goal Condition=\"() => State.SelectTotalPriceOfClothing() > 5000\" ConditionKey=\"products-clothing-exceeds-50\">\n          The total price of clothing exceeds $5000.\n        </Goal>\n      </MudList>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\" lg=\"6\">\n    <MudStack>\n      <MudStack Row Justify=\"Justify.SpaceBetween\" AlignItems=\"AlignItems.Baseline\">\n        <MudBadge Content=\"@ElectronicsCount\" Color=\"Color.Primary\" Class=\"mt-5\">\n          <MudText Typo=\"Typo.h5\">Electronics</MudText>\n        </MudBadge>\n        <MudText Typo=\"Typo.h6\" Class=\"mt-2\">\n          <b>Total Price: @($\"${TotalPriceOfElectronics}\")</b>\n        </MudText>\n      </MudStack>\n\n      <MudPaper>\n        @if (!HasElectronics)\n        {\n          <MudText Typo=\"Typo.h6\" Class=\"ma-4\">\n            No electronics available - add a new product to get started!\n          </MudText>\n        }\n        <MudList T=\"Product\">\n          @foreach (var product in Electronics)\n          {\n            <MudListItem @key=\"product.Id\">\n              <MudStack Row Justify=\"Justify.SpaceBetween\" AlignItems=\"AlignItems.Center\">\n                <MudText>@product.Name</MudText>\n                <MudText>@($\"${product.Price}\")</MudText>\n                <MudSpacer/>\n                <MudButton Variant=\"Variant.Outlined\" Color=\"Color.Error\" OnClick=\"() => DeleteProduct(product.Id)\">Delete</MudButton>\n              </MudStack>\n            </MudListItem>\n          }\n        </MudList>\n      </MudPaper>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\" lg=\"6\">\n    <MudStack>\n      <MudStack Row Justify=\"Justify.SpaceBetween\" AlignItems=\"AlignItems.Baseline\">\n        <MudBadge Content=\"@ClothingCount\" Color=\"Color.Secondary\" Class=\"mt-5\">\n          <MudText Typo=\"Typo.h5\">Clothing</MudText>\n        </MudBadge>\n        <MudText Typo=\"Typo.h6\" Class=\"mt-2\">\n          <b>Total Price: @($\"${TotalPriceOfClothing}\")</b>\n        </MudText>\n      </MudStack>\n      <MudPaper>\n        @if (!HasClothing)\n        {\n          <MudText Typo=\"Typo.h6\" Class=\"ma-4\">\n            No clothing available - add a new product to get started!\n          </MudText>\n        }\n        <MudList T=\"Product\">\n          @foreach (var product in Clothing)\n          {\n            <MudListItem @key=\"product.Id\">\n              <MudStack Row Justify=\"Justify.SpaceBetween\" AlignItems=\"AlignItems.Center\">\n                <MudText>@product.Name</MudText>\n                <MudText>@($\"${product.Price}\")</MudText>\n                <MudSpacer/>\n                <MudButton\n                  Variant=\"Variant.Outlined\"\n                  Color=\"Color.Error\"\n                  OnClick=\"() => DeleteProduct(product.Id)\">\n                  Delete\n                </MudButton>\n              </MudStack>\n            </MudListItem>\n          }\n        </MudList>\n      </MudPaper>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    <MudCard>\n      <MudCardContent>\n        <MudTextField @bind-Value=\"_newProductName\" Variant=\"Variant.Filled\" Label=\"New Product Name\"/>\n        <MudNumericField @bind-Value=\"_newProductPrice\" Variant=\"Variant.Filled\" Label=\"Price\"/>\n        <MudSelect @bind-Value=\"_newProductCategory\" Label=\"Category\">\n          <MudSelectItem Value=\"@(\"Electronics\")\">Electronics</MudSelectItem>\n          <MudSelectItem Value=\"@(\"Clothing\")\">Clothing</MudSelectItem>\n        </MudSelect>\n      </MudCardContent>\n      <MudCardActions>\n        <MudButton Variant=\"Variant.Outlined\" OnClick=\"CreateProduct\" Class=\"ml-auto mr-2 mb-2\">Add Product</MudButton>\n      </MudCardActions>\n    </MudCard>\n  </MudItem>\n</MudGrid>\n\n@code {\n\n  private string _newProductName = string.Empty;\n  private decimal _newProductPrice;\n  private string _newProductCategory = \"Electronics\";\n  \n  private ValueCollection<Product> Electronics => State.SelectElectronics();\n  private int ElectronicsCount => Electronics.Count;\n  private bool HasElectronics => ElectronicsCount > 0;\n  private decimal TotalPriceOfElectronics => State.SelectTotalPriceOfElectronics();\n\n  private ValueCollection<Product> Clothing => State.SelectClothing();\n  private int ClothingCount => Clothing.Count;\n  private bool HasClothing => ClothingCount > 0;\n  private decimal TotalPriceOfClothing => State.SelectTotalPriceOfClothing();\n  \n  private void CreateProduct()\n  {\n    if (!string.IsNullOrWhiteSpace(_newProductName) && _newProductPrice > 0)\n    {\n      var newProduct = new Product(Guid.NewGuid(), _newProductName, _newProductPrice, _newProductCategory);\n      Dispatcher.AddProduct(newProduct);\n      _newProductName = string.Empty;\n      _newProductPrice = 0;\n      _newProductCategory = \"Electronics\";\n    }\n  }\n\n  private void DeleteProduct(Guid id)\n  {\n    Dispatcher.RemoveProduct(id);\n  }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/PageProducts.razor b/src/demo/Demo.BlazorWasm/Components/Pages/PageProducts.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/PageProducts.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/PageProducts.razor	(date 1744907965156)
+@@ -1,5 +1,6 @@
+ @page "/products"
+-@inherits DuckyComponent<ProductState>
++@inherits DuckyComponent
++@inject ProductState State
+ 
+ <PageTitle>Ducky - Product Catalog</PageTitle>
+ 
+Index: src/demo/Demo.BlazorWasm/Components/Shared/AboutDialog.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@inherits DuckyComponent<LayoutState>\n\n<MudDialog>\n  <TitleContent>\n    @State.SelectFullTitle()\n  </TitleContent>\n  <DialogContent>\n    <MudStack>\n      <MudText Typo=\"Typo.h6\">About This Application</MudText>\n      <MudDivider/>\n      <MudText>\n        This application is a demonstration of the Ducky framework, showcasing its capabilities in building responsive and interactive web applications using .NET 8 and Blazor.\n      </MudText>\n      <MudSpacer/>\n      <MudText Typo=\"Typo.subtitle1\">Version Information</MudText>\n      <MudDivider/>\n      <MudText>\n        <strong>Version:</strong> @State.Version\n      </MudText>\n      <MudSpacer/>\n      <MudText Typo=\"Typo.subtitle1\">Credits</MudText>\n      <MudDivider/>\n      <MudText>\n        Made with ❤\uFE0F by Philippe Matray and the Ducky Team. We acknowledge all contributors and open-source projects that have made this application possible.\n      </MudText>\n      <MudSpacer/>\n      <MudText Typo=\"Typo.subtitle1\">Useful Links</MudText>\n      <MudDivider/>\n      <MudList T=\"string\">\n        <MudListItem>\n          <MudLink Href=\"https://github.com/Ducky\" Target=\"_blank\">GitHub Repository</MudLink>\n        </MudListItem>\n        <MudListItem>\n          <MudLink Href=\"https://ducky.io/docs\" Target=\"_blank\">Documentation</MudLink>\n        </MudListItem>\n        <MudListItem>\n          <MudLink Href=\"https://ducky.io/community\" Target=\"_blank\">Community Forum</MudLink>\n        </MudListItem>\n      </MudList>\n    </MudStack>\n  </DialogContent>\n</MudDialog>\n\n@code {\n\n  [CascadingParameter]\n  private IMudDialogInstance MudDialog { get; set; } = null!;\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Shared/AboutDialog.razor b/src/demo/Demo.BlazorWasm/Components/Shared/AboutDialog.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Shared/AboutDialog.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Shared/AboutDialog.razor	(date 1744908259240)
+@@ -1,4 +1,5 @@
+-@inherits DuckyComponent<LayoutState>
++@inherits DuckyComponent
++@inject LayoutState State
+ 
+ <MudDialog>
+   <TitleContent>
+Index: src/demo/Demo.BlazorWasm/Components/Pages/PageTodo.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/todo\"\n@inherits DuckyComponent<TodoState>\n\n<PageTitle>Ducky - Todo List</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">Example</MudText>\n      <MudText Typo=\"Typo.h3\">Todo List</MudText>\n      <MudText Typo=\"Typo.body1\">\n        Creates an interactive todo list using the Ducky state management library for predictable state handling,<br/>\n        featuring functionality to add, toggle, and remove todo items.\n      </MudText>\n      <MudList T=\"string\" Dense=\"true\">\n        <Goal Condition=\"() => State.SelectActiveTodosCount() >= 5\" ConditionKey=\"todo-active-exceed-5\">\n          The number of active todos is 5 or more.\n        </Goal>\n        <Goal Condition=\"() => State.SelectCompletedTodosCount() >= 5\" ConditionKey=\"todo-completed-exceed-5\">\n          The number of completed todos is 5 or more.\n        </Goal>\n        <Goal Condition=\"() => !State.SelectHasActiveTodos()\" ConditionKey=\"todo-no-active\">\n          There are no active todos.\n        </Goal>\n      </MudList>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\" lg=\"6\">\n    <MudStack>\n      <div>\n        <MudBadge Content=\"@ActiveTodosCount\" Color=\"Color.Primary\" Class=\"mt-5\">\n          <MudText Typo=\"Typo.h5\">Active Todos</MudText>\n        </MudBadge>\n      </div>\n      \n      <MudPaper>\n        @if (!HasActiveTodos)\n        {\n          <MudText Typo=\"Typo.h6\" Class=\"ma-4\">\n            No active todos - add a new todo item to get started!\n          </MudText>\n        }\n        <MudList T=\"TodoItem\">\n          @foreach (var todo in ActiveTodos)\n          {\n            <MudListItem @key=\"todo.Id\">\n              <MudStack Row Justify=\"Justify.SpaceBetween\" AlignItems=\"AlignItems.Center\">\n                <MudIconButton Icon=\"@Icons.Material.Filled.CheckBoxOutlineBlank\" OnClick=\"() => ToggleTodoItem(todo.Id)\"/>\n                <MudText>@todo.Title</MudText>\n                <MudSpacer/>\n                <MudButton Variant=\"Variant.Outlined\" Color=\"Color.Error\" OnClick=\"() => DeleteTodoItem(todo.Id)\">Delete</MudButton>\n              </MudStack>\n            </MudListItem>\n          }\n        </MudList>\n      </MudPaper>\n      \n      <MudCard>\n        <MudCardContent>\n          <MudTextField\n            @bind-Value=\"_newTodo\"\n            Variant=\"Variant.Filled\"\n            Label=\"New Todo\"\n            HelperText=\"Type a new todo item and click 'Add Todo' to add it to the list.\"/>\n        </MudCardContent>\n        <MudCardActions>\n          <MudButton Variant=\"Variant.Outlined\" OnClick=\"CreateTodoItem\" Class=\"ml-auto mr-2 mb-2\">Add Todo</MudButton>\n        </MudCardActions>\n      </MudCard>\n    </MudStack>\n  </MudItem>\n  \n  <MudItem xs=\"12\" lg=\"6\">\n    <MudStack>\n      <div>\n        <MudBadge Content=\"@CompletedTodosCount\" Color=\"Color.Secondary\" Class=\"mt-5\">\n          <MudText Typo=\"Typo.h5\">Completed Todos</MudText>\n        </MudBadge>\n      </div>\n      <MudPaper>\n        <MudList T=\"TodoItem\">\n          @foreach (var todo in CompletedTodos)\n          {\n            <MudListItem @key=\"todo.Id\">\n              <MudStack Row Justify=\"Justify.SpaceBetween\" AlignItems=\"AlignItems.Center\">\n                <MudIconButton Icon=\"@Icons.Material.Filled.CheckBox\" OnClick=\"() => ToggleTodoItem(todo.Id)\"/>\n                <MudText Style=\"text-decoration: line-through;\">@todo.Title</MudText>\n                <MudSpacer/>\n                <MudButton Variant=\"Variant.Outlined\" Color=\"Color.Error\" OnClick=\"() => DeleteTodoItem(todo.Id)\">Delete</MudButton>\n              </MudStack>\n            </MudListItem>\n          }\n        </MudList>\n      </MudPaper>\n    </MudStack>\n  </MudItem>\n</MudGrid>\n\n\n@code {\n\n  private string _newTodo = string.Empty;\n  \n  private ValueCollection<TodoItem> ActiveTodos\n    => State.SelectActiveTodos();\n\n  private int ActiveTodosCount\n    => State.SelectActiveTodosCount();\n\n  private bool HasActiveTodos\n    => State.SelectHasActiveTodos();\n  \n  private ValueCollection<TodoItem> CompletedTodos\n    => State.SelectCompletedTodos();\n  \n  private int CompletedTodosCount\n    => State.SelectCompletedTodosCount();\n  \n  private void CreateTodoItem()\n  {\n    if (!string.IsNullOrWhiteSpace(_newTodo))\n    {\n      Dispatcher.CreateTodo(_newTodo);\n      _newTodo = string.Empty;\n    }\n  }\n\n  private void ToggleTodoItem(Guid id)\n  {\n    Dispatcher.ToggleTodo(id);\n  }\n\n  private void DeleteTodoItem(Guid id)\n  {\n    Dispatcher.DeleteTodo(id);\n  }\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/PageTodo.razor b/src/demo/Demo.BlazorWasm/Components/Pages/PageTodo.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/PageTodo.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/PageTodo.razor	(date 1744907986901)
+@@ -1,5 +1,6 @@
+ @page "/todo"
+-@inherits DuckyComponent<TodoState>
++@inherits DuckyComponent
++@inject TodoState State
+ 
+ <PageTitle>Ducky - Todo List</PageTitle>
+ 
+Index: src/demo/Demo.BlazorWasm/Components/Pages/PageErrors.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/errors\"\n@inherits DuckyComponent<NotificationsState>\n\n<PageTitle>Ducky - Notifications</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">System</MudText>\n      <MudText Typo=\"Typo.h3\">Errors</MudText>\n      <MudText Typo=\"Typo.body1\">\n        Review and manage system errors and exceptions.\n      </MudText>\n    </MudStack>\n  </MudItem>\n  \n  <MudItem xs=\"12\">\n    <MudTextField\n      @bind-Value=\"@_searchTerm\"\n      AdornmentIcon=\"@Icons.Material.Filled.FindInPage\"\n      Adornment=\"Adornment.End\"\n      Immediate=\"true\"\n      Variant=\"Variant.Outlined\"\n      Label=\"Search\" />\n    \n    @if (ErrorNotifications.Any())\n    {\n      <MudTimeline TimelineOrientation=\"TimelineOrientation.Vertical\" TimelinePosition=\"TimelinePosition.Start\">\n        @foreach (var notification in ErrorNotifications)\n        {\n          <MudTimelineItem @key=\"notification.Id\" Color=\"@notification.Severity.ToMudColor()\" Variant=\"Variant.Filled\">\n            <ItemContent>\n              <ExceptionDetailsAlert Notification=\"@notification\" SearchTerm=\"@_searchTerm\"/>\n            </ItemContent>\n          </MudTimelineItem>\n        }\n      </MudTimeline>\n    }\n    else\n    {\n      <MudStack Row Class=\"ml-6\">\n        <MudIcon Icon=\"@Icons.Material.Filled.Info\" Color=\"Color.Secondary\"/>\n        <MudText>There are no error notifications.</MudText>\n      </MudStack>\n    }\n  </MudItem>\n</MudGrid>\n\n@code {\n  \n  private string _searchTerm = \"\";\n  \n  private ValueCollection<Notification> ErrorNotifications\n    => State.SelectErrorNotifications();\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/PageErrors.razor b/src/demo/Demo.BlazorWasm/Components/Pages/PageErrors.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/PageErrors.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/PageErrors.razor	(date 1744910919248)
+@@ -1,5 +1,6 @@
+ @page "/errors"
+-@inherits DuckyComponent<NotificationsState>
++@inherits DuckyComponent
++@inject NotificationState State
+ 
+ <PageTitle>Ducky - Notifications</PageTitle>
+ 
+Index: src/demo/Demo.BlazorWasm/Components/Pages/Home.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/\"\n@inherits DuckyComponent<RootState>\n@inject IRootStateSerializer RootStateSerializer\n\n<PageTitle>Ducky</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">System</MudText>\n      <MudText Typo=\"Typo.h3\">Serialized State</MudText>\n      <MudText Typo=\"Typo.body1\">\n        The current state of the application is serialized below.<br/>\n        This is useful for debugging and understanding the current state of the application.\n      </MudText>\n      <MudText Typo=\"Typo.body1\">\n        <b>What is a Serialized State?</b><br/>\n        Serialization is the process of converting the state of the application into a format that can be easily stored and transported.\n        This allows for easy inspection, debugging, and can be useful for persisting the state between sessions or transferring it across different parts of the application.\n      </MudText>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    <MudExpansionPanels MultiExpansion=\"true\">\n      @foreach (var key in State.GetKeys())\n      {\n        <MudExpansionPanel Text=\"@key\" Style=\"overflow: hidden;\">\n          <JsonMarkup Data=\"@RootStateSerializer.Serialize(State, key)\"/>\n        </MudExpansionPanel>\n      }\n    </MudExpansionPanels>\n  </MudItem>\n</MudGrid>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/Home.razor b/src/demo/Demo.BlazorWasm/Components/Pages/Home.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/Home.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/Home.razor	(date 1744905995397)
+@@ -1,5 +1,6 @@
+ @page "/"
+-@inherits DuckyComponent<RootState>
++@inherits DuckyComponent
++@inject RootState State
+ @inject IRootStateSerializer RootStateSerializer
+ 
+ <PageTitle>Ducky</PageTitle>
+Index: src/demo/Demo.BlazorWasm/AppStore/Timer/TimerDucks.cs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.\n// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.\n// See the LICENSE file in the project root for full license information.\n\nnamespace Demo.BlazorWasm.AppStore;\n\n#region State\n\npublic record TimerState\n{\n    public int Time { get; init; }\n\n    public bool IsRunning { get; init; }\n\n    // Selectors\n    public string SelectAngle()\n        => $\"{Time % 60 * 6}deg\";\n}\n\n#endregion\n\n#region Actions\n\n[DuckyAction]\npublic record StartTimer;\n\n[DuckyAction]\npublic record StopTimer;\n\n[DuckyAction]\npublic record ResetTimer;\n\n[DuckyAction]\npublic record Tick;\n\n#endregion\n\n#region Reducers\n\npublic record TimerReducers : SliceReducers<TimerState>\n{\n    public TimerReducers()\n    {\n        On<StartTimer>(Reduce);\n        On<StopTimer>(Reduce);\n        On<ResetTimer>(Reduce);\n        On<Tick>(Reduce);\n    }\n\n    public override TimerState GetInitialState()\n        => new()\n        {\n            Time = 0,\n            IsRunning = false\n        };\n\n    private static TimerState Reduce(TimerState state, StartTimer _)\n        => state with { IsRunning = true };\n\n    private static TimerState Reduce(TimerState state, StopTimer _)\n        => state with { IsRunning = false };\n\n    private static TimerState Reduce(TimerState timerState, ResetTimer resetTimer)\n        => new();\n\n    private static TimerState Reduce(TimerState state, Tick _)\n        => state with { Time = state.Time + 1 };\n}\n\n#endregion\n\n#region Effects\n\n// ReSharper disable once UnusedType.Global\npublic class StartTimerEffect : ReactiveEffect\n{\n    public override Observable<object> Handle(\n        Observable<object> actions,\n        Observable<IRootState> rootState)\n    {\n        return actions\n            .OfActionType<StartTimer>()\n            .SwitchSelect(_ => Observable\n                .Interval(TimeSpan.FromSeconds(1), TimeProvider)\n                .Select(_ => new Tick())\n                .TakeUntil(actions.OfActionType<StopTimer>())\n                .Cast<Tick, object>());\n    }\n}\n\n#endregion\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/AppStore/Timer/TimerDucks.cs b/src/demo/Demo.BlazorWasm/AppStore/Timer/TimerDucks.cs
+--- a/src/demo/Demo.BlazorWasm/AppStore/Timer/TimerDucks.cs	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/AppStore/Timer/TimerDucks.cs	(date 1744909803458)
+@@ -6,6 +6,7 @@
+ 
+ #region State
+ 
++[DuckyState]
+ public record TimerState
+ {
+     public int Time { get; init; }
+Index: src/demo/Demo.BlazorWasm/Components/Pages/PageTimer.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/timer\"\n@inherits DuckyComponent<TimerState>\n\n<PageTitle>Ducky - Timer</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">Example</MudText>\n      <MudText Typo=\"Typo.h3\">Timer</MudText>\n      <MudText Typo=\"Typo.body1\">\n        Creates an interactive timer using the Ducky state management library for predictable state handling,<br/>\n        featuring start, stop, and reset functionality.\n      </MudText>\n      <MudList T=\"string\" Dense=\"true\">\n        <Goal Condition=\"() => State.Time >= 5\" ConditionKey=\"timer-exceeds-5\">\n          The timer exceeds 5 seconds.\n        </Goal>\n        <Goal Condition=\"() => State.Time >= 10\" ConditionKey=\"timer-exceeds-10\">\n          The timer exceeds 10 seconds.\n        </Goal>\n      </MudList>\n    </MudStack>\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    <MudButtonGroup Variant=\"Variant.Outlined\">\n      <MudButton Variant=\"Variant.Outlined\" OnClick=\"StartTimer\" Disabled=\"IsRunning\">Start</MudButton>\n      <MudButton Variant=\"Variant.Outlined\" OnClick=\"StopTimer\" Disabled=\"!IsRunning\">Stop</MudButton>\n      <MudButton Variant=\"Variant.Outlined\" OnClick=\"ResetTimer\" Disabled=\"State.Time == 0\">Reset</MudButton>\n    </MudButtonGroup>\n  </MudItem>\n\n  <MudItem xs=\"12\">\n    <MudStack Row>\n      <MudStack AlignItems=\"AlignItems.Center\">\n        <MudText>Time: <strong>@Time</strong> seconds</MudText>\n        <AnalogClock/>\n      </MudStack>\n    </MudStack>\n  </MudItem>\n</MudGrid>\n\n@code {\n\n  private int Time\n    => State.Time;\n  \n  private bool IsRunning\n    => State.IsRunning;\n\n  protected override void OnAfterSubscribed()\n  {\n    if (IsRunning)\n    {\n      StartTimer();\n    }\n  }\n  \n  private void ResetTimer()\n  {\n    StopTimer();\n    Dispatcher.ResetTimer();\n  }\n\n  private void StartTimer()\n  {\n    Dispatcher.StartTimer();\n  }\n\n  private void StopTimer()\n  {\n    Dispatcher.StopTimer();\n  }\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/PageTimer.razor b/src/demo/Demo.BlazorWasm/Components/Pages/PageTimer.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/PageTimer.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/PageTimer.razor	(date 1744907974642)
+@@ -1,5 +1,6 @@
+ @page "/timer"
+-@inherits DuckyComponent<TimerState>
++@inherits DuckyComponent
++@inject TimerState State
+ 
+ <PageTitle>Ducky - Timer</PageTitle>
+ 
+Index: src/demo/Demo.BlazorWasm/Components/Pages/PageMovieDetails.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@page \"/movies/{movieId:int}\"\n@inherits DuckyComponent<MoviesState>\n\n<PageTitle>Ducky - Movie Details</PageTitle>\n\n<MudGrid>\n  <MudItem xs=\"12\">\n    <MudStack>\n      <MudText Typo=\"Typo.subtitle1\">Example</MudText>\n      <MudText Typo=\"Typo.h3\">Movie Details</MudText>\n    </MudStack>\n  </MudItem>\n  \n  <MudItem xs=\"12\">\n    @if (SelectedMovie == null)\n    {\n      <MudText>No movie selected.</MudText>\n    }\n    else\n    {\n      <MudPaper Class=\"pa-4\">\n        <MudStack>\n          <MudText Typo=\"Typo.h5\">@SelectedMovie.Title</MudText>\n\n          <MudStack Row AlignItems=\"AlignItems.Center\">\n            <MudText Typo=\"Typo.h6\">Year</MudText>\n            <MudText>@SelectedMovie.Year</MudText>\n            <MudDivider Vertical/>\n            <MudText Typo=\"Typo.h6\">Duration</MudText>\n            <MudText>@SelectedMovie.Duration</MudText>\n            <MudDivider Vertical/>\n            <MudText Typo=\"Typo.h6\">IMDb</MudText>\n            <MudText>@SelectedMovie.Imdb</MudText>\n            <MudDivider Vertical/>\n            <MudText Typo=\"Typo.h6\">Metascore</MudText>\n            <MudChip T=\"int\">@SelectedMovie.Metascore</MudChip>\n          </MudStack>\n\n          <MudText>@SelectedMovie.Description</MudText>\n          \n          <MudSimpleTable Elevation=\"0\">\n            <tr>\n              <td><MudText Typo=\"Typo.h6\">Director</MudText></td>\n              <td><MudChip T=\"string\">@SelectedMovie.Director</MudChip></td>\n            </tr>\n            <tr>\n              <td><MudText Typo=\"Typo.h6\">Actors</MudText></td>\n              <td>\n                <MudStack Row>\n                  @foreach (var actor in SelectedMovie.Actors)\n                  {\n                    <MudChip T=\"string\">@actor</MudChip>\n                  }\n                </MudStack>\n              </td>\n            </tr>\n          </MudSimpleTable>\n\n        </MudStack>\n          \n      </MudPaper>\n    }\n  </MudItem>\n</MudGrid>\n\n@code {\n  \n  [Parameter] \n  public required int Id { get; set; }\n  \n  private Movie? SelectedMovie\n    => State.SelectMovieById(Id);\n  \n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Pages/PageMovieDetails.razor b/src/demo/Demo.BlazorWasm/Components/Pages/PageMovieDetails.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Pages/PageMovieDetails.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Pages/PageMovieDetails.razor	(date 1744910912631)
+@@ -1,5 +1,6 @@
+ @page "/movies/{movieId:int}"
+-@inherits DuckyComponent<MoviesState>
++@inherits DuckyComponent
++@inject MovieState State
+ 
+ <PageTitle>Ducky - Movie Details</PageTitle>
+ 
+Index: src/demo/Demo.BlazorWasm/Components/Layout/NotificationsDrawer.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@inherits DuckyComponent<NotificationsState>\n@inject NavigationManager NavigationManager\n\n<MudDrawer\n  Open=\"@IsOpen\"\n  Anchor=\"Anchor.End\"\n  ClipMode=\"DrawerClipMode.Always\"\n  Width=\"420px\"\n  Elevation=\"2\">\n  \n  <MudStack Spacing=\"0\">\n    <MudStack Row Justify=\"Justify.SpaceBetween\" AlignItems=\"AlignItems.Center\" Class=\"pa-4\" Style=\"width: 100%\">\n      <MudText Typo=\"Typo.h6\">Notifications</MudText>\n      <MudTooltip Text=\"Mark all as read\" Placement=\"Placement.Left\" Arrow>\n        <MudIconButton\n          Icon=\"@Icons.Material.Filled.MarkChatRead\"\n          Color=\"Color.Default\"\n          Size=\"Size.Small\"\n          OnClick=\"MarkAllNotificationsAsRead\"/>\n      </MudTooltip>\n    </MudStack>\n    <MudDivider Class=\"mb-2\"/>\n  </MudStack>\n\n  <MudList T=\"Notification\" Dense>\n\n    @if (HasUnreadNotifications)\n    {\n      @foreach (var notification in UnreadNotifications)\n      {\n        <MudListItem>\n          <MudAlert\n            Severity=\"@notification.Severity.ToMudSeverity()\"\n            Variant=\"Variant.Outlined\"\n            ShowCloseIcon\n            CloseIconClicked=\"() => MarkNotificationAsRead(notification.Id)\">\n            <MudStack Spacing=\"0\">\n              <MudText>@notification.Message</MudText>\n              <MudText Typo=\"Typo.caption\">@notification.Timestamp.Humanize()</MudText>\n              @if (notification is ExceptionNotification)\n              {\n                <MudButton\n                  Variant=\"Variant.Outlined\"\n                  Class=\"mt-2\"\n                  OnClick=\"() => GoToErrorDetails(notification.Id)\">\n                  Show Details\n                </MudButton>\n              }\n            </MudStack>\n          </MudAlert>\n        </MudListItem>\n      }\n    }\n    else\n    {\n      <MudListItem>\n        <MudAlert \n          Severity=\"Severity.Normal\"\n          Variant=\"Variant.Outlined\">\n          <MudStack Spacing=\"0\">\n            <MudText>There are no unread notifications.</MudText>\n            <MudText Typo=\"Typo.caption\">You're all caught up!</MudText>\n          </MudStack>\n        </MudAlert>\n      </MudListItem>\n    }\n  </MudList>\n</MudDrawer>\n\n@code {\n\n  [Parameter, EditorRequired]\n  public bool IsOpen { get; set; }\n  \n  private ValueCollection<Notification> UnreadNotifications\n    => State.SelectUnreadNotifications();\n  \n  private bool HasUnreadNotifications\n    => State.SelectHasUnreadNotifications();\n  \n  private void MarkNotificationAsRead(Guid id)\n  {\n    Dispatcher.MarkNotificationAsRead(id);\n  }\n\n  private void MarkAllNotificationsAsRead()\n  {\n    Dispatcher.MarkAllNotificationsAsRead();\n  }\n  \n  private void GoToErrorDetails(Guid id)\n  {\n    NavigationManager.NavigateTo($\"/errors#{id}\");\n  }\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Layout/NotificationsDrawer.razor b/src/demo/Demo.BlazorWasm/Components/Layout/NotificationsDrawer.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Layout/NotificationsDrawer.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Layout/NotificationsDrawer.razor	(date 1744910919244)
+@@ -1,4 +1,5 @@
+-@inherits DuckyComponent<NotificationsState>
++@inherits DuckyComponent
++@inject NotificationState State
+ @inject NavigationManager NavigationManager
+ 
+ <MudDrawer
+Index: src/demo/Demo.BlazorWasm/Components/Layout/NotificationsBadge.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@inherits DuckyComponent<Demo.BlazorWasm.AppStore.NotificationsState>\n\n<MudBadge\n  Content=\"@UnreadNotificationCount\"\n  Overlap Color=\"Color.Secondary\"\n  Class=\"mt-2\"\n  Visible=\"@NotificationBadgeVisible\">\n  <MudIconButton\n    Icon=\"@Icons.Material.Filled.Notifications\"\n    Color=\"Color.Inherit\"\n    Edge=\"Edge.End\"\n    OnClick=\"ToggleNotifications\"\n    Class=\"mt-n2\"/>\n</MudBadge>\n\n@code {\n  \n  private int UnreadNotificationCount\n    => State.SelectUnreadNotificationCount();\n  \n  private bool NotificationBadgeVisible\n    => State.SelectUnreadNotificationCount() > 0;\n  \n  private void ToggleNotifications()\n    => Dispatcher.ToggleNotifications();\n  \n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Layout/NotificationsBadge.razor b/src/demo/Demo.BlazorWasm/Components/Layout/NotificationsBadge.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Layout/NotificationsBadge.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Layout/NotificationsBadge.razor	(date 1744910919247)
+@@ -1,4 +1,5 @@
+-@inherits DuckyComponent<Demo.BlazorWasm.AppStore.NotificationsState>
++@inherits DuckyComponent
++@inject NotificationState State
+ 
+ <MudBadge
+   Content="@UnreadNotificationCount"
+Index: src/demo/Demo.BlazorWasm/Components/Layout/CounterLink.razor
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>@inherits DuckyComponent<CounterState>\n\n<MudNavLink\n  Href=\"counter\"\n  Match=\"NavLinkMatch.Prefix\"\n  Icon=\"@Icons.Material.Filled.Add\">\n  Counter = @State.Value\n</MudNavLink>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/demo/Demo.BlazorWasm/Components/Layout/CounterLink.razor b/src/demo/Demo.BlazorWasm/Components/Layout/CounterLink.razor
+--- a/src/demo/Demo.BlazorWasm/Components/Layout/CounterLink.razor	(revision 3735debeb5cb36b0df1f70cd5e6a8552e8c5bc41)
++++ b/src/demo/Demo.BlazorWasm/Components/Layout/CounterLink.razor	(date 1744908117204)
+@@ -1,4 +1,5 @@
+-@inherits DuckyComponent<CounterState>
++@inherits DuckyComponent
++@inject CounterState State
+ 
+ <MudNavLink
+   Href="counter"

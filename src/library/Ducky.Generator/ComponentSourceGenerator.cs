@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Ducky.Generator.Descriptors;
 using Ducky.Generator.Sources;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -344,36 +345,4 @@ public class ComponentSourceGenerator : SourceGeneratorBase
 
         sb.AppendLine("        }");
     }
-}
-
-/// <summary>
-/// Describes a component to generate.
-/// </summary>
-internal class ComponentDescriptor
-{
-    public string ComponentName { get; set; } = string.Empty;
-    public string StateSliceName { get; set; } = string.Empty;
-    public string StateSliceType { get; set; } = string.Empty;
-    public string StateSliceProperty { get; set; } = string.Empty;
-    public List<ComponentActionDescriptor> Actions { get; set; } = [];
-}
-
-/// <summary>
-/// Describes an action method to generate in a component.
-/// </summary>
-internal class ComponentActionDescriptor
-{
-    public string ActionName { get; set; } = string.Empty;
-    public string ActionType { get; set; } = string.Empty;
-    public List<ParameterDescriptor> Parameters { get; set; } = [];
-}
-
-/// <summary>
-/// Parameter descriptor for code generation.
-/// </summary>
-internal class ParameterDescriptor
-{
-    public string ParamName { get; set; } = string.Empty;
-    public string ParamType { get; set; } = "object";
-    public string? DefaultValue { get; set; }
 }

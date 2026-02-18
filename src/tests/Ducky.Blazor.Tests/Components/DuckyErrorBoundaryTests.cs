@@ -3,7 +3,6 @@ using Ducky.Blazor.Components;
 using Ducky.Pipeline;
 using FakeItEasy;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Tests.Components;
