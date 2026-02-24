@@ -135,9 +135,8 @@ partial class Build : NukeBuild
         .Description("Install .NET workloads")
         .Executes(() =>
         {
-            // Demo.BlazorWasm targets net9.0; with .NET 10 SDK the correct
-            // workload is wasm-tools-net9 (not wasm-tools which covers net10.0).
-            DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools-net9"));
+            // Projects now target net10.0; use the standard wasm-tools workload.
+            DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools"));
         });
 
     Target Restore => _ => _
