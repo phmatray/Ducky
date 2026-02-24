@@ -83,7 +83,7 @@ partial class Build : NukeBuild
     [GitRepository]
     readonly GitRepository GitRepository;
     
-    [Solution(SuppressBuildProjectCheck = true, GenerateProjects = true)]
+    [Solution(GenerateProjects = true)]
     readonly Solution Solution;
     
     const string MainBranch = "main";
