@@ -135,8 +135,9 @@ partial class Build : NukeBuild
         .Description("Install .NET workloads")
         .Executes(() =>
         {
-            // this requires sudo on macOS and Linux
-            DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools"));
+            // Demo.BlazorWasm targets net9.0; with .NET 10 SDK the correct
+            // workload is wasm-tools-net9 (not wasm-tools which covers net10.0).
+            DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools-net9"));
         });
 
     Target Restore => _ => _
