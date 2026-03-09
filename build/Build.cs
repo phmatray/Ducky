@@ -75,14 +75,14 @@ partial class Build : NukeBuild
     [OctoVersion(
         AutoDetectBranch = true,
         UpdateBuildNumber = true,
-        Framework = "net9.0",
+        Framework = "net10.0",
         Major = 1)]
     readonly OctoVersionInfo OctoVersionInfo;
 
     [GitRepository]
     readonly GitRepository GitRepository;
     
-    [Solution(SuppressBuildProjectCheck = true, GenerateProjects = true)]
+    [Solution(GenerateProjects = true)]
     readonly Solution Solution;
     
     const string MainBranch = "main";
