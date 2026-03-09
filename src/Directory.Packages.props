@@ -7,9 +7,9 @@
   <ItemGroup>
     <PackageVersion Include="DotNet.ReproducibleBuilds" Version="2.0.2" />
     <PackageVersion Include="Humanizer.Core" Version="3.0.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.3" PrivateAssets="all" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.3" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.CodeCoverage" Version="18.3.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.3" />
