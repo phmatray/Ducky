@@ -37,7 +37,10 @@ public sealed record TestCounterReducers : SliceReducers<int>
 // Effects
 public sealed class TestIncrementEffect : AsyncEffect<TestIncrementAction>
 {
-    public override async Task HandleAsync(TestIncrementAction action, IStateProvider stateProvider)
+    public override async Task HandleAsync(
+        TestIncrementAction action,
+        IStateProvider stateProvider,
+        CancellationToken cancellationToken = default)
     {
         // if the Value is greater than 15, then reset the counter
         int state = stateProvider.GetSlice<int>();
@@ -46,7 +49,7 @@ public sealed class TestIncrementEffect : AsyncEffect<TestIncrementAction>
             return;
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(3));
+        await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
         Dispatcher.Dispatch(new TestResetAction());
     }
 }

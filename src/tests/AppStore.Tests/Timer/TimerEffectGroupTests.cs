@@ -53,7 +53,7 @@ public class TimerEffectGroupTests
         A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _stateProvider);
+        _ = _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Wait a bit for the timer to start
         await Task.Delay(100, TestContext.Current.CancellationToken);
@@ -75,11 +75,11 @@ public class TimerEffectGroupTests
         A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Start timer first
-        _ = _effectGroup.HandleAsync(startAction, _stateProvider);
+        _ = _effectGroup.HandleAsync(startAction, _stateProvider, TestContext.Current.CancellationToken);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
-        await _effectGroup.HandleAsync(stopAction, _stateProvider);
+        await _effectGroup.HandleAsync(stopAction, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(_logger).Where(call => call.Method.Name == "Log"
@@ -95,7 +95,7 @@ public class TimerEffectGroupTests
         ResetTimer action = new();
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(_logger).Where(call => call.Method.Name == "Log"
@@ -113,7 +113,7 @@ public class TimerEffectGroupTests
         A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(_logger).Where(call => call.Method.Name == "Log"
@@ -137,7 +137,7 @@ public class TimerEffectGroupTests
         A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -154,7 +154,7 @@ public class TimerEffectGroupTests
         A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -178,7 +178,7 @@ public class TimerEffectGroupTests
                 atLimitState); // Subsequent checks
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _stateProvider);
+        _ = _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Wait for timer to process multiple ticks
         await Task.Delay(3000, TestContext.Current.CancellationToken);
@@ -197,10 +197,10 @@ public class TimerEffectGroupTests
         A.CallTo(() => _stateProvider.GetSlice<TimerState>()).Returns(timerState);
 
         // Act
-        _ = _effectGroup.HandleAsync(action, _stateProvider);
+        _ = _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
-        _ = _effectGroup.HandleAsync(action, _stateProvider);
+        _ = _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Assert
@@ -225,9 +225,9 @@ public class TimerEffectGroupTests
                 stoppedState); // After timer is stopped
 
         // Act - Start timer then immediately stop it
-        _ = _effectGroup.HandleAsync(startAction, _stateProvider);
+        _ = _effectGroup.HandleAsync(startAction, _stateProvider, TestContext.Current.CancellationToken);
         await Task.Delay(100, TestContext.Current.CancellationToken); // Brief delay to let timer start
-        await _effectGroup.HandleAsync(stopAction, _stateProvider);
+        await _effectGroup.HandleAsync(stopAction, _stateProvider, TestContext.Current.CancellationToken);
         await Task.Delay(1500, TestContext.Current.CancellationToken); // Wait to ensure no ticks after stop
 
         // Assert

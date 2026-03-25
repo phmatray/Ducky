@@ -30,11 +30,11 @@ public class DebouncedSearchEffect : AsyncEffect<SearchMovies>
     }
 
     /// <inheritdoc />
-    public override async Task HandleAsync(SearchMovies action, IStateProvider stateProvider)
+    public override async Task HandleAsync(SearchMovies action, IStateProvider stateProvider, CancellationToken cancellationToken = default)
     {
         // Cancel any previous search
         _searchCancellationTokenSource?.Cancel();
-        _searchCancellationTokenSource = new CancellationTokenSource();
+        _searchCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         try
         {

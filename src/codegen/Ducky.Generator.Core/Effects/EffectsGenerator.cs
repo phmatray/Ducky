@@ -22,6 +22,7 @@ public class EffectsGenerator : SourceGeneratorBase<EffectsGeneratorOptions>
             [
                 "System",
                 "System.Reactive.Linq",
+                "System.Threading",
                 "System.Threading.Tasks",
                 "Ducky",
                 "Ducky.Abstractions",
@@ -128,7 +129,8 @@ public class EffectsGenerator : SourceGeneratorBase<EffectsGeneratorOptions>
             Parameters = new List<ParameterDescriptor>
             {
                 new() { ParamName = "action", ParamType = "object" },
-                new() { ParamName = "stateProvider", ParamType = "IStateProvider" }
+                new() { ParamName = "stateProvider", ParamType = "IStateProvider" },
+                new() { ParamName = "cancellationToken", ParamType = "CancellationToken" }
             },
             ExpressionBody = new ExpressionElement
             {

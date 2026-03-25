@@ -59,7 +59,7 @@ public record CounterReducers : SliceReducers<CounterState>
 
 public class ResetCounterAfter3Sec : AsyncEffect<Increment>
 {
-    public override async Task HandleAsync(Increment action, IStateProvider stateProvider)
+    public override async Task HandleAsync(Increment action, IStateProvider stateProvider, CancellationToken cancellationToken = default)
     {
         CounterState counterState = stateProvider.GetSlice<CounterState>();
 
@@ -69,7 +69,7 @@ public class ResetCounterAfter3Sec : AsyncEffect<Increment>
             return;
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(3));
+        await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
         Dispatcher.Reset();
     }
 }

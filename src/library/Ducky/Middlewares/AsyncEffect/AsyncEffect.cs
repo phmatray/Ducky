@@ -30,9 +30,9 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
     }
 
     /// <inheritdoc />
-    public Task HandleAsync(object action, IStateProvider stateProvider)
+    public Task HandleAsync(object action, IStateProvider stateProvider, CancellationToken cancellationToken = default)
     {
-        return HandleAsync((TAction)action, stateProvider);
+        return HandleAsync((TAction)action, stateProvider, cancellationToken);
     }
 
     /// <summary>
@@ -40,6 +40,7 @@ public abstract class AsyncEffect<TAction> : IAsyncEffect
     /// </summary>
     /// <param name="action">The action to handle.</param>
     /// <param name="stateProvider">The provider for accessing application state.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task HandleAsync(TAction action, IStateProvider stateProvider);
+    public abstract Task HandleAsync(TAction action, IStateProvider stateProvider, CancellationToken cancellationToken = default);
 }
