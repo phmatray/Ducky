@@ -1,3 +1,7 @@
+// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the Apache-2.0 license.
+// See the LICENSE file in the project root for full license information.
+
 #pragma warning disable RCS1090 // Add 'ConfigureAwait(false)' call
 #pragma warning disable RCS1250 // Simplify object creation  
 #pragma warning disable RCS1264 // Use explicit type instead of 'var'
