@@ -18,8 +18,13 @@ public sealed class DuckyStore : IStore, IDisposable
     private readonly ObservableSlices _slices = new();
     private readonly DateTime _startTime = DateTime.UtcNow;
     private readonly object _syncRoot = new();
+    private readonly Queue<object> _reentrantQueue = [];
+
+    private const int MaxReentrantDepth = 10;
+
     private volatile bool _isDisposed;
     private volatile bool _isDispatching;
+    private object? _currentAction;
     private List<string> _sliceKeys = [];
 
     /// <summary>
@@ -121,33 +126,72 @@ public sealed class DuckyStore : IStore, IDisposable
         _pipeline.Dispose();
         _slices.Dispose();
 
+        lock (_syncRoot)
+        {
+            _reentrantQueue.Clear();
+        }
+
         _isDisposed = true;
     }
 
     private void ProcessActionSafely(object action)
     {
-        // Prevent re-entrant processing
-        if (_isDispatching)
-        {
-            return;
-        }
-
         lock (_syncRoot)
         {
             if (_isDispatching)
             {
+                // Queue re-entrant action instead of silently dropping it
+                if (_reentrantQueue.Count >= MaxReentrantDepth)
+                {
+                    _eventPublisher.Publish(new ActionAbortedEventArgs(
+                        new ActionContext(action) { StateProvider = _slices },
+                        $"Re-entrant queue depth exceeded maximum of {MaxReentrantDepth}"));
+                    return;
+                }
+
+                _eventPublisher.Publish(new ActionReentrantEventArgs(
+                    action, _currentAction!, _reentrantQueue.Count + 1));
+                _reentrantQueue.Enqueue(action);
                 return;
             }
 
             _isDispatching = true;
+        }
 
-            try
+        try
+        {
+            _currentAction = action;
+            ProcessAction(action);
+        }
+        finally
+        {
+            // Drain re-entrant queue
+            while (true)
             {
-                ProcessAction(action);
-            }
-            finally
-            {
-                _isDispatching = false;
+                object? nextAction;
+                lock (_syncRoot)
+                {
+                    if (_reentrantQueue.Count == 0)
+                    {
+                        _isDispatching = false;
+                        _currentAction = null;
+                        break;
+                    }
+
+                    nextAction = _reentrantQueue.Dequeue();
+                }
+
+                try
+                {
+                    _currentAction = nextAction;
+                    ProcessAction(nextAction);
+                }
+                catch (Exception ex)
+                {
+                    ActionContext context = new(nextAction) { StateProvider = _slices };
+                    _eventPublisher.Publish(new ActionErrorEventArgs(ex, nextAction, context));
+                    // Continue draining — don't let one failure block subsequent actions
+                }
             }
         }
     }

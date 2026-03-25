@@ -175,6 +175,9 @@ for (int i = 0; i < 3; i++)
 #### State Slices
 SliceReducers<TState> is abstract - users must create concrete implementations. The StoreBuilder handles basic registration but complex scenarios need custom implementations.
 
+#### Re-Entrant Dispatch Handling
+`DuckyStore.ProcessActionSafely()` handles re-entrant dispatches (actions dispatched during reduce/middleware) by queuing them and processing after the current action completes. A warning event (`ActionReentrantEventArgs`) is published for each re-entrant action. A maximum queue depth of 10 prevents infinite loops from circular dispatch chains — actions exceeding this limit are aborted with an `ActionAbortedEventArgs`.
+
 ### Blazor Integration
 - **DuckyComponent<TState>**: Base component for automatic re-rendering on state changes
 - **Redux DevTools**: Support via DevToolsMiddleware for browser debugging
