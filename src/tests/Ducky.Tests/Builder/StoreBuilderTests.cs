@@ -81,10 +81,29 @@ public class StoreBuilderTests
         ServiceCollection services = [];
 
         // Act
-        services.AddDucky(builder => builder.AddSlice<TestState>());
+        services.AddDucky(builder => builder.AddSlice<TestStateReducers>());
 
         // Assert
-        services.Any(sd => sd.ServiceType == typeof(ISlice<TestState>)).ShouldBeTrue();
+        services.Any(sd => sd.ServiceType == typeof(TestStateReducers)).ShouldBeTrue();
+        services.Any(sd => sd.ServiceType == typeof(ISlice)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void StoreBuilder_AddSlice_ShouldResolveAtRuntime()
+    {
+        // Arrange
+        ServiceCollection services = [];
+        services.AddLogging();
+        services.AddDucky(builder => builder.AddSlice<TestStateReducers>());
+
+        // Act
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IEnumerable<ISlice> slices = provider.GetServices<ISlice>();
+
+        // Assert - Should resolve without throwing (unlike the old abstract registration)
+        List<ISlice> sliceList = slices.ToList();
+        sliceList.ShouldNotBeEmpty();
+        sliceList.ShouldContain(s => s is TestStateReducers);
     }
 
     [Fact]
@@ -131,7 +150,7 @@ public class StoreBuilderTests
         {
             builder
                 .UseDefaultMiddlewares()
-                .AddSlice<TestState>()
+                .AddSlice<TestStateReducers>()
                 .AddEffect<TestAsyncEffect>()
                 .AddExceptionHandler<TestExceptionHandler>()
                 .ConfigureStore(options => options.AssemblyNames = ["TestAssembly"]);
@@ -139,7 +158,7 @@ public class StoreBuilderTests
 
         // Verify all registrations
         services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(2); // Default middlewares
-        services.Any(sd => sd.ServiceType == typeof(ISlice<TestState>)).ShouldBeTrue();
+        services.Any(sd => sd.ServiceType == typeof(ISlice)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IAsyncEffect)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IExceptionHandler)).ShouldBeTrue();
     }
@@ -148,6 +167,11 @@ public class StoreBuilderTests
     private class TestMiddleware : MiddlewareBase;
 
     private class TestState : IState;
+
+    private sealed record TestStateReducers : SliceReducers<TestState>
+    {
+        public override TestState GetInitialState() => new();
+    }
 
     private class TestAsyncEffect : IAsyncEffect
     {

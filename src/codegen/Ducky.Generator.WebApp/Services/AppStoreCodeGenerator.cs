@@ -278,7 +278,7 @@ public class AppStoreCodeGenerator : IAppStoreCodeGenerator
         
         foreach (StateSlice slice in appStore.StateSlices)
         {
-            sb.AppendLine($"                .AddSlice<{slice.Name}State>()");
+            sb.AppendLine($"                .AddSlice<{slice.Name}Reducers>()");
             
             foreach (EffectDefinition effect in slice.Effects)
             {
