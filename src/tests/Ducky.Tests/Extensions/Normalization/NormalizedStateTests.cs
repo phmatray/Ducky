@@ -137,7 +137,7 @@ public class NormalizedStateTests
         SampleGuidState state = new SampleGuidState().SetMany([entity1, entity2]);
 
         // Act
-        ValueCollection<Guid> allIds = state.AllIds;
+        ImmutableArray<Guid> allIds = state.AllIds;
 
         // Assert
         allIds.ShouldContain(entity1.Id);
@@ -153,7 +153,7 @@ public class NormalizedStateTests
         SampleGuidState state = new SampleGuidState().SetMany([entity1, entity2]);
 
         // Act
-        ValueCollection<SampleGuidEntity> entities = state.SelectEntities();
+        ImmutableArray<SampleGuidEntity> entities = state.SelectEntities();
 
         // Assert
         entities.ShouldContain(entity1);
@@ -171,10 +171,10 @@ public class NormalizedStateTests
         ]);
 
         // Act
-        ValueCollection<SampleGuidEntity> result = state.SelectEntities(e => e.Name.Contains("Entity"));
+        ImmutableArray<SampleGuidEntity> result = state.SelectEntities(e => e.Name.Contains("Entity"));
 
         // Assert
-        result.Count.ShouldBe(2);
+        result.Length.ShouldBe(2);
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public class NormalizedStateTests
         // Arrange
         SampleGuidEntity entity1 = new() { Id = Guid.NewGuid(), Name = "Entity 1" };
         SampleGuidEntity entity2 = new() { Id = Guid.NewGuid(), Name = "Entity 2" };
-        ValueCollection<SampleGuidEntity> entities = [entity1, entity2];
+        ImmutableArray<SampleGuidEntity> entities = [entity1, entity2];
 
         // Act
         SampleGuidState state = SampleGuidState.Create(entities);

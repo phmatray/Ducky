@@ -13,7 +13,7 @@ public partial class NotificationsDrawer
     [EditorRequired]
     public bool IsOpen { get; set; }
 
-    private ValueCollection<Notification> UnreadNotifications
+    private ImmutableArray<Notification> UnreadNotifications
         => State.SelectUnreadNotifications();
 
     private bool HasUnreadNotifications

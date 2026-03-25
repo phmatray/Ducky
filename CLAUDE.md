@@ -74,7 +74,7 @@ Ducky implements a Redux-inspired unidirectional data flow pattern with strong t
 Actions flow through a configurable middleware pipeline using reactive streams:
 - **IActionMiddleware**: Interface for middleware that can intercept actions before/after reducer
 - **Pipeline Flow**: Actions → Middleware (Before) → Reducer → Middleware (After) → Effects
-- **Built-in Middleware**: CorrelationId, ExceptionHandling, AsyncEffect, ReactiveEffect, NoOp
+- **Built-in Middleware**: CorrelationId, ExceptionHandling, AsyncEffect, ReactiveEffect
 - **Reactive Design**: Uses R3 observables for reactive middleware and effects
 
 ### Store Configuration Patterns
@@ -100,7 +100,7 @@ Also available for backward compatibility:
 - `AddDucky(configure)` - With fluent configuration
 
 ### Project Structure
-- `Ducky/`: Core library with state management primitives
+- `Ducky/`: Core library with state management primitives and reactive effects (includes former Ducky.Reactive)
 - `Ducky.Blazor/`: Blazor-specific integrations (components, DevTools, persistence, cross-tab sync)
 - `Ducky.Generator/`: Source generators to reduce boilerplate
 - `Demo.BlazorWasm/`: Comprehensive example Blazor WebAssembly application
@@ -131,7 +131,7 @@ state with { Count = state.Count + 1 }
 ```
 
 #### Normalized State
-For collections, use `NormalizedState<TKey, TEntity>` to maintain relationships:
+For collections, use `NormalizedState<TKey, TEntity, TState>` to maintain relationships:
 ```csharp
 public record TodoState(NormalizedState<Guid, TodoItem> Items);
 ```
@@ -197,54 +197,11 @@ SliceReducers<TState> is abstract - users must create concrete implementations. 
 
 ## Code Generation Infrastructure
 
-Ducky includes both source generators for compile-time code generation and standalone generators for development-time code generation.
-
 ### Source Generators (Compile-Time)
 Located in `src/library/Ducky.Generator/`:
 - **ActionDispatcherSourceGenerator**: Automatically creates extension methods for actions marked with `[DuckyAction]`
 - Uses incremental generation for performance
 - Integrates seamlessly with IDE and build process
-
-### Standalone Generators (Development-Time)
-Located in `src/codegen/`:
-- **Ducky.CodeGen.Core**: Core generation infrastructure with visitor pattern
-- **Ducky.CodeGen.WebApp**: Blazor UI for interactive code generation
-- **Ducky.CodeGen.Cli**: Command-line interface for scripted generation
-
-#### Available Generators
-1. **ActionCreatorGenerator**: Creates static factory classes for actions
-2. **ReducerGenerator**: Generates reducer classes with partial method signatures for custom logic
-
-#### Generator Architecture
-The codegen infrastructure uses a visitor pattern with strongly-typed model classes:
-```csharp
-// 1. Build model
-var model = new CompilationUnitElement 
-{
-    Usings = ["System", "Ducky"],
-    Namespaces = [new NamespaceElement { Name = "MyApp.Actions", Classes = [...] }]
-};
-
-// 2. Generate syntax tree via visitor
-var visitor = new SyntaxFactoryVisitor();
-var syntaxNode = model.Accept(visitor);
-
-// 3. Format and render
-var formatted = Format(syntaxNode);
-return formatted.ToFullString();
-```
-
-#### Running Code Generators
-```bash
-# Web UI (interactive)
-dotnet run --project src/codegen/Ducky.CodeGen.WebApp
-
-# CLI (scriptable)
-dotnet run --project src/codegen/Ducky.CodeGen.Cli
-
-# Build generators
-dotnet build src/codegen/Ducky.CodeGen.Core
-```
 
 ## Redux DevTools Integration
 

@@ -103,7 +103,7 @@ public class MemoizedSelectorTests
         int Selector(TodoState s)
         {
             callCount++;
-            return s.SelectCompletedTodos().Count;
+            return s.SelectCompletedTodos().Length;
         }
     }
 
@@ -130,7 +130,7 @@ public class MemoizedSelectorTests
         int Selector(TodoState s)
         {
             callCount++;
-            return s.SelectCompletedTodos().Count;
+            return s.SelectCompletedTodos().Length;
         }
     }
 
@@ -197,14 +197,14 @@ public class MemoizedSelectorTests
         // Arrange
         TodoState state = new();
 
-        Func<TodoState, ValueCollection<TodoItem>> selector1 =
-            MemoizedSelector.Create<TodoState, ValueCollection<TodoItem>>(
+        Func<TodoState, ImmutableArray<TodoItem>> selector1 =
+            MemoizedSelector.Create<TodoState, ImmutableArray<TodoItem>>(
                 s => s.SelectEntities(todo => todo.IsCompleted),
                 s => s.ById);
 
         Func<TodoState, int> selector2 = MemoizedSelector.Compose(
             selector1,
-            todos => todos.Count,
+            todos => todos.Length,
             s => s.ById);
 
         // Act

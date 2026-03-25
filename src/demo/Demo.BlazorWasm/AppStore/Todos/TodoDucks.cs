@@ -10,20 +10,20 @@ public record TodoState
     : NormalizedState<Guid, TodoItem, TodoState>
 {
     // Selectors
-    public ValueCollection<TodoItem> SelectCompletedTodos()
+    public ImmutableArray<TodoItem> SelectCompletedTodos()
         => SelectEntities(todo => todo.IsCompleted);
 
     public int SelectCompletedTodosCount()
-        => SelectCompletedTodos().Count;
+        => SelectCompletedTodos().Length;
 
     public bool SelectHasCompletedTodos()
         => !SelectCompletedTodos().IsEmpty;
 
-    public ValueCollection<TodoItem> SelectActiveTodos()
+    public ImmutableArray<TodoItem> SelectActiveTodos()
         => SelectEntities(todo => !todo.IsCompleted);
 
     public int SelectActiveTodosCount()
-        => SelectActiveTodos().Count;
+        => SelectActiveTodos().Length;
 
     public bool SelectHasActiveTodos()
         => !SelectActiveTodos().IsEmpty;
@@ -34,63 +34,13 @@ public record TodoState
 #region Actions
 
 [DuckyAction]
-public sealed record CreateTodo
-    : Fsa<CreateTodo.ActionPayload, CreateTodo.ActionMeta>
-{
-    // Action creators are represented as constructors.
-    public CreateTodo(string title)
-        : base(new ActionPayload(title), new ActionMeta(DateTime.UtcNow))
-    {
-    }
-
-    // [Recommended] Write Action Types as domain/eventName
-    public override string TypeKey => "todos/create";
-
-    // Optionally, you can use models defined within the action or external models like TodoItem.
-    public sealed record ActionPayload(string Title);
-
-    // Meta information can store additional data such as a timestamp.
-    public sealed record ActionMeta(DateTime TimeStamp);
-}
+public sealed record CreateTodo(string Title);
 
 [DuckyAction]
-public sealed record ToggleTodo
-    : Fsa<ToggleTodo.ActionPayload, ToggleTodo.ActionMeta>
-{
-    // Action creators are represented as constructors.
-    public ToggleTodo(Guid id)
-        : base(new ActionPayload(id), new ActionMeta(DateTime.UtcNow))
-    {
-    }
-
-    // [Recommended] Write Action Types as domain/eventName
-    public override string TypeKey => "todos/toggle";
-
-    // Payload containing the ID of the todo to be toggled.
-    public sealed record ActionPayload(Guid Id);
-
-    // Meta information can store additional data such as a timestamp.
-    public sealed record ActionMeta(DateTime TimeStamp);
-}
+public sealed record ToggleTodo(Guid Id);
 
 [DuckyAction]
-public sealed record DeleteTodo
-    : Fsa<DeleteTodo.ActionPayload, ActionMeta>
-{
-    // Action creators are represented as constructors.
-    // You can also use the ActionMeta.Create() method from Ducky to create a timestamp.
-#pragma warning disable RCS1231 // Make parameter ref read-only
-    public DeleteTodo(Guid id)
-        : base(new ActionPayload(id), ActionMeta.Create())
-    {
-    }
-
-    // [Recommended] Write Action Types as domain/eventName
-    public override string TypeKey => "todos/delete";
-
-    // Payload containing the ID of the todo to be deleted.
-    public sealed record ActionPayload(Guid Id);
-}
+public sealed record DeleteTodo(Guid Id);
 
 #endregion
 
@@ -115,13 +65,13 @@ public record TodoReducers : SliceReducers<TodoState>
         ]);
 
     private static TodoState Reduce(TodoState state, CreateTodo action)
-        => state.SetOne(new TodoItem(action.Payload.Title));
+        => state.SetOne(new TodoItem(action.Title));
 
     private static TodoState Reduce(TodoState state, ToggleTodo action)
-        => state.UpdateOne(action.Payload.Id, todo => new TodoItem(todo.Id, todo.Title, !todo.IsCompleted));
+        => state.UpdateOne(action.Id, todo => new TodoItem(todo.Id, todo.Title, !todo.IsCompleted));
 
     private static TodoState Reduce(TodoState state, DeleteTodo action)
-        => state.RemoveOne(action.Payload.Id);
+        => state.RemoveOne(action.Id);
 }
 
 #endregion

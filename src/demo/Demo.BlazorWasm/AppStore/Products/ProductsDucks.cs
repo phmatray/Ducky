@@ -8,18 +8,18 @@ namespace Demo.BlazorWasm.AppStore;
 
 public record ProductState : NormalizedState<Guid, Product, ProductState>
 {
-    private readonly Func<ProductState, ValueCollection<Product>> _selectElectronics;
-    private readonly Func<ProductState, ValueCollection<Product>> _selectClothing;
+    private readonly Func<ProductState, ImmutableArray<Product>> _selectElectronics;
+    private readonly Func<ProductState, ImmutableArray<Product>> _selectClothing;
     private readonly Func<ProductState, decimal> _selectTotalPriceOfElectronics;
     private readonly Func<ProductState, decimal> _selectTotalPriceOfClothing;
 
     public ProductState()
     {
-        _selectElectronics = MemoizedSelector.Create<ProductState, ValueCollection<Product>>(
+        _selectElectronics = MemoizedSelector.Create<ProductState, ImmutableArray<Product>>(
             state => state.SelectEntities(product => product.Category == "Electronics"),
             state => state.ById);
 
-        _selectClothing = MemoizedSelector.Create<ProductState, ValueCollection<Product>>(
+        _selectClothing = MemoizedSelector.Create<ProductState, ImmutableArray<Product>>(
             state => state.SelectEntities(product => product.Category == "Clothing"),
             state => state.ById);
 
@@ -35,10 +35,10 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
     }
 
     // Memoized Selectors
-    public ValueCollection<Product> SelectElectronics()
+    public ImmutableArray<Product> SelectElectronics()
         => _selectElectronics(this);
 
-    public ValueCollection<Product> SelectClothing()
+    public ImmutableArray<Product> SelectClothing()
         => _selectClothing(this);
 
     public decimal SelectTotalPriceOfElectronics()
@@ -53,32 +53,10 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
 #region Actions
 
 [DuckyAction]
-public sealed record AddProduct
-    : Fsa<AddProduct.ActionPayload, ActionMeta>
-{
-    public AddProduct(Product product)
-        : base(new ActionPayload(product), ActionMeta.Create())
-    {
-    }
-
-    public override string TypeKey => "products/add";
-
-    public sealed record ActionPayload(Product Product);
-}
+public sealed record AddProduct(Product Product);
 
 [DuckyAction]
-public sealed record RemoveProduct
-    : Fsa<RemoveProduct.ActionPayload, ActionMeta>
-{
-    public RemoveProduct(Guid productId)
-        : base(new ActionPayload(productId), ActionMeta.Create())
-    {
-    }
-
-    public override string TypeKey => "products/remove";
-
-    public sealed record ActionPayload(Guid ProductId);
-}
+public sealed record RemoveProduct(Guid ProductId);
 
 #endregion
 
@@ -103,10 +81,10 @@ public record ProductsReducers : SliceReducers<ProductState>
         ]);
 
     private static ProductState Reduce(ProductState state, AddProduct action)
-        => state.SetOne(action.Payload.Product);
+        => state.SetOne(action.Product);
 
     private static ProductState Reduce(ProductState state, RemoveProduct action)
-        => state.RemoveOne(action.Payload.ProductId);
+        => state.RemoveOne(action.ProductId);
 }
 
 #endregion

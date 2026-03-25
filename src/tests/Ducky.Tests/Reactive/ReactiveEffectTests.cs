@@ -1,0 +1,135 @@
+// Copyright (c) 2020-2026 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the Apache-2.0 license.
+// See the LICENSE file in the project root for full license information.
+
+namespace Ducky.Reactive.Tests;
+
+public class ReactiveEffectTests
+{
+    [Fact]
+    public void GetKey_ShouldReturnTypeName()
+    {
+        // Arrange
+        TestEffect effect = new();
+
+        // Act
+        string key = effect.GetKey();
+
+        // Assert
+        key.ShouldBe("TestEffect");
+    }
+
+    [Fact]
+    public void GetAssemblyName_ShouldReturnAssemblyName()
+    {
+        // Arrange
+        TestEffect effect = new();
+
+        // Act
+        string assemblyName = effect.GetAssemblyName();
+
+        // Assert
+        assemblyName.ShouldBe("Ducky.Tests");
+    }
+
+    [Fact]
+    public void Handle_DefaultImplementation_ShouldReturnEmptyObservable()
+    {
+        // Arrange
+        BaseTestEffect effect = new();
+        IObservable<object> actions = Observable.Never<object>();
+        IObservable<IStateProvider> stateProvider = Observable.Never<IStateProvider>();
+        List<object> results = [];
+
+        // Act
+        IObservable<object> result = effect.Handle(actions, stateProvider);
+        result.Subscribe(results.Add);
+
+        // Wait a bit to ensure nothing is emitted
+        Thread.Sleep(50);
+
+        // Assert
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void TimeProvider_ShouldUseSystemDefault()
+    {
+        // Arrange
+        TestEffect effect = new();
+
+        // Act
+        TimeProvider timeProvider = effect.TimeProvider;
+
+        // Assert
+        timeProvider.ShouldBe(TimeProvider.System);
+    }
+
+    [Fact]
+    public void ReactiveEffect_ShouldHaveTimeProvider()
+    {
+        // Arrange
+        TestEffect effect = new();
+
+        // Act
+        TimeProvider timeProvider = effect.TimeProvider;
+
+        // Assert
+        timeProvider.ShouldNotBeNull();
+        timeProvider.GetType().BaseType.ShouldBe(typeof(TimeProvider));
+    }
+
+    [Fact]
+    public void ReactiveEffect_Inheritance_ShouldWorkCorrectly()
+    {
+        // Arrange
+        ComplexTestEffect effect = new();
+
+        // Act
+        string key = effect.GetKey();
+        string assemblyName = effect.GetAssemblyName();
+
+        // Assert
+        key.ShouldBe("ComplexTestEffect");
+        assemblyName.ShouldBe("Ducky.Tests");
+        effect.WasInitialized.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Multiple_ReactiveEffects_ShouldHaveUniqueKeys()
+    {
+        // Arrange
+        ReactiveEffect[] effects = 
+        [
+            new TestEffect(),
+            new BaseTestEffect(),
+            new ComplexTestEffect()
+        ];
+
+        // Act
+        string[] keys = effects.Select(e => e.GetKey()).ToArray();
+
+        // Assert
+        keys.ShouldBeUnique();
+        keys.ShouldBe(["TestEffect", "BaseTestEffect", "ComplexTestEffect"]);
+    }
+
+    // Test helper classes
+    private class TestEffect : ReactiveEffect;
+
+    private class BaseTestEffect : ReactiveEffect
+    {
+        // Uses default Handle implementation
+    }
+
+    private class ComplexTestEffect : ReactiveEffect
+    {
+        public bool WasInitialized { get; private set; }
+
+        public override IObservable<object> Handle(IObservable<object> actions, IObservable<IStateProvider> stateProvider)
+        {
+            WasInitialized = true;
+            return Observable.Empty<object>();
+        }
+    }
+}
