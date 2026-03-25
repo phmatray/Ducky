@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Ducky.Pipeline;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Middlewares.DevTools;
 
@@ -11,6 +12,7 @@ public sealed class DevToolsMiddleware : MiddlewareBase
 {
     private readonly ReduxDevToolsModule _devTools;
     private readonly DevToolsOptions _options;
+    private readonly ILogger<DevToolsMiddleware> _logger;
     private readonly object _syncRoot = new();
     private IStore? _store;
     private Task _tailTask = Task.CompletedTask;
@@ -21,10 +23,12 @@ public sealed class DevToolsMiddleware : MiddlewareBase
     /// Initializes a new instance of the <see cref="DevToolsMiddleware"/> class.
     /// </summary>
     /// <param name="devTools">The DevTools JSInterop module.</param>
+    /// <param name="logger">The logger instance.</param>
     /// <param name="options">The DevTools configuration options.</param>
-    public DevToolsMiddleware(ReduxDevToolsModule devTools, DevToolsOptions? options = null)
+    public DevToolsMiddleware(ReduxDevToolsModule devTools, ILogger<DevToolsMiddleware> logger, DevToolsOptions? options = null)
     {
         _devTools = devTools ?? throw new ArgumentNullException(nameof(devTools));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _options = options ?? new DevToolsOptions();
     }
 
@@ -124,9 +128,11 @@ public sealed class DevToolsMiddleware : MiddlewareBase
         _sequenceNumberOfCurrentState = actionIndex;
 
         // Log the jump operation for debugging
-        Console.WriteLine(
-            $"DevTools: Jumped to action index {actionIndex} "
-                + $"(current: {_sequenceNumberOfCurrentState}, latest: {_sequenceNumberOfLatestState})");
+        _logger.LogDebug(
+            "DevTools: Jumped to action index {ActionIndex} (current: {CurrentState}, latest: {LatestState})",
+            actionIndex,
+            _sequenceNumberOfCurrentState,
+            _sequenceNumberOfLatestState);
 
         // Note: The actual state restoration is handled by the DevTools module
         // which will dispatch appropriate actions through the normal pipeline
@@ -145,7 +151,7 @@ public sealed class DevToolsMiddleware : MiddlewareBase
         catch (Exception ex)
         {
             // Log but don't crash the application
-            Console.WriteLine($"Failed to send to DevTools: {ex.Message}");
+            _logger.LogWarning(ex, "Failed to send to DevTools");
         }
     }
 

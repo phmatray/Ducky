@@ -1,4 +1,5 @@
 using FakeItEasy;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace Ducky.Blazor.Tests;
@@ -10,11 +11,11 @@ public class DevToolsInitializationTests
     {
         // Arrange
         IJSRuntime mockJsRuntime = A.Fake<IJSRuntime>();
-        DevToolsStateManager stateManager = new();
+        DevToolsStateManager stateManager = new(A.Fake<ILogger<DevToolsStateManager>>());
         DevToolsOptions options = new();
 
         // Act
-        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, options);
+        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, A.Fake<ILogger<ReduxDevToolsModule>>(), options);
 
         // Assert
         devTools.ShouldNotBeNull();
@@ -26,9 +27,9 @@ public class DevToolsInitializationTests
     {
         // Arrange
         IJSRuntime mockJsRuntime = A.Fake<IJSRuntime>();
-        DevToolsStateManager stateManager = new();
+        DevToolsStateManager stateManager = new(A.Fake<ILogger<DevToolsStateManager>>());
         DevToolsOptions options = new() { Enabled = false };
-        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, options);
+        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, A.Fake<ILogger<ReduxDevToolsModule>>(), options);
 
         // Act
         await devTools.InitAsync().ConfigureAwait(true);
@@ -46,9 +47,9 @@ public class DevToolsInitializationTests
     {
         // Arrange
         IJSRuntime mockJsRuntime = A.Fake<IJSRuntime>();
-        DevToolsStateManager stateManager = new();
-        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager);
-        DevToolsMiddleware middleware = new(devTools);
+        DevToolsStateManager stateManager = new(A.Fake<ILogger<DevToolsStateManager>>());
+        ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, A.Fake<ILogger<ReduxDevToolsModule>>());
+        DevToolsMiddleware middleware = new(devTools, A.Fake<ILogger<DevToolsMiddleware>>());
 
         IStore mockStore = A.Fake<IStore>();
         IDispatcher mockDispatcher = A.Fake<IDispatcher>();
@@ -67,6 +68,7 @@ public class DevToolsInitializationTests
 
         // Add required dependencies
         services.AddSingleton(A.Fake<IJSRuntime>());
+        services.AddLogging();
 
         // Save original environment variables
         string? originalAspNetCoreEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");

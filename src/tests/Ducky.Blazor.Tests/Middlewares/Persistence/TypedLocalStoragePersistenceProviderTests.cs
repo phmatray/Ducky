@@ -2,6 +2,7 @@ using System.Text.Json;
 using Blazored.LocalStorage;
 using Ducky.Blazor.Middlewares.Persistence;
 using FakeItEasy;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Tests.Middlewares.Persistence;
 
@@ -15,7 +16,10 @@ public class TypedLocalStoragePersistenceProviderTests
     {
         _localStorage = A.Fake<ILocalStorageService>();
         _options = new PersistenceOptions { StorageKey = "test:state" };
-        _provider = new TypedLocalStoragePersistenceProvider(_localStorage, _options);
+        _provider = new TypedLocalStoragePersistenceProvider(
+            _localStorage,
+            _options,
+            A.Fake<ILogger<TypedLocalStoragePersistenceProvider>>());
     }
 
     [Fact]
@@ -23,7 +27,7 @@ public class TypedLocalStoragePersistenceProviderTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new TypedLocalStoragePersistenceProvider(null!, _options));
+            new TypedLocalStoragePersistenceProvider(null!, _options, A.Fake<ILogger<TypedLocalStoragePersistenceProvider>>()));
     }
 
     [Fact]
@@ -33,7 +37,10 @@ public class TypedLocalStoragePersistenceProviderTests
         var optionsWithoutKey = new PersistenceOptions { StorageKey = null };
 
         // Act
-        var provider = new TypedLocalStoragePersistenceProvider(_localStorage, optionsWithoutKey);
+        var provider = new TypedLocalStoragePersistenceProvider(
+            _localStorage,
+            optionsWithoutKey,
+            A.Fake<ILogger<TypedLocalStoragePersistenceProvider>>());
 
         // Assert
         provider.ShouldNotBeNull();

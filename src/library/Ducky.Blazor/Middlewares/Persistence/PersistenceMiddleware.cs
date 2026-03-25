@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Ducky.Pipeline;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Middlewares.Persistence;
 
@@ -15,6 +16,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     private readonly IEnhancedPersistenceProvider<Dictionary<string, object>> _persistenceProvider;
     private readonly HydrationManager _hydrationManager;
     private readonly PersistenceOptions _options;
+    private readonly ILogger<PersistenceMiddleware> _logger;
     private IDispatcher? _dispatcher;
     private IStore? _store;
 
@@ -42,14 +44,17 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     /// <param name="persistenceProvider">The enhanced persistence provider.</param>
     /// <param name="hydrationManager">The hydration manager.</param>
     /// <param name="options">Configuration options for persistence.</param>
+    /// <param name="logger">The logger instance.</param>
     public PersistenceMiddleware(
         IEnhancedPersistenceProvider<Dictionary<string, object>> persistenceProvider,
         HydrationManager hydrationManager,
-        PersistenceOptions options)
+        PersistenceOptions options,
+        ILogger<PersistenceMiddleware> logger)
     {
         _persistenceProvider = persistenceProvider ?? throw new ArgumentNullException(nameof(persistenceProvider));
         _hydrationManager = hydrationManager ?? throw new ArgumentNullException(nameof(hydrationManager));
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _isEnabled = _options.Enabled;
 
@@ -477,7 +482,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
             return;
         }
 
-        Console.WriteLine($"[PersistenceMiddleware] {DateTime.UtcNow:HH:mm:ss.fff} {message}");
+        _logger.LogDebug("[PersistenceMiddleware] {Message}", message);
     }
 
     /// <summary>

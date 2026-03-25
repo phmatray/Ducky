@@ -5,6 +5,7 @@
 using System.Text;
 using System.Text.Json;
 using Blazored.LocalStorage;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Middlewares.Persistence;
 
@@ -14,6 +15,7 @@ namespace Ducky.Blazor.Middlewares.Persistence;
 public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider<Dictionary<string, object>>
 {
     private readonly ILocalStorageService _localStorage;
+    private readonly ILogger<TypedLocalStoragePersistenceProvider> _logger;
     private readonly string _key;
     private readonly string _metadataKey;
     private readonly JsonSerializerOptions _jsonOptions;
@@ -23,9 +25,11 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
     /// </summary>
     public TypedLocalStoragePersistenceProvider(
         ILocalStorageService localStorage,
-        PersistenceOptions options)
+        PersistenceOptions options,
+        ILogger<TypedLocalStoragePersistenceProvider> logger)
     {
         _localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _key = options.StorageKey ?? "ducky:state";
         _metadataKey = $"{_key}:metadata";
 
@@ -59,13 +63,13 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
 
             if (persistedDict?.Slices is null || persistedDict.Slices.Count == 0)
             {
-                Console.WriteLine("[TypedLocalStoragePersistenceProvider] No persisted state found");
+                _logger.LogDebug("No persisted state found");
                 return null;
             }
 
             // Reconstruct the state dictionary with proper types
             Dictionary<string, object> stateDict = [];
-            
+
             foreach ((string key, PersistedSlice slice) in persistedDict.Slices)
             {
                 try
@@ -74,7 +78,7 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
                     Type? stateType = Type.GetType(slice.TypeName);
                     if (stateType is null)
                     {
-                        Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Could not find type: {slice.TypeName}");
+                        _logger.LogWarning("Could not find type: {TypeName}", slice.TypeName);
                         continue;
                     }
 
@@ -83,16 +87,16 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
                     if (state is not null)
                     {
                         stateDict[key] = state;
-                        Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Loaded slice '{key}' with type {stateType.Name}");
+                        _logger.LogDebug("Loaded slice '{SliceKey}' with type {TypeName}", key, stateType.Name);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Failed to deserialize slice '{key}': {ex.Message}");
+                    _logger.LogError(ex, "Failed to deserialize slice '{SliceKey}'", key);
                 }
             }
 
-            Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Successfully loaded {stateDict.Count} slices");
+            _logger.LogDebug("Successfully loaded {SliceCount} slices", stateDict.Count);
 
             return new PersistedStateContainer<Dictionary<string, object>>
             {
@@ -102,7 +106,7 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Failed to load state: {ex.Message}");
+            _logger.LogError(ex, "Failed to load state");
             return null;
         }
     }
@@ -129,7 +133,7 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
                     StateJson = stateJson
                 };
 
-                Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Saving slice '{key}' with type {value.GetType().Name}");
+                _logger.LogDebug("Saving slice '{SliceKey}' with type {TypeName}", key, value.GetType().Name);
             }
 
             // Save the dictionary and metadata
@@ -138,13 +142,13 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
 
             await Task.WhenAll(dictTask, metadataTask).ConfigureAwait(false);
 
-            Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Successfully saved {state.Count} slices");
+            _logger.LogDebug("Successfully saved {SliceCount} slices", state.Count);
 
             return PersistenceResult.Successful();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Failed to save state: {ex.Message}");
+            _logger.LogError(ex, "Failed to save state");
             return PersistenceResult.Failed(ex.Message);
         }
     }
@@ -163,7 +167,7 @@ public class TypedLocalStoragePersistenceProvider : IEnhancedPersistenceProvider
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[TypedLocalStoragePersistenceProvider] Failed to clear state: {ex.Message}");
+            _logger.LogError(ex, "Failed to clear state");
             return PersistenceResult.Failed(ex.Message);
         }
     }
