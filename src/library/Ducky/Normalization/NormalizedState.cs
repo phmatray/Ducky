@@ -106,7 +106,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        return key is string
+        return key is string s && string.IsNullOrEmpty(s)
             ? throw new DuckyException("The key cannot be empty.")
             : CreateWith(ById.Remove(key));
     }
@@ -225,7 +225,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        return key is string
+        return key is string s && string.IsNullOrEmpty(s)
             ? throw new DuckyException("The key cannot be empty.")
             : ById.ContainsKey(key);
     }
