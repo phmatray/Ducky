@@ -23,20 +23,27 @@ public static class MemoizedSelector
         params Func<TState, object>[] dependencies)
         where TState : notnull
     {
-        Dictionary<TState, (TResult Result, object[] Dependencies)> cache = [];
+        TState? lastState = default;
+        TResult? lastResult = default;
+        object[]? lastDependencies = null;
+        var hasCache = false;
 
         return state =>
         {
             object[] currentDependencies = Array.ConvertAll(dependencies, dep => dep(state));
 
-            if (cache.TryGetValue(state, out (TResult Result, object[] Dependencies) cacheEntry)
-                && AreDependenciesEqual(cacheEntry.Dependencies, currentDependencies))
+            if (hasCache
+                && EqualityComparer<TState>.Default.Equals(lastState!, state)
+                && AreDependenciesEqual(lastDependencies!, currentDependencies))
             {
-                return cacheEntry.Result;
+                return lastResult!;
             }
 
             TResult result = selector(state);
-            cache[state] = (result, currentDependencies);
+            lastState = state;
+            lastResult = result;
+            lastDependencies = currentDependencies;
+            hasCache = true;
             return result;
         };
     }
