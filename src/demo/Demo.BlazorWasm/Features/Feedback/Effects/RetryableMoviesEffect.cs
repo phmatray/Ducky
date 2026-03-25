@@ -20,7 +20,7 @@ public sealed class RetryableMoviesEffect : AsyncEffect<LoadMovies>
         _logger = logger;
     }
 
-    public override async Task HandleAsync(LoadMovies action, IStateProvider stateProvider)
+    public override async Task HandleAsync(LoadMovies action, IStateProvider stateProvider, CancellationToken cancellationToken = default)
     {
         try
         {

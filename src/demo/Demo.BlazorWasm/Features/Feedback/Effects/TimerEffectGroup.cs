@@ -25,14 +25,14 @@ public class TimerEffectGroup : AsyncEffectGroup
         On<Tick>(HandleTickAsync);
     }
 
-    private async Task HandleStartTimerAsync(StartTimer action, IStateProvider stateProvider)
+    private async Task HandleStartTimerAsync(StartTimer action, IStateProvider stateProvider, CancellationToken ct)
     {
         _logger.LogInformation("Starting timer");
 
         // Cancel any existing timer
         StopCurrentTimer();
 
-        _timerCancellationTokenSource = new CancellationTokenSource();
+        _timerCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ct);
         CancellationToken cancellationToken = _timerCancellationTokenSource.Token;
 
         // Start the timer loop
@@ -66,14 +66,14 @@ public class TimerEffectGroup : AsyncEffectGroup
             cancellationToken);
     }
 
-    private Task HandleStopTimerAsync(StopTimer action, IStateProvider stateProvider)
+    private Task HandleStopTimerAsync(StopTimer action, IStateProvider stateProvider, CancellationToken ct)
     {
         _logger.LogInformation("Stopping timer");
         StopCurrentTimer();
         return Task.CompletedTask;
     }
 
-    private Task HandleResetTimerAsync(ResetTimer action, IStateProvider stateProvider)
+    private Task HandleResetTimerAsync(ResetTimer action, IStateProvider stateProvider, CancellationToken ct)
     {
         _logger.LogInformation("Resetting timer");
         StopCurrentTimer();
@@ -81,7 +81,7 @@ public class TimerEffectGroup : AsyncEffectGroup
         return Task.CompletedTask;
     }
 
-    private Task HandleTickAsync(Tick action, IStateProvider stateProvider)
+    private Task HandleTickAsync(Tick action, IStateProvider stateProvider, CancellationToken ct)
     {
         TimerState timerState = stateProvider.GetSlice<TimerState>();
         _logger.LogDebug("Timer tick: {Time}s", timerState.Time);

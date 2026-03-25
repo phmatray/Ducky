@@ -289,7 +289,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.BunitContext
 
 public class TestAsyncEffect : AsyncEffect<TestAction>
 {
-    public override Task HandleAsync(TestAction action, IStateProvider stateProvider)
+    public override Task HandleAsync(TestAction action, IStateProvider stateProvider, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }

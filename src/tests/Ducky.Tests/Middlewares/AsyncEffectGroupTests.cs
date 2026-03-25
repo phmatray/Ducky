@@ -81,7 +81,7 @@ public class AsyncEffectGroupTests
         TestAction1 action = new() { Value = "test" };
 
         // Act
-        await effectGroup.HandleAsync(action, StateProvider);
+        await effectGroup.HandleAsync(action, StateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         effectGroup.HandledActions.ShouldContain(action);
@@ -96,7 +96,7 @@ public class AsyncEffectGroupTests
         UnregisteredAction action = new();
 
         // Act & Assert
-        await Should.NotThrowAsync(() => effectGroup.HandleAsync(action, StateProvider));
+        await Should.NotThrowAsync(() => effectGroup.HandleAsync(action, StateProvider, TestContext.Current.CancellationToken));
         effectGroup.HandledActions.ShouldBeEmpty();
     }
 
@@ -110,8 +110,8 @@ public class AsyncEffectGroupTests
         TestAction2 action2 = new() { Number = 42 };
 
         // Act
-        await effectGroup.HandleAsync(action1, StateProvider);
-        await effectGroup.HandleAsync(action2, StateProvider);
+        await effectGroup.HandleAsync(action1, StateProvider, TestContext.Current.CancellationToken);
+        await effectGroup.HandleAsync(action2, StateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         effectGroup.HandledActions.Count.ShouldBe(2);
@@ -145,8 +145,8 @@ public class AsyncEffectGroupTests
         TestAction2 action2 = new() { Number = 10 };
 
         // Act
-        await effectGroup.HandleAsync(action1, StateProvider);
-        await effectGroup.HandleAsync(action2, StateProvider);
+        await effectGroup.HandleAsync(action1, StateProvider, TestContext.Current.CancellationToken);
+        await effectGroup.HandleAsync(action2, StateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         effectGroup.SharedCounter.ShouldBe(2); // Both handlers increment the shared counter
@@ -172,7 +172,7 @@ public class AsyncEffectGroupTests
             On<TestAction2>(HandleTestAction2Async);
         }
 
-        private Task HandleTestAction1Async(TestAction1 action, IStateProvider stateProvider)
+        private Task HandleTestAction1Async(TestAction1 action, IStateProvider stateProvider, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Handling TestAction1: {Value}", action.Value);
             HandledActions.Add(action);
@@ -180,7 +180,7 @@ public class AsyncEffectGroupTests
             return Task.CompletedTask;
         }
 
-        private Task HandleTestAction2Async(TestAction2 action, IStateProvider stateProvider)
+        private Task HandleTestAction2Async(TestAction2 action, IStateProvider stateProvider, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Handling TestAction2: {Number}", action.Number);
             HandledActions.Add(action);

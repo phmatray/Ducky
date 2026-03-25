@@ -28,7 +28,7 @@ public sealed class CounterEffectsTests
         A.CallTo(() => stateProvider.GetSlice<CounterState>()).Returns(new CounterState(16));
 
         // Act
-        Task handleTask = _sut.HandleAsync(new Increment(), stateProvider);
+        Task handleTask = _sut.HandleAsync(new Increment(), stateProvider, TestContext.Current.CancellationToken);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
         await handleTask;
 
@@ -45,7 +45,7 @@ public sealed class CounterEffectsTests
         A.CallTo(() => stateProvider.GetSlice<CounterState>()).Returns(new CounterState(15));
 
         // Act
-        Task handleTask = _sut.HandleAsync(new Increment(), stateProvider);
+        Task handleTask = _sut.HandleAsync(new Increment(), stateProvider, TestContext.Current.CancellationToken);
         _timeProvider.Advance(TimeSpan.FromSeconds(10));
         await handleTask;
 

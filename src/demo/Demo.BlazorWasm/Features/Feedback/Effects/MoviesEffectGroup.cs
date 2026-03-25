@@ -31,7 +31,7 @@ public class MoviesEffectGroup : AsyncEffectGroup
         On<LoadMoviesFailure>(HandleLoadMoviesFailureAsync);
     }
 
-    private async Task HandleLoadMoviesAsync(LoadMovies action, IStateProvider stateProvider)
+    private async Task HandleLoadMoviesAsync(LoadMovies action, IStateProvider stateProvider, CancellationToken cancellationToken)
     {
         try
         {
@@ -46,7 +46,7 @@ public class MoviesEffectGroup : AsyncEffectGroup
         }
     }
 
-    private async Task HandleSearchMoviesAsync(SearchMovies action, IStateProvider stateProvider)
+    private async Task HandleSearchMoviesAsync(SearchMovies action, IStateProvider stateProvider, CancellationToken cancellationToken)
     {
         try
         {
@@ -63,14 +63,14 @@ public class MoviesEffectGroup : AsyncEffectGroup
         }
     }
 
-    private Task HandleLoadMoviesSuccessAsync(LoadMoviesSuccess action, IStateProvider stateProvider)
+    private Task HandleLoadMoviesSuccessAsync(LoadMoviesSuccess action, IStateProvider stateProvider, CancellationToken cancellationToken)
     {
         string message = $"Loaded {action.Movies.Count} movies from the server.";
         ShowSuccessNotification(message);
         return Task.CompletedTask;
     }
 
-    private Task HandleLoadMoviesFailureAsync(LoadMoviesFailure action, IStateProvider stateProvider)
+    private Task HandleLoadMoviesFailureAsync(LoadMoviesFailure action, IStateProvider stateProvider, CancellationToken cancellationToken)
     {
         ShowErrorNotification(action.ErrorMessage);
         return Task.CompletedTask;

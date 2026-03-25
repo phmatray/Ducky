@@ -155,7 +155,7 @@ public class StoreBuilderTests
 
         public bool CanHandle(object action) => true;
 
-        public Task HandleAsync(object action, IStateProvider stateProvider)
+        public Task HandleAsync(object action, IStateProvider stateProvider, CancellationToken cancellationToken = default)
         {
             LastAction = action;
             return Task.CompletedTask;

@@ -98,7 +98,7 @@ public class MoviesEffectGroupTests
         A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -125,7 +125,7 @@ public class MoviesEffectGroupTests
         A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Throws(exception);
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -157,7 +157,7 @@ public class MoviesEffectGroupTests
         A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -192,7 +192,7 @@ public class MoviesEffectGroupTests
         A.CallTo(() => _moviesService.GetMoviesAsync(1, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(() => _dispatcher.Dispatch(
@@ -213,7 +213,7 @@ public class MoviesEffectGroupTests
         LoadMoviesSuccess action = new(movies, 10);
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(() => _snackbar.Add(
@@ -236,7 +236,7 @@ public class MoviesEffectGroupTests
         LoadMoviesFailure action = new("Failed to load movies");
 
         // Act
-        await _effectGroup.HandleAsync(action, _stateProvider);
+        await _effectGroup.HandleAsync(action, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         A.CallTo(() => _snackbar.Add(
@@ -272,8 +272,8 @@ public class MoviesEffectGroupTests
         A.CallTo(() => _moviesService.GetMoviesAsync(2, 5, A<CancellationToken>.Ignored)).Returns(response);
 
         // Act
-        await _effectGroup.HandleAsync(loadAction, _stateProvider);
-        await _effectGroup.HandleAsync(searchAction, _stateProvider);
+        await _effectGroup.HandleAsync(loadAction, _stateProvider, TestContext.Current.CancellationToken);
+        await _effectGroup.HandleAsync(searchAction, _stateProvider, TestContext.Current.CancellationToken);
 
         // Assert
         // Both handlers should use the same pagination info (page 2)

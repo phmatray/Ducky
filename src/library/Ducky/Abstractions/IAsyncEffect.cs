@@ -32,6 +32,7 @@ public interface IAsyncEffect
     /// </summary>
     /// <param name="action">The action to handle.</param>
     /// <param name="stateProvider">The provider for accessing application state.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task HandleAsync(object action, IStateProvider stateProvider);
+    Task HandleAsync(object action, IStateProvider stateProvider, CancellationToken cancellationToken = default);
 }
