@@ -12,7 +12,7 @@ namespace Ducky;
 public sealed class ObservableSlices : IStateProvider, IDisposable
 {
     private readonly Dictionary<string, ISlice> _slices = [];
-    private readonly List<EventHandler> _sliceUpdateHandlers = [];
+    private readonly Dictionary<string, EventHandler> _sliceUpdateHandlers = [];
 
     /// <summary>
     /// Occurs when any slice state changes.
@@ -51,23 +51,20 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
                     newState.GetType(),
                     newState));
         };
-        _sliceUpdateHandlers.Add(handler);
+        _sliceUpdateHandlers[slice.GetKey()] = handler;
         slice.StateUpdated += handler;
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        // Unsubscribe all handlers
-        int index = 0;
-        foreach (ISlice slice in _slices.Values)
+        // Unsubscribe all handlers by explicit key pairing
+        foreach ((string key, EventHandler handler) in _sliceUpdateHandlers)
         {
-            if (index < _sliceUpdateHandlers.Count)
+            if (_slices.TryGetValue(key, out ISlice? slice))
             {
-                slice.StateUpdated -= _sliceUpdateHandlers[index];
+                slice.StateUpdated -= handler;
             }
-
-            index++;
         }
 
         _sliceUpdateHandlers.Clear();
