@@ -89,36 +89,18 @@ public interface INormalizedStateCollectionMethods<in TKey, TEntity, out TState>
     /// Updates one entity in the collection. Supports partial updates.
     /// </summary>
     /// <param name="key">The key of the entity to update.</param>
-    /// <param name="update">The update action to apply to the entity.</param>
-    /// <returns>The new state with the entity updated.</returns>
-    /// <exception cref="ArgumentNullException">The key and update action must not be null.</exception>
-    TState UpdateOne(TKey key, Action<TEntity> update);
-
-    /// <summary>
-    /// Updates one entity in the collection. Supports partial updates.
-    /// </summary>
-    /// <param name="key">The key of the entity to update.</param>
     /// <param name="update">The update function to apply to the entity.</param>
     /// <returns>The new state with the entity updated.</returns>
-    /// <exception cref="ArgumentNullException">The key and update action must not be null.</exception>
+    /// <exception cref="ArgumentNullException">The key and update function must not be null.</exception>
     TState UpdateOne(TKey key, Func<TEntity, TEntity> update);
 
     /// <summary>
     /// Updates multiple entities in the collection. Supports partial updates.
     /// </summary>
     /// <param name="keys">The keys of the entities to update.</param>
-    /// <param name="update">The update action to apply to the entities.</param>
+    /// <param name="update">The update function to apply to the entities.</param>
     /// <returns>The new state with the entities updated.</returns>
-    /// <exception cref="ArgumentNullException">The keys collection and update action must not be null.</exception>
-    TState UpdateMany(IEnumerable<TKey> keys, Action<TEntity> update);
-
-    /// <summary>
-    /// Updates multiple entities in the collection. Supports partial updates.
-    /// </summary>
-    /// <param name="keys">The keys of the entities to update.</param>
-    /// <param name="update">The update action to apply to the entities.</param>
-    /// <returns>The new state with the entities updated.</returns>
-    /// <exception cref="ArgumentNullException">The keys collection and update action must not be null.</exception>
+    /// <exception cref="ArgumentNullException">The keys collection and update function must not be null.</exception>
     TState UpdateMany(IEnumerable<TKey> keys, Func<TEntity, TEntity> update);
 
     /// <summary>

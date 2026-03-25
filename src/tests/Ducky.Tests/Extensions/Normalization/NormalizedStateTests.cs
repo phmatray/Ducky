@@ -393,20 +393,6 @@ public class NormalizedStateTests
     }
 
     [Fact]
-    public void UpdateOne_ShouldUpdateEntity()
-    {
-        // Arrange
-        SampleGuidEntity entity = CreateEntity(Guid.NewGuid(), "Test Entity");
-        SampleGuidState state = new SampleGuidState().AddOne(entity);
-
-        // Act
-        SampleGuidState newState = state.UpdateOne(entity.Id, e => e.Name = "Updated Entity");
-
-        // Assert
-        newState[entity.Id].Name.ShouldBe("Updated Entity");
-    }
-
-    [Fact]
     public void UpdateOne_WithFunc_ShouldUpdateEntity()
     {
         // Arrange
@@ -421,21 +407,20 @@ public class NormalizedStateTests
     }
 
     [Fact]
-    public void UpdateMany_ShouldUpdateEntities()
+    public void UpdateOne_ShouldPreserveImmutability()
     {
         // Arrange
-        List<SampleGuidEntity> entities =
-        [
-            CreateEntity(Guid.NewGuid(), "Entity 1"),
-            CreateEntity(Guid.NewGuid(), "Entity 2")
-        ];
-        SampleGuidState state = new SampleGuidState().AddMany(entities);
+        SampleGuidEntity entity = CreateEntity(Guid.NewGuid(), "Original Name");
+        SampleGuidState state = new SampleGuidState().AddOne(entity);
 
         // Act
-        SampleGuidState newState = state.UpdateMany(entities.Select(e => e.Id), e => e.Name = "Updated Entity");
+        SampleGuidState newState = state.UpdateOne(entity.Id, e => new SampleGuidEntity(e.Id, "Updated Name"));
 
-        // Assert
-        newState.ById.Values.ShouldAllBe(e => e.Name == "Updated Entity");
+        // Assert - new state has updated entity
+        newState[entity.Id].Name.ShouldBe("Updated Name");
+
+        // Assert - original state is unchanged (immutability preserved)
+        state[entity.Id].Name.ShouldBe("Original Name");
     }
 
     [Fact]

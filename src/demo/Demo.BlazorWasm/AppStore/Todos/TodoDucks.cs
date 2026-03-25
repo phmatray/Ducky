@@ -118,7 +118,7 @@ public record TodoReducers : SliceReducers<TodoState>
         => state.SetOne(new TodoItem(action.Payload.Title));
 
     private static TodoState Reduce(TodoState state, ToggleTodo action)
-        => state.UpdateOne(action.Payload.Id, todo => todo.IsCompleted = !todo.IsCompleted);
+        => state.UpdateOne(action.Payload.Id, todo => new TodoItem(todo.Id, todo.Title, !todo.IsCompleted));
 
     private static TodoState Reduce(TodoState state, DeleteTodo action)
         => state.RemoveOne(action.Payload.Id);
