@@ -527,6 +527,42 @@ public class NormalizedStateTests
     }
 
     [Fact]
+    public void UpsertMany_ShouldOverwriteExistingEntities()
+    {
+        // Arrange
+        Guid id = Guid.NewGuid();
+        SampleGuidState state = new SampleGuidState().AddOne(CreateEntity(id, "Original"));
+
+        // Act
+        SampleGuidState newState = state.UpsertMany([CreateEntity(id, "Updated")]);
+
+        // Assert
+        newState.ById.Count.ShouldBe(1);
+        newState.GetByKey(id).Name.ShouldBe("Updated");
+    }
+
+    [Fact]
+    public void UpsertMany_ShouldInsertAndUpdateInSingleCall()
+    {
+        // Arrange
+        Guid existingId = Guid.NewGuid();
+        Guid newId = Guid.NewGuid();
+        SampleGuidState state = new SampleGuidState().AddOne(CreateEntity(existingId, "Original"));
+
+        // Act
+        SampleGuidState newState = state.UpsertMany(
+        [
+            CreateEntity(existingId, "Updated"),
+            CreateEntity(newId, "New Entity")
+        ]);
+
+        // Assert
+        newState.ById.Count.ShouldBe(2);
+        newState.GetByKey(existingId).Name.ShouldBe("Updated");
+        newState.GetByKey(newId).Name.ShouldBe("New Entity");
+    }
+
+    [Fact]
     public void MapOne_ShouldUpdateEntityUsingMapFunction()
     {
         // Arrange
