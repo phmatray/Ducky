@@ -24,6 +24,10 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         _stateProviderMock = A.Fake<IStateProvider>();
 
         // Note: Can't mock CurrentState() as it's an extension method
+
+        // Default: return empty state dictionary for snapshot creation
+        A.CallTo(() => _storeMock.GetStateDictionary())
+            .Returns(ImmutableSortedDictionary<string, object>.Empty);
     }
 
     [Fact]
@@ -119,9 +123,10 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         List<ReactiveEffect> effects = [stateEffect];
         ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
-        // Setup initial state
+        // Setup initial state with GetStateDictionary for snapshot creation
         CounterState initialState = new(0);
-        A.CallTo(() => _stateProviderMock.GetSlice<CounterState>()).Returns(initialState);
+        A.CallTo(() => _storeMock.GetStateDictionary())
+            .Returns(ImmutableSortedDictionary<string, object>.Empty.Add("counter", initialState));
 
         await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
@@ -129,8 +134,8 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         for (int i = 1; i <= 12; i++)
         {
             CounterState newState = new(i);
-            A.CallTo(() => _stateProviderMock.GetSlice<CounterState>()).Returns(newState);
-            A.CallTo(() => _storeMock.GetSlice<CounterState>()).Returns(newState);
+            A.CallTo(() => _storeMock.GetStateDictionary())
+                .Returns(ImmutableSortedDictionary<string, object>.Empty.Add("counter", newState));
 
             middleware.AfterReduce(new { Type = "INCREMENT" });
         }
@@ -256,10 +261,10 @@ public class ReactiveEffectIntegrationTests : ReactiveTest
         List<ReactiveEffect> effects = [timerEffect, stateEffect];
         ReactiveEffectMiddleware middleware = new(effects, _eventPublisherMock);
 
-        // Setup state
+        // Setup state with GetStateDictionary for snapshot creation
         CounterState state = new(5);
-        A.CallTo(() => _stateProviderMock.GetSlice<CounterState>()).Returns(state);
-        A.CallTo(() => _storeMock.GetSlice<CounterState>()).Returns(state);
+        A.CallTo(() => _storeMock.GetStateDictionary())
+            .Returns(ImmutableSortedDictionary<string, object>.Empty.Add("counter", state));
 
         await middleware.InitializeAsync(_dispatcherMock, _storeMock);
 
