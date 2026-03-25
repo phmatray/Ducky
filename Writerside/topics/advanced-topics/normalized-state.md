@@ -132,24 +132,22 @@ Here’s an overview of the key methods available in `NormalizedState`:
   var newState = state.RemoveMany(todoIds);
   ```
 
-- **UpdateOne**: Updates a single entity using an action or function.
+- **UpdateOne**: Updates a single entity using a function that returns the updated entity.
   ```C#
-  public TState UpdateOne(TKey key, Action<TEntity> update)
   public TState UpdateOne(TKey key, Func<TEntity, TEntity> update)
   ```
   Example:
   ```C#
-  var updatedState = state.UpdateOne(todoId, todo => todo.MarkAsCompleted());
+  var updatedState = state.UpdateOne(todoId, todo => todo with { IsCompleted = true });
   ```
 
-- **UpdateMany**: Updates multiple entities using an action or function.
+- **UpdateMany**: Updates multiple entities using a function that returns the updated entity.
   ```C#
-  public TState UpdateMany(IEnumerable<TKey> keys, Action<TEntity> update)
   public TState UpdateMany(IEnumerable<TKey> keys, Func<TEntity, TEntity> update)
   ```
   Example:
   ```C#
-  var updatedState = state.UpdateMany(todoIds, todo => todo.MarkAsCompleted());
+  var updatedState = state.UpdateMany(todoIds, todo => todo with { IsCompleted = true });
   ```
 
 - **UpsertOne**: Updates or inserts a single entity.
@@ -195,7 +193,7 @@ Here’s an overview of the key methods available in `NormalizedState`:
 var newState = state.AddOne(new TodoItem(Guid.NewGuid(), "New Task"));
 
 // Updating an existing todo item
-newState = newState.UpdateOne(todoId, todo => todo.MarkAsCompleted());
+newState = newState.UpdateOne(todoId, todo => todo with { IsCompleted = true });
 
 // Removing a todo item
 newState = newState.RemoveOne(todoId);

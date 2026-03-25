@@ -132,17 +132,6 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     }
 
     /// <inheritdoc />
-    public TState UpdateOne(TKey key, Action<TEntity> update)
-    {
-        ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(update);
-
-        TEntity entity = GetByKey(key);
-        update(entity);
-        return CreateWith(ById.SetItem(key, entity));
-    }
-
-    /// <inheritdoc />
     public TState UpdateOne(TKey key, Func<TEntity, TEntity> update)
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -151,23 +140,6 @@ public abstract record NormalizedState<TKey, TEntity, TState>
         TEntity entity = GetByKey(key);
         entity = update(entity);
         return CreateWith(ById.SetItem(key, entity));
-    }
-
-    /// <inheritdoc />
-    public TState UpdateMany(IEnumerable<TKey> keys, Action<TEntity> update)
-    {
-        ArgumentNullException.ThrowIfNull(keys);
-        ArgumentNullException.ThrowIfNull(update);
-
-        ImmutableDictionary<TKey, TEntity> byId = ById;
-        foreach (TKey key in keys)
-        {
-            TEntity entity = GetByKey(key);
-            update(entity);
-            byId = byId.SetItem(key, entity);
-        }
-
-        return CreateWith(byId);
     }
 
     /// <inheritdoc />
