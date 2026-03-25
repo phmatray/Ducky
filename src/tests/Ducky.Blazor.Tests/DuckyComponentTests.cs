@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 
 namespace Ducky.Blazor.Tests;
 
-public class DuckyComponentTests : Bunit.TestContext
+public class DuckyComponentTests : Bunit.BunitContext
 {
     private readonly IStore _storeMock;
     private readonly IDispatcher _dispatcherMock;
@@ -35,7 +35,7 @@ public class DuckyComponentTests : Bunit.TestContext
     public void DuckyComponent_WithRootState_ShouldNotThrow()
     {
         // Act & Assert - should not throw
-        IRenderedComponent<TestRootStateComponent> component = RenderComponent<TestRootStateComponent>();
+        IRenderedComponent<TestRootStateComponent> component = Render<TestRootStateComponent>();
 
         // Verify the component rendered without throwing
         component.Markup.ShouldContain("Root State Component");
@@ -45,7 +45,7 @@ public class DuckyComponentTests : Bunit.TestContext
     public void DuckyComponent_WithSliceState_ShouldRetrieveCorrectSlice()
     {
         // Act
-        IRenderedComponent<TestSliceComponent> component = RenderComponent<TestSliceComponent>();
+        IRenderedComponent<TestSliceComponent> component = Render<TestSliceComponent>();
 
         // Assert
         component.Markup.ShouldContain("Value: 42");
@@ -55,7 +55,7 @@ public class DuckyComponentTests : Bunit.TestContext
     public void DuckyComponent_StateChange_ShouldTriggerRerender()
     {
         // Arrange
-        IRenderedComponent<TestSliceComponent> component = RenderComponent<TestSliceComponent>();
+        IRenderedComponent<TestSliceComponent> component = Render<TestSliceComponent>();
         int renderCount = component.RenderCount;
 
         // Act - simulate state change

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Tests.Components;
 
-public class StoreInitializerTests : Bunit.TestContext
+public class StoreInitializerTests : Bunit.BunitContext
 {
     private readonly IStore _store;
     private readonly ILogger<DuckyStoreInitializer> _duckyStoreInitializerLogger;
@@ -36,7 +36,7 @@ public class StoreInitializerTests : Bunit.TestContext
         // we need to ensure it stays false during the initial render
 
         // Act
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>(parameters =>
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>(parameters =>
             parameters.Add(p => p.ChildContent, (RenderFragment)(builder => builder.AddContent(0, "Main Content"))));
 
         // Assert - With store not initialized, it should show loading until OnAfterRenderAsync runs
@@ -52,7 +52,7 @@ public class StoreInitializerTests : Bunit.TestContext
         A.CallTo(() => _store.IsInitialized).Returns(false);
 
         // Act
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>(parameters =>
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>(parameters =>
             parameters
                 .Add(p => p.LoadingContent, (RenderFragment)(builder => builder.AddContent(0, "Custom Loading...")))
                 .Add(p => p.ChildContent, (RenderFragment)(builder => builder.AddContent(0, "Main Content"))));
@@ -70,7 +70,7 @@ public class StoreInitializerTests : Bunit.TestContext
         A.CallTo(() => _store.IsInitialized).ReturnsLazily(() => isInitialized);
 
         // Act
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>(parameters =>
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>(parameters =>
             parameters.Add(p => p.ChildContent, (RenderFragment)(builder => builder.AddContent(0, "Main Content"))));
 
         // Initially might show loading or content depending on timing
@@ -95,7 +95,7 @@ public class StoreInitializerTests : Bunit.TestContext
             .Throws(new InvalidOperationException("Initialization failed"));
 
         // Act
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>(parameters =>
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>(parameters =>
             parameters.Add(p => p.ChildContent, (RenderFragment)(builder => builder.AddContent(0, "Main Content"))));
 
         // Wait for initialization to complete
@@ -125,7 +125,7 @@ public class StoreInitializerTests : Bunit.TestContext
         };
 
         // Act
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>(parameters =>
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>(parameters =>
             parameters
                 .Add(p => p.ErrorContent, customError)
                 .Add(p => p.ChildContent, (RenderFragment)(builder => builder.AddContent(0, "Main Content"))));
@@ -154,7 +154,7 @@ public class StoreInitializerTests : Bunit.TestContext
             });
 
         // Act
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>();
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>();
         await Task.Delay(50); // Allow initialization
         cut.Render(); // Force re-render
         cut.Render(); // Force another re-render
@@ -171,7 +171,7 @@ public class StoreInitializerTests : Bunit.TestContext
             .Throws(new InvalidOperationException("Init error"));
 
         // Act
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>();
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>();
         await Task.Delay(100); // Allow initialization to complete
 
         // Assert - Just verify the error was handled (logger type issues make exact assertion complex)
@@ -183,7 +183,7 @@ public class StoreInitializerTests : Bunit.TestContext
     public void Component_DisposesCorrectly()
     {
         // Arrange
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>();
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>();
 
         // Act
         cut.Dispose();
@@ -200,7 +200,7 @@ public class StoreInitializerTests : Bunit.TestContext
         A.CallTo(() => _store.IsInitialized).ReturnsLazily(() => isInitialized);
 
         // Act & Assert - Initial state (loading)
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>(parameters =>
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>(parameters =>
             parameters
                 .Add(p => p.LoadingContent, (RenderFragment)(builder => builder.AddContent(0, "Loading...")))
                 .Add(p => p.ChildContent, (RenderFragment)(builder => builder.AddContent(0, "Content")))
@@ -226,7 +226,7 @@ public class StoreInitializerTests : Bunit.TestContext
         A.CallTo(() => _store.IsInitialized).Returns(true);
 
         // Act
-        IRenderedComponent<StoreInitializer> cut = RenderComponent<StoreInitializer>(parameters =>
+        IRenderedComponent<StoreInitializer> cut = Render<StoreInitializer>(parameters =>
             parameters.Add(p => p.ChildContent, (RenderFragment)(builder => builder.AddContent(0, "Immediate Content"))));
 
         await Task.Delay(100); // Allow async operations to complete

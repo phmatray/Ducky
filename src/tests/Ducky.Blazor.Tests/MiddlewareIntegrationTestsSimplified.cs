@@ -10,7 +10,7 @@ namespace Ducky.Blazor.Tests;
 /// <summary>
 /// Simplified but comprehensive middleware integration tests that focus on the core functionality.
 /// </summary>
-public class MiddlewareIntegrationTestsSimplified : Bunit.TestContext
+public class MiddlewareIntegrationTestsSimplified : Bunit.BunitContext
 {
     private readonly IJSRuntime _jsRuntimeMock;
 

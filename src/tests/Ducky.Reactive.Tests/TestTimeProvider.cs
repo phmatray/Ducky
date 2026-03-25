@@ -10,7 +10,7 @@ namespace Ducky.Reactive.Tests;
 public sealed class TestTimeProvider : TimeProvider
 {
     private DateTimeOffset _currentTime = DateTimeOffset.UtcNow;
-#if NET9_0_OR_GREATER
+#if NET10_0_OR_GREATER
     private readonly Lock _lock = new();
 #else
     private readonly object _lock = new();

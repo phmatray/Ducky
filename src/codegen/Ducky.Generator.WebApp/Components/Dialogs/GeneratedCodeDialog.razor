@@ -41,7 +41,7 @@
 
             <!-- File Tabs -->
             <MudTabs Elevation="0" Rounded="true" Centered="false" Color="Color.Primary" 
-                     PanelClass="pa-0" HeaderPosition="TabHeaderPosition.Before"
+                     TabPanelsClass="pa-0" HeaderPosition="TabHeaderPosition.Before"
                      Style="min-height: 500px;">
                 @foreach (var fileGroup in GeneratedFiles.GroupBy(f => f.FileType).OrderBy(g => GetFileTypeOrder(g.Key)))
                 {

@@ -1,7 +1,7 @@
 <Project>
   <!-- General -->
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
@@ -95,9 +95,7 @@
   <!-- Test-Specific Dependencies -->
   <!-- These dependencies are only used in test projects -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="FakeItEasy" />

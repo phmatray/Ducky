@@ -150,7 +150,7 @@ public class ActionDispatcherSourceGeneratorTests
             .Replace("\r\n", "\n");  // Normalize line endings
 
         // Assert
-        generatedText.ShouldBe(ExpectedIncrementDispatcher);
+        generatedText.ShouldBe(ExpectedIncrementDispatcher.Replace("\r\n", "\n"));
     }
 
     [Fact]
@@ -186,6 +186,6 @@ public class ActionDispatcherSourceGeneratorTests
             .Replace("\r\n", "\n");  // Normalize line endings
 
         // Assert
-        generatedText.ShouldBe(ExpectedCreateTodoDispatcher);
+        generatedText.ShouldBe(ExpectedCreateTodoDispatcher.Replace("\r\n", "\n"));
     }
 }

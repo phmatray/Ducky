@@ -3,7 +3,6 @@ using Ducky.Generator.WebApp.Components;
 using Ducky.Generator.WebApp.Data;
 using Ducky.Generator.WebApp.Services;
 using Microsoft.EntityFrameworkCore;
-using MudBlazor.Extensions;
 using MudBlazor.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -27,7 +26,6 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
-builder.Services.AddMudExtensions();
 
 WebApplication app = builder.Build();
 
@@ -48,8 +46,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAntiforgery();
-
-app.Use(MudExWebApp.MudExMiddleware);
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

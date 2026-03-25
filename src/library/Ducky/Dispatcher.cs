@@ -9,7 +9,7 @@ namespace Ducky;
 /// </summary>
 public sealed class Dispatcher : IDispatcher, IDisposable
 {
-#if NET9_0_OR_GREATER
+#if NET10_0_OR_GREATER
     private readonly Lock _syncRoot = new();
 #else
     private readonly object _syncRoot = new();

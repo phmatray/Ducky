@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Tests.Components;
 
-public class DuckyErrorBoundaryTests : Bunit.TestContext
+public class DuckyErrorBoundaryTests : Bunit.BunitContext
 {
     private readonly IExceptionHandler _exceptionHandler1;
     private readonly IExceptionHandler _exceptionHandler2;
@@ -32,7 +32,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
     public void Component_WithNoContent_RendersEmpty()
     {
         // Arrange & Act - Test that the component can be rendered without content
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>();
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>();
 
         // Assert - The component should render without throwing an exception during setup
         cut.ShouldNotBeNull();
@@ -45,7 +45,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
     public void Component_WithValidContent_RendersChildContent()
     {
         // Arrange & Act - Test with simple text content that should not throw
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(p => p.ChildContent, builder => builder.AddContent(0, "Test Content")));
 
         // Assert
@@ -57,7 +57,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
     public void Component_WithError_RendersDefaultErrorUI()
     {
         // Arrange & Act - Component will throw on render
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder => 
@@ -75,7 +75,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
     public void Component_WithErrorAndShowDetails_RendersDetailedError()
     {
         // Arrange & Act
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters
                 .Add(p => p.ShowDetails, true)
                 .Add(
@@ -106,7 +106,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
         };
 
         // Act
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters
                 .Add(p => p.ErrorContent, customError)
                 .Add(
@@ -131,7 +131,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
         A.CallTo(() => _exceptionHandler2.HandleActionError(A<ActionErrorEventArgs>._)).Returns(true);
 
         // Act
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder => 
@@ -162,7 +162,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
         A.CallTo(() => _exceptionHandler2.HandleActionError(A<ActionErrorEventArgs>._)).Returns(false);
 
         // Act
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder => 
@@ -185,7 +185,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
         A.CallTo(() => _exceptionHandler1.HandleActionError(A<ActionErrorEventArgs>._)).Returns(false);
 
         // Act
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder => 
@@ -212,7 +212,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
         A.CallTo(() => _exceptionHandler2.HandleActionError(A<ActionErrorEventArgs>._)).Returns(false);
 
         // Act
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder =>
@@ -235,7 +235,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
     public async Task Recover_CompletesWithoutError()
     {
         // Arrange
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder => 
@@ -264,7 +264,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
             .ReturnsLazily(() => ++callCount == 1);
 
         // Act - First error
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder => 
@@ -275,7 +275,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
 
         // Recover and trigger second error
         await cut.InvokeAsync(() => cut.Instance.Recover());
-        cut.SetParametersAndRender(parameters => parameters
+        cut.Render(parameters => parameters
             .Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder =>
@@ -295,7 +295,7 @@ public class DuckyErrorBoundaryTests : Bunit.TestContext
     public void Component_LogsErrors()
     {
         // Act
-        IRenderedComponent<DuckyErrorBoundary> cut = RenderComponent<DuckyErrorBoundary>(parameters =>
+        IRenderedComponent<DuckyErrorBoundary> cut = Render<DuckyErrorBoundary>(parameters =>
             parameters.Add(
                 p => p.ChildContent,
                 (RenderFragment)(builder => 

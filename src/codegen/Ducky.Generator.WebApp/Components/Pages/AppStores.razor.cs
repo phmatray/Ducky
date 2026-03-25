@@ -121,7 +121,7 @@ public partial class AppStores
     private async Task DeleteAppStoreAsync(AppStore appStore)
     {
         DialogOptions options = new() { CloseOnEscapeKey = true };
-        bool? result = await DialogService.ShowMessageBox(
+        bool? result = await DialogService.ShowMessageBoxAsync(
             "Delete App Store",
             $"Are you sure you want to delete '{appStore.Name}'? This action cannot be undone.",
             yesText: "Delete", cancelText: "Cancel", options: options);
