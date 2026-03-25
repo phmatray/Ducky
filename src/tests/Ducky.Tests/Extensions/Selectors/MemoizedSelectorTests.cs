@@ -57,7 +57,7 @@ public class MemoizedSelectorTests
     }
 
     [Fact]
-    public void Create_ShouldNotCacheResult_ForDifferentInputs()
+    public void Create_ShouldRecompute_WhenInputChangesBackToPrevious()
     {
         // Arrange
         int callCount = 0;
@@ -72,7 +72,7 @@ public class MemoizedSelectorTests
         result1.ShouldBe(10);
         result2.ShouldBe(20);
         result3.ShouldBe(10);
-        callCount.ShouldBe(2, "because the selector function should be called for each unique input with cached results");
+        callCount.ShouldBe(3, "because the single-entry cache only retains the last input, so reverting to a previous input recomputes");
         return;
 
         int Selector(int x)
@@ -131,6 +131,63 @@ public class MemoizedSelectorTests
         {
             callCount++;
             return s.SelectCompletedTodos().Count;
+        }
+    }
+
+    [Fact]
+    public void Create_ShouldOnlyCacheLastState()
+    {
+        // Arrange - verify single-entry cache by checking that only the most recent
+        // state produces a cache hit (callCount doesn't increase)
+        int callCount = 0;
+        Func<int, int> memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
+
+        // Act - call with 100 different inputs, then repeat the last one
+        for (int i = 0; i < 100; i++)
+        {
+            memoizedSelector(i);
+        }
+
+        int countBeforeRepeat = callCount;
+        memoizedSelector(99); // repeat last input - should be cached
+
+        // Assert
+        callCount.ShouldBe(countBeforeRepeat, "because the last input should still be cached");
+        callCount.ShouldBe(100, "because each unique input should have been computed exactly once");
+        return;
+
+        int Selector(int x)
+        {
+            callCount++;
+            return x * 2;
+        }
+    }
+
+    [Fact]
+    public void Create_ShouldNotRetainAllPreviousStates()
+    {
+        // Arrange - verify the cache is bounded by checking that earlier inputs
+        // are NOT cached (they must be recomputed)
+        int callCount = 0;
+        Func<int, int> memoizedSelector = MemoizedSelector.Create((Func<int, int>)Selector);
+
+        // Act - call with inputs 0..9, then call with input 0 again
+        for (int i = 0; i < 10; i++)
+        {
+            memoizedSelector(i);
+        }
+
+        int countBefore = callCount; // should be 10
+        memoizedSelector(0); // input 0 was evicted, must recompute
+
+        // Assert
+        callCount.ShouldBe(countBefore + 1, "because earlier inputs should be evicted from the single-entry cache");
+        return;
+
+        int Selector(int x)
+        {
+            callCount++;
+            return x * 2;
         }
     }
 
