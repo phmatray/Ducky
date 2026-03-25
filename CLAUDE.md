@@ -375,3 +375,7 @@ public class DevToolsOptions
 - Verify state is fully serializable
 - Check for circular references in state objects
 - Note: Time-travel requires implementing state restoration (currently logged only)
+
+## License
+
+This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for full terms. All source files include Apache-2.0 headers. NuGet packages are distributed under the same license.
