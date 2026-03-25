@@ -34,7 +34,8 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
 
         _effects = effects;
         _eventPublisher = eventPublisher;
-        _stateProvider = new BehaviorSubject<IStateProvider>(null!);
+        _stateProvider = new BehaviorSubject<IStateProvider>(
+            new StateSnapshot(ImmutableSortedDictionary<string, object>.Empty));
     }
 
     /// <inheritdoc />
@@ -43,8 +44,8 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
         _dispatcher = dispatcher;
         _store = store;
 
-        // Initialize state provider
-        _stateProvider.OnNext(store);
+        // Initialize state provider with a snapshot of the current state
+        _stateProvider.OnNext(new StateSnapshot(store.GetStateDictionary()));
 
         // Subscribe to all effects
         foreach (ReactiveEffect effect in _effects)
@@ -82,10 +83,10 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
     /// <inheritdoc />
     public override void AfterReduce(object action)
     {
-        // Update state after reduction
+        // Snapshot state after reduction to ensure effects see consistent state
         if (_store is not null)
         {
-            _stateProvider.OnNext(_store);
+            _stateProvider.OnNext(new StateSnapshot(_store.GetStateDictionary()));
         }
 
         // Stream the action to all effects

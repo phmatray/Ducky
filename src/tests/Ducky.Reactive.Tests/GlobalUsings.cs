@@ -4,6 +4,7 @@
 
 // Global using directives for tests
 
+global using System.Collections.Immutable;
 global using System.Reactive.Disposables;
 global using System.Reactive.Linq;
 global using System.Reactive.Subjects;

@@ -4,6 +4,7 @@
 
 // Global using directives
 
+global using System.Collections.Immutable;
 global using System.Reactive;
 global using System.Reactive.Concurrency;
 global using System.Reactive.Disposables;
