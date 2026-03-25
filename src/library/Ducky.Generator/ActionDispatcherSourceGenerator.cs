@@ -59,16 +59,16 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
             return false;
         }
 
-        // Check if any attribute might be DuckyAction by syntax alone
+        // Check if any attribute might be DuckyAction by syntax alone (exact matches only)
         foreach (AttributeListSyntax attributeList in record.AttributeLists)
         {
             foreach (AttributeSyntax attribute in attributeList.Attributes)
             {
                 string attributeName = attribute.Name.ToString();
-                // Check for both simple name and fully qualified name
-                if (attributeName.Contains("DuckyAction")
-                    || attributeName == "DuckyAction"
-                    || attributeName == "Ducky.Generators.DuckyAction")
+                if (attributeName == "DuckyAction"
+                    || attributeName == "DuckyActionAttribute"
+                    || attributeName == "Ducky.Generators.DuckyAction"
+                    || attributeName == "Ducky.Generators.DuckyActionAttribute")
                 {
                     return true;
                 }
@@ -82,17 +82,22 @@ public class ActionDispatcherSourceGenerator : SourceGeneratorBase
         GetRecordDeclarationForSourceGen(in GeneratorSyntaxContext context)
     {
         var recordDeclaration = (RecordDeclarationSyntax)context.Node;
-        
-        // We already know it has DuckyAction in the name from IsCandidateRecord
-        // Now verify via semantic model
+
+        // Use semantic model to resolve the attribute symbol and verify it is exactly
+        // Ducky.Generators.DuckyActionAttribute, not an unrelated attribute with a similar name.
         foreach (AttributeListSyntax attributeList in recordDeclaration.AttributeLists)
         {
             foreach (AttributeSyntax attribute in attributeList.Attributes)
             {
-                string attributeName = attribute.Name.ToString();
-                if (attributeName.Contains("DuckyAction"))
+                SymbolInfo symbolInfo = context.SemanticModel.GetSymbolInfo(attribute);
+                ISymbol? targetSymbol = symbolInfo.Symbol ?? symbolInfo.CandidateSymbols.FirstOrDefault();
+                if (targetSymbol is IMethodSymbol attributeConstructor)
                 {
-                    return (recordDeclaration, true);
+                    string fullName = attributeConstructor.ContainingType.ToDisplayString();
+                    if (fullName == "Ducky.Generators.DuckyActionAttribute")
+                    {
+                        return (recordDeclaration, true);
+                    }
                 }
             }
         }
