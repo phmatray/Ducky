@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Middlewares.DevTools;
 
@@ -9,14 +10,17 @@ namespace Ducky.Blazor.Middlewares.DevTools;
 public class DevToolsReducer
 {
     private readonly DevToolsStateManager _stateManager;
+    private readonly ILogger<DevToolsReducer> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DevToolsReducer"/> class.
     /// </summary>
     /// <param name="stateManager">The state manager for serialization/deserialization.</param>
-    public DevToolsReducer(DevToolsStateManager stateManager)
+    /// <param name="logger">The logger instance.</param>
+    public DevToolsReducer(DevToolsStateManager stateManager, ILogger<DevToolsReducer> logger)
     {
         _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -70,9 +74,9 @@ public class DevToolsReducer
     /// <param name="currentState">The current state.</param>
     /// <param name="jumpAction">The jump action.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IStateProvider HandleJumpToAction(IStateProvider currentState, DevToolsActions.JumpToAction jumpAction)
+    private IStateProvider HandleJumpToAction(IStateProvider currentState, DevToolsActions.JumpToAction jumpAction)
     {
-        Console.WriteLine($"DevTools: Jump to action {jumpAction.ActionIndex} ({jumpAction.ActionType})");
+        _logger.LogDebug("DevTools: Jump to action {ActionIndex} ({ActionType})", jumpAction.ActionIndex, jumpAction.ActionType);
 
         // TODO: Implement action replay from stored history
         // This would require:
@@ -91,9 +95,12 @@ public class DevToolsReducer
     /// <param name="currentState">The current state.</param>
     /// <param name="replayAction">The replay action.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IStateProvider HandleReplayActions(IStateProvider currentState, DevToolsActions.ReplayActions replayAction)
+    private IStateProvider HandleReplayActions(IStateProvider currentState, DevToolsActions.ReplayActions replayAction)
     {
-        Console.WriteLine($"DevTools: Replay actions from {replayAction.FromActionIndex} to {replayAction.ToActionIndex}");
+        _logger.LogDebug(
+            "DevTools: Replay actions from {FromIndex} to {ToIndex}",
+            replayAction.FromActionIndex,
+            replayAction.ToActionIndex);
 
         // TODO: Implement action range replay
         // This would require:
@@ -110,9 +117,9 @@ public class DevToolsReducer
     /// </summary>
     /// <param name="currentState">The current state.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IStateProvider HandleCommitState(IStateProvider currentState)
+    private IStateProvider HandleCommitState(IStateProvider currentState)
     {
-        Console.WriteLine("DevTools: Commit state handled in reducer");
+        _logger.LogDebug("DevTools: Commit state handled in reducer");
 
         // The actual commit operation is handled in the ReduxDevToolsModule
         // by updating the initial state in the state manager
@@ -125,9 +132,9 @@ public class DevToolsReducer
     /// </summary>
     /// <param name="currentState">The current state.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IStateProvider HandleRollbackToCommitted(IStateProvider currentState)
+    private IStateProvider HandleRollbackToCommitted(IStateProvider currentState)
     {
-        Console.WriteLine("DevTools: Rollback to committed state");
+        _logger.LogDebug("DevTools: Rollback to committed state");
 
         // TODO: Implement rollback to last committed state
         // This would require:
@@ -143,9 +150,9 @@ public class DevToolsReducer
     /// </summary>
     /// <param name="currentState">The current state.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IStateProvider HandleSweepSkippedActions(IStateProvider currentState)
+    private IStateProvider HandleSweepSkippedActions(IStateProvider currentState)
     {
-        Console.WriteLine("DevTools: Sweep skipped actions");
+        _logger.LogDebug("DevTools: Sweep skipped actions");
 
         // TODO: Implement sweeping of skipped actions
         // This would require:
@@ -163,9 +170,9 @@ public class DevToolsReducer
     /// <param name="currentState">The current state.</param>
     /// <param name="toggleAction">The toggle action.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IStateProvider HandleToggleAction(IStateProvider currentState, DevToolsActions.ToggleAction toggleAction)
+    private IStateProvider HandleToggleAction(IStateProvider currentState, DevToolsActions.ToggleAction toggleAction)
     {
-        Console.WriteLine($"DevTools: Toggle action at index {toggleAction.ActionIndex}");
+        _logger.LogDebug("DevTools: Toggle action at index {ActionIndex}", toggleAction.ActionIndex);
 
         // TODO: Implement action toggling (skip/unskip)
         // This would require:
@@ -183,10 +190,10 @@ public class DevToolsReducer
     /// <param name="currentState">The current state.</param>
     /// <param name="recordingAction">The recording control action.</param>
     /// <returns>The current state (no change for now).</returns>
-    private static IStateProvider HandleRecordingControl(IStateProvider currentState, DevToolsActions.RecordingControl recordingAction)
+    private IStateProvider HandleRecordingControl(IStateProvider currentState, DevToolsActions.RecordingControl recordingAction)
     {
         string status = recordingAction.IsPaused ? "paused" : recordingAction.IsLocked ? "locked" : "resumed";
-        Console.WriteLine($"DevTools: Recording {status}");
+        _logger.LogDebug("DevTools: Recording {Status}", status);
 
         // TODO: Implement recording control
         // This would require:

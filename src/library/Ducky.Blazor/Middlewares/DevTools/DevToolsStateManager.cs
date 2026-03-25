@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Middlewares.DevTools;
 
@@ -10,13 +11,16 @@ namespace Ducky.Blazor.Middlewares.DevTools;
 public class DevToolsStateManager
 {
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly ILogger<DevToolsStateManager> _logger;
     private ImmutableSortedDictionary<string, object>? _initialState;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DevToolsStateManager"/> class.
     /// </summary>
-    public DevToolsStateManager()
+    /// <param name="logger">The logger instance.</param>
+    public DevToolsStateManager(ILogger<DevToolsStateManager> logger)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -50,7 +54,7 @@ public class DevToolsStateManager
         catch (Exception ex)
         {
             // Log error and return empty state if serialization fails
-            Console.WriteLine($"DevTools state serialization failed: {ex.Message}");
+            _logger.LogWarning(ex, "DevTools state serialization failed");
             return "{}";
         }
     }
@@ -96,7 +100,7 @@ public class DevToolsStateManager
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"DevTools state deserialization failed: {ex.Message}");
+            _logger.LogWarning(ex, "DevTools state deserialization failed");
             return _initialState;
         }
     }

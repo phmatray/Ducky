@@ -2,6 +2,9 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using FakeItEasy;
+using Microsoft.Extensions.Logging;
+
 namespace Ducky.Reactive.Tests;
 
 public class CustomOperatorsTests
@@ -190,10 +193,11 @@ public class CustomOperatorsTests
         // Arrange
         Subject<int> source = new();
         List<int> results = [];
+        ILogger logger = A.Fake<ILogger>();
 
         // Act
         source
-            .LogMessage("Test message")
+            .LogMessage(logger, "Test message")
             .Subscribe(results.Add);
 
         source.OnNext(1);
@@ -203,7 +207,6 @@ public class CustomOperatorsTests
         // Assert
         results.Count.ShouldBe(3);
         results.ShouldBe([1, 2, 3]);
-        // Note: In a real test, you might want to capture console output to verify logging
     }
 
     // Test helper classes

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace Ducky.Blazor.Middlewares.DevTools;
@@ -13,6 +14,7 @@ public class ReduxDevToolsModule : JsModule
     private IDispatcher? _dispatcher;
     private readonly DevToolsOptions _options;
     private readonly DevToolsStateManager _stateManager;
+    private readonly ILogger<ReduxDevToolsModule> _logger;
     private bool _enabled;
     private readonly TaskCompletionSource<bool> _readyTcs = new();
 
@@ -45,14 +47,17 @@ public class ReduxDevToolsModule : JsModule
     /// </summary>
     /// <param name="js">The Blazor JS runtime.</param>
     /// <param name="stateManager">The state manager for serialization.</param>
+    /// <param name="logger">The logger instance.</param>
     /// <param name="options">Configuration options for DevTools.</param>
     public ReduxDevToolsModule(
         IJSRuntime js,
         DevToolsStateManager stateManager,
+        ILogger<ReduxDevToolsModule> logger,
         DevToolsOptions? options = default)
         : base(js, "./_content/Ducky.Blazor/reduxDevtools.js")
     {
         _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _options = options ?? new DevToolsOptions();
     }
 
@@ -133,17 +138,7 @@ public class ReduxDevToolsModule : JsModule
             // DevTools initialization failed, but don't crash the application
             _enabled = false;
             _readyTcs.TrySetResult(false);
-
-            // Log the error if a logger is available
-            // This is optional and should not fail
-            try
-            {
-                Console.WriteLine($"DevTools initialization failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools initialization failed");
         }
     }
 
@@ -169,15 +164,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            // Log but don't crash the application
-            try
-            {
-                Console.WriteLine($"DevTools send failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools send failed");
         }
     }
 
@@ -203,15 +190,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            // Log but don't crash the application
-            try
-            {
-                Console.WriteLine($"DevTools send failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools send failed");
         }
     }
 
@@ -233,15 +212,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            // Log but don't crash the application
-            try
-            {
-                Console.WriteLine($"DevTools subscription failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools subscription failed");
         }
     }
 
@@ -256,7 +227,7 @@ public class ReduxDevToolsModule : JsModule
         {
             if (!_options.EnableTimeTravel)
             {
-                Console.WriteLine("DevTools time-travel is disabled");
+                _logger.LogDebug("DevTools time-travel is disabled");
                 return Task.CompletedTask;
             }
 
@@ -265,26 +236,19 @@ public class ReduxDevToolsModule : JsModule
 
             if (restoreAction is not null)
             {
-                Console.WriteLine($"DevTools: Restoring state from time-travel");
+                _logger.LogDebug("DevTools: Restoring state from time-travel");
 
                 // Dispatch the restore action through the normal pipeline
                 _dispatcher?.Dispatch(restoreAction);
             }
             else
             {
-                Console.WriteLine("DevTools: Failed to parse state for time-travel");
+                _logger.LogWarning("DevTools: Failed to parse state for time-travel");
             }
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools time-travel failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools time-travel failed");
         }
 
         return Task.CompletedTask;
@@ -300,11 +264,11 @@ public class ReduxDevToolsModule : JsModule
         {
             if (!_options.EnableTimeTravel)
             {
-                Console.WriteLine("DevTools time-travel is disabled");
+                _logger.LogDebug("DevTools time-travel is disabled");
                 return Task.CompletedTask;
             }
 
-            Console.WriteLine("DevTools: Resetting to initial state");
+            _logger.LogDebug("DevTools: Resetting to initial state");
 
             // Create and dispatch a reset action
             DevToolsActions.ResetToInitial resetAction = _stateManager.CreateResetAction();
@@ -312,14 +276,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools reset failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools reset failed");
         }
 
         return Task.CompletedTask;
@@ -337,11 +294,11 @@ public class ReduxDevToolsModule : JsModule
         {
             if (!_options.EnableTimeTravel)
             {
-                Console.WriteLine("DevTools time-travel is disabled");
+                _logger.LogDebug("DevTools time-travel is disabled");
                 return;
             }
 
-            Console.WriteLine($"DevTools: Jumping to action {actionIndex} ({actionType})");
+            _logger.LogDebug("DevTools: Jumping to action {ActionIndex} ({ActionType})", actionIndex, actionType);
 
             // Invoke the callback if set
             if (_onJumpToState is not null)
@@ -357,14 +314,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools jump to action failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools jump to action failed");
         }
     }
 
@@ -376,7 +326,7 @@ public class ReduxDevToolsModule : JsModule
     {
         try
         {
-            Console.WriteLine("DevTools: Commit current state as baseline");
+            _logger.LogDebug("DevTools: Commit current state as baseline");
 
             // Update the initial state to the current state
             if (_store is not null)
@@ -398,14 +348,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools commit failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools commit failed");
         }
     }
 
@@ -417,7 +360,7 @@ public class ReduxDevToolsModule : JsModule
     {
         try
         {
-            Console.WriteLine("DevTools: Rollback to committed state");
+            _logger.LogDebug("DevTools: Rollback to committed state");
 
             // Create and dispatch a rollback action
             DevToolsActions.RollbackToCommitted rollbackAction = new(DateTime.UtcNow);
@@ -425,14 +368,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools rollback failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools rollback failed");
         }
 
         return Task.CompletedTask;
@@ -446,7 +382,7 @@ public class ReduxDevToolsModule : JsModule
     {
         try
         {
-            Console.WriteLine("DevTools: Sweep skipped actions");
+            _logger.LogDebug("DevTools: Sweep skipped actions");
 
             // Create and dispatch a sweep action
             DevToolsActions.SweepSkippedActions sweepAction = new(DateTime.UtcNow);
@@ -454,14 +390,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools sweep failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools sweep failed");
         }
 
         return Task.CompletedTask;
@@ -476,7 +405,7 @@ public class ReduxDevToolsModule : JsModule
     {
         try
         {
-            Console.WriteLine($"DevTools: Toggle action at index {actionIndex}");
+            _logger.LogDebug("DevTools: Toggle action at index {ActionIndex}", actionIndex);
 
             // Create and dispatch a toggle action
             DevToolsActions.ToggleAction toggleAction = new(actionIndex, DateTime.UtcNow);
@@ -484,14 +413,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools toggle action failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools toggle action failed");
         }
 
         return Task.CompletedTask;
@@ -506,33 +428,26 @@ public class ReduxDevToolsModule : JsModule
     {
         try
         {
-            Console.WriteLine("DevTools: Import state");
+            _logger.LogDebug("DevTools: Import state");
 
             // Create a restore action from the imported JSON state
             DevToolsActions.RestoreState? importAction = _stateManager.CreateRestoreAction(jsonState);
 
             if (importAction is not null)
             {
-                Console.WriteLine("DevTools: Importing state from external source");
+                _logger.LogDebug("DevTools: Importing state from external source");
 
                 // Dispatch the import action through the normal pipeline
                 _dispatcher?.Dispatch(importAction);
             }
             else
             {
-                Console.WriteLine("DevTools: Failed to parse imported state");
+                _logger.LogWarning("DevTools: Failed to parse imported state");
             }
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools import state failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools import state failed");
         }
 
         return Task.CompletedTask;
@@ -549,7 +464,7 @@ public class ReduxDevToolsModule : JsModule
         try
         {
             string actionType = isPaused ? "pause recording" : isLocked ? "lock changes" : "resume recording";
-            Console.WriteLine($"DevTools: {actionType}");
+            _logger.LogDebug("DevTools: {ActionType}", actionType);
 
             // Create and dispatch a recording control action
             DevToolsActions.RecordingControl recordingAction = new(isPaused, isLocked, DateTime.UtcNow);
@@ -557,14 +472,7 @@ public class ReduxDevToolsModule : JsModule
         }
         catch (Exception ex)
         {
-            try
-            {
-                Console.WriteLine($"DevTools recording control failed: {ex.Message}");
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
+            _logger.LogWarning(ex, "DevTools recording control failed");
         }
 
         return Task.CompletedTask;

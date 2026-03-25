@@ -2,6 +2,8 @@
 // Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
 // See the LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.Logging;
+
 namespace Ducky.Reactive;
 
 /// <summary>
@@ -110,16 +112,18 @@ public static class CustomOperators
     }
 
     /// <summary>
-    /// Logs a message to the console for each element in the observable sequence.
+    /// Logs a message for each element in the observable sequence using the provided logger.
     /// </summary>
     /// <typeparam name="TSource">The type of the source elements.</typeparam>
     /// <param name="source">The source observable sequence.</param>
-    /// <param name="message">The message to log to the console.</param>
+    /// <param name="logger">The logger to use for logging.</param>
+    /// <param name="message">The message to log.</param>
     /// <returns>The source sequence with added side-effects of logging each element.</returns>
     public static IObservable<TSource> LogMessage<TSource>(
         this IObservable<TSource> source,
+        ILogger logger,
         string message)
     {
-        return source.Do(_ => Console.WriteLine(message));
+        return source.Do(_ => logger.LogDebug("{Message}", message));
     }
 }

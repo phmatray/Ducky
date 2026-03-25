@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Ducky.Blazor.Middlewares.Persistence;
 using FakeItEasy;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Blazor.Tests.Middlewares.Persistence;
 
@@ -25,7 +26,11 @@ public class PersistenceMiddlewareTests : IDisposable
         A.CallTo(() => _store.GetStateDictionary())
             .Returns(ImmutableSortedDictionary<string, object>.Empty);
 
-        _middleware = new PersistenceMiddleware(_persistenceProvider, _hydrationManager, _options);
+        _middleware = new PersistenceMiddleware(
+            _persistenceProvider,
+            _hydrationManager,
+            _options,
+            A.Fake<ILogger<PersistenceMiddleware>>());
     }
 
     public void Dispose()
@@ -49,7 +54,11 @@ public class PersistenceMiddlewareTests : IDisposable
     {
         // Arrange - Create a new middleware with disabled options
         var disabledOptions = new PersistenceOptions { Enabled = false };
-        var disabledMiddleware = new PersistenceMiddleware(_persistenceProvider, _hydrationManager, disabledOptions);
+        var disabledMiddleware = new PersistenceMiddleware(
+            _persistenceProvider,
+            _hydrationManager,
+            disabledOptions,
+            A.Fake<ILogger<PersistenceMiddleware>>());
         
         await disabledMiddleware.InitializeAsync(_dispatcher, _store);
 
