@@ -75,6 +75,32 @@ public class NormalizedStateTests
     }
 
     [Fact]
+    public void ContainsKey_WithStringKey_ShouldReturnTrue_WhenEntityExists()
+    {
+        // Arrange
+        SampleStringState state = new SampleStringState().SetOne(new SampleStringEntity("key-1", "Test Entity"));
+
+        // Act
+        bool containsKey = state.ContainsKey("key-1");
+
+        // Assert
+        containsKey.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ContainsKey_WithStringKey_ShouldReturnFalse_WhenEntityDoesNotExist()
+    {
+        // Arrange
+        SampleStringState state = new();
+
+        // Act
+        bool containsKey = state.ContainsKey("non-existent-key");
+
+        // Assert
+        containsKey.ShouldBeFalse();
+    }
+
+    [Fact]
     public void GetByKey_ShouldReturnEntity_WhenEntityExists()
     {
         // Arrange
@@ -336,6 +362,33 @@ public class NormalizedStateTests
 
         // Assert
         act.ShouldThrow<DuckyException>("The key cannot be empty.");
+    }
+
+    [Fact]
+    public void RemoveOne_WithStringKey_ShouldRemoveEntity()
+    {
+        // Arrange
+        SampleStringEntity entity = new("key-1", "Test Entity");
+        SampleStringState state = new SampleStringState().AddOne(entity);
+
+        // Act
+        SampleStringState newState = state.RemoveOne("key-1");
+
+        // Assert
+        newState.ById.ShouldNotContainKey("key-1");
+    }
+
+    [Fact]
+    public void RemoveOne_WithNullStringKey_ShouldThrowException()
+    {
+        // Arrange
+        SampleStringState state = new();
+
+        // Act
+        Action act = () => state.RemoveOne(null!);
+
+        // Assert
+        act.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
