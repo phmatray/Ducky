@@ -107,11 +107,13 @@ public class DuckyBuilder
     }
 
     /// <summary>
-    /// Adds a state slice to the store.
+    /// Adds a concrete slice reducer to the store.
     /// </summary>
-    public DuckyBuilder AddSlice<TState>() where TState : class, IState, new()
+    /// <typeparam name="TReducer">The concrete <see cref="SliceReducers{TState}"/> implementation type.</typeparam>
+    public DuckyBuilder AddSlice<TReducer>() where TReducer : class, ISlice
     {
-        _services.AddScoped<ISlice<TState>, SliceReducers<TState>>();
+        _services.TryAddScoped<TReducer>();
+        _services.AddScoped<ISlice>(sp => sp.GetRequiredService<TReducer>());
         return this;
     }
 

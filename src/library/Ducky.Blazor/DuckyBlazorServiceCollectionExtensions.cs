@@ -221,13 +221,13 @@ public class BlazorDuckyBuilder
     }
 
     /// <summary>
-    /// Adds a state slice to the store.
+    /// Adds a concrete slice reducer to the store.
     /// </summary>
-    /// <typeparam name="TState">The state type.</typeparam>
+    /// <typeparam name="TReducer">The concrete <see cref="SliceReducers{TState}"/> implementation type.</typeparam>
     /// <returns>The builder for chaining.</returns>
-    public BlazorDuckyBuilder AddSlice<TState>() where TState : class, IState, new()
+    public BlazorDuckyBuilder AddSlice<TReducer>() where TReducer : class, ISlice
     {
-        _innerBuilder.AddSlice<TState>();
+        _innerBuilder.AddSlice<TReducer>();
         return this;
     }
 
