@@ -82,6 +82,15 @@ public class DuckyStoreLogger : IDisposable
                     aborted.Reason);
                 break;
             }
+            case ActionReentrantEventArgs reentrant:
+            {
+                _logger.LogWarning(
+                    "[EVENT] Re-entrant dispatch detected: {ActionType} queued while processing {CurrentActionType} (queue depth: {QueueDepth})",
+                    reentrant.Action.GetType().Name,
+                    reentrant.CurrentAction.GetType().Name,
+                    reentrant.QueueDepth);
+                break;
+            }
         }
     }
 
