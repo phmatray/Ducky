@@ -198,7 +198,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     public TState UpsertMany(params IEnumerable<TEntity> entities)
     {
         ArgumentNullException.ThrowIfNull(entities);
-        return CreateWith(ById.AddRange(entities.ToImmutableDictionary(entity => entity.Id)));
+        return CreateWith(ById.SetItems(entities.ToImmutableDictionary(entity => entity.Id)));
     }
 
     /// <inheritdoc />
