@@ -57,16 +57,6 @@ public class DuckyBuilder
     }
 
     /// <summary>
-    /// Uses a production-ready middleware configuration.
-    /// </summary>
-    public DuckyBuilder UseProductionPreset()
-    {
-        UseDefaultMiddlewares();
-        // Add other production middlewares as needed
-        return this;
-    }
-
-    /// <summary>
     /// Adds a middleware to the pipeline.
     /// </summary>
     public DuckyBuilder AddMiddleware<TMiddleware>() where TMiddleware : class, IMiddleware

@@ -10,7 +10,7 @@ public partial class PageTodo
 {
     private string _newTodo = string.Empty;
 
-    private ValueCollection<TodoItem> ActiveTodos
+    private ImmutableArray<TodoItem> ActiveTodos
         => State.SelectActiveTodos();
 
     private int ActiveTodosCount
@@ -19,7 +19,7 @@ public partial class PageTodo
     private bool HasActiveTodos
         => State.SelectHasActiveTodos();
 
-    private ValueCollection<TodoItem> CompletedTodos
+    private ImmutableArray<TodoItem> CompletedTodos
         => State.SelectCompletedTodos();
 
     private int CompletedTodosCount

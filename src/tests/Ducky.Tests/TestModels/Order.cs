@@ -7,4 +7,4 @@ namespace Ducky.Tests.TestModels;
 public record Order(
     string OrderId,
     string CustomerName,
-    ValueCollection<OrderItem> Items);
+    ImmutableArray<OrderItem> Items);

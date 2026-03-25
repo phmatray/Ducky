@@ -12,12 +12,12 @@ public partial class PageProducts
     private decimal _newProductPrice;
     private string _newProductCategory = "Electronics";
 
-    private ValueCollection<Product> Electronics => State.SelectElectronics();
-    private int ElectronicsCount => Electronics.Count;
+    private ImmutableArray<Product> Electronics => State.SelectElectronics();
+    private int ElectronicsCount => Electronics.Length;
     private bool HasElectronics => ElectronicsCount > 0;
     private decimal TotalPriceOfElectronics => State.SelectTotalPriceOfElectronics();
-    private ValueCollection<Product> Clothing => State.SelectClothing();
-    private int ClothingCount => Clothing.Count;
+    private ImmutableArray<Product> Clothing => State.SelectClothing();
+    private int ClothingCount => Clothing.Length;
     private bool HasClothing => ClothingCount > 0;
     private decimal TotalPriceOfClothing => State.SelectTotalPriceOfClothing();
 

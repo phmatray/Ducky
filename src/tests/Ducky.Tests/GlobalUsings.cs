@@ -3,8 +3,16 @@
 // See the LICENSE file in the project root for full license information.
 
 global using System.Collections.Immutable;
+global using System.Reactive.Disposables;
+global using System.Reactive.Linq;
+global using System.Reactive.Subjects;
+global using Ducky;
+global using Ducky.Pipeline;
+global using Ducky.Reactive;
+global using Ducky.Reactive.Middlewares.ReactiveEffects;
 global using Ducky.Tests.TestModels;
 global using Microsoft.Extensions.Logging;
+global using Microsoft.Reactive.Testing;
 global using FakeItEasy;
 global using Shouldly;
 global using Xunit;

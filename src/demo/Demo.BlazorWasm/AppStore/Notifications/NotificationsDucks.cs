@@ -8,10 +8,10 @@ namespace Demo.BlazorWasm.AppStore;
 
 public record NotificationsState
 {
-    public required ValueCollection<Notification> Notifications { get; init; }
+    public required ImmutableArray<Notification> Notifications { get; init; }
 
     // Selectors
-    public ValueCollection<Notification> SelectUnreadNotifications()
+    public ImmutableArray<Notification> SelectUnreadNotifications()
         =>
         [
             ..Notifications
@@ -23,14 +23,14 @@ public record NotificationsState
         => !SelectUnreadNotifications().IsEmpty;
 
     public int SelectUnreadNotificationCount()
-        => SelectUnreadNotifications().Count;
+        => SelectUnreadNotifications().Length;
 
-    public ValueCollection<Notification> SelectNotificationsBySeverity(NotificationSeverity severity)
+    public ImmutableArray<Notification> SelectNotificationsBySeverity(NotificationSeverity severity)
         => SelectUnreadNotifications()
             .Where(n => n.Severity == severity)
-            .ToValueCollection();
+            .ToImmutableArray();
 
-    public ValueCollection<Notification> SelectErrorNotifications()
+    public ImmutableArray<Notification> SelectErrorNotifications()
         => SelectNotificationsBySeverity(NotificationSeverity.Error);
 }
 
@@ -65,15 +65,15 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
     }
 
     public override NotificationsState GetInitialState()
-        => new()
-        {
-            Notifications = new ValueCollection<Notification>
-            {
-                new SuccessNotification("Welcome to Ducky!"),
-                new WarningNotification("This is a warning."),
-                new ErrorNotification("This is an error.")
-            }
-        };
+    {
+        Notification[] initial =
+        [
+            new SuccessNotification("Welcome to Ducky!"),
+            new WarningNotification("This is a warning."),
+            new ErrorNotification("This is an error.")
+        ];
+        return new NotificationsState { Notifications = initial.ToImmutableArray() };
+    }
 
     private static NotificationsState Reduce(NotificationsState state, AddNotification action)
         => new() { Notifications = state.Notifications.Add(action.Notification) };
@@ -85,7 +85,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
                 .Select(n => n.Id == action.NotificationId
                     ? n with { IsRead = true }
                     : n)
-                .ToValueCollection()
+                .ToImmutableArray()
         };
 
     private static NotificationsState Reduce(NotificationsState state, MarkAllNotificationsAsRead action)
@@ -93,7 +93,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
         {
             Notifications = state.Notifications
                 .Select(n => n with { IsRead = true })
-                .ToValueCollection()
+                .ToImmutableArray()
         };
 
     private static NotificationsState Reduce(NotificationsState state, ClearErrorNotifications action)
@@ -101,7 +101,7 @@ public record NotificationsReducers : SliceReducers<NotificationsState>
         {
             Notifications = state.Notifications
                 .Where(n => n.Severity != NotificationSeverity.Error)
-                .ToValueCollection()
+                .ToImmutableArray()
         };
 }
 

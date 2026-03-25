@@ -32,6 +32,7 @@
   <ItemGroup>
     <ProjectReference Include="../../library/Ducky/Ducky.csproj" />
     <ProjectReference Include="../../library/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <ProjectReference Include="../../demo/Demo.BlazorWasm/Demo.BlazorWasm.csproj" />
   </ItemGroup>
 
 </Project>

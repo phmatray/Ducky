@@ -10,7 +10,7 @@ public partial class PageErrors
 {
     private string _searchTerm = string.Empty;
 
-    private ValueCollection<Notification> ErrorNotifications
+    private ImmutableArray<Notification> ErrorNotifications
         => State.SelectErrorNotifications();
 
     private void ThrowException()

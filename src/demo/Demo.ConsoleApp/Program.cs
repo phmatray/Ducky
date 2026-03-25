@@ -185,7 +185,7 @@ async Task RunTodoDemo(IDispatcher actionDispatcher, IStore stateStore)
         AnsiConsole.MarkupLine(
             $"[green]Active: {todoState.ActiveCount}[/] | [blue]Completed: {todoState.CompletedCount}[/]\n");
 
-        ValueCollection<TodoItem> todos = todoState.SelectEntities();
+        ImmutableArray<TodoItem> todos = todoState.SelectEntities();
         if (todos.IsEmpty)
         {
             AnsiConsole.MarkupLine("[grey]No todos yet[/]");
@@ -308,7 +308,7 @@ void ShowCurrentState(IStore store)
 
     AnsiConsole.Write(statePanel);
 
-    ValueCollection<TodoItem> todos = todoState.SelectEntities();
+    ImmutableArray<TodoItem> todos = todoState.SelectEntities();
     if (todos.IsEmpty)
     {
         return;

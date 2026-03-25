@@ -110,10 +110,9 @@ partial class Build : NukeBuild
             DotNetClean(c => c.SetProject(Solution.src.library.Ducky_Blazor));
             DotNetClean(c => c.SetProject(Solution.src.library.Ducky_Generator));
 
-            DotNetClean(c => c.SetProject(Solution.src.tests.AppStore_Tests));
             DotNetClean(c => c.SetProject(Solution.src.tests.Ducky_Tests));
-            DotNetClean(c => c.SetProject(Solution.src.tests.Ducky_Generator_Tests));
-            
+            DotNetClean(c => c.SetProject(Solution.src.tests.Ducky_Blazor_Tests));
+
             DotNetClean(c => c.SetProject(Solution.src.demo.Demo_BlazorWasm));
             
             // Clean artifacts directory

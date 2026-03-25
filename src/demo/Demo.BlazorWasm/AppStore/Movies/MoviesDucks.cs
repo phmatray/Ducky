@@ -50,7 +50,7 @@ public record MoviesState
 public record LoadMovies;
 
 [DuckyAction]
-public record LoadMoviesSuccess(ValueCollection<Movie> Movies, int TotalItems);
+public record LoadMoviesSuccess(ImmutableArray<Movie> Movies, int TotalItems);
 
 [DuckyAction]
 public record LoadMoviesFailure(string ErrorMessage);

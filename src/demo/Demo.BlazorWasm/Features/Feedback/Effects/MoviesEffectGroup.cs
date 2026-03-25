@@ -55,7 +55,7 @@ public class MoviesEffectGroup : AsyncEffectGroup
 
             List<Movie> filteredMovies = FilterMovies(response.Movies, action.Query);
 
-            Dispatcher.LoadMoviesSuccess(filteredMovies, filteredMovies.Count);
+            Dispatcher.LoadMoviesSuccess([..filteredMovies], filteredMovies.Count);
         }
         catch (Exception ex)
         {
@@ -65,7 +65,7 @@ public class MoviesEffectGroup : AsyncEffectGroup
 
     private Task HandleLoadMoviesSuccessAsync(LoadMoviesSuccess action, IStateProvider stateProvider, CancellationToken cancellationToken)
     {
-        string message = $"Loaded {action.Movies.Count} movies from the server.";
+        string message = $"Loaded {action.Movies.Length} movies from the server.";
         ShowSuccessNotification(message);
         return Task.CompletedTask;
     }

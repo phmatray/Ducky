@@ -52,7 +52,7 @@ public class DebouncedSearchEffect : AsyncEffect<SearchMovies>
                         || m.Director.Contains(action.Query, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-            Dispatcher.LoadMoviesSuccess(filteredMovies, filteredMovies.Count);
+            Dispatcher.LoadMoviesSuccess([..filteredMovies], filteredMovies.Count);
         }
         catch (OperationCanceledException)
         {

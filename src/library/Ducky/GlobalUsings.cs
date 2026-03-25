@@ -5,5 +5,10 @@
 // Global using directives
 
 global using System.Collections.Immutable;
-global using Ducky;
-global using Ducky.Generators;
+global using System.Reactive;
+global using System.Reactive.Concurrency;
+global using System.Reactive.Disposables;
+global using System.Reactive.Linq;
+global using System.Reactive.Subjects;
+global using Ducky.Pipeline;
+global using Ducky.Reactive.Middlewares.ReactiveEffects;

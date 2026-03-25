@@ -11,6 +11,6 @@ public sealed record TodoItem(string Id, string Title, bool IsCompleted = false)
 
 public sealed record TodoState : NormalizedState<string, TodoItem, TodoState>
 {
-    public int CompletedCount => SelectEntities(t => t.IsCompleted).Count;
-    public int ActiveCount => SelectEntities(t => !t.IsCompleted).Count;
+    public int CompletedCount => SelectEntities(t => t.IsCompleted).Length;
+    public int ActiveCount => SelectEntities(t => !t.IsCompleted).Length;
 }
