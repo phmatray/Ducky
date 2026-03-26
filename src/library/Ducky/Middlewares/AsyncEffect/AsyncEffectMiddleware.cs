@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Ducky.Pipeline;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky.Middlewares.AsyncEffect;
 
@@ -13,6 +14,8 @@ public sealed class AsyncEffectMiddleware : MiddlewareBase, IDisposable
 {
     private readonly IEnumerable<IAsyncEffect> _effects;
     private readonly IStoreEventPublisher _eventPublisher;
+    private readonly ILogger<AsyncEffectMiddleware> _logger;
+    private readonly EffectOptions _options;
     private CancellationTokenSource _cts = new();
     private IStore? _store;
     private bool _disposed;
@@ -22,15 +25,22 @@ public sealed class AsyncEffectMiddleware : MiddlewareBase, IDisposable
     /// </summary>
     /// <param name="effects">An enumerable collection of asynchronous effects that implement <see cref="IAsyncEffect"/>.</param>
     /// <param name="eventPublisher">The store event publisher for error events.</param>
+    /// <param name="logger">The logger for error output.</param>
+    /// <param name="options">Optional configuration options.</param>
     public AsyncEffectMiddleware(
         IEnumerable<IAsyncEffect> effects,
-        IStoreEventPublisher eventPublisher)
+        IStoreEventPublisher eventPublisher,
+        ILogger<AsyncEffectMiddleware> logger,
+        EffectOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(effects);
         ArgumentNullException.ThrowIfNull(eventPublisher);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _effects = effects;
         _eventPublisher = eventPublisher;
+        _logger = logger;
+        _options = options ?? new EffectOptions();
     }
 
     /// <inheritdoc />
@@ -106,7 +116,12 @@ public sealed class AsyncEffectMiddleware : MiddlewareBase, IDisposable
             }
             catch (Exception exception)
             {
-                // Synchronous failure — publish immediately with correct attribution
+                // Synchronous failure — log and publish immediately with correct attribution
+                _logger.LogError(
+                    exception,
+                    "Async effect {EffectType} failed synchronously for action {ActionType}.",
+                    effect.GetType().Name,
+                    action.GetType().Name);
                 _eventPublisher.Publish(new EffectErrorEventArgs(exception, effect.GetType(), action));
             }
         }
@@ -129,13 +144,18 @@ public sealed class AsyncEffectMiddleware : MiddlewareBase, IDisposable
                     // Swallow — we inspect individual tasks below for accurate attribution
                 }
 
-                // Publish errors with correct effect attribution
+                // Log and publish errors with correct effect attribution
                 foreach ((IAsyncEffect effect, Task task) in effectTasks)
                 {
                     if (task is { IsFaulted: true, Exception: not null })
                     {
                         foreach (Exception innerEx in task.Exception.Flatten().InnerExceptions)
                         {
+                            _logger.LogError(
+                                innerEx,
+                                "Async effect {EffectType} failed for action {ActionType}.",
+                                effect.GetType().Name,
+                                action.GetType().Name);
                             _eventPublisher.Publish(new EffectErrorEventArgs(innerEx, effect.GetType(), action));
                         }
                     }

@@ -4,6 +4,7 @@
 
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Pipeline;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ducky.Tests.Middlewares;
 
@@ -27,7 +28,7 @@ public class AsyncEffectMiddlewareTests
 
     private async Task<AsyncEffectMiddleware> CreateInitializedMiddleware(params IAsyncEffect[] effects)
     {
-        AsyncEffectMiddleware middleware = new(effects, _eventPublisher);
+        AsyncEffectMiddleware middleware = new(effects, _eventPublisher, NullLogger<AsyncEffectMiddleware>.Instance);
         await middleware.InitializeAsync(_dispatcher, _store);
         return middleware;
     }
@@ -36,7 +37,7 @@ public class AsyncEffectMiddlewareTests
     public void Constructor_WithNullEffects_ThrowsArgumentNullException()
     {
         Should.Throw<ArgumentNullException>(() =>
-            new AsyncEffectMiddleware(null!, _eventPublisher));
+            new AsyncEffectMiddleware(null!, _eventPublisher, NullLogger<AsyncEffectMiddleware>.Instance));
     }
 
     [Fact]
@@ -45,7 +46,7 @@ public class AsyncEffectMiddlewareTests
         IAsyncEffect[] effects = [];
 
         Should.Throw<ArgumentNullException>(() =>
-            new AsyncEffectMiddleware(effects, null!));
+            new AsyncEffectMiddleware(effects, null!, NullLogger<AsyncEffectMiddleware>.Instance));
     }
 
     [Fact]
@@ -53,7 +54,7 @@ public class AsyncEffectMiddlewareTests
     {
         IAsyncEffect[] effects = [];
 
-        AsyncEffectMiddleware middleware = new(effects, _eventPublisher);
+        AsyncEffectMiddleware middleware = new(effects, _eventPublisher, NullLogger<AsyncEffectMiddleware>.Instance);
 
         middleware.ShouldNotBeNull();
     }
