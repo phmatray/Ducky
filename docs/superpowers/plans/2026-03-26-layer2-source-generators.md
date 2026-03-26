@@ -6,7 +6,7 @@
 
 **Architecture:** US-08 (IAction) must be done first as US-09 and US-10 depend on it. US-09 and US-10 are independent and can be parallelized.
 
-**Tech Stack:** .NET 9, C# 13, Roslyn Incremental Generators (netstandard2.0), xUnit
+**Tech Stack:** .NET 10, C# 13, Roslyn Incremental Generators (netstandard2.0), xUnit
 
 **Spec:** `docs/superpowers/specs/2026-03-26-legends-review-user-stories-design.md`
 

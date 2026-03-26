@@ -6,7 +6,7 @@
 
 **Architecture:** Six independent fixes to the core Ducky library. US-01 (re-entrancy) and US-02 (thread safety) overlap on Dispatcher and DuckyStore, so they are combined into a single task. US-06 (ObservableSlices) is covered by US-02.
 
-**Tech Stack:** .NET 9, C# 13, xUnit, Shouldly, FakeItEasy
+**Tech Stack:** .NET 10, C# 13, xUnit, Shouldly, FakeItEasy
 
 **Spec:** `docs/superpowers/specs/2026-03-26-legends-review-user-stories-design.md`
 
@@ -44,7 +44,7 @@ namespace Ducky;
 /// </summary>
 public sealed class Dispatcher : IDispatcher, IDisposable
 {
-    private readonly object _syncRoot = new();
+    private readonly Lock _syncRoot = new();
     private bool _disposed;
 
     /// <inheritdoc />
@@ -286,7 +286,7 @@ Add `_rwLock.Dispose()` in the `Dispose` method.
 In `SliceReducers.cs`, add a lock object:
 
 ```csharp
-    private readonly object _initLock = new();
+    private readonly Lock _initLock = new();
 ```
 
 Update `GetState()` (lines 103-114):

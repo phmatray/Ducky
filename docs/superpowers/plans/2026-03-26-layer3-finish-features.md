@@ -6,7 +6,7 @@
 
 **Architecture:** US-11 (CrossTabSync) and US-12 (DevTools) are independent and can be parallelized. Both build on the corrected core from Layer 1.
 
-**Tech Stack:** .NET 9, C# 13, Blazor WebAssembly, JavaScript Interop, xUnit, bUnit
+**Tech Stack:** .NET 10, C# 13, Blazor WebAssembly, JavaScript Interop, xUnit, bUnit
 
 **Spec:** `docs/superpowers/specs/2026-03-26-legends-review-user-stories-design.md`
 
