@@ -28,16 +28,16 @@ public record LayoutState
 #region Actions
 
 [DuckyAction]
-public record SetTitle(string Title);
+public partial record SetTitle(string Title);
 
 [DuckyAction]
-public record ToggleDarkMode;
+public partial record ToggleDarkMode;
 
 [DuckyAction]
-public record ToggleDrawer;
+public partial record ToggleDrawer;
 
 [DuckyAction]
-public record ToggleNotifications;
+public partial record ToggleNotifications;
 
 #endregion
 

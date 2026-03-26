@@ -39,16 +39,16 @@ public record NotificationsState
 #region Actions
 
 [DuckyAction]
-public record AddNotification(Notification Notification);
+public partial record AddNotification(Notification Notification);
 
 [DuckyAction]
-public record MarkNotificationAsRead(Guid NotificationId);
+public partial record MarkNotificationAsRead(Guid NotificationId);
 
 [DuckyAction]
-public record MarkAllNotificationsAsRead;
+public partial record MarkAllNotificationsAsRead;
 
 [DuckyAction]
-public record ClearErrorNotifications;
+public partial record ClearErrorNotifications;
 
 #endregion
 

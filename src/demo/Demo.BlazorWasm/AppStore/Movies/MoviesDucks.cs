@@ -47,19 +47,19 @@ public record MoviesState
 #region Actions
 
 [DuckyAction]
-public record LoadMovies;
+public partial record LoadMovies;
 
 [DuckyAction]
-public record LoadMoviesSuccess(ImmutableArray<Movie> Movies, int TotalItems);
+public partial record LoadMoviesSuccess(ImmutableArray<Movie> Movies, int TotalItems);
 
 [DuckyAction]
-public record LoadMoviesFailure(string ErrorMessage);
+public partial record LoadMoviesFailure(string ErrorMessage);
 
 [DuckyAction]
-public record SetCurrentPage(int CurrentPage);
+public partial record SetCurrentPage(int CurrentPage);
 
 [DuckyAction]
-public record SearchMovies(string Query);
+public partial record SearchMovies(string Query);
 
 #endregion
 

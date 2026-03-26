@@ -25,7 +25,15 @@ public interface IDispatcher
     /// <param name="action">The action to dispatch.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="action"/> is null.</exception>
     /// <exception cref="ObjectDisposedException">Thrown when the dispatcher has been disposed.</exception>
+    [Obsolete("Use Dispatch<TAction>(TAction action) for compile-time safety, or typed dispatch extension methods.")]
     void Dispatch(object action);
+
+    /// <summary>
+    /// Dispatches the specified strongly-typed action.
+    /// </summary>
+    /// <typeparam name="TAction">The action type, must implement <see cref="IAction"/>.</typeparam>
+    /// <param name="action">The action to dispatch.</param>
+    void Dispatch<TAction>(TAction action) where TAction : IAction;
 }
 
 /// <summary>

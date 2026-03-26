@@ -8,10 +8,10 @@ namespace Demo.BlazorWasm.Features.Feedback.Actions;
 /// Action to retry a failed operation.
 /// </summary>
 [DuckyAction]
-public record RetryFailedOperation(object OriginalAction, string? CorrelationId = null);
+public partial record RetryFailedOperation(object OriginalAction, string? CorrelationId = null);
 
 /// <summary>
 /// Action to report an error to external logging service.
 /// </summary>
 [DuckyAction]
-public record ReportError(Exception Exception, string? UserFeedback = null);
+public partial record ReportError(Exception Exception, string? UserFeedback = null);

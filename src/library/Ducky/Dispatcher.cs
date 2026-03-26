@@ -19,6 +19,15 @@ public sealed class Dispatcher : IDispatcher, IDisposable
     public object? LastAction { get; private set; }
 
     /// <inheritdoc />
+    public void Dispatch<TAction>(TAction action) where TAction : IAction
+    {
+        ArgumentNullException.ThrowIfNull(action);
+#pragma warning disable CS0618 // Obsolete Dispatch(object) – called internally by the typed overload
+        Dispatch((object)action);
+#pragma warning restore CS0618
+    }
+
+    /// <inheritdoc />
     public void Dispatch(object action)
     {
         lock (_syncRoot)

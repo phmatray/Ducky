@@ -5,16 +5,16 @@
 namespace Demo.ConsoleApp.Todos;
 
 [DuckyAction]
-public sealed record AddTodo(string Title, string? Id = null);
+public sealed partial record AddTodo(string Title, string? Id = null);
 
 [DuckyAction]
-public sealed record ToggleTodo(string Id);
+public sealed partial record ToggleTodo(string Id);
 
 [DuckyAction]
-public sealed record RemoveTodo(string Id);
+public sealed partial record RemoveTodo(string Id);
 
 [DuckyAction]
-public sealed record ClearCompleted;
+public sealed partial record ClearCompleted;
 
 [DuckyAction]
-public sealed record ToggleAll(bool IsCompleted);
+public sealed partial record ToggleAll(bool IsCompleted);
