@@ -151,8 +151,7 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
             if (!_slicesByStateType.TryGetValue(
                 typeof(TState), out ISlice? slice))
             {
-                throw new InvalidOperationException(
-                    $"Slice of type {typeof(TState).Name} not found.");
+                throw ExceptionFactory.SliceNotFound(typeof(TState));
             }
 
             return (TState)slice.GetState();
@@ -171,7 +170,7 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
         {
             if (!_slices.TryGetValue(key, out ISlice? slice))
             {
-                throw new KeyNotFoundException($"Slice with key '{key}' not found.");
+                throw ExceptionFactory.SliceKeyNotFound(key);
             }
 
             return (TState)slice.GetState();

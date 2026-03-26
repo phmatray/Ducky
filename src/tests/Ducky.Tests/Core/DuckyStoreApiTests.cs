@@ -45,7 +45,7 @@ public class DuckyStoreApiTests : IDisposable
     public void GetSlice_Should_Throw_When_Slice_Not_Found()
     {
         // Act & Assert
-        Should.Throw<InvalidOperationException>(() => _store.GetSlice<string>());
+        Should.Throw<DuckyException>(() => _store.GetSlice<string>());
     }
 
     [Fact]

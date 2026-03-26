@@ -116,7 +116,7 @@ public abstract partial record SliceReducers<TState>
         }
 
         return _currentState is null
-            ? throw new DuckyException($"State for slice '{GetKey()}' is null. Ensure GetInitialState() returns a non-null value.")
+            ? throw ExceptionFactory.StateIsNull(GetKey())
             : _currentState;
     }
 

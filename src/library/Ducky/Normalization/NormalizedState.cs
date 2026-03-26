@@ -216,7 +216,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
 
         return ById.TryGetValue(key, out TEntity? value)
             ? value
-            : throw new DuckyException("The entity does not exist.");
+            : throw ExceptionFactory.EntityNotFound(key, typeof(TEntity));
     }
 
     /// <summary>

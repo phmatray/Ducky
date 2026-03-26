@@ -31,7 +31,7 @@ public class NormalizedStateTests
         Action act = () => _ = state[Guid.NewGuid()];
 
         // Assert
-        act.ShouldThrow<DuckyException>("The entity does not exist.");
+        act.ShouldThrow<KeyNotFoundException>();
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public class NormalizedStateTests
         Action act = () => state.GetByKey(Guid.NewGuid());
 
         // Assert
-        act.ShouldThrow<DuckyException>("The entity does not exist.");
+        act.ShouldThrow<KeyNotFoundException>();
     }
 
     [Fact]
