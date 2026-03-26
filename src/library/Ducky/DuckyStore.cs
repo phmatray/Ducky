@@ -322,6 +322,18 @@ public sealed class DuckyStore : IStore, IDisposable
     #endregion
 
     /// <inheritdoc/>
+    public void RestoreState(IReadOnlyDictionary<string, object> stateDict)
+    {
+        ArgumentNullException.ThrowIfNull(stateDict);
+        foreach (KeyValuePair<string, object> kvp in stateDict)
+        {
+#pragma warning disable CS0618
+            _dispatcher.Dispatch(new HydrateSliceAction(kvp.Key, kvp.Value));
+#pragma warning restore CS0618
+        }
+    }
+
+    /// <inheritdoc/>
     public IReadOnlyList<string> GetSliceNames()
     {
         return _slices.AllSlices.Select(s => s.GetKey()).ToList().AsReadOnly();

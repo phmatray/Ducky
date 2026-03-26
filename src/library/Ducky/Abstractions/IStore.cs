@@ -44,6 +44,13 @@ public interface IStore : IStateProvider
     IDisposable WhenSliceChanges<TState>(Action<TState> callback);
 
     /// <summary>
+    /// Restores state from a dictionary, bypassing the dispatch pipeline.
+    /// Used by DevTools time-travel debugging.
+    /// </summary>
+    /// <param name="stateDict">The state dictionary to restore.</param>
+    void RestoreState(IReadOnlyDictionary<string, object> stateDict);
+
+    /// <summary>
     /// Subscribes to changes of a specific slice with a transformation function.
     /// </summary>
     /// <typeparam name="TState">The type of the slice state.</typeparam>

@@ -14,16 +14,19 @@ namespace Ducky.Blazor.Middlewares.DevTools;
 public class DevToolsReducer
 {
     private readonly DevToolsStateManager _stateManager;
+    private readonly DevToolsMiddleware _middleware;
     private readonly ILogger<DevToolsReducer> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DevToolsReducer"/> class.
     /// </summary>
     /// <param name="stateManager">The state manager for serialization/deserialization.</param>
+    /// <param name="middleware">The DevTools middleware that owns history state.</param>
     /// <param name="logger">The logger instance.</param>
-    public DevToolsReducer(DevToolsStateManager stateManager, ILogger<DevToolsReducer> logger)
+    public DevToolsReducer(DevToolsStateManager stateManager, DevToolsMiddleware middleware, ILogger<DevToolsReducer> logger)
     {
         _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
+        _middleware = middleware ?? throw new ArgumentNullException(nameof(middleware));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -71,34 +74,18 @@ public class DevToolsReducer
     }
 
     /// <summary>
-    /// Handles jump to action operations.
-    /// For now, this logs the operation. In a full implementation,
-    /// this would involve replaying actions up to the target index.
+    /// Handles jump to action operations by delegating to the middleware.
     /// </summary>
-    /// <param name="currentState">The current state.</param>
-    /// <param name="jumpAction">The jump action.</param>
-    /// <returns>The current state (no change for now).</returns>
     private IStateProvider HandleJumpToAction(IStateProvider currentState, DevToolsActions.JumpToAction jumpAction)
     {
         _logger.LogDebug("DevTools: Jump to action {ActionIndex} ({ActionType})", jumpAction.ActionIndex, jumpAction.ActionType);
-
-        // TODO: Implement action replay from stored history
-        // This would require:
-        // 1. Access to action history
-        // 2. Ability to replay actions from a specific point
-        // 3. Coordination with the action pipeline
-
+        _middleware.JumpToAction(jumpAction.ActionIndex);
         return currentState;
     }
 
     /// <summary>
-    /// Handles replay actions operations.
-    /// For now, this logs the operation. In a full implementation,
-    /// this would replay a range of actions.
+    /// Handles replay actions operations by jumping to the target action index.
     /// </summary>
-    /// <param name="currentState">The current state.</param>
-    /// <param name="replayAction">The replay action.</param>
-    /// <returns>The current state (no change for now).</returns>
     private IStateProvider HandleReplayActions(IStateProvider currentState, DevToolsActions.ReplayActions replayAction)
     {
         _logger.LogDebug(
@@ -106,105 +93,58 @@ public class DevToolsReducer
             replayAction.FromActionIndex,
             replayAction.ToActionIndex);
 
-        // TODO: Implement action range replay
-        // This would require:
-        // 1. Access to action history
-        // 2. Ability to replay a range of actions
-        // 3. State checkpointing at the start point
-
+        _middleware.JumpToAction(replayAction.ToActionIndex);
         return currentState;
     }
 
     /// <summary>
-    /// Handles commit state operations.
-    /// For now, this logs the operation.
+    /// Handles commit state operations by delegating to the middleware.
     /// </summary>
-    /// <param name="currentState">The current state.</param>
-    /// <returns>The current state (no change for now).</returns>
     private IStateProvider HandleCommitState(IStateProvider currentState)
     {
         _logger.LogDebug("DevTools: Commit state handled in reducer");
-
-        // The actual commit operation is handled in the ReduxDevToolsModule
-        // by updating the initial state in the state manager
+        _middleware.Commit();
         return currentState;
     }
 
     /// <summary>
-    /// Handles rollback to committed state operations.
-    /// For now, this logs the operation.
+    /// Handles rollback to committed state by delegating to the middleware.
     /// </summary>
-    /// <param name="currentState">The current state.</param>
-    /// <returns>The current state (no change for now).</returns>
     private IStateProvider HandleRollbackToCommitted(IStateProvider currentState)
     {
         _logger.LogDebug("DevTools: Rollback to committed state");
-
-        // TODO: Implement rollback to last committed state
-        // This would require:
-        // 1. Access to the last committed state
-        // 2. State restoration mechanism
-
+        _middleware.RollbackToCommitted();
         return currentState;
     }
 
     /// <summary>
-    /// Handles sweep skipped actions operations.
-    /// For now, this logs the operation.
+    /// Handles sweep skipped actions by delegating to the middleware.
     /// </summary>
-    /// <param name="currentState">The current state.</param>
-    /// <returns>The current state (no change for now).</returns>
     private IStateProvider HandleSweepSkippedActions(IStateProvider currentState)
     {
         _logger.LogDebug("DevTools: Sweep skipped actions");
-
-        // TODO: Implement sweeping of skipped actions
-        // This would require:
-        // 1. Access to action history with skip flags
-        // 2. Ability to remove skipped actions from history
-        // 3. State recalculation after sweep
-
+        _middleware.SweepSkippedActions();
         return currentState;
     }
 
     /// <summary>
-    /// Handles toggle action operations.
-    /// For now, this logs the operation.
+    /// Handles toggle action by delegating to the middleware.
     /// </summary>
-    /// <param name="currentState">The current state.</param>
-    /// <param name="toggleAction">The toggle action.</param>
-    /// <returns>The current state (no change for now).</returns>
     private IStateProvider HandleToggleAction(IStateProvider currentState, DevToolsActions.ToggleAction toggleAction)
     {
         _logger.LogDebug("DevTools: Toggle action at index {ActionIndex}", toggleAction.ActionIndex);
-
-        // TODO: Implement action toggling (skip/unskip)
-        // This would require:
-        // 1. Access to action history with skip flags
-        // 2. Ability to mark actions as skipped/unskipped
-        // 3. State recalculation with toggled actions
-
+        _middleware.ToggleAction(toggleAction.ActionIndex);
         return currentState;
     }
 
     /// <summary>
-    /// Handles recording control operations.
-    /// For now, this logs the operation.
+    /// Handles recording control by delegating to the middleware.
     /// </summary>
-    /// <param name="currentState">The current state.</param>
-    /// <param name="recordingAction">The recording control action.</param>
-    /// <returns>The current state (no change for now).</returns>
     private IStateProvider HandleRecordingControl(IStateProvider currentState, DevToolsActions.RecordingControl recordingAction)
     {
         string status = recordingAction.IsPaused ? "paused" : recordingAction.IsLocked ? "locked" : "resumed";
         _logger.LogDebug("DevTools: Recording {Status}", status);
-
-        // TODO: Implement recording control
-        // This would require:
-        // 1. State to track recording status
-        // 2. Conditional action processing based on recording state
-        // 3. Lock mechanism for state changes
-
+        _middleware.SetRecording(recordingAction.IsPaused);
         return currentState;
     }
 }
