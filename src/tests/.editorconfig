@@ -11,3 +11,6 @@ dotnet_diagnostic.CA2007.severity = none
 
 # RCS1090: Call 'ConfigureAwait(false)'
 dotnet_diagnostic.RCS1090.severity = none
+
+# RCS1047: Allowed in test helpers that override base class methods with Async suffix
+dotnet_diagnostic.RCS1047.severity = none

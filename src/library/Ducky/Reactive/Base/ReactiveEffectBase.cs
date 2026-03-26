@@ -7,7 +7,7 @@ namespace Ducky.Reactive;
 /// <summary>
 /// Enhanced base class for reactive effects with lifecycle hooks and error handling.
 /// </summary>
-public abstract class ReactiveEffectBase : ReactiveEffect, IDisposable
+public abstract class ReactiveEffectBase : ReactiveEffect, IDisposable, IAsyncDisposable
 {
     private readonly CompositeDisposable _disposables = [];
     private readonly Subject<Exception> _errors = new();
@@ -112,6 +112,25 @@ public abstract class ReactiveEffectBase : ReactiveEffect, IDisposable
         IObservable<IStateProvider> stateProvider);
 
     /// <summary>
+    /// Disposes the effect asynchronously, calling <see cref="OnDisposeAsync"/> before releasing resources.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        await OnDisposeAsync().ConfigureAwait(false);
+        _disposables.Dispose();
+        _errors.OnCompleted();
+        _errors.Dispose();
+        _isDisposed = true;
+
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
     /// Disposes the effect and performs cleanup.
     /// </summary>
     public void Dispose()
@@ -133,7 +152,8 @@ public abstract class ReactiveEffectBase : ReactiveEffect, IDisposable
 
         if (disposing)
         {
-            OnDisposeAsync().GetAwaiter().GetResult();
+            // Do NOT call OnDisposeAsync().GetAwaiter().GetResult() — deadlock risk.
+            // Synchronous dispose only cleans up synchronous resources.
             _disposables.Dispose();
             _errors.OnCompleted();
             _errors.Dispose();

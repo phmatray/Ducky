@@ -5,18 +5,11 @@
 namespace Ducky;
 
 /// <summary>
-/// A dispatcher that queues and dispatches actions, providing events for dispatched actions.
+/// A thin event emitter that validates and dispatches actions immediately.
 /// </summary>
 public sealed class Dispatcher : IDispatcher, IDisposable
 {
-#if NET10_0_OR_GREATER
     private readonly Lock _syncRoot = new();
-#else
-    private readonly object _syncRoot = new();
-#endif
-
-    private readonly Queue<object> _queuedActions = [];
-    private volatile bool _isDequeuing;
     private bool _disposed;
 
     /// <inheritdoc />
@@ -28,21 +21,20 @@ public sealed class Dispatcher : IDispatcher, IDisposable
     /// <inheritdoc />
     public void Dispatch(object action)
     {
-        if (_disposed)
+        lock (_syncRoot)
         {
-            throw new DuckyException(
-                "The dispatcher has been disposed.",
-                new ObjectDisposedException(nameof(Dispatcher)));
+            if (_disposed)
+            {
+                throw new DuckyException(
+                    "The dispatcher has been disposed.",
+                    new ObjectDisposedException(nameof(Dispatcher)));
+            }
         }
 
         ArgumentNullException.ThrowIfNull(action);
 
-        lock (_syncRoot)
-        {
-            _queuedActions.Enqueue(action);
-        }
-
-        DequeueActions();
+        LastAction = action;
+        ActionDispatched?.Invoke(this, new ActionDispatchedEventArgs(action));
     }
 
     /// <summary>
@@ -50,47 +42,15 @@ public sealed class Dispatcher : IDispatcher, IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-        ActionDispatched = null;
-    }
-
-    /// <summary>
-    /// Dequeues and dispatches actions to event handlers.
-    /// </summary>
-    private void DequeueActions()
-    {
         lock (_syncRoot)
         {
-            if (_isDequeuing)
+            if (_disposed)
             {
                 return;
             }
 
-            _isDequeuing = true;
-        }
-
-        while (true)
-        {
-            object dequeuedAction;
-
-            lock (_syncRoot)
-            {
-                if (_queuedActions.Count == 0)
-                {
-                    _isDequeuing = false;
-                    return;
-                }
-
-                dequeuedAction = _queuedActions.Dequeue();
-            }
-
-            LastAction = dequeuedAction;
-            ActionDispatched?.Invoke(this, new ActionDispatchedEventArgs(dequeuedAction));
+            _disposed = true;
+            ActionDispatched = null;
         }
     }
 }

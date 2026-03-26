@@ -1,5 +1,5 @@
-// Copyright (c) 2020-2024 Atypical Consulting SRL. All rights reserved.
-// Atypical Consulting SRL licenses this file to you under the GPL-3.0-or-later license.
+// Copyright (c) 2020-2026 Atypical Consulting SRL. All rights reserved.
+// Atypical Consulting SRL licenses this file to you under the Apache-2.0 license.
 // See the LICENSE file in the project root for full license information.
 
 using Ducky.Pipeline;
@@ -19,36 +19,6 @@ public sealed record ReentrantChainAction(int Depth);
 public sealed record FloodAction(int Count);
 
 public sealed record FloodedAction(int Index);
-
-/// <summary>
-/// A dispatcher that fires ActionDispatched synchronously without queuing,
-/// which triggers true re-entrancy in DuckyStore.ProcessActionSafely().
-/// The standard Dispatcher's _isDequeuing guard serializes delivery and
-/// prevents store-level re-entrancy, so this dispatcher is needed for testing.
-/// </summary>
-public sealed class ImmediateDispatcher : IDispatcher, IDisposable
-{
-    /// <inheritdoc />
-    public event EventHandler<ActionDispatchedEventArgs>? ActionDispatched;
-
-    /// <inheritdoc />
-    public object? LastAction { get; private set; }
-
-    /// <inheritdoc />
-    public void Dispatch(object action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-        LastAction = action;
-        ActionDispatched?.Invoke(
-            this, new ActionDispatchedEventArgs(action));
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        ActionDispatched = null;
-    }
-}
 
 /// <summary>
 /// A middleware that synchronously dispatches during AfterReduce
@@ -143,7 +113,7 @@ public class DuckyStoreReentrancyTests
         IStore Store,
         IDispatcher Dispatcher,
         IStoreEventPublisher EventPublisher)>
-        CreateStoreWithImmediateDispatcher()
+        CreateStoreWithReentrantMiddleware()
     {
         ServiceCollection services = [];
         services.AddLogging();
@@ -153,11 +123,6 @@ public class DuckyStoreReentrancyTests
         {
             builder.AddMiddleware<ReentrantMiddleware>();
         });
-
-        // Override Dispatcher AFTER AddDucky to replace it
-        services.AddScoped<ImmediateDispatcher>();
-        services.AddScoped<IDispatcher>(
-            sp => sp.GetRequiredService<ImmediateDispatcher>());
 
         ServiceProvider provider = services.BuildServiceProvider();
         IStore store = provider.GetRequiredService<IStore>();
@@ -180,7 +145,7 @@ public class DuckyStoreReentrancyTests
     {
         // Arrange
         (IStore store, IDispatcher dispatcher, _) =
-            await CreateStoreWithImmediateDispatcher();
+            await CreateStoreWithReentrantMiddleware();
 
         // Act — triggers re-entrant dispatch in AfterReduce
         dispatcher.Dispatch(new TriggerReentrantAction());
@@ -201,7 +166,7 @@ public class DuckyStoreReentrancyTests
         (IStore store,
             IDispatcher dispatcher,
             IStoreEventPublisher eventPublisher) =
-            await CreateStoreWithImmediateDispatcher();
+            await CreateStoreWithReentrantMiddleware();
 
         ActionReentrantEventArgs? capturedEvent = null;
         eventPublisher.EventPublished += (_, args) =>
@@ -231,7 +196,7 @@ public class DuckyStoreReentrancyTests
     {
         // Arrange
         (IStore store, IDispatcher dispatcher, _) =
-            await CreateStoreWithImmediateDispatcher();
+            await CreateStoreWithReentrantMiddleware();
 
         // Act — chain: 3 → 2 → 1 → 0
         dispatcher.Dispatch(new ReentrantChainAction(3));
@@ -269,37 +234,17 @@ public class DuckyStoreReentrancyTests
     }
 
     [Fact]
-    public async Task ReentrantDispatch_AbortsWhenMaxDepthExceeded()
+    public async Task ReentrantDispatch_ThrowsWhenMaxDepthExceeded()
     {
         // Arrange
         (IStore store,
             IDispatcher dispatcher,
             IStoreEventPublisher eventPublisher) =
-            await CreateStoreWithImmediateDispatcher();
+            await CreateStoreWithReentrantMiddleware();
 
-        ActionAbortedEventArgs? abortedEvent = null;
-        eventPublisher.EventPublished += (_, args) =>
-        {
-            if (args is not ActionAbortedEventArgs aborted)
-            {
-                return;
-            }
-
-            if (!aborted.Reason.Contains("Re-entrant queue depth"))
-            {
-                return;
-            }
-
-            abortedEvent = aborted;
-        };
-
-        // Act — flood with 12 actions during single AfterReduce
-        // exceeds MaxReentrantDepth (10)
-        dispatcher.Dispatch(new FloodAction(12));
-
-        // Assert
-        abortedEvent.ShouldNotBeNull();
-        abortedEvent.Reason.ShouldContain(
-            "Re-entrant queue depth exceeded maximum of 10");
+        // Act & Assert — flood with 12 actions during single AfterReduce
+        // exceeds MaxReentrantDepth (10), should throw InvalidOperationException
+        Should.Throw<InvalidOperationException>(
+            () => dispatcher.Dispatch(new FloodAction(12)));
     }
 }

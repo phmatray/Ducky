@@ -217,4 +217,43 @@ public class MemoizedSelectorTests
         result1.ShouldBe(0);
         result2.ShouldBe(1);
     }
+
+    [Fact]
+    public void Create_ShouldNotCallDependencies_OnSameReferenceHit()
+    {
+        // Arrange - verify that dependency functions are NOT called when the same state reference
+        // is passed, even if the selector has dependencies
+        int selectorCallCount = 0;
+        int dependencyCallCount = 0;
+
+        TodoState state = new();
+        Func<TodoState, int> memoizedSelector = MemoizedSelector.Create(
+            (Func<TodoState, int>)Selector,
+            Dependency);
+
+        // Act
+        int result1 = memoizedSelector(state);
+        int result2 = memoizedSelector(state); // Same reference
+        int result3 = memoizedSelector(state); // Same reference again
+
+        // Assert
+        result1.ShouldBe(0);
+        result2.ShouldBe(0);
+        result3.ShouldBe(0);
+        selectorCallCount.ShouldBe(1, "because the selector should be called only once for the same state reference");
+        dependencyCallCount.ShouldBe(1, "because dependencies should be called only once when using the fast-path for same-reference hits");
+        return;
+
+        int Selector(TodoState s)
+        {
+            selectorCallCount++;
+            return s.SelectCompletedTodos().Length;
+        }
+
+        object Dependency(TodoState s)
+        {
+            dependencyCallCount++;
+            return s.ById;
+        }
+    }
 }
