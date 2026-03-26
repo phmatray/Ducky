@@ -183,12 +183,36 @@ public class BlazorDuckyBuilder
     /// <summary>
     /// Enables cross-tab state synchronization.
     /// </summary>
-    public BlazorDuckyBuilder EnableCrossTabSync()
+    /// <param name="configure">Optional configuration action for cross-tab sync options.</param>
+    public BlazorDuckyBuilder EnableCrossTabSync(Action<CrossTabSyncOptions>? configure = null)
     {
         if (!_crossTabSyncEnabled)
         {
             _crossTabSyncEnabled = true;
+
+            _services.AddSingleton<CrossTabSyncOptions>(_ =>
+            {
+                CrossTabSyncOptions options = new();
+                configure?.Invoke(options);
+                return options;
+            });
+
             _services.AddScoped<CrossTabSyncModule>();
+        }
+        else if (configure is not null)
+        {
+            ServiceDescriptor? existingDescriptor = _services.FirstOrDefault(d => d.ServiceType == typeof(CrossTabSyncOptions));
+            if (existingDescriptor is not null)
+            {
+                _services.Remove(existingDescriptor);
+            }
+
+            _services.AddSingleton<CrossTabSyncOptions>(_ =>
+            {
+                CrossTabSyncOptions options = new();
+                configure.Invoke(options);
+                return options;
+            });
         }
 
         return this;

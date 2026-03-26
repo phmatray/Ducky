@@ -1,8 +1,8 @@
 export function addReduxStorageListener(dotnetRef, storageKey) {
   window.addEventListener("storage", function (e) {
     if (e.key === storageKey) {
-      // Notify .NET only if the key matches
-      dotnetRef.invokeMethodAsync("OnExternalStateChangedAsync");
+      // Notify .NET with the changed key so it can filter appropriately
+      dotnetRef.invokeMethodAsync("OnExternalStateChangedAsync", e.key);
     }
   });
 }
