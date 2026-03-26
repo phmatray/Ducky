@@ -78,7 +78,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.BunitContext
         IMiddleware[] middlewares = scope.ServiceProvider.GetServices<IMiddleware>().ToArray();
         
         // Should have exactly 2 middlewares (no duplicates)
-        middlewares.Length.ShouldBe(2);
+        middlewares.Length.ShouldBe(3); // CorrelationId + AsyncEffect + ReactiveEffect (defaults)
         middlewares.ShouldContain(m => m is CorrelationIdMiddleware);
         middlewares.ShouldContain(m => m is AsyncEffectMiddleware);
     }
@@ -107,7 +107,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.BunitContext
         store.ShouldNotBeNull();
         
         IMiddleware[] middlewares = scope.ServiceProvider.GetServices<IMiddleware>().ToArray();
-        middlewares.Length.ShouldBe(2);
+        middlewares.Length.ShouldBe(3); // CorrelationId + AsyncEffect + ReactiveEffect (defaults)
         middlewares.ShouldContain(m => m is CorrelationIdMiddleware);
         middlewares.ShouldContain(m => m is AsyncEffectMiddleware);
     }
@@ -175,7 +175,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.BunitContext
         IMiddleware[] middlewares = scope.ServiceProvider.GetServices<IMiddleware>().ToArray();
 
         // AddDucky adds default middlewares, so we expect 2
-        middlewares.Length.ShouldBe(2);
+        middlewares.Length.ShouldBe(3); // CorrelationId + AsyncEffect + ReactiveEffect (defaults)
         middlewares.ShouldContain(m => m is CorrelationIdMiddleware);
         middlewares.ShouldContain(m => m is AsyncEffectMiddleware);
     }
@@ -247,7 +247,7 @@ public class MiddlewareIntegrationTestsSimplified : Bunit.BunitContext
         IMiddleware[] middlewares = scope.ServiceProvider.GetServices<IMiddleware>().ToArray();
         
         // Should have both CorrelationIdMiddleware and AsyncEffectMiddleware
-        middlewares.Length.ShouldBe(2);
+        middlewares.Length.ShouldBe(3); // CorrelationId + AsyncEffect + ReactiveEffect (defaults)
         middlewares.ShouldContain(m => m is CorrelationIdMiddleware);
         middlewares.ShouldContain(m => m is AsyncEffectMiddleware);
     }

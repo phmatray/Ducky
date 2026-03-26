@@ -19,6 +19,7 @@ public static class DuckyStoreConfigurationExtensions
     /// <param name="configure">Action to configure the store builder.</param>
     /// <param name="configureEffects">Action to configure reactive effects.</param>
     /// <returns>The service collection for chaining.</returns>
+    [Obsolete("Use services.AddDucky(builder => builder.AddReactiveEffect<T>()) or builder.AddReactiveEffects(configure) instead.")]
     public static IServiceCollection AddDuckyStoreWithReactiveEffects(
         this IServiceCollection services,
         Action<DuckyBuilder> configure,

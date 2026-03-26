@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Ducky.Middlewares.AsyncEffect;
 using Ducky.Middlewares.CorrelationId;
 using Ducky.Pipeline;
+using Ducky.Reactive;
 using System.Reflection;
 
 namespace Ducky.Builder;
@@ -22,6 +23,11 @@ public class DuckyBuilder
     private readonly HashSet<Assembly> _assembliesToScan = [];
     private bool _defaultMiddlewaresAdded;
     private Action<DuckyOptions>? _configureOptions;
+
+    /// <summary>
+    /// Gets the service collection for internal use by extension methods within the Ducky library.
+    /// </summary>
+    internal IServiceCollection Services => _services;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DuckyBuilder"/> class.
@@ -41,7 +47,7 @@ public class DuckyBuilder
     }
 
     /// <summary>
-    /// Uses the default middleware configuration (CorrelationId, AsyncEffect).
+    /// Uses the default middleware configuration (CorrelationId, AsyncEffect, ReactiveEffect).
     /// </summary>
     public DuckyBuilder UseDefaultMiddlewares()
     {
@@ -53,6 +59,7 @@ public class DuckyBuilder
         _defaultMiddlewaresAdded = true;
         AddMiddleware<CorrelationIdMiddleware>();
         AddMiddleware<AsyncEffectMiddleware>();
+        AddMiddleware<ReactiveEffectMiddleware>();
         return this;
     }
 
@@ -216,6 +223,7 @@ public class DuckyBuilder
         {
             ScanAndRegister<ISlice>(assembly);
             ScanAndRegister<IAsyncEffect>(assembly);
+            ScanAndRegister<ReactiveEffect>(assembly);
         }
 
         // Configure store
@@ -232,6 +240,13 @@ public class DuckyBuilder
             {
                 throw new MissingMiddlewareException(
                     "AsyncEffectMiddleware is required when using async effects. Add it with builder.AddMiddleware<AsyncEffectMiddleware>()");
+            }
+
+            IEnumerable<ReactiveEffect> reactiveEffects = sp.GetServices<ReactiveEffect>();
+            if (reactiveEffects.Any() && !_middlewareTypes.Contains(typeof(ReactiveEffectMiddleware)))
+            {
+                throw new MissingMiddlewareException(
+                    "ReactiveEffectMiddleware is required when using reactive effects. Add it with builder.AddMiddleware<ReactiveEffectMiddleware>() or builder.AddReactiveEffects().");
             }
 
             // Create pipeline

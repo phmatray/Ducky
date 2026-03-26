@@ -10,6 +10,8 @@ using Ducky.Blazor.Middlewares.Persistence;
 using Ducky.Blazor.Services;
 using Ducky.Builder;
 using Ducky.Pipeline;
+using Ducky.Reactive;
+using Ducky.Reactive.Middlewares.ReactiveEffects;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using System.Reflection;
@@ -239,6 +241,28 @@ public class BlazorDuckyBuilder
     public BlazorDuckyBuilder AddEffect<TEffect>() where TEffect : class, IAsyncEffect
     {
         _innerBuilder.AddEffect<TEffect>();
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a reactive effect.
+    /// </summary>
+    /// <typeparam name="TEffect">The reactive effect type.</typeparam>
+    /// <returns>The builder for chaining.</returns>
+    public BlazorDuckyBuilder AddReactiveEffect<TEffect>() where TEffect : ReactiveEffect
+    {
+        _innerBuilder.AddReactiveEffect<TEffect>();
+        return this;
+    }
+
+    /// <summary>
+    /// Adds reactive effects with configuration.
+    /// </summary>
+    /// <param name="configure">Action to configure reactive effects.</param>
+    /// <returns>The builder for chaining.</returns>
+    public BlazorDuckyBuilder AddReactiveEffects(Action<ReactiveEffectsBuilder> configure)
+    {
+        _innerBuilder.AddReactiveEffects(configure);
         return this;
     }
 
