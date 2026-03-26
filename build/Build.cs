@@ -72,7 +72,7 @@ partial class Build : NukeBuild
     [GitRepository]
     readonly GitRepository GitRepository;
     
-    [Solution(SuppressBuildProjectCheck = true, GenerateProjects = true)]
+    [Solution(GenerateProjects = true)]
     readonly Solution Solution;
     
     const string MainBranch = "main";
@@ -123,7 +123,7 @@ partial class Build : NukeBuild
         .Description("Install .NET workloads")
         .Executes(() =>
         {
-            // this requires sudo on macOS and Linux
+            // Projects now target net10.0; use the standard wasm-tools workload.
             DotNetWorkloadInstall(s => s.SetWorkloadId("wasm-tools"));
         });
 
