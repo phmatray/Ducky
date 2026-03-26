@@ -25,6 +25,7 @@ public sealed class DuckyStore : IStore, IDisposable
     private const int MaxReentrantDepth = 10;
 
     private bool _isDisposed;
+    private bool _synchronousInitialized;
     private bool _isDispatching;
     private int _dispatchingThreadId;
     private object? _currentAction;
@@ -81,7 +82,40 @@ public sealed class DuckyStore : IStore, IDisposable
     /// Initializes the store asynchronously. This method must be called after construction.
     /// </summary>
     /// <returns>A task that represents the asynchronous initialization operation.</returns>
+    [Obsolete("Store is initialized automatically via DI. For async middleware init, use DuckyStoreInitializer.")]
     public async Task InitializeAsync()
+    {
+        if (IsInitialized)
+        {
+            return;
+        }
+
+        InitializeSynchronous();
+        await InitializePipelineAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Performs synchronous initialization: subscribes to the dispatcher so that
+    /// actions can be dispatched immediately after DI resolution.
+    /// </summary>
+    internal void InitializeSynchronous()
+    {
+        if (_synchronousInitialized)
+        {
+            return;
+        }
+
+        _synchronousInitialized = true;
+
+        // Subscribe to action stream and process through pipeline
+        _dispatcher.ActionDispatched += OnActionDispatched;
+    }
+
+    /// <summary>
+    /// Performs asynchronous initialization: initializes the middleware pipeline,
+    /// dispatches <see cref="StoreInitialized"/>, and marks the store as initialized.
+    /// </summary>
+    internal async Task InitializePipelineAsync()
     {
         if (IsInitialized)
         {
@@ -90,9 +124,6 @@ public sealed class DuckyStore : IStore, IDisposable
 
         // Initialize the pipeline
         await _pipeline.InitializeAsync(_dispatcher, this).ConfigureAwait(false);
-
-        // Subscribe to action stream and process through pipeline
-        _dispatcher.ActionDispatched += OnActionDispatched;
 
         // Dispatch initial action
 #pragma warning disable CS0618 // Internal action uses untyped Dispatch – will migrate later

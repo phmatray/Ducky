@@ -262,7 +262,14 @@ public class DuckyBuilder
             // Create store
             _ = sp.GetRequiredService<DuckyStoreLogger>(); // Ensure logger is created
             ILogger<DuckyStore> storeLogger = sp.GetRequiredService<ILogger<DuckyStore>>();
-            return new DuckyStore(dispatcher, pipeline, eventPublisher, slices, storeLogger);
+            DuckyStore store = new(dispatcher, pipeline, eventPublisher, slices, storeLogger);
+
+            // Perform synchronous initialization so the store can dispatch actions
+            // immediately after DI resolution. Async pipeline init happens separately
+            // via DuckyStoreInitializer (Blazor) or the caller.
+            store.InitializeSynchronous();
+
+            return store;
         });
 
         // Apply any additional configuration
