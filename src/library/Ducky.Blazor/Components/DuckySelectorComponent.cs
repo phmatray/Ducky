@@ -148,7 +148,7 @@ public abstract class DuckySelectorComponent<TViewModel> : ComponentBase, IDispo
         Dispatcher.Dispatch(action);
     }
 
-    private void OnStateChanged(object? sender, StateChangedEventArgs e)
+    private async void OnStateChanged(object? sender, StateChangedEventArgs e)
     {
         TViewModel? previousViewModel = _currentViewModel;
         UpdateViewModel();
@@ -159,7 +159,15 @@ public abstract class DuckySelectorComponent<TViewModel> : ComponentBase, IDispo
             return;
         }
 
-        InvokeAsync(StateHasChanged);
+        try
+        {
+            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Component was disposed between event firing and async callback
+        }
+
         Logger.ComponentRefreshed(ComponentName);
     }
 }

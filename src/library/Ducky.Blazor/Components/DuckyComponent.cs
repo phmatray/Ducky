@@ -130,10 +130,17 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
         Dispatcher.Dispatch(action);
     }
 
-    private void OnStateChanged(object? sender, StateChangedEventArgs e)
+    private async void OnStateChanged(object? sender, StateChangedEventArgs e)
     {
+        // Only process changes for our slice type
+        if (e.SliceType != typeof(TState))
+        {
+            return;
+        }
+
+        // Use state directly from event args instead of calling Store.GetSlice<TState>()
         TState? previousState = _currentState;
-        UpdateCurrentState();
+        _currentState = (TState)e.NewState;
 
         // Only re-render if the state actually changed
         if (EqualityComparer<TState>.Default.Equals(previousState, _currentState))
@@ -141,7 +148,15 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
             return;
         }
 
-        InvokeAsync(StateHasChanged);
+        try
+        {
+            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Component was disposed between event firing and async callback
+        }
+
         Logger.ComponentRefreshed(ComponentName);
     }
 }
