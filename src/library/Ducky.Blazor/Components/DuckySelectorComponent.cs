@@ -163,9 +163,12 @@ public abstract class DuckySelectorComponent<TViewModel> : ComponentBase, IDispo
         {
             await InvokeAsync(StateHasChanged).ConfigureAwait(false);
         }
-        catch (ObjectDisposedException)
+        catch (Exception ex)
         {
-            // Component was disposed between event firing and async callback
+            Logger.LogError(
+                ex,
+                "Error in DuckySelectorComponent<{ViewModelType}>.OnStateChanged while processing state change.",
+                typeof(TViewModel).Name);
         }
 
         Logger.ComponentRefreshed(ComponentName);
