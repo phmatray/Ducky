@@ -12,12 +12,18 @@ namespace Ducky;
 public sealed class ObservableSlices : IStateProvider, IDisposable
 {
     private readonly Dictionary<string, ISlice> _slices = [];
+    private readonly Dictionary<Type, ISlice> _slicesByStateType = [];
     private readonly Dictionary<string, EventHandler> _sliceUpdateHandlers = [];
 
     /// <summary>
     /// Occurs when any slice state changes.
     /// </summary>
     public event EventHandler<StateChangedEventArgs>? SliceStateChanged;
+
+    /// <summary>
+    /// Gets the number of registered slices.
+    /// </summary>
+    public int Count => _slices.Count;
 
     /// <summary>
     /// Gets an enumerable collection of all registered slices.
@@ -33,7 +39,23 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     {
         ArgumentNullException.ThrowIfNull(slice);
 
-        _slices[slice.GetKey()] = slice;
+        string key = slice.GetKey();
+        Type stateType = slice.GetStateType();
+
+        // If replacing an existing slice with the same key,
+        // update the type index to point to the new instance.
+        if (_slices.TryGetValue(key, out ISlice? existingSlice))
+        {
+            Type existingType = existingSlice.GetStateType();
+            if (_slicesByStateType.TryGetValue(existingType, out ISlice? indexedSlice)
+                && ReferenceEquals(indexedSlice, existingSlice))
+            {
+                _slicesByStateType[existingType] = slice;
+            }
+        }
+
+        _slices[key] = slice;
+        _slicesByStateType.TryAdd(stateType, slice);
 
         // Create handler for slice updates
         EventHandler handler = (sender, _) =>
@@ -69,6 +91,7 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
 
         _sliceUpdateHandlers.Clear();
         _slices.Clear();
+        _slicesByStateType.Clear();
         SliceStateChanged = null;
     }
 
@@ -77,10 +100,11 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     /// <inheritdoc />
     public TState GetSlice<TState>()
     {
-        ISlice? slice = _slices.Values.FirstOrDefault(s => s.GetState() is TState);
-        if (slice is null)
+        if (!_slicesByStateType.TryGetValue(
+            typeof(TState), out ISlice? slice))
         {
-            throw new InvalidOperationException($"Slice of type {typeof(TState).Name} not found.");
+            throw new InvalidOperationException(
+                $"Slice of type {typeof(TState).Name} not found.");
         }
 
         return (TState)slice.GetState();
@@ -100,8 +124,8 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     /// <inheritdoc />
     public bool TryGetSlice<TState>(out TState? state)
     {
-        ISlice? slice = _slices.Values.FirstOrDefault(s => s.GetState() is TState);
-        if (slice is not null)
+        if (_slicesByStateType.TryGetValue(
+            typeof(TState), out ISlice? slice))
         {
             state = (TState)slice.GetState();
             return true;
@@ -114,7 +138,7 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     /// <inheritdoc />
     public bool HasSlice<TState>()
     {
-        return _slices.Values.Any(s => s.GetState() is TState);
+        return _slicesByStateType.ContainsKey(typeof(TState));
     }
 
     /// <inheritdoc />

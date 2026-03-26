@@ -18,6 +18,8 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     where TEntity : IEntity<TKey>
     where TState : NormalizedState<TKey, TEntity, TState>, new()
 {
+    private ImmutableArray<TKey>? _cachedAllIds;
+
     /// <summary>
     /// Gets or init the dictionary of entities.
     /// </summary>
@@ -27,7 +29,7 @@ public abstract record NormalizedState<TKey, TEntity, TState>
     /// Gets the collection of entity IDs.
     /// </summary>
     public ImmutableArray<TKey> AllIds
-        => [..ById.Keys];
+        => _cachedAllIds ??= ImmutableArray.CreateRange(ById.Keys);
 
     /// <summary>
     /// Indexer to get an entity by its key.

@@ -108,7 +108,7 @@ public sealed class DuckyStore : IStore, IDisposable
     public DateTime StartTime => _startTime;
 
     /// <inheritdoc/>
-    public int SliceCount => _slices.AllSlices.Count();
+    public int SliceCount => _slices.Count;
 
     /// <inheritdoc/>
     public void Dispose()
@@ -292,13 +292,12 @@ public sealed class DuckyStore : IStore, IDisposable
 
         void Handler(object? sender, StateChangedEventArgs e)
         {
-            ISlice? slice = _slices.AllSlices.FirstOrDefault(s => s.GetStateType() == stateType);
-            if (slice is null)
+            if (e.SliceType != stateType)
             {
                 return;
             }
 
-            var currentState = (TState)slice.GetState();
+            var currentState = (TState)e.NewState;
 
             // Only notify if state actually changed
             if (hasPreviousState && EqualityComparer<TState>.Default.Equals(previousState, currentState))
