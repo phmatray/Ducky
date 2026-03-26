@@ -13,18 +13,23 @@ namespace Ducky.Reactive.Middlewares.ReactiveEffects;
 internal sealed class StateSnapshot : IStateProvider
 {
     private readonly ImmutableSortedDictionary<string, object> _state;
+    private readonly Dictionary<Type, string> _typeIndex;
 
-    public StateSnapshot(ImmutableSortedDictionary<string, object> state)
+    public StateSnapshot(
+        ImmutableSortedDictionary<string, object> state,
+        Dictionary<Type, string> typeIndex)
     {
         _state = state;
+        _typeIndex = typeIndex;
     }
 
     public TState GetSlice<TState>()
     {
-        string? key = _state.Keys.FirstOrDefault(k => _state[k] is TState);
-        if (key is not null)
+        if (_typeIndex.TryGetValue(typeof(TState), out string? key)
+            && _state.TryGetValue(key, out object? value)
+            && value is TState state)
         {
-            return (TState)_state[key];
+            return state;
         }
 
         throw new InvalidOperationException($"Slice of type {typeof(TState).Name} not found in state snapshot.");
@@ -42,10 +47,11 @@ internal sealed class StateSnapshot : IStateProvider
 
     public bool TryGetSlice<TState>(out TState? state)
     {
-        string? key = _state.Keys.FirstOrDefault(k => _state[k] is TState);
-        if (key is not null)
+        if (_typeIndex.TryGetValue(typeof(TState), out string? key)
+            && _state.TryGetValue(key, out object? value)
+            && value is TState typedState)
         {
-            state = (TState)_state[key];
+            state = typedState;
             return true;
         }
 
@@ -55,7 +61,7 @@ internal sealed class StateSnapshot : IStateProvider
 
     public bool HasSlice<TState>()
     {
-        return _state.Values.Any(v => v is TState);
+        return _typeIndex.ContainsKey(typeof(TState));
     }
 
     public bool HasSliceByKey(string key)

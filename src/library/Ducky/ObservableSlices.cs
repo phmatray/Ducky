@@ -15,6 +15,9 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     private readonly Dictionary<Type, ISlice> _slicesByStateType = [];
     private readonly Dictionary<string, EventHandler> _sliceUpdateHandlers = [];
     private readonly ReaderWriterLockSlim _rwLock = new();
+    private ImmutableSortedDictionary<string, object>? _cachedStateDictionary;
+    private Dictionary<Type, string>? _cachedTypeIndex;
+    private volatile bool _stateDirty = true;
 
     /// <summary>
     /// Occurs when any slice state changes.
@@ -88,6 +91,9 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
             _slices[key] = slice;
             _slicesByStateType.TryAdd(stateType, slice);
 
+            // Invalidate cache when slices change
+            _stateDirty = true;
+
             // Create handler for slice updates
             EventHandler handler = (sender, _) =>
             {
@@ -95,6 +101,8 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
                 {
                     return;
                 }
+
+                _stateDirty = true;
 
                 object newState = updatedSlice.GetState();
                 SliceStateChanged?.Invoke(
@@ -257,16 +265,56 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     /// <inheritdoc />
     public ImmutableSortedDictionary<string, object> GetStateDictionary()
     {
+        return GetSnapshotData().State;
+    }
+
+    /// <summary>
+    /// Returns a cached snapshot of the current state dictionary and type index.
+    /// Rebuilds only when the state is marked dirty.
+    /// </summary>
+    public (ImmutableSortedDictionary<string, object> State, Dictionary<Type, string> TypeIndex) GetSnapshotData()
+    {
         _rwLock.EnterReadLock();
         try
         {
-            return _slices.ToImmutableSortedDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value.GetState());
+            if (!_stateDirty && _cachedStateDictionary is not null && _cachedTypeIndex is not null)
+            {
+                return (_cachedStateDictionary, _cachedTypeIndex);
+            }
         }
         finally
         {
             _rwLock.ExitReadLock();
+        }
+
+        _rwLock.EnterWriteLock();
+        try
+        {
+            // Double-check after acquiring write lock
+            if (!_stateDirty && _cachedStateDictionary is not null && _cachedTypeIndex is not null)
+            {
+                return (_cachedStateDictionary, _cachedTypeIndex);
+            }
+
+            ImmutableSortedDictionary<string, object>.Builder builder = ImmutableSortedDictionary.CreateBuilder<string, object>();
+            Dictionary<Type, string> typeIndex = new(_slices.Count);
+
+            foreach ((string key, ISlice slice) in _slices)
+            {
+                object state = slice.GetState();
+                builder.Add(key, state);
+                typeIndex.TryAdd(state.GetType(), key);
+            }
+
+            _cachedStateDictionary = builder.ToImmutable();
+            _cachedTypeIndex = typeIndex;
+            _stateDirty = false;
+
+            return (_cachedStateDictionary, _cachedTypeIndex);
+        }
+        finally
+        {
+            _rwLock.ExitWriteLock();
         }
     }
 
