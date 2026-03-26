@@ -20,6 +20,7 @@ namespace Ducky;
 public abstract partial record SliceReducers<TState>
     : ISlice<TState>, IDisposable
 {
+    private readonly Lock _initLock = new();
     private bool _isInitialized;
     private TState? _currentState;
     private bool _disposed;
@@ -104,12 +105,18 @@ public abstract partial record SliceReducers<TState>
     {
         if (!_isInitialized)
         {
-            _currentState = GetInitialState();
-            _isInitialized = true;
+            lock (_initLock)
+            {
+                if (!_isInitialized)
+                {
+                    _currentState = GetInitialState();
+                    _isInitialized = true;
+                }
+            }
         }
 
         return _currentState is null
-            ? throw new DuckyException("State is null.")
+            ? throw new DuckyException($"State for slice '{GetKey()}' is null. Ensure GetInitialState() returns a non-null value.")
             : _currentState;
     }
 

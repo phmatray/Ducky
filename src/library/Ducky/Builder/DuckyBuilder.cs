@@ -261,7 +261,8 @@ public class DuckyBuilder
 
             // Create store
             _ = sp.GetRequiredService<DuckyStoreLogger>(); // Ensure logger is created
-            return new DuckyStore(dispatcher, pipeline, eventPublisher, slices);
+            ILogger<DuckyStore> storeLogger = sp.GetRequiredService<ILogger<DuckyStore>>();
+            return new DuckyStore(dispatcher, pipeline, eventPublisher, slices, storeLogger);
         });
 
         // Apply any additional configuration

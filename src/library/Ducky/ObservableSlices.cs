@@ -14,6 +14,7 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     private readonly Dictionary<string, ISlice> _slices = [];
     private readonly Dictionary<Type, ISlice> _slicesByStateType = [];
     private readonly Dictionary<string, EventHandler> _sliceUpdateHandlers = [];
+    private readonly ReaderWriterLockSlim _rwLock = new();
 
     /// <summary>
     /// Occurs when any slice state changes.
@@ -23,13 +24,40 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     /// <summary>
     /// Gets the number of registered slices.
     /// </summary>
-    public int Count => _slices.Count;
+    public int Count
+    {
+        get
+        {
+            _rwLock.EnterReadLock();
+            try
+            {
+                return _slices.Count;
+            }
+            finally
+            {
+                _rwLock.ExitReadLock();
+            }
+        }
+    }
 
     /// <summary>
     /// Gets an enumerable collection of all registered slices.
     /// </summary>
     public IEnumerable<ISlice> AllSlices
-        => _slices.Values;
+    {
+        get
+        {
+            _rwLock.EnterReadLock();
+            try
+            {
+                return _slices.Values.ToList();
+            }
+            finally
+            {
+                _rwLock.ExitReadLock();
+            }
+        }
+    }
 
     /// <summary>
     /// Adds a new slice with the specified key and data.
@@ -42,39 +70,47 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
         string key = slice.GetKey();
         Type stateType = slice.GetStateType();
 
-        // If replacing an existing slice with the same key,
-        // update the type index to point to the new instance.
-        if (_slices.TryGetValue(key, out ISlice? existingSlice))
+        _rwLock.EnterWriteLock();
+        try
         {
-            Type existingType = existingSlice.GetStateType();
-            if (_slicesByStateType.TryGetValue(existingType, out ISlice? indexedSlice)
-                && ReferenceEquals(indexedSlice, existingSlice))
+            // If replacing an existing slice with the same key,
+            // update the type index to point to the new instance.
+            if (_slices.TryGetValue(key, out ISlice? existingSlice))
             {
-                _slicesByStateType[existingType] = slice;
+                Type existingType = existingSlice.GetStateType();
+                if (_slicesByStateType.TryGetValue(existingType, out ISlice? indexedSlice)
+                    && ReferenceEquals(indexedSlice, existingSlice))
+                {
+                    _slicesByStateType[existingType] = slice;
+                }
             }
+
+            _slices[key] = slice;
+            _slicesByStateType.TryAdd(stateType, slice);
+
+            // Create handler for slice updates
+            EventHandler handler = (sender, _) =>
+            {
+                if (sender is not ISlice updatedSlice)
+                {
+                    return;
+                }
+
+                object newState = updatedSlice.GetState();
+                SliceStateChanged?.Invoke(
+                    this,
+                    new StateChangedEventArgs(
+                        updatedSlice.GetKey(),
+                        newState.GetType(),
+                        newState));
+            };
+            _sliceUpdateHandlers[slice.GetKey()] = handler;
+            slice.StateUpdated += handler;
         }
-
-        _slices[key] = slice;
-        _slicesByStateType.TryAdd(stateType, slice);
-
-        // Create handler for slice updates
-        EventHandler handler = (sender, _) =>
+        finally
         {
-            if (sender is not ISlice updatedSlice)
-            {
-                return;
-            }
-
-            object newState = updatedSlice.GetState();
-            SliceStateChanged?.Invoke(
-                this,
-                new StateChangedEventArgs(
-                    updatedSlice.GetKey(),
-                    newState.GetType(),
-                    newState));
-        };
-        _sliceUpdateHandlers[slice.GetKey()] = handler;
-        slice.StateUpdated += handler;
+            _rwLock.ExitWriteLock();
+        }
     }
 
     /// <inheritdoc />
@@ -93,6 +129,7 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
         _slices.Clear();
         _slicesByStateType.Clear();
         SliceStateChanged = null;
+        _rwLock.Dispose();
     }
 
     #region IStateProvider Implementation
@@ -100,79 +137,151 @@ public sealed class ObservableSlices : IStateProvider, IDisposable
     /// <inheritdoc />
     public TState GetSlice<TState>()
     {
-        if (!_slicesByStateType.TryGetValue(
-            typeof(TState), out ISlice? slice))
+        _rwLock.EnterReadLock();
+        try
         {
-            throw new InvalidOperationException(
-                $"Slice of type {typeof(TState).Name} not found.");
-        }
+            if (!_slicesByStateType.TryGetValue(
+                typeof(TState), out ISlice? slice))
+            {
+                throw new InvalidOperationException(
+                    $"Slice of type {typeof(TState).Name} not found.");
+            }
 
-        return (TState)slice.GetState();
+            return (TState)slice.GetState();
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     /// <inheritdoc />
     public TState GetSliceByKey<TState>(string key)
     {
-        if (!_slices.TryGetValue(key, out ISlice? slice))
+        _rwLock.EnterReadLock();
+        try
         {
-            throw new KeyNotFoundException($"Slice with key '{key}' not found.");
-        }
+            if (!_slices.TryGetValue(key, out ISlice? slice))
+            {
+                throw new KeyNotFoundException($"Slice with key '{key}' not found.");
+            }
 
-        return (TState)slice.GetState();
+            return (TState)slice.GetState();
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     /// <inheritdoc />
     public bool TryGetSlice<TState>(out TState? state)
     {
-        if (_slicesByStateType.TryGetValue(
-            typeof(TState), out ISlice? slice))
+        _rwLock.EnterReadLock();
+        try
         {
-            state = (TState)slice.GetState();
-            return true;
-        }
+            if (_slicesByStateType.TryGetValue(
+                typeof(TState), out ISlice? slice))
+            {
+                state = (TState)slice.GetState();
+                return true;
+            }
 
-        state = default;
-        return false;
+            state = default;
+            return false;
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     /// <inheritdoc />
     public bool HasSlice<TState>()
     {
-        return _slicesByStateType.ContainsKey(typeof(TState));
+        _rwLock.EnterReadLock();
+        try
+        {
+            return _slicesByStateType.ContainsKey(typeof(TState));
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     /// <inheritdoc />
     public bool HasSliceByKey(string key)
     {
-        return _slices.ContainsKey(key);
+        _rwLock.EnterReadLock();
+        try
+        {
+            return _slices.ContainsKey(key);
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     /// <inheritdoc />
     public IReadOnlyCollection<string> GetSliceKeys()
     {
-        return _slices.Keys.ToList().AsReadOnly();
+        _rwLock.EnterReadLock();
+        try
+        {
+            return _slices.Keys.ToList().AsReadOnly();
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     /// <inheritdoc />
     public IReadOnlyDictionary<string, object> GetAllSlices()
     {
-        return _slices.ToDictionary(
-            kvp => kvp.Key,
-            kvp => kvp.Value.GetState());
+        _rwLock.EnterReadLock();
+        try
+        {
+            return _slices.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.GetState());
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     /// <inheritdoc />
     public ImmutableSortedDictionary<string, object> GetStateDictionary()
     {
-        return _slices.ToImmutableSortedDictionary(
-            kvp => kvp.Key,
-            kvp => kvp.Value.GetState());
+        _rwLock.EnterReadLock();
+        try
+        {
+            return _slices.ToImmutableSortedDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.GetState());
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     /// <inheritdoc />
     public ImmutableSortedSet<string> GetKeys()
     {
-        return _slices.Keys.ToImmutableSortedSet();
+        _rwLock.EnterReadLock();
+        try
+        {
+            return _slices.Keys.ToImmutableSortedSet();
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
+        }
     }
 
     #endregion

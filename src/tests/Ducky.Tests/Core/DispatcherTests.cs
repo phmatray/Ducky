@@ -13,7 +13,7 @@ public sealed class DispatcherTests : IDisposable
     private bool _disposed;
 
     [Fact]
-    public void Dispatch_Should_EnqueueAction()
+    public void Dispatch_Should_FireActionDispatched()
     {
         // Arrange
         TestActionWithParameter action = new("Test");
@@ -57,12 +57,17 @@ public sealed class DispatcherTests : IDisposable
     }
 
     [Fact]
-    public void Dispatch_MultipleConcurrentActions_Should_EmitInOrder()
+    public void Dispatch_ConcurrentActions_Should_EmitAll()
     {
-        // Verifies that actions dispatched concurrently are still emitted in the order they were enqueued.
         // Arrange
         List<object> emittedActions = [];
-        _sut.ActionDispatched += (_, args) => emittedActions.Add(args.Action);
+        _sut.ActionDispatched += (_, args) =>
+        {
+            lock (emittedActions)
+            {
+                emittedActions.Add(args.Action);
+            }
+        };
 
         // Act
         Parallel.Invoke(
@@ -81,7 +86,6 @@ public sealed class DispatcherTests : IDisposable
     [Fact]
     public void UnsubscribingFromActionDispatched_Should_NotReceiveFurtherActions()
     {
-        // Tests that unsubscribing from the ActionDispatched event stops receiving further actions.
         // Arrange
         List<object> emittedActions = [];
         EventHandler<ActionDispatchedEventArgs> handler = (_, args) => emittedActions.Add(args.Action);
@@ -99,8 +103,6 @@ public sealed class DispatcherTests : IDisposable
     [Fact]
     public void Dispatch_Should_NotBlockWhenNoSubscribers()
     {
-        // Ensures that the Dispatch method does not block or throw an exception
-        // when there are no subscribers to the ActionStream.
         // Act
         Action act = () => _sut.Dispatch(_action1);
 
@@ -111,17 +113,15 @@ public sealed class DispatcherTests : IDisposable
     [Fact]
     public void ActionDispatched_Should_BeNullWhenDispatcherDisposed()
     {
-        // Verifies that the ActionDispatched event is cleared when the Dispatcher is disposed,
-        // ensuring proper resource cleanup.
         // Arrange
         var eventFired = false;
         _sut.ActionDispatched += (_, _) => eventFired = true;
 
         // Act
         _sut.Dispose();
-        
+
         // Try to dispatch after dispose (should throw)
-        try 
+        try
         {
             _sut.Dispatch(_action1);
         }
@@ -159,6 +159,16 @@ public sealed class DispatcherTests : IDisposable
 
         // Assert
         act.ShouldNotThrow();
+    }
+
+    [Fact]
+    public void Dispatch_Should_SetLastAction()
+    {
+        // Act
+        _sut.Dispatch(_action1);
+
+        // Assert
+        _sut.LastAction.ShouldBe(_action1);
     }
 
     public void Dispose()

@@ -4,6 +4,7 @@
 
 using System.Collections.Immutable;
 using Ducky.Pipeline;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky;
 
@@ -15,6 +16,7 @@ public sealed class DuckyStore : IStore, IDisposable
     private readonly IDispatcher _dispatcher;
     private readonly ActionPipeline _pipeline;
     private readonly IStoreEventPublisher _eventPublisher;
+    private readonly ILogger<DuckyStore> _logger;
     private readonly ObservableSlices _slices = new();
     private readonly DateTime _startTime = DateTime.UtcNow;
     private readonly object _syncRoot = new();
@@ -22,8 +24,9 @@ public sealed class DuckyStore : IStore, IDisposable
 
     private const int MaxReentrantDepth = 10;
 
-    private volatile bool _isDisposed;
-    private volatile bool _isDispatching;
+    private bool _isDisposed;
+    private bool _isDispatching;
+    private int _dispatchingThreadId;
     private object? _currentAction;
     private List<string> _sliceKeys = [];
 
@@ -34,20 +37,24 @@ public sealed class DuckyStore : IStore, IDisposable
     /// <param name="pipeline">The reactive action pipeline that processes actions.</param>
     /// <param name="eventPublisher">The event publisher for store events.</param>
     /// <param name="slices">The initial collection of slices to register.</param>
+    /// <param name="logger">The logger for store diagnostics.</param>
     public DuckyStore(
         IDispatcher dispatcher,
         ActionPipeline pipeline,
         IStoreEventPublisher eventPublisher,
-        IEnumerable<ISlice> slices)
+        IEnumerable<ISlice> slices,
+        ILogger<DuckyStore> logger)
     {
         ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(pipeline);
         ArgumentNullException.ThrowIfNull(eventPublisher);
         ArgumentNullException.ThrowIfNull(slices);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _dispatcher = dispatcher;
         _pipeline = pipeline;
         _eventPublisher = eventPublisher;
+        _logger = logger;
 
         List<string> sliceKeys = [];
 
@@ -83,7 +90,7 @@ public sealed class DuckyStore : IStore, IDisposable
 
         // Initialize the pipeline
         await _pipeline.InitializeAsync(_dispatcher, this).ConfigureAwait(false);
-        
+
         // Subscribe to action stream and process through pipeline
         _dispatcher.ActionDispatched += OnActionDispatched;
 
@@ -113,9 +120,14 @@ public sealed class DuckyStore : IStore, IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        if (_isDisposed)
+        lock (_syncRoot)
         {
-            return;
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
         }
 
         TimeSpan uptime = DateTime.UtcNow - _startTime;
@@ -130,32 +142,62 @@ public sealed class DuckyStore : IStore, IDisposable
         {
             _reentrantQueue.Clear();
         }
-
-        _isDisposed = true;
     }
 
     private void ProcessActionSafely(object action)
     {
         lock (_syncRoot)
         {
-            if (_isDispatching)
+            if (_isDisposed)
             {
-                // Queue re-entrant action instead of silently dropping it
-                if (_reentrantQueue.Count >= MaxReentrantDepth)
-                {
-                    _eventPublisher.Publish(new ActionAbortedEventArgs(
-                        new ActionContext(action) { StateProvider = _slices },
-                        $"Re-entrant queue depth exceeded maximum of {MaxReentrantDepth}"));
-                    return;
-                }
-
-                _eventPublisher.Publish(new ActionReentrantEventArgs(
-                    action, _currentAction!, _reentrantQueue.Count + 1));
-                _reentrantQueue.Enqueue(action);
+                _logger.LogWarning(
+                    "Action {ActionType} dispatched after store disposal — ignoring.",
+                    action.GetType().Name);
                 return;
             }
 
+            if (_isDispatching)
+            {
+                // Same thread = true re-entrancy (e.g. middleware dispatching during reduce)
+                if (_dispatchingThreadId == Environment.CurrentManagedThreadId)
+                {
+                    if (_reentrantQueue.Count >= MaxReentrantDepth)
+                    {
+                        throw new InvalidOperationException(
+                            $"Re-entrant queue depth exceeded maximum of {MaxReentrantDepth}. "
+                            + $"Action '{action.GetType().Name}' aborted to prevent infinite loop.");
+                    }
+
+                    _logger.LogWarning(
+                        "Re-entrant dispatch of {ActionType} while processing {CurrentActionType} — queued at depth {Depth}.",
+                        action.GetType().Name,
+                        _currentAction?.GetType().Name,
+                        _reentrantQueue.Count + 1);
+
+                    _eventPublisher.Publish(new ActionReentrantEventArgs(
+                        action, _currentAction!, _reentrantQueue.Count + 1));
+                    _reentrantQueue.Enqueue(action);
+                    return;
+                }
+
+                // Different thread = concurrent dispatch — wait for current dispatch to finish
+                while (_isDispatching)
+                {
+                    Monitor.Wait(_syncRoot);
+                }
+
+                // Re-check disposed after waiting
+                if (_isDisposed)
+                {
+                    _logger.LogWarning(
+                        "Action {ActionType} dispatched after store disposal — ignoring.",
+                        action.GetType().Name);
+                    return;
+                }
+            }
+
             _isDispatching = true;
+            _dispatchingThreadId = Environment.CurrentManagedThreadId;
         }
 
         try
@@ -174,7 +216,9 @@ public sealed class DuckyStore : IStore, IDisposable
                     if (_reentrantQueue.Count == 0)
                     {
                         _isDispatching = false;
+                        _dispatchingThreadId = 0;
                         _currentAction = null;
+                        Monitor.PulseAll(_syncRoot);
                         break;
                     }
 
