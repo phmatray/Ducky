@@ -40,7 +40,7 @@ public class ImprovedApiExampleTests
         // Then configure Ducky store
         services.AddScoped<ISlice<TestCounterState>, TestCounterSliceReducers>();
         
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
                 .UseDefaultMiddlewares()
@@ -48,7 +48,7 @@ public class ImprovedApiExampleTests
                 {
                     effects
                         .Add<SimpleCounterEffect>()
-                        .Add<AdvancedCounterEffect>(effect => 
+                        .Add<AdvancedCounterEffect>(effect =>
                         {
                             // Configure the effect
                             effect.Threshold = 10;
@@ -83,7 +83,7 @@ public class ImprovedApiExampleTests
         });
 
         // Then configure Ducky store
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
                 .UseDefaultMiddlewares()
@@ -156,7 +156,7 @@ public class ImprovedApiExampleTests
         });
 
         // Then configure Ducky store
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
                 .UseDefaultMiddlewares()

@@ -39,7 +39,7 @@ public class SimpleApiExampleTests
         });
 
         // Then configure Ducky store
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
                 .UseDefaultMiddlewares()
@@ -71,7 +71,7 @@ public class SimpleApiExampleTests
                         type.Name.EndsWith("Effect"));
         });
 
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
                 .UseDefaultMiddlewares()
@@ -126,7 +126,7 @@ public class SimpleApiExampleTests
                 .WithMetricsMonitor();
         });
 
-        services.AddDuckyStore(builder =>
+        services.AddDucky(builder =>
         {
             builder
                 .UseDefaultMiddlewares()
