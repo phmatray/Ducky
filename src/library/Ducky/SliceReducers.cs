@@ -2,7 +2,6 @@
 // Atypical Consulting SRL licenses this file to you under the Apache-2.0 license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -24,6 +23,7 @@ public abstract partial record SliceReducers<TState>
     private bool _isInitialized;
     private TState? _currentState;
     private bool _disposed;
+    private string? _cachedKey;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SliceReducers{TState}"/> class.
@@ -52,6 +52,11 @@ public abstract partial record SliceReducers<TState>
     /// <inheritdoc />
     public virtual string GetKey()
     {
+        if (_cachedKey is not null)
+        {
+            return _cachedKey;
+        }
+
         Type type = GetType();
 
         // Use full name for robustness, but clean it up for readability
@@ -84,7 +89,8 @@ public abstract partial record SliceReducers<TState>
         string kebabCase = LowerCharUpperCharRegex().Replace(fullTypeName, "$1-$2");
 
         // Return the key in lowercase for consistency
-        return kebabCase.ToLower(CultureInfo.InvariantCulture);
+        _cachedKey = kebabCase.ToLower(CultureInfo.InvariantCulture);
+        return _cachedKey;
     }
 
     /// <inheritdoc />
@@ -115,10 +121,8 @@ public abstract partial record SliceReducers<TState>
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
         var prevState = (TState)GetState();
         TState updatedState = Reduce(prevState, action);
-        stopwatch.Stop();
 
         if (prevState?.Equals(updatedState) == true)
         {
