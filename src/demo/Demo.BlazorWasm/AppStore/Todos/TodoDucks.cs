@@ -34,13 +34,13 @@ public record TodoState
 #region Actions
 
 [DuckyAction]
-public sealed record CreateTodo(string Title);
+public sealed partial record CreateTodo(string Title);
 
 [DuckyAction]
-public sealed record ToggleTodo(Guid Id);
+public sealed partial record ToggleTodo(Guid Id);
 
 [DuckyAction]
-public sealed record DeleteTodo(Guid Id);
+public sealed partial record DeleteTodo(Guid Id);
 
 #endregion
 

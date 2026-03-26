@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);RCS1090</NoWarn>
+    <NoWarn>$(NoWarn);RCS1090;CS0618</NoWarn>
     <RunAOTCompilation>true</RunAOTCompilation>
     <GHPages>true</GHPages>
   </PropertyGroup>

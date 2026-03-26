@@ -15,16 +15,16 @@ public record CounterState(int Value);
 #region Actions
 
 [DuckyAction]
-public record Increment(int Amount = 1);
+public partial record Increment(int Amount = 1);
 
 [DuckyAction]
-public record Decrement(int Amount = 1);
+public partial record Decrement(int Amount = 1);
 
 [DuckyAction]
-public record Reset;
+public partial record Reset;
 
 [DuckyAction]
-public record SetValue(int Value);
+public partial record SetValue(int Value);
 
 #endregion
 

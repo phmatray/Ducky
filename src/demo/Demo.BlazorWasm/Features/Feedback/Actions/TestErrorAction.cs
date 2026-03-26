@@ -8,4 +8,4 @@ namespace Demo.BlazorWasm.Features.Feedback.Actions;
 /// Test action that is used to simulate errors in the error handling demo.
 /// </summary>
 [DuckyAction]
-public record TestErrorAction(string ErrorMessage = "This is a simulated error from an action!");
+public partial record TestErrorAction(string ErrorMessage = "This is a simulated error from an action!");

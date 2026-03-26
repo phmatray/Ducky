@@ -26,13 +26,13 @@ public record MessageState
 #region Actions
 
 [DuckyAction]
-public record SetMessage(string Message);
+public partial record SetMessage(string Message);
 
 [DuckyAction]
-public record AppendMessage(string Message);
+public partial record AppendMessage(string Message);
 
 [DuckyAction]
-public record ClearMessage;
+public partial record ClearMessage;
 
 #endregion
 
