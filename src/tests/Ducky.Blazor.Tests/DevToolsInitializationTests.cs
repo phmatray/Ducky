@@ -53,7 +53,7 @@ public class DevToolsInitializationTests
         IJSRuntime mockJsRuntime = A.Fake<IJSRuntime>();
         DevToolsStateManager stateManager = new(A.Fake<ILogger<DevToolsStateManager>>());
         ReduxDevToolsModule devTools = new(mockJsRuntime, stateManager, A.Fake<ILogger<ReduxDevToolsModule>>());
-        DevToolsMiddleware middleware = new(devTools, A.Fake<ILogger<DevToolsMiddleware>>());
+        DevToolsMiddleware middleware = new(devTools, stateManager, A.Fake<ILogger<DevToolsMiddleware>>());
 
         IStore mockStore = A.Fake<IStore>();
         IDispatcher mockDispatcher = A.Fake<IDispatcher>();
