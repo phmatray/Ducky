@@ -75,7 +75,7 @@ public class MissingMiddlewareException : InvalidOperationException
             {{suggestion}}
             
             Example:
-            services.AddDuckyStore(builder => builder
+            services.AddDucky(builder => builder
                 .{{suggestion}}
                 .AddEffect<{{effectType.Name}}>()
             );

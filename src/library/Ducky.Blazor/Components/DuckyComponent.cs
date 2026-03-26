@@ -152,9 +152,12 @@ public abstract class DuckyComponent<TState> : ComponentBase, IDisposable
         {
             await InvokeAsync(StateHasChanged).ConfigureAwait(false);
         }
-        catch (ObjectDisposedException)
+        catch (Exception ex)
         {
-            // Component was disposed between event firing and async callback
+            Logger.LogError(
+                ex,
+                "Error in DuckyComponent<{StateType}>.OnStateChanged while processing state change.",
+                typeof(TState).Name);
         }
 
         Logger.ComponentRefreshed(ComponentName);

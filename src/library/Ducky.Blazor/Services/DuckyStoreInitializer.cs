@@ -45,12 +45,12 @@ public sealed class DuckyStoreInitializer
 
         try
         {
-            _logger.LogInformation("Initializing Ducky store...");
-            
+            _logger.LogInformation("Initializing Ducky store middleware pipeline...");
+
             if (_store is DuckyStore duckyStore)
             {
-                await duckyStore.InitializeAsync().ConfigureAwait(false);
-                _logger.LogInformation("Ducky store initialized successfully.");
+                await duckyStore.InitializePipelineAsync().ConfigureAwait(false);
+                _logger.LogInformation("Ducky store middleware pipeline initialized successfully.");
                 _initializationTask.TrySetResult(true);
             }
             else

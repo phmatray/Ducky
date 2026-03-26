@@ -66,7 +66,7 @@ public class MiddlewareOrderException : InvalidOperationException
                  {{suggestedOrder}}
 
                  To disable order validation (not recommended):
-                 services.AddDuckyStore(builder => builder
+                 services.AddDucky(builder => builder
                      .DisableOrderValidation()
                      // ... add middlewares
                  );
@@ -84,7 +84,7 @@ public class MiddlewareOrderException : InvalidOperationException
 
         return $$"""
                  Suggested order:
-                 services.AddDuckyStore(builder => builder
+                 services.AddDucky(builder => builder
                  {{string.Join("\n", suggestedOrder.Select(t => $"    .Add{t.Name}()"))}}
                  );
                  """;

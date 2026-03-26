@@ -36,8 +36,10 @@ public class DuckyComponentTypeCheckTests
         IStore store = provider.GetRequiredService<IStore>();
 
         // Act & Assert - calling GetSlice<RootState>() should throw
-        InvalidOperationException exception = Should.Throw<InvalidOperationException>(() => store.GetSlice<RootState>());
-        exception.Message.ShouldContain("Slice of type RootState not found", Case.Insensitive);
+        DuckyException exception = Should.Throw<DuckyException>(() => store.GetSlice<RootState>());
+        exception.Message.ShouldContain("Slice of type", Case.Insensitive);
+        exception.Message.ShouldContain("RootState", Case.Insensitive);
+        exception.Message.ShouldContain("not found", Case.Insensitive);
     }
 
     [Fact]

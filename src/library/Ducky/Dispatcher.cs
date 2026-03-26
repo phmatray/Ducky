@@ -34,9 +34,7 @@ public sealed class Dispatcher : IDispatcher, IDisposable
         {
             if (_disposed)
             {
-                throw new DuckyException(
-                    "The dispatcher has been disposed.",
-                    new ObjectDisposedException(nameof(Dispatcher)));
+                throw ExceptionFactory.DispatcherDisposed();
             }
         }
 

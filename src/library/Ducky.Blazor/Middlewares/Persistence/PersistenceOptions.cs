@@ -106,6 +106,12 @@ public class PersistenceOptions
     /// Gets or sets error handling behavior for persistence failures.
     /// </summary>
     public PersistenceErrorHandling ErrorHandling { get; set; } = PersistenceErrorHandling.LogAndContinue;
+
+    /// <summary>
+    /// Timeout in milliseconds after which a warning is logged if hydration hasn't started.
+    /// Set to 0 to disable. Default: 5000 (5 seconds).
+    /// </summary>
+    public int HydrationTimeoutWarningMs { get; set; } = 5000;
 }
 
 /// <summary>

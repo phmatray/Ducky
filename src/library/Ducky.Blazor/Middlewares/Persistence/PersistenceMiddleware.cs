@@ -30,6 +30,7 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     private DateTime _lastPersistenceTime = DateTime.MinValue;
     private readonly Timer _debounceTimer;
     private readonly Timer _throttleTimer;
+    private Timer? _hydrationWarningTimer;
     private string? _lastPersistedStateHash;
 
     /// <summary>
@@ -74,11 +75,31 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
         _store = store;
 
         LogIfEnabled($"[InitializeAsync] PersistenceMiddleware initialized with store: {store?.GetType().Name}");
-        
+
         // In Blazor apps, hydration should be handled by PersistenceInitializer component
         // to ensure proper timing after the store is fully initialized
         // We don't auto-hydrate here to avoid race conditions
-        
+
+        if (_options.HydrationTimeoutWarningMs > 0)
+        {
+            _hydrationWarningTimer = new Timer(
+                _ =>
+                {
+                    if (_hydrationManager.IsHydrating || _isHydrated)
+                    {
+                        return;
+                    }
+
+                    _logger.LogWarning(
+                        "Persistence is configured but HydrateAsync() has not been called after {Timeout}ms. "
+                        + "Did you forget to add <PersistenceInitializer> to your Blazor layout?",
+                        _options.HydrationTimeoutWarningMs);
+                },
+                null,
+                _options.HydrationTimeoutWarningMs,
+                Timeout.Infinite);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -94,6 +115,9 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
 
         string hydrationId = Guid.NewGuid().ToString();
         Stopwatch stopwatch = Stopwatch.StartNew();
+
+        // Cancel the hydration warning timer since hydration is now starting
+        _hydrationWarningTimer?.Change(Timeout.Infinite, Timeout.Infinite);
 
         try
         {
@@ -528,5 +552,6 @@ public sealed class PersistenceMiddleware : MiddlewareBase, IDisposable
     {
         _debounceTimer?.Dispose();
         _throttleTimer?.Dispose();
+        _hydrationWarningTimer?.Dispose();
     }
 }
