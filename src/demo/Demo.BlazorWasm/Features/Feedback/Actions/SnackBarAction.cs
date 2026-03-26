@@ -8,4 +8,4 @@ namespace Demo.BlazorWasm.Features.Feedback.Actions;
 /// Action dispatched after a successful or failed snackbar message.
 /// </summary>
 [DuckyAction]
-public record SnackBarAction;
+public partial record SnackBarAction;

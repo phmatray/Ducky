@@ -53,10 +53,10 @@ public record ProductState : NormalizedState<Guid, Product, ProductState>
 #region Actions
 
 [DuckyAction]
-public sealed record AddProduct(Product Product);
+public sealed partial record AddProduct(Product Product);
 
 [DuckyAction]
-public sealed record RemoveProduct(Guid ProductId);
+public sealed partial record RemoveProduct(Guid ProductId);
 
 #endregion
 

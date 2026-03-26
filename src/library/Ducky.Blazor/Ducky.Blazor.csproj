@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>Ducky.Blazor</RootNamespace>
-    <NoWarn>$(NoWarn);RCS1019</NoWarn>
+    <NoWarn>$(NoWarn);RCS1019;CS0618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

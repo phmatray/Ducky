@@ -22,16 +22,16 @@ public record TimerState
 #region Actions
 
 [DuckyAction]
-public record StartTimer;
+public partial record StartTimer;
 
 [DuckyAction]
-public record StopTimer;
+public partial record StopTimer;
 
 [DuckyAction]
-public record ResetTimer;
+public partial record ResetTimer;
 
 [DuckyAction]
-public record Tick;
+public partial record Tick;
 
 #endregion
 

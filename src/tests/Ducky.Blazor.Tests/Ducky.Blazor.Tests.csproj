@@ -8,7 +8,7 @@
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     <TestingPlatformCaptureOutput>true</TestingPlatformCaptureOutput>
-    <NoWarn>$(NoWarn);xUnit1051;xUnit1031</NoWarn>
+    <NoWarn>$(NoWarn);xUnit1051;xUnit1031;CS0618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

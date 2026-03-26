@@ -41,4 +41,4 @@ public class CounterMilestoneReactiveEffect : ReactiveEffect
 /// Action dispatched when the counter reaches a milestone (multiple of 100).
 /// </summary>
 [DuckyAction]
-public record CounterMilestoneReached(int MilestoneValue);
+public partial record CounterMilestoneReached(int MilestoneValue);

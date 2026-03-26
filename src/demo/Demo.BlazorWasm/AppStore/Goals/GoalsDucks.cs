@@ -20,7 +20,7 @@ public record GoalState
 #region Actions
 
 [DuckyAction]
-public record SetGoalMet(string GoalKey);
+public partial record SetGoalMet(string GoalKey);
 
 #endregion
 

@@ -95,7 +95,9 @@ public sealed class DuckyStore : IStore, IDisposable
         _dispatcher.ActionDispatched += OnActionDispatched;
 
         // Dispatch initial action
+#pragma warning disable CS0618 // Internal action uses untyped Dispatch – will migrate later
         _dispatcher.Dispatch(new StoreInitialized());
+#pragma warning restore CS0618
 
         // Publish store initialized event
         _eventPublisher.Publish(new StoreInitializedEventArgs(_sliceKeys.Count, _sliceKeys));

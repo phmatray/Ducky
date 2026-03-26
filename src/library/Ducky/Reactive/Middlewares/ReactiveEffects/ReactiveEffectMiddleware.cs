@@ -60,7 +60,9 @@ public sealed class ReactiveEffectMiddleware : MiddlewareBase
                     onNext: action =>
                     {
                         // Dispatch the action produced by the effect
+#pragma warning disable CS0618 // Reactive effects produce untyped actions – will migrate later
                         _dispatcher?.Dispatch(action);
+#pragma warning restore CS0618
                     },
                     onError: error =>
                     {
