@@ -136,17 +136,47 @@ For collections, use `NormalizedState<TKey, TEntity, TState>` to maintain relati
 public record TodoState(NormalizedState<Guid, TodoItem> Items);
 ```
 
-#### Reactive Effects
-Handle side effects reactively using R3 observables:
+#### Effects: Async vs Reactive
+
+Ducky provides two unified effect systems registered through the same `DuckyBuilder` API:
+
+**When to use Async Effects** (`AsyncEffect<TAction>`, `AsyncEffectGroup`):
+- Simple request/response patterns (API calls, data fetching)
+- One-shot side effects (delayed actions, notifications)
+- Effects that handle a single action type
+
+**When to use Reactive Effects** (`ReactiveEffect`):
+- Stream-based patterns (debounce, throttle, retry)
+- State monitoring with deduplication
+- Complex event coordination across multiple action types
+- Timer-based logic, polling, observable composition
+
+**Registration (unified API):**
+```csharp
+services.AddDucky(builder => builder
+    .AddEffect<MyApiEffect>()                  // async effect
+    .AddEffectGroup<MoviesEffectGroup>()       // async effect group
+    .AddReactiveEffect<DebouncedSearchEffect>() // reactive effect
+    .AddReactiveEffects(fx => fx               // multiple reactive effects
+        .Add<TimerEffect>()
+        .Add<StateMonitorEffect>()
+        .WithLoggingMonitor())
+);
+```
+
+**Reactive effect example:**
 ```csharp
 public class TimerEffect : ReactiveEffect
 {
-    public override Observable<object> Handle(Observable<object> actions, Observable<IRootState> rootState)
+    public override IObservable<object> Handle(
+        IObservable<object> actions,
+        IObservable<IStateProvider> stateProvider)
     {
         return actions
             .OfActionType<StartTimer>()
-            .SwitchSelect(_ => Observable.Interval(TimeSpan.FromSeconds(1), TimeProvider)
+            .SelectMany(_ => Observable.Interval(TimeSpan.FromSeconds(1))
                 .Select(_ => new Tick())
+                .Cast<object>()
                 .TakeUntil(actions.OfActionType<StopTimer>()));
     }
 }

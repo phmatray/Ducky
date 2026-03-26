@@ -28,7 +28,8 @@ public class MiddlewareRegistrationTests
         services.Any(sd => sd.ServiceType == typeof(AsyncEffectMiddleware)).ShouldBeTrue();
 
         // Also check that they are registered as IMiddleware
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(2);
+        // Default middlewares include CorrelationId + AsyncEffect + ReactiveEffect
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3);
     }
 
     [Fact]

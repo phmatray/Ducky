@@ -34,7 +34,7 @@ public class StoreBuilderTests
         List<ServiceDescriptor> middlewareServices = services.Where(sd => sd.ServiceType == typeof(IMiddleware)).ToList();
         // If this fails, uncomment the next line to see what middlewares are registered
         // var middlewareTypes = middlewareServices.Select(sd => sd.ImplementationType?.Name ?? sd.ImplementationFactory?.ToString() ?? "Unknown").ToList();
-        middlewareServices.Count.ShouldBe(2);
+        middlewareServices.Count.ShouldBe(3); // CorrelationId + AsyncEffect + ReactiveEffect (from defaults)
     }
 
     [Fact]
@@ -55,9 +55,9 @@ public class StoreBuilderTests
 
         // Assert - Should only register once
         services.Count(sd => sd.ServiceType == typeof(CorrelationIdMiddleware)).ShouldBe(1);
-        // Default middlewares (CorrelationId + AsyncEffect) are added automatically
+        // Default middlewares (CorrelationId + AsyncEffect + ReactiveEffect) are added automatically
         // Since we're trying to add CorrelationId again, it won't add a duplicate
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(2); // CorrelationId + AsyncEffect from defaults
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3); // CorrelationId + AsyncEffect + ReactiveEffect from defaults
     }
 
     [Fact]
@@ -157,7 +157,7 @@ public class StoreBuilderTests
         });
 
         // Verify all registrations
-        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(2); // Default middlewares
+        services.Count(sd => sd.ServiceType == typeof(IMiddleware)).ShouldBe(3); // Default middlewares
         services.Any(sd => sd.ServiceType == typeof(ISlice)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IAsyncEffect)).ShouldBeTrue();
         services.Any(sd => sd.ServiceType == typeof(IExceptionHandler)).ShouldBeTrue();
