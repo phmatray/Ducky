@@ -30,12 +30,19 @@ public static class MemoizedSelector
 
         return state =>
         {
+            // Fast path: if state reference hasn't changed, return cached result
+            if (hasCache && ReferenceEquals(lastState, state))
+            {
+                return lastResult!;
+            }
+
             object[] currentDependencies = Array.ConvertAll(dependencies, dep => dep(state));
 
             if (hasCache
                 && EqualityComparer<TState>.Default.Equals(lastState!, state)
                 && AreDependenciesEqual(lastDependencies!, currentDependencies))
             {
+                lastState = state; // Update reference for future fast-path
                 return lastResult!;
             }
 
@@ -76,7 +83,19 @@ public static class MemoizedSelector
     /// <returns>True if the dependencies are equal; otherwise, false.</returns>
     private static bool AreDependenciesEqual(object[] oldDeps, object[] newDeps)
     {
-        return oldDeps.Length == newDeps.Length
-            && !oldDeps.Where((t, i) => !Equals(t, newDeps[i])).Any();
+        if (oldDeps.Length != newDeps.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < oldDeps.Length; i++)
+        {
+            if (!Equals(oldDeps[i], newDeps[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

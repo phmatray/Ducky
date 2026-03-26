@@ -1,0 +1,118 @@
+Index: build/_build.csproj
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><Project Sdk=\"Microsoft.NET.Sdk\">\r\n\r\n  <PropertyGroup>\r\n    <OutputType>Exe</OutputType>\r\n    <TargetFramework>net10.0</TargetFramework>\r\n    <RootNamespace></RootNamespace>\r\n    <NoWarn>CS0649;CS0169;CA1050;CA1822;CA2211;IDE1006</NoWarn>\r\n    <NukeRootDirectory>..</NukeRootDirectory>\r\n    <NukeScriptDirectory>..</NukeScriptDirectory>\r\n    <NukeTelemetryVersion>1</NukeTelemetryVersion>\r\n    <IsPackable>false</IsPackable>\r\n  </PropertyGroup>\r\n\r\n  <ItemGroup>\r\n    <PackageReference Include=\"Nuke.Common\" Version=\"10.1.0\" />\r\n    <PackageReference Include=\"System.Runtime.Serialization.Formatters\" Version=\"10.0.5\" />\r\n  </ItemGroup>\r\n\r\n  <ItemGroup>\r\n    <PackageDownload Include=\"Octopus.OctoVersion.Tool\" Version=\"[1.0.9]\" />\r\n  </ItemGroup>\r\n\r\n  <ItemGroup>\r\n    <Folder Include=\"logs\\\" />\r\n  </ItemGroup>\r\n\r\n  <ItemGroup>\r\n    <Content Include=\"..\\CHANGELOG.md\">\r\n      <Link>config\\CHANGELOG.md</Link>\r\n    </Content>\r\n  </ItemGroup>\r\n\r\n</Project>\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/build/_build.csproj b/build/_build.csproj
+--- a/build/_build.csproj	(revision 01172d7b78995be0dbdfce6f31e5297e58b2d820)
++++ b/build/_build.csproj	(date 1774449680518)
+@@ -30,4 +30,8 @@
+     </Content>
+   </ItemGroup>
+ 
++  <ItemGroup>
++    <None Remove="..\.claude\**" />
++  </ItemGroup>
++
+ </Project>
+Index: .github/dependabot.yml
+===================================================================
+diff --git a/.github/dependabot.yml b/.github/dependabot.yml
+deleted file mode 100644
+--- a/.github/dependabot.yml	(revision 01172d7b78995be0dbdfce6f31e5297e58b2d820)
++++ /dev/null	(revision 01172d7b78995be0dbdfce6f31e5297e58b2d820)
+@@ -1,20 +0,0 @@
+-# To get started with Dependabot version updates, you'll need to specify which
+-# package ecosystems to update and where the package manifests are located.
+-# Please see the documentation for all configuration options:
+-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+-
+-version: 2
+-updates:
+-  - package-ecosystem: "github-actions"
+-    directory: "/"
+-    schedule:
+-      interval: daily
+-      time: "06:30"
+-      timezone: Europe/Brussels
+-  - package-ecosystem: nuget
+-    directory: "/"
+-    schedule:
+-      interval: daily
+-      time: "06:30"
+-      timezone: Europe/Brussels
+-    open-pull-requests-limit: 99
+\ No newline at end of file
+Index: .claude/settings.local.json
+===================================================================
+diff --git a/.claude/settings.local.json b/.claude/settings.local.json
+deleted file mode 100644
+--- a/.claude/settings.local.json	(revision 01172d7b78995be0dbdfce6f31e5297e58b2d820)
++++ /dev/null	(revision 01172d7b78995be0dbdfce6f31e5297e58b2d820)
+@@ -1,63 +0,0 @@
+-{
+-  "permissions": {
+-    "allow": [
+-      "Bash(/Users/philippe/repo/github/Ducky/check_tests.sh)",
+-      "Bash(BASE_URL=http://localhost:8080 dotnet test:*)",
+-      "Bash(chmod:*)",
+-      "Bash(curl:*)",
+-      "Bash(docker:*)",
+-      "Bash(docker-compose:*)",
+-      "Bash(dotnet:*)",
+-      "Bash(find:*)",
+-      "Bash(grep:*)",
+-      "Bash(ls:*)",
+-      "Bash(od:*)",
+-      "Bash(perl:*)",
+-      "Bash(pwsh:*)",
+-      "Bash(rm:*)",
+-      "Bash(sed:*)",
+-      "Bash(xxd:*)",
+-      "Bash(dotnet roslynator fix:*)",
+-      "Bash(dotnet tool list:*)",
+-      "Bash(roslynator fix:*)",
+-      "Bash(pkill:*)",
+-      "Bash(true)",
+-      "mcp__ide__getDiagnostics",
+-      "Bash(mv:*)",
+-      "Bash(/Users/phmatray/.nvm/versions/node/v20.18.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg \"IActionMiddleware\" src/tests/Ducky.Tests/Core/ActionPipelineTests.cs)",
+-      "WebFetch(domain:xunit.net)",
+-      "Bash(for project in src/tests/AppStore.Tests/AppStore.Tests.csproj src/tests/Ducky.Tests/Ducky.Tests.csproj src/tests/Ducky.Generator.Tests/Ducky.Generator.Tests.csproj src/tests/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj)",
+-      "Bash(do echo \"Building $project\")",
+-      "Bash(done)",
+-      "Bash(playwright install)",
+-      "Bash(timeout:*)",
+-      "Bash(node:*)",
+-      "Bash(rg:*)",
+-      "Bash(mkdir:*)",
+-      "Bash(git checkout:*)",
+-      "Bash(cat:*)",
+-      "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests --help)",
+-      "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests --list-tests)",
+-      "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests --timeout 30s)",
+-      "Bash(./bin/Debug/net9.0/Ducky.Reactive.Tests:*)",
+-      "WebFetch(domain:introtorx.com)",
+-      "Bash(-e 's/\\.Should()\\.NotBeNull()/\\.ShouldNotBeNull()/g' )",
+-      "Bash(-e 's/\\.Should()\\.BeNull()/\\.ShouldBeNull()/g' )",
+-      "Bash(-e 's/\\.Should()\\.BeTrue()/\\.ShouldBeTrue()/g' )",
+-      "Bash(-e 's/\\.Should()\\.BeFalse()/\\.ShouldBeFalse()/g' )",
+-      "Bash(-e 's/\\.Should()\\.Be(/\\.ShouldBe(/g' )",
+-      "Bash(-e 's/\\.Should()\\.NotBe(/\\.ShouldNotBe(/g' )",
+-      "Bash(-e 's/\\.Should()\\.BeEmpty()/\\.ShouldBeEmpty()/g' )",
+-      "Bash(-e 's/\\.Should()\\.NotBeEmpty()/\\.ShouldNotBeEmpty()/g' )",
+-      "Bash(-e 's/\\.Should()\\.Contain(/\\.ShouldContain(/g' )",
+-      "Bash(-e 's/\\.Should()\\.NotContain(/\\.ShouldNotContain(/g' )",
+-      "Bash(-e 's/\\.Should()\\.HaveCount(/\\.Count.ShouldBe(/g' )",
+-      "Bash(-e 's/\\.Should()\\.ContainKey(/\\.ShouldContainKey(/g' )",
+-      "Bash(-e 's/\\.Should()\\.NotContainKey(/\\.ShouldNotContainKey(/g' )",
+-      "Bash(-e 's/\\.Should()\\.BeSameAs(/\\.ShouldBeSameAs(/g' )",
+-      "Bash({} ;)"
+-    ],
+-    "deny": []
+-  },
+-  "enableAllProjectMcpServers": false
+-}
+\ No newline at end of file
