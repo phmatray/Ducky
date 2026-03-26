@@ -80,6 +80,52 @@ public class DuckyComponentTests : Bunit.BunitContext
         component.Markup.ShouldContain("Value: 100");
     }
 
+    [Fact]
+    public void DuckyComponent_UnrelatedSliceChange_ShouldNotRerender()
+    {
+        // Arrange
+        IRenderedComponent<TestSliceComponent> component = Render<TestSliceComponent>();
+        int renderCount = component.RenderCount;
+
+        // Act - raise a state change event for a DIFFERENT slice type
+        _storeMock.StateChanged += Raise.FreeForm<EventHandler<StateChangedEventArgs>>
+            .With(
+                _storeMock,
+                new StateChangedEventArgs(
+                    "other",
+                    typeof(OtherState),
+                    new OtherState { Name = "test" },
+                    null));
+
+        // Assert - render count should NOT have increased
+        component.RenderCount.ShouldBe(renderCount);
+    }
+
+    [Fact]
+    public void DuckyComponent_StateChange_ShouldUseEventArgsDirectly()
+    {
+        // Arrange
+        IRenderedComponent<TestSliceComponent> component = Render<TestSliceComponent>();
+        Fake.ClearRecordedCalls(_storeMock);
+
+        // Act - raise state change with new value in event args
+        _storeMock.StateChanged += Raise.FreeForm<EventHandler<StateChangedEventArgs>>
+            .With(
+                _storeMock,
+                new StateChangedEventArgs(
+                    "test",
+                    typeof(TestState),
+                    new TestState { Value = 200 },
+                    new TestState { Value = 42 }));
+
+        // Assert - component should show value from event args
+        component.Markup.ShouldContain("Value: 200");
+
+        // Verify GetSlice was NOT called after the state change
+        // (state should come from event args, not from store)
+        A.CallTo(() => _storeMock.GetSlice<TestState>()).MustNotHaveHappened();
+    }
+
     // Test components
     private class TestRootStateComponent : DuckyComponent<RootState>
     {
@@ -100,5 +146,10 @@ public class DuckyComponentTests : Bunit.BunitContext
     private record TestState : IState
     {
         public int Value { get; init; }
+    }
+
+    private record OtherState : IState
+    {
+        public string Name { get; init; } = string.Empty;
     }
 }
