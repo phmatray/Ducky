@@ -17,7 +17,7 @@
     <RoslynatorVersion>4.15.0</RoslynatorVersion>
     <MudBlazorVersion>9.2.0</MudBlazorVersion>
     <SerilogVersion>10.0.0</SerilogVersion>
-    <TestSdkVersion>18.3.0</TestSdkVersion>
+    <TestSdkVersion>18.4.0</TestSdkVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- Blazor & Web -->
