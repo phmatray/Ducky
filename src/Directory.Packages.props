@@ -9,10 +9,10 @@
     <!-- Treat package downgrade as error -->
     <WarningsAsErrors>$(WarningsAsErrors);NU1605</WarningsAsErrors>
     <!-- Define common versions as properties for related packages -->
-    <AspNetCoreVersion>10.0.5</AspNetCoreVersion>
-    <EntityFrameworkCoreVersion>10.0.5</EntityFrameworkCoreVersion>
-    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
-    <CodeAnalysisVersion>5.0.0</CodeAnalysisVersion>
+    <AspNetCoreVersion>10.0.6</AspNetCoreVersion>
+    <EntityFrameworkCoreVersion>10.0.6</EntityFrameworkCoreVersion>
+    <MicrosoftExtensionsVersion>10.0.6</MicrosoftExtensionsVersion>
+    <CodeAnalysisVersion>5.3.0</CodeAnalysisVersion>
     <CodeAnalysisAnalyzerUtilitiesVersion>4.14.0</CodeAnalysisAnalyzerUtilitiesVersion>
     <RoslynatorVersion>4.15.0</RoslynatorVersion>
     <MudBlazorVersion>9.3.0</MudBlazorVersion>
@@ -63,7 +63,7 @@
     <PackageVersion Include="bunit" Version="2.7.2" />
     <PackageVersion Include="FakeItEasy" Version="9.0.1" />
     <PackageVersion Include="Microsoft.CodeCoverage" Version="$(TestSdkVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.4.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.5.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.59.0" />
     <PackageVersion Include="Microsoft.Reactive.Testing" Version="6.1.0" />
@@ -78,13 +78,13 @@
     <PackageVersion Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <!-- Build & Versioning -->
     <PackageVersion Include="DotNet.ReproducibleBuilds" Version="2.0.2" PrivateAssets="all" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.201" PrivateAssets="all" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.202" PrivateAssets="all" />
     <PackageVersion Include="MinVer" Version="7.0.0" PrivateAssets="all" />
     <!-- Utilities -->
     <PackageVersion Include="Humanizer.Core" Version="3.0.10" />
     <PackageVersion Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
     <PackageVersion Include="Spectre.Console" Version="0.55.2" />
-    <PackageVersion Include="System.Formats.Asn1" Version="10.0.5" />
+    <PackageVersion Include="System.Formats.Asn1" Version="10.0.6" />
     <PackageVersion Include="System.Reactive" Version="6.1.0" />
   </ItemGroup>
 </Project>
