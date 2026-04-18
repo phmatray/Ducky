@@ -26,7 +26,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(AspNetCoreVersion)" PrivateAssets="all" />
     <PackageVersion Include="MudBlazor" Version="$(MudBlazorVersion)" />
-    <PackageVersion Include="MudBlazor.Extensions" Version="9.2.0" />
+    <PackageVersion Include="MudBlazor.Extensions" Version="9.3.0" />
     <PackageVersion Include="PublishSPAforGitHubPages.Build" Version="3.0.3" PrivateAssets="all" />
     <!-- Microsoft Extensions -->
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="$(MicrosoftExtensionsVersion)" />
