@@ -15,7 +15,7 @@
     <CodeAnalysisVersion>5.0.0</CodeAnalysisVersion>
     <CodeAnalysisAnalyzerUtilitiesVersion>4.14.0</CodeAnalysisAnalyzerUtilitiesVersion>
     <RoslynatorVersion>4.15.0</RoslynatorVersion>
-    <MudBlazorVersion>9.2.0</MudBlazorVersion>
+    <MudBlazorVersion>9.3.0</MudBlazorVersion>
     <SerilogVersion>10.0.0</SerilogVersion>
     <TestSdkVersion>18.4.0</TestSdkVersion>
   </PropertyGroup>
