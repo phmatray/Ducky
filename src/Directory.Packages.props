@@ -60,7 +60,7 @@
     <PackageVersion Include="Roslynator.CodeAnalysis.Analyzers" Version="$(RoslynatorVersion)" PrivateAssets="all" />
     <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="$(RoslynatorVersion)" PrivateAssets="all" />
     <!-- Testing -->
-    <PackageVersion Include="bunit" Version="2.6.2" />
+    <PackageVersion Include="bunit" Version="2.7.2" />
     <PackageVersion Include="FakeItEasy" Version="9.0.1" />
     <PackageVersion Include="Microsoft.CodeCoverage" Version="$(TestSdkVersion)" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.4.0" />
