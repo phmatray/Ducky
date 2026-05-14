@@ -75,7 +75,7 @@
     <PackageVersion Include="Serilog.AspNetCore" Version="$(SerilogVersion)" />
     <PackageVersion Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageVersion Include="Serilog.Sinks.Seq" Version="9.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Seq" Version="9.1.0" />
     <!-- Build & Versioning -->
     <PackageVersion Include="DotNet.ReproducibleBuilds" Version="2.0.2" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.202" PrivateAssets="all" />
