@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **This repository has moved.** The code now lives in **[Atypical-Consulting/blazor-state](https://github.com/Atypical-Consulting/blazor-state)** under [`libs/ducky`](https://github.com/Atypical-Consulting/blazor-state/tree/main/libs/ducky) — full git history preserved. This repository is archived (read-only).
+
 ![Ducky banner](.github/banner.png)
 
 # Ducky 🦆
