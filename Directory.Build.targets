@@ -1,0 +1,30 @@
+<Project>
+  <!-- Analyzers and ban lists per project kind (SPEC §17.1, §18). Every rule is an error through TreatWarningsAsErrors. -->
+
+  <!-- src/: public API tracking, banned APIs (§10), threading analyzers. CA2007 is raised in .editorconfig [src/**.cs]. -->
+  <ItemGroup Condition="'$(DuckyIsSrcProject)' == 'true'">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="$(RepoRoot)BannedSymbols.txt" />
+  </ItemGroup>
+
+  <!-- test/: no sleeps (§17.1); covered projects also ban the concurrency starters of test/BannedSymbols.covered.txt.
+       The analyzer comes through CPM, so a project with CPM off (test/Ducky.PackageSmoke, §17.9) gets no versionless reference. -->
+  <ItemGroup Condition="'$(DuckyIsTestProject)' == 'true'">
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
+    <AdditionalFiles Include="$(RepoRoot)test/BannedSymbols.txt" />
+    <AdditionalFiles Include="$(RepoRoot)test/BannedSymbols.covered.txt" Condition="'$(MSBuildProjectName)' != 'Ducky.Concurrency.Tests'" />
+  </ItemGroup>
+
+  <!-- In-repo generator consumers: generator assets never flow through a ProjectReference (R-PKG-5, §18). -->
+  <ItemGroup Condition="'$(DuckyUseGenerators)' == 'true'">
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Generators/Ducky.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Import Project="$(RepoRoot)src/Ducky/buildTransitive/Ducky.targets" Condition="'$(DuckyUseGenerators)' == 'true'" />
+
+  <ItemGroup Condition="'$(DuckyUseDraftGenerator)' == 'true'">
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Draft.Generators/Ducky.Draft.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Import Project="$(RepoRoot)src/Ducky.Draft/buildTransitive/Ducky.Draft.targets" Condition="'$(DuckyUseDraftGenerator)' == 'true'" />
+</Project>

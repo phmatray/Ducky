@@ -1,0 +1,13 @@
+// Banned in every test project (SPEC §17.1, no sleeps). Task.Delay(TimeSpan, TimeProvider[, CancellationToken])
+// with a FakeTimeProvider stays allowed.
+M:System.Threading.Tasks.Task.Delay(System.Int32);Use Task.Delay(TimeSpan, TimeProvider) with FakeTimeProvider
+M:System.Threading.Tasks.Task.Delay(System.TimeSpan);Use Task.Delay(TimeSpan, TimeProvider) with FakeTimeProvider
+M:System.Threading.Tasks.Task.Delay(System.Int32,System.Threading.CancellationToken);Use Task.Delay(TimeSpan, TimeProvider, CancellationToken) with FakeTimeProvider
+M:System.Threading.Tasks.Task.Delay(System.TimeSpan,System.Threading.CancellationToken);Use Task.Delay(TimeSpan, TimeProvider, CancellationToken) with FakeTimeProvider
+M:System.Threading.Thread.Sleep(System.Int32);No sleeps in tests
+M:System.Threading.Thread.Sleep(System.TimeSpan);No sleeps in tests
+M:System.Threading.SpinWait.SpinUntil(System.Func{System.Boolean});No sleeps in tests
+M:System.Threading.SpinWait.SpinUntil(System.Func{System.Boolean},System.Int32);No sleeps in tests
+M:System.Threading.SpinWait.SpinUntil(System.Func{System.Boolean},System.TimeSpan);No sleeps in tests
+P:System.DateTime.Now;Use FakeTimeProvider
+P:System.DateTime.UtcNow;Use FakeTimeProvider

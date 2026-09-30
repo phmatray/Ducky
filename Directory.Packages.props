@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      S-1 (R-PKG-3): generator floor. SDK 10.0.100 ships Roslyn 5.0.0-2.25523.111
+      (sdk/10.0.100/Roslyn/bincore/csc.deps.json), i.e. Microsoft.CodeAnalysis.CSharp 5.0.0.
+      A higher version makes consumers on SDK 10.0.100 fail with CS9057. Never bump:
+      Renovate ignores it (.github/renovate.json); spikes/S-1-roslyn-floor proves it.
+    -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+
+    <!-- R3 1.3.x: plain version, pinned by the lock file, packed as R3 >= 1.3.x (SPEC §3). -->
+    <PackageVersion Include="R3" Version="1.3.1" />
+
+    <!-- Test stack. test/BannedSymbols.covered.txt lists CsCheck.Check overloads of this exact version: on a bump, run the check mode of test/banned-ids.cs, which fails on a stale ID or a new unbanned threads overload (Renovate asks for approval). -->
+    <PackageVersion Include="CsCheck" Version="4.9.1" />
+
+    <!-- Build analyzers (SPEC §17.1). Verified to load in SDK 10.0.100's compiler (no CS9057); Renovate asks for approval and a 10.0.100 build on a bump. -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0" />
+    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23" />
+  </ItemGroup>
+</Project>

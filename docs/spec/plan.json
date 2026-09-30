@@ -1,0 +1,3467 @@
+{
+ "milestones": [
+  {
+   "id": "M0",
+   "title": "Engineering skeleton",
+   "goal": "Orphan v2 branch with every gate live before any feature code (§24 step 1): locked restore, warnings-as-errors analyzers, signing, Fallout targets (Restore, Format, Compile, Test, ConcurrencyTest, CoverageGate 100%, MutationPr/Mutation, SpecTraceGate over the staged manifest, ExclusionGate, AotSmoke, E2E with the ducky.js block gate over a stub, Pack + package validation + staged PackageSmoke, PublicAPI tracking, VerifyWorkflows, Docs fence check), generated GitHub Actions calling Fallout, and branch protection. Every library has one public type with a test and every test project one skeleton test. S-1, S-2, S-6, S-8 closed; week-1 prototypes for S-3, S-4, S-5, S-7 and S-9."
+  },
+  {
+   "id": "M1",
+   "title": "Core store",
+   "goal": "Slices, slice keys, snapshot, single-drainer dispatcher, drain catch-all and SafeLogger, per-store causal scope, failure router, builder and aggregated configuration errors, DI lifetimes, init buffer with zero middleware, core dispose, WhenIdleAsync, and TST-03 concurrency items 1-5, 7, 11-13 (S-4 regression)."
+  },
+  {
+   "id": "M2",
+   "title": "Effects",
+   "goal": "Effect<T>, EffectGroup, EffectContext and ctx.Run; Merge/Switch/Exhaust/Queue with the slot compare-and-remove rule, failure observation, quiescence with CountedForIdle, the run registry and effect-aware dispose (phase 5b), the policy matrix and model-based property (INV-11), keyed DUCKY309."
+  },
+  {
+   "id": "M3",
+   "title": "Selectors and subscriptions",
+   "goal": "SubscriberList, IStore.Select, Selection<T>, the typed fast path, Selector.Define memoization (INV-09, INV-21), subscriber isolation in covered tests, and the AOT smoke for the core."
+  },
+  {
+   "id": "M4",
+   "title": "Middleware, init lifecycle and core contract",
+   "goal": "Middleware hooks, veto and ActionContext, the Process failure rule, DispatchSystem, middleware init with timeout and the QueueWorkItem overflow abort, disposal during init with per-middleware bounds, materialization versus disposal, the JSON gateway, action names, unhandled check, tracing/metrics with SafeTelemetry and the never-fault contract. The Ducky core API is complete after M4."
+  },
+  {
+   "id": "M5",
+   "title": "Blazor components and interactivity",
+   "goal": "Ducky.Blazor foundation (AddBlazor, JsBridge, fakes on a real ComponentStatePersistenceManager), SubscriptionCore, DuckyComponent/Layout/Select/Initializer (§24 step 10), then the InteractivityGate and first-toucher hand-off (step 11, INV-19, INV-20), built on the week-1 S-3/S-5/S-7 prototypes."
+  },
+  {
+   "id": "M6",
+   "title": "Browser persistence and prerender",
+   "goal": "Prerender<T> and the prerender handoff (seed take, write, browser wait; step 11), then ducky.js storage, envelopes, Persist<T>, the persistence slice, hydration with exactly-one-terminal, PersistenceWriter with the race-proof defer, retry and the phase-5a flush, ClearPersistedState, seed/storage precedence and pause seeds with dirty keys and versions (INV-14, INV-15, INV-16)."
+  },
+  {
+   "id": "M7",
+   "title": "Cross-tab",
+   "goal": "ducky.js watch/relay/resync with pruning and repair, the .NET CrossTabSync with echo, removal and convergence guards, and scope-aware receipts (INV-18)."
+  },
+  {
+   "id": "M8",
+   "title": "DevTools",
+   "goal": "Redux DevTools extension bridge: outbound FSA with sanitizers, failure projections and trace, immutable history, inbound jump/reset/import with pulled large messages and declared types, and the time-travel veto (INV-28)."
+  },
+  {
+   "id": "M9",
+   "title": "SliceStore, entities and Ducky.Testing",
+   "goal": "SliceStore<TState> (INV-30) inside runs and across stores and its Blazor-host integration, EntityState (INV-32), TestStore/SliceTest/EffectTest with the wall-clock dispose bound, the SliceStore and TestStore analyzer arms, AOT smoke extension."
+  },
+  {
+   "id": "M10",
+   "title": "Ducky.Draft",
+   "goal": "Draft runtime collections, the Draft generator with symbol-based mapping on the shared helpers, INV-26 properties, DUCKY101-109, the DUCKY003 Draft-receiver exemption, multi-assembly fixture, DUCKY901 and the Draft PackageSmoke consumer."
+  },
+  {
+   "id": "M11",
+   "title": "Ducky.Reactive",
+   "goal": "R3 host, bridge and middleware; failures as system failure actions; resubscribe with backoff and its races; excluded from quiescence (INV-27); Reactive contract twins, generator arms and PackageSmoke consumer; AOT smoke for Draft and Reactive."
+  },
+  {
+   "id": "M12",
+   "title": "Server persistence",
+   "goal": "PersistStorage.Server over IDistributedCache, scopes, retries and the phase-5a flush, the auth-driven scope switch with epochs, init-phase deadlines, reconnect absorption and attempt supersession (INV-17), static SSR pins, pause seeds across scopes; AOT smoke for server persistence and DevTools payload."
+  },
+  {
+   "id": "M13",
+   "title": "Generators, analyzers and tombstones",
+   "goal": "Shared generator helpers, GEN-01 dispatch helpers, GEN-02 core registration (step 7) and its Blazor arms (Prerender<T> at stage 11, PersistAttributeDefaults<T> and Ducky.Blazor.Generated.Tests at stage 12), multi-assembly fixture (INV-25), the stage-7 analyzers (DUCKY001-025 arms whose APIs exist by step 6), DUCKYM001-M008 tombstones, stage-7 PackageSmoke assertions."
+  },
+  {
+   "id": "M14",
+   "title": "Samples, E2E and AOT",
+   "goal": "Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, and the trimmed AOT-WASM smoke that can't skip in the aot job."
+  },
+  {
+   "id": "M15",
+   "title": "Docs and migration guides",
+   "goal": "docfx with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the seven migration guides with compiled before/after samples and the 1.x API list check."
+  },
+  {
+   "id": "M16",
+   "title": "Release candidate",
+   "goal": "Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook."
+  }
+ ],
+ "stories": [
+  {
+   "id": "M0-01",
+   "milestone": "M0",
+   "title": "Orphan v2 branch and repository root",
+   "size": "M",
+   "depends_on": [],
+   "area": "repo-root",
+   "invariants": [],
+   "scope": "Stage 1. `git switch --orphan v2` in phmatray/Ducky; the owner makes v2 the default branch (§18). Root files: global.json (SDK 10.0.100, rollForward latestFeature, allowPrerelease false, test runner MTP), .editorconfig, .gitignore, .gitattributes, LICENSE (Apache-2.0), NOTICE, CHANGELOG.md stub, ducky.snk, Directory.Build.props (LangVersion latest, Nullable, ImplicitUsings, TreatWarningsAsErrors with WarningsNotAsErrors NU1901-NU1904, AnalysisLevel latest-recommended, EnforceCodeStyleInBuild, GenerateDocumentationFile for src, Deterministic, ContinuousIntegrationBuild and RestoreLockedMode in CI, IsPackable=false by default (R-PKG-6), RepoRoot=$(MSBuildThisFileDirectory), PackageOutputPath=$(RepoRoot)artifacts/packages/, SignAssembly with ducky.snk for src AND test projects, DuckyPublicKey defined once), Directory.Build.targets (PublicApiAnalyzers, BannedApiAnalyzers, VSTHRD analyzers, CA2007 for src; test defaults; test/BannedSymbols.covered.txt for every test project except Ducky.Concurrency.Tests; the DuckyUseGenerators/DuckyUseDraftGenerator switches for in-repo consumers, §18), Directory.Packages.props (CPM + CentralPackageTransitivePinningEnabled; Roslyn pinned per S-1; R3 1.3.x as a plain version, pinned by the lock file, packed as R3 >= 1.3.x), BannedSymbols.txt (§10: JsonSerializer without JsonTypeInfo, reflection activation, the four JSInterop extension types and every InvokeAsync/Invoke overload by documentation ID, the Task.Delay/Thread.Sleep/DateTime(Offset).Now overloads by exact ID, StackFrame.GetMethod, ExcludeFromCodeCoverageAttribute), test/BannedSymbols.txt (§17.1 no-sleeps; Task.Delay(TimeSpan, TimeProvider[, CancellationToken]) allowed), test/BannedSymbols.covered.txt (SampleParallel, M:CsCheck.Check.Sample*, Task.Run, Barrier, TaskFactory.StartNew*, Thread.#ctor*, ThreadPool.QueueUserWorkItem*/UnsafeQueueUserWorkItem*, Parallel), build/property-seeds.txt, empty Ducky.slnx. Copy SPEC.md and adr/ to docs/spec and docs/adr. Spike S-1: find the Microsoft.CodeAnalysis.CSharp version shipped with SDK 10.0.100, pin it in CPM with a Renovate ignore rule.",
+   "acceptance_tests": [
+    "`dotnet build Ducky.slnx` succeeds on a clean clone with SDK 10.0.100 and no workload",
+    "`git log v2` has no ancestor from main (orphan)",
+    "S-1: Roslyn version recorded in Directory.Packages.props with a comment, and a consumer build pinned to SDK 10.0.100 compiles",
+    "Planted check: Task.Run in a covered test project fails Compile (test/BannedSymbols.covered.txt)"
+   ],
+   "done_definition": "Branch pushed, v2 is the default branch, S-1 closed with the pinned version. No production code yet (TDD starts at M0-02)."
+  },
+  {
+   "id": "M0-02",
+   "milestone": "M0",
+   "title": "Project skeletons, one public type per library, one test per test project",
+   "size": "M",
+   "depends_on": [
+    "M0-01"
+   ],
+   "area": "src/*/*.csproj, src/*/Skeleton*, test/*, test/Shared/Property.cs, Ducky.slnx, Ducky.Tests.slnf",
+   "invariants": [
+    "INV-22"
+   ],
+   "scope": "Stage 1. Projects per §18, all in Ducky.slnx from day one. src: Ducky, Ducky.Reactive, Ducky.Draft, Ducky.Testing (net10.0, IsAotCompatible, strong-named, IsPackable=true, PublicAPI.Shipped/Unshipped.txt); Ducky.Blazor on Microsoft.NET.Sdk.Razor with SupportedPlatform browser and a one-export stub wwwroot/ducky.js; Ducky.Generators and Ducky.Draft.Generators (netstandard2.0, IncludeBuildOutput=false, packed into analyzers/dotnet/cs of Ducky / Ducky.Draft); Ducky.Generator.Tombstone (Microsoft.Build.NoTargets, MinVerSkip, Version 2.0.0, IncludeSymbols=false, SuppressDependenciesWhenPacking, PackageOutputPath $(RepoRoot)artifacts/tombstone/, buildTransitive only); buildTransitive/Ducky.targets (DUCKY900; DUCKY902 after ResolvePackageAssets for a Ducky.Blazor package with major < 2; the CompilerVisibleProperty items, §3) and Ducky.Draft.targets (DUCKY901). Ducky.Blazor/Reactive/Testing reference Ducky with PrivateAssets=none (R-PKG-5). Each library project gets one public type of its final §5-§15 API with a test, so CoverageGate holds at 100% from the first PR (§24 step 1). Test projects (xUnit v3 on MTP v2, Shouldly, CsCheck, FakeLogCollector, no mocks), signed with ducky.snk: Ducky.Tests, Ducky.Concurrency.Tests, Ducky.Blazor.Tests, Ducky.Reactive.Tests, Ducky.Draft.Tests, Ducky.Testing.Tests, Ducky.Generators.Tests, Ducky.Draft.Generators.Tests, Ducky.Docs.Tests and Ducky.E2E; each receives IVT only from its own package, every item written with Key=\"$(DuckyPublicKey)\" (R-PKG-2; Ducky.Concurrency.Tests from Ducky and Ducky.Blazor). Every test project has one real test, Skeleton_{Project}_Smoke (stage 1, no invariant), deleted with its manifest entry by the story that replaces it: a Barrier test over the step-1 type in Ducky.Concurrency.Tests, a region test in Ducky.Docs.Tests, a harness spec over the stub ducky.js in Ducky.E2E (MTP exit code 8 is never ignored). test/Shared/Property.cs (Property.Check: with DUCKY_PROPERTY_SEEDS set, each seed of build/property-seeds.txt with iter 1 and threads 1; the one RS0030-justified CsCheck Sample call) linked into every covered test project. Red first: a linked StaticFieldAudit helper (§17.5 allow-list, [CompilerGenerated] types exempt) and a fixture assembly with a planted mutable static, a static readonly DiagnosticDescriptor and a non-capturing lambda; then NoStaticMutableFields in every package test project. Ducky.Tests.slnf lists every test project except Ducky.Concurrency.Tests and Ducky.E2E. Any CS8002 is suppressed only in the referencing csproj with a justification, and the list is recorded.",
+   "acceptance_tests": [
+    "NoStaticMutableFields (one per package test project, 7 projects)",
+    "NoStaticMutableFields_DetectsPlantedMutableStatic",
+    "Skeleton_{Project}_Smoke (one per test project)",
+    "`dotnet test --solution Ducky.Tests.slnf` green; `dotnet pack` puts Ducky.Generators.dll under analyzers/dotnet/cs of Ducky",
+    "A signed test project receiving IVT with the public key builds (no CS1726)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1; gates that exist so far). Every package project and its test project exist; the static-state audit is the first red-green test."
+  },
+  {
+   "id": "M0-03",
+   "milestone": "M0",
+   "title": "Fallout build: core targets",
+   "size": "M",
+   "depends_on": [
+    "M0-02"
+   ],
+   "area": "build/Build.cs, build/_build.csproj, build.sh/ps1/cmd, .config/dotnet-tools.json",
+   "invariants": [],
+   "scope": "Stage 1. build/_build.csproj on Fallout.Common 10.4.0 (exact), tool manifest (Fallout.GlobalTool 10.4.0, dotnet-stryker, reportgenerator, docfx). `partial class Build : FalloutBuild, IHasSolution, IConfigureGitHubActions` (no ITest/IReportCoverage/IPack, §19) with the ReleaseBranch, BaseRef and ReleaseVersion parameters. Targets: Clean, Restore (locked mode, packages.lock.json committed), Format, Compile (Release, plus a check that fails when a packable net10.0 src project lacks IsAotCompatible), Test (fails first unless the test projects of Ducky.Tests.slnf equal those of Ducky.slnx minus the coverage exclusion list {Ducky.Concurrency.Tests, Ducky.E2E}; then MTP syntax with DUCKY_PROPERTY_SEEDS=1 and CsCheck_Threads=1, cobertura + trx into artifacts/test, DUCKY_REPEAT passthrough), ConcurrencyTest (Ducky.Concurrency.Tests without coverage into artifacts/concurrency), ExclusionGate text checks in build/Build.Gates.cs (reasonless `Stryker disable`, unjustified `#pragma warning disable` in src), and an initial Ci aggregate.",
+   "acceptance_tests": [
+    "`./build.sh Ci` green on the skeleton",
+    "Planted check: removing IsAotCompatible from src/Ducky.Blazor fails Compile",
+    "Planted check: `// Stryker disable all` without `: reason` fails ExclusionGate; `#pragma warning disable` without `// justification:` fails ExclusionGate",
+    "Planted check: `Task.Delay` in a test file fails Compile (test/BannedSymbols.txt)",
+    "Planted check: a stale packages.lock.json fails Restore",
+    "Planted check: a test project added to Ducky.slnx but not to Ducky.Tests.slnf fails Test",
+    "ConcurrencyTest runs the Ducky.Concurrency.Tests skeleton test without writing a cobertura file"
+   ],
+   "done_definition": "Targets are thin dotnet CLI wrappers; each planted check is shown failing in the PR description, then reverted."
+  },
+  {
+   "id": "M0-04",
+   "milestone": "M0",
+   "title": "CoverageGate (100% line and branch) and spike S-2",
+   "size": "M",
+   "depends_on": [
+    "M0-03"
+   ],
+   "area": "build/Build.Gates.cs",
+   "invariants": [],
+   "scope": "Stage 1. CoverageGate: ReportGenerator merges every artifacts/test/**/*.cobertura.xml (Ducky.Concurrency.Tests never writes there) into artifacts/coverage (Cobertura + HTML); fails when any assembly's line-rate or branch-rate < 1.0 (prints uncovered file:line) or when the report's assembly set differs from the src projects listed in Ducky.slnx (a missing assembly fails; the NoTargets tombstone has no assembly and is excluded). No ReportGenerator filter beyond that assembly list. ExclusionGate pins exactly one committed coverage settings file whose only source exclusion is **/*.g.cs (plus the default CompilerGenerated/GeneratedCode handling S-2 records). Spike S-2 as a week-1 prototype under spikes/ (async state machines, records, lowered lock, await using, switch expressions, a member-less error-level [Obsolete] interface, a generator run through CSharpGeneratorDriver): reach 100% with no exclusion and no crash on the pinned xunit.v3/MTP versions; pick MTP CodeCoverage or coverlet.MTP and record the choice in docs/spec/spikes.md.",
+   "acceptance_tests": [
+    "Planted check: an uncovered branch in src/Ducky fails CoverageGate and prints its file:line",
+    "Planted check: a src project of Ducky.slnx missing from the merged report fails CoverageGate",
+    "Planted check: an extra exclusion in the coverage settings file fails ExclusionGate",
+    "S-2 prototype reaches 100% line and branch with no exclusion (recorded in docs/spec/spikes.md)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Coverage tool choice recorded; gate added to Ci."
+  },
+  {
+   "id": "M0-05",
+   "milestone": "M0",
+   "title": "Mutation gates and spike S-6",
+   "size": "M",
+   "depends_on": [
+    "M0-03"
+   ],
+   "area": "build/Build.Mutation.cs, src/*/stryker-config.json",
+   "invariants": [],
+   "scope": "Stage 1. One stryker-config.json per mutated project (Ducky, Ducky.Blazor, Ducky.Reactive, Ducky.Draft, Ducky.Testing, Ducky.Generators, Ducky.Draft.Generators): test-runner mtp, thresholds 90/85/85, mutate exactly [\"**/*.cs\"] with no ! pattern, test-projects = every covered test project referencing the assembly plus Ducky.Concurrency.Tests for Ducky, Ducky.Blazor, Ducky.Reactive and Ducky.Testing, additional-timeout, no mutation-level or ignore-* keys; ExclusionGate checks those keys and the computed test-projects lists. Targets (Stryker process env DUCKY_REPEAT=1, DUCKY_PROPERTY_SEEDS=1, CsCheck_Threads=1): MutationPr (--since BaseRef per active project, break 85, zero mutants allowed), Mutation (full per active project from the manifest's projects: stages, optional repeatable --project <name>, --strict runs all seven, fails on zero mutants or no score for an active project, HTML to artifacts/mutation, opens an issue below 90), PropertyLong (CsCheck_Iter=100000, DUCKY_REPEAT=1, DUCKY_PROPERTY_SEEDS unset). Spike S-6 as a week-1 prototype under spikes/: --since and full runs on a plain library, a generator and a Razor SDK library shaped like Ducky.Blazor (STJ and [LoggerMessage] generators, IVT to two test projects), mutants > 0 per project, a concurrency test observed running once per mutant, and the ConfigureAwait answer recorded (if the boolean literal is mutated: ConfigureAwaitOptions.None on Task awaits, reasoned inline disables only on ValueTask/await using lines).",
+   "acceptance_tests": [
+    "Planted check: a PR adding a surviving mutant breaks MutationPr",
+    "MutationPr and Mutation pass on the skeleton (every mutated project is inactive at stage 1)",
+    "Planted check: a `!` pattern or an ignore-methods key in a stryker-config.json fails ExclusionGate",
+    "S-6 prototype: scores reported for the three prototype projects with mutants > 0 and the ConfigureAwait answer (docs/spec/spikes.md)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). MutationPr becomes part of the `mutation` workflow in M0-11."
+  },
+  {
+   "id": "M0-06",
+   "milestone": "M0",
+   "title": "SpecTraceGate and the staged docs/spec/tests.yaml",
+   "size": "M",
+   "depends_on": [
+    "M0-02",
+    "M0-03"
+   ],
+   "area": "build/Build.SpecTrace.cs, docs/spec/tests.yaml",
+   "invariants": [],
+   "scope": "Stage 1. Write docs/spec/tests.yaml from §4, §14 and §17: every named test with name, project(s), invariant and stage (P1: the stage of the story below that implements it; a name listed in several projects takes the stage of the last story that adds it), the invariants: map (each invariant's stage = the lowest stage of a story adding a covered-project test for it), the projects: map of §17.8 (Ducky 2, Ducky.Generators 7, Ducky.Testing 9, Ducky.Blazor 10, Ducky.Reactive 16, Ducky.Draft 17, Ducky.Draft.Generators 17) and activeStage: 1. SpecTraceGate (§19): runs --list-tests on every .NET test project of Ducky.slnx (Ducky.E2E included); always fails when a manifest name is absent from docs/spec/SPEC.md or a §4 'Named tests' token is missing from the manifest; for active entries (stage <= activeStage) fails when a name is missing from any of its projects (Ducky.AotSmoke names excepted: the AotSmoke target checks them) and when an invariant other than INV-24 whose stage is active has no active entry in a covered project; --strict also fails on any inactive entry and checks all 32 invariants. One matching rule: a {Placeholder} matches \\w+ at any position; a listed test matches on its method name before any '('.",
+   "acceptance_tests": [
+    "Planted check: deleting a §4 name from tests.yaml fails SpecTraceGate",
+    "Planted check: renaming an active test fails SpecTraceGate",
+    "Planted check: an active invariant whose only active test is in Ducky.Concurrency.Tests fails SpecTraceGate",
+    "`--strict` fails while any entry is inactive",
+    "`Caching_{Step}_Cached` matches `Caching_Pipeline_Cached` and `Skeleton_{Project}_Smoke` matches `Skeleton_DuckyTests_Smoke`"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Gate added to Ci; the stage and activeStage rules of P1 are documented in docs/spec/README.md."
+  },
+  {
+   "id": "M0-07",
+   "milestone": "M0",
+   "title": "Pack, MinVer, package validation and PackageSmoke skeleton",
+   "size": "M",
+   "depends_on": [
+    "M0-03"
+   ],
+   "area": "build/Build.Release.cs, test/Ducky.PackageSmoke, Ducky.PackageSmoke.slnx",
+   "invariants": [],
+   "scope": "Stage 1. MinVer via GlobalPackageReference (tag prefix v, MinVerMinimumMajorMinor 2.0, alpha.0); IsPackable=true only in the six shipping projects. Pack target: deletes artifacts/packages and artifacts/tombstone, `dotnet pack Ducky.slnx -c Release --no-build` (PackageOutputPath from Directory.Build.props, the tombstone into artifacts/tombstone), EnablePackageValidation on the library packages (not the tombstone; no baseline until GA), then fails unless artifacts/packages holds exactly the five library IDs plus five .snupkg at $(MinVerVersion) and artifacts/tombstone exactly Ducky.Generator.2.0.0.nupkg. PackageSmoke target (deletes artifacts/smoke-packages first) and Ducky.PackageSmoke.slnx (unlocked, CPM off, -p:DuckyVersion) with its own nuget.config (nuget.org plus artifacts/packages, artifacts/tombstone and the committed feed/, packageSourceMapping routing Ducky, Ducky.*, Ducky.Generator and Mutty only to the local feeds), RestorePackagesPath=artifacts/smoke-packages, committed fakes Ducky.Generator.1.0.292.nupkg and Ducky.Blazor.1.0.292.nupkg. Only the step-1 checks (§17.9 is staged): nuspec checks (Ducky: exactly the two Extensions abstractions; no exclude on any Ducky dependency, R-PKG-5; analyzers/dotnet/cs/Ducky.Generators.dll present; Ducky.Draft with zero dependencies, Ducky.Draft.Generators.dll and Ducky.Draft.targets; tombstone without dependency groups; no Ducky.Generator.*.nupkg in artifacts/packages; no bracketed exact range), the transitive scan for R-PKG-1 IDs, DUCKY900 with the fake 1.0.292 and with the 2.0.0 tombstone, DUCKY902 with the fake Ducky.Blazor 1.0.292. Minimal WASM, Server (implements Microsoft.AspNetCore.Http.IMiddleware, global using Ducky) and Blazor-only consumers compile with TreatWarningsAsErrors. Later consumers and assertions arrive with their features: generator consumers and DUCKY004 (M13-11), the ducky.js publish check (M6-01), [Persist]/[Prerender] slices (M13-04b), the Reactive consumer (M11-05), the Draft consumer and DUCKY901 (M10-07).",
+   "acceptance_tests": [
+    "PackageSmoke green on the skeleton packages",
+    "Planted check: adding `exclude=\"Build,Analyzers\"` to Ducky.Blazor's Ducky dependency fails PackageSmoke",
+    "Planted check: a PackageReference to xunit in src/Ducky fails the R-PKG-1 scan",
+    "Consumer referencing fake Ducky.Generator 1.0.292 fails with DUCKY900; consumer referencing the 2.0.0 tombstone fails with DUCKY900",
+    "Planted check: an extra nupkg in artifacts/packages fails Pack's exact-set check",
+    "Consumer referencing the fake Ducky.Blazor 1.0.292 fails with DUCKY902"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Versions come from MinVer; package validation runs inside Pack."
+  },
+  {
+   "id": "M0-08",
+   "milestone": "M0",
+   "title": "AotSmoke target (NativeAOT console)",
+   "size": "S",
+   "depends_on": [
+    "M0-03"
+   ],
+   "area": "build/Build.Aot.cs, test/Ducky.AotSmoke, Ducky.Aot.slnx",
+   "invariants": [
+    "INV-24"
+   ],
+   "scope": "Stage 1. test/Ducky.AotSmoke (PublishAot console) in its own Ducky.Aot.slnx, restored unlocked. A run prints one PASS <name>/FAIL <name> line per named assertion and exits non-zero on any FAIL; every printed name is a manifest name that appears in SPEC.md, so area stories extend existing assertions instead of printing new names (P8). First assertion `AotSmoke` (references Ducky). AotSmoke target (Linux): wasm-tools install, unlocked restore, publish -r linux-x64 -p:PublishAot=true, run, require only PASS lines and a printed PASS set equal to the active manifest entries mapped to Ducky.AotSmoke (no --list: SpecTraceGate never runs the binary). The trimmed AOT-WASM step joins at stage 18 (M14-06).",
+   "acceptance_tests": [
+    "AotSmoke",
+    "Planted check: a FAIL line makes the target fail",
+    "Planted check: a printed PASS name that is not an active Ducky.AotSmoke manifest entry fails the target"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Target runs in the `aot` workflow."
+  },
+  {
+   "id": "M0-09",
+   "milestone": "M0",
+   "title": "E2E skeleton and ducky.js block-coverage gate",
+   "size": "M",
+   "depends_on": [
+    "M0-03",
+    "M0-02"
+   ],
+   "area": "build/Build.E2E.cs, test/Ducky.E2E",
+   "invariants": [],
+   "scope": "Stage 1. test/Ducky.E2E with Microsoft.Playwright (.NET, an xUnit v3 project on MTP, listed by --list-tests): harness/ static page, Kestrel static-file host, published-dll host fixture (--urls http://127.0.0.1:0, port from stdout, health poll, kill on teardown), browser selected by DUCKY_BROWSER, Playwright's clock installed before the module loads, and the ~60-line CDP precise-coverage helper (every page and context, ranges keyed to ducky.js, merged counts, fail on a zero merged block). Targets E2E (publishes only the samples that exist in Ducky.slnx, Chromium, MTP syntax, then the JS coverage gate) and E2EAllBrowsers (Firefox/WebKit functional). From day one the gate measures the one-export stub ducky.js of M0-02 through the Ducky.E2E skeleton spec, so it is never vacuous; the real module replaces the stub in M6-01.",
+   "acceptance_tests": [
+    "Skeleton_{Project}_Smoke (the Ducky.E2E harness spec over the stub ducky.js) passes in Chromium",
+    "Planted check: an unexecuted block in the stub ducky.js fails the coverage gate"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Target runs in the `e2e` workflow."
+  },
+  {
+   "id": "M0-10",
+   "milestone": "M0",
+   "title": "Public API tracking and release-tracking targets",
+   "size": "S",
+   "depends_on": [
+    "M0-03"
+   ],
+   "area": "build/Build.PublicApi.cs, src/*/PublicAPI.*.txt, src/*Generators/AnalyzerReleases.*.md",
+   "invariants": [],
+   "scope": "Stage 1. Confirm RS0016/RS0017 are errors in every packable project; AnalyzerReleases.Shipped/Unshipped.md in both generator projects. Targets ShipPublicApi (Unshipped to Shipped for PublicAPI and AnalyzerReleases, never touches the package-validation baseline) and SetBaseline (writes PackageValidationBaselineVersion={latest GA on nuget.org} into Directory.Build.props). Together with Pack's EnablePackageValidation this realises the requested 'PackageValidation' and 'PublicApi' targets under the spec's names. Each generator assembly's AnalyzerReleases lists exactly its own descriptors (RS2002 otherwise); runtime, MSBuild and obsolete IDs are covered by the Docs page check (M15-04).",
+   "acceptance_tests": [
+    "Planted check: a public type without a PublicAPI.Unshipped.txt line fails Compile (RS0016)",
+    "ShipPublicApi moves lines on a scratch branch and leaves Directory.Build.props untouched",
+    "SetBaseline writes the property (dry run against a fake feed)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M0-11",
+   "milestone": "M0",
+   "title": "GitHub Actions generated by Fallout, and spike S-8",
+   "size": "M",
+   "depends_on": [
+    "M0-04",
+    "M0-05",
+    "M0-06",
+    "M0-07",
+    "M0-08",
+    "M0-09",
+    "M0-10"
+   ],
+   "area": ".github/, build/Build.CI.cs, build/DuckyGitHubActionsAttribute.cs",
+   "invariants": [],
+   "scope": "Stage 1. DuckyGitHubActionsAttribute overrides GetJobs so each job is named after its workflow (S-8). Build.CI.cs attributes (§20.1) for ci (Ci), ci-cross-windows and ci-cross-macos (Test and ConcurrencyTest), e2e (E2E), aot (AotSmoke), mutation (MutationPr), nightly-mutation, nightly-e2e, nightly-props (nightly-audit is added in M16-01); the nightly attributes set EnableGitHubToken, WritePermissions Issues and ReadPermissions Contents/Actions. ConfigureSteps PreRun (wasm-tools for aot, Playwright deps for e2e); JobEnd step opens or updates an issue on nightly failure. VerifyWorkflows target (regenerate to temp, diff, unique job names). Docs target v0 = fence check only (no ```csharp outside docs/spec and docs/adr). Final Ci aggregate: Format, ExclusionGate, CoverageGate, ConcurrencyTest, SpecTraceGate, PackageSmoke, VerifyWorkflows, Docs. Hand-written pr-title.yml, renovate.json (Roslyn and R3 majors ignored, automerge minor/patch dev deps), CODEOWNERS, pull_request_template.md (links the story issue, red-green-refactor checklist, the story's stage and whether it completes a stage, P1).",
+   "acceptance_tests": [
+    "Generated YAML: every job name equals its workflow name (S-8 closed)",
+    "Planted check: a hand edit to ci.yml fails VerifyWorkflows",
+    "Planted check: a fenced csharp block in docs/guides fails Docs",
+    "A PR to v2 reports ci, ci-cross-windows, ci-cross-macos, e2e, aot, mutation, pr-title, all green"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Every required check reports on a real PR."
+  },
+  {
+   "id": "M0-12",
+   "milestone": "M0",
+   "title": "Branch protection and first tag",
+   "size": "S",
+   "depends_on": [
+    "M0-11"
+   ],
+   "area": "build/protect-branch.sh",
+   "invariants": [],
+   "scope": "Stage 1. Idempotent build/protect-branch.sh (gh api, §20.2): PR required, 0 approvals, strict required checks ci, ci-cross-windows, ci-cross-macos, e2e, aot, mutation, pr-title; linear history, squash only, no force-push or deletion, conversation resolution, admins included; tag ruleset on v* (maintainer only). Owner runs it for v2 and pushes tag v2.0.0-alpha.0.",
+   "acceptance_tests": [
+    "Running the script twice changes nothing the second time",
+    "A direct push to v2 is rejected",
+    "A PR with a red required check cannot be merged"
+   ],
+   "done_definition": "Owner-run; protection verified. From here on every story lands behind the full gate set."
+  },
+  {
+   "id": "M0-13",
+   "milestone": "M0",
+   "title": "Week-1 Blazor spike prototypes S-3, S-5, S-7",
+   "size": "M",
+   "depends_on": [
+    "M0-01"
+   ],
+   "area": "spikes/blazor, docs/spec/spikes.md",
+   "invariants": [],
+   "scope": "Stage 1. Throwaway prototypes under spikes/ (outside every solution and gate, exempt from TDD, §23), answering the platform questions before the Blazor steps are designed: S-3 a trimmed AOT WASM app persists and takes a byte[] seed with zero IL warnings (JsonTypeInfo-based API preferred, audited byte[] suppression as fallback); S-5 a Server app round-trips 2 MB from localStorage through IJSStreamReference without closing the circuit, and a pull export returning an empty Uint8Array yields a zero-length reference; S-7 WASM, Server and Auto apps print the answers to §23: root/store-scope identity of PersistentComponentState and IJSRuntime, AuthenticationStateProvider lifetime, a synchronous InvalidOperationException from the prerender import, ducky:seed delivery to a scoped TryTakeFromJson after pause/resume, RegisterOnPersisting(…, RenderMode.InteractiveAuto) in a single-mode and a both-modes app, and whether ConnectCircuit/ResumeCircuit raise AuthenticationStateChanged on a live store with DuckyScopes.NameIdentifier completing synchronously. Any 'no' enables the DuckyComponent hand-off fallback (§6.10) before M5-04 designs the gate.",
+   "acceptance_tests": [
+    "docs/spec/spikes.md records the S-3, S-5 and S-7 prototype answers and the fallbacks they trigger"
+   ],
+   "done_definition": "Only docs/spec/spikes.md is merged; the prototypes stay under spikes/ and no gate builds them. Regression tests at stage 18: WasmTrimmedSmoke, Persist_LargeSlice_OnServer_RoundTrips and the S-7 E2E tests."
+  },
+  {
+   "id": "M0-14",
+   "milestone": "M0",
+   "title": "Week-1 spike prototypes S-4 and S-9",
+   "size": "S",
+   "depends_on": [
+    "M0-05"
+   ],
+   "area": "spikes/core, docs/spec/spikes.md",
+   "invariants": [],
+   "scope": "Stage 1. S-4: a dispatcher stub under spikes/ (a lock-protected queue with one drainer) runs a CsCheck SampleParallel property at 50 repetitions under 3 minutes; the tuned operation counts are recorded and re-checked against the real dispatcher in M1-14. S-9: the per-project split is designed up front (Mutation --project <name>), and the S-6 prototypes' per-project times give the first timeout-minutes of nightly-mutation and release-mutation.",
+   "acceptance_tests": [
+    "docs/spec/spikes.md records the S-4 operation counts and the S-9 per-project timings"
+   ],
+   "done_definition": "Only docs/spec/spikes.md and the timeout-minutes values are merged. S-4 re-runs at stage 2 (Linearizability_DispatchVsModel); S-9 is re-measured at stages 13 and 17."
+  },
+  {
+   "id": "M1-01",
+   "milestone": "M1",
+   "title": "SliceKey derivation and validation",
+   "size": "S",
+   "depends_on": [
+    "M0-12"
+   ],
+   "area": "src/Ducky/Slices/SliceKey.cs",
+   "invariants": [],
+   "scope": "Stage 2. SliceKey.FromType (§6.1): type name, nested prefix joined with '-', strip one Slice/Store/Reducers/Reducer suffix, kebab-case with acronyms. Key regex `^(@ducky/)?[a-z0-9]+(-[a-z0-9]+)*$`; @ducky/ allowed only for assemblies with Ducky.dll's public key token. Pure functions, internal.",
+   "acceptance_tests": [
+    "SliceKey_FromType_Table",
+    "SliceKey_Validation_Table (non-normative: regex and reserved prefix cases)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Deletes the Ducky.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M1-02",
+   "milestone": "M1",
+   "title": "Slice<TState> reducers with exact-type matching",
+   "size": "S",
+   "depends_on": [
+    "M1-01"
+   ],
+   "area": "src/Ducky/Slices",
+   "invariants": [],
+   "scope": "Stage 2. Slice (private protected ctor, virtual cached Key, StateType), Slice<TState> (protected Initial read once, sealed StateType = typeof(TState), On<TAction> both overloads). On<T> throws on duplicate T, non-concrete T (abstract/interface/object), or after freeze. Freeze to FrozenDictionary keyed by exact runtime type (ADR-0008). Internal InitialState, CanHandle, TryReduce.",
+   "acceptance_tests": [
+    "DuplicateHandler_ThrowsAtConstruction",
+    "OnAfterFreeze_Throws",
+    "ExactTypeMatching_DerivedActionNotHandledByBaseHandler"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); PublicAPI.Unshipped updated."
+  },
+  {
+   "id": "M1-03",
+   "milestone": "M1",
+   "title": "Error model, library actions and runtime codes",
+   "size": "S",
+   "depends_on": [
+    "M0-12"
+   ],
+   "area": "src/Ducky/Errors, docs/diagnostics",
+   "invariants": [
+    "INV-31"
+   ],
+   "scope": "Stage 2. DuckyError, DuckyConfigurationException (Errors list), internal error catalogue building every Ducky runtime code (DUCKY300-309, 350, 351 as a DuckyConfigurationException, 353) with the four-part template (what, types/keys, fix, link, §8.3). Library records StoreInitialized, ReducerFailed, EffectFailed; DispatchLoopException, UnhandledActionException; enums DispatchResult and Origin. One docs/diagnostics/{code}.md page per code (prose only; snippets arrive in M15).",
+   "acceptance_tests": [
+    "EveryErrorCode_FollowsMessageTemplate"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); every code has a docs page."
+  },
+  {
+   "id": "M1-04",
+   "milestone": "M1",
+   "title": "StateSnapshot and Registry",
+   "size": "S",
+   "depends_on": [
+    "M1-02",
+    "M1-03"
+   ],
+   "area": "src/Ducky/Store/StateSnapshot.cs",
+   "invariants": [
+    "INV-07"
+   ],
+   "scope": "Stage 2. Frozen Registry (keys, by state type, by key, slices), StateSnapshot (object[] states by ordinal, ulong[] restored bitset, Version): Get<T> (DUCKY350 naming AddDuckyGenerated_{Asm}), TryGet, Get(key) (KeyNotFoundException), Keys, WasRestored<T>/WasRestored(key). Internal commit helper that clones only when a slot changed.",
+   "acceptance_tests": [
+    "Snapshot_GetUnregisteredType_ThrowsDucky350 (non-normative)",
+    "Snapshot_CommitWithoutChange_ReturnsSameInstance (non-normative)",
+    "Snapshot_WasRestored_BitsetCopiedOnlyOnHydration (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-05",
+   "milestone": "M1",
+   "title": "Single-drainer dispatcher and store facade",
+   "size": "M",
+   "depends_on": [
+    "M1-04"
+   ],
+   "area": "src/Ducky/Store",
+   "invariants": [
+    "INV-01",
+    "INV-02",
+    "INV-03",
+    "INV-07",
+    "INV-08",
+    "INV-10"
+   ],
+   "scope": "Stage 2. Dispatcher per §6.3 (Lock _gate, queue, _draining, Ids under _gate starting at 1 in enqueue order, _drainExited), Pending, Drain loop with empty-check and release in one critical section. Process steps 6-8: reduce into a scratch array, atomic commit (INV-08), Volatile.Write, complete TCS (RunContinuationsAsynchronously, never under the lock); a dispatch from a reducer is queued, never nested. DuckyStore facade: Dispatch, DispatchAsync, State, InitialState and Slices (IReadOnlyList<Slice> in registration order: registry data, no init, no materialization, readable after disposal), with internal construction for now. [LoggerMessage] Log class (EventIds 1000+). Reducer failure completes Failed (failure actions arrive in M1-07). The catch-all and SafeLogger come in M1-05b.",
+   "acceptance_tests": [
+    "ReducerThrow_InOneSlice_CommitsNoSliceForThatAction",
+    "DispatchAsync_Reduced_CompletesAfterCommit (non-normative)",
+    "Dispatch_CallerBecomesDrainer_ReadYourWrites (non-normative)",
+    "Reducers_DispatchFromReducer_QueuedNotNested",
+    "Snapshot_DispatchAsyncReduced_StateVersionAtLeastCommitVersion"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); no user code or completion runs under _gate (code review checklist)."
+  },
+  {
+   "id": "M1-05b",
+   "milestone": "M1",
+   "title": "Drain catch-all, BeforeProcessHook and SafeLogger",
+   "size": "S",
+   "depends_on": [
+    "M1-05"
+   ],
+   "area": "src/Ducky/Store/Drain.cs, src/Ducky/Diagnostics/SafeLogger.cs",
+   "invariants": [
+    "INV-03"
+   ],
+   "scope": "Stage 2. Internal SafeLogger : ILogger in Ducky, catching every non-fatal exception from Log, IsEnabled and BeginScope, wrapped once where each component obtains its logger (it replaces any per-call 'swallows its own throw' code). Catch-all around Process: it completes p first, then logs EventId 1012 inside its own try/catch, so a fatal rethrow from a logging provider still leaves the action completed Failed, the next action drained and _drainExited completed. Internal IVT seam BeforeProcessHook on the store (an instance Action?, null in production), from which the tests throw.",
+   "acceptance_tests": [
+    "Drain_ProcessThrowsUnexpectedly_NextActionStillDrained",
+    "Drain_ProcessThrowsAndLogRethrowsFatal_ActionCompletedAndNextDrained",
+    "SafeLogger_ProviderThrows_NeverEscapes (Ducky.Tests)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-06",
+   "milestone": "M1",
+   "title": "CausalScope and depth guard",
+   "size": "S",
+   "depends_on": [
+    "M1-05"
+   ],
+   "area": "src/Ducky/Store/CausalScope.cs",
+   "invariants": [
+    "INV-06"
+   ],
+   "scope": "Stage 2. Per-store causal scope: a private readonly AsyncLocal<Cause?> _causal instance field on the dispatcher (never static; a scope never crosses stores, §6.5) holding Seq, Depth, CorrelationId and InFailure, set in Process step 2 and restored in finally with _processingSeq reset to 0. Enqueue depth rule for every origin: null scope => depth 0 new chain; Seq == _processingSeq => child depth+1; otherwise async continuation depth 0 keeping correlation. Step 1: depth > MaxDispatchDepth => Dropped.",
+   "acceptance_tests": [
+    "SelfDispatchLoop_IsStoppedByDepthGuard",
+    "CausalScope_NeverLeftSetInCallerContext (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-07",
+   "milestone": "M1",
+   "title": "FailureRouter",
+   "size": "S",
+   "depends_on": [
+    "M1-06"
+   ],
+   "area": "src/Ducky/Store/FailureRouter.cs",
+   "invariants": [
+    "INV-06",
+    "INV-12"
+   ],
+   "scope": "Stage 3. Core failure actions enqueued at depth 0 with the parent correlation and IsFailure; log-only when the current scope has InFailure. Depth-drop enqueues ReducerFailed(DispatchLoopException) so it is itself reduced. Reducer throw now enqueues exactly one ReducerFailed. The loop-guard ReducerFailed takes p.CorrelationId/p.InFailure explicitly, never the ambient scope.",
+   "acceptance_tests": [
+    "ReducerFailed_ExactlyOnce",
+    "FailureWhileReducingFailure_LogsOnly",
+    "LoopGuardFailure_IsReducedNotDropped",
+    "LoopGuardFailure_ReactorRedispatches_Terminates"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-08",
+   "milestone": "M1",
+   "title": "DuckyBuilder, AddDucky and aggregated validation",
+   "size": "M",
+   "depends_on": [
+    "M1-05",
+    "M1-03"
+   ],
+   "area": "src/Ducky/Configuration",
+   "invariants": [
+    "INV-31"
+   ],
+   "scope": "Stage 2. DuckyBuilder (§5.1): Services, Lifetime backed by ServiceLifetime?, MaxDispatchDepth, ThrowOnUnhandledAction, InitBufferCapacity, InitTimeout, DisposeTimeout, AddSlice (throwaway instance in try/catch => DUCKY307/308), AddValidation (no AddError), internal settable IsBrowser (single RS0030-justified read). AddDucky throws only DUCKY300; everything else (DUCKY301-305, custom rules) is aggregated into one DuckyConfigurationException at first store resolution. UseJson/RequireJsonTypeInfo/AddEffect/Use are added by later stories. Later packages register their configuration codes as AddValidation rules evaluated on the final composed options at first resolution.",
+   "acceptance_tests": [
+    "Build_WithFiveMisconfigurations_ReportsAllFive",
+    "Build_SelfContainedAndDiDependentErrors_ReportedTogether",
+    "AddDucky_Twice_Throws"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-09",
+   "milestone": "M1",
+   "title": "DI lifetimes and store identity",
+   "size": "S",
+   "depends_on": [
+    "M1-08"
+   ],
+   "area": "src/Ducky/Configuration/Registration.cs",
+   "invariants": [
+    "INV-22"
+   ],
+   "scope": "Stage 2. AddDucky registers IStore through DuckyStore.Create(sp, config), IDispatcher forwarding, each slice type resolving to the store-owned instance, TryAddSingleton(TimeProvider.System). Lifetime resolved after configure: IsBrowser ? Singleton : Scoped; Transient => DUCKY301. Store-owned AsyncServiceScope for effects/middleware. Singleton on a non-browser host logs Warning 1004.",
+   "acceptance_tests": [
+    "BrowserLifetime_RootAndScopes_ResolveOneStore",
+    "ServerLifetime_TwoScopes_TwoStores",
+    "ServerLifetime_HandlerScope_GetsDistinctStore",
+    "Lifetime_Default_FollowsIsBrowserSetInConfigure"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-10",
+   "milestone": "M1",
+   "title": "Init buffer, StoreInitialized and Restore",
+   "size": "M",
+   "depends_on": [
+    "M1-07",
+    "M1-09"
+   ],
+   "area": "src/Ducky/Store/Init",
+   "invariants": [
+    "INV-04",
+    "INV-13"
+   ],
+   "scope": "Stage 3. StoreState machine, InitCoordinator happy path with no middleware (NotStarted to Completed, Start never under _gate), init buffer for Local/Effect before Ready, MarkReady appends StoreInitialized then the buffer under one lock, shared init task, InitializeAsync(token) = WaitAsync. Init auto-starts on Dispatch, DispatchAsync and State reads. IStore.Restore(values, origin) for Hydration/CrossTab/DevTools (internal HydrateSlices, TState values; JsonElement in M4-06), WasRestored set only by Hydration, ArgumentOutOfRangeException for Local/Effect/System. The shared init TCS travels in StoreInitialized's Pending, so InitializeAsync completes when StoreInitialized is processed (or Failed, or at disposal), never from MarkReady.",
+   "acceptance_tests": [
+    "Init_AutoStartsOnFirstDispatch",
+    "Init_StoreInitializedExactlyOnce",
+    "PreInitDispatches_AreBufferedAndReplayedInOrder",
+    "Restore_BypassesInitBuffer",
+    "InitBuffer_ActionsAfterReady_FollowBufferedActions"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-11",
+   "milestone": "M1",
+   "title": "Core dispose",
+   "size": "M",
+   "depends_on": [
+    "M1-10"
+   ],
+   "area": "src/Ducky/Store/Dispose.cs",
+   "invariants": [
+    "INV-10",
+    "INV-13",
+    "INV-29"
+   ],
+   "scope": "Stage 3. DisposeAsync publishes its TCS through Interlocked.CompareExchange before step 1 and returns that task to every caller, re-entrant ones included; it never faults. Step 1 under _gate: mark Disposed (the volatile _disposal read by later call-time checks), detach pendings and idle waiters, complete them Disposed outside the lock together with the shared init task if never Ready; step 2 cancels the lifetime CTS (callbacks may overlap an in-flight drain; AggregateException logged, EventId 1013); step 3 awaits _drainExited bounded by DisposeTimeout (Warning 1011): DisposeAsync completes at the bound and later phases chain on _drainExited. Sync Dispose() is `_ = DisposeAsync();` plus Warning 1010. Post-dispose behaviour of Dispatch, DispatchAsync, InitializeAsync, State and Restore.",
+   "acceptance_tests": [
+    "Dispose_Twice_IsNoOp",
+    "SyncDispose_LogsWarningAndDelegates",
+    "InitializeAsync_DisposedBeforeReady_Completes",
+    "Dispose_ReentrantFromLifetimeCallback_RunsOnce"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-12",
+   "milestone": "M1",
+   "title": "WhenIdleAsync",
+   "size": "S",
+   "depends_on": [
+    "M1-11"
+   ],
+   "area": "src/Ducky/Store/Idle.cs",
+   "invariants": [
+    "INV-13"
+   ],
+   "scope": "Stage 3. Idle waiters (Ready, queue empty, not draining; effects join in M2-03), TakeIdleWaitersIfIdleLocked detached under _gate and completed outside, auto-start of init, only the caller's token cancels, idle waiters are completed in dispose step 1, after the lock is released.",
+   "acceptance_tests": [
+    "WhenIdle_CompletesAfterDrainExit (non-normative)",
+    "WhenIdle_CallerTokenCancels_OnlyThatWait (non-normative)",
+    "WhenIdle_StartsInit (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M1-13",
+   "milestone": "M1",
+   "title": "Concurrency suite I",
+   "size": "M",
+   "depends_on": [
+    "M1-06"
+   ],
+   "area": "test/Ducky.Concurrency.Tests",
+   "invariants": [
+    "INV-01",
+    "INV-02",
+    "INV-03",
+    "INV-04",
+    "INV-05",
+    "INV-07"
+   ],
+   "scope": "Stage 2. Replace the Ducky.Concurrency.Tests skeleton test (the project exists since M0-02, outside coverage, run by ConcurrencyTest): Repeat MemberData driven by DUCKY_REPEAT (default 50), 10 s WaitAsync with a thread-dump failure, Task.Run with Barrier/TCS choreography only. TST-03 items 1-5 and 7 (item 8 moved to M4-04, after dispose).",
+   "acceptance_tests": [
+    "Dispatch_FromNThreads_AppliesEveryActionExactlyOnce",
+    "Reducers_NeverRunConcurrently",
+    "Dispatch_PreservesPerProducerOrder",
+    "Dispatch_AfterDrainRelease_NoStrandedAction",
+    "Dispatch_OwnerBlocksOnCrossThreadDispatch_DoesNotDeadlock",
+    "Snapshot_VersionStrictlyMonotonic",
+    "Snapshot_NeverTorn",
+    "Snapshot_AfterConcurrentReduces_IsNeverStale"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); 50 repetitions green locally and on all three OS jobs. Deletes the Ducky.Concurrency.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M1-14",
+   "milestone": "M1",
+   "title": "Concurrency suite II and linearizability (spike S-4)",
+   "size": "M",
+   "depends_on": [
+    "M1-13",
+    "M0-14"
+   ],
+   "area": "test/Ducky.Concurrency.Tests/Linearizability",
+   "invariants": [
+    "INV-01",
+    "INV-02",
+    "INV-03",
+    "INV-04",
+    "INV-07",
+    "INV-10"
+   ],
+   "scope": "Stage 2. TST-03 items 11-13. CsCheck SampleParallel over awaited DispatchAsync, ReadState and (later) Selection.Value against a sequential reducer model; sync Dispatch checked separately for exactly-once and per-producer order after WhenIdleAsync. S-4 regression: re-run against the real dispatcher, resetting the operation counts measured by the M0-14 prototype so the suite stays under 3 minutes at 50 repetitions.",
+   "acceptance_tests": [
+    "DispatchAsync_QueuedBehindOtherThreadsDrain_CompletesAfterReduce",
+    "DispatchAsync_ContinuationNeverRunsInlineOnDrainer",
+    "Linearizability_DispatchVsModel"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); S-4 budget recorded in docs/spec/spikes.md."
+  },
+  {
+   "id": "M2-01",
+   "milestone": "M2",
+   "title": "Effect<T>, Merge policy, EffectContext and materialization",
+   "size": "M",
+   "depends_on": [
+    "M1-12",
+    "M4-01"
+   ],
+   "area": "src/Ducky/Effects",
+   "invariants": [
+    "INV-11",
+    "INV-31"
+   ],
+   "scope": "Stage 4. Effect (LongRunning), Effect<TAction> (Policy, ConcurrencyKey, Handle), Concurrency enum, AddEffect<[DAM]T>() and AddEffect(instance) (never disposed): one registration per effect type, the instance wins whatever the order and the replaced type is excluded from DUCKY309. Materialization on first store use via Lazy(ExecutionAndPublication) with ActivatorUtilities from the store scope; a throwing constructor caches one DuckyConfigurationException (DUCKY353) rethrown by every call. Exact-type effect index; Process step 11 starts runs inline to the first await. EffectContext.Trigger carries the ActionContext of M4-01 (P6). EffectContext (live State, Trigger, Time, Dispatch/DispatchAsync with Origin.Effect). Merge runs on the store-lifetime token. Store owns and disposes store-created effects.",
+   "acceptance_tests": [
+    "Effect_RegisteredInDi_StillStoreOwnedPerStore",
+    "Effect_PolicyCancellation_NeverEffectFailed",
+    "Materialization_CtorThrows_EveryCallRethrowsSameConfigurationException",
+    "Effect_AddEffectInstance_NeverDisposed (non-normative)",
+    "AddEffect_InstanceAndType_SameEffect_OneRunner"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M2-02",
+   "milestone": "M2",
+   "title": "Effect failure observation",
+   "size": "S",
+   "depends_on": [
+    "M2-01"
+   ],
+   "area": "src/Ducky/Effects/EffectRun.cs",
+   "invariants": [
+    "INV-11",
+    "INV-12"
+   ],
+   "scope": "Stage 4. async RunAsync observation: an OperationCanceledException is cancellation iff its token is our run token or the run token is cancelled; anything else (including a synchronous throw before the first await) goes to FailureRouter as EffectFailed at depth 0, or is logged only when the trigger was a failure action. The observer never uses the cancellable token.",
+   "acceptance_tests": [
+    "Effect_ForeignOce_IsEffectFailed",
+    "Effect_FaultDuringDispose_StillObserved",
+    "EffectOnEffectFailed_ThrowsSync_LogsOnly_NoLoop",
+    "EffectOnEffectFailed_ThrowsAfterAwait_LogsOnly"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M2-03",
+   "milestone": "M2",
+   "title": "Quiescence, per-store effect-run scope and CountedForIdle",
+   "size": "M",
+   "depends_on": [
+    "M2-02"
+   ],
+   "area": "src/Ducky/Effects/Quiescence.cs",
+   "invariants": [
+    "INV-10",
+    "INV-11",
+    "INV-13"
+   ],
+   "scope": "Stage 4. _runningEffects (non-LongRunning) incremented under _gate when RunAsync is created and decremented last in the run's finally (after the slot compare-and-remove, Done and CTS disposal), completing idle waiters at zero; WhenIdleAsync now waits for runs. Per-store private readonly AsyncLocal<EffectRunToken?> _effectRun instance field, set only by RunAsync; Process step 2 sets it to null for each action and restores it in finally. EffectRunToken.CountedForIdle: WhenIdleAsync (hence TestStore.Settled) throws InvalidOperationException synchronously from a non-LongRunning run of the same store instead of waiting for itself.",
+   "acceptance_tests": [
+    "WhenIdle_NeverCompletesWhileEffectCausedActionPending",
+    "WhenIdle_IgnoresLongRunningEffects",
+    "WhenIdle_FromNonLongRunningEffectRun_ThrowsNotHangs"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M2-03b",
+   "milestone": "M2",
+   "title": "Run registry and effect-aware dispose (phase 5b)",
+   "size": "M",
+   "depends_on": [
+    "M2-03",
+    "M4-01"
+   ],
+   "area": "src/Ducky/Store/Dispose.cs, src/Ducky/Effects/RunRegistry.cs, test/Ducky.Concurrency.Tests/Dispose",
+   "invariants": [
+    "INV-11",
+    "INV-29"
+   ],
+   "scope": "Stage 4. Per-store run registry _runs covering every policy (LongRunning included), filled by the drainer and emptied by a continuation. Every EffectRunToken is a new object (run id + token) with a DisposeCalled TCS completed by any DisposeAsync call made from that run; dispose step 4 awaits Task.WhenAny(run.Task, run.Token.DisposeCalled.Task) per run, bounded by DisposeTimeout and chained past it; phase 5b (effects, reactive effects, store scope) runs after phase 5a and the run wait, so a hung run delays only effect and scope disposal. Process step 11 checks the store-lifetime token once, before any run, and starts none once disposal began (Debug log).",
+   "acceptance_tests": [
+    "Dispose_AwaitsMergeAndLongRunningRuns",
+    "Dispose_SecondCallFromEffectRun_DoesNotWaitForItself",
+    "Dispose_FromAfterReduce_NoEffectStartedForThatAction",
+    "Dispose_FromRacingEffectContinuation_WaitsForDrain (Ducky.Concurrency.Tests)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M2-04",
+   "milestone": "M2",
+   "title": "Switch policy, EffectRunToken and the run check",
+   "size": "M",
+   "depends_on": [
+    "M2-03"
+   ],
+   "area": "src/Ducky/Effects/Policies/Switch.cs",
+   "invariants": [
+    "INV-11"
+   ],
+   "scope": "Stage 4. EffectRunner with ConcurrentDictionary<object, Slot> (NullKey sentinel), immutable Slot per start, AddOrUpdate install with factories that only return the pre-built slot and record prev, compare-and-remove of the own slot, CTS ownership rule (CancelAsync on the drainer, dispose in a continuation, Warning 1014 on callback fault). EffectRunToken (a new object per run) checked at call time and stored in Pending.Run for Process step 3. EffectContext.Dispatch/DispatchAsync first read the store's disposal state (one volatile read) and complete Disposed, uncounted, once disposal began; only then does the run check drop a superseded Switch run's dispatch (Dropped, counted); step 3 applies the same precedence. Internal SlotCount.",
+   "acceptance_tests": [
+    "Switch_OldRunCompletion_DoesNotRemoveNewSlot",
+    "Switch_SupersededRunIgnoringToken_CannotDispatch",
+    "Switch_StaleResultQueuedBeforeSupersession_IsDropped",
+    "Switch_CancelCallbackThrows_DrainerSurvives",
+    "Effect_KeyedSwitch_ProductB_DoesNotCancelProductA"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); every test asserts SlotCount == 0 after WhenIdleAsync."
+  },
+  {
+   "id": "M2-05",
+   "milestone": "M2",
+   "title": "Exhaust and Queue policies",
+   "size": "M",
+   "depends_on": [
+    "M2-04"
+   ],
+   "area": "src/Ducky/Effects/Policies/ExhaustQueue.cs",
+   "invariants": [
+    "INV-11"
+   ],
+   "scope": "Stage 4. Exhaust: TryAdd running marker, drop with Debug log and a drop hook for ducky.effect.dropped. Queue: Done TCS (RunContinuationsAsynchronously), run awaits prev.Done.Task.WaitAsync(runToken), handler never invoked when cancelled while waiting, finally compare-and-removes its own slot then completes its own Done. The Exhaust run token is the store-lifetime token, like Merge. Normative finally order: slot compare-and-remove, Done, CTS disposal, then the idle decrement; the Queue test completes its last run on a pool thread through a RunContinuationsAsynchronously gate.",
+   "acceptance_tests": [
+    "Exhaust_SecondWhileRunning_DroppedAndCounted",
+    "Queue_ThreeRuns_NeverOverlap_SlotEmptyAtIdle",
+    "Queue_DisposeFromRunWithQueuedSuccessor_CompletesWithoutTimeout",
+    "Queue_AfterDispose_HandlerNeverInvoked"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M2-06",
+   "milestone": "M2",
+   "title": "Policy matrix and model-based effect property",
+   "size": "M",
+   "depends_on": [
+    "M2-05",
+    "M1-13"
+   ],
+   "area": "test/Ducky.Tests/Effects/Matrix, test/Ducky.Concurrency.Tests/Effects",
+   "invariants": [
+    "INV-11"
+   ],
+   "scope": "Stage 4. 4 policies x {global, key A, key B} x {complete, fault, foreign OCE, policy cancel, store dispose} theory with TCS-gated fakes (dispatched actions, EffectFailed count, SlotCount == 0 at idle). CsCheck model property through Property.Check (fixed seeds when gated) over random streams and completion orders. Concurrency: install racing completion-remove.",
+   "acceptance_tests": [
+    "EffectPolicyMatrix (theory, 60 cases; non-normative name for the §17.4 matrix)",
+    "EffectPolicies_ModelBased",
+    "Queue_InstallRacesCompletionRemove_HandlerRunsOncePerAction"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M2-07",
+   "milestone": "M2",
+   "title": "EffectGroup and ctx.Run",
+   "size": "S",
+   "depends_on": [
+    "M2-03",
+    "M2-04"
+   ],
+   "area": "src/Ducky/Effects/EffectGroup.cs",
+   "invariants": [
+    "INV-11",
+    "INV-31"
+   ],
+   "scope": "Stage 4. EffectGroup.On<T>(handler, policy, key) constructor-only; duplicate or non-concrete T throws, surfacing as DUCKY353 naming DUCKY308/307. EffectContextExtensions.Run (started, work, succeeded, failed; our-token cancellation propagates, HttpClient timeout is a failure). Process step 11 computes each effect's ConcurrencyKey or EffectGroup key inside that effect's try/catch: a throw routes EffectFailed for that effect only and the others still start.",
+   "acceptance_tests": [
+    "EffectContext_Run_HttpTimeout_DispatchesFailed",
+    "EffectGroup_DuplicateOn_Ducky353NamesDucky308 (non-normative)",
+    "EffectGroup_PolicyPerHandler (non-normative)",
+    "Effect_ConcurrencyKeyThrows_EffectFailedOtherEffectsStart"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M2-08",
+   "milestone": "M2",
+   "title": "Constructor dependency check (DUCKY309)",
+   "size": "S",
+   "depends_on": [
+    "M2-01",
+    "M1-08"
+   ],
+   "area": "src/Ducky/Configuration/CtorCheck.cs",
+   "invariants": [
+    "INV-31"
+   ],
+   "scope": "Stage 4. At first resolution, for each registered effect (middleware in M4-05, reactive in M11-01): take the ActivatorUtilitiesConstructor or the public constructors of the [DAM] type; pass if one candidate has every non-default parameter resolvable per IServiceProviderIsService (IStore, IDispatcher, slice and SliceStore types count as resolvable). Skip with a Debug log when the container has no IServiceProviderIsService. [FromKeyedServices(key)] parameters are checked with IServiceProviderIsKeyedService.IsKeyedService (skipped with the Debug log when absent); [ServiceKey] parameters are unresolvable. Public DuckyBuilder.RequireResolvableConstructor([DAM] Type type, string requiredBy) queues any type for DUCKY309 (AddReactiveEffect uses it).",
+   "acceptance_tests": [
+    "Build_EffectCtorDependencyMissing_ReportedWithOtherErrors",
+    "CtorCheck_NoIsServiceProvider_SkippedWithDebugLog (non-normative)",
+    "Build_EffectCtorKeyedDependency_NotReported",
+    "Build_EffectCtorKeyedDependencyMissingKey_Reported"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M2-09",
+   "milestone": "M2",
+   "title": "Effect-driven causal depth",
+   "size": "S",
+   "depends_on": [
+    "M2-02"
+   ],
+   "area": "test/Ducky.Tests/CausalDepth",
+   "invariants": [
+    "INV-06"
+   ],
+   "scope": "Stage 4. Single-threaded tests in Ducky.Tests (covered; §17.3 keeps the INV-06 depth tests out of Ducky.Concurrency.Tests) with FakeTimeProvider: synchronous ping-pong stops at 64, a polling effect runs 200 ticks through Task.Delay(TimeSpan, TimeProvider), a continuation driven by FakeTimeProvider.Advance on the test thread after the drain exited starts at depth 0 with the old correlation.",
+   "acceptance_tests": [
+    "EffectPingPong_SynchronousPrefix_IsStoppedByDepthGuard",
+    "PollingEffect_RunsBeyondMaxDepthTicks",
+    "AsyncDispatchWhileStoreIdle_StartsNewChainAtDepthZero"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M3-01",
+   "milestone": "M3",
+   "title": "SubscriberList, IStore.Select and Selection<T>",
+   "size": "M",
+   "depends_on": [
+    "M1-12"
+   ],
+   "area": "src/Ducky/Selectors/Subscriptions",
+   "invariants": [
+    "INV-09",
+    "INV-13",
+    "INV-21"
+   ],
+   "scope": "Stage 5. SubscriberList (ImmutableArray swapped with ImmutableInterlocked, idempotent unsubscribe, snapshot iteration, each call isolated and logged). IStore.Select order (§6.8): start init, add with last = Unset, read State after the add and CAS, return Selection; drainer CAS-or-compare then onChange. Internal AfterSubscribeHook. Selection<T>.Create/Value (evaluate on read)/implicit/ToString/idempotent Dispose; inert after store dispose. Process step 10 notify.",
+   "acceptance_tests": [
+    "Select_CommitBetweenAddAndRead_InstalledByDrainer",
+    "Select_DedupesOnProjectedValue",
+    "Select_AfterDispose_InertReadsLastSnapshot (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M3-01b",
+   "milestone": "M3",
+   "title": "Subscriber isolation and re-entrancy in covered tests",
+   "size": "S",
+   "depends_on": [
+    "M3-01",
+    "M2-01"
+   ],
+   "area": "src/Ducky/Selectors/Subscriptions/Notify.cs, test/Ducky.Tests/Subscriptions",
+   "invariants": [
+    "INV-02",
+    "INV-09"
+   ],
+   "scope": "Stage 5. Process step 10 runs each subscription's selector, comparer and onChange in its own try/catch (last unchanged, subscription kept, logged), so one throw never skips the others or the effect start. A volatile _disposed flag on Subscription, set by Dispose and checked right before the selector (a running callback may finish after Dispose returns; Dispose never waits), and the internal IVT seam BeforeNotifyHook between capture and iteration. The INV-09 subscriber tests live here, in a covered project (§17.3).",
+   "acceptance_tests": [
+    "Subscriber_UnsubscribesItselfDuringNotify",
+    "Subscriber_Throws_OthersStillNotified_StaysSubscribed",
+    "Subscriber_SelectorThrows_OthersNotifiedAndEffectsStillStart",
+    "Subscriber_DisposedBeforeNotify_NotInvoked",
+    "Dispatch_ReentrantFromSubscriberAndEffectPrefix_EachProcessedOnce"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M3-02",
+   "milestone": "M3",
+   "title": "Typed Select fast path",
+   "size": "S",
+   "depends_on": [
+    "M3-01"
+   ],
+   "area": "src/Ducky/Selectors/StoreExtensions.cs",
+   "invariants": [
+    "INV-21"
+   ],
+   "scope": "Stage 5. StoreExtensions.Select<TState,T>: skip the projector when the TState slot is ReferenceEquals to the cached one; one immutable Entry(slot, result) swapped with Volatile.Write.",
+   "acceptance_tests": [
+    "TypedSelect_FastPath_SkipsProjectorWhenSlotUnchanged"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M3-03",
+   "milestone": "M3",
+   "title": "Selector.Define and SelectorDef memoization",
+   "size": "M",
+   "depends_on": [
+    "M1-04"
+   ],
+   "area": "src/Ducky/Selectors/Definitions",
+   "invariants": [
+    "INV-21"
+   ],
+   "scope": "Stage 5. All Selector.Define overloads (1-4 inputs, with and without TArg), SelectorDef<T> (Evaluate, Create) and SelectorDef<TArg,T> (Evaluate, Create(argument, comparer)); closures over an immutable Entry(inputs, result); ReferenceEquals for references, EqualityComparer.Default for value types; no static cache.",
+   "acceptance_tests": [
+    "Memoized_EqualsUnmemoized",
+    "SameInputRefs_SameOutputInstance",
+    "ArgSelector_ArgChange_Recomputes",
+    "TwoStores_ShareDefinition_NoSharedCache"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M3-04",
+   "milestone": "M3",
+   "title": "Subscriber concurrency tests",
+   "size": "S",
+   "depends_on": [
+    "M3-01",
+    "M1-13"
+   ],
+   "area": "test/Ducky.Concurrency.Tests/Subscriptions",
+   "invariants": [
+    "INV-05",
+    "INV-09"
+   ],
+   "scope": "Stage 5. TST-03 item 10 and the Select half of item 18 in Ducky.Concurrency.Tests (the other INV-09 subscriber tests are single-threaded and live in M3-01b).",
+   "acceptance_tests": [
+    "Subscriber_ReadsStateAndDispatchesDuringNotify_NoDeadlock",
+    "Select_ConcurrentWithCommit_NoLostOnChange"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M3-05",
+   "milestone": "M3",
+   "title": "AOT smoke: store, effects, selectors",
+   "size": "S",
+   "depends_on": [
+    "M2-06",
+    "M3-03"
+   ],
+   "area": "test/Ducky.AotSmoke",
+   "invariants": [
+    "INV-24"
+   ],
+   "scope": "Stage 5. Extend the `AotSmoke` assertion (no new PASS names, P8) with dispatch/reduce, all four policies, Select and SelectorDef.",
+   "acceptance_tests": [
+    "AotSmoke (now also covering dispatch/reduce, the four policies, Select and SelectorDef)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); aot job green with zero IL warnings."
+  },
+  {
+   "id": "M4-01",
+   "milestone": "M4",
+   "title": "Middleware hooks, veto and dispose ordering",
+   "size": "M",
+   "depends_on": [
+    "M1-12",
+    "M1-11"
+   ],
+   "area": "src/Ducky/Middleware",
+   "invariants": [
+    "INV-12",
+    "INV-29"
+   ],
+   "scope": "Stage 3. Middleware base (Store and a protected read-only DisposeTimeout attached before InitializeAsync, InvalidOperationException before), Use<[DAM]T>() idempotent with first-registration position. Immutable ActionContext (Action, ActionType, Origin, Depth, Id, CorrelationId, PreviousState, State, ChangedKeys) is introduced here (P6). Process steps 4 (MayDispatch only for Local/Effect; a veto or a throwing MayDispatch ends Process), 5 (BeforeReduce) and 9 (AfterReduce, each middleware isolated and logged). Dispose phase 5a: middleware in reverse registration order after drain exit, each DisposeAsync in its own try/catch (Error 1015), chained after _drainExited when step 3 timed out; lifetime callbacks that throw never stop it.",
+   "acceptance_tests": [
+    "Veto_NeverAppliesToSystemOrRestoreOrigins",
+    "Dispose_FromReducer_MiddlewareDisposedAfterDrainExit",
+    "Dispose_DrainTimeout_MiddlewareDisposedAfterDrainExit",
+    "Dispose_FromDrainer_DoesNotDeadlock",
+    "Dispose_MiddlewareDisposeThrows_OthersStillDisposed",
+    "Dispose_ThrowingLifetimeCallback_CompletesAndDisposesMiddleware",
+    "Middleware_AfterReduceThrows_OthersStillRun (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-01b",
+   "milestone": "M4",
+   "title": "Process failure rule: effects react to the action, not to the commit",
+   "size": "S",
+   "depends_on": [
+    "M4-01",
+    "M2-01",
+    "M3-01"
+   ],
+   "area": "src/Ducky/Store/Process.cs, test/Ducky.Tests/Pipeline",
+   "invariants": [
+    "INV-08",
+    "INV-13"
+   ],
+   "scope": "Stage 5. The general rule of §6.4: a veto, or a throwing MayDispatch, ends Process; a BeforeReduce or reducer failure commits nothing, completes Failed, skips steps 7, 10 and 12, and still runs step 9 (State == PreviousState, empty ChangedKeys) and step 11, so StoreInitialized's load effects always start.",
+   "acceptance_tests": [
+    "BeforeReduceThrows_NoCommitNoNotify_EffectsStart",
+    "ReducerThrowsOnStoreInitialized_LoadEffectAndReactiveHostStillStart (Ducky.Tests; the Ducky.Reactive.Tests twin is M11-01b)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-02",
+   "milestone": "M4",
+   "title": "DispatchSystem",
+   "size": "S",
+   "depends_on": [
+    "M4-01"
+   ],
+   "area": "src/Ducky/Middleware/DispatchSystem.cs",
+   "invariants": [
+    "INV-06",
+    "INV-12"
+   ],
+   "scope": "Stage 3. Middleware.DispatchSystem(action, isFailure): Origin.System, bypasses buffer and veto, normal depth rule, isFailure marks a failure action.",
+   "acceptance_tests": [
+    "DispatchSystemLoopFromAfterReduce_IsStoppedByDepthGuard",
+    "DispatchSystem_IsFailure_FailuresUnderItLogOnly (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-03",
+   "milestone": "M4",
+   "title": "Middleware init, timeout and overflow abort",
+   "size": "M",
+   "depends_on": [
+    "M4-02"
+   ],
+   "area": "src/Ducky/Store/Init",
+   "invariants": [
+    "INV-05",
+    "INV-13"
+   ],
+   "scope": "Stage 3. InitCoordinator per §6.7: Start checks the state before each InitializeAsync and stops after Retire; each call is `try { t = mw.InitializeAsync(tok).AsTask(); } catch (Exception ex) { t = Task.FromException(ex); }`, appended to the per-middleware InitTasks (by registration index) and observed individually; CAS Starting to Running; _prefixDone (RunContinuationsAsynchronously) completed whatever the CAS outcome; InitTimeout armed on TimeProvider; WhenAll with Error logs; Complete. When every started InitializeAsync returned a completed task, steps 4-5 run synchronously and the triggering Dispatch returns after its action is reduced. Abort is one CAS Running to Completed (dispose timer, Cancel _initCts outside locks with AggregateException log 1013, StoreInitAborted once, MarkReady). The overflow path is M4-03b, disposal during init M4-03c.",
+   "acceptance_tests": [
+    "Init_MiddlewareSyncPrefixesAllRunBeforeStartReturns",
+    "Init_HangingMiddleware_TimesOutAndReleasesBuffer",
+    "Init_Completed_TimerNeverAborts",
+    "Init_AbortCallbackThrows_StoreStillReady",
+    "Init_MiddlewareAwaitsDispatchAsync_TimesOutNotHangs",
+    "Init_MiddlewareAwaitsWhenIdle_TimesOutNotHangs",
+    "Init_MiddlewareInitializeThrowsSynchronously_StoreStillReady",
+    "Init_AllInitsCompleteSynchronously_FirstDispatchReducedInline"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-03b",
+   "milestone": "M4",
+   "title": "Overflow abort through QueueWorkItem",
+   "size": "S",
+   "depends_on": [
+    "M4-03"
+   ],
+   "area": "src/Ducky/Store/Init/Overflow.cs",
+   "invariants": [
+    "INV-05",
+    "INV-13"
+   ],
+   "scope": "Stage 3. RequestOverflowAbort() queues Abort(BufferOverflow) through the store's internal QueueWorkItem seam (an instance delegate defaulting to ThreadPool.UnsafeQueueUserWorkItem) from Enqueue and Start step 3, only from Running and once (a flag), so the caller never blocks and repeated overflow enqueues stay one volatile read; ordering and 'nothing dropped' unchanged. Ducky.Tests replaces the seam with a capturing queue to run the abort at a chosen point.",
+   "acceptance_tests": [
+    "Init_BufferOverflow_AbortsInitDropsNothing",
+    "Init_OverflowDuringSyncPrefix_AbortsFromRunning",
+    "Init_OverflowAbort_NeverRunsOnCaller",
+    "Init_OverflowTwiceBeforeQueuedAbortRuns_QueuedOnce",
+    "Init_QueuedOverflowAbortRunsAfterComplete_NoOp"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-03c",
+   "milestone": "M4",
+   "title": "Disposal during init and per-middleware dispose bounds",
+   "size": "M",
+   "depends_on": [
+    "M4-03",
+    "M4-01",
+    "M1-05b"
+   ],
+   "area": "src/Ducky/Store/Dispose.cs, src/Ducky/Store/Init/Retire.cs",
+   "invariants": [
+    "INV-13",
+    "INV-29"
+   ],
+   "scope": "Stage 3. InitCoordinator.Retire() in dispose step 1 (it returns _prefixDone.Task when it replaced Starting), so the init timer never fires after disposal and no middleware init starts after it. Each middleware's dispose waits only for its own init task; one whose init wait expired has its DisposeAsync chained on that task alone while phase 5a moves on; each DisposeAsync is awaited with WaitAsync(DisposeTimeout, TimeProvider), Warning EventId 1016 on expiry, then the next middleware. DisposeAsync completes once every phase finished or reached its bound. A throwing logging provider can stop neither MarkReady nor disposal (SafeLogger).",
+   "acceptance_tests": [
+    "Dispose_DuringInit_TimerNeverFires_NoAbortLog",
+    "Dispose_MiddlewareInitInFlight_DisposeAsyncAfterInitTaskEnds",
+    "Dispose_DuringStartSyncPrefix_AwaitsStartedInitsAndStartsNoMore",
+    "Dispose_InitAwaitingWhenIdle_MiddlewareStillDisposed",
+    "Dispose_HungMiddlewareDispose_OthersDisposedAndDisposeAsyncCompletes",
+    "Lifecycle_ThrowingLoggerProvider_StoreReadyAndDisposeComplete"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-04",
+   "milestone": "M4",
+   "title": "Init and dispose concurrency tests",
+   "size": "S",
+   "depends_on": [
+    "M4-03",
+    "M1-13",
+    "M4-03b"
+   ],
+   "area": "test/Ducky.Concurrency.Tests/Lifecycle",
+   "invariants": [
+    "INV-04",
+    "INV-05",
+    "INV-13",
+    "INV-29"
+   ],
+   "scope": "Stage 3. TST-03 items 8, 14 and 16 in Ducky.Concurrency.Tests (Dispose_FromDrainer_DoesNotDeadlock is single-threaded and lives in M4-01).",
+   "acceptance_tests": [
+    "InitBuffer_PreservesUserActionOrderAcrossGate",
+    "InitStart_NeverRunsUnderGate",
+    "Init_OverflowBetweenFlagAndStart_MiddlewareInitStillRuns",
+    "Dispose_WaitsForInFlightDrainBeforeMiddlewareDispose",
+    "SyncDispose_DuringDrain_NoAfterReduceOnDisposedMiddleware",
+    "InitializeAsync_WithConcurrentDrainer_CompletesAfterStoreInitializedReduced",
+    "Dispose_DuringConcurrentDispatch_NoExceptionNoLeak_AllTasksComplete"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-05",
+   "milestone": "M4",
+   "title": "Middleware constructor check and materialization",
+   "size": "S",
+   "depends_on": [
+    "M4-01",
+    "M2-08"
+   ],
+   "area": "src/Ducky/Configuration/CtorCheck.cs",
+   "invariants": [
+    "INV-31"
+   ],
+   "scope": "Stage 4. Extend DUCKY309 and DUCKY353 to middleware; a constructor that uses the store re-enters materialization and throws InvalidOperationException.",
+   "acceptance_tests": [
+    "Build_MiddlewareCtorDependencyMissing_Reported (non-normative)",
+    "Materialization_MiddlewareCtorUsesStore_Throws (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-05b",
+   "milestone": "M4",
+   "title": "Materialization versus disposal",
+   "size": "M",
+   "depends_on": [
+    "M4-05",
+    "M2-03b",
+    "M1-09"
+   ],
+   "area": "src/Ducky/Store/Materialization.cs, test/Ducky.Concurrency.Tests/Materialization",
+   "invariants": [
+    "INV-05",
+    "INV-29",
+    "INV-31"
+   ],
+   "scope": "Stage 4. Every materializing entry point first calls BeginMaterialize(), which under _gate returns false once the store is Disposed (the caller takes its after-disposal path and constructs nothing) and otherwise sets _materializationStarted; dispose step 1 sets Disposed in the same critical section, then awaits the factory's RunContinuationsAsynchronously _materialized TCS within DisposeTimeout (chained past it) and disposes what it built. A throwing factory disposes the instances already built in reverse order, each in its own try/catch (1015), before caching DUCKY353; DisposeAsync never rethrows DUCKY353. Internal scoped StoreDisposeHook, resolved last at materialization (skipped once disposal began) and disposed first by the server scope, disposes the store before its effects' scoped dependencies (lazily resolved dependencies documented as not covered).",
+   "acceptance_tests": [
+    "Dispose_NeverMaterialized_ConstructsNothing",
+    "Dispatch_AfterDisposeOnUnmaterializedStore_IgnoredNotThrown",
+    "Dispose_ConcurrentWithFirstUse_EveryConstructedMiddlewareDisposed_Deterministic",
+    "Dispose_ConcurrentWithFirstUse_EveryConstructedMiddlewareDisposed (Ducky.Concurrency.Tests)",
+    "Materialization_ConcurrentFirstUse_SecondCallerWaitsThenSucceeds (Ducky.Concurrency.Tests)",
+    "Materialization_CtorThrows_EarlierInstancesDisposed",
+    "ServerScopeDispose_EffectScopedDependencyDisposedAfterStoreDispose"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-06",
+   "milestone": "M4",
+   "title": "JSON gateway (UseJson, DuckyJson) and JsonElement restore",
+   "size": "M",
+   "depends_on": [
+    "M1-10",
+    "M1-08"
+   ],
+   "area": "src/Ducky/Json",
+   "invariants": [
+    "INV-23"
+   ],
+   "scope": "Stage 6. UseJson(resolver): a JsonSerializerContext's own options are copied (new JsonSerializerOptions(ctx.Options) { TypeInfoResolver = resolver }), any other resolver gets fresh options; UseJson(options) only stores the reference: a null TypeInfoResolver is DUCKY306 at first resolution with the other errors, and only after validation a copy is made and frozen (the caller's instance is never frozen); last call wins. RequireJsonTypeInfo => DUCKY306 with the [JsonSerializable] line. DuckyJson (§10): per-store cache where only missing type info is cached; TrySerialize/ToNode return false/null on missing info or any non-fatal exception (Debug once per type per store); TryDeserialize(JsonElement, Type, out object?, string? key = null) catches every non-fatal exception and logs a Warning naming the key and type. No DuckyWireContext (Ducky core sends nothing over a wire). IStore.Json. Restore accepts JsonElement (cloned before enqueue); TryRestore uses the declared StateType and passes the key; a failing slice keeps its state while others restore.",
+   "acceptance_tests": [
+    "Restore_JsonElementFromDisposedDocument_WhileOtherThreadDrains_Restores (Ducky.Concurrency.Tests)",
+    "Restore_JsonElementFromDisposedDocument_WhileOtherThreadDrains_Restores_Deterministic",
+    "DuckyJson_CtorThrowingPayload_ReturnsFalse (non-normative)",
+    "UseJson_Context_CopiesContextOptions (non-normative)",
+    "RequireJsonTypeInfo_Missing_Ducky306 (non-normative)",
+    "UseJson_OptionsWithoutResolver_Ducky306_CallerInstanceNotFrozen (non-normative; also a case of Build_WithFiveMisconfigurations_ReportsAllFive)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-07",
+   "milestone": "M4",
+   "title": "Action type names and unserializable degrade",
+   "size": "S",
+   "depends_on": [
+    "M4-06",
+    "M3-05"
+   ],
+   "area": "src/Ducky/Diagnostics/ActionTypes.cs, test/Ducky.AotSmoke",
+   "invariants": [
+    "INV-23",
+    "INV-24"
+   ],
+   "scope": "Stage 6. ActionTypeAttribute, per-store cached names (§9): attribute, SetState => {sliceKey}/{name}, HydrateSlices => @ducky/restore, otherwise Namespace.Name with Name<Arg> and Outer.Inner. Unserializable action payloads degrade to name only, logged once per type per store. [ActionType] is the one attribute read at run time: once per action type per store, with GetCustomAttribute<ActionTypeAttribute>(inherit: false). Ducky.AotSmoke gains the ActionType_AttributeName_SurvivesAot assertion.",
+   "acceptance_tests": [
+    "ActionType_Names_Table",
+    "Unserializable_Action_DegradesToNameOnce",
+    "ActionType_AttributeName_SurvivesAot (Ducky.AotSmoke)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-08",
+   "milestone": "M4",
+   "title": "Unhandled action check",
+   "size": "S",
+   "depends_on": [
+    "M2-01",
+    "M4-01"
+   ],
+   "area": "src/Ducky/Store/Unhandled.cs",
+   "invariants": [],
+   "scope": "Stage 6. Process step 12 for Local/Effect only: no slice handles and no effect matched => Debug log guarded by IsEnabled, or ReducerFailed(UnhandledActionException) when ThrowOnUnhandledAction. Library traffic never checked.",
+   "acceptance_tests": [
+    "UnhandledAction_DefaultLogsDebug",
+    "UnhandledAction_StrictMode_ReducerFailed"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M4-09",
+   "milestone": "M4",
+   "title": "Tracing and metrics",
+   "size": "M",
+   "depends_on": [
+    "M2-05",
+    "M1-05b"
+   ],
+   "area": "src/Ducky/Diagnostics/Telemetry.cs",
+   "invariants": [
+    "INV-02",
+    "INV-03",
+    "INV-22"
+   ],
+   "scope": "Stage 6. static readonly ActivitySource(\"Ducky\"); ducky.dispatch activity with type/origin/depth/correlation tags when listened, parented on Pending.ParentActivity (Activity.Current?.Context captured on the producer's flow); step 2 saves Activity.Current and the finally that restores the causal scope stops the activity and restores the saved value. Meter only through IMeterFactory: ducky.dispatch.duration, ducky.dispatch.dropped (tag ducky.drop.reason = depth or run; counted at step 1, step 3 and the call-time drops of EffectContext and SliceStore, never for Disposed), ducky.effect.failures, ducky.effect.dropped. Internal SafeTelemetry wraps StartActivity, Stop, Add and Record (Warning 1017 through SafeLogger). No static Meter.",
+   "acceptance_tests": [
+    "Tracing_ActionFromOtherThread_ParentIsProducerActivity",
+    "Tracing_ActivityCurrentRestoredAfterDispatch",
+    "Telemetry_ListenerThrows_LaterStepsStillRun (Ducky.Tests)",
+    "Metrics_DroppedAndEffectCounters (non-normative)",
+    "Metrics_NoMeterFactory_NoMeterCreated (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); NoStaticMutableFields still green."
+  },
+  {
+   "id": "M4-10",
+   "milestone": "M4",
+   "title": "Core contract closure",
+   "size": "S",
+   "depends_on": [
+    "M4-03",
+    "M4-07",
+    "M4-08",
+    "M2-06",
+    "M3-01",
+    "M4-01b",
+    "M4-03b",
+    "M4-03c",
+    "M4-05b",
+    "M4-09",
+    "M3-01b"
+   ],
+   "area": "test/Ducky.Tests/Contract, src/Ducky/IDispatcher.cs",
+   "invariants": [
+    "INV-10"
+   ],
+   "scope": "Stage 6. Complete DispatchAsync result theory: Reduced, Vetoed, Dropped (depth, step 3 and the call-time run check, each asserting ducky.dispatch.dropped with its reason), Failed, Disposed (including an EffectContext.DispatchAsync from a Merge run after DisposeAsync began and a run-tagged action processed after dispose steps 1-2 through BeforeProcessHook, uncounted; the SliceStore rows arrive in M9-01b). Api_AllAsyncMembers_NeverFault over exactly the INV-10 member set of §8.1 with its named carve-outs (synchronous init throws injected); Api_CallerTokenCancelled_OnlyThatWaitCanceled; replay determinism (the concurrency property and its single-threaded twin); the §7 threading contract verbatim in IDispatcher XML docs.",
+   "acceptance_tests": [
+    "DispatchAsync_EveryPath_ReturnsExpectedResult",
+    "Api_AllAsyncMembers_NeverFault",
+    "Api_{Member}_NeverFaults (one per public async member)",
+    "Api_CallerTokenCancelled_OnlyThatWaitCanceled",
+    "ReplayDeterminism_SameActionsSameSnapshot (Ducky.Concurrency.Tests)",
+    "ReplayDeterminism_SameActionsSameSnapshot_Deterministic"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Ducky core public API equals §5 minus SliceStore/EntityState/tombstones."
+  },
+  {
+   "id": "M5-02",
+   "milestone": "M5",
+   "title": "AddBlazor, BlazorOptions, JsBridge and test fakes",
+   "size": "M",
+   "depends_on": [
+    "M0-13"
+   ],
+   "area": "src/Ducky.Blazor/Core, test/Ducky.Blazor.Tests/Fakes",
+   "invariants": [
+    "INV-03",
+    "INV-22",
+    "INV-23"
+   ],
+   "scope": "Stage 10. DuckyBlazorBuilderExtensions.AddBlazor (idempotent; configure delegates compose in call order into one BlazorOptions; Use<PrerenderHandoff>, Use<PersistenceMiddleware> placeholders inert), BlazorOptions with internal IsBrowser (single justified read). JsBridge as the only interop caller (the JSInterop extension types and InvokeAsync/Invoke overloads are banned elsewhere; each JsBridge call site carries the RS0030 justification) accepting string/int/long/bool/DotNetObjectReference, lazy module import that caches only a successful import task, JSDisconnected/TaskCanceled catches. Internal BlazorWireContext; internal SafeLogger for Ducky.Blazor; EventIds 2000+. Test fakes: FakeJsRuntime (records every argument), FakeJsStreamReference and FakeComponentStateStore : IPersistentComponentStateStore driving a real ComponentStatePersistenceManager (PersistentComponentState is never faked; the fake store's SupportsRenderMode accepts only InteractiveAutoRenderMode).",
+   "acceptance_tests": [
+    "JsBridge_OnlyStringAndPrimitiveArgsCrossBoundary",
+    "NoStaticState_TwoCircuitsIsolated",
+    "DuplicateRegistration_AddSliceTwice_OneSlice",
+    "AddBlazor_ConfigureDelegatesCompose (non-normative)",
+    "SafeLogger_ProviderThrows_NeverEscapes (Ducky.Blazor.Tests)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Deletes the Ducky.Blazor.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M5-03",
+   "milestone": "M5",
+   "title": "SubscriptionCore",
+   "size": "M",
+   "depends_on": [
+    "M5-02"
+   ],
+   "area": "src/Ducky.Blazor/Components/SubscriptionCore.cs",
+   "invariants": [
+    "INV-19"
+   ],
+   "scope": "Stage 10. One store subscription (static s => s, ReferenceEqualityComparer); OnCommit CAS on _scheduled; Schedule under ExecutionContext.SuppressFlow with await Task.Yield() inside; Evaluate catches its own exceptions after step 1, so only a failure before Evaluate starts resets the flag, with CompareExchange(ref _scheduled, 0, 1) (logged), ObjectDisposedException swallowed; Evaluate resets the flag first, returns if disposed, recomputes selections against the last renderer-observed values, one StateHasChanged.",
+   "acceptance_tests": [
+    "Schedule_InvokeAsyncThrows_FlagReset",
+    "Schedule_DoesNotFlowCausalScope",
+    "Schedule_DrainerOnRendererThread_InlineInvoke_DoesNotFlowCausalScope",
+    "SubscriptionCore_RandomPublishInterleavings_LastPublishAlwaysEvaluated",
+    "Evaluate_SelectorThrows_AtMostOnePendingInvoke"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M5-05",
+   "milestone": "M5",
+   "title": "DuckyComponent, DuckyComponent<TState>, DuckyLayout",
+   "size": "M",
+   "depends_on": [
+    "M5-03"
+   ],
+   "area": "src/Ducky.Blazor/Components/DuckyComponent*.cs",
+   "invariants": [
+    "INV-19",
+    "INV-20"
+   ],
+   "scope": "Stage 10. C# components (no .razor): Select overloads through SubscriptionCore, Dispatch/DispatchAsync, IHandleAfterRender re-implementation closing registration (DUCKY352), idempotent Dispose. DuckyComponent<TState>.State created on first access or in the after-render hook just before closing. The interactivity hand-off is added by the gate story (M5-04). Ducky.Blazor's EveryErrorCode_FollowsMessageTemplate starts here with DUCKY352.",
+   "acceptance_tests": [
+    "Component_ParameterChangeWithoutDispatch_ShowsNewItem",
+    "Component_ChangeToOtherItem_NoRerender",
+    "Component_ChangeToSelectedItem_Rerenders",
+    "Component_ParamChangeThenStoreChangeBackToOldValue_Rerenders",
+    "Select_AfterFirstRender_Throws",
+    "Select_AfterFirstRender_ThrowsEvenIfOverrideSkipsBase",
+    "Dispose_ThenStoreChange_NoStateHasChanged",
+    "ManyChangedSelections_OneRender",
+    "DuckyComponentOfT_ConditionalStateAccessAfterFirstRender_Works"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M5-06",
+   "milestone": "M5",
+   "title": "DuckySelect, StoreSelectionExtensions, DuckyInitializer",
+   "size": "M",
+   "depends_on": [
+    "M5-05"
+   ],
+   "area": "src/Ducky.Blazor/Components/Select+Initializer",
+   "invariants": [
+    "INV-19"
+   ],
+   "scope": "Stage 10. DuckySelect<TResult> (renders ChildContent(value), re-subscribes on Selector reference change in SetParametersAsync, disposes). StoreSelectionExtensions.Select(store, selector, invokeAsync, stateHasChanged, rendererInfo, IServiceProvider services) for foreign base classes. DuckyInitializer awaits Store.InitializeAsync() in OnInitializedAsync (normative, §11.1), Loading then ChildContent. Interactivity recording and the service hand-off of all three touchers arrive with the gate (M5-04).",
+   "acceptance_tests": [
+    "DuckySelect_OnlyFragmentRerenders",
+    "DuckySelect_SelectorParameterChange_Reevaluates",
+    "ForeignBase_StoreSelect_Works",
+    "DuckyInitializer_ShowsLoadingUntilReady"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M5-04",
+   "milestone": "M5",
+   "title": "InteractivityGate and the first-toucher hand-off",
+   "size": "S",
+   "depends_on": [
+    "M5-02",
+    "M5-06"
+   ],
+   "area": "src/Ducky.Blazor/Interactivity",
+   "invariants": [
+    "INV-15",
+    "INV-19"
+   ],
+   "scope": "Stage 11. Internal gate, one per store, reached through the store-owned PersistenceSlice registration (it follows the store's lifetime; never a scoped service): Unknown/Interactive/NonInteractive; IsBrowser => Interactive; the first toucher (DuckyComponent, DuckySelect and StoreSelectionExtensions.Select through its services parameter, DuckyInitializer) records RendererInfo.IsInteractive and hands over its scoped IServiceProvider; one synchronous probe through JsBridge when still Unknown (a synchronous InvalidOperationException => NonInteractive, else Interactive and keep the module task); a synchronous OnFirstRegistration(Action) callback run outside locks. SubscriptionCore and DuckyInitializer resolve the gate with GetService and skip recording and hand-off when AddBlazor() was not called. Built on the S-7 prototype answers (M0-13).",
+   "acceptance_tests": [
+    "Gate_Unknown_ProbeDetectsPrerender (bUnit; its E2E twin is in M14-03)",
+    "Gate_Wasm_ComponentRegistrationVisibleToMiddleware",
+    "Component_WithoutAddBlazor_SelectsAndRerenders",
+    "StoreSelectionExtensions_Wasm_HandsOverScopedServices",
+    "Gate_OnFirstRegistration_RunsSynchronouslyInsideSelect (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-01",
+   "milestone": "M6",
+   "title": "ducky.js storage exports",
+   "size": "M",
+   "depends_on": [
+    "M0-09",
+    "M5-02"
+   ],
+   "area": "src/Ducky.Blazor/wwwroot/ducky.js, test/Ducky.E2E/harness, test/Ducky.PackageSmoke",
+   "invariants": [
+    "INV-23"
+   ],
+   "scope": "Stage 12. Replace the M0-02 stub with the real module (one plain ES module): storageGet(area, key, maxInlineBytes) measuring UTF-8 of JSON.stringify and returning the too-large sentinel, storageGetStream returning an empty Uint8Array when nothing is kept, storageSet/storageRemove(area, key, id) returning false for an unregistered id (relay to other ids comes in M7-01). Harness specs in Ducky.E2E on Playwright's clock; the JS gate measures the real ducky.js at 100%. PackageSmoke step 5: publish the WASM and Server consumers from packages and assert ducky.js in the static web assets output (§17.9).",
+   "acceptance_tests": [
+    "DuckyJs_StorageGet_ReturnsSentinelAboveUtf8Budget (non-normative harness spec)",
+    "DuckyJs_StorageSetGetRemove_RoundTrip (non-normative harness spec)",
+    "DuckyJs_PullExports_ReturnEmptyWhenGone (storageGetStream; extended to devtoolsTakeMessage in M8-01)",
+    "E2E JS gate: 100% block coverage of ducky.js",
+    "PackageSmoke: the published WASM and Server consumers serve ducky.js"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1) including the JS coverage gate. Deletes the Ducky.E2E Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M6-02",
+   "milestone": "M6",
+   "title": "Envelope reader and writer",
+   "size": "M",
+   "depends_on": [
+    "M5-02",
+    "M4-06"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Envelope",
+   "invariants": [
+    "INV-14"
+   ],
+   "scope": "Stage 12. EnvelopeWriter (Utf8JsonWriter, {v, at, s}, no AQN). EnvelopeReader shared with cross-tab: v > Version => not found (Warning), v < Version => Migrate steps over JsonNode, MaxAge discard, deserialize s through Store.Json with the declared StateType, malformed or throwing => keep state (Warning); 1.x data discarded (Debug).",
+   "acceptance_tests": [
+    "Persist_Envelope_Migrations_Ttl_NewerVersionIgnored",
+    "Persist_EnvelopeRoundTrip_Property",
+    "Persist_OneXFormat_Discarded",
+    "Persist_PolymorphicState_RoundTripsViaDeclaredType",
+    "Persist_ContextWithCamelCaseAndEnumStringConverter_RoundTripsUsingContextOptions"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-03",
+   "milestone": "M6",
+   "title": "Persist<T> API, PersistenceSlice and validation",
+   "size": "M",
+   "depends_on": [
+    "M6-02",
+    "M6-04"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Registration",
+   "invariants": [
+    "INV-14",
+    "INV-31"
+   ],
+   "scope": "Stage 12. Persist<TSlice>(configure) composing into one PersistOptions per slice (Storage, Version, Migrate, MaxAge, Debounce, SyncAcrossTabs, Scope: browser keys are scoped only when Scope is set explicitly), RequireJsonTypeInfo. Hidden PersistAttributeDefaults<T> for generated code (emitted in M13-04b): registers T as persisted exactly like Persist<T>() (AddBlazor(), RequireJsonTypeInfo, the same validations) and records the attribute values as the base layer applied before every Persist<T> delegate, so the builder always wins. Public actions HydrationCompleted, HydrationFailed, PersistenceFailed, ClearPersistedState; PersistenceState/PersistenceStatus; internal PersistenceSlice (key @ducky/persistence, Initial Hydrated, ignores terminals with another ScopeEpoch, no-op ClearPersistedState). DUCKY310, 311, 312 and 316 as AddValidation rules on the final composed options at first resolution; Ducky.Blazor's EveryErrorCode_FollowsMessageTemplate extended.",
+   "acceptance_tests": [
+    "ClearPersistedState_Strict_NoFailure",
+    "Hydration_StaleEpochTerminal_IgnoredBySlice",
+    "Persist_ConfigureComposesInCallOrder (non-normative)",
+    "Validation_Ducky310_311_312_316_Reported (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-04",
+   "milestone": "M6",
+   "title": "Prerender<T> and the handoff: seed take and SeedSettled",
+   "size": "M",
+   "depends_on": [
+    "M5-06",
+    "M5-04",
+    "M4-06"
+   ],
+   "area": "src/Ducky.Blazor/Prerender/Take, src/Ducky.Blazor/Prerender/Registration",
+   "invariants": [
+    "INV-15"
+   ],
+   "scope": "Stage 11. Prerender<TSlice>() and Prerender<TSlice, TState>(Func<TState, bool> include) (a slice is seeded only while the predicate holds, for error or incomplete states), both calling RequireJsonTypeInfo. PrerenderHandoff middleware (inert without Prerender slices). Outside the browser, synchronous prefix: TryTakeFromJson<byte[]>(\"ducky:seed\") (path per S-3), parse the envelope through BlazorWireContext, Store.Restore(Hydration), complete SeedSettled (carrying pause-seed keys); RegisterOnPersisting(…, RenderMode.InteractiveAuto) always (writing in M6-05; the WASM copy of the seed is documented as not data-protected). Tests persist and restore through FakeComponentStateStore and a real ComponentStatePersistenceManager.",
+   "acceptance_tests": [
+    "PrerenderSeed_AppliedBeforeFirstInteractiveRender",
+    "Prerender_InitStartedByDuckyInitializer_SeedAppliedBeforeFirstRender",
+    "Circuit_Resume_SeedRestoresPrerenderSlices (bUnit; its E2E twin is in M14-03)",
+    "Prerender_RestoredSlice_LoadEffectRunsOnceAcrossHandoff",
+    "Prerender_OnPersistingRegisteredWithInteractiveAutoMode"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-05",
+   "milestone": "M6",
+   "title": "Prerender handoff: seed writing and wire budget",
+   "size": "M",
+   "depends_on": [
+    "M6-04"
+   ],
+   "area": "src/Ducky.Blazor/Prerender/Write",
+   "invariants": [
+    "INV-15"
+   ],
+   "scope": "Stage 11. OnPersisting: WhenIdleAsync bounded by PrerenderIdleTimeout; on idle take one snap = Store.State and serialize Prerender slices in registration order into the UTF-8 envelope, omitting a slice whose inclusion exceeds PrerenderSeedMaxWireBytes by the §11.4 estimate (Warning 2021 once per slice); timeout persists nothing (Warning 2014 once per store); src prerender or pause. A Prerender<TSlice, TState> include predicate is evaluated on that snapshot.",
+   "acceptance_tests": [
+    "Prerender_LoadEffectSlowerThanRender_SeedWaitsForIdle",
+    "Prerender_IdleTimeout_PersistsNoSeed_LogsOnce",
+    "Prerender_LongRunningEffect_DoesNotBlockSeed",
+    "PrerenderSeed_AboveBudget_OmitsSliceAndLogs",
+    "PrerenderSeed_WireEstimate_NeverBelowActualEncoding",
+    "DuckyInitializerFirstToucher_SeedWrittenOnPrerenderAndAppliedBeforeFirstInteractiveRender",
+    "Prerender_LoadFailedDuringPrerender_InteractiveSideRetries"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-06",
+   "milestone": "M6",
+   "title": "Browser seed wait",
+   "size": "S",
+   "depends_on": [
+    "M6-04",
+    "M4-03b"
+   ],
+   "area": "src/Ducky.Blazor/Prerender/BrowserWait",
+   "invariants": [
+    "INV-15"
+   ],
+   "scope": "Stage 11. In the browser: take synchronously; otherwise the gate's synchronous OnFirstRegistration callback takes the seed behind a once-flag (RegisterOnRestoring is not used: it fires at registration, not at the initial restore). InitializeAsync awaits SeedSettled.Task.WaitAsync(PrerenderSeedWaitTimeout, TimeProvider, initToken); on timeout take once more, Warning 2022 once (naming the awaited-preload fix), complete SeedSettled. When the init token is cancelled (overflow abort), both settle paths skip the restore (Debug log) and still complete SeedSettled, and PrerenderHandoff returns normally. No OnPersisting in the browser; later seeds are never read.",
+   "acceptance_tests": [
+    "Prerender_WasmPreloadBeforeRun_SeedStillApplied",
+    "Prerender_EnhancedNavLaterSeed_Ignored",
+    "Prerender_BrowserWaitTimeout_WarnsOnce (non-normative)",
+    "Prerender_WasmOverflowAbortBeforeFirstRegistration_SeedIgnored"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-07",
+   "milestone": "M6",
+   "title": "Hydration: attempt, _issue lock, exactly one terminal",
+   "size": "M",
+   "depends_on": [
+    "M6-01",
+    "M6-03",
+    "M6-04",
+    "M5-04"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Hydration",
+   "invariants": [
+    "INV-14"
+   ],
+   "scope": "Stage 12. PersistenceMiddleware + internal BrowserStorageProvider over JsBridge. Synchronous prefix: readable slices by gate (probe if Unknown); none => Status stays Hydrated (NotStarted only in a NonInteractive store with no readable slice); else attempt 0 under _issue (register on the init token, arm the init-phase HydrationTimeout deadline, Hydrating restore), and epoch 0 records its key set. Async: resolve the initial scope for epoch 0 (the hand-off wait, scope resolution and reads share that one HydrationTimeout budget) and record it, which publishes the epoch-to-scope map; read keys through EnvelopeReader (passing the key); await SeedSettled; under _issue claim the terminal, set baselines, one restore, HydrationCompleted with epoch, IssueTerminal. Nothing is written before the first read (deferred keys).",
+   "acceptance_tests": [
+    "Hydration_Restored_OneTerminal_StatusOrder",
+    "Hydration_Empty_OneTerminal",
+    "Hydration_NothingPersisted_Inert",
+    "Hydration_TerminalActions_Paired",
+    "Hydration_OneSliceCtorThrows_OtherSlicesStillRestored",
+    "Hydration_ServerInteractive_BrowserReadBeforeStoreInitialized"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-08",
+   "milestone": "M6",
+   "title": "Hydration failures, timeout and init-abort races",
+   "size": "M",
+   "depends_on": [
+    "M6-07"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Hydration/Failure, test/Ducky.Concurrency.Tests/Persistence",
+   "invariants": [
+    "INV-14"
+   ],
+   "scope": "Stage 12. Exception, timeout and init-token paths claim and issue HydrationFailed (isFailure) under _issue; the init-token callback always calls IssueTerminal under _issue so the terminal precedes StoreInitialized; late results discarded; persistence resumes after failure. Deterministic TCS-gated twins cover every branch; the CsCheck SampleParallel test runs the real race.",
+   "acceptance_tests": [
+    "Hydration_LoadThrows_FailedGateReleasedPersistenceResumes",
+    "Hydration_Timeout_Failed",
+    "Hydration_InitAborted_OneTerminal",
+    "Hydration_ResultAfterTimeout_IsDiscarded",
+    "Hydration_ReadCompletesConcurrentlyWithInitAbort_TerminalPrecedesStoreInitialized (Ducky.Concurrency.Tests)",
+    "Hydration_ReadCompletesConcurrentlyWithInitAbort_TerminalPrecedesStoreInitialized_Deterministic"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-09",
+   "milestone": "M6",
+   "title": "Large reads through IJSStreamReference",
+   "size": "S",
+   "depends_on": [
+    "M6-07"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Providers/Stream",
+   "invariants": [
+    "INV-23"
+   ],
+   "scope": "Stage 12. The too-large sentinel switches to storageGetStream with maxAllowedSize MaxPayloadBytes (D11, path per S-5). Every stream reference is read under await using, the over-limit path included; a zero-length reference is not found; a value above MaxPayloadBytes is not found for that key, with Warning 2023, and never fails the attempt or escapes the [JSInvokable] handler.",
+   "acceptance_tests": [
+    "LargeRead_UsesStreamAboveInlineLimit",
+    "LargeRead_MaxPayloadBytesBoundary",
+    "Hydration_OneOversizedKey_OtherSlicesRestored"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-10",
+   "milestone": "M6",
+   "title": "PersistenceWriter",
+   "size": "M",
+   "depends_on": [
+    "M6-07"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Writer",
+   "invariants": [
+    "INV-16"
+   ],
+   "scope": "Stage 12. AfterReduce signals changed keys unless the origin is Hydration/CrossTab/DevTools. One loop per key on its own CTS: Channel<bool>(1, DropOldest) wake-up, debounce on TimeProvider (defaults per §11.1), one snapshot read, hydration skip (Hydrating and key in the epoch's key set) into _deferred, scope/key derivation from the snapshot epoch, serialize with the declared type, dedupe against the per-storage-key LastKnownPayload (always a local serialization), write, baseline on success. Deferred keys are signalled at the terminal (TryRemove per key). PersistenceFailed once per failure streak (isFailure); a serialization failure reports it and consumes the signal, so the next valid value is written. The race-proof skip is M6-10b.",
+   "acceptance_tests": [
+    "Writes_NeverOverlapPerKey",
+    "LastWrite_EqualsFinalState",
+    "NoWrite_ForHydrationCrossTabDevToolsOrigins",
+    "PersistenceFailed_OncePerStreak",
+    "Persist_TransientNaN_NextValidValueIsWritten"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-10b",
+   "milestone": "M6",
+   "title": "Writer defer race and the ShouldSkip predicate",
+   "size": "S",
+   "depends_on": [
+    "M6-10"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Writer/Defer, test/Ducky.Concurrency.Tests/Persistence",
+   "invariants": [
+    "INV-16"
+   ],
+   "scope": "Stage 12. One predicate ShouldSkip(snap, key) (Hydrating and key in the epoch's key set, or scoped with the epoch's scope still unknown) for the skip and for add-then-recheck: after adding a key to _deferred the writer re-reads Store.State and the epoch-to-scope map and, if the skip no longer holds, TryRemoves it and re-signals itself; AfterReduce removes per key with TryRemove and signals what it removed, so each key is signalled exactly once; recording a scope under _issue publishes the map and drains _deferred. Internal IVT hook BlazorOptions.AfterDeferHook(string key, DeferPoint point) with BeforeAdd and AfterAdd.",
+   "acceptance_tests": [
+    "Write_SkipRacesTerminal_DeferredKeyStillWritten (Ducky.Concurrency.Tests)",
+    "Write_TerminalBetweenReadAndDefer_WriterRechecksAndResignals_Deterministic",
+    "Write_TerminalAfterDeferAdd_AfterReduceSignalsOnce_Deterministic",
+    "Write_TerminalBeforeScopeResolved_NoSpin_WrittenOnceScopeRecorded",
+    "Wasm_ScopeWithoutHandOff_ScopedChange_NoWriterSpin"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-11",
+   "milestone": "M6",
+   "title": "Retry on provider failure, flush in phase 5a, loss counting",
+   "size": "M",
+   "depends_on": [
+    "M6-10",
+    "M2-03b",
+    "M4-03c"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Writer/Retry",
+   "invariants": [
+    "INV-03",
+    "INV-16",
+    "INV-29"
+   ],
+   "scope": "Stage 12. Every provider failure while the store is alive (JSDisconnected/TaskCanceled for browser storage) keeps the key dirty with its baseline untouched and retries with the capped 1 s to 30 s backoff on TimeProvider; PersistenceFailed once at the start of a streak (disconnects stay Debug-only); a failed module import is re-imported on the next call and the watchStorage registration re-issued. Dispose flush in phase 5a (after drain exit and the init wait only, so a hung effect run or middleware init never blocks it): cancel pending debounce and backoff, one immediate attempt per dirty key (the hydration skip still applies), bounded by Middleware.DisposeTimeout, then cancel the loop CTSs; every key still dirty is counted ducky.persistence.lost. Ducky.Blazor's SafeTelemetry wraps the meter (Warning 2024).",
+   "acceptance_tests": [
+    "ServerBrowserStorage_TransientDisconnect_WriteRetriedAfterReconnect",
+    "ServerBrowserStorage_ChangeInsideDebounceThenCircuitClose_IsLostAndCounted",
+    "ServerBrowserStorage_ImportFailsOnDisconnect_ReimportedAfterReconnect",
+    "Dispose_HungEffectRun_PersistenceStillFlushed",
+    "Dispose_HungMiddlewareInit_PersistenceStillFlushed",
+    "Telemetry_ListenerThrows_LaterStepsStillRun (Ducky.Blazor.Tests)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-12",
+   "milestone": "M6",
+   "title": "ClearPersistedState removal command",
+   "size": "M",
+   "depends_on": [
+    "M6-10",
+    "M6-11"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Writer/Clear",
+   "invariants": [
+    "INV-16"
+   ],
+   "scope": "Stage 12. AfterReduce posts a removal to each persisted slice's writer, key from the clear's snapshot epoch; the loop runs it after any in-flight write, discards signals stamped before the clear, removes the exact key, resets the baseline to absent. No prefix clear. Posting a command ends a backoff sleep: the loop makes one immediate attempt at its head item, then runs the command; a failed attempt resumes the backoff at the step it reached.",
+   "acceptance_tests": [
+    "Write_AfterClear_SameContent_IsWritten",
+    "Clear_RemovesOnlyPersistedKeysOfThisScope",
+    "Clear_DuringInFlightWrite_KeyStaysRemoved",
+    "Clear_WithPendingDebouncedChange_KeyStaysRemoved",
+    "Clear_WriterInRetryBackoff_RemovedImmediately"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-13",
+   "milestone": "M6",
+   "title": "Seed/storage precedence and pause seeds",
+   "size": "M",
+   "depends_on": [
+    "M6-06",
+    "M6-10"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Precedence",
+   "invariants": [
+    "INV-15"
+   ],
+   "scope": "Stage 12. Storage restore enqueued only after SeedSettled; a valid storage envelope wins over a prerender seed regardless of age (ADR-0011); an awaited WASM preload warns and never inverts the precedence. Pause seeds are M6-13b.",
+   "acceptance_tests": [
+    "Precedence_ValidStorageEnvelope_WinsOverSeed",
+    "Precedence_OlderStorageEnvelope_StillWins",
+    "Precedence_PrerenderSeed_StorageStillWins",
+    "Prerender_WasmAwaitedPreload_WarnsAndDoesNotInvertPrecedence"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M6-13b",
+   "milestone": "M6",
+   "title": "Pause seeds: dirty keys and the version map",
+   "size": "S",
+   "depends_on": [
+    "M6-13",
+    "M6-05"
+   ],
+   "area": "src/Ducky.Blazor/Prerender/PauseSeed",
+   "invariants": [
+    "INV-15"
+   ],
+   "scope": "Stage 12. A pause seed (src pause) derives everything from one snap = Store.State after the idle wait: values, the left-out keys of an attempt still Hydrating, and a dirty array listing each carried browser-storage key whose serialization differs from LastKnownPayload (absent compares as the initial state). Every seed carries ver = {slice key: PersistOptions.Version} for each persisted key. On restore a key whose recorded version differs or is missing is dropped (Debug log) from the synchronous restore and the dirty set, so storage (migrated by EnvelopeReader) or the initial state applies; only dirty keys take the 'pause seed wins' path (read with baseline set, restore skipped, deferred and rewritten after the terminal), clean keys follow prerender precedence. The pause override never applies to Server storage (M12-07).",
+   "acceptance_tests": [
+    "Circuit_ResumeAfterOtherTabWrote_CleanKey_StorageWins",
+    "Circuit_ResumeAfterVersionBump_DirtySeedKeyDropped_StorageMigrated",
+    "PauseSeed_DirtyKeysSkipStorageRestoreAndAreRewritten (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M7-01",
+   "milestone": "M7",
+   "title": "ducky.js watch, relay and resync",
+   "size": "M",
+   "depends_on": [
+    "M6-01"
+   ],
+   "area": "src/Ducky.Blazor/wwwroot/ducky.js, test/Ducky.E2E/harness",
+   "invariants": [
+    "INV-18"
+   ],
+   "scope": "Stage 14. watchStorage(id, ref, prefix, crossTab, pruneAfterMs) idempotent per id, unwatchStorage; window storage listener for crossTab ids (localStorage, prefix filter, UTF-8 size decides tooLarge); same-document relay from storageSet/storageRemove to other ids with the same prefix; a rejected invokeMethodAsync records the failed (source, area) pair per id and resyncs each pair once on the first success, with 1 s to 30 s backoff; an id is pruned after pruneAfterMs (a fixed 10 minutes passed by .NET) of continuous delivery failure, the untracked-object match kept as a fast path; storageSet/storageRemove return false for a pruned id.",
+   "acceptance_tests": [
+    "DuckyJs_Relay_SkipsWriterId (non-normative harness spec)",
+    "DuckyJs_ResyncBackoff_CapsAt30s_ThenReReadsAll",
+    "DuckyJs_PrunedIdReRegisteredOnNextWrite",
+    "DuckyJs_UntrackedObject_PrunesId (non-normative harness spec)",
+    "E2E JS gate: 100% block coverage of ducky.js"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1) including the JS coverage gate."
+  },
+  {
+   "id": "M7-02",
+   "milestone": "M7",
+   "title": "CrossTabSync (.NET)",
+   "size": "M",
+   "depends_on": [
+    "M6-10"
+   ],
+   "area": "src/Ducky.Blazor/CrossTab",
+   "invariants": [
+    "INV-18",
+    "INV-23"
+   ],
+   "scope": "Stage 14. CrossTabSync is an internal component owned by PersistenceMiddleware (its restores need _issue). Store id Guid N; register once before the hydration read, unwatch on dispose; OnStorageChanged: accept exact current keys (tab: synced slices; doc: area-matching persisted slices), 50 ms per-key debounce, removal => initial state (CrossTab), else EnvelopeReader, drop if local re-serialization equals the baseline, else under _issue bump sequence, Restore(CrossTab), set baseline, signal writer; key null => re-read every accepted key; tooLarge => stream re-read. A value receipt for a key in the key set of an attempt without a terminal is restored with Origin.Hydration (WasRestored<T>() true).",
+   "acceptance_tests": [
+    "CrossTab_OriginNeverPersisted",
+    "CrossTab_EchoDropped",
+    "CrossTab_TooLarge_ReReadViaStream",
+    "CrossTab_NonAsciiValueUnderCharLimitOverByteLimit_UsesStream",
+    "CrossTab_OtherScopeKey_Ignored",
+    "CrossTab_NewerVersionEnvelope_Ignored",
+    "CrossTab_CtorThrowingPayload_Ignored",
+    "CrossTab_EventDuringHydration_NewestWins"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M7-02b",
+   "milestone": "M7",
+   "title": "Cross-tab receipts, repair and scope events",
+   "size": "M",
+   "depends_on": [
+    "M7-02",
+    "M7-01",
+    "M12-03",
+    "M6-12"
+   ],
+   "area": "src/Ducky.Blazor/CrossTab/Receipts",
+   "invariants": [
+    "INV-16",
+    "INV-17",
+    "INV-18"
+   ],
+   "scope": "Stage 14. Absence is a payload for the echo guard: a removal or missing-value receipt (the re-read-all path included) bumps the key's sequence number under _issue first, so it orders against hydration, then restores the initial state; a null receipt sets the baseline to the local serialization of the initial state and signals, so a pending write dedupes away; a receipt for a key whose baseline is already absent restores nothing. A zero-length stream reference reads as a removal. storageSet/storageRemove returning false re-issues watchStorage and runs the re-read-all path per registered area. Scoped keys are matched against the scope of the current epoch under _issue (none accepted between an epoch bump and the new scope's recording), re-checked when the restore is issued.",
+   "acceptance_tests": [
+    "CrossTab_RemovalReceipt_NoWriteBack",
+    "CrossTab_RemovalDuringHydration_RemovalWins",
+    "CrossTab_ResyncAfterDisconnect_UnwrittenLocalChangeOnOtherKey_Kept",
+    "CrossTab_TooLargeKeyRemovedBeforePull_ResetsSlice",
+    "CrossTab_StorageSetReportsUnknownId_ReWatchesAndReReads",
+    "CrossTab_OldScopeEventDuringSwitch_Ignored"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M7-03",
+   "milestone": "M7",
+   "title": "Cross-tab convergence properties",
+   "size": "S",
+   "depends_on": [
+    "M7-02"
+   ],
+   "area": "test/Ducky.Blazor.Tests/CrossTab/Convergence",
+   "invariants": [
+    "INV-16",
+    "INV-18"
+   ],
+   "scope": "Stage 14. Two stores whose serializers emit different element orders; CsCheck property through Property.Check of remote changes during a local pending write.",
+   "acceptance_tests": [
+    "CrossTab_HashOrderedCollection_DifferentProcessOrder_Converges",
+    "CrossTab_RemoteChangeDuringLocalPendingWrite_TabsConverge"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M8-01",
+   "milestone": "M8",
+   "title": "ducky.js DevTools exports",
+   "size": "S",
+   "depends_on": [
+    "M7-01"
+   ],
+   "area": "src/Ducky.Blazor/wwwroot/ducky.js, test/Ducky.E2E/harness",
+   "invariants": [
+    "INV-23",
+    "INV-28"
+   ],
+   "scope": "Stage 15. devtoolsConnect(id, ref, configJson, pruneAfterMs) => bool (false without the extension), devtoolsInit, devtoolsSend (false for an unregistered id), devtoolsDisconnect; inbound messages forwarded as strings with state stripped from JUMP_*; larger messages use the pull pattern: devtoolsTakeMessage(id, seq) returns the kept message, or an empty Uint8Array when none is kept.",
+   "acceptance_tests": [
+    "DuckyJs_DevtoolsConnect_NoExtension_ReturnsFalse (non-normative harness spec)",
+    "DuckyJs_DevToolsLargeMessage_PullBranch",
+    "DuckyJs_PullExports_ReturnEmptyWhenGone (extended to devtoolsTakeMessage)",
+    "E2E JS gate: 100% block coverage of ducky.js"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1) including the JS coverage gate."
+  },
+  {
+   "id": "M8-02",
+   "milestone": "M8",
+   "title": "DevToolsMiddleware outbound",
+   "size": "M",
+   "depends_on": [
+    "M5-04",
+    "M4-07"
+   ],
+   "area": "src/Ducky.Blazor/DevTools/Outbound",
+   "invariants": [
+    "INV-23",
+    "INV-28"
+   ],
+   "scope": "Stage 15. UseDevTools(configure) (explicit, composing), DevToolsOptions with the internal DescribeFrame seam (settable inside UseDevTools through Ducky.Blazor's IVT). InitializeAsync reads the gate synchronously (the shared one-time probe when Unknown, never awaiting a registration), connects with a pre-serialized config bounded by HydrationTimeout, and goes inert with a Warning when the extension is absent or devtoolsSend reports an unknown id; sends sanitized @@INIT. AfterReduce: Filter, FSA via Store.Json.ToNode(action, runtime type) then ActionSanitizer (null => meta.unserializable); library actions and failures projected through BlazorWireContext as {type, message, sliceKey|effectType} before the user resolver; per-slice state through the declared StateType taken from IStore.Slices, then StateSanitizer (@ducky/* slices through BlazorWireContext); Trace through DescribeFrame (DiagnosticMethodInfo, <unknown> when trimmed); DevTools-local counter.",
+   "acceptance_tests": [
+    "DevTools_SanitizerAppliedToInitAndEverySend",
+    "DevTools_OptionsReachExtension",
+    "DevTools_FilterExcludesAction",
+    "DevTools_ExtensionAbsent_Inert",
+    "DevTools_Trace_UsesDiagnosticMethodInfo",
+    "DevTools_GateUnknown_ProbesAndDoesNotDelayInit",
+    "DevTools_FailureAction_ShowsTypeAndMessage",
+    "DevTools_Trace_TrimmedFrame_RendersUnknown"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M8-03",
+   "milestone": "M8",
+   "title": "DevTools history, inbound and time travel",
+   "size": "M",
+   "depends_on": [
+    "M8-02"
+   ],
+   "area": "src/Ducky.Blazor/DevTools/Inbound",
+   "invariants": [
+    "INV-28"
+   ],
+   "scope": "Stage 15. History: an immutable array of (devToolsIndex, StateSnapshot) capped at MaxAge, replaced only by the drainer with Volatile.Write; [JSInvokable] OnMessage(string? json, long seq, bool tooLarge) parsed with BlazorWireContext reads it once; the time-travel flag is volatile. JUMP_TO_STATE/JUMP_TO_ACTION restore snapshot slots except @ducky/* (DevTools origin) and veto Local/Effect while not at latest; RESET to initial states; IMPORT_STATE per slice through Store.Json with the key; others ignored (Debug); evicted index ignored.",
+   "acceptance_tests": [
+    "DevTools_JumpToRecordState_RestoresReferenceEqualSlices",
+    "DevTools_DuringTimeTravel_UserActionVetoed",
+    "DevTools_JumpAfterFilteredActions_RestoresMatchingEntry",
+    "DevTools_Reset_RestoresInitialStates"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M8-03b",
+   "milestone": "M8",
+   "title": "DevTools inbound: large messages, concurrency and declared types",
+   "size": "M",
+   "depends_on": [
+    "M8-03",
+    "M8-01"
+   ],
+   "area": "src/Ducky.Blazor/DevTools/Inbound/Pull, test/Ducky.Concurrency.Tests/DevTools",
+   "invariants": [
+    "INV-23",
+    "INV-28"
+   ],
+   "scope": "Stage 15. tooLarge messages are pulled with devtoolsTakeMessage through IJSStreamReference under await using (above MaxPayloadBytes ignored with Warning 2023; a zero-length reference ignored with a Debug log); JUMP_* works from the stripped inline message; IMPORT_STATE deserializes each key with its declared StateType from IStore.Slices; jumps delivered concurrently with the drainer's sends restore the entry their index names.",
+   "acceptance_tests": [
+    "DevTools_JumpMessage_StateStrippedInline",
+    "DevTools_LargeImport_ReadViaStream",
+    "DevTools_PolymorphicState_SerializedAndImportedViaDeclaredType",
+    "DevTools_JumpConcurrentWithSend_RestoresMatchingEntry (Ducky.Concurrency.Tests)",
+    "DevTools_JumpConcurrentWithSend_RestoresMatchingEntry_Deterministic"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M9-01",
+   "milestone": "M9",
+   "title": "SliceStore<TState>",
+   "size": "M",
+   "depends_on": [
+    "M4-10"
+   ],
+   "area": "src/Ducky/SliceStore",
+   "invariants": [
+    "INV-11",
+    "INV-30"
+   ],
+   "scope": "Stage 8. Internal SetState<TState>(Name, Mutator) registered by the constructor; Set/SetAsync through the full pipeline (Origin.Local outside a run; Origin.Effect with Pending.Run inside a run of the owning store); both read the store's disposal state first (Disposed, uncounted) and then the run token (Dropped, counted with reason run); State via IStore.State (starts init, a point-in-time read); DUCKY351 (a DuckyConfigurationException, SetAsync included) before attach; action type {key}/{name}; the injected instance is the store-owned slice. No StoreLifetime member.",
+   "acceptance_tests": [
+    "SliceStore_InjectedInstance_IsStoreOwnedSlice",
+    "SliceStore_SameReference_NoCommit",
+    "SliceStore_StateBeforeAttach_Throws",
+    "Effect_InjectsSliceStore_Resolves"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M9-01b",
+   "milestone": "M9",
+   "title": "SliceStore inside effect runs and across stores",
+   "size": "S",
+   "depends_on": [
+    "M9-01",
+    "M2-04",
+    "M4-10"
+   ],
+   "area": "test/Ducky.Tests/SliceStore/Runs, test/Ducky.Concurrency.Tests/SliceStore",
+   "invariants": [
+    "INV-06",
+    "INV-10",
+    "INV-11",
+    "INV-30"
+   ],
+   "scope": "Stage 8. Pin Set/SetAsync against the owning store's per-store flow scopes: inside a Switch run they are Origin.Effect with Pending.Run (dropped when superseded); from a subscriber during a drain owned by an effect continuation they are Local; from another store's run they are Local at depth 0 on a new chain. Add the SliceStore rows to DispatchAsync_EveryPath_ReturnsExpectedResult (a Set in a superseded run: Dropped with reason run; a SetAsync in a Switch run after DisposeAsync began: Disposed, uncounted).",
+   "acceptance_tests": [
+    "Switch_SupersededRunCallingSliceStoreSet_IsDropped",
+    "SliceStore_SetFromSubscriberDuringDrainOwnedByEffectContinuation_IsLocal",
+    "TwoStores_EffectRunOfA_DoesNotScopeDispatchSetOrWhenIdleOfB",
+    "SliceStore_ConcurrentSetFromNThreads_AppliesAll (Ducky.Concurrency.Tests)",
+    "DispatchAsync_EveryPath_ReturnsExpectedResult (SliceStore rows)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M9-01c",
+   "milestone": "M9",
+   "title": "SliceStore analyzer arms: DUCKY001-003 mutators, DUCKY010 SetAsync",
+   "size": "S",
+   "depends_on": [
+    "M9-01",
+    "M13-06",
+    "M13-08"
+   ],
+   "area": "src/Ducky.Generators/Analyzers/Purity, src/Ducky.Generators/Analyzers/Usage",
+   "invariants": [],
+   "scope": "Stage 8. The analyzer arms that target the SliceStore API ship with it (§24 step 8, P10): DUCKY001-003 analyse SliceStore.Set/SetAsync mutator lambdas and DUCKY010 reports blocking on SetAsync, with verifier tests against the real Ducky assembly (no stub symbols).",
+   "acceptance_tests": [
+    "DUCKY001-003 mutator-arm verifier tests (non-normative)",
+    "DUCKY010 SetAsync-arm verifier tests (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); AnalyzerReleases unchanged (no new descriptor)."
+  },
+  {
+   "id": "M9-02",
+   "milestone": "M9",
+   "title": "SliceStore in Blazor hosts",
+   "size": "S",
+   "depends_on": [
+    "M9-01",
+    "M6-13"
+   ],
+   "area": "test/Ducky.Blazor.Tests/SliceStore",
+   "invariants": [
+    "INV-15"
+   ],
+   "scope": "Stage 12. A SliceStore read first (State) starts init so seed and storage apply; plain-component WASM apps never stall on the seed wait. SliceStore.State is a point-in-time read: markup that must follow changes goes through DuckyComponent.Select, <DuckySelect> or StoreSelectionExtensions.Select.",
+   "acceptance_tests": [
+    "SliceStore_StateReadFirst_SeedAndStorageApplied",
+    "Prerender_PlainComponentsOnlyWasm_NoInitStall",
+    "SliceStore_RenderedThroughSelect_RerendersOnStorageRestore"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M9-03",
+   "milestone": "M9",
+   "title": "EntityState<TKey,TEntity>",
+   "size": "M",
+   "depends_on": [
+    "M1-12"
+   ],
+   "area": "src/Ducky/Entities",
+   "invariants": [
+    "INV-32"
+   ],
+   "scope": "Stage 8. IEntity<TKey>, MergeStrategy, EntityState per §5.10: Empty, JsonConstructor (duplicate ids throw), Items only serialized, lazily built FrozenDictionary index cached per instance, SetAll/Add/Upsert/Update/Map/Remove/RemoveWhere/Merge returning this when nothing changes.",
+   "acceptance_tests": [
+    "EntityState_ModelBased",
+    "EntityState_NoOp_ReturnsSameInstance",
+    "EntityState_JsonRoundTrip"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M9-04",
+   "milestone": "M9",
+   "title": "Ducky.Testing: TestStore",
+   "size": "M",
+   "depends_on": [
+    "M4-10",
+    "M9-01"
+   ],
+   "area": "src/Ducky.Testing/TestStore",
+   "invariants": [],
+   "scope": "Stage 9. TestStore.Create(configure, services, failureTypes), public API only (ADR-0039): FakeTimeProvider registered, ThrowOnUnhandledAction = true before configure, recording middleware for Processed (failed actions included) and Failures (ReducerFailed, EffectFailed, listed types), each an ImmutableList swapped with ImmutableInterlocked.Update and returned as a snapshot; Seed<TState> resolving Slices.Single(s => s.StateType == typeof(TState)).Key (DUCKY350 on no match) and restoring with Origin.Hydration; GetSlice<TSlice>() returning the store-owned SliceStore; Settled(timeout) raising DuckyAssertionException; all IStore members forwarded, Slices included. DuckyAssertionException.",
+   "acceptance_tests": [
+    "TestStore_Seed_NoFailure",
+    "TestStore_FailureTypes_CollectsCustomFailures",
+    "TestStore_Settled_WaitsForEffects",
+    "Assertions_ThrowDuckyAssertionException",
+    "TestStore_Seed_ResolvesKeyByDeclaredStateType",
+    "TestStore_GetSlice_ReturnsStoreOwnedSliceStore"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Deletes the Ducky.Testing.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M9-04b",
+   "milestone": "M9",
+   "title": "TestStore disposal bound and concurrent reads",
+   "size": "S",
+   "depends_on": [
+    "M9-04"
+   ],
+   "area": "src/Ducky.Testing/TestStore/Dispose.cs, test/Ducky.Concurrency.Tests/Testing",
+   "invariants": [],
+   "scope": "Stage 9. Public WallClockTimeout (default 10 s, also the default of Settled). TestStore.DisposeAsync waits for the real store's DisposeAsync with WaitAsync(WallClockTimeout, TimeProvider.System) and throws DuckyAssertionException naming the bound, the likely causes and the last processed actions (the test-failure carve-out of INV-10, §8.1). Processed and Failures snapshots stay readable while a LongRunning effect appends from pool threads.",
+   "acceptance_tests": [
+    "TestStore_DisposeWithHungEffectRun_FailsWithinWallClockBound",
+    "TestStore_ProcessedReadWhileLongRunningEffectDispatches_NoException (Ducky.Concurrency.Tests)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M9-04c",
+   "milestone": "M9",
+   "title": "DUCKY021 TestStore member arm",
+   "size": "S",
+   "depends_on": [
+    "M9-04",
+    "M13-02"
+   ],
+   "area": "src/Ducky.Generators/Dispatch/Collisions",
+   "invariants": [],
+   "scope": "Stage 9. DUCKY021 also checks the accessible members of TestStore (§24 step 9, P10), with verifier tests against the real Ducky.Testing assembly.",
+   "acceptance_tests": [
+    "DUCKY021 TestStore-arm verifier tests (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M9-05",
+   "milestone": "M9",
+   "title": "Ducky.Testing: SliceTest and EffectTest",
+   "size": "M",
+   "depends_on": [
+    "M9-04",
+    "M9-01"
+   ],
+   "area": "src/Ducky.Testing/SliceTest+EffectTest",
+   "invariants": [],
+   "scope": "Stage 9. SliceTest.For<TSlice,TState>() Given/When/Then/ThenUnchanged: seeds through Restore, dispatches with Dispatch (reduced inline, §6.7) and throws DuckyAssertionException when an action is missing from Processed. EffectTest.Run (ThrowOnUnhandledAction = false before configure, AddEffect(instance) replacing a configure-registered type of the same effect, arrange after build) and a type-based EffectTest.Run<[DAM] TEffect, TAction>(action, configure, arrange, services), both constrained to Effect so EffectGroup is covered, returning EffectRun (Dispatched, Failures).",
+   "acceptance_tests": [
+    "SliceTest_ThenUnchanged_ReferenceEquals",
+    "EffectTest_CollectsDispatched",
+    "EffectTest_EffectReadingState_Works",
+    "EffectTest_UnhandledResultAction_NotAFailure",
+    "EffectTest_ConfigureAlsoRegistersEffectType_HandlerRunsOnce",
+    "EffectTest_EffectInjectingSliceStore_Works",
+    "SliceTest_ActionMissingFromProcessed_Throws"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M9-06",
+   "milestone": "M9",
+   "title": "AOT smoke: SliceStore and EntityState",
+   "size": "S",
+   "depends_on": [
+    "M9-01",
+    "M9-03",
+    "M3-05",
+    "M4-07"
+   ],
+   "area": "test/Ducky.AotSmoke",
+   "invariants": [
+    "INV-24"
+   ],
+   "scope": "Stage 8. Extend the `AotSmoke` assertion (no new PASS names, P8) with SliceStore and EntityState, JSON round-trip included.",
+   "acceptance_tests": [
+    "AotSmoke (now also covering SliceStore and EntityState)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M10-01",
+   "milestone": "M10",
+   "title": "Draft core types and ListDraft<T>",
+   "size": "M",
+   "depends_on": [
+    "M0-12"
+   ],
+   "area": "src/Ducky.Draft/Collections/ListDraft.cs",
+   "invariants": [
+    "INV-26"
+   ],
+   "scope": "Stage 17. DraftableAttribute, IRevocable, IDraft<T>; ListDraft<T> (lazy copy-on-write, remembers its own source, BuildList/BuildArray returning the source when clean and of that kind, default ImmutableArray reads as empty and is returned as-is, implicit conversions, equal set is not a change, explicit revoke). Ducky.Draft never references Ducky.",
+   "acceptance_tests": [
+    "ListDraft_Clean_BuildReturnsSource (non-normative)",
+    "ListDraft_DefaultArray_ReadsEmptyReturnsDefault (non-normative)",
+    "ListDraft_Revoked_Throws (non-normative)",
+    "ListDraft_ModelBased (non-normative CsCheck)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Deletes the Ducky.Draft.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M10-02",
+   "milestone": "M10",
+   "title": "Element drafts, dictionary and set drafts",
+   "size": "M",
+   "depends_on": [
+    "M10-01"
+   ],
+   "area": "src/Ducky.Draft/Collections",
+   "invariants": [
+    "INV-26"
+   ],
+   "scope": "Stage 17. ListDraft<T,TDraft> (lazy element drafts, structural ops flush then clear the element cache), DictionaryDraft<K,V>, DictionaryDraft<K,V,TDraft>, SetDraft<T> (BuildHashSet/BuildSortedSet); revoking a collection revokes cached element drafts. A nullable-annotated element or value maps to the plain ListDraft<T>/DictionaryDraft<K,V>; ListDraft<T,TDraft> and DictionaryDraft<K,V,TDraft> never call createDraft on a null element (the indexer returns null and the element stays null at Build); flushed element drafts and replaced child drafts are revoked; collection drafts build through ToBuilder() to keep comparers.",
+   "acceptance_tests": [
+    "ElementDraft_StructuralOpsFlushCache (non-normative runtime twin of Produce_ListStructuralOps_FlushElementDrafts)",
+    "DictionaryDraft_ModelBased (non-normative)",
+    "SetDraft_ModelBased (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M10-03",
+   "milestone": "M10",
+   "title": "Draft generator test harness",
+   "size": "S",
+   "depends_on": [
+    "M0-12",
+    "M13-01"
+   ],
+   "area": "test/Ducky.Draft.Generators.Tests/Infrastructure",
+   "invariants": [
+    "INV-25"
+   ],
+   "scope": "Stage 17. Draft generator test harness on the shared src/Shared.Generators helpers of M13-01 (P7): CSharpGeneratorDriver, Verify.SourceGenerators, the real Ducky.Draft reference, the zero-diagnostics helper for generated compilations (DocumentationMode.Diagnose, nullable enabled, warning level 9999), and the caching-test helper over tracking names.",
+   "acceptance_tests": [
+    "Harness self-test: a planted warning in a generated compilation fails the zero-diagnostics helper (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); CoverageGate proves no over-broad link. Deletes the Ducky.Draft.Generators.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M10-04",
+   "milestone": "M10",
+   "title": "Draft generator: pipeline, diagnostics and scalar members",
+   "size": "M",
+   "depends_on": [
+    "M10-01",
+    "M10-03"
+   ],
+   "area": "src/Ducky.Draft.Generators/Pipeline",
+   "invariants": [
+    "INV-25",
+    "INV-26"
+   ],
+   "scope": "Stage 17. ForAttributeWithMetadataName(\"Ducky.Draft.DraftableAttribute\"), symbol-free models, WithTrackingName per step. Emits Produce, CreateDraft and the nested Draft class (§13.3) for scalar and other members under the GEN-06 rules (// <auto-generated/>, #nullable enable, /// <summary> on public generated members, #pragma warning disable CS0612, CS0618 with its justification around user-type references, hint name {sanitized metadata name}.Draft.g.cs, oblivious reference types treated as annotated): private names __m_{Name}/__s_{Name} with verbatim member names and __x_original/__x_revoked/__x_Guard, explicit IDraft members, Build() omitted when the record has a Build member, revoke guard, get-only members kept; the draft mirrors instance properties with public, internal or protected internal accessibility (minimum of member and type accessibility; EqualityContract and synthesized members excluded; new over a hidden GetType/MemberwiseClone; error-obsolete members left out); implicit operator Draft?(R?). No-op decided at Build against the original. Diagnostics DUCKY101-104 and DUCKY108 with no output. AnalyzerReleases tracking.",
+   "acceptance_tests": [
+    "Produce_NoOpRecipe_ReturnsSameReference",
+    "Produce_RevertedScalar_ReturnsSameReference",
+    "Caching_{Step}_Cached (Draft generator steps)",
+    "Generated_CompilesClean_{Shape} (scalar shapes, members named Build/IsDirty/Revoke/Revoked/O, TagsSet next to Tags, a case-only pair, accessibility rows, GetType, [Obsolete] rows, #nullable disable rows, hint-name rows)",
+    "HintNames_UniqueAndValid (Ducky.Draft.Generators.Tests)",
+    "Descriptors_MatchCatalogue (Ducky.Draft.Generators.Tests)",
+    "DUCKY101-104 and DUCKY108 verifier tests (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); Verify snapshots committed."
+  },
+  {
+   "id": "M10-05",
+   "milestone": "M10",
+   "title": "Draft generator: collection, nested and nullable members",
+   "size": "M",
+   "depends_on": [
+    "M10-04",
+    "M10-02"
+   ],
+   "area": "src/Ducky.Draft.Generators/Mapping",
+   "invariants": [
+    "INV-25",
+    "INV-26"
+   ],
+   "scope": "Stage 17. Symbol-based mapping (OriginalDefinition vs GetTypeByMetadataName, FullyQualifiedFormat): draftable records, ImmutableList/Array, ImmutableDictionary, ImmutableHashSet/SortedSet, element drafts; tri-state members (untouched/drafted/assigned), nullable reads return null, per-kind no-op identity (ImmutableArray.Equals), new modifiers when a base declares Draft/CreateDraft, mutable collections plain get/set with DUCKY105. A same-compilation C maps to C.Draft iff it passes the generator's own shape predicate (one shared function, a boolean in the parent's equatable model); a cross-assembly C maps to C.Draft only when a nested public Draft implementing IDraft<C> with a public Draft(C) constructor exists, else plain get/set with DUCKY107; nullable-annotated elements are never element-drafted and oblivious elements keep element drafting.",
+   "acceptance_tests": [
+    "Produce_NoOp_ImmutableArrayMember_ReturnsSameReference",
+    "Produce_DefaultImmutableArrayMember_Works",
+    "Produce_NullableMemberNullOriginal_GetReturnsNull",
+    "Produce_ListStructuralOps_FlushElementDrafts",
+    "Generated_CompilesClean_{Shape} (element kind x collection kind x nullability x derived)",
+    "Produce_AssignRecordToDraftableMember_Builds",
+    "DUCKY105 and DUCKY107 verifier tests (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M10-06",
+   "milestone": "M10",
+   "title": "INV-26 properties",
+   "size": "M",
+   "depends_on": [
+    "M10-05"
+   ],
+   "area": "test/Ducky.Draft.Tests/Properties",
+   "invariants": [
+    "INV-26"
+   ],
+   "scope": "Stage 17. CsCheck generators through Property.Check of random nested records and edit scripts (null assignment and null elements in nullable-element lists, collection replacement through implicit conversion, nested draft replacement, assigning a record to a draftable member, no-op ImmutableArray edits), checked with a structural comparer (element-wise, with comparer-identity checks), never record Equals; revocation of flushed element drafts and replaced child drafts.",
+   "acceptance_tests": [
+    "Produce_EqualsManualWithExpressions",
+    "Produce_UntouchedBranches_ReferenceEqual",
+    "Produce_BaseDeepEqualBeforeAndAfter",
+    "Produce_RevokedDraftAccess_Throws",
+    "Produce_AssignEqualScalar_IsNoOp",
+    "Produce_ElementDraftAfterStructuralOp_Throws",
+    "Produce_ReplacedChildDraft_Throws"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M10-07",
+   "milestone": "M10",
+   "title": "DUCKY106, Draft multi-assembly fixture, DUCKY901, Mutty caching port",
+   "size": "M",
+   "depends_on": [
+    "M10-05"
+   ],
+   "area": "src/Ducky.Draft.Generators/Analyzers, test/Ducky.Draft.Generators.Tests/MultiAssembly, test/Ducky.PackageSmoke",
+   "invariants": [
+    "INV-25",
+    "INV-26"
+   ],
+   "scope": "Stage 17. DUCKY106 analyzer (draft escaping the recipe). Three-compilation fixture: Lib draftable record used as member and list element in App, App record deriving from a Lib draftable (new modifiers), nested Lib draft accessed after Produce throws. A cross-assembly variant with a hand-written Draft : IDraft<C> lacking the (C) constructor reports DUCKY107. PackageSmoke (§17.9, stage 17): a Ducky.Draft-only consumer (TreatWarningsAsErrors, nullable, GenerateDocumentationFile) with a nested draftable member, Produce and CreateDraft().Build(), and its variant with the committed fake Mutty nupkg raising DUCKY901. S-9 is re-measured now that the Draft projects hold their real logic. Port Mutty's caching suite.",
+   "acceptance_tests": [
+    "MultiAssembly_NoAmbiguityOrConflict (Draft fixture)",
+    "DUCKY106 verifier tests (non-normative)",
+    "PackageSmoke: Mutty + Ducky.Draft consumer warns DUCKY901",
+    "Caching_{Step}_Cached (ported Mutty cases)",
+    "PackageSmoke: Ducky.Draft-only consumer builds from packages",
+    "S-9 re-measured at step 17: nightly-mutation and release-mutation timeout-minutes updated (docs/spec/spikes.md)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M10-07b",
+   "milestone": "M10",
+   "title": "Draft analyzers: DUCKY109 and the DUCKY003 Draft-receiver exemption",
+   "size": "S",
+   "depends_on": [
+    "M10-07",
+    "M13-06"
+   ],
+   "area": "src/Ducky.Draft.Generators/Analyzers/Discard, src/Ducky.Generators/Analyzers/Purity/DraftExemption",
+   "invariants": [
+    "INV-26"
+   ],
+   "scope": "Stage 17. DUCKY109 (Warning, Ducky.Draft.Generators): inside a Produce recipe, an expression statement that discards a same-type result of a plain get/set draft member's method (ImmutableQueue.Enqueue, ImmutableSortedDictionary.Add, EntityState.Upsert), with an assigned false-positive case. DUCKY003's exemption for receivers implementing Ducky.Draft.IDraft<T> or a Ducky.Draft collection draft (matched by metadata name) ships here, verified against the real Ducky.Draft assembly (§24 step 17, P10).",
+   "acceptance_tests": [
+    "DUCKY109 verifier tests (non-normative)",
+    "DUCKY003 Draft-receiver exemption verifier tests against the real IDraft<T> (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); AnalyzerReleases.Unshipped and docs/diagnostics/DUCKY109.md added."
+  },
+  {
+   "id": "M11-01",
+   "milestone": "M11",
+   "title": "Ducky.Reactive host, bridge and middleware",
+   "size": "M",
+   "depends_on": [
+    "M4-10",
+    "M2-08"
+   ],
+   "area": "src/Ducky.Reactive",
+   "invariants": [
+    "INV-27"
+   ],
+   "scope": "Stage 16. ReactiveEffect (Handle(actions, state), RetryDelay), AddReactiveEffect<[DAM]T>() recording a store-scope factory, calling RequireResolvableConstructor for DUCKY309, Use<ReactiveMiddleware>() and AddEffect<ReactiveHost>(); ReactiveBridge registered Scoped (one per store) with Subject<object> and SynchronizedReactiveProperty<StateSnapshot> (values have a single writer, the drainer; subscription changes are synchronized); ReactiveMiddleware pushes from AfterReduce; ReactiveHost (Effect<StoreInitialized>, Merge) sets bridge.State.Value = ctx.State before subscribing any pipeline, emits StoreInitialized once after the first subscription, returns immediately and is not counted for quiescence; onNext => ctx.Dispatch; every subscription joins one CompositeDisposable disposed by the lifetime callback; OfActionType exact type. Internal SafeLogger for Ducky.Reactive.",
+   "acceptance_tests": [
+    "Reactive_DisposedWithStore_NoEmissionAfterDispose",
+    "Reactive_SyncSelfLoop_StoppedByDepthGuard",
+    "Reactive_DoesNotBlockWhenIdle",
+    "Reactive_Debounce_WithFakeTime",
+    "Reactive_ScopedDependencyInBrowser_Resolves",
+    "Reactive_StateObservable_FirstValueIsCurrentSnapshot"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); R3 pinned in Directory.Packages.props and packed as R3 >= 1.3.x; EventIds 3000+. Deletes the Ducky.Reactive.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M11-01b",
+   "milestone": "M11",
+   "title": "Reactive twins of the core contract",
+   "size": "S",
+   "depends_on": [
+    "M11-01",
+    "M4-01b"
+   ],
+   "area": "test/Ducky.Reactive.Tests/Contract",
+   "invariants": [
+    "INV-03",
+    "INV-13",
+    "INV-31"
+   ],
+   "scope": "Stage 16. Ducky.Reactive twins of core rules: a throwing reducer on StoreInitialized still starts ReactiveHost and its pipelines subscribe; Ducky.Reactive's SafeLogger never lets a provider throw escape; a reactive effect with an unresolvable constructor dependency is reported by DUCKY309 with the other errors at first resolution.",
+   "acceptance_tests": [
+    "ReducerThrowsOnStoreInitialized_LoadEffectAndReactiveHostStillStart (Ducky.Reactive.Tests)",
+    "SafeLogger_ProviderThrows_NeverEscapes (Ducky.Reactive.Tests)",
+    "Build_ReactiveEffectCtorDependencyMissing_ReportedWithOtherErrors"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M11-02",
+   "milestone": "M11",
+   "title": "Reactive failures and resubscribe",
+   "size": "M",
+   "depends_on": [
+    "M11-01",
+    "M9-04"
+   ],
+   "area": "src/Ducky.Reactive/Failures",
+   "invariants": [
+    "INV-12",
+    "INV-27"
+   ],
+   "scope": "Stage 16. Every reactive failure published by ReactiveMiddleware as DispatchSystem(EffectFailed(type, \"reactive\", ex), isFailure: true); onErrorResume continues; failure completion resubscribes after RetryDelay(attempt) through Task.Delay(delay, timeProvider, lifetimeToken) followed by lifetimeToken.ThrowIfCancellationRequested() into the one cancellation catch (null stops, Warning), attempt counter reset on emission. GroupByUntil recipe test.",
+   "acceptance_tests": [
+    "Reactive_FailureCompletion_ResubscribesWithBackoff",
+    "Reactive_OnErrorResume_ContinuesStream",
+    "Reactive_Failure_IsSystemFailureAction_StrictModeClean",
+    "Reactive_GroupByUntilRecipe_ReleasesGroups"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M11-02b",
+   "milestone": "M11",
+   "title": "Reactive resubscribe races and replay",
+   "size": "S",
+   "depends_on": [
+    "M11-02"
+   ],
+   "area": "src/Ducky.Reactive/Resubscribe, test/Ducky.Concurrency.Tests/Reactive",
+   "invariants": [
+    "INV-27"
+   ],
+   "scope": "Stage 16. A resubscribe pending at dispose never resubscribes; failure resubscribes never replay StoreInitialized; resubscribes and timer-driven inner subscriptions racing a producer's drain see the current snapshot first and lose no subscriber (R3's Subject locks subscribe/dispose; a bridge-level lock only if the concurrency test shows otherwise). The deterministic twin drives FakeTimeProvider.Advance from a user AfterReduce placed before the reactive middleware.",
+   "acceptance_tests": [
+    "Reactive_ResubscribePendingAtDispose_NeverResubscribes",
+    "Reactive_OfActionTypeStoreInitialized_FiresOnceNotOnResubscribe",
+    "Reactive_ResubscribeConcurrentWithDrain_FirstValueCurrent_NoLostSubscriber (Ducky.Concurrency.Tests)",
+    "Reactive_ResubscribeConcurrentWithDrain_FirstValueCurrent_NoLostSubscriber_Deterministic"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M11-03",
+   "milestone": "M11",
+   "title": "Reactive vs prerender quiescence pin",
+   "size": "S",
+   "depends_on": [
+    "M11-01",
+    "M6-05"
+   ],
+   "area": "test/Ducky.Blazor.Tests/Prerender/Reactive",
+   "invariants": [
+    "INV-15",
+    "INV-27"
+   ],
+   "scope": "Stage 16. Pin that a reactive load in flight is not waited for by the seed; XML docs warning on Prerender<T>, ReactiveEffect and Settled.",
+   "acceptance_tests": [
+    "Prerender_ReactiveLoadInFlight_Documented"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M11-04",
+   "milestone": "M11",
+   "title": "AOT smoke: Draft and Reactive",
+   "size": "S",
+   "depends_on": [
+    "M10-06",
+    "M11-02",
+    "M3-05",
+    "M12-05"
+   ],
+   "area": "test/Ducky.AotSmoke",
+   "invariants": [
+    "INV-24"
+   ],
+   "scope": "Stage 17. Extend the `AotSmoke` assertion (no new PASS names, P8) with Produce over a generated draftable record and a reactive effect emission under NativeAOT.",
+   "acceptance_tests": [
+    "AotSmoke (now also covering Draft and Reactive)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); zero IL warnings from R3."
+  },
+  {
+   "id": "M11-05",
+   "milestone": "M11",
+   "title": "Reactive generator arms and PackageSmoke consumer",
+   "size": "S",
+   "depends_on": [
+    "M11-01",
+    "M13-03",
+    "M13-07",
+    "M13-11"
+   ],
+   "area": "src/Ducky.Generators/Registration/Reactive, src/Ducky.Generators/Analyzers/Structural/OfActionType, test/Ducky.PackageSmoke",
+   "invariants": [
+    "INV-25"
+   ],
+   "scope": "Stage 16. The arms that target Ducky.Reactive ship with it (§24 step 16, P10): GEN-02 registers every ReactiveEffect (any public constructor, dependencies checked by DUCKY309) through a fully qualified AddReactiveEffect<T> call when that exact method symbol resolves, else DUCKY022; the OfActionType<T> arm of DUCKY005; generator tests reference the real Ducky.Reactive.dll. PackageSmoke gains its fifth consumer: it references only Ducky.Reactive, declares a ReactiveEffect and calls AddDuckyGenerated_*.",
+   "acceptance_tests": [
+    "Registration_RealReactive_EmitsAddReactiveEffect_NoDucky022",
+    "Generated_CompilesClean_{Shape} (reactive effect rows, including one whose only constructor injects HttpClient)",
+    "DUCKY005 OfActionType-arm verifier tests (non-normative)",
+    "PackageSmoke: Reactive-only consumer compiles the generated AddReactiveEffect<T> call"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M12-01",
+   "milestone": "M12",
+   "title": "IDistributedCache provider and PersistStorage.Server",
+   "size": "M",
+   "depends_on": [
+    "M6-13",
+    "M6-11"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/Providers/DistributedCache",
+   "invariants": [
+    "INV-17",
+    "INV-31"
+   ],
+   "scope": "Stage 13. Internal DistributedCacheProvider (key {prefix}:{scope}:{sliceKey}, UTF-8 envelope, MaxAge => AbsoluteExpirationRelativeToNow else ServerEntryOptions), DuckyScopes.NameIdentifier; Server keys use Scope ?? NameIdentifier, browser keys are scoped only when Scope is set explicitly; a null scope means no I/O (Info once). In the browser Server storage is inert (Info 2020, seed-only): inert slices count as not persisted (Status stays Hydrated), never count as scoped keys and never need an AuthenticationStateProvider. NonInteractive rule (read during init, write-through); debounce 0. DUCKY314/315 (skipped when IsBrowser) and DUCKY317 as AddValidation rules; Ducky.Blazor's EveryErrorCode_FollowsMessageTemplate now covers DUCKY310-317 and 352. Every NonInteractive Server-storage test runs against MemoryDistributedCache and a Task.Yield() wrapper.",
+   "acceptance_tests": [
+    "DistributedCache_TwoScopes_NeverSeeEachOther",
+    "DistributedCache_NullScope_NoIo",
+    "DistributedCache_AnonymousUser_NoIo",
+    "DistributedCache_DefaultPrefixWithServerStorage_IsConfigurationError",
+    "Browser_ServerStorageWithoutCacheOrAuth_NoConfigurationError",
+    "Server_ServerStorageWithoutCache_Ducky314",
+    "Precedence_ServerStorage_IndependentOfRegistrationOrder",
+    "Hydration_BrowserOnlyInertServerSlices_StatusHydrated",
+    "Scope_DefaultNeverAppliesToBrowserKeys",
+    "EveryErrorCode_FollowsMessageTemplate (Ducky.Blazor.Tests: DUCKY310-317, 352)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); tests use the real MemoryDistributedCache."
+  },
+  {
+   "id": "M12-02",
+   "milestone": "M12",
+   "title": "Server flush, retries, late-flush loss and last-writer-wins pins",
+   "size": "M",
+   "depends_on": [
+    "M12-01"
+   ],
+   "area": "test/Ducky.Blazor.Tests/DistributedCache/Flush, src/Ducky.Blazor/Persistence/Providers/DistributedCache/Flush, build/Build.CI.cs",
+   "invariants": [
+    "INV-16",
+    "INV-17",
+    "INV-29"
+   ],
+   "scope": "Stage 13. Server storage in phase 5a (no JS): provider failures retried with the 1 s to 30 s backoff while the store is alive (PersistenceFailed once per streak); the flush cancels pending backoff and makes one immediate attempt per dirty key. When the drain overruns DisposeTimeout, DisposeAsync completes at the bound and the chained flush catches ObjectDisposedException and provider exceptions per key and counts them ducky.persistence.lost. Documented last-writer-wins and prerender-flush ceilings. S-9 is re-measured at step 13.",
+   "acceptance_tests": [
+    "DistributedCache_DisposeFlushesPending",
+    "Dispose_ChangeInsideDebounce_FlushedImmediately_ServerStorage",
+    "DistributedCache_TwoCircuitsSameUser_LastWriterWins",
+    "DistributedCache_PrerenderFlushAfterCircuitWrite_Documented",
+    "DistributedCache_TransientCacheFailure_WriteRetriedUntilSuccess",
+    "Dispose_KeyInRetryBackoff_FlushWritesImmediately_ServerStorage",
+    "Dispose_DrainOverrunsTimeout_ServerScope_DisposeAsyncCompletesAtBound_LateFlushCountsLost",
+    "S-9 re-measured at step 13: nightly-mutation and release-mutation timeout-minutes updated (docs/spec/spikes.md)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M12-03",
+   "milestone": "M12",
+   "title": "Scope switch core",
+   "size": "M",
+   "depends_on": [
+    "M12-01",
+    "M6-10b",
+    "M6-12"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/ScopeSwitch",
+   "invariants": [
+    "INV-14",
+    "INV-16",
+    "INV-17"
+   ],
+   "scope": "Stage 13. Subscribe to AuthenticationStateChanged before the epoch-0 resolution (server: synchronous prefix; browser: inside the hand-off callback, the provider resolved with GetService), unsubscribe in dispose phase 5a. Handler, synchronously under _issue: epoch = ++_scopeVersion, a new current attempt, the reset's PreviousState (the newest old-epoch snapshot, taken on the drainer through AfterReduce) queued to each scoped writer's final-snapshot queue and written under the old key before the loop reads Store.State, one Hydration restore of scoped initial states plus Hydrating{epoch}; the epoch records its key set. Then resolve the scope and record it for the epoch if still current; switch reads run as commands in each key's writer loop, after its final snapshot and any in-flight write; a null scope drops only the scoped keys (HydrationCompleted(false) at once when nothing else is carried). The handler never throws.",
+   "acceptance_tests": [
+    "ScopeSwitch_TwoOverlappingSwitches_DistinctEpochs_LatestWins",
+    "ScopeSwitch_ToAnonymous_StatusReturnsToHydrated_UnscopedWritesResume",
+    "DistributedCache_UserChangesInsideCircuit_ActionDuringSwitch_NeverWrittenUnderOtherScope",
+    "DistributedCache_UserChangeWithConcurrentLocalChange_NeverWritesOldStateUnderNewKey",
+    "Write_UnscopedChangeDuringScopeSwitch_IsWrittenAfterTerminal",
+    "Wasm_UserChange_ScopedBrowserKeysMoveToNewScope (bUnit; its E2E twin is in M14-05)",
+    "ScopeSwitch_ChangeCommittedJustBeforeSwitch_WrittenUnderOldKey",
+    "ScopeSwitch_SameScopeReasserted_FinalWriteNotRolledBack"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M12-03b",
+   "milestone": "M12",
+   "title": "Scope switch during init and initial hydration",
+   "size": "M",
+   "depends_on": [
+    "M12-03",
+    "M6-08"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/ScopeSwitch/Init",
+   "invariants": [
+    "INV-14",
+    "INV-17"
+   ],
+   "scope": "Stage 13. A switch's key set is its scoped keys plus the not-yet-restored unscoped keys of the attempt it supersedes (transitively); the writer's hydration skip and the reads use it, and a null-scope switch still reads carried unscoped keys through their writer loops. _initPhase, read and cleared only under _issue: set in step 3, cleared with the terminal of the attempt current during init or by the init-token callback (clearing disposes the init-phase timer); the init-phase HydrationTimeout deadline and the init-token callback act on whichever attempt is current and are no-ops once it is cleared; a switch arms its own timer iff _initPhase is clear, so a switch during init never outlives InitTimeout.",
+   "acceptance_tests": [
+    "ScopeSwitch_AuthChangeDuringInitialScopeResolution_NeverWritesUnderOldScope",
+    "ScopeSwitch_DuringInit_TerminalPrecedesStoreInitialized_WithinOneHydrationTimeout",
+    "ScopeSwitch_DuringInitialHydration_UnscopedKeysStillRestored",
+    "ScopeSwitch_ToAnonymousDuringInitialHydration_UnscopedKeysStillRestored",
+    "ScopeSwitch_JustAfterInitialTerminal_OwnTimerArmed_NotFailedByInitDeadline",
+    "ScopeSwitch_BetweenInitialTerminalAndInitReturn_HungRead_FailsAtOwnTimeout"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M12-03c",
+   "milestone": "M12",
+   "title": "Scope switch: write retries, reconnect absorption, inert Server keys",
+   "size": "M",
+   "depends_on": [
+    "M12-03",
+    "M6-11",
+    "M6-12"
+   ],
+   "area": "src/Ducky.Blazor/Persistence/ScopeSwitch/Reassert",
+   "invariants": [
+    "INV-16",
+    "INV-17"
+   ],
+   "scope": "Stage 13. A failed queued old-scope snapshot stays at the head of its queue and is retried with the same backoff, re-serialized against its own epoch's key and baseline; posting a switch read or enqueuing a final snapshot ends a backoff sleep. Re-assertion check before a switch: outside _issue the scope delegate is called once; if its ValueTask completed successfully and, under _issue, the current epoch's recorded scope is known, ordinally equal and its attempt has issued its terminal, the event is absorbed (no epoch bump, reset or reads; Debug log); every other case runs the switch. In the browser inert Server keys are never read and never join a switch, but the reset restores them; without an AuthenticationStateProvider there is no subscription.",
+   "acceptance_tests": [
+    "ScopeSwitch_FinalOldScopeWriteFailsTransiently_RetriedUnderOldKey",
+    "ScopeSwitch_WriterInRetryBackoff_SwitchReadCompletesWithinHydrationTimeout",
+    "ScopeSwitch_CircuitReconnectSameUser_NoResetNoReRead",
+    "Wasm_ServerStorageOnly_NoAuthProvider_NoSubscriptionNoThrow",
+    "Wasm_UserChange_InertServerSlicesResetNotRead"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M12-04",
+   "milestone": "M12",
+   "title": "Scope switch races",
+   "size": "S",
+   "depends_on": [
+    "M12-03",
+    "M12-03b"
+   ],
+   "area": "test/Ducky.Concurrency.Tests/DistributedCache, test/Ducky.Blazor.Tests/DistributedCache/Races",
+   "invariants": [
+    "INV-17"
+   ],
+   "scope": "Stage 13. CsCheck SampleParallel in Ducky.Concurrency.Tests (§17.3 row 6) with a TCS-gated cache, and their …_Deterministic twins in Ducky.Blazor.Tests covering every branch.",
+   "acceptance_tests": [
+    "DistributedCache_StaleAttemptAfterSecondSwitch_NeverRestoredOrWrittenUnderNewScope (Ducky.Concurrency.Tests)",
+    "DistributedCache_StaleAttemptAfterSecondSwitch_NeverRestoredOrWrittenUnderNewScope_Deterministic",
+    "DistributedCache_UserChangeDuringInitialHydration_OldScopeValuesNeverRestored (Ducky.Concurrency.Tests)",
+    "DistributedCache_UserChangeDuringInitialHydration_OldScopeValuesNeverRestored_Deterministic"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M12-05",
+   "milestone": "M12",
+   "title": "AOT smoke: server persistence and DevTools payload",
+   "size": "S",
+   "depends_on": [
+    "M12-02",
+    "M8-02",
+    "M3-05",
+    "M9-06"
+   ],
+   "area": "test/Ducky.AotSmoke",
+   "invariants": [
+    "INV-23",
+    "INV-24"
+   ],
+   "scope": "Stage 15. Through public API only: PersistStorage.Server round-trip over MemoryDistributedCache (KeyPrefix smoke, fixed scope) and UseDevTools with a fake IJSRuntime (Trace = true) producing a non-empty payload. The round-trip extends the `AotSmoke` assertion (no new PASS name, P8); DevToolsPayload_NonEmpty is its own manifest name.",
+   "acceptance_tests": [
+    "DevToolsPayload_NonEmpty",
+    "AotSmoke (now also covering the Server-storage round-trip)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M12-06",
+   "milestone": "M12",
+   "title": "NonInteractive Server storage and static SSR pins",
+   "size": "S",
+   "depends_on": [
+    "M12-01",
+    "M5-06"
+   ],
+   "area": "test/Ducky.Blazor.Tests/DistributedCache/StaticSsr",
+   "invariants": [
+    "INV-17"
+   ],
+   "scope": "Stage 13. Server-storage values reach NonInteractive HTML only when a lifecycle method awaits InitializeAsync (DuckyInitializer does, in OnInitializedAsync); the seed carries them in any case (OnPersisting waits for idle). Pin the asynchronous IDistributedCache cases and the Post/Redirect/Get stale read (the request-scope flush runs after the redirect response); no public flush API in 2.0, a ponytail note names the 2.1 FlushPersistenceAsync upgrade path.",
+   "acceptance_tests": [
+    "StaticSsr_AsyncDistributedCache_DuckyInitializer_HtmlShowsStoredValue",
+    "StaticSsr_AsyncDistributedCache_WithoutInitializer_HtmlShowsInitialState_Documented",
+    "DistributedCache_StaticSsrPostRedirect_StaleReadDocumented"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M12-07",
+   "milestone": "M12",
+   "title": "Pause seeds across scopes",
+   "size": "S",
+   "depends_on": [
+    "M6-13b",
+    "M12-03b"
+   ],
+   "area": "src/Ducky.Blazor/Prerender/PauseSeed/Scope",
+   "invariants": [
+    "INV-15",
+    "INV-17"
+   ],
+   "scope": "Stage 13. A pause records the SHA-256 of the captured scope (never the raw id), carries scoped keys only for a known non-null scope of snap.ScopeEpoch and leaves out every key of an attempt still Hydrating (read under _issue). Scoped keys of a pause seed are not restored in the synchronous prefix: they are handed through SeedSettled and applied in step 6 only when the epoch-0 scope matches, otherwise storage or InitialState is restored. The pause override applies only to browser-storage keys; Server storage wins. Internal IVT hook BlazorOptions.AfterSeedIdleHook.",
+   "acceptance_tests": [
+    "Circuit_ResumeUnderOtherUser_PauseSeedScopedSlicesNotRestoredOrWritten",
+    "Circuit_PauseDuringScopeSwitch_StorageNotOverwrittenWithInitialState"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-01",
+   "milestone": "M13",
+   "title": "Shared generator helpers, Ducky.Generators harness and AssemblyNameSanitizer",
+   "size": "S",
+   "depends_on": [
+    "M4-10"
+   ],
+   "area": "src/Shared.Generators, test/Ducky.Generators.Tests/Infrastructure",
+   "invariants": [
+    "INV-25"
+   ],
+   "scope": "Stage 7. src/Shared.Generators (P7): EquatableArray.cs, CodeWriter.cs (~40 lines, raw string literals), IdentifierSanitizer.cs and AssemblyNameSanitizer.cs (invalid chars => _, leading digit or keyword => _ prefix, null => Anonymous), one helper per file, linked per use. Ducky.Generators test infrastructure: CSharpGeneratorDriver, Verify.SourceGenerators, the real Ducky.dll (never stubs for gated symbols, GEN-06), a generated-compilation helper with DocumentationMode.Diagnose, nullable enabled and warning level 9999, and the caching-test helper over tracking names.",
+   "acceptance_tests": [
+    "AssemblyNameSanitizer_Table",
+    "IdentifierSanitizer_Table (non-normative)",
+    "EquatableArray_ValueEquality (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Deletes the Ducky.Generators.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M13-02",
+   "milestone": "M13",
+   "title": "GEN-01 DispatchExtensionsGenerator",
+   "size": "M",
+   "depends_on": [
+    "M13-01"
+   ],
+   "area": "src/Ducky.Generators/Dispatch",
+   "invariants": [
+    "INV-25"
+   ],
+   "scope": "Stage 7. [DuckyAction] => {Record}DispatchExtensions (nested: A_B_RecordDispatchExtensions) under the GEN-06 rules (prologue, #nullable enable, summaries, the justified CS0612/CS0618 pragma, hint name {sanitized metadata name}.DispatchExtensions.g.cs, oblivious types treated as annotated): one overload pair per explicitly declared accessible constructor (the implicit parameterless one only when none is declared, never the record copy constructor; error-obsolete constructors skipped), defaults kept, parameter names verbatim with keywords @-escaped, receiver __dispatcher, minimum effective accessibility, MethodName. DUCKY020 (generic, nested in generic, inaccessible or file-local, error-obsolete, no usable constructor, generated name already declared), DUCKY021 (collisions with IDispatcher/IStore/EffectContext/object members => skipped; the TestStore arm ships in M9-04c), DUCKY024 (Info: two same-named, same-signature helpers in one compilation).",
+   "acceptance_tests": [
+    "Generated_CompilesClean_{Shape} (positional/non-positional, defaults, record structs, nested at several depths, file-local, [Obsolete] and [Obsolete(error: true)] rows, global namespace, keyword and case-only names, #nullable disable rows)",
+    "Helper_RecordStructWithDefaults_DispatchesDefaultValues",
+    "HintNames_UniqueAndValid (Ducky.Generators.Tests)",
+    "Descriptors_MatchCatalogue (Ducky.Generators.Tests)",
+    "Caching_{Step}_Cached (dispatch steps)",
+    "DUCKY020, DUCKY021 and DUCKY024 verifier tests (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-03",
+   "milestone": "M13",
+   "title": "GEN-02 RegistrationGenerator core (slices, effects)",
+   "size": "M",
+   "depends_on": [
+    "M13-01"
+   ],
+   "area": "src/Ducky.Generators/Registration",
+   "invariants": [
+    "INV-25"
+   ],
+   "scope": "Stage 7. Ducky.Generated.{Asm}_DuckyRegistrations.AddDuckyGenerated_{Asm} (fixed hint name DuckyRegistrations.g.cs): every non-abstract, non-generic, accessible Slice<> with a public parameterless constructor (SliceStores included; DUCKY023 otherwise), and every Effect<>/EffectGroup with any public constructor (dependencies checked by DUCKY309); file-local slices and effects are DUCKY023. The DUCKY022 'type or method doesn't resolve' branch, tested with compilations that omit the Ducky.Blazor and Ducky.Reactive references. The Blazor and Reactive emission arms ship with their APIs (M13-04, M13-04b, M11-05; P10). Middleware is never registered.",
+   "acceptance_tests": [
+    "Generated_CompilesClean_{Shape} (registration shapes, including an effect whose only constructor injects HttpClient)",
+    "Caching_{Step}_Cached (registration steps)",
+    "DUCKY022 (not-resolved branch) and DUCKY023 verifier tests (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-04",
+   "milestone": "M13",
+   "title": "GEN-02 Prerender<T> emission",
+   "size": "S",
+   "depends_on": [
+    "M13-03",
+    "M6-04"
+   ],
+   "area": "src/Ducky.Generators/Registration/Blazor/Prerender",
+   "invariants": [
+    "INV-25"
+   ],
+   "scope": "Stage 11. When the exact Ducky.Blazor Prerender<T> method symbol resolves, emit a fully qualified Prerender<T>(b) call per [Prerender] slice, else DUCKY022 for it (§24 step 11, P10); generator tests reference the real Ducky.Blazor.dll, and the skew branch uses an older-shape fixture.",
+   "acceptance_tests": [
+    "Generated_CompilesClean_{Shape} ([Prerender] rows against the real Ducky.Blazor)",
+    "DUCKY022 skew case for Prerender<T> through an older-shape fixture (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-04b",
+   "milestone": "M13",
+   "title": "GEN-02 PersistAttributeDefaults<T> emission and Ducky.Blazor.Generated.Tests",
+   "size": "M",
+   "depends_on": [
+    "M13-04",
+    "M6-03",
+    "M13-07",
+    "M13-11"
+   ],
+   "area": "src/Ducky.Generators/Registration/Blazor/Persist, src/Ducky.Generators/Analyzers/Structural/Persist, test/Ducky.Blazor.Generated.Tests, test/Ducky.PackageSmoke",
+   "invariants": [
+    "INV-25"
+   ],
+   "scope": "Stage 12. GEN-02 always emits PersistAttributeDefaults<T> for [Persist] (only explicitly supplied named arguments; an empty delegate for a bare [Persist]), gated on the exact method symbol (DUCKY022 on a mismatch); the Persist<T>() arm of DUCKY012 (§24 step 12, P10). New test/Ducky.Blazor.Generated.Tests, the one Blazor test project with DuckyUseGenerators (joins Ducky.slnx, Ducky.Tests.slnf, the coverage run and the computed Stryker test projects; IVT from Ducky.Blazor with the key), holding the three generator-emitted attribute tests and their shared, composable [Persist]/[Prerender] fixtures. PackageSmoke's Server consumer declares [Persist(Version = 2, SyncAcrossTabs = true)] and [Prerender] slices under TreatWarningsAsErrors.",
+   "acceptance_tests": [
+    "Registration_RealBlazor_EmitsPersistAndPrerender_NoDucky022",
+    "PersistAttribute_NoArguments_SlicePersisted",
+    "PersistAttributePlusBuilderMigrate_Composes",
+    "AddBlazor_AfterGeneratedPersist_ConfigureApplied",
+    "DUCKY012 Persist<T>()-arm verifier tests (non-normative)",
+    "PackageSmoke: Server consumer with [Persist]/[Prerender] compiles from packages (no DUCKY022)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-05",
+   "milestone": "M13",
+   "title": "Multi-assembly fixture (Ducky generators)",
+   "size": "S",
+   "depends_on": [
+    "M13-02",
+    "M13-03"
+   ],
+   "area": "test/Ducky.Generators.Tests/MultiAssembly",
+   "invariants": [
+    "INV-25"
+   ],
+   "scope": "Stage 7. §16.3: Lib (MyCompany.Todos) and App both run the generator and declare Increment in different namespaces; Tests references both without the generator and calls both registrations (extension and explicit) and both Increment helpers; TreatWarningsAsErrors. App also declares a second Increment in another App namespace, and the fixture asserts DUCKY024 on it.",
+   "acceptance_tests": [
+    "MultiAssembly_NoAmbiguityOrConflict"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-06",
+   "milestone": "M13",
+   "title": "Purity analyzers DUCKY001-003",
+   "size": "M",
+   "depends_on": [
+    "M13-01",
+    "M3-03"
+   ],
+   "area": "src/Ducky.Generators/Analyzers/Purity",
+   "invariants": [],
+   "scope": "Stage 7. Analyse On<T> reducer lambdas and Selector.Define projectors (the reducer and projector arms, §24 step 7): non-determinism (001), I/O or blocking (002), mutation (003; nested recipe parameters are not state). The SliceStore mutator arms ship in M9-01c and the Draft-receiver exemption of DUCKY003 in M10-07b (P10). Generated code not analysed. False-positive corpus over the existing snippets.",
+   "acceptance_tests": [
+    "DUCKY001 verifier tests, reducer and projector arms (non-normative)",
+    "DUCKY002 verifier tests, reducer and projector arms (non-normative)",
+    "DUCKY003 verifier tests, reducer and projector arms (non-normative)",
+    "Purity_FalsePositiveCorpus_ZeroHits (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); AnalyzerReleases.Unshipped updated; docs/diagnostics pages."
+  },
+  {
+   "id": "M13-07",
+   "milestone": "M13",
+   "title": "Structural analyzers DUCKY005, 011, 012, 013, 014, 015",
+   "size": "M",
+   "depends_on": [
+    "M13-01"
+   ],
+   "area": "src/Ducky.Generators/Analyzers/Structural",
+   "invariants": [],
+   "scope": "Stage 7. 005 non-concrete T in On<T>/EffectGroup.On<T>/Effect<T> (the OfActionType<T> arm ships in M11-05); 011 `s with { }` in On<T>; 012 slice with [Persist] relying on the derived Key (the Persist<T>() arm ships in M13-04b); 013 ConcurrencyKey without value equality; 014 duplicate On<T>; 015 two slices share a TState.",
+   "acceptance_tests": [
+    "DUCKY005 verifier tests (non-normative)",
+    "DUCKY011 verifier tests (non-normative)",
+    "DUCKY012 verifier tests (non-normative)",
+    "DUCKY013 verifier tests (non-normative)",
+    "DUCKY014 verifier tests (non-normative)",
+    "DUCKY015 verifier tests (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-08",
+   "milestone": "M13",
+   "title": "Usage analyzers DUCKY004, 006, 008, 010, 016, 025",
+   "size": "M",
+   "depends_on": [
+    "M13-03"
+   ],
+   "area": "src/Ducky.Generators/Analyzers/Usage",
+   "invariants": [],
+   "scope": "Stage 7. 004 Singleton in a non-WASM web project (build_property options from Ducky.targets); 006 [DuckyAction]/state types outside the set of T for which the UseJson context type declares a JsonTypeInfo<T> property (union over Combine; a DiagnosticAnalyzer, since it must see STJ generator output); 008 IStore/IDispatcher injected into effect, effect-group or middleware constructors; 010 blocking on DispatchAsync/WhenIdleAsync/InitializeAsync (the SetAsync arm ships in M9-01c); 016 AddDucky without the assembly's own AddDuckyGenerated_{Asm}; 025 UseJson(JsonTypeInfoResolver.Combine(...)) where a combined context's [JsonSourceGenerationOptions] sets a non-default option (a named argument or JsonSerializerDefaults other than General), with the fix in the message.",
+   "acceptance_tests": [
+    "DUCKY004 verifier tests (non-normative)",
+    "DUCKY006 verifier tests (non-normative)",
+    "DUCKY008 verifier tests (non-normative)",
+    "DUCKY010 verifier tests (non-normative)",
+    "DUCKY016 verifier tests (non-normative)",
+    "DUCKY025 verifier tests (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-09",
+   "milestone": "M13",
+   "title": "DUCKY009 Select in markup/lifecycle",
+   "size": "S",
+   "depends_on": [
+    "M13-01",
+    "M5-05"
+   ],
+   "area": "src/Ducky.Generators/Analyzers/Razor",
+   "invariants": [
+    "INV-20"
+   ],
+   "scope": "Stage 10. ConfigureGeneratedCodeAnalysis(Analyze | ReportDiagnostics); flag Select in BuildRenderTree, OnParametersSet(Async), OnAfterRender(Async) and event handlers of DuckyComponent/DuckyLayout subclasses at the #line-mapped .razor location; tested with the real Razor source generator in the driver.",
+   "acceptance_tests": [
+    "DUCKY009 verifier tests with the Razor generator (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-10",
+   "milestone": "M13",
+   "title": "1.x tombstones DUCKYM001-M008",
+   "size": "S",
+   "depends_on": [
+    "M4-10",
+    "M0-02"
+   ],
+   "area": "src/Ducky/Migration, src/Ducky.Blazor/Migration",
+   "invariants": [],
+   "scope": "Stage 7. Member-less interfaces with error-level [Obsolete(DiagnosticId, UrlFormat)] and [EditorBrowsable(Never)] in their 1.x namespaces, rebuilt from the 1.0.292 public API (§22.1): M001 IState/IKeyedAction, M002 SliceReducers<TState>/ISlice<TState>, M003 AsyncEffect<TAction>/IAsyncEffect, M004 IReactiveEffect, M005 MemoizedSelector, M006 the Fsa records, M007 NormalizedState<TKey,TEntity,TState>, M008 DuckyLayout<TState>; dev-only types get none; no IMiddleware tombstone. PublicAPI entries; docs/diagnostics/DUCKYM00n.md; coverage reports nothing uncovered (S-2 shape).",
+   "acceptance_tests": [
+    "Tombstones_DeriveFromEach_ReportsDuckyM00n (non-normative, compilation test)",
+    "PackageSmoke Server consumer implementing Microsoft.AspNetCore.Http.IMiddleware stays unambiguous"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M13-11",
+   "milestone": "M13",
+   "title": "PackageSmoke generator assertions",
+   "size": "S",
+   "depends_on": [
+    "M13-02",
+    "M13-03",
+    "M13-08",
+    "M13-10"
+   ],
+   "area": "test/Ducky.PackageSmoke",
+   "invariants": [],
+   "scope": "Stage 7. The stage-7 PackageSmoke assertions (§17.9 is staged): the WASM and Server consumers call AddDuckyGenerated_PackageSmoke() and a generated dispatch helper; the Ducky.Blazor-only consumer compiles a generated helper and AddDuckyGenerated_* (generator and buildTransitive targets flow, R-PKG-5); its Singleton variant and the Server Singleton variant raise DUCKY004 under -warnaserror; adding Ducky.Generator raises DUCKY900.",
+   "acceptance_tests": [
+    "PackageSmoke: Blazor-only consumer compiles generated helpers",
+    "PackageSmoke: Server Singleton variant fails with DUCKY004",
+    "PackageSmoke: Blazor-only consumer + Ducky.Generator fails with DUCKY900"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M14-01",
+   "milestone": "M14",
+   "title": "Samples.Wasm",
+   "size": "M",
+   "depends_on": [
+    "M8-03",
+    "M7-02",
+    "M9-01",
+    "M13-04b"
+   ],
+   "area": "samples/Ducky.Samples.Wasm",
+   "invariants": [],
+   "scope": "Stage 18. Workload-free WASM standalone sample: todos with slices, effects, a SliceStore, generated registration, JsonSerializerContext, Persist Local + SyncAcrossTabs, Prerender-free, UseDevTools guarded by IsDevelopment; pages used by E2E and the trimmed smoke.",
+   "acceptance_tests": [
+    "Sample builds in Ducky.slnx with no workload",
+    "Purity_FalsePositiveCorpus_ZeroHits still green over the sample"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1) (samples are not coverage-gated; analyzers and warnings still apply)."
+  },
+  {
+   "id": "M14-02",
+   "milestone": "M14",
+   "title": "Samples.Server (+ .Client, Interactive Auto)",
+   "size": "M",
+   "depends_on": [
+    "M12-04",
+    "M8-03",
+    "M13-04b",
+    "M12-06",
+    "M12-03c"
+   ],
+   "area": "samples/Ducky.Samples.Server",
+   "invariants": [],
+   "scope": "Stage 18. Interactive Auto web app with shared .Client registration: Prerender slices loaded by effects, Local/Session/Server persistence (MemoryDistributedCache, KeyPrefix set, auth with a test login), cross-tab, DevTools, a DelegatingHandler page, large-slice and CJK pages for E2E. Includes a NameIdentifier-scoped Server-storage slice and a page that drops and restores the circuit connection.",
+   "acceptance_tests": [
+    "Sample builds and starts with the E2E host fixture (health endpoint)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M14-03",
+   "milestone": "M14",
+   "title": "E2E: persistence, prerender and circuit resume",
+   "size": "M",
+   "depends_on": [
+    "M14-01",
+    "M14-02"
+   ],
+   "area": "test/Ducky.E2E/Persistence",
+   "invariants": [
+    "INV-14",
+    "INV-15",
+    "INV-17",
+    "INV-23"
+   ],
+   "scope": "Stage 18. Playwright specs against both samples (stage 18), including the S-5 and S-7 regression twins.",
+   "acceptance_tests": [
+    "Persist_ReloadRestores_WasmAndServer",
+    "Persist_LargeSlice_OnServer_RoundTrips",
+    "Prerender_NoDoubleLoad_NetworkCalledOnce",
+    "Prerender_LargeSlice_InteractiveServer_CircuitStarts",
+    "Prerender_SeedJustUnderBudget_QuoteDenseAndCjk_InteractiveServer_CircuitStarts",
+    "Circuit_ResumeAfterDisconnect_PauseSeedWinsOverStaleLocalStorage",
+    "Circuit_Resume_SeedRestoresPrerenderSlices",
+    "Gate_Unknown_ProbeDetectsPrerender",
+    "Prerender_ServerAndWasmModesConfigured_SeedPersistedAndApplied",
+    "Circuit_ReconnectWithScopedSlices_NoResetFlicker"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M14-04",
+   "milestone": "M14",
+   "title": "E2E: cross-tab",
+   "size": "M",
+   "depends_on": [
+    "M14-01",
+    "M14-02"
+   ],
+   "area": "test/Ducky.E2E/CrossTab",
+   "invariants": [
+    "INV-18",
+    "INV-23"
+   ],
+   "scope": "Stage 18. Two-page and disconnect/resume scenarios.",
+   "acceptance_tests": [
+    "CrossTab_TwoPages_ChangeInAAppearsInB",
+    "CrossTab_SubscriberThatRedispatches_ConvergesWithinNWrites",
+    "CrossTab_ListenerRegisteredOnceAcrossReinit",
+    "CrossTab_ClearFromOtherScript_ResetsSyncedSlices",
+    "CrossTab_ClearPersistedStateInOtherTab_ResetsSlice",
+    "CrossTab_LargeValue_ReadViaStream",
+    "CrossTab_NonAsciiValueUnderCharLimitOverByteLimit_UsesStream",
+    "CrossTab_EventDuringCircuitDisconnect_ConvergesAfterReconnect",
+    "CrossTab_CircuitResumed_OldListenerRemoved",
+    "CrossTab_TooLargeKeyRemovedBeforePull_RealRuntime_ResetsSlice"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M14-05",
+   "milestone": "M14",
+   "title": "E2E: Interactive Auto, store identity and DevTools",
+   "size": "M",
+   "depends_on": [
+    "M14-02"
+   ],
+   "area": "test/Ducky.E2E/Auto",
+   "invariants": [
+    "INV-17",
+    "INV-18",
+    "INV-22",
+    "INV-28"
+   ],
+   "scope": "Stage 18. Circuit and WASM stores in one document, shared registration, handler-scope dispatch, user switch, fake extension.",
+   "acceptance_tests": [
+    "Auto_ServerAndWasmStoresInOneDocument_Converge",
+    "Auto_SessionAndUnsyncedLocalSlices_ConvergeInOneDocument",
+    "Auto_ClearInCircuitStore_ResetsWasmStore",
+    "Auto_SharedServerPersistRegistration_WasmStartsAndSkipsServerSlices",
+    "CrossTab_CircuitAndWasmStoresInSamePage_IndependentListeners",
+    "Wasm_DelegatingHandlerDispatch_ReachesUiStore",
+    "Wasm_UserChange_ScopedBrowserKeysMoveToNewScope",
+    "DevTools_FakeExtension_ReceivesSanitizedPayloads"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M14-06",
+   "milestone": "M14",
+   "title": "Trimmed AOT-WASM smoke",
+   "size": "S",
+   "depends_on": [
+    "M14-01",
+    "M0-08",
+    "M11-04"
+   ],
+   "area": "build/Build.Aot.cs, test/Ducky.E2E/Aot",
+   "invariants": [
+    "INV-24"
+   ],
+   "scope": "Stage 18. AotSmoke target from stage 18: publish Samples.Wasm with -p:RunAOTCompilation=true -p:TrimMode=full -p:RestoreLockedMode=false -o artifacts/wasm-trimmed, install Playwright Chromium, run Ducky.E2E with --filter-method \"*.WasmTrimmedSmoke\", DUCKY_REQUIRE_TRIMMED_PUBLISH=1 and DUCKY_TRIMMED_PUBLISH_DIR; the fixture skips only when DUCKY_REQUIRE_TRIMMED_PUBLISH is unset; the target parses the TRX and fails unless exactly one test ran and passed with zero skipped. The test injects a fake __REDUX_DEVTOOLS_EXTENSION__: a non-empty todos/added payload, a persisted slice that survives a reload, a Trace stack (possibly <unknown> frames).",
+   "acceptance_tests": [
+    "WasmTrimmedSmoke",
+    "Planted check: a publish written to another directory fails WasmTrimmedSmoke in the aot job instead of skipping it"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1); aot job green."
+  },
+  {
+   "id": "M15-01",
+   "milestone": "M15",
+   "title": "Docs infrastructure",
+   "size": "M",
+   "depends_on": [
+    "M9-05",
+    "M0-11"
+   ],
+   "area": "docs/docfx.json, test/Ducky.Docs.Tests, build/Build.Gates.cs#Docs, .github/workflows/docs.yml",
+   "invariants": [],
+   "scope": "Stage 18. docfx.json; Ducky.Docs.Tests replaces its skeleton region test (every snippet is a #region of a compiled, tested file); Ducky.Migration.slnx scaffold with per-guide Before/After projects whose docs/migration/samples/Directory.Build.props imports the root props and sets ManagePackageVersionsCentrally=false, RestoreLockedMode=false and NuGetAudit=false; full Docs target (builds Ducky.Migration.slnx without a lock file, fence check, docfx to artifacts/docs); hand-written docs.yml (on release: Docs + Pages with the WASM sample).",
+   "acceptance_tests": [
+    "Docs target builds docfx with a region include from Ducky.Docs.Tests",
+    "Planted check: a fenced csharp block fails Docs"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). Deletes the Ducky.Docs.Tests Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1)."
+  },
+  {
+   "id": "M15-02",
+   "milestone": "M15",
+   "title": "Core guides and threading.md",
+   "size": "M",
+   "depends_on": [
+    "M15-01"
+   ],
+   "area": "docs/guides/core, docs/threading.md, test/Ducky.Docs.Tests/Core",
+   "invariants": [],
+   "scope": "Stage 18. Getting started (direct Ducky PackageReference rule, R-PKG-5), slices and keys, effects and policies, selectors, SliceStore, EntityState, testing with Ducky.Testing, threading.md with the §7 text verbatim and the liveness ceilings.",
+   "acceptance_tests": [
+    "Every guide snippet is a compiled, tested region (Docs target green)",
+    "ThreadingDoc_MatchesIDispatcherXmlDocs (non-normative)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M15-03",
+   "milestone": "M15",
+   "title": "Blazor, Reactive and Draft guides",
+   "size": "M",
+   "depends_on": [
+    "M15-01",
+    "M14-02"
+   ],
+   "area": "docs/guides/blazor, test/Ducky.Docs.Tests/Blazor",
+   "invariants": [],
+   "scope": "Stage 18. Render-mode matrix and the one load-effect rule, persistence (browser and server, scopes, ceilings), prerender (seed budget, Effect<T> rule), cross-tab, DevTools (IsDevelopment guard), Reactive recipes (debounced search, polling, GroupByUntil), Draft usage.",
+   "acceptance_tests": [
+    "Every guide snippet is a compiled, tested region (Docs target green)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M15-04",
+   "milestone": "M15",
+   "title": "Diagnostics catalogue completeness",
+   "size": "S",
+   "depends_on": [
+    "M15-01",
+    "M13-06",
+    "M13-07",
+    "M13-08",
+    "M13-09",
+    "M13-10",
+    "M10-07",
+    "M13-04b",
+    "M11-05",
+    "M10-07b",
+    "M9-01c",
+    "M9-04c"
+   ],
+   "area": "docs/diagnostics",
+   "invariants": [],
+   "scope": "Stage 18. Every DUCKY/DUCKYM ID has a page whose bad-example snippets are regions over the analyzer verifier tests' raw strings; HelpLinkUri of every descriptor points to its page; rerun the DUCKY001-003 false-positive corpus over all docs snippets. Adds the Docs check that fails when an ID of §8.2 or §16.2 (DUCKY001-025, DUCKY101-109, DUCKY300-353, DUCKY900-902, DUCKYM001-M008) has no docs/diagnostics/{ID}.md.",
+   "acceptance_tests": [
+    "EveryDiagnostic_HasDocsPageAndHelpLink (non-normative)",
+    "Purity_FalsePositiveCorpus_ZeroHits (non-normative)",
+    "Planted check: deleting docs/diagnostics/DUCKY025.md fails Docs"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M15-05",
+   "milestone": "M15",
+   "title": "Migration guide: Ducky 1.x",
+   "size": "M",
+   "depends_on": [
+    "M15-01",
+    "M13-10"
+   ],
+   "area": "docs/migration/ducky-1x.md, docs/migration/samples/ducky-1x",
+   "invariants": [],
+   "scope": "Stage 18. Mapping table, behaviour changes each with a test, checklist (§22.1; step 3 adds a possibly empty context passed with UseJson(AppJson.Default)), compiled Before (Ducky 1.x from nuget.org) and After projects. Rows for DuckyComponent.Dispatcher.X(), GetSliceState<T>/GetSlice<T>/GetSliceByKey/TryGetSlice/GetSliceKeys, OnAfterSubscribed(), StateChanged, AddDucky(IConfiguration, …)/AddDuckyCore/DuckyOptions, ActionStream/LastAction and Ducky.Blazor.Router (no equivalent). Commits docs/migration/ducky-1x-api.txt (the 1.0.292 public types) and adds the Docs check that fails on a listed type with neither a tombstone nor a mapping row.",
+   "acceptance_tests": [
+    "Ducky.Migration.slnx builds the ducky-1x Before and After samples",
+    "After sample tests pass",
+    "Planted check: removing the mapping row of a listed 1.x type fails Docs"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M15-06",
+   "milestone": "M15",
+   "title": "Migration guides: Bustand, TheBlazorState, BlazorMVU",
+   "size": "M",
+   "depends_on": [
+    "M15-01"
+   ],
+   "area": "docs/migration/{bustand,theblazorstate,blazormvu}",
+   "invariants": [],
+   "scope": "Stage 18. §22.2 as a table (SetAsync(Func) => SetAsync(Func), SetAsync(TState) => SetAsync(_ => value), an I/O-awaiting store method => an effect; rows for Subscribe/Subscribe<TSlice>/StateChanged, IsInitialized, OnStateChanged, IMiddleware/IAsyncMiddleware, ZustandComponentScoped/ZustandScope and IStore<TState>); the UserStore sample declares SetUserAsync wrapping SetAsync, loaded by an Effect<StoreInitialized>. §22.3-22.4 with compiled before/after samples.",
+   "acceptance_tests": [
+    "Ducky.Migration.slnx builds the three Before/After pairs"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M15-07",
+   "milestone": "M15",
+   "title": "Migration guides: Mutty, DuckyNext, blazor-state",
+   "size": "S",
+   "depends_on": [
+    "M15-01",
+    "M10-07",
+    "M10-07b"
+   ],
+   "area": "docs/migration/{mutty,duckynext,blazor-state}",
+   "invariants": [],
+   "scope": "Stage 18. §13.4 and §22.5-22.6; the Mutty guide states the net10.0 requirement and the unmaintained last Mutty. The Produce row reads 'unchanged for scalar and nested-record edits; collection edits per the rows below', with rows for List<T>/List<MutableT> members, IReadOnlyList<T>/IReadOnlyCollection<T>, queue/stack/sorted-dictionary members (DUCKY109) and record struct (DUCKY101); the sample includes a Find-based recipe and a queue member.",
+   "acceptance_tests": [
+    "Ducky.Migration.slnx builds the Mutty Before/After pair"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M16-01",
+   "milestone": "M16",
+   "title": "Nightly audit and benchmarks",
+   "size": "M",
+   "depends_on": [
+    "M4-10",
+    "M0-11"
+   ],
+   "area": "benchmarks/, build/Build.Audit.cs, .github/workflows/nightly-audit.yml",
+   "invariants": [],
+   "scope": "Stage 19. Audit target (dotnet restore Ducky.slnx -p:NuGetAudit=true -p:NuGetAuditMode=all with NU1901-NU1904 as errors, <NuGetAuditSuppress> items only, never over Ducky.Migration.slnx), benchmarks/Ducky.Benchmarks with committed baseline and Benchmarks target (report only), nightly-audit workflow via Build.CI.cs.",
+   "acceptance_tests": [
+    "VerifyWorkflows green with nightly-audit",
+    "Audit fails on a planted vulnerable package"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M16-02",
+   "milestone": "M16",
+   "title": "Mutation budget (S-9) and score to >= 90",
+   "size": "M",
+   "depends_on": [
+    "M13-11",
+    "M12-05",
+    "M11-04",
+    "M10-07",
+    "M14-03",
+    "M14-04",
+    "M14-05",
+    "M11-05",
+    "M13-04b",
+    "M10-07b"
+   ],
+   "area": "src/*/stryker-config.json, build/Build.CI.cs",
+   "invariants": [],
+   "scope": "Stage 19. Final S-9 measurement of the full run on ubuntu-latest; set nightly-mutation/release-mutation timeout-minutes with 30% headroom under 360 or split the nightly per project (Mutation --project); kill surviving mutants with tests, not disables, until every project is >= 90; systematic survivors per §17.8 (the S-6 ConfigureAwait answer, Descriptors_MatchCatalogue for descriptor strings).",
+   "acceptance_tests": [
+    "Nightly Mutation: every project >= 90",
+    "S-9 recorded in docs/spec/spikes.md"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M16-03",
+   "milestone": "M16",
+   "title": "Release pipeline",
+   "size": "M",
+   "depends_on": [
+    "M0-11"
+   ],
+   "area": "build/Build.Release.cs, .github/workflows/release.yml, cliff.toml",
+   "invariants": [],
+   "scope": "Stage 19. Targets Changelog (git-cliff, --release-version via the ReleaseVersion parameter), Publish (no DependsOn, ordered after the gates; Pack's exact-set check on the downloaded packages; v* tag; git merge-base --is-ancestor against origin/$ReleaseBranch; dotnet nuget push artifacts/packages/*.nupkg and .snupkg with --source https://api.nuget.org/v3/index.json --api-key $NUGET_API_KEY --skip-duplicate; the tombstone push only for the exact v2.0.0 tag), GitHubRelease (gh with GH_TOKEN, prerelease flag), ReleaseGates (Ci, E2E, AotSmoke; SpecTraceGate --strict for -rc.N and GA tags; uploads artifacts/packages and artifacts/tombstone), MutationForSha (passes on a successful nightly-mutation run for the SHA, else runs Mutation, --strict at rc/GA; fails, never falls back, when the query errors), Release (local). Hand-written release.yml with three jobs: release-gates, release-mutation (contents: read, actions: read, issues: write) and publish (environment nuget with approval, NuGet/login trusted publishing, pinned git-cliff, `./build.sh Publish GitHubRelease` without --skip); fetch-depth: 0 on every job. Can be scheduled early to publish milestone alphas of the active stage.",
+   "acceptance_tests": [
+    "Tag v2.0.0-alpha.1 publishes prerelease packages after approval, without the tombstone",
+    "Publish refuses a tag not reachable from origin/$ReleaseBranch",
+    "Planted check: a failing gh query makes MutationForSha fail instead of starting a full run"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M16-04",
+   "milestone": "M16",
+   "title": "Spec closure",
+   "size": "S",
+   "depends_on": [
+    "M16-02",
+    "M15-04",
+    "M1-14",
+    "M2-07",
+    "M2-09",
+    "M3-02",
+    "M3-04",
+    "M4-04",
+    "M6-09",
+    "M7-02b",
+    "M7-03",
+    "M8-03b",
+    "M9-01b",
+    "M9-02",
+    "M9-04b",
+    "M11-01b",
+    "M11-02b",
+    "M11-03",
+    "M12-07",
+    "M13-05",
+    "M14-06",
+    "M15-06",
+    "M15-07"
+   ],
+   "area": "docs/spec/tests.yaml, build/Build.SpecTrace.cs",
+   "invariants": [],
+   "scope": "Stage 19. activeStage reaches 19 (P1): every manifest entry active, SpecTraceGate --strict green over all 32 invariants, Mutation --strict green on all seven projects; public API diff reviewed against §5, §11.1, §12-15.",
+   "acceptance_tests": [
+    "SpecTraceGate --strict green with activeStage 19",
+    "Planted check: an entry with a stage above activeStage fails --strict",
+    "Ci green with every manifest test active"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
+   "id": "M16-05",
+   "milestone": "M16",
+   "title": "v2.0.0-rc.1 and consumer migrations",
+   "size": "M",
+   "depends_on": [
+    "M16-03",
+    "M16-04",
+    "M15-05",
+    "M15-02",
+    "M15-03"
+   ],
+   "area": "release (no repo code)",
+   "invariants": [],
+   "scope": "Stage 19. Tag v2.0.0-rc.1; migrate NeoSocial (Ducky 1.0.291 / Ducky.Blazor 1.0.292) and BlazorProtectedStorage (1.0.224) with the guide against the rc packages; record time in the guide; file issues for gaps.",
+   "acceptance_tests": [
+    "NeoSocial tests pass on rc packages",
+    "BlazorProtectedStorage tests pass on rc packages"
+   ],
+   "done_definition": "RC accepted; follow-up issues filed and triaged."
+  },
+  {
+   "id": "M16-06",
+   "milestone": "M16",
+   "title": "GA runbook",
+   "size": "S",
+   "depends_on": [
+    "M16-05"
+   ],
+   "area": "docs/release.md",
+   "invariants": [],
+   "scope": "Stage 19. Release PR (ShipPublicApi, Changelog, no baseline), tag v2.0.0, SetBaseline PR after the push, rename main to release/1.x and v2 to main, protect-branch.sh for main, nuget.org deprecations (Ducky 1.x, Ducky.Generator, Mutty) and repo retirements (§21).",
+   "acceptance_tests": [
+    "Runbook dry-run checklist reviewed by the owner"
+   ],
+   "done_definition": "Owner executes at GA."
+  }
+ ]
+}

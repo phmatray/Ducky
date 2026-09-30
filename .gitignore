@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+StrykerOutput/
+coverage*/
+*.trx
+*.coverage
+*.cobertura.xml
+
+# Tooling and IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+.DS_Store
+
+# Node (E2E harness, Playwright)
+node_modules/
+playwright-report/

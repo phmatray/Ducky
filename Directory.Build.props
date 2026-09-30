@@ -1,0 +1,46 @@
+<Project>
+  <!-- Repository-wide defaults (SPEC §18). Kind-specific analyzers and ban lists live in Directory.Build.targets. -->
+
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <DuckyIsSrcProject>$(MSBuildProjectDirectory.StartsWith('$(RepoRoot)src$([System.IO.Path]::DirectorySeparatorChar)'))</DuckyIsSrcProject>
+    <DuckyIsTestProject>$(MSBuildProjectDirectory.StartsWith('$(RepoRoot)test$([System.IO.Path]::DirectorySeparatorChar)'))</DuckyIsTestProject>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- NuGetAudit advisories never fail PR builds; only the nightly Audit target enforces them (SPEC §17.1). -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Deterministic>true</Deterministic>
+    <!-- R-PKG-6: only the six shipping projects opt back in. -->
+    <IsPackable>false</IsPackable>
+    <!-- Anchored: a relative path would resolve per project, into src/<Project>/artifacts/. -->
+    <PackageOutputPath>$(RepoRoot)artifacts/packages/</PackageOutputPath>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(CI)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <RestoreLockedMode>true</RestoreLockedMode>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DuckyIsSrcProject)' == 'true'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- src/ and test/ are signed alike, so friend assemblies (R-PKG-2) never hit CS1726. -->
+  <PropertyGroup Condition="'$(DuckyIsSrcProject)' == 'true' or '$(DuckyIsTestProject)' == 'true'">
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(RepoRoot)ducky.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Full public key of ducky.snk, for <InternalsVisibleTo Include="X" Key="$(DuckyPublicKey)" />. -->
+    <DuckyPublicKey>0024000004800000940000000602000000240000525341310004000001000100859dbfcae1c04735cd362e81b6902192d1d6c8ed0b0b1a475ff5fd5a96e6f4cdf5483dcf92c5a88fca24c5184bc0fe470ac76c0c80da574a3d84f33c4fad0dd89b9bedc533e030fbc5fd52616c96341e99e10dd30695c427c293bdc4042027b01c8f3ecb2242e868ab50e88a43b8e1b2e7a50df3c1cc075ea5f1b0b98264f9ca</DuckyPublicKey>
+  </PropertyGroup>
+</Project>
