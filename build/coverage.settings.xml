@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The one coverage settings file (SPEC §17.1), passed by the Test target as dotnet test coverage-settings.
+  Its only exclusion is generated source by path; the tool's defaults stay as spike S-2 recorded them
+  (docs/spec/spikes.md). ExclusionGate fails on any other element or attribute.
+-->
+<Configuration>
+  <CodeCoverage>
+    <Sources>
+      <Exclude>
+        <Source>.*\.g\.cs$</Source>
+      </Exclude>
+    </Sources>
+  </CodeCoverage>
+</Configuration>

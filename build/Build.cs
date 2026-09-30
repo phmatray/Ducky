@@ -49,9 +49,10 @@ internal sealed partial class Build : FalloutBuild, IHasSolution, IConfigureGitH
         .DependsOn(Restore)
         .Executes(() => DotNet($"build {Solution} -c Release --no-restore"));
 
-    // Grows with the gates of later stories (CoverageGate, SpecTraceGate, PackageSmoke, VerifyWorkflows, Docs).
+    // Grows with the gates of later stories (SpecTraceGate, PackageSmoke, VerifyWorkflows, Docs); Test runs through
+    // CoverageGate.
     private Target Ci => _ => _
-        .DependsOn(Format, ExclusionGate, Test, ConcurrencyTest);
+        .DependsOn(Format, ExclusionGate, CoverageGate, ConcurrencyTest);
 
     // Workflow steps arrive with the generated workflows (M0-11).
     public void ConfigureSteps(GitHubActionsStepPipeline pipeline)

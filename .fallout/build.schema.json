@@ -28,6 +28,7 @@
         "Clean",
         "Compile",
         "ConcurrencyTest",
+        "CoverageGate",
         "ExclusionGate",
         "Format",
         "Restore",

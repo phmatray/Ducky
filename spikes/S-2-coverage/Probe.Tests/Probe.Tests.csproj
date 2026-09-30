@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <!-- test/** relaxes CA1707 in .editorconfig; spikes/ is outside it. -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Probe/Probe.csproj" />
+    <ProjectReference Include="../Probe.Empty/Probe.Empty.csproj" />
+    <ProjectReference Include="../Probe.Generator/Probe.Generator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The pinned versions of Directory.Packages.props, as the covered test projects use them. -->
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

@@ -143,8 +143,9 @@ P:System.DateTimeOffset.UtcNow;Use TimeProvider
 M:System.Diagnostics.StackFrame.GetMethod;Use DiagnosticMethodInfo.Create(StackFrame)
 // Microsoft code coverage also skips [DebuggerNonUserCode], [DebuggerHidden] and [CompilerGenerated] code by default,
 // so those are coverage exclusions too. [GeneratedCode] cannot be banned here (STJ source-generator output carries it,
-// RS0030 would fire on it); M0-03's ExclusionGate text-checks it instead: no GeneratedCode attribute in a src/ file that
-// is not *.g.cs, and no committed *.g.cs under src/ (the coverage settings exclude **/*.g.cs by path).
+// RS0030 would fire on it); ExclusionGate checks it instead: no [GeneratedCode] type or method of a src/ Release assembly
+// with code outside *.g.cs (read from metadata), and no committed *.g.cs under src/ (the coverage settings exclude
+// **/*.g.cs by path).
 T:System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute;No coverage exclusions (ADR-0037)
 T:System.Diagnostics.DebuggerNonUserCodeAttribute;No coverage exclusions (ADR-0037)
 T:System.Diagnostics.DebuggerHiddenAttribute;No coverage exclusions (ADR-0037)

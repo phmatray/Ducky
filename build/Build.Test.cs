@@ -41,7 +41,7 @@ internal partial class Build
                 ["DUCKY_PROPERTY_SEEDS"] = "1",
                 ["CsCheck_Threads"] = "1",
             };
-            DotNet($"test --solution {TestFilter} -c Release --no-build --coverage --coverage-output-format cobertura --report-trx --results-directory {Artifacts / "test"}",
+            DotNet($"test --solution {TestFilter} -c Release --no-build --coverage --coverage-output-format cobertura --coverage-settings {CoverageSettings} --report-trx --results-directory {Artifacts / "test"}",
                 environmentVariables: environment);
         });
 
