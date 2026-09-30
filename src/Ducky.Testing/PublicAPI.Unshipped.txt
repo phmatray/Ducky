@@ -1,0 +1,3 @@
+#nullable enable
+Ducky.Testing.DuckyAssertionException
+Ducky.Testing.DuckyAssertionException.DuckyAssertionException() -> void

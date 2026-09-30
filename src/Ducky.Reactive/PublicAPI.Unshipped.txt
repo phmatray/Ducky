@@ -1,0 +1,3 @@
+#nullable enable
+Ducky.Reactive.DuckyReactiveExtensions
+static Ducky.Reactive.DuckyReactiveExtensions.OfActionType<TAction>(this R3.Observable<object!>! actions) -> R3.Observable<TAction>!

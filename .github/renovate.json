@@ -1,6 +1,16 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Directory.Build.targets pins the implicit Microsoft.NET.ILLink.Tasks (KnownILLinkPack ILLinkPackVersion), so the lock files do not depend on the SDK patch. After a bump, regenerate every packages.lock.json (dotnet restore --force-evaluate).",
+      "managerFilePatterns": ["/^Directory\\.Build\\.targets$/"],
+      "matchStrings": ["<KnownILLinkPack [^>]*ILLinkPackVersion=\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "Microsoft.NET.ILLink.Tasks",
+      "datasourceTemplate": "nuget"
+    }
+  ],
   "packageRules": [
     {
       "description": "S-1 (R-PKG-3, ADR-0003): Microsoft.CodeAnalysis.CSharp 5.0.0 is the Roslyn of SDK 10.0.100, the generator floor, and global.json pins that SDK. Never update either.",
@@ -22,6 +32,12 @@
       "description": "These analyzers load into the repo's own compiler, and the repo must build on SDK 10.0.100 (Roslyn 5.0.0; global.json, M0-01): a release built against a newer Roslyn fails every 10.0.100 build with CS9057, which CI on a newer SDK (rollForward latestFeature) does not see. Before merging, build the repo with exactly SDK 10.0.100 (the spikes/S-1-roslyn-floor/README.md side-by-side install and a global.json with rollForward disable).",
       "matchPackageNames": ["Microsoft.CodeAnalysis.BannedApiAnalyzers", "Microsoft.CodeAnalysis.PublicApiAnalyzers", "Microsoft.VisualStudio.Threading.Analyzers"],
       "dependencyDashboardApproval": true
+    },
+    {
+      "description": "The ILLink pack stays on the 10.0 line of the net10.0 target (Directory.Build.targets).",
+      "matchPackageNames": ["Microsoft.NET.ILLink.Tasks"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
     }
   ]
 }

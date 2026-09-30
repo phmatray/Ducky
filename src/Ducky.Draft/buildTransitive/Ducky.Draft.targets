@@ -1,0 +1,7 @@
+<Project>
+  <Target Name="_DuckyDraftWarnMutty" BeforeTargets="CoreCompile"
+          Condition="'@(PackageReference->WithMetadataValue('Identity','Mutty'))' != ''">
+    <Warning Code="DUCKY901"
+             Text="Mutty is replaced by Ducky.Draft. Remove the Mutty PackageReference. https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY901.md" />
+  </Target>
+</Project>

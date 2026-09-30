@@ -1,0 +1,22 @@
+<Project>
+  <ItemGroup>                                                     <!-- read by DUCKY004 -->
+    <CompilerVisibleProperty Include="UsingMicrosoftNETSdkWeb" />
+    <CompilerVisibleProperty Include="UsingMicrosoftNETSdkBlazorWebAssembly" />
+  </ItemGroup>
+  <Target Name="_DuckyRejectLegacyGenerator" BeforeTargets="CoreCompile"
+          Condition="'@(PackageReference->WithMetadataValue('Identity','Ducky.Generator'))' != ''">
+    <Error Code="DUCKY900"
+           Text="Ducky.Generator is deprecated: the generator ships inside Ducky 2.x. Remove the Ducky.Generator PackageReference. https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY900.md" />
+  </Target>
+  <!-- Ducky.Blazor 1.x declares Ducky >= 1.x, so Ducky 2 satisfies it and it fails at run time (TypeLoadException).
+       1.x shipped only Ducky, Ducky.Blazor and Ducky.Generator: there is no 1.x Ducky.Reactive or Ducky.Testing to reject -->
+  <Target Name="_DuckyRejectSkewedCompanions" AfterTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <_DuckySkewed Include="@(RuntimeCopyLocalItems);@(ResolvedCompileFileDefinitions)"
+          Condition="'%(NuGetPackageId)' == 'Ducky.Blazor'
+                     and $([System.Version]::Parse($([System.String]::Copy('%(NuGetPackageVersion)').Split('-')[0])).Major) &lt; 2" />
+    </ItemGroup>
+    <Error Code="DUCKY902" Condition="'@(_DuckySkewed)' != ''"
+           Text="@(_DuckySkewed->'%(NuGetPackageId) %(NuGetPackageVersion)'->Distinct()) is a 1.x package and can't run on Ducky 2.x. Update it to 2.x. https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY902.md" />
+  </Target>
+</Project>

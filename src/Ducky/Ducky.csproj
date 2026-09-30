@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Ducky</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ducky.Tests" Key="$(DuckyPublicKey)" />
+    <InternalsVisibleTo Include="Ducky.Concurrency.Tests" Key="$(DuckyPublicKey)" />
+  </ItemGroup>
+
+  <!-- The generators ship inside the Ducky package (SPEC §3), never as a dependency. -->
+  <ItemGroup>
+    <ProjectReference Include="../Ducky.Generators/Ducky.Generators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <None Include="../Ducky.Generators/bin/$(Configuration)/netstandard2.0/Ducky.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="buildTransitive/Ducky.targets" Pack="true" PackagePath="buildTransitive" />
+  </ItemGroup>
+</Project>

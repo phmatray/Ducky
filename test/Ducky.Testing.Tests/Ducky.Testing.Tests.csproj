@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ducky.Testing/Ducky.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="CsCheck" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../Shared/Property.cs" Link="Shared/Property.cs" />
+    <Compile Include="../Shared/StaticFieldAudit.cs" Link="Shared/StaticFieldAudit.cs" />
+    <None Include="../../build/property-seeds.txt" Link="property-seeds.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

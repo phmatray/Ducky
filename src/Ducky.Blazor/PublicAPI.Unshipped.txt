@@ -1,0 +1,17 @@
+#nullable enable
+Ducky.Blazor.PersistenceFailed
+Ducky.Blazor.PersistenceFailed.<Clone>$() -> Ducky.Blazor.PersistenceFailed!
+Ducky.Blazor.PersistenceFailed.Deconstruct(out string! SliceKey, out string! ErrorType, out string! Message) -> void
+Ducky.Blazor.PersistenceFailed.Equals(Ducky.Blazor.PersistenceFailed? other) -> bool
+Ducky.Blazor.PersistenceFailed.ErrorType.get -> string!
+Ducky.Blazor.PersistenceFailed.ErrorType.init -> void
+Ducky.Blazor.PersistenceFailed.Message.get -> string!
+Ducky.Blazor.PersistenceFailed.Message.init -> void
+Ducky.Blazor.PersistenceFailed.PersistenceFailed(string! SliceKey, string! ErrorType, string! Message) -> void
+Ducky.Blazor.PersistenceFailed.SliceKey.get -> string!
+Ducky.Blazor.PersistenceFailed.SliceKey.init -> void
+override Ducky.Blazor.PersistenceFailed.Equals(object? obj) -> bool
+override Ducky.Blazor.PersistenceFailed.GetHashCode() -> int
+override Ducky.Blazor.PersistenceFailed.ToString() -> string!
+static Ducky.Blazor.PersistenceFailed.operator !=(Ducky.Blazor.PersistenceFailed? left, Ducky.Blazor.PersistenceFailed? right) -> bool
+static Ducky.Blazor.PersistenceFailed.operator ==(Ducky.Blazor.PersistenceFailed? left, Ducky.Blazor.PersistenceFailed? right) -> bool

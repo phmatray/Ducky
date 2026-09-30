@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Playwright specs (SPEC §17.6); outside Ducky.Tests.slnf and the coverage run. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="Microsoft.Playwright" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="harness/**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Ducky.Blazor/wwwroot/ducky.js" Link="harness/ducky.js" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

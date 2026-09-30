@@ -17,6 +17,13 @@
     <AdditionalFiles Include="$(RepoRoot)test/BannedSymbols.covered.txt" Condition="'$(MSBuildProjectName)' != 'Ducky.Concurrency.Tests'" />
   </ItemGroup>
 
+  <!-- IsAotCompatible adds an implicit Microsoft.NET.ILLink.Tasks reference at the running SDK's runtime patch, and the
+       lock files record it: without a pin, locked restore (CI=true) fails with NU1004 on any other 10.0.x SDK. Renovate
+       bumps the value (.github/renovate.json); regenerate the lock files with it. -->
+  <ItemGroup>
+    <KnownILLinkPack Update="@(KnownILLinkPack)" ILLinkPackVersion="10.0.12" />
+  </ItemGroup>
+
   <!-- In-repo generator consumers: generator assets never flow through a ProjectReference (R-PKG-5, §18). -->
   <ItemGroup Condition="'$(DuckyUseGenerators)' == 'true'">
     <ProjectReference Include="$(RepoRoot)src/Ducky.Generators/Ducky.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />

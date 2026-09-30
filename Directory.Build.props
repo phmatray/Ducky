@@ -33,7 +33,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <!-- src/ and test/ are signed alike, so friend assemblies (R-PKG-2) never hit CS1726. -->
+  <!-- src/ and test/ are signed alike, so friend assemblies (R-PKG-2) never hit CS1726.
+       CS8002 list (M0-02): empty; the SDK suppresses CS8002 for .NETCoreApp targets (NoWarn inside CoreCompile), the
+       netstandard2.0 generators reference only strong-named Roslyn. Never add a global NoWarn for it (SPEC §18). -->
   <PropertyGroup Condition="'$(DuckyIsSrcProject)' == 'true' or '$(DuckyIsTestProject)' == 'true'">
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(RepoRoot)ducky.snk</AssemblyOriginatorKeyFile>

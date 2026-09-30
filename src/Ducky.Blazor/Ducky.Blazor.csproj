@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- Razor SDK: only it turns wwwroot/ducky.js into the static web asset _content/Ducky.Blazor/ducky.js (SPEC §3). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ducky.Blazor.Tests" Key="$(DuckyPublicKey)" />
+    <InternalsVisibleTo Include="Ducky.Concurrency.Tests" Key="$(DuckyPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- PrivateAssets="none": the Ducky dependency keeps its generator and buildTransitive assets (R-PKG-5). -->
+    <ProjectReference Include="../Ducky/Ducky.csproj" PrivateAssets="none" />
+  </ItemGroup>
+</Project>

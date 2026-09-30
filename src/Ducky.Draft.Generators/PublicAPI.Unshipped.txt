@@ -1,0 +1,4 @@
+#nullable enable
+Ducky.Draft.Generators.DraftGenerator
+Ducky.Draft.Generators.DraftGenerator.DraftGenerator() -> void
+Ducky.Draft.Generators.DraftGenerator.Initialize(Microsoft.CodeAnalysis.IncrementalGeneratorInitializationContext context) -> void

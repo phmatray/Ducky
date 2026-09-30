@@ -1,0 +1,15 @@
+{
+  "solution": {
+    "path": "Ducky.slnx",
+    "projects": [
+      "test/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj",
+      "test/Ducky.Docs.Tests/Ducky.Docs.Tests.csproj",
+      "test/Ducky.Draft.Generators.Tests/Ducky.Draft.Generators.Tests.csproj",
+      "test/Ducky.Draft.Tests/Ducky.Draft.Tests.csproj",
+      "test/Ducky.Generators.Tests/Ducky.Generators.Tests.csproj",
+      "test/Ducky.Reactive.Tests/Ducky.Reactive.Tests.csproj",
+      "test/Ducky.Testing.Tests/Ducky.Testing.Tests.csproj",
+      "test/Ducky.Tests/Ducky.Tests.csproj"
+    ]
+  }
+}

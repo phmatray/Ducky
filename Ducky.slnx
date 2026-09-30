@@ -1,2 +1,24 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Ducky/Ducky.csproj" />
+    <Project Path="src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <Project Path="src/Ducky.Draft/Ducky.Draft.csproj" />
+    <Project Path="src/Ducky.Draft.Generators/Ducky.Draft.Generators.csproj" />
+    <Project Path="src/Ducky.Generator.Tombstone/Ducky.Generator.Tombstone.csproj" />
+    <Project Path="src/Ducky.Generators/Ducky.Generators.csproj" />
+    <Project Path="src/Ducky.Reactive/Ducky.Reactive.csproj" />
+    <Project Path="src/Ducky.Testing/Ducky.Testing.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj" />
+    <Project Path="test/Ducky.Concurrency.Tests/Ducky.Concurrency.Tests.csproj" />
+    <Project Path="test/Ducky.Docs.Tests/Ducky.Docs.Tests.csproj" />
+    <Project Path="test/Ducky.Draft.Generators.Tests/Ducky.Draft.Generators.Tests.csproj" />
+    <Project Path="test/Ducky.Draft.Tests/Ducky.Draft.Tests.csproj" />
+    <Project Path="test/Ducky.E2E/Ducky.E2E.csproj" />
+    <Project Path="test/Ducky.Generators.Tests/Ducky.Generators.Tests.csproj" />
+    <Project Path="test/Ducky.Reactive.Tests/Ducky.Reactive.Tests.csproj" />
+    <Project Path="test/Ducky.Testing.Tests/Ducky.Testing.Tests.csproj" />
+    <Project Path="test/Ducky.Tests/Ducky.Tests.csproj" />
+  </Folder>
 </Solution>

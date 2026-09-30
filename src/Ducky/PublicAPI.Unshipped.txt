@@ -1,0 +1,4 @@
+#nullable enable
+Ducky.ActionTypeAttribute
+Ducky.ActionTypeAttribute.ActionTypeAttribute(string! name) -> void
+Ducky.ActionTypeAttribute.Name.get -> string!

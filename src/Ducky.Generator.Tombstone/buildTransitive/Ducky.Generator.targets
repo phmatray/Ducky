@@ -1,0 +1,8 @@
+<Project>
+  <!-- Unique name: Ducky.targets defines a conditional _DuckyRejectLegacyGenerator, and MSBuild keeps the last imported
+       definition of a name, which could otherwise replace this unconditional error. -->
+  <Target Name="_DuckyGeneratorTombstone" BeforeTargets="CoreCompile">
+    <Error Code="DUCKY900"
+           Text="Ducky.Generator is deprecated: the generator ships inside Ducky 2.x. Remove the Ducky.Generator PackageReference. https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY900.md" />
+  </Target>
+</Project>

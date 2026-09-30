@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ducky.Reactive.Tests" Key="$(DuckyPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- PrivateAssets="none": the Ducky dependency keeps its generator and buildTransitive assets (R-PKG-5). -->
+    <ProjectReference Include="../Ducky/Ducky.csproj" PrivateAssets="none" />
+    <PackageReference Include="R3" />
+  </ItemGroup>
+</Project>

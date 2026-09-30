@@ -1,0 +1,3 @@
+#nullable enable
+Ducky.Draft.DraftableAttribute
+Ducky.Draft.DraftableAttribute.DraftableAttribute() -> void
