@@ -21,3 +21,6 @@ coverage*/
 # Node (E2E harness, Playwright)
 node_modules/
 playwright-report/
+
+# Fallout run logs and caches
+.fallout/temp/

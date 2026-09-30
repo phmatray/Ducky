@@ -36,7 +36,7 @@ internal static class StaticFieldAudit
     public static IReadOnlyList<string> Violations(Assembly assembly) =>
     [
         .. from type in assembly.GetTypes()
-           where !InCompilerGeneratedType(type)
+           where !InCompilerGeneratedType(type) && !IsCoverageTracker(type)
            from field in type.GetFields(DeclaredStatics)
            where !field.IsLiteral && (!field.IsInitOnly || !IsAllowedReadonly(field))
            select $"{type.FullName}.{field.Name}",
@@ -66,4 +66,10 @@ internal static class StaticFieldAudit
         return _allowedTypeNames.Contains(definition.FullName ?? definition.Name)
             || (!definition.IsNested && !definition.IsInterface && _immutableCollectionNamespaces.Contains(definition.Namespace ?? ""));
     }
+
+    // §17.5: the tracker type that MTP CodeCoverage's static instrumentation injects into the audited assembly during
+    // the Test target's coverage run (tool state, not library state). Namespace and name prefix must both match.
+    private static bool IsCoverageTracker(Type type) =>
+        type.Namespace == "Microsoft.CodeCoverage.Instrumentation.Static.Tracker"
+        && type.Name.StartsWith("StaticManagedTrackerTemplate_", StringComparison.Ordinal);
 }

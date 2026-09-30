@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Fallout build (SPEC §19, ADR-0035). Not in Ducky.slnx: ./build.sh builds and runs it through the fallout tool. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace></RootNamespace>
+    <IsPackable>false</IsPackable>
+    <FalloutRootDirectory>..</FalloutRootDirectory>
+    <FalloutScriptDirectory>..</FalloutScriptDirectory>
+    <!-- Fallout conventions: [Parameter] fields are PascalCase, injected by reflection and read by the targets
+         of later stories (IDE1006, CS0649, CS0169, CS0414); targets are instance members of one class in the global
+         namespace (CA1822, CA1050); the project keeps Fallout's conventional _build name (CA1707). -->
+    <NoWarn>$(NoWarn);CS0649;CS0169;CS0414;CA1050;CA1707;CA1822;IDE1006</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fallout.Common" />
+    <PackageReference Include="Fallout.Components" />
+  </ItemGroup>
+</Project>

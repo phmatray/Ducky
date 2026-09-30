@@ -22,23 +22,42 @@ public sealed class StaticStateTests
             using System.Collections.Immutable;
             using Microsoft.CodeAnalysis;
 
-            namespace Fixture;
-
-            public static class Planted
+            namespace Fixture
             {
-                public static int Counter;
-                public static readonly List<int> Cache = [];
-                public static List<int> Held { get; } = [];
+                public static class Planted
+                {
+                    public static int Counter;
+                    public static readonly List<int> Cache = [];
+                    public static List<int> Held { get; } = [];
 
-                public static readonly DiagnosticDescriptor Rule =
-                    new("FIX001", "Title", "Message", "Category", DiagnosticSeverity.Warning, isEnabledByDefault: true);
-                public static readonly string Name = "fixture";
-                public static readonly object Unset = new();
-                public static readonly Func<int> One = () => 1;
-                public static readonly ImmutableArray<int> Items = [1, 2];
-                public const int Answer = 42;
+                    public static readonly DiagnosticDescriptor Rule =
+                        new("FIX001", "Title", "Message", "Category", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+                    public static readonly string Name = "fixture";
+                    public static readonly object Unset = new();
+                    public static readonly Func<int> One = () => 1;
+                    public static readonly ImmutableArray<int> Items = [1, 2];
+                    public const int Answer = 42;
 
-                public static Func<int, int> Double() => x => x * 2;
+                    public static Func<int, int> Double() => x => x * 2;
+                }
+
+                public static class StaticManagedTrackerTemplate_Impostor
+                {
+                    public static int Hits;
+                }
+            }
+
+            namespace Microsoft.CodeCoverage.Instrumentation.Static.Tracker
+            {
+                public static class StaticManagedTrackerTemplate_0f8c2d1e
+                {
+                    public static int Hits;
+                }
+
+                public static class Neighbour
+                {
+                    public static int Hits;
+                }
             }
             """);
 
@@ -48,7 +67,13 @@ public sealed class StaticStateTests
             .SelectMany(t => t.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             .ShouldContain(f => !f.IsInitOnly);
         StaticFieldAudit.Violations(fixture).ShouldBe(
-            ["Fixture.Planted.Counter", "Fixture.Planted.Cache", "Fixture.Planted.<Held>k__BackingField"],
+            [
+                "Fixture.Planted.Counter",
+                "Fixture.Planted.Cache",
+                "Fixture.Planted.<Held>k__BackingField",
+                "Fixture.StaticManagedTrackerTemplate_Impostor.Hits",
+                "Microsoft.CodeCoverage.Instrumentation.Static.Tracker.Neighbour.Hits",
+            ],
             ignoreOrder: true);
     }
 

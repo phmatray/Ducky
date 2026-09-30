@@ -22,6 +22,13 @@
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.10.0" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
+    <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
+
+    <!-- Fallout build (SPEC §19, ADR-0035): exact pin. -->
+    <PackageVersion Include="Fallout.Common" Version="[10.4.0]" />
+    <PackageVersion Include="Fallout.Components" Version="[10.4.0]" />
 
     <!-- Build analyzers (SPEC §17.1). Verified to load in SDK 10.0.100's compiler (no CS9057); Renovate asks for approval and a 10.0.100 build on a bump. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />

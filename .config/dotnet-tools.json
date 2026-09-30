@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "fallout.globaltool": {
+      "version": "10.4.0",
+      "commands": [
+        "fallout"
+      ],
+      "rollForward": false
+    },
+    "dotnet-stryker": {
+      "version": "4.16.0",
+      "commands": [
+        "dotnet-stryker"
+      ],
+      "rollForward": false
+    },
+    "dotnet-reportgenerator-globaltool": {
+      "version": "5.5.11",
+      "commands": [
+        "reportgenerator"
+      ],
+      "rollForward": false
+    },
+    "docfx": {
+      "version": "2.81.0",
+      "commands": [
+        "docfx"
+      ],
+      "rollForward": false
+    }
+  }
+}

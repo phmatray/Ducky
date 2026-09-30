@@ -13,9 +13,20 @@
        The analyzer comes through CPM, so a project with CPM off (test/Ducky.PackageSmoke, §17.9) gets no versionless reference. -->
   <ItemGroup Condition="'$(DuckyIsTestProject)' == 'true'">
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
+    <!-- TRX for every run; coverage only when the Test target asks for it, and never in Ducky.Concurrency.Tests (§17.3):
+         there the coverage option fails as unknown. -->
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Condition="'$(ManagePackageVersionsCentrally)' == 'true' and '$(MSBuildProjectName)' != 'Ducky.Concurrency.Tests'" />
     <AdditionalFiles Include="$(RepoRoot)test/BannedSymbols.txt" />
     <AdditionalFiles Include="$(RepoRoot)test/BannedSymbols.covered.txt" Condition="'$(MSBuildProjectName)' != 'Ducky.Concurrency.Tests'" />
   </ItemGroup>
+
+  <!-- INV-24 (§19 Compile): every packable net10.0 src/ library is AOT-compatible with the trim, AOT and single-file
+       analyzers on. The NoTargets tombstone has no assembly. -->
+  <Target Name="DuckyRequireAotCompatible" BeforeTargets="CoreCompile"
+          Condition="'$(DuckyIsSrcProject)' == 'true' and '$(IsPackable)' == 'true' and '$(TargetFramework)' == 'net10.0' and '$(UsingMicrosoftNoTargetsSdk)' != 'true' and ('$(IsAotCompatible)' != 'true' or '$(EnableTrimAnalyzer)' == 'false' or '$(EnableAotAnalyzer)' == 'false' or '$(EnableSingleFileAnalyzer)' == 'false')">
+    <Error Text="$(MSBuildProjectName) is a packable net10.0 src/ project: it must set IsAotCompatible=true and keep the trim, AOT and single-file analyzers on (INV-24, §19 Compile)." />
+  </Target>
 
   <!-- IsAotCompatible adds an implicit Microsoft.NET.ILLink.Tasks reference at the running SDK's runtime patch, and the
        lock files record it: without a pin, locked restore (CI=true) fails with NU1004 on any other 10.0.x SDK. Renovate
