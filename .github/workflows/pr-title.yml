@@ -1,0 +1,20 @@
+# Hand-written (SPEC §20.1): VerifyWorkflows checks only its job name, unique across workflows (§20.2).
+# The squash commit takes the PR title, so the title must be a Conventional Commit (git-cliff builds the changelog).
+name: pr-title
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+    branches: [v2, main]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  pr-title:
+    name: pr-title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -160,3 +160,31 @@ made in a plain clone with one changed line per project (commands in the spike's
 
 Not measured here: Linux and Windows (the `mutation` and `nightly-mutation` workflows arrive with M0-11), and run times
 at scale (S-9).
+
+## S-8: workflow job names from `DuckyGitHubActionsAttribute` (M0-11)
+
+**Question.** Does overriding `GetJobs` give each workflow's job the workflow name without other side effects?
+
+**Setup.** No separate prototype: the answer is the production attribute, `build/DuckyGitHubActionsAttribute.cs`,
+checked by `VerifyWorkflows`. Run 2026-10-01 on macOS arm64 with SDK 10.0.401 and Fallout 10.4.0 (`Fallout.Common`,
+tool manifest pin), over the nine workflows of `build/Build.CI.cs` (§20.1 without `nightly-audit`, which M16-01 adds).
+
+**Answer: yes.** Without the override, every generated job is keyed and named after its image (`ubuntu-latest:` /
+`name: ubuntu-latest`, likewise `windows-latest`, `macos-latest`): `VerifyWorkflows` reported nine S-8 violations and
+`ubuntu-latest` shared by seven workflows. With `job.Name = IdPostfix` after `base.GetJobs`, each workflow has one job
+keyed and named after the workflow (`ci`, `ci-cross-windows`, `ci-cross-macos`, `e2e`, `aot`, `mutation`,
+`nightly-mutation`, `nightly-e2e`, `nightly-props`), unique across `.github/workflows` together with the hand-written
+`pr-title`. The rest of each file is unchanged: `GitHubActionsJob.Write` uses `Name` for both the job key and `name:`
+and nothing else (steps, `runs-on`, `timeout-minutes`, permissions and triggers come from the other properties);
+actionlint 1.7 with shellcheck reports nothing on the generated files.
+
+**Two consequences.**
+- **Auto-generation is off** (`AutoGenerate = false` in the attribute's constructor). Fallout regenerates every
+  configuration in place on each local build (`InvokeBuildServerConfigurationGenerationAttribute`, skipped on a server
+  build), which would undo a hand edit before `VerifyWorkflows` could see it locally, and waits for a key press on an
+  interactive console. A workflow is regenerated with
+  `./build.sh --generate-configuration GitHubActions_<workflow> --host GitHubActions` (the command each file's header
+  names), or by copying the file `VerifyWorkflows` left in `artifacts/workflows`.
+- **`VerifyWorkflows` regenerates into `artifacts/workflows`** by running the build assembly once per attribute with
+  `--generate-configuration` and `DUCKY_WORKFLOWS_DIR` set, which the attribute's `ConfigurationFile` honours, so the
+  gate never writes `.github/workflows`.

@@ -9,9 +9,30 @@
       "matchStrings": ["<KnownILLinkPack [^>]*ILLinkPackVersion=\"(?<currentValue>[^\"]+)\""],
       "depNameTemplate": "Microsoft.NET.ILLink.Tasks",
       "datasourceTemplate": "nuget"
+    },
+    {
+      "customType": "regex",
+      "description": "The e2e workflow installs the Playwright OS dependencies with the npm CLI of the Microsoft.Playwright pin (build/Build.CI.cs reads Directory.Packages.props), so the generated e2e.yml moves in the same PR and VerifyWorkflows stays green.",
+      "managerFilePatterns": ["/^\\.github/workflows/e2e\\.yml$/"],
+      "matchStrings": ["npx --yes playwright@(?<currentValue>[^ ]+) "],
+      "depNameTemplate": "Microsoft.Playwright",
+      "datasourceTemplate": "nuget"
     }
   ],
   "packageRules": [
+    {
+      "description": "SPEC §20.2: automerge minor and patch updates of dev dependencies, only through platform automerge behind the required checks. The runtime dependencies of SPEC §3 (Microsoft.Extensions.*, Microsoft.AspNetCore.*, R3) are excluded by pattern, so one a later story adds is never automerged; the test-only Microsoft.Extensions.* packages are excluded with them.",
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchPackageNames": ["!/^Microsoft\\.Extensions\\./", "!/^Microsoft\\.AspNetCore\\./", "!R3"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Fallout pins the actions of the generated workflows (only release.yml, pr-title.yml and docs.yml are hand-written); an edit there fails VerifyWorkflows. They move with a Fallout bump and a regeneration.",
+      "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/workflows/{ci,ci-cross-windows,ci-cross-macos,e2e,aot,mutation}.yml", ".github/workflows/nightly-*.yml"],
+      "enabled": false
+    },
     {
       "description": "S-1 (R-PKG-3, ADR-0003): Microsoft.CodeAnalysis.CSharp 5.0.0 is the Roslyn of SDK 10.0.100, the generator floor, and global.json pins that SDK. Never update either.",
       "matchPackageNames": ["Microsoft.CodeAnalysis.CSharp", "dotnet-sdk"],
@@ -26,12 +47,14 @@
     {
       "description": "test/BannedSymbols.covered.txt lists CsCheck.Check overloads by exact documentation ID, and BannedApiAnalyzers ignores an ID that no longer resolves and cannot ban an overload it is not given. Before merging, run `dotnet run test/banned-ids.cs -- check`: it fails on a listed ID that no longer resolves and on a generated overload missing from the list (a bump that adds a threads overload). Paste the cscheck group printed by `dotnet run test/banned-ids.cs` into the list, then update test/Shared/Property.cs.",
       "matchPackageNames": ["CsCheck"],
-      "dependencyDashboardApproval": true
+      "dependencyDashboardApproval": true,
+      "automerge": false
     },
     {
       "description": "These analyzers load into the repo's own compiler, and the repo must build on SDK 10.0.100 (Roslyn 5.0.0; global.json, M0-01): a release built against a newer Roslyn fails every 10.0.100 build with CS9057, which CI on a newer SDK (rollForward latestFeature) does not see. Before merging, build the repo with exactly SDK 10.0.100 (the spikes/S-1-roslyn-floor/README.md side-by-side install and a global.json with rollForward disable).",
       "matchPackageNames": ["Microsoft.CodeAnalysis.BannedApiAnalyzers", "Microsoft.CodeAnalysis.PublicApiAnalyzers", "Microsoft.VisualStudio.Threading.Analyzers"],
-      "dependencyDashboardApproval": true
+      "dependencyDashboardApproval": true,
+      "automerge": false
     },
     {
       "description": "The ILLink pack stays on the 10.0 line of the net10.0 target (Directory.Build.targets).",

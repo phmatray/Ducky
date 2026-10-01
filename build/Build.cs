@@ -54,13 +54,7 @@ internal sealed partial class Build : FalloutBuild, IHasSolution, IConfigureGitH
             FailOnViolations("Compile", PublicApiSelfCheck().ToList());
         });
 
-    // Grows with the gates of later stories (VerifyWorkflows, Docs); Test runs through CoverageGate, Pack through
-    // PackageSmoke.
+    // §19; Test runs through CoverageGate, Pack through PackageSmoke.
     private Target Ci => _ => _
-        .DependsOn(Format, ExclusionGate, CoverageGate, ConcurrencyTest, SpecTraceGate, PackageSmoke);
-
-    // Workflow steps arrive with the generated workflows (M0-11).
-    public void ConfigureSteps(GitHubActionsStepPipeline pipeline)
-    {
-    }
+        .DependsOn(Format, ExclusionGate, CoverageGate, ConcurrencyTest, SpecTraceGate, PackageSmoke, VerifyWorkflows, Docs);
 }
