@@ -6,7 +6,12 @@ namespace Ducky;
 // The single drainer (SPEC §6.3): whoever enqueues while no drain is active drains the whole queue inline, so reducers
 // never run concurrently (INV-01) and a dispatch from a reducer is queued, never nested. No user code, log call or
 // completion runs under _gate (INV-05).
-internal sealed partial class Dispatcher(Registry registry, StateSnapshot initial, SafeLogger logger, int maxDispatchDepth)
+internal sealed partial class Dispatcher(
+    Registry registry,
+    StateSnapshot initial,
+    SafeLogger logger,
+    int maxDispatchDepth,
+    Func<Task>[] inits)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();
@@ -33,8 +38,11 @@ internal sealed partial class Dispatcher(Registry registry, StateSnapshot initia
     // IVT-only seam (§6.3, §17.1): null in production, invoked with the action at the top of Process.
     internal Action<object>? BeforeProcessHook { get; set; }
 
+    // Before Ready a user action (Local, Effect) goes to the init buffer and starts init; every other action goes to the
+    // main queue (§6.3). Init starts and the drain runs outside the lock, on the caller's context (INV-05).
     internal void Enqueue(Pending p)
     {
+        var startInit = false;
         var drain = false;
         lock (_gate)
         {
@@ -44,20 +52,44 @@ internal sealed partial class Dispatcher(Registry registry, StateSnapshot initia
                 p.CorrelationId = p.Id;
             }
 
-            _queue.Enqueue(p);
-            if (!_draining)
+            if (_state != StoreState.Ready && p.Origin is Origin.Local or Origin.Effect)
             {
-                _draining = true;
-                _drainExited = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                drain = true;
+                _initBuffer.Enqueue(p);
+                if (_state == StoreState.Created)
+                {
+                    _state = StoreState.Initializing;
+                    startInit = true;
+                }
+            }
+            else
+            {
+                _queue.Enqueue(p);
+                drain = BeginDrainLocked();
             }
         }
 
-        // On the caller's context, outside the lock.
+        if (startInit)
+        {
+            StartInit();
+        }
+
         if (drain)
         {
             Drain();
         }
+    }
+
+    // Under _gate: true when the caller became the drainer.
+    private bool BeginDrainLocked()
+    {
+        if (_draining)
+        {
+            return false;
+        }
+
+        _draining = true;
+        _drainExited = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        return true;
     }
 
     private void Drain()
@@ -115,7 +147,11 @@ internal sealed partial class Dispatcher(Registry registry, StateSnapshot initia
         var outer = EnterScope(p);
         try
         {
-            if (!Reduce(p.Action))
+            if (p.Action is HydrateSlices restore)
+            {
+                Hydrate(restore);
+            }
+            else if (!Reduce(p.Action))
             {
                 p.Complete(DispatchResult.Failed);
                 return;

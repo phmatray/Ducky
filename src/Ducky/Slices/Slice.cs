@@ -31,6 +31,9 @@ public abstract class Slice
     internal abstract bool CanHandle(Type actionType);
 
     internal abstract bool TryReduce(object state, object action, out object next);
+
+    // A restored value (SPEC §6.4 step 6): taken when it is the declared state type (JsonElement values come with M4-06).
+    internal abstract bool TryRestore(object value, out object state);
 }
 
 /// <summary>
@@ -105,6 +108,12 @@ public abstract class Slice<TState> : Slice
 
         next = state;
         return false;
+    }
+
+    internal override bool TryRestore(object value, out object state)
+    {
+        state = value;
+        return value is TState;
     }
 
     // DUCKY307/DUCKY308 come from the DuckyErrors catalogue (SPEC §8.3); AddSlice reads them from Errors (§5.1, §6.1).

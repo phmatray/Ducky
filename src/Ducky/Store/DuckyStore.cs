@@ -7,7 +7,12 @@ namespace Ducky;
 // The store facade (SPEC §5.2), created by DI through Create (§6.10).
 internal sealed class DuckyStore : IStore
 {
-    internal DuckyStore(IEnumerable<Slice> slices, ILogger logger, int maxDispatchDepth = Dispatcher.DefaultMaxDispatchDepth)
+    // inits: the internal stand-in for middleware init (§6.7) that Ducky.Tests uses until middleware lands (M4-03).
+    internal DuckyStore(
+        IEnumerable<Slice> slices,
+        ILogger logger,
+        int maxDispatchDepth = Dispatcher.DefaultMaxDispatchDepth,
+        Func<Task>[]? inits = null)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -18,7 +23,7 @@ internal sealed class DuckyStore : IStore
         var registry = new Registry(owned);
         Slices = Array.AsReadOnly(owned);
         InitialState = new StateSnapshot(registry);
-        Dispatcher = new Dispatcher(registry, InitialState, new SafeLogger(logger), maxDispatchDepth);
+        Dispatcher = new Dispatcher(registry, InitialState, new SafeLogger(logger), maxDispatchDepth, inits ?? []);
     }
 
     // The IStore factory AddDucky registers (§6.10): validates once per container (INV-31), then builds this store.
@@ -43,7 +48,16 @@ internal sealed class DuckyStore : IStore
 
     public StateSnapshot InitialState { get; }
 
-    public StateSnapshot State => Dispatcher.State;
+    // Starts init (one volatile read once started). A first read sees StoreInitialized reduced only when every init completes
+    // synchronously and no other drain is active; InitializeAsync gives the guarantee.
+    public StateSnapshot State
+    {
+        get
+        {
+            Dispatcher.StartInit();
+            return Dispatcher.State;
+        }
+    }
 
     internal Dispatcher Dispatcher { get; }
 
@@ -64,4 +78,18 @@ internal sealed class DuckyStore : IStore
         Dispatcher.Enqueue(Dispatcher.NewPending(action, Origin.Local, completion));
         return completion.Task;
     }
+
+    // Never starts init, and never enters the init buffer (§5.2).
+    public void Restore(IReadOnlyDictionary<string, object> values, Origin origin)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        if (origin is not (Origin.Hydration or Origin.CrossTab or Origin.DevTools))
+        {
+            throw new ArgumentOutOfRangeException(nameof(origin), origin, "Restore takes Origin.Hydration, Origin.CrossTab or Origin.DevTools.");
+        }
+
+        Dispatcher.Enqueue(Dispatcher.NewPending(new HydrateSlices([.. values]), origin, null));
+    }
+
+    public Task InitializeAsync(CancellationToken cancellationToken = default) => Dispatcher.InitializeAsync(cancellationToken);
 }

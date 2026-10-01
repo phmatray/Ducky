@@ -13,6 +13,7 @@ public sealed class DrainTests
     {
         var logger = new FakeLogger();
         var store = new DuckyStore([new CountSlice()], logger);
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
         var thrown = new InvalidOperationException("hook");
         var (seen, next) = ThrowOnPing(store, thrown);
         var ping = new Ping();
