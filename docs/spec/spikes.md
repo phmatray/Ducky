@@ -114,6 +114,63 @@ sites report IL2026 twice each (the trim analyzer at build, ILLink at publish). 
 Not measured here: Linux and Windows (the `aot` job publishes on Linux; M14-06 checks the IL2104 allowlist and the AOT
 publish there again), and Firefox and WebKit (Chromium only).
 
+## S-4: CsCheck `SampleParallel` within the CI budget (M0-14)
+
+**Question.** Does a CsCheck `SampleParallel` linearizability property at 50 repetitions (`DUCKY_REPEAT`) stay under
+3 minutes, and with which operation counts?
+
+**Setup.** `spikes/S-4-dispatcher`, run 2026-10-01 on macOS arm64 (Apple M1 Max, 10 logical CPUs) with SDK 10.0.401,
+CsCheck 4.9.1 and xunit.v3.mtp-v2 4.0.1 (the pins of `Directory.Packages.props`). The stub is a lock-protected queue
+with one drainer: the dispatching thread that finds no drainer drains outside the lock until the queue is empty, and
+`DispatchAsync` completes after its action is reduced and committed (`RunContinuationsAsynchronously`). The property
+has the §17.3 row 13 shape: `[Theory]` over `DUCKY_REPEAT` (default 50), a 10 s `WaitAsync` per repetition, two
+operations (awaited `DispatchAsync` of a random int, `ReadState`) against a sequential reducer model (append to a list).
+The final state and every read must match one linearization: each `ReadState` carries a fresh key, so the stub's read
+is compared with the model's read of the same operation. Times are the wall time of `dotnet test --no-build` (about
+1 s of it is host start), with `CsCheck_Threads` set to 10 (the CsCheck default here) and to 4 (an `ubuntu-latest`
+runner's vCPUs).
+
+**Answer: yes, with large headroom. Tuned counts: `maxSequentialOperations: 10` (the CsCheck default),
+`maxParallelOperations: 6`, `iter` left to CsCheck (100, or `CsCheck_Iter`).** 50 repetitions take 7.7 s at 10 threads
+and 5.6 s at 4 (the bold row); one repetition on one thread (the Stryker setting, §17.8) takes 1.1 s. A naive stub
+(each caller reduces in place, no lock, no drainer) fails all 50 repetitions, each with a shrunk two-dispatch
+counterexample. Both buggy stubs stay in the spike behind `S4_STUB=stranded|naive` (README), so M1-14 can re-measure
+the detection column.
+
+| Counts (seq / par / iter) | 50 reps, 10 threads | 50 reps, 4 threads | Stranded-action stub: failing reps of 50 (10 / 4 threads) |
+|---|---|---|---|
+| 10 / 5 / 100 | 4.6 s | 4.1 s | 7 / 2 |
+| 10 / **6** / 100 | 7.7 s | 5.6 s | 10 / 8 |
+| 10 / 7 / 100 | 24.6 s | 7.8 s | 21 / 7 |
+| 10 / 8 / 100 | 81.2 s | 13.8 s | 13 / 5 |
+| 20 / 5 / 100 | 4.5 s | 4.2 s | – |
+| 10 / 5 / 1000 | 34.7 s | 30.1 s | – |
+| 10 / 6 / 1000 | 66.0 s | 39.6 s | – |
+
+- **Detection.** The stranded-action stub has the INV-03 bug: the drainer sees the queue empty under the lock but clears
+  its flag after releasing it, so a dispatch enqueued in between returns, finds a drainer, and is never reduced (its
+  `DispatchAsync` hangs and the 10 s bound fails the repetition; the times of those runs are not budget data). Every
+  count catches it in some repetitions of a 50-repetition run; at 6 parallel operations 8 to 10 of 50 failed at either
+  thread count in the table's runs and 6 / 5 (10 / 4 threads) in a re-run through `S4_STUB=stranded`. A per-repetition
+  detection of 10 to 20% puts a 50-repetition miss between 0.9^50 (about 0.5%) and 0.8^50. That is a point estimate for
+  this stub's race window (a few instructions between the unlock and the flag write), not a guarantee for the real
+  dispatcher: detection depends on the window's width (a `SpinWait` before the flag write failed 20 of 20 in review).
+  5 parallel operations caught it in only 2 of 50 at 4 threads.
+- **Cost.** The linearization check tries every order of the parallel operations, so time grows factorially with
+  `maxParallelOperations` (6! = 720, 8! = 40 320), and from 6 operations on more CsCheck threads are slower: each
+  thread runs its parallel operations on threads of its own, oversubscribing the cores (81 s at 10 threads against 14 s at 4 for 8
+  operations). 7 doubles detection at 10 threads but not at 4, for three times the cost. `iter` scales linearly
+  (×10 iterations is about ×7 time) and the sequential prefix costs nothing measurable.
+- **Headroom for the real dispatcher.** 7.7 s is about 1/23 of the 3-minute budget and 0.15 s of each repetition's 10 s
+  bound. The real store commits snapshots, runs middleware hooks and slices per action, so an operation will cost more
+  than the stub's; M1-14 re-runs these counts on `Linearizability_DispatchVsModel` and lowers `maxParallelOperations`
+  to 5 only if 50 repetitions on `ubuntu-latest` exceed 3 minutes.
+- **`iter` stays CsCheck's.** The `PropertyLong` nightly lengthens runs through `CsCheck_Iter` (§19), the value CsCheck
+  uses for an `iter` the call leaves unset (`CsCheck_Iter=1000` took 5 repetitions from 1.6 s to 7.9 s); a tuned
+  `iter` argument would pin the count instead.
+
+Not measured here: Linux and Windows, and the real dispatcher (M1-14, stage 2).
+
 ## S-5: the `IJSStreamReference` read path on Server (M0-13)
 
 **Question.** Does a Server app round-trip about 2 MB from `localStorage` through `IJSStreamReference` without closing
@@ -366,3 +423,73 @@ actionlint 1.7 with shellcheck reports nothing on the generated files.
 - **`VerifyWorkflows` regenerates into `artifacts/workflows`** by running the build assembly once per attribute with
   `--generate-configuration` and `DUCKY_WORKFLOWS_DIR` set, which the attribute's `ConfigurationFile` honours, so the
   gate never writes `.github/workflows`.
+
+## S-9: Stryker run time per mutated project (M0-14)
+
+**Question.** How long does a full Stryker run take per mutated project, which `timeout-minutes` does that give
+`nightly-mutation` and `release-mutation`, and how does the nightly split per project if one job no longer fits?
+
+**Setup.** Run 2026-10-01 on macOS arm64 (Apple M1 Max, 10 logical CPUs) with SDK 10.0.401 and `dotnet-stryker` 4.16.0,
+in the environment the targets give Stryker (`DUCKY_REPEAT=1`, `DUCKY_PROPERTY_SEEDS=1`, `CsCheck_Threads=1`). The
+three S-6 prototypes (`spikes/S-6-mutation`, commands in its README, test projects built first), at Stryker's default
+concurrency (half the logical CPUs, 5 here) and at `--concurrency` 1 and 2 (an `ubuntu-latest` runner has 4 vCPUs, so Stryker's default there
+is 2); then the seven stage-1 projects through `./build.sh Mutation --strict-stages`, and one project alone through
+`--project`. The S-6 prototypes needed one fix to build again: since M0-07 the root pins
+`Microsoft.Extensions.Logging.Abstractions`, so the spike's own `PackageVersion` was a duplicate (NU1506); their lock
+files gain the root's `MinVer` reference.
+
+**Answer.** A per-project full run is 7 to 23 seconds, nearly all of it fixed cost; the first `timeout-minutes` stays
+**330 for `nightly-mutation` and for `release-mutation`** (§20.1), and the split is per-project
+`Mutation --project <name>` jobs inside the same workflow.
+
+| Project (prototype) | Mutants created / tested | Full run, default concurrency | `--concurrency 1` | `--concurrency 2` |
+|---|---|---|---|---|
+| `Plain` (plain SDK) | 20 / 13 | 7.3 s | 7.1 s | 7.3 s |
+| `Gen` (netstandard2.0 generator) | 51 / 35 | 7.6 s | 7.6 s | 7.8 s |
+| `Web` (Razor SDK, two test projects) | 18 / 11 | 10.9 s | 12.2 s | 10.6 s |
+
+| Stage-1 project (`Mutation --strict-stages`) | Stryker time | Mutants |
+|---|---|---|
+| `Ducky` (first: builds six test projects) | 22.5 s | 0 |
+| `Ducky.Generators` | 6.4 s | 0 |
+| `Ducky.Testing` | 7.2 s | 0 |
+| `Ducky.Blazor` | 11.1 s | 0 |
+| `Ducky.Reactive` | 8.1 s | 1 |
+| `Ducky.Draft` | 7.7 s | 0 |
+| `Ducky.Draft.Generators` | 6.9 s | 0 |
+
+- **Fixed cost dominates.** Per project, analysis takes 2 to 3 s, building the test projects 1 to 2 s each, and the
+  initial test run 2 s; testing the mutants took about 2 s whatever the concurrency (35 mutants of `Gen` included). The
+  whole seven-project run took 89 s with `Restore` and `Compile` (the six zero-mutant projects fail the staged check, as
+  S-6 recorded); `Mutation --strict-stages --project Ducky.Reactive` alone took 21 s (Restore 1 s, Compile 8 s,
+  Mutation 8 s).
+- **What grows.** With `coverage-analysis: "off"` (S-6) every tested mutant runs every test of its project's
+  `test-projects` list in reused test hosts, so a project's time is about its fixed cost plus
+  tested mutants × the list's test time ÷ concurrency. The prototypes' tests take milliseconds; the real lists (`Ducky`'s
+  has six test projects, `Ducky.Concurrency.Tests` among them, §17.8) will take seconds, which is
+  the term the stage-13 and stage-17 measurements must capture.
+- **The timeout.** The prototype puts a full nightly at 89 s here, 2 minutes with 30% headroom: it fits 330 minutes
+  by two orders of magnitude even on a much slower runner, so it gives no reason to change §20.1's 330. A timeout
+  sized to the prototype would cancel the nightly as soon as stage 2 gives `Ducky` real logic, long before the
+  stage-13 re-measurement. 330 keeps 30% headroom (§23) while a measured full run stays at or below 254 minutes
+  (330 / 1.3); stages 13 and 17 re-measure on `ubuntu-latest` and record the new value, or the split, here.
+  `nightly-mutation.yml` already has 330 (`build/Build.CI.cs`); `release.yml` (M16-03) writes 330 for
+  `release-mutation`.
+- **The split, designed now.** `Mutation --project <name>` (repeatable, M0-05, §17.8) runs and checks only the named
+  projects, with every other rule unchanged. If a measured run passes 254 minutes, `nightly-mutation.yml` gets seven
+  per-project jobs (§17.8), each running `Mutation --project <name>` under its own `timeout-minutes`, emitted as seven
+  named jobs or as one matrix job by the `GetJobs` override of `build/DuckyGitHubActionsAttribute.cs`, whichever
+  Fallout's `GitHubActionsJob` supports (unchecked here; a check for the stage-13/17 story). No leg may cancel another
+  (`strategy.fail-fast: false` on a matrix), so every project still opens its own below-90 issue that night, and the
+  `Report: nightly failure` step (`build/Build.CI.cs`) moves out of the legs into one final job that `needs:` them all,
+  with `if: failure() || cancelled()`: per leg, concurrent search-then-create on one title would race into duplicate
+  issues. It stays one workflow, so `MutationForSha`'s `gh run list --workflow nightly-mutation.yml --commit` still
+  finds one run for the SHA, successful only when every leg passed. `release-mutation` can split the same way (same
+  `fail-fast` and report rules) only once `MutationForSha` takes what §19 gives `Mutation` alone: the shared Fallout
+  `Project` parameter (`build/Build.Mutation.cs`) passed through to its fallback `Mutation`, and its nightly-run query
+  made per leg (the nightly job of its own project); that §19 change belongs to the split's story.
+  A single project above 254 minutes cannot be split this way; its `test-projects` list (the per-mutant cost) is then
+  the lever.
+
+Not measured here: `ubuntu-latest` (no CI run was made for this story; the stage-13 and stage-17 measurements are
+made there), and projects with real logic.

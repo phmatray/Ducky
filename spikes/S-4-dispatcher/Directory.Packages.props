@@ -1,0 +1,4 @@
+<Project>
+  <!-- The repository pins (Directory.Packages.props): CsCheck and xunit.v3 exactly as Ducky.Concurrency.Tests uses them. -->
+  <Import Project="../../Directory.Packages.props" />
+</Project>
