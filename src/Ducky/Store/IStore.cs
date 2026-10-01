@@ -20,6 +20,23 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     IReadOnlyList<Slice> Slices { get; }
 
     /// <summary>
+    /// Selects a value from the state. The selection's <see cref="Selection{T}.Value"/> evaluates
+    /// <paramref name="selector"/> against the current snapshot on each read. With <paramref name="onChange"/>, the
+    /// drainer evaluates <paramref name="selector"/> after each commit that changed the snapshot and calls
+    /// <paramref name="onChange"/> only when the selected value changed; a commit racing this call is never missed.
+    /// Starts init. After disposal the selection is inert and reads the last snapshot.
+    /// </summary>
+    /// <typeparam name="T">The selected value's type.</typeparam>
+    /// <param name="selector">Projects a snapshot to the value; must be pure.</param>
+    /// <param name="onChange">Called on the drainer with the new value, only when it changed; never under a lock.</param>
+    /// <param name="comparer">Decides whether the value changed; <see cref="EqualityComparer{T}.Default"/> when null.</param>
+    /// <returns>The selection; dispose it to unsubscribe <paramref name="onChange"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="selector"/> is null.</exception>
+#pragma warning disable CA1716 // justification: Select is the one selection signature of the library (SPEC §5.2, §5.9)
+    Selection<T> Select<T>(Func<StateSnapshot, T> selector, Action<T>? onChange = null, IEqualityComparer<T>? comparer = null);
+#pragma warning restore CA1716
+
+    /// <summary>
     /// Replaces the state of the named slices in one action that bypasses the init buffer and is never vetoed. Each value is
     /// the slice's state instance; an unknown key or a value of another type restores nothing for that entry. Only
     /// <see cref="Origin.Hydration"/> marks a slice as restored (<see cref="StateSnapshot.WasRestored(string)"/>).

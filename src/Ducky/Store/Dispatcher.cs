@@ -186,10 +186,14 @@ internal sealed partial class Dispatcher(
                 return;
             }
 
-            Commit(p.Origin);
+            var changed = Commit(p.Origin);
             p.Complete(DispatchResult.Reduced);
             var state = State;
             AfterReduce(new ActionContext(p, before.ActionType, previous, state, ChangedKeys(previous, state)), middleware);
+            if (changed)
+            {
+                Notify();
+            }
         }
         finally
         {
@@ -232,7 +236,13 @@ internal sealed partial class Dispatcher(
         return true;
     }
 
-    // Step 7: Commit returns the same snapshot when nothing changed, so republishing it is a no-op (INV-07).
-    private void Commit(Origin origin) =>
-        Volatile.Write(ref _snapshot, State.Commit(CollectionsMarshal.AsSpan(_scratch), origin));
+    // Step 7: Commit returns the same snapshot when nothing changed, so republishing it is a no-op (INV-07). Returns
+    // whether it changed, which gates step 10.
+    private bool Commit(Origin origin)
+    {
+        var previous = State;
+        var next = previous.Commit(CollectionsMarshal.AsSpan(_scratch), origin);
+        Volatile.Write(ref _snapshot, next);
+        return !ReferenceEquals(previous, next);
+    }
 }
