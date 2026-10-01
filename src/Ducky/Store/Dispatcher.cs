@@ -149,7 +149,12 @@ internal sealed partial class Dispatcher(Registry registry, StateSnapshot initia
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                Log.ReducerThrew(logger, ex, registry.Keys[ordinal], action.GetType());
+                var sliceKey = registry.Keys[ordinal];
+                Log.ReducerThrew(logger, ex, sliceKey, action.GetType());
+
+                // Step 2 installed this action's scope.
+                var scope = _causal.Value!;
+                RouteFailure(new(TypeName(action), sliceKey, ex), scope.CorrelationId, scope.InFailure);
                 return false;
             }
         }

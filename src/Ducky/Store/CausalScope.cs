@@ -25,11 +25,11 @@ internal sealed partial class Dispatcher
         var c = _causal.Value;
         if (c is null)
         {
-            return new(action, origin, 0, 0, false, completion);
+            return new(action, origin, 0, 0, false, false, completion);
         }
 
         var child = c.Seq == Volatile.Read(ref _processingSeq);
-        return new(action, origin, child ? c.Depth + 1 : 0, c.CorrelationId, child && c.InFailure, completion);
+        return new(action, origin, child ? c.Depth + 1 : 0, c.CorrelationId, child && c.InFailure, false, completion);
     }
 
     // Step 1. Runs before step 2 installs p's scope.
@@ -41,6 +41,10 @@ internal sealed partial class Dispatcher
         }
 
         p.Complete(DispatchResult.Dropped);
+
+        // _causal is still the drainer's ambient scope here, so the failure takes p's chain and InFailure explicitly.
+        var type = TypeName(p.Action);
+        RouteFailure(new(type, null, new DispatchLoopException(type, p.Depth)), p.CorrelationId, p.InFailure);
         return true;
     }
 
@@ -49,7 +53,7 @@ internal sealed partial class Dispatcher
     {
         var outer = _causal.Value;
         Volatile.Write(ref _processingSeq, p.Id);
-        _causal.Value = new(p.Id, p.Depth, p.CorrelationId, p.InFailure);
+        _causal.Value = new(p.Id, p.Depth, p.CorrelationId, p.InFailure || p.IsFailure);
         return outer;
     }
 
