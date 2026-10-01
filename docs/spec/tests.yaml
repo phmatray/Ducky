@@ -408,7 +408,7 @@ tests:
   - { name: ServerLifetime_TwoScopes_TwoStores, projects: [Ducky.Tests], invariants: [INV-22], stage: 2 }
   - { name: ServerScopeDispose_EffectScopedDependencyDisposedAfterStoreDispose, projects: [Ducky.Tests], invariants: [INV-29], stage: 4 }
   - { name: Server_ServerStorageWithoutCache_Ducky314, projects: [Ducky.Blazor.Tests], stage: 13 }
-  - { name: 'Skeleton_{Project}_Smoke', projects: [Ducky.Blazor.Tests, Ducky.Concurrency.Tests, Ducky.Docs.Tests, Ducky.Draft.Generators.Tests, Ducky.Draft.Tests, Ducky.E2E, Ducky.Generators.Tests, Ducky.Reactive.Tests, Ducky.Testing.Tests], stage: 1 }
+  - { name: 'Skeleton_{Project}_Smoke', projects: [Ducky.Blazor.Tests, Ducky.Docs.Tests, Ducky.Draft.Generators.Tests, Ducky.Draft.Tests, Ducky.E2E, Ducky.Generators.Tests, Ducky.Reactive.Tests, Ducky.Testing.Tests], stage: 1 }
   - { name: SliceKey_FromType_Table, projects: [Ducky.Tests], stage: 2 }
   - { name: SliceStore_ConcurrentSetFromNThreads_AppliesAll, projects: [Ducky.Concurrency.Tests], invariants: [INV-30], stage: 8 }
   - { name: SliceStore_InjectedInstance_IsStoreOwnedSlice, projects: [Ducky.Tests], invariants: [INV-30], stage: 8 }
