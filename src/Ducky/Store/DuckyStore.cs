@@ -16,7 +16,7 @@ internal sealed class DuckyStore
         var registry = new Registry(owned);
         Slices = Array.AsReadOnly(owned);
         InitialState = new StateSnapshot(registry);
-        Dispatcher = new Dispatcher(registry, InitialState, logger);
+        Dispatcher = new Dispatcher(registry, InitialState, new SafeLogger(logger));
     }
 
     // Registry data: reading it starts nothing.

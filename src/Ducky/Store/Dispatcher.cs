@@ -6,7 +6,7 @@ namespace Ducky;
 // The single drainer (SPEC §6.3): whoever enqueues while no drain is active drains the whole queue inline, so reducers
 // never run concurrently (INV-01) and a dispatch from a reducer is queued, never nested. No user code, log call or
 // completion runs under _gate (INV-05).
-internal sealed class Dispatcher(Registry registry, StateSnapshot initial, ILogger logger)
+internal sealed class Dispatcher(Registry registry, StateSnapshot initial, SafeLogger logger)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();
@@ -29,6 +29,9 @@ internal sealed class Dispatcher(Registry registry, StateSnapshot initial, ILogg
             }
         }
     }
+
+    // IVT-only seam (§6.3, §17.1): null in production, invoked with the action at the top of Process.
+    internal Action<object>? BeforeProcessHook { get; set; }
 
     internal void Enqueue(Pending p)
     {
@@ -74,13 +77,31 @@ internal sealed class Dispatcher(Registry registry, StateSnapshot initial, ILogg
                 return;
             }
 
-            Process(p);
+            try
+            {
+                Process(p);
+            }
+#pragma warning disable CA1031 // justification: the last line of defence, nothing may escape Process (INV-03)
+            catch (Exception ex)
+            {
+                // Complete first, so even a fatal rethrow from the log call can't strand the action or hold the drain.
+                p.Complete(DispatchResult.Failed);
+                try
+                {
+                    Log.ProcessEscaped(logger, ex, p.Action.GetType());
+                }
+                catch
+                {
+                }
+            }
+#pragma warning restore CA1031
         }
     }
 
     // SPEC §6.4, one method per step; this story adds steps 6-8.
     private void Process(Pending p)
     {
+        BeforeProcessHook?.Invoke(p.Action);
         if (!Reduce(p.Action))
         {
             p.Complete(DispatchResult.Failed);
