@@ -64,7 +64,8 @@ public sealed class SnapshotInterleavingTests
         var store = Interleaving.Store(new LogSlice());
         using var start = new Barrier(Writers);
 
-        var producers = Enumerable.Range(0, Writers).Select(p => Task.Run(
+        // Dedicated threads, as in FireAndSettle: a party parked on the barrier must not hold a pool thread.
+        var producers = Enumerable.Range(0, Writers).Select(p => Task.Factory.StartNew(
             async () =>
             {
                 start.SignalAndWait(cancellationToken);
@@ -81,7 +82,9 @@ public sealed class SnapshotInterleavingTests
                         $"stale snapshot at version {snapshot.Version} after {mine}");
                 }
             },
-            cancellationToken));
+            cancellationToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default).Unwrap());
         await Interleaving.Within(Task.WhenAll(producers));
 
         store.State.Version.ShouldBe(Writers * AwaitedPerWriter);
@@ -96,7 +99,9 @@ public sealed class SnapshotInterleavingTests
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         var cancellationToken = stop.Token;
         using var start = new Barrier(Writers + Readers);
-        var writers = Task.WhenAll(Enumerable.Range(0, Writers).Select(_ => Task.Run(
+        // Dedicated threads, as in FireAndSettle: Writers + Readers parties parked on the barrier must not hold pool
+        // threads, which a cold 2-vCPU pool injects at about one a second.
+        var writers = Task.WhenAll(Enumerable.Range(0, Writers).Select(_ => Task.Factory.StartNew(
             () =>
             {
                 start.SignalAndWait(cancellationToken);
@@ -105,8 +110,10 @@ public sealed class SnapshotInterleavingTests
                     store.Dispatch(new Tick());
                 }
             },
-            cancellationToken)));
-        var readers = Enumerable.Range(0, Readers).Select(_ => Task.Run(
+            cancellationToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default)));
+        var readers = Enumerable.Range(0, Readers).Select(_ => Task.Factory.StartNew(
             () =>
             {
                 var check = newReader();
@@ -118,7 +125,9 @@ public sealed class SnapshotInterleavingTests
 
                 check(store.State);
             },
-            cancellationToken));
+            cancellationToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default));
 
         try
         {
