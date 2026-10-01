@@ -132,7 +132,7 @@ public sealed class DispatcherTests
                     CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously,
                     TaskScheduler.Default);
-                store.Dispatcher.Enqueue(new Pending(new Bump(), Origin.Local, 0, 0, false, completion));
+                store.Dispatcher.Enqueue(new Pending(new Bump(), Origin.Local, 0, 0, false, false, completion));
                 queued.Add(completion.Task);
             }
         };
@@ -159,7 +159,7 @@ public sealed class DispatcherTests
         var store = new DuckyStore([count], NullLogger.Instance);
         var dispatcher = store.Dispatcher;
         dispatcher.DrainExited.ShouldBeNull();
-        var nested = new Pending(new Bump(), Origin.Local, 0, 0, false, null);
+        var nested = new Pending(new Bump(), Origin.Local, 0, 0, false, false, null);
         var drainer = Environment.CurrentManagedThreadId;
         var insideEnqueue = true;
         Task? duringDrain = null;
@@ -176,7 +176,7 @@ public sealed class DispatcherTests
                 TaskContinuationOptions.ExecuteSynchronously,
                 TaskScheduler.Default);
         };
-        var first = new Pending(new Probe(), Origin.Local, 0, 0, false, null);
+        var first = new Pending(new Probe(), Origin.Local, 0, 0, false, false, null);
 
         dispatcher.Enqueue(first);
         Volatile.Write(ref insideEnqueue, false);
@@ -189,7 +189,7 @@ public sealed class DispatcherTests
         dispatcher.DrainExited.ShouldBeSameAs(exited);
         (await continuation.ShouldNotBeNull()).ShouldBeFalse();
 
-        var third = new Pending(new Bump(), Origin.Local, 0, 0, false, null);
+        var third = new Pending(new Bump(), Origin.Local, 0, 0, false, false, null);
         dispatcher.Enqueue(third);
         third.Id.ShouldBe(3);
         dispatcher.DrainExited.ShouldNotBeSameAs(exited);

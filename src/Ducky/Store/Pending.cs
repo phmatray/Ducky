@@ -9,6 +9,7 @@ internal sealed class Pending(
     int depth,
     long correlationId,
     bool inFailure,
+    bool isFailure,
     TaskCompletionSource<DispatchResult>? completion)
 {
     internal object Action { get; } = action;
@@ -24,6 +25,9 @@ internal sealed class Pending(
 
     // Assigned under _gate in enqueue order; the first Id is 1.
     internal long Id { get; set; }
+
+    // A core failure action (§6.4 steps 1 and 6): step 2 marks its scope InFailure, so failures under it are logged only.
+    internal bool IsFailure { get; } = isFailure;
 
     internal void Complete(DispatchResult result) => completion?.TrySetResult(result);
 }

@@ -57,6 +57,16 @@ internal sealed class BoomSlice : Slice<Flag>
     protected override Flag Initial => new(false);
 }
 
+// Registered after BoomSlice: a second throwing reducer, so one ReducerFailed per action is tested where it could break.
+internal sealed class Boom2Slice : Slice<Flag2>
+{
+    public Boom2Slice() => On<Boom>(_ => throw new InvalidOperationException("boom2"));
+
+    protected override Flag2 Initial => new(false);
+}
+
+internal sealed record Flag2(bool On);
+
 internal sealed record Step(string Name);
 
 // Step runs OnStep with the action, so a test can observe the causal scope and dispatch from inside a reducer.
@@ -71,4 +81,24 @@ internal sealed class StepSlice : Slice<Count>
     public Action<Step>? OnStep { get; set; }
 
     protected override Count Initial => new(0);
+}
+
+internal sealed record Seen(int Count);
+
+// Reduces ReducerFailed: records each one and runs OnFailed inside the reducer, so a test can observe the scope, throw or
+// dispatch from a failure action.
+internal sealed class FailureSlice : Slice<Seen>
+{
+    public FailureSlice() => On<ReducerFailed>((state, failed) =>
+    {
+        Failures.Add(failed);
+        OnFailed?.Invoke(failed);
+        return state with { Count = state.Count + 1 };
+    });
+
+    public List<ReducerFailed> Failures { get; } = [];
+
+    public Action<ReducerFailed>? OnFailed { get; set; }
+
+    protected override Seen Initial => new(0);
 }

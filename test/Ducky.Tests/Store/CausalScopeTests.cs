@@ -35,10 +35,11 @@ public sealed class CausalScopeTests
         results[..64].ShouldAllBe(r => r == DispatchResult.Reduced);
         results[64].ShouldBe(DispatchResult.Dropped);
 
-        // The store is still live, and the next unrelated dispatch starts a new chain at depth 0.
+        // The store is still live, and the next unrelated dispatch starts a new chain at depth 0 (Id 67 is the drop's
+        // ReducerFailed, M1-07).
         slice.OnStep = _ => scopes.Add(store.Dispatcher.Causal.ShouldNotBeNull());
         (await store.DispatchAsync(new Step("next"))).ShouldBe(DispatchResult.Reduced);
-        scopes[^1].ShouldBe(new Cause(67, 0, 67, false));
+        scopes[^1].ShouldBe(new Cause(68, 0, 68, false));
     }
 
     // Non-normative: Process restores the drainer's scope and resets _processingSeq, so nothing leaks to the caller.
@@ -117,8 +118,8 @@ public sealed class CausalScopeTests
             }
         };
 
-        // A failure chain seeded through the internal API, the way FailureRouter will enqueue one (M1-07).
-        store.Dispatcher.Enqueue(new Pending(new Step("parent"), Origin.Local, 0, 0, true, null));
+        // A chain already descending from a failure action, seeded through the internal API.
+        store.Dispatcher.Enqueue(new Pending(new Step("parent"), Origin.Local, 0, 0, true, false, null));
 
         seen["parent"].ShouldBe(new Cause(1, 0, 1, true));
         seen["child"].ShouldBe(new Cause(2, 1, 1, true));
