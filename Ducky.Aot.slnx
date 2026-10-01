@@ -1,0 +1,6 @@
+<Solution>
+  <!-- AotSmoke (SPEC §10, §19): outside the locked Ducky.slnx, restored unlocked and published by the AotSmoke target on Linux. -->
+  <Folder Name="/test/">
+    <Project Path="test/Ducky.AotSmoke/Ducky.AotSmoke.csproj" />
+  </Folder>
+</Solution>

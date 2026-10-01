@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- NativeAOT smoke (SPEC §10, INV-24). Only in Ducky.Aot.slnx: with PublishAot a lock file would record the host-RID
+       ILCompiler package (NU1004 on other hosts), so it is restored unlocked, by the AotSmoke target on Linux only. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <!-- Set here, not only as a global -p: on the command line it would also reach the netstandard2.0 generator that
+         src/Ducky builds (NETSDK1207). -->
+    <PublishAot>true</PublishAot>
+    <!-- The one publish RID (§19), restored with the project: dotnet restore -r would flow to src/Ducky and break its
+         locked restore (NU1004). -->
+    <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <RestoreLockedMode>false</RestoreLockedMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ducky/Ducky.csproj" />
+  </ItemGroup>
+</Project>

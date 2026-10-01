@@ -14,9 +14,9 @@
   <ItemGroup Condition="'$(DuckyIsTestProject)' == 'true'">
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
     <!-- TRX for every run; coverage only when the Test target asks for it, and never in Ducky.Concurrency.Tests (§17.3):
-         there the coverage option fails as unknown. -->
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Condition="'$(ManagePackageVersionsCentrally)' == 'true' and '$(MSBuildProjectName)' != 'Ducky.Concurrency.Tests'" />
+         there the coverage option fails as unknown. Ducky.AotSmoke is a plain NativeAOT console, not a test module (§10). -->
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Condition="'$(ManagePackageVersionsCentrally)' == 'true' and '$(MSBuildProjectName)' != 'Ducky.AotSmoke'" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Condition="'$(ManagePackageVersionsCentrally)' == 'true' and '$(MSBuildProjectName)' != 'Ducky.Concurrency.Tests' and '$(MSBuildProjectName)' != 'Ducky.AotSmoke'" />
     <AdditionalFiles Include="$(RepoRoot)test/BannedSymbols.txt" />
     <AdditionalFiles Include="$(RepoRoot)test/BannedSymbols.covered.txt" Condition="'$(MSBuildProjectName)' != 'Ducky.Concurrency.Tests'" />
   </ItemGroup>
