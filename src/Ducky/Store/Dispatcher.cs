@@ -6,7 +6,7 @@ namespace Ducky;
 // The single drainer (SPEC §6.3): whoever enqueues while no drain is active drains the whole queue inline, so reducers
 // never run concurrently (INV-01) and a dispatch from a reducer is queued, never nested. No user code, log call or
 // completion runs under _gate (INV-05).
-internal sealed partial class Dispatcher(Registry registry, StateSnapshot initial, SafeLogger logger)
+internal sealed partial class Dispatcher(Registry registry, StateSnapshot initial, SafeLogger logger, int maxDispatchDepth)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();

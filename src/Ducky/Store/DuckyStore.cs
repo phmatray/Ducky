@@ -2,10 +2,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Ducky;
 
-// The store facade (SPEC §5.2). Construction is internal until DuckyStore.Create and AddDucky arrive (M1-08, M1-09).
+// The store facade (SPEC §5.2). Construction is internal until DuckyStore.Create arrives (M1-09).
 internal sealed class DuckyStore
 {
-    internal DuckyStore(IEnumerable<Slice> slices, ILogger logger)
+    internal DuckyStore(IEnumerable<Slice> slices, ILogger logger, int maxDispatchDepth = Dispatcher.DefaultMaxDispatchDepth)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -16,7 +16,7 @@ internal sealed class DuckyStore
         var registry = new Registry(owned);
         Slices = Array.AsReadOnly(owned);
         InitialState = new StateSnapshot(registry);
-        Dispatcher = new Dispatcher(registry, InitialState, new SafeLogger(logger));
+        Dispatcher = new Dispatcher(registry, InitialState, new SafeLogger(logger), maxDispatchDepth);
     }
 
     // Registry data: reading it starts nothing.

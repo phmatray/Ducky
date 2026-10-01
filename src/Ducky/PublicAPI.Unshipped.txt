@@ -98,3 +98,21 @@ Ducky.StateSnapshot.TryGet<TState>(out TState? state) -> bool
 Ducky.StateSnapshot.Version.get -> long
 Ducky.StateSnapshot.WasRestored(string! key) -> bool
 Ducky.StateSnapshot.WasRestored<TState>() -> bool
+Ducky.DuckyBuilder
+Ducky.DuckyBuilder.AddSlice<TSlice>() -> Ducky.DuckyBuilder!
+Ducky.DuckyBuilder.AddValidation(System.Func<System.IServiceProvider!, System.Collections.Generic.IEnumerable<Ducky.DuckyError!>!>! rule) -> Ducky.DuckyBuilder!
+Ducky.DuckyBuilder.DisposeTimeout.get -> System.TimeSpan
+Ducky.DuckyBuilder.DisposeTimeout.set -> void
+Ducky.DuckyBuilder.InitBufferCapacity.get -> int
+Ducky.DuckyBuilder.InitBufferCapacity.set -> void
+Ducky.DuckyBuilder.InitTimeout.get -> System.TimeSpan
+Ducky.DuckyBuilder.InitTimeout.set -> void
+Ducky.DuckyBuilder.Lifetime.get -> Microsoft.Extensions.DependencyInjection.ServiceLifetime
+Ducky.DuckyBuilder.Lifetime.set -> void
+Ducky.DuckyBuilder.MaxDispatchDepth.get -> int
+Ducky.DuckyBuilder.MaxDispatchDepth.set -> void
+Ducky.DuckyBuilder.Services.get -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Ducky.DuckyBuilder.ThrowOnUnhandledAction.get -> bool
+Ducky.DuckyBuilder.ThrowOnUnhandledAction.set -> void
+Ducky.DuckyServiceCollectionExtensions
+static Ducky.DuckyServiceCollectionExtensions.AddDucky(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Ducky.DuckyBuilder!>! configure) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

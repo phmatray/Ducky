@@ -5,9 +5,8 @@ internal sealed record Cause(long Seq, int Depth, long CorrelationId, bool InFai
 
 internal sealed partial class Dispatcher
 {
-    // Synchronous causal depth above which an action is dropped (§5.1). DuckyBuilder.MaxDispatchDepth replaces it
-    // once the builder reaches the store (M1-08, M1-09).
-    private const int MaxDispatchDepth = 64;
+    // Default synchronous causal depth above which an action is dropped (§5.1); DuckyBuilder.MaxDispatchDepth sets it.
+    internal const int DefaultMaxDispatchDepth = 64;
 
     // Per store, never static: a scope never crosses stores (§6.5).
     private readonly AsyncLocal<Cause?> _causal = new();
@@ -34,9 +33,9 @@ internal sealed partial class Dispatcher
     }
 
     // Step 1. Runs before step 2 installs p's scope.
-    private static bool DepthExceeded(Pending p)
+    private bool DepthExceeded(Pending p)
     {
-        if (p.Depth <= MaxDispatchDepth)
+        if (p.Depth <= maxDispatchDepth)
         {
             return false;
         }

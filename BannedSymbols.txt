@@ -150,3 +150,6 @@ T:System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute;No coverage e
 T:System.Diagnostics.DebuggerNonUserCodeAttribute;No coverage exclusions (ADR-0037)
 T:System.Diagnostics.DebuggerHiddenAttribute;No coverage exclusions (ADR-0037)
 T:System.Runtime.CompilerServices.CompilerGeneratedAttribute;No coverage exclusions (ADR-0037)
+
+// Browser detection (§5.1): read once per package into DuckyBuilder.IsBrowser / BlazorOptions.IsBrowser.
+M:System.OperatingSystem.IsBrowser;Read DuckyBuilder.IsBrowser or BlazorOptions.IsBrowser (§5.1)
