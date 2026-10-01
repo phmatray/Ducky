@@ -108,6 +108,9 @@ internal sealed class DuckyStore : IStore
 
     public Task InitializeAsync(CancellationToken cancellationToken = default) => Dispatcher.InitializeAsync(cancellationToken);
 
+    // Starts init; a cancelled token ends only this caller's wait (§6.3, §6.7).
+    public Task WhenIdleAsync(CancellationToken cancellationToken = default) => Dispatcher.WhenIdleAsync(cancellationToken);
+
     // Idempotent: every caller, a re-entrant one included, gets the one disposal task (§6.11).
     public ValueTask DisposeAsync() => new(Dispatcher.DisposeAsync());
 

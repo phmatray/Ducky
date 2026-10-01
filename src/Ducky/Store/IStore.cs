@@ -38,4 +38,14 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     /// <param name="cancellationToken">Cancels this caller's wait only, never init.</param>
     /// <returns>A task that completes once <see cref="StoreInitialized"/> has been processed; it never faults.</returns>
     Task InitializeAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Starts init if it has not started, and waits until the store is idle: initialized, with nothing queued and no
+    /// drain running. Use it after <see cref="IDispatcher.DispatchAsync(object)"/> to also wait for what that action
+    /// caused. After disposal it completes at once. A middleware that awaits it from its init waits until init times out,
+    /// because idle requires initialization.
+    /// </summary>
+    /// <param name="cancellationToken">Cancels this caller's wait only, never init or any other wait.</param>
+    /// <returns>A task that completes once the store is idle or disposed; it never faults.</returns>
+    Task WhenIdleAsync(CancellationToken cancellationToken = default);
 }

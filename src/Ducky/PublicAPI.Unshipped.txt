@@ -125,3 +125,4 @@ Ducky.IStore.InitializeAsync(System.Threading.CancellationToken cancellationToke
 Ducky.IStore.Restore(System.Collections.Generic.IReadOnlyDictionary<string!, object!>! values, Ducky.Origin origin) -> void
 Ducky.IStore.Slices.get -> System.Collections.Generic.IReadOnlyList<Ducky.Slice!>!
 Ducky.IStore.State.get -> Ducky.StateSnapshot!
+Ducky.IStore.WhenIdleAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
