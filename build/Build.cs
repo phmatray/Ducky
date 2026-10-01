@@ -19,7 +19,7 @@ internal sealed partial class Build : FalloutBuild, IHasSolution, IConfigureGitH
     [Parameter("PR base for Stryker --since; default origin/$GITHUB_BASE_REF, else origin/{ReleaseBranch}")]
     private readonly string? BaseRef;
 
-    [Parameter("Version (no v) of the release notes and GitHub release; default GITHUB_REF_NAME minus v, else MinVerVersion")]
+    [Parameter("Version (no v) of the release notes, the GitHub release and ShipPublicApi's analyzer release; default GITHUB_REF_NAME minus v, else MinVerVersion")]
     private readonly string? ReleaseVersion;
 
     private AbsolutePath Artifacts => RootDirectory / "artifacts";
@@ -44,10 +44,15 @@ internal sealed partial class Build : FalloutBuild, IHasSolution, IConfigureGitH
         .Executes(() => DotNet($"format {Solution} --verify-no-changes --no-restore"));
 
     // Warnings are errors via Directory.Build.props; Directory.Build.targets fails a packable net10.0 src project
-    // without IsAotCompatible (§3).
+    // without IsAotCompatible (§3) and loads PublicApiAnalyzers in every src project, whose RS0016/RS0017 .globalconfig
+    // raises to errors. PublicApiSelfCheck proves it on a planted fixture and checks each src project takes it (M0-10).
     private Target Compile => _ => _
         .DependsOn(Restore)
-        .Executes(() => DotNet($"build {Solution} -c Release --no-restore"));
+        .Executes(() =>
+        {
+            DotNet($"build {Solution} -c Release --no-restore");
+            FailOnViolations("Compile", PublicApiSelfCheck().ToList());
+        });
 
     // Grows with the gates of later stories (VerifyWorkflows, Docs); Test runs through CoverageGate, Pack through
     // PackageSmoke.

@@ -1,0 +1,9 @@
+# PublicAPI tracking (SPEC §17.1): RS0016/RS0017 are errors at analyzer severity, so a project that turns
+# TreatWarningsAsErrors off still fails on them. Only src/ projects load PublicApiAnalyzers (Directory.Build.targets).
+# NoWarn and WarningsNotAsErrors still override this severity. Compile's planted fixture (M0-10), built with
+# TreatWarningsAsErrors=false, proves both are reported as errors; Compile also rejects a src project whose NoWarn or
+# WarningsNotAsErrors names them.
+is_global = true
+
+dotnet_diagnostic.RS0016.severity = error
+dotnet_diagnostic.RS0017.severity = error

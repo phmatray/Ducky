@@ -40,6 +40,8 @@
         "PackageSmoke",
         "PropertyLong",
         "Restore",
+        "SetBaseline",
+        "ShipPublicApi",
         "SpecTraceGate",
         "Test"
       ]
@@ -126,6 +128,10 @@
           "type": "string",
           "description": "PR base for Stryker --since; default origin/$GITHUB_BASE_REF, else origin/{ReleaseBranch}"
         },
+        "NuGetFlatContainer": {
+          "type": "string",
+          "description": "NuGet V3 flat-container base URL SetBaseline reads the latest Ducky GA from"
+        },
         "Project": {
           "type": "array",
           "description": "Mutation: mutate only this project (repeatable); default every active mutated project",
@@ -139,7 +145,7 @@
         },
         "ReleaseVersion": {
           "type": "string",
-          "description": "Version (no v) of the release notes and GitHub release; default GITHUB_REF_NAME minus v, else MinVerVersion"
+          "description": "Version (no v) of the release notes, the GitHub release and ShipPublicApi's analyzer release; default GITHUB_REF_NAME minus v, else MinVerVersion"
         },
         "Solution": {
           "type": "string",

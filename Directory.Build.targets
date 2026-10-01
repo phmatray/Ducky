@@ -1,7 +1,9 @@
 <Project>
   <!-- Analyzers and ban lists per project kind (SPEC §17.1, §18). Every rule is an error through TreatWarningsAsErrors. -->
 
-  <!-- src/: public API tracking, banned APIs (§10), threading analyzers. CA2007 is raised in .editorconfig [src/**.cs]. -->
+  <!-- src/: public API tracking (RS0016/RS0017 raised to errors in .globalconfig), banned APIs (§10), threading analyzers.
+       CA2007 is raised in .editorconfig [src/**.cs]. Generator projects also track their descriptors in
+       AnalyzerReleases.*.md, which Microsoft.CodeAnalysis.Analyzers picks up from the project directory. -->
   <ItemGroup Condition="'$(DuckyIsSrcProject)' == 'true'">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
