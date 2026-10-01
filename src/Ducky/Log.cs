@@ -7,5 +7,8 @@ namespace Ducky;
 internal static partial class Log
 {
     [LoggerMessage(EventId = 1000, Level = LogLevel.Error, Message = "Reducer of slice '{SliceKey}' threw while reducing {ActionType}")]
-    internal static partial void ReducerThrew(ILogger logger, Exception exception, string sliceKey, Type actionType);
+    internal static partial void ReducerThrew(SafeLogger logger, Exception exception, string sliceKey, Type actionType);
+
+    [LoggerMessage(EventId = 1012, Level = LogLevel.Error, Message = "unexpected exception while processing {Type}")]
+    internal static partial void ProcessEscaped(SafeLogger logger, Exception exception, Type type);
 }
