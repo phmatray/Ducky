@@ -7,6 +7,7 @@ namespace Ducky;
 // The store facade (SPEC §5.2), created by DI through Create (§6.10).
 internal sealed class DuckyStore : IStore
 {
+    // middleware: creates the store's middleware in registration order, on the first drain (§6.6).
     // inits: the internal stand-in for middleware init (§6.7) that Ducky.Tests uses until middleware lands (M4-03).
     // disposeTimeout and timeProvider default to DuckyBuilder's DisposeTimeout and TimeProvider.System.
     internal DuckyStore(
@@ -15,7 +16,8 @@ internal sealed class DuckyStore : IStore
         int maxDispatchDepth = Dispatcher.DefaultMaxDispatchDepth,
         Func<Task>[]? inits = null,
         TimeSpan? disposeTimeout = null,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        Func<Middleware[]>? middleware = null)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -33,7 +35,8 @@ internal sealed class DuckyStore : IStore
             maxDispatchDepth,
             inits ?? [],
             disposeTimeout ?? TimeSpan.FromSeconds(2),
-            timeProvider ?? TimeProvider.System);
+            timeProvider ?? TimeProvider.System,
+            new(() => Attach(middleware?.Invoke() ?? []), LazyThreadSafetyMode.ExecutionAndPublication));
     }
 
     // The IStore factory AddDucky registers (§6.10): validates once per container (INV-31), then builds this store.
@@ -47,14 +50,17 @@ internal sealed class DuckyStore : IStore
             Log.SingletonOutsideBrowser(new SafeLogger(logger));
         }
 
+        AsyncServiceScope? scope = singleton ? services.CreateAsyncScope() : null;
+        var storeServices = scope?.ServiceProvider ?? services;
         return new DuckyStore(
             config.CreateSlices(),
             logger,
             config.MaxDispatchDepth,
             disposeTimeout: config.DisposeTimeout,
-            timeProvider: services.GetRequiredService<TimeProvider>())
+            timeProvider: services.GetRequiredService<TimeProvider>(),
+            middleware: () => config.CreateMiddleware(storeServices))
         {
-            Scope = singleton ? services.CreateAsyncScope() : null,
+            Scope = scope,
         };
     }
 
@@ -115,4 +121,16 @@ internal sealed class DuckyStore : IStore
     public ValueTask DisposeAsync() => new(Dispatcher.DisposeAsync());
 
     public void Dispose() => Dispatcher.Dispose();
+
+    // Store and DisposeTimeout are attached before any hook or init can run (§5.6). The factory runs on the first drain,
+    // after the constructor assigned Dispatcher, so the timeout is the clamped one step 3 waits with.
+    private Middleware[] Attach(Middleware[] middleware)
+    {
+        foreach (var m in middleware)
+        {
+            m.Attach(this, Dispatcher.DisposeTimeout);
+        }
+
+        return middleware;
+    }
 }
