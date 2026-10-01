@@ -17,4 +17,9 @@
     <PackageReference Include="Fallout.Common" />
     <PackageReference Include="Fallout.Components" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- The ducky.js block-coverage merge (SPEC §17.2), shared with the planted check of test/Ducky.E2E. -->
+    <Compile Include="../test/Ducky.E2E/JsBlockCoverage.cs" Link="JsBlockCoverage.cs" />
+  </ItemGroup>
 </Project>

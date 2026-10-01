@@ -30,6 +30,8 @@
         "Compile",
         "ConcurrencyTest",
         "CoverageGate",
+        "E2E",
+        "E2EAllBrowsers",
         "ExclusionGate",
         "Format",
         "Mutation",
