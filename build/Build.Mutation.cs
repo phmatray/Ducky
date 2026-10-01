@@ -29,9 +29,9 @@ internal sealed partial class Build
     [Parameter("Mutation: mutate only this project (repeatable); default every active mutated project")]
     private readonly string[] Project = [];
 
-    // SPEC's `--strict` (§17.8): Fallout 10.4 reserves `strict` (its execution planner then demands one total target
-    // order and fails every run of this build), so the switch is --strict-stages. SpecTraceGate shares it (M0-06).
-    [Parameter("For -rc.N and GA tags: every stage counts as active; Mutation mutates and checks all seven projects (§17.8)")]
+    // SPEC's `--strict` (§17.8, §19): Fallout 10.4 reserves `strict` (its execution planner then demands one total target
+    // order and fails every run of this build), so the switch is --strict-stages. SpecTraceGate shares it.
+    [Parameter("For -rc.N and GA tags: every stage counts as active; Mutation mutates and checks all seven projects (§17.8), SpecTraceGate fails on any inactive entry and checks all 32 invariants (§19)")]
     private readonly bool StrictStages;
 
     private AbsolutePath Manifest => RootDirectory / "docs" / "spec" / "tests.yaml";
@@ -152,7 +152,7 @@ internal sealed partial class Build
     // The manifest's activeStage and projects: stages, from its text (the working tree's, or a commit's in MutationPr).
     private static (int ActiveStage, Dictionary<string, int> Stages) ManifestStages(string yaml)
     {
-        var manifest = new DeserializerBuilder().Build().Deserialize<Dictionary<string, object>>(yaml);
+        var manifest = new DeserializerBuilder().WithDuplicateKeyChecking().Build().Deserialize<Dictionary<string, object>>(yaml);
         return (int.Parse((string)manifest["activeStage"], CultureInfo.InvariantCulture),
             ((Dictionary<object, object>)manifest["projects"]).ToDictionary(p => (string)p.Key, p => int.Parse((string)p.Value, CultureInfo.InvariantCulture)));
     }

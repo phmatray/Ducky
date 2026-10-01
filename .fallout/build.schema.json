@@ -35,6 +35,7 @@
         "MutationPr",
         "PropertyLong",
         "Restore",
+        "SpecTraceGate",
         "Test"
       ]
     },
@@ -141,7 +142,7 @@
         },
         "StrictStages": {
           "type": "boolean",
-          "description": "For -rc.N and GA tags: every stage counts as active; Mutation mutates and checks all seven projects (§17.8)"
+          "description": "For -rc.N and GA tags: every stage counts as active; Mutation mutates and checks all seven projects (§17.8), SpecTraceGate fails on any inactive entry and checks all 32 invariants (§19)"
         }
       }
     },

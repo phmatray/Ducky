@@ -1,5 +1,5 @@
-# Staged test manifest (SPEC §4, §17.8, §19, §24). M0-06 adds the tests: entries and the invariants: map and documents
-# the stage rules; M0-05 needs only activeStage and the mutated projects' stages, which Mutation and MutationPr read.
+# Staged test manifest (SPEC §4, §17.1, §19, §24; PLAN P1). The only input of SpecTraceGate: name -> project(s) ->
+# invariant(s) -> stage. Rules: docs/spec/README.md. Every name appears in SPEC.md; a {Placeholder} matches \w+.
 activeStage: 1
 
 # §17.8: the §24 step that gives each mutated project real logic. A project above activeStage is not mutated (its
@@ -12,3 +12,462 @@ projects:
   Ducky.Reactive: 16
   Ducky.Draft: 17
   Ducky.Draft.Generators: 17
+
+# The §24 step that introduces each invariant: the lowest stage of a story adding a covered-project test for it.
+# INV-24 has no covered test (its gate is the aot job); it carries the stage of the AotSmoke entry.
+invariants:
+  INV-01: 2
+  INV-02: 5
+  INV-03: 2
+  INV-04: 3
+  INV-05: 3
+  INV-06: 2
+  INV-07: 2
+  INV-08: 2
+  INV-09: 5
+  INV-10: 4
+  INV-11: 4
+  INV-12: 3
+  INV-13: 3
+  INV-14: 12
+  INV-15: 11
+  INV-16: 12
+  INV-17: 13
+  INV-18: 14
+  INV-19: 10
+  INV-20: 10
+  INV-21: 5
+  INV-22: 1
+  INV-23: 6
+  INV-24: 1
+  INV-25: 7
+  INV-26: 17
+  INV-27: 16
+  INV-28: 15
+  INV-29: 3
+  INV-30: 8
+  INV-31: 2
+  INV-32: 8
+
+# One entry per normative test name (§4, §14, §17 and the backticked names of PLAN.md). stage: the stage of the
+# story that implements it; a name listed in several projects takes the stage of the last story that adds it.
+tests:
+  - { name: ActionType_AttributeName_SurvivesAot, projects: [Ducky.AotSmoke], stage: 6 }
+  - { name: ActionType_Names_Table, projects: [Ducky.Tests], stage: 6 }
+  - { name: AddBlazor_AfterGeneratedPersist_ConfigureApplied, projects: [Ducky.Blazor.Generated.Tests], stage: 12 }
+  - { name: AddDucky_Twice_Throws, projects: [Ducky.Tests], stage: 2 }
+  - { name: AddEffect_InstanceAndType_SameEffect_OneRunner, projects: [Ducky.Tests], stage: 4 }
+  - { name: AotSmoke, projects: [Ducky.AotSmoke], invariants: [INV-24], stage: 1 }
+  - { name: Api_AllAsyncMembers_NeverFault, projects: [Ducky.Tests], invariants: [INV-10], stage: 6 }
+  - { name: Api_CallerTokenCancelled_OnlyThatWaitCanceled, projects: [Ducky.Tests], invariants: [INV-10], stage: 6 }
+  - { name: 'Api_{Member}_NeverFaults', projects: [Ducky.Tests], invariants: [INV-10], stage: 6 }
+  - { name: ArgSelector_ArgChange_Recomputes, projects: [Ducky.Tests], invariants: [INV-21], stage: 5 }
+  - { name: AssemblyNameSanitizer_Table, projects: [Ducky.Generators.Tests], stage: 7 }
+  - { name: Assertions_ThrowDuckyAssertionException, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: AsyncDispatchWhileStoreIdle_StartsNewChainAtDepthZero, projects: [Ducky.Tests], invariants: [INV-06], stage: 4 }
+  - { name: Auto_ClearInCircuitStore_ResetsWasmStore, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: Auto_ServerAndWasmStoresInOneDocument_Converge, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: Auto_SessionAndUnsyncedLocalSlices_ConvergeInOneDocument, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: Auto_SharedServerPersistRegistration_WasmStartsAndSkipsServerSlices, projects: [Ducky.E2E], stage: 18 }
+  - { name: BeforeReduceThrows_NoCommitNoNotify_EffectsStart, projects: [Ducky.Tests], invariants: [INV-08], stage: 5 }
+  - { name: BrowserLifetime_RootAndScopes_ResolveOneStore, projects: [Ducky.Tests], invariants: [INV-22], stage: 2 }
+  - { name: Browser_ServerStorageWithoutCacheOrAuth_NoConfigurationError, projects: [Ducky.Blazor.Tests], stage: 13 }
+  - { name: Build_EffectCtorDependencyMissing_ReportedWithOtherErrors, projects: [Ducky.Tests], invariants: [INV-31], stage: 4 }
+  - { name: Build_EffectCtorKeyedDependencyMissingKey_Reported, projects: [Ducky.Tests], invariants: [INV-31], stage: 4 }
+  - { name: Build_EffectCtorKeyedDependency_NotReported, projects: [Ducky.Tests], invariants: [INV-31], stage: 4 }
+  - { name: Build_ReactiveEffectCtorDependencyMissing_ReportedWithOtherErrors, projects: [Ducky.Reactive.Tests], invariants: [INV-31], stage: 16 }
+  - { name: Build_SelfContainedAndDiDependentErrors_ReportedTogether, projects: [Ducky.Tests], invariants: [INV-31], stage: 2 }
+  - { name: Build_WithFiveMisconfigurations_ReportsAllFive, projects: [Ducky.Tests], invariants: [INV-31], stage: 2 }
+  - { name: 'Caching_{Step}_Cached', projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], invariants: [INV-25], stage: 17 }
+  - { name: Circuit_PauseDuringScopeSwitch_StorageNotOverwrittenWithInitialState, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 13 }
+  - { name: Circuit_ReconnectWithScopedSlices_NoResetFlicker, projects: [Ducky.E2E], stage: 18 }
+  - { name: Circuit_ResumeAfterDisconnect_PauseSeedWinsOverStaleLocalStorage, projects: [Ducky.E2E], invariants: [INV-15], stage: 18 }
+  - { name: Circuit_ResumeAfterOtherTabWrote_CleanKey_StorageWins, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 12 }
+  - { name: Circuit_ResumeAfterVersionBump_DirtySeedKeyDropped_StorageMigrated, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 12 }
+  - { name: Circuit_ResumeUnderOtherUser_PauseSeedScopedSlicesNotRestoredOrWritten, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: Circuit_Resume_SeedRestoresPrerenderSlices, projects: [Ducky.Blazor.Tests, Ducky.E2E], stage: 18 }
+  - { name: ClearPersistedState_Strict_NoFailure, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Clear_DuringInFlightWrite_KeyStaysRemoved, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Clear_RemovesOnlyPersistedKeysOfThisScope, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Clear_WithPendingDebouncedChange_KeyStaysRemoved, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Clear_WriterInRetryBackoff_RemovedImmediately, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Component_ChangeToOtherItem_NoRerender, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Component_ChangeToSelectedItem_Rerenders, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Component_ParamChangeThenStoreChangeBackToOldValue_Rerenders, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Component_ParameterChangeWithoutDispatch_ShowsNewItem, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Component_WithoutAddBlazor_SelectsAndRerenders, projects: [Ducky.Blazor.Tests], stage: 11 }
+  - { name: CrossTab_CircuitAndWasmStoresInSamePage_IndependentListeners, projects: [Ducky.E2E], stage: 18 }
+  - { name: CrossTab_CircuitResumed_OldListenerRemoved, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_ClearFromOtherScript_ResetsSyncedSlices, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_ClearPersistedStateInOtherTab_ResetsSlice, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_CtorThrowingPayload_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_EchoDropped, projects: [Ducky.Blazor.Tests], stage: 14 }
+  - { name: CrossTab_EventDuringCircuitDisconnect_ConvergesAfterReconnect, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_EventDuringHydration_NewestWins, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_HashOrderedCollection_DifferentProcessOrder_Converges, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_LargeValue_ReadViaStream, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_ListenerRegisteredOnceAcrossReinit, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_NewerVersionEnvelope_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_NonAsciiValueUnderCharLimitOverByteLimit_UsesStream, projects: [Ducky.Blazor.Tests, Ducky.E2E], invariants: [INV-23], stage: 18 }
+  - { name: CrossTab_OldScopeEventDuringSwitch_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 14 }
+  - { name: CrossTab_OriginNeverPersisted, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_OtherScopeKey_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_RemoteChangeDuringLocalPendingWrite_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_RemovalDuringHydration_RemovalWins, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_RemovalReceipt_NoWriteBack, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ResyncAfterDisconnect_UnwrittenLocalChangeOnOtherKey_Kept, projects: [Ducky.Blazor.Tests], invariants: [INV-16, INV-18], stage: 14 }
+  - { name: CrossTab_StorageSetReportsUnknownId_ReWatchesAndReReads, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_SubscriberThatRedispatches_ConvergesWithinNWrites, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_TooLargeKeyRemovedBeforePull_RealRuntime_ResetsSlice, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_TooLargeKeyRemovedBeforePull_ResetsSlice, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_TooLarge_ReReadViaStream, projects: [Ducky.Blazor.Tests], stage: 14 }
+  - { name: CrossTab_TwoPages_ChangeInAAppearsInB, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: Descriptors_MatchCatalogue, projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], stage: 17 }
+  - { name: DevToolsPayload_NonEmpty, projects: [Ducky.AotSmoke], invariants: [INV-23], stage: 15 }
+  - { name: DevTools_DuringTimeTravel_UserActionVetoed, projects: [Ducky.Blazor.Tests], invariants: [INV-28], stage: 15 }
+  - { name: DevTools_ExtensionAbsent_Inert, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DevTools_FailureAction_ShowsTypeAndMessage, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DevTools_FakeExtension_ReceivesSanitizedPayloads, projects: [Ducky.E2E], stage: 18 }
+  - { name: DevTools_FilterExcludesAction, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DevTools_GateUnknown_ProbesAndDoesNotDelayInit, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DevTools_JumpAfterFilteredActions_RestoresMatchingEntry, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DevTools_JumpConcurrentWithSend_RestoresMatchingEntry, projects: [Ducky.Concurrency.Tests], invariants: [INV-28], stage: 15 }
+  - { name: DevTools_JumpConcurrentWithSend_RestoresMatchingEntry_Deterministic, projects: [Ducky.Blazor.Tests], invariants: [INV-28], stage: 15 }
+  - { name: DevTools_JumpMessage_StateStrippedInline, projects: [Ducky.Blazor.Tests], invariants: [INV-23], stage: 15 }
+  - { name: DevTools_JumpToRecordState_RestoresReferenceEqualSlices, projects: [Ducky.Blazor.Tests], invariants: [INV-28], stage: 15 }
+  - { name: DevTools_LargeImport_ReadViaStream, projects: [Ducky.Blazor.Tests], invariants: [INV-23], stage: 15 }
+  - { name: DevTools_OptionsReachExtension, projects: [Ducky.Blazor.Tests], invariants: [INV-28], stage: 15 }
+  - { name: DevTools_PolymorphicState_SerializedAndImportedViaDeclaredType, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DevTools_Reset_RestoresInitialStates, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DevTools_SanitizerAppliedToInitAndEverySend, projects: [Ducky.Blazor.Tests], invariants: [INV-28], stage: 15 }
+  - { name: DevTools_Trace_TrimmedFrame_RendersUnknown, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DevTools_Trace_UsesDiagnosticMethodInfo, projects: [Ducky.Blazor.Tests], stage: 15 }
+  - { name: DispatchAsync_ContinuationNeverRunsInlineOnDrainer, projects: [Ducky.Concurrency.Tests], invariants: [INV-10], stage: 2 }
+  - { name: DispatchAsync_EveryPath_ReturnsExpectedResult, projects: [Ducky.Tests], invariants: [INV-10], stage: 6 }
+  - { name: DispatchAsync_QueuedBehindOtherThreadsDrain_CompletesAfterReduce, projects: [Ducky.Concurrency.Tests], invariants: [INV-10], stage: 2 }
+  - { name: DispatchSystemLoopFromAfterReduce_IsStoppedByDepthGuard, projects: [Ducky.Tests], invariants: [INV-06], stage: 3 }
+  - { name: Dispatch_AfterDisposeOnUnmaterializedStore_IgnoredNotThrown, projects: [Ducky.Tests], invariants: [INV-29], stage: 4 }
+  - { name: Dispatch_AfterDrainRelease_NoStrandedAction, projects: [Ducky.Concurrency.Tests], invariants: [INV-03], stage: 2 }
+  - { name: Dispatch_FromNThreads_AppliesEveryActionExactlyOnce, projects: [Ducky.Concurrency.Tests], invariants: [INV-02], stage: 2 }
+  - { name: Dispatch_OwnerBlocksOnCrossThreadDispatch_DoesNotDeadlock, projects: [Ducky.Concurrency.Tests], invariants: [INV-05], stage: 2 }
+  - { name: Dispatch_PreservesPerProducerOrder, projects: [Ducky.Concurrency.Tests], invariants: [INV-04], stage: 2 }
+  - { name: Dispatch_ReentrantFromSubscriberAndEffectPrefix_EachProcessedOnce, projects: [Ducky.Tests], invariants: [INV-02], stage: 5 }
+  - { name: Dispose_AwaitsMergeAndLongRunningRuns, projects: [Ducky.Tests], invariants: [INV-29], stage: 4 }
+  - { name: Dispose_ChangeInsideDebounce_FlushedImmediately_ServerStorage, projects: [Ducky.Blazor.Tests], stage: 13 }
+  - { name: Dispose_ConcurrentWithFirstUse_EveryConstructedMiddlewareDisposed, projects: [Ducky.Concurrency.Tests], invariants: [INV-29], stage: 4 }
+  - { name: Dispose_ConcurrentWithFirstUse_EveryConstructedMiddlewareDisposed_Deterministic, projects: [Ducky.Tests], invariants: [INV-29], stage: 4 }
+  - { name: Dispose_DrainOverrunsTimeout_ServerScope_DisposeAsyncCompletesAtBound_LateFlushCountsLost, projects: [Ducky.Blazor.Tests], invariants: [INV-29], stage: 13 }
+  - { name: Dispose_DrainTimeout_MiddlewareDisposedAfterDrainExit, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_DuringConcurrentDispatch_NoExceptionNoLeak_AllTasksComplete, projects: [Ducky.Concurrency.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_DuringInit_TimerNeverFires_NoAbortLog, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_DuringStartSyncPrefix_AwaitsStartedInitsAndStartsNoMore, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_FromAfterReduce_NoEffectStartedForThatAction, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Dispose_FromDrainer_DoesNotDeadlock, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_FromRacingEffectContinuation_WaitsForDrain, projects: [Ducky.Concurrency.Tests], invariants: [INV-29], stage: 4 }
+  - { name: Dispose_FromReducer_MiddlewareDisposedAfterDrainExit, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_HungEffectRun_PersistenceStillFlushed, projects: [Ducky.Blazor.Tests], invariants: [INV-29], stage: 12 }
+  - { name: Dispose_HungMiddlewareDispose_OthersDisposedAndDisposeAsyncCompletes, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_HungMiddlewareInit_PersistenceStillFlushed, projects: [Ducky.Blazor.Tests], invariants: [INV-29], stage: 12 }
+  - { name: Dispose_InitAwaitingWhenIdle_MiddlewareStillDisposed, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_KeyInRetryBackoff_FlushWritesImmediately_ServerStorage, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 13 }
+  - { name: Dispose_MiddlewareDisposeThrows_OthersStillDisposed, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_MiddlewareInitInFlight_DisposeAsyncAfterInitTaskEnds, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_NeverMaterialized_ConstructsNothing, projects: [Ducky.Tests], invariants: [INV-29], stage: 4 }
+  - { name: Dispose_ReentrantFromLifetimeCallback_RunsOnce, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_SecondCallFromEffectRun_DoesNotWaitForItself, projects: [Ducky.Tests], invariants: [INV-29], stage: 4 }
+  - { name: Dispose_ThenStoreChange_NoStateHasChanged, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Dispose_ThrowingLifetimeCallback_CompletesAndDisposesMiddleware, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_Twice_IsNoOp, projects: [Ducky.Tests], invariants: [INV-29], stage: 3 }
+  - { name: Dispose_WaitsForInFlightDrainBeforeMiddlewareDispose, projects: [Ducky.Concurrency.Tests], invariants: [INV-29], stage: 3 }
+  - { name: DistributedCache_AnonymousUser_NoIo, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_DefaultPrefixWithServerStorage_IsConfigurationError, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_DisposeFlushesPending, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_NullScope_NoIo, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_PrerenderFlushAfterCircuitWrite_Documented, projects: [Ducky.Blazor.Tests], stage: 13 }
+  - { name: DistributedCache_StaleAttemptAfterSecondSwitch_NeverRestoredOrWrittenUnderNewScope, projects: [Ducky.Concurrency.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_StaleAttemptAfterSecondSwitch_NeverRestoredOrWrittenUnderNewScope_Deterministic, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_StaticSsrPostRedirect_StaleReadDocumented, projects: [Ducky.Blazor.Tests], stage: 13 }
+  - { name: DistributedCache_TransientCacheFailure_WriteRetriedUntilSuccess, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 13 }
+  - { name: DistributedCache_TwoCircuitsSameUser_LastWriterWins, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_TwoScopes_NeverSeeEachOther, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_UserChangeDuringInitialHydration_OldScopeValuesNeverRestored, projects: [Ducky.Concurrency.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_UserChangeDuringInitialHydration_OldScopeValuesNeverRestored_Deterministic, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_UserChangeWithConcurrentLocalChange_NeverWritesOldStateUnderNewKey, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: DistributedCache_UserChangesInsideCircuit_ActionDuringSwitch_NeverWrittenUnderOtherScope, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: Drain_ProcessThrowsAndLogRethrowsFatal_ActionCompletedAndNextDrained, projects: [Ducky.Tests], invariants: [INV-03], stage: 2 }
+  - { name: Drain_ProcessThrowsUnexpectedly_NextActionStillDrained, projects: [Ducky.Tests], invariants: [INV-03], stage: 2 }
+  - { name: DuckyComponentOfT_ConditionalStateAccessAfterFirstRender_Works, projects: [Ducky.Blazor.Tests], stage: 10 }
+  - { name: DuckyInitializerFirstToucher_SeedWrittenOnPrerenderAndAppliedBeforeFirstInteractiveRender, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: DuckyInitializer_ShowsLoadingUntilReady, projects: [Ducky.Blazor.Tests], stage: 10 }
+  - { name: DuckyJs_DevToolsLargeMessage_PullBranch, projects: [Ducky.E2E], stage: 15 }
+  - { name: DuckyJs_PrunedIdReRegisteredOnNextWrite, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
+  - { name: DuckyJs_PullExports_ReturnEmptyWhenGone, projects: [Ducky.E2E], invariants: [INV-23], stage: 12 }
+  - { name: DuckyJs_ResyncBackoff_CapsAt30s_ThenReReadsAll, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
+  - { name: DuckySelect_OnlyFragmentRerenders, projects: [Ducky.Blazor.Tests], stage: 10 }
+  - { name: DuckySelect_SelectorParameterChange_Reevaluates, projects: [Ducky.Blazor.Tests], stage: 10 }
+  - { name: DuplicateHandler_ThrowsAtConstruction, projects: [Ducky.Tests], stage: 2 }
+  - { name: DuplicateRegistration_AddSliceTwice_OneSlice, projects: [Ducky.Blazor.Tests], stage: 10 }
+  - { name: EffectContext_Run_HttpTimeout_DispatchesFailed, projects: [Ducky.Tests], stage: 4 }
+  - { name: EffectOnEffectFailed_ThrowsAfterAwait_LogsOnly, projects: [Ducky.Tests], invariants: [INV-12], stage: 4 }
+  - { name: EffectOnEffectFailed_ThrowsSync_LogsOnly_NoLoop, projects: [Ducky.Tests], invariants: [INV-12], stage: 4 }
+  - { name: EffectPingPong_SynchronousPrefix_IsStoppedByDepthGuard, projects: [Ducky.Tests], invariants: [INV-06], stage: 4 }
+  - { name: EffectPolicies_ModelBased, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: EffectTest_CollectsDispatched, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: EffectTest_ConfigureAlsoRegistersEffectType_HandlerRunsOnce, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: EffectTest_EffectInjectingSliceStore_Works, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: EffectTest_EffectReadingState_Works, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: EffectTest_UnhandledResultAction_NotAFailure, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: Effect_ConcurrencyKeyThrows_EffectFailedOtherEffectsStart, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Effect_FaultDuringDispose_StillObserved, projects: [Ducky.Tests], stage: 4 }
+  - { name: Effect_ForeignOce_IsEffectFailed, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Effect_InjectsSliceStore_Resolves, projects: [Ducky.Tests], stage: 8 }
+  - { name: Effect_KeyedSwitch_ProductB_DoesNotCancelProductA, projects: [Ducky.Tests], stage: 4 }
+  - { name: Effect_PolicyCancellation_NeverEffectFailed, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Effect_RegisteredInDi_StillStoreOwnedPerStore, projects: [Ducky.Tests], stage: 4 }
+  - { name: EntityState_JsonRoundTrip, projects: [Ducky.Tests], stage: 8 }
+  - { name: EntityState_ModelBased, projects: [Ducky.Tests], invariants: [INV-32], stage: 8 }
+  - { name: EntityState_NoOp_ReturnsSameInstance, projects: [Ducky.Tests], invariants: [INV-32], stage: 8 }
+  - { name: Evaluate_SelectorThrows_AtMostOnePendingInvoke, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: EveryErrorCode_FollowsMessageTemplate, projects: [Ducky.Blazor.Tests, Ducky.Tests], invariants: [INV-31], stage: 13 }
+  - { name: ExactTypeMatching_DerivedActionNotHandledByBaseHandler, projects: [Ducky.Tests], stage: 2 }
+  - { name: Exhaust_SecondWhileRunning_DroppedAndCounted, projects: [Ducky.Tests], stage: 4 }
+  - { name: FailureWhileReducingFailure_LogsOnly, projects: [Ducky.Tests], invariants: [INV-12], stage: 3 }
+  - { name: ForeignBase_StoreSelect_Works, projects: [Ducky.Blazor.Tests], stage: 10 }
+  - { name: Gate_Unknown_ProbeDetectsPrerender, projects: [Ducky.Blazor.Tests, Ducky.E2E], stage: 18 }
+  - { name: Gate_Wasm_ComponentRegistrationVisibleToMiddleware, projects: [Ducky.Blazor.Tests], stage: 11 }
+  - { name: 'Generated_CompilesClean_{Shape}', projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], invariants: [INV-25], stage: 17 }
+  - { name: Helper_RecordStructWithDefaults_DispatchesDefaultValues, projects: [Ducky.Generators.Tests], invariants: [INV-25], stage: 7 }
+  - { name: HintNames_UniqueAndValid, projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], invariants: [INV-25], stage: 17 }
+  - { name: Hydration_BrowserOnlyInertServerSlices_StatusHydrated, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 13 }
+  - { name: Hydration_Empty_OneTerminal, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_InitAborted_OneTerminal, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_LoadThrows_FailedGateReleasedPersistenceResumes, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_NothingPersisted_Inert, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_OneOversizedKey_OtherSlicesRestored, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_OneSliceCtorThrows_OtherSlicesStillRestored, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_ReadCompletesConcurrentlyWithInitAbort_TerminalPrecedesStoreInitialized, projects: [Ducky.Concurrency.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_ReadCompletesConcurrentlyWithInitAbort_TerminalPrecedesStoreInitialized_Deterministic, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_Restored_OneTerminal_StatusOrder, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_ResultAfterTimeout_IsDiscarded, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_ServerInteractive_BrowserReadBeforeStoreInitialized, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Hydration_StaleEpochTerminal_IgnoredBySlice, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_TerminalActions_Paired, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: Hydration_Timeout_Failed, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 12 }
+  - { name: InitBuffer_ActionsAfterReady_FollowBufferedActions, projects: [Ducky.Tests], invariants: [INV-04], stage: 3 }
+  - { name: InitBuffer_PreservesUserActionOrderAcrossGate, projects: [Ducky.Concurrency.Tests], invariants: [INV-04], stage: 3 }
+  - { name: InitStart_NeverRunsUnderGate, projects: [Ducky.Concurrency.Tests], invariants: [INV-05], stage: 3 }
+  - { name: Init_AbortCallbackThrows_StoreStillReady, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_AllInitsCompleteSynchronously_FirstDispatchReducedInline, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_AutoStartsOnFirstDispatch, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_BufferOverflow_AbortsInitDropsNothing, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_Completed_TimerNeverAborts, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_HangingMiddleware_TimesOutAndReleasesBuffer, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_MiddlewareAwaitsDispatchAsync_TimesOutNotHangs, projects: [Ducky.Tests], stage: 3 }
+  - { name: Init_MiddlewareAwaitsWhenIdle_TimesOutNotHangs, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_MiddlewareInitializeThrowsSynchronously_StoreStillReady, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_MiddlewareSyncPrefixesAllRunBeforeStartReturns, projects: [Ducky.Tests], stage: 3 }
+  - { name: Init_OverflowAbort_NeverRunsOnCaller, projects: [Ducky.Tests], invariants: [INV-05], stage: 3 }
+  - { name: Init_OverflowBetweenFlagAndStart_MiddlewareInitStillRuns, projects: [Ducky.Concurrency.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_OverflowDuringSyncPrefix_AbortsFromRunning, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_OverflowTwiceBeforeQueuedAbortRuns_QueuedOnce, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_QueuedOverflowAbortRunsAfterComplete_NoOp, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Init_StoreInitializedExactlyOnce, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: InitializeAsync_DisposedBeforeReady_Completes, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: InitializeAsync_WithConcurrentDrainer_CompletesAfterStoreInitializedReduced, projects: [Ducky.Concurrency.Tests], invariants: [INV-13], stage: 3 }
+  - { name: JsBridge_OnlyStringAndPrimitiveArgsCrossBoundary, projects: [Ducky.Blazor.Tests], invariants: [INV-23], stage: 10 }
+  - { name: LargeRead_MaxPayloadBytesBoundary, projects: [Ducky.Blazor.Tests], invariants: [INV-23], stage: 12 }
+  - { name: LargeRead_UsesStreamAboveInlineLimit, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: LastWrite_EqualsFinalState, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Lifecycle_ThrowingLoggerProvider_StoreReadyAndDisposeComplete, projects: [Ducky.Tests], invariants: [INV-13, INV-29], stage: 3 }
+  - { name: Lifetime_Default_FollowsIsBrowserSetInConfigure, projects: [Ducky.Tests], invariants: [INV-22], stage: 2 }
+  - { name: Linearizability_DispatchVsModel, projects: [Ducky.Concurrency.Tests], invariants: [INV-01], stage: 2 }
+  - { name: LoopGuardFailure_IsReducedNotDropped, projects: [Ducky.Tests], invariants: [INV-06], stage: 3 }
+  - { name: LoopGuardFailure_ReactorRedispatches_Terminates, projects: [Ducky.Tests], invariants: [INV-12], stage: 3 }
+  - { name: ManyChangedSelections_OneRender, projects: [Ducky.Blazor.Tests], stage: 10 }
+  - { name: Materialization_ConcurrentFirstUse_SecondCallerWaitsThenSucceeds, projects: [Ducky.Concurrency.Tests], invariants: [INV-05], stage: 4 }
+  - { name: Materialization_CtorThrows_EarlierInstancesDisposed, projects: [Ducky.Tests], invariants: [INV-31], stage: 4 }
+  - { name: Materialization_CtorThrows_EveryCallRethrowsSameConfigurationException, projects: [Ducky.Tests], invariants: [INV-31], stage: 4 }
+  - { name: Memoized_EqualsUnmemoized, projects: [Ducky.Tests], invariants: [INV-21], stage: 5 }
+  - { name: MultiAssembly_NoAmbiguityOrConflict, projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], invariants: [INV-25], stage: 17 }
+  - { name: NoStaticMutableFields, projects: [Ducky.Blazor.Tests, Ducky.Draft.Generators.Tests, Ducky.Draft.Tests, Ducky.Generators.Tests, Ducky.Reactive.Tests, Ducky.Testing.Tests, Ducky.Tests], invariants: [INV-22], stage: 1 }
+  - { name: NoStaticMutableFields_DetectsPlantedMutableStatic, projects: [Ducky.Tests], invariants: [INV-22], stage: 1 }
+  - { name: NoStaticState_TwoCircuitsIsolated, projects: [Ducky.Blazor.Tests], invariants: [INV-22], stage: 10 }
+  - { name: NoWrite_ForHydrationCrossTabDevToolsOrigins, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: OnAfterFreeze_Throws, projects: [Ducky.Tests], stage: 2 }
+  - { name: PersistAttributePlusBuilderMigrate_Composes, projects: [Ducky.Blazor.Generated.Tests], stage: 12 }
+  - { name: PersistAttribute_NoArguments_SlicePersisted, projects: [Ducky.Blazor.Generated.Tests], stage: 12 }
+  - { name: Persist_ContextWithCamelCaseAndEnumStringConverter_RoundTripsUsingContextOptions, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Persist_EnvelopeRoundTrip_Property, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Persist_Envelope_Migrations_Ttl_NewerVersionIgnored, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Persist_LargeSlice_OnServer_RoundTrips, projects: [Ducky.E2E], invariants: [INV-23], stage: 18 }
+  - { name: Persist_OneXFormat_Discarded, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Persist_PolymorphicState_RoundTripsViaDeclaredType, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Persist_ReloadRestores_WasmAndServer, projects: [Ducky.E2E], stage: 18 }
+  - { name: Persist_TransientNaN_NextValidValueIsWritten, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: PersistenceFailed_OncePerStreak, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: PollingEffect_RunsBeyondMaxDepthTicks, projects: [Ducky.Tests], invariants: [INV-06], stage: 4 }
+  - { name: PreInitDispatches_AreBufferedAndReplayedInOrder, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Precedence_OlderStorageEnvelope_StillWins, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Precedence_PrerenderSeed_StorageStillWins, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: Precedence_ServerStorage_IndependentOfRegistrationOrder, projects: [Ducky.Blazor.Tests], stage: 13 }
+  - { name: Precedence_ValidStorageEnvelope_WinsOverSeed, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: PrerenderSeed_AboveBudget_OmitsSliceAndLogs, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: PrerenderSeed_AppliedBeforeFirstInteractiveRender, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: PrerenderSeed_WireEstimate_NeverBelowActualEncoding, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_EnhancedNavLaterSeed_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_IdleTimeout_PersistsNoSeed_LogsOnce, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_InitStartedByDuckyInitializer_SeedAppliedBeforeFirstRender, projects: [Ducky.Blazor.Tests], stage: 11 }
+  - { name: Prerender_LargeSlice_InteractiveServer_CircuitStarts, projects: [Ducky.E2E], stage: 18 }
+  - { name: Prerender_LoadEffectSlowerThanRender_SeedWaitsForIdle, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_LoadFailedDuringPrerender_InteractiveSideRetries, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_LongRunningEffect_DoesNotBlockSeed, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_NoDoubleLoad_NetworkCalledOnce, projects: [Ducky.E2E], stage: 18 }
+  - { name: Prerender_OnPersistingRegisteredWithInteractiveAutoMode, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_PlainComponentsOnlyWasm_NoInitStall, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 12 }
+  - { name: Prerender_ReactiveLoadInFlight_Documented, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 16 }
+  - { name: Prerender_RestoredSlice_LoadEffectRunsOnceAcrossHandoff, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_SeedJustUnderBudget_QuoteDenseAndCjk_InteractiveServer_CircuitStarts, projects: [Ducky.E2E], stage: 18 }
+  - { name: Prerender_ServerAndWasmModesConfigured_SeedPersistedAndApplied, projects: [Ducky.E2E], invariants: [INV-15], stage: 18 }
+  - { name: Prerender_WasmAwaitedPreload_WarnsAndDoesNotInvertPrecedence, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 12 }
+  - { name: Prerender_WasmOverflowAbortBeforeFirstRegistration_SeedIgnored, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Prerender_WasmPreloadBeforeRun_SeedStillApplied, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
+  - { name: Produce_AssignEqualScalar_IsNoOp, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_AssignRecordToDraftableMember_Builds, projects: [Ducky.Draft.Generators.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_BaseDeepEqualBeforeAndAfter, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_DefaultImmutableArrayMember_Works, projects: [Ducky.Draft.Generators.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_ElementDraftAfterStructuralOp_Throws, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_EqualsManualWithExpressions, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_ListStructuralOps_FlushElementDrafts, projects: [Ducky.Draft.Generators.Tests], stage: 17 }
+  - { name: Produce_NoOpRecipe_ReturnsSameReference, projects: [Ducky.Draft.Generators.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_NoOp_ImmutableArrayMember_ReturnsSameReference, projects: [Ducky.Draft.Generators.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_NullableMemberNullOriginal_GetReturnsNull, projects: [Ducky.Draft.Generators.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_ReplacedChildDraft_Throws, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_RevertedScalar_ReturnsSameReference, projects: [Ducky.Draft.Generators.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_RevokedDraftAccess_Throws, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_UntouchedBranches_ReferenceEqual, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Queue_AfterDispose_HandlerNeverInvoked, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Queue_DisposeFromRunWithQueuedSuccessor_CompletesWithoutTimeout, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Queue_InstallRacesCompletionRemove_HandlerRunsOncePerAction, projects: [Ducky.Concurrency.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Queue_ThreeRuns_NeverOverlap_SlotEmptyAtIdle, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Reactive_Debounce_WithFakeTime, projects: [Ducky.Reactive.Tests], stage: 16 }
+  - { name: Reactive_DisposedWithStore_NoEmissionAfterDispose, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_DoesNotBlockWhenIdle, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_FailureCompletion_ResubscribesWithBackoff, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_Failure_IsSystemFailureAction_StrictModeClean, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_GroupByUntilRecipe_ReleasesGroups, projects: [Ducky.Reactive.Tests], stage: 16 }
+  - { name: Reactive_OfActionTypeStoreInitialized_FiresOnceNotOnResubscribe, projects: [Ducky.Reactive.Tests], stage: 16 }
+  - { name: Reactive_OnErrorResume_ContinuesStream, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_ResubscribeConcurrentWithDrain_FirstValueCurrent_NoLostSubscriber, projects: [Ducky.Concurrency.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_ResubscribeConcurrentWithDrain_FirstValueCurrent_NoLostSubscriber_Deterministic, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_ResubscribePendingAtDispose_NeverResubscribes, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_ScopedDependencyInBrowser_Resolves, projects: [Ducky.Reactive.Tests], stage: 16 }
+  - { name: Reactive_StateObservable_FirstValueIsCurrentSnapshot, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: Reactive_SyncSelfLoop_StoppedByDepthGuard, projects: [Ducky.Reactive.Tests], invariants: [INV-27], stage: 16 }
+  - { name: ReducerFailed_ExactlyOnce, projects: [Ducky.Tests], invariants: [INV-12], stage: 3 }
+  - { name: ReducerThrow_InOneSlice_CommitsNoSliceForThatAction, projects: [Ducky.Tests], invariants: [INV-08], stage: 2 }
+  - { name: ReducerThrowsOnStoreInitialized_LoadEffectAndReactiveHostStillStart, projects: [Ducky.Reactive.Tests, Ducky.Tests], invariants: [INV-13], stage: 16 }
+  - { name: Reducers_DispatchFromReducer_QueuedNotNested, projects: [Ducky.Tests], invariants: [INV-01], stage: 2 }
+  - { name: Reducers_NeverRunConcurrently, projects: [Ducky.Concurrency.Tests], invariants: [INV-01], stage: 2 }
+  - { name: Registration_RealBlazor_EmitsPersistAndPrerender_NoDucky022, projects: [Ducky.Generators.Tests], invariants: [INV-25], stage: 12 }
+  - { name: Registration_RealReactive_EmitsAddReactiveEffect_NoDucky022, projects: [Ducky.Generators.Tests], invariants: [INV-25], stage: 16 }
+  - { name: ReplayDeterminism_SameActionsSameSnapshot, projects: [Ducky.Concurrency.Tests], invariants: [INV-01, INV-04, INV-07], stage: 6 }
+  - { name: ReplayDeterminism_SameActionsSameSnapshot_Deterministic, projects: [Ducky.Tests], invariants: [INV-01, INV-04, INV-07], stage: 6 }
+  - { name: Restore_BypassesInitBuffer, projects: [Ducky.Tests], invariants: [INV-13], stage: 3 }
+  - { name: Restore_JsonElementFromDisposedDocument_WhileOtherThreadDrains_Restores, projects: [Ducky.Concurrency.Tests], invariants: [INV-01, INV-04, INV-07], stage: 6 }
+  - { name: Restore_JsonElementFromDisposedDocument_WhileOtherThreadDrains_Restores_Deterministic, projects: [Ducky.Tests], invariants: [INV-01, INV-04, INV-07], stage: 6 }
+  - { name: SafeLogger_ProviderThrows_NeverEscapes, projects: [Ducky.Blazor.Tests, Ducky.Reactive.Tests, Ducky.Tests], invariants: [INV-03], stage: 16 }
+  - { name: SameInputRefs_SameOutputInstance, projects: [Ducky.Tests], invariants: [INV-21], stage: 5 }
+  - { name: Schedule_DoesNotFlowCausalScope, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Schedule_DrainerOnRendererThread_InlineInvoke_DoesNotFlowCausalScope, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Schedule_InvokeAsyncThrows_FlagReset, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: ScopeSwitch_AuthChangeDuringInitialScopeResolution_NeverWritesUnderOldScope, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: ScopeSwitch_BetweenInitialTerminalAndInitReturn_HungRead_FailsAtOwnTimeout, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 13 }
+  - { name: ScopeSwitch_ChangeCommittedJustBeforeSwitch_WrittenUnderOldKey, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 13 }
+  - { name: ScopeSwitch_CircuitReconnectSameUser_NoResetNoReRead, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: ScopeSwitch_DuringInit_TerminalPrecedesStoreInitialized_WithinOneHydrationTimeout, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 13 }
+  - { name: ScopeSwitch_DuringInitialHydration_UnscopedKeysStillRestored, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 13 }
+  - { name: ScopeSwitch_FinalOldScopeWriteFailsTransiently_RetriedUnderOldKey, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 13 }
+  - { name: ScopeSwitch_JustAfterInitialTerminal_OwnTimerArmed_NotFailedByInitDeadline, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 13 }
+  - { name: ScopeSwitch_SameScopeReasserted_FinalWriteNotRolledBack, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: ScopeSwitch_ToAnonymousDuringInitialHydration_UnscopedKeysStillRestored, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 13 }
+  - { name: ScopeSwitch_ToAnonymous_StatusReturnsToHydrated_UnscopedWritesResume, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 13 }
+  - { name: ScopeSwitch_TwoOverlappingSwitches_DistinctEpochs_LatestWins, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: ScopeSwitch_WriterInRetryBackoff_SwitchReadCompletesWithinHydrationTimeout, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 13 }
+  - { name: Scope_DefaultNeverAppliesToBrowserKeys, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: Select_AfterFirstRender_Throws, projects: [Ducky.Blazor.Tests], invariants: [INV-20], stage: 10 }
+  - { name: Select_AfterFirstRender_ThrowsEvenIfOverrideSkipsBase, projects: [Ducky.Blazor.Tests], invariants: [INV-20], stage: 10 }
+  - { name: Select_CommitBetweenAddAndRead_InstalledByDrainer, projects: [Ducky.Tests], stage: 5 }
+  - { name: Select_ConcurrentWithCommit_NoLostOnChange, projects: [Ducky.Concurrency.Tests], invariants: [INV-09, INV-11], stage: 5 }
+  - { name: Select_DedupesOnProjectedValue, projects: [Ducky.Tests], invariants: [INV-21], stage: 5 }
+  - { name: SelfDispatchLoop_IsStoppedByDepthGuard, projects: [Ducky.Tests], invariants: [INV-06], stage: 2 }
+  - { name: ServerBrowserStorage_ChangeInsideDebounceThenCircuitClose_IsLostAndCounted, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: ServerBrowserStorage_ImportFailsOnDisconnect_ReimportedAfterReconnect, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: ServerBrowserStorage_TransientDisconnect_WriteRetriedAfterReconnect, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: ServerLifetime_HandlerScope_GetsDistinctStore, projects: [Ducky.Tests], invariants: [INV-22], stage: 2 }
+  - { name: ServerLifetime_TwoScopes_TwoStores, projects: [Ducky.Tests], invariants: [INV-22], stage: 2 }
+  - { name: ServerScopeDispose_EffectScopedDependencyDisposedAfterStoreDispose, projects: [Ducky.Tests], invariants: [INV-29], stage: 4 }
+  - { name: Server_ServerStorageWithoutCache_Ducky314, projects: [Ducky.Blazor.Tests], stage: 13 }
+  - { name: 'Skeleton_{Project}_Smoke', projects: [Ducky.Blazor.Tests, Ducky.Concurrency.Tests, Ducky.Docs.Tests, Ducky.Draft.Generators.Tests, Ducky.Draft.Tests, Ducky.E2E, Ducky.Generators.Tests, Ducky.Reactive.Tests, Ducky.Testing.Tests, Ducky.Tests], stage: 1 }
+  - { name: SliceKey_FromType_Table, projects: [Ducky.Tests], stage: 2 }
+  - { name: SliceStore_ConcurrentSetFromNThreads_AppliesAll, projects: [Ducky.Concurrency.Tests], invariants: [INV-30], stage: 8 }
+  - { name: SliceStore_InjectedInstance_IsStoreOwnedSlice, projects: [Ducky.Tests], invariants: [INV-30], stage: 8 }
+  - { name: SliceStore_RenderedThroughSelect_RerendersOnStorageRestore, projects: [Ducky.Blazor.Tests], stage: 12 }
+  - { name: SliceStore_SameReference_NoCommit, projects: [Ducky.Tests], invariants: [INV-30], stage: 8 }
+  - { name: SliceStore_SetFromSubscriberDuringDrainOwnedByEffectContinuation_IsLocal, projects: [Ducky.Tests], invariants: [INV-30], stage: 8 }
+  - { name: SliceStore_StateBeforeAttach_Throws, projects: [Ducky.Tests], stage: 8 }
+  - { name: SliceStore_StateReadFirst_SeedAndStorageApplied, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 12 }
+  - { name: SliceTest_ActionMissingFromProcessed_Throws, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: SliceTest_ThenUnchanged_ReferenceEquals, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: Snapshot_AfterConcurrentReduces_IsNeverStale, projects: [Ducky.Concurrency.Tests], invariants: [INV-07], stage: 2 }
+  - { name: Snapshot_DispatchAsyncReduced_StateVersionAtLeastCommitVersion, projects: [Ducky.Tests], invariants: [INV-07], stage: 2 }
+  - { name: Snapshot_NeverTorn, projects: [Ducky.Concurrency.Tests], invariants: [INV-07], stage: 2 }
+  - { name: Snapshot_VersionStrictlyMonotonic, projects: [Ducky.Concurrency.Tests], invariants: [INV-07], stage: 2 }
+  - { name: StaticSsr_AsyncDistributedCache_DuckyInitializer_HtmlShowsStoredValue, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: StaticSsr_AsyncDistributedCache_WithoutInitializer_HtmlShowsInitialState_Documented, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: StoreSelectionExtensions_Wasm_HandsOverScopedServices, projects: [Ducky.Blazor.Tests], stage: 11 }
+  - { name: Subscriber_DisposedBeforeNotify_NotInvoked, projects: [Ducky.Tests], invariants: [INV-09], stage: 5 }
+  - { name: Subscriber_ReadsStateAndDispatchesDuringNotify_NoDeadlock, projects: [Ducky.Concurrency.Tests], invariants: [INV-05], stage: 5 }
+  - { name: Subscriber_SelectorThrows_OthersNotifiedAndEffectsStillStart, projects: [Ducky.Tests], invariants: [INV-09], stage: 5 }
+  - { name: Subscriber_Throws_OthersStillNotified_StaysSubscribed, projects: [Ducky.Tests], invariants: [INV-09], stage: 5 }
+  - { name: Subscriber_UnsubscribesItselfDuringNotify, projects: [Ducky.Tests], invariants: [INV-09], stage: 5 }
+  - { name: SubscriptionCore_RandomPublishInterleavings_LastPublishAlwaysEvaluated, projects: [Ducky.Concurrency.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Switch_CancelCallbackThrows_DrainerSurvives, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Switch_OldRunCompletion_DoesNotRemoveNewSlot, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: Switch_StaleResultQueuedBeforeSupersession_IsDropped, projects: [Ducky.Tests], stage: 4 }
+  - { name: Switch_SupersededRunCallingSliceStoreSet_IsDropped, projects: [Ducky.Tests], invariants: [INV-11], stage: 8 }
+  - { name: Switch_SupersededRunIgnoringToken_CannotDispatch, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
+  - { name: SyncDispose_DuringDrain_NoAfterReduceOnDisposedMiddleware, projects: [Ducky.Concurrency.Tests], invariants: [INV-29], stage: 3 }
+  - { name: SyncDispose_LogsWarningAndDelegates, projects: [Ducky.Tests], stage: 3 }
+  - { name: Telemetry_ListenerThrows_LaterStepsStillRun, projects: [Ducky.Blazor.Tests, Ducky.Tests], invariants: [INV-03], stage: 12 }
+  - { name: TestStore_DisposeWithHungEffectRun_FailsWithinWallClockBound, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: TestStore_FailureTypes_CollectsCustomFailures, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: TestStore_GetSlice_ReturnsStoreOwnedSliceStore, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: TestStore_ProcessedReadWhileLongRunningEffectDispatches_NoException, projects: [Ducky.Concurrency.Tests], stage: 9 }
+  - { name: TestStore_Seed_NoFailure, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: TestStore_Seed_ResolvesKeyByDeclaredStateType, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: TestStore_Settled_WaitsForEffects, projects: [Ducky.Testing.Tests], stage: 9 }
+  - { name: Tracing_ActionFromOtherThread_ParentIsProducerActivity, projects: [Ducky.Tests], stage: 6 }
+  - { name: Tracing_ActivityCurrentRestoredAfterDispatch, projects: [Ducky.Tests], stage: 6 }
+  - { name: TwoStores_EffectRunOfA_DoesNotScopeDispatchSetOrWhenIdleOfB, projects: [Ducky.Tests], invariants: [INV-06], stage: 8 }
+  - { name: TwoStores_ShareDefinition_NoSharedCache, projects: [Ducky.Tests], invariants: [INV-21], stage: 5 }
+  - { name: TypedSelect_FastPath_SkipsProjectorWhenSlotUnchanged, projects: [Ducky.Tests], stage: 5 }
+  - { name: UnhandledAction_DefaultLogsDebug, projects: [Ducky.Tests], stage: 6 }
+  - { name: UnhandledAction_StrictMode_ReducerFailed, projects: [Ducky.Tests], stage: 6 }
+  - { name: Unserializable_Action_DegradesToNameOnce, projects: [Ducky.Tests], invariants: [INV-23], stage: 6 }
+  - { name: Veto_NeverAppliesToSystemOrRestoreOrigins, projects: [Ducky.Tests], stage: 3 }
+  - { name: WasmTrimmedSmoke, projects: [Ducky.E2E], invariants: [INV-24], stage: 18 }
+  - { name: Wasm_DelegatingHandlerDispatch_ReachesUiStore, projects: [Ducky.E2E], invariants: [INV-22], stage: 18 }
+  - { name: Wasm_ScopeWithoutHandOff_ScopedChange_NoWriterSpin, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Wasm_ServerStorageOnly_NoAuthProvider_NoSubscriptionNoThrow, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: Wasm_UserChange_InertServerSlicesResetNotRead, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
+  - { name: Wasm_UserChange_ScopedBrowserKeysMoveToNewScope, projects: [Ducky.Blazor.Tests, Ducky.E2E], invariants: [INV-17], stage: 18 }
+  - { name: WhenIdle_FromNonLongRunningEffectRun_ThrowsNotHangs, projects: [Ducky.Tests], invariants: [INV-10], stage: 4 }
+  - { name: WhenIdle_IgnoresLongRunningEffects, projects: [Ducky.Tests], stage: 4 }
+  - { name: WhenIdle_NeverCompletesWhileEffectCausedActionPending, projects: [Ducky.Tests], stage: 4 }
+  - { name: Write_AfterClear_SameContent_IsWritten, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Write_SkipRacesTerminal_DeferredKeyStillWritten, projects: [Ducky.Concurrency.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Write_TerminalAfterDeferAdd_AfterReduceSignalsOnce_Deterministic, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Write_TerminalBeforeScopeResolved_NoSpin_WrittenOnceScopeRecorded, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Write_TerminalBetweenReadAndDefer_WriterRechecksAndResignals_Deterministic, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Write_UnscopedChangeDuringScopeSwitch_IsWrittenAfterTerminal, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 13 }
+  - { name: Writes_NeverOverlapPerKey, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
