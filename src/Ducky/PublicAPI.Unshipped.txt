@@ -90,3 +90,11 @@ Ducky.Slice<TState>.On<TAction>(System.Func<TState!, TState!>! reducer) -> void
 Ducky.Slice<TState>.Slice() -> void
 override sealed Ducky.Slice<TState>.StateType.get -> System.Type!
 virtual Ducky.Slice.Key.get -> string!
+Ducky.StateSnapshot
+Ducky.StateSnapshot.Get(string! key) -> object!
+Ducky.StateSnapshot.Get<TState>() -> TState!
+Ducky.StateSnapshot.Keys.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Ducky.StateSnapshot.TryGet<TState>(out TState? state) -> bool
+Ducky.StateSnapshot.Version.get -> long
+Ducky.StateSnapshot.WasRestored(string! key) -> bool
+Ducky.StateSnapshot.WasRestored<TState>() -> bool
