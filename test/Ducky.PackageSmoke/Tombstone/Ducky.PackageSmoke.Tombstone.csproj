@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A 1.x app that bumps only Ducky.Generator (SPEC §17.9 step 4): the 2.0.0 tombstone alone must fail the build with
+       DUCKY900. Not in Ducky.PackageSmoke.slnx (it must fail); the PackageSmoke target builds it on its own. No code:
+       the error stops the build before CoreCompile. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ducky.Generator" Version="2.0.0" />
+  </ItemGroup>
+</Project>

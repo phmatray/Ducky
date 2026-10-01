@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The normal install (SPEC §17.9 step 1, R-PKG-5): only Ducky.Blazor, so Ducky and its buildTransitive/Ducky.targets
+       arrive transitively. Its DUCKY900 variant sets -p:SmokeLegacyGenerator=1.0.292 (the committed fake). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ducky.Blazor" Version="$(DuckyVersion)" />
+    <PackageReference Include="Ducky.Generator" Version="$(SmokeLegacyGenerator)" Condition="'$(SmokeLegacyGenerator)' != ''" />
+  </ItemGroup>
+</Project>

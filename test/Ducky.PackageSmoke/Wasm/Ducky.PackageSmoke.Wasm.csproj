@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <!-- WASM consumer (SPEC §17.9 step 1): compiles against the packed Ducky and Ducky.Blazor with TreatWarningsAsErrors. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ducky" Version="$(DuckyVersion)" />
+    <PackageReference Include="Ducky.Blazor" Version="$(DuckyVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
+  </ItemGroup>
+</Project>

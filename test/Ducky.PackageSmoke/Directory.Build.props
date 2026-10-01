@@ -1,0 +1,20 @@
+<Project>
+  <!-- PackageSmoke (SPEC §17.9): consumes the packed nupkgs, never src/. Outside Ducky.slnx, so the locked Restore never
+       sees it; unlocked, CPM off, built with -p:DuckyVersion=$(MinVerVersion) by the PackageSmoke target (build/Build.Release.cs). -->
+  <Import Project="../../Directory.Build.props" />
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <!-- The root Directory.Packages.props would switch CPM back on (and add its global MinVer reference). -->
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <RestoreLockedMode>false</RestoreLockedMode>
+    <!-- SPEC §17.1: audit is enforced only by the nightly Audit target; NU1900 or a new advisory must not fail the smoke restore. -->
+    <NuGetAudit>false</NuGetAudit>
+    <!-- Set per project, so a restore through the root Ducky.PackageSmoke.slnx reads this feed list too. -->
+    <RestoreConfigFile>$(MSBuildThisFileDirectory)nuget.config</RestoreConfigFile>
+    <!-- Never the global packages folder: a cached real 1.0.292, or an older alpha at the same version, would be used
+         instead of what Pack just built. The PackageSmoke target deletes this folder before restoring. -->
+    <RestorePackagesPath>$(RepoRoot)artifacts/smoke-packages/</RestorePackagesPath>
+  </PropertyGroup>
+</Project>

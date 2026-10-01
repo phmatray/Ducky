@@ -33,6 +33,8 @@
         "Format",
         "Mutation",
         "MutationPr",
+        "Pack",
+        "PackageSmoke",
         "PropertyLong",
         "Restore",
         "SpecTraceGate",

@@ -11,6 +11,12 @@
     <InternalsVisibleTo Include="Ducky.Concurrency.Tests" Key="$(DuckyPublicKey)" />
   </ItemGroup>
 
+  <!-- The only runtime dependencies (SPEC §3); PackageSmoke checks the packed nuspec against this list. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
   <!-- The generators ship inside the Ducky package (SPEC §3), never as a dependency. -->
   <ItemGroup>
     <ProjectReference Include="../Ducky.Generators/Ducky.Generators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />

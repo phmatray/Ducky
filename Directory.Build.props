@@ -19,6 +19,19 @@
     <Deterministic>true</Deterministic>
     <!-- R-PKG-6: only the six shipping projects opt back in. -->
     <IsPackable>false</IsPackable>
+    <!-- Versioning (§19): MinVer, the GlobalPackageReference of Directory.Packages.props. The orphan v2 branch reaches no
+         v* tag, so without the minimum MinVer would produce 0.0.0-alpha. -->
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerMinimumMajorMinor>2.0</MinVerMinimumMajorMinor>
+    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    <!-- Packages (§3, §17.9): validation runs inside Pack (no baseline until the 2.0.0 GA push, SetBaseline); symbols as
+         .snupkg; SourceLink comes with the SDK. The tombstone opts out of validation and symbols in its csproj. -->
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Authors>Philippe Matray</Authors>
     <!-- Anchored: a relative path would resolve per project, into src/<Project>/artifacts/. -->
     <PackageOutputPath>$(RepoRoot)artifacts/packages/</PackageOutputPath>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>

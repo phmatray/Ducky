@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Server consumer (SPEC §17.9 step 1): implicit usings plus `global using Ducky;`, and an IMiddleware, so no tombstone
+       type makes a name ambiguous. Its DUCKY902 variant sets -p:SmokeBlazorVersion=1.0.292 (the committed fake). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <SmokeBlazorVersion Condition="'$(SmokeBlazorVersion)' == ''">$(DuckyVersion)</SmokeBlazorVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="Ducky" />
+    <PackageReference Include="Ducky" Version="$(DuckyVersion)" />
+    <PackageReference Include="Ducky.Blazor" Version="$(SmokeBlazorVersion)" />
+  </ItemGroup>
+</Project>

@@ -3,6 +3,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
+    <!-- Off here: pinning would promote Ducky's Extensions abstractions to direct nuspec dependencies, outside this
+         package's SPEC §3 row; they flow through the Ducky dependency at the same version. -->
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup>

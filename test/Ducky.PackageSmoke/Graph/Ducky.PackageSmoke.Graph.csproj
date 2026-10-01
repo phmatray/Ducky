@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Restore-graph consumer (SPEC §17.9 step 3, R-PKG-1): references all five library packages, so the transitive scan
+       covers every package's whole graph, including Ducky.Testing, which no other consumer references. No code. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ducky" Version="$(DuckyVersion)" />
+    <PackageReference Include="Ducky.Blazor" Version="$(DuckyVersion)" />
+    <PackageReference Include="Ducky.Draft" Version="$(DuckyVersion)" />
+    <PackageReference Include="Ducky.Reactive" Version="$(DuckyVersion)" />
+    <PackageReference Include="Ducky.Testing" Version="$(DuckyVersion)" />
+  </ItemGroup>
+</Project>

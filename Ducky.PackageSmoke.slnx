@@ -1,0 +1,10 @@
+<Solution>
+  <!-- PackageSmoke (SPEC §17.9): outside Ducky.slnx. The failing variants (DUCKY900, DUCKY902) and the tombstone
+       consumer are built one by one by the PackageSmoke target. -->
+  <Folder Name="/test/">
+    <Project Path="test/Ducky.PackageSmoke/BlazorOnly/Ducky.PackageSmoke.BlazorOnly.csproj" />
+    <Project Path="test/Ducky.PackageSmoke/Graph/Ducky.PackageSmoke.Graph.csproj" />
+    <Project Path="test/Ducky.PackageSmoke/Server/Ducky.PackageSmoke.Server.csproj" />
+    <Project Path="test/Ducky.PackageSmoke/Wasm/Ducky.PackageSmoke.Wasm.csproj" />
+  </Folder>
+</Solution>
