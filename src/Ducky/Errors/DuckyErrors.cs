@@ -107,7 +107,7 @@ internal static class DuckyErrors
 
     // C# spelling of a type: Outer.Inner, Name<Arg, Arg>, Element[,], and T for a generic parameter.
     // ponytail: a type nested in a generic type lists every generic argument at the end (Outer.Inner<T>).
-    private static string Display(Type type) => type.IsGenericType
+    internal static string Display(Type type) => type.IsGenericType
         ? $"{Regex.Replace(type.GetGenericTypeDefinition().FullName!, @"`\d+", "").Replace('+', '.')}<{string.Join(", ", type.GetGenericArguments().Select(Display))}>"
         : type.IsArray ? $"{Display(type.GetElementType()!)}[{new string(',', type.GetArrayRank() - 1)}]"
         : type.IsGenericParameter ? type.Name
