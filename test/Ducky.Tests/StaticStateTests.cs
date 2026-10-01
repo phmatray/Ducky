@@ -45,6 +45,11 @@ public sealed class StaticStateTests
                 {
                     public static int Hits;
                 }
+
+                public static class MutantControl
+                {
+                    public static int ActiveMutant;
+                }
             }
 
             namespace Microsoft.CodeCoverage.Instrumentation.Static.Tracker
@@ -52,6 +57,26 @@ public sealed class StaticStateTests
                 public static class StaticManagedTrackerTemplate_0f8c2d1e
                 {
                     public static int Hits;
+                }
+
+                public static class Neighbour
+                {
+                    public static int Hits;
+                }
+            }
+
+            namespace Strykerpj21gpFK0syN5ug
+            {
+                public static class MutantControl
+                {
+                    public static int ActiveMutant = -2;
+                }
+
+                internal sealed class MutantContext
+                {
+                    [ThreadStatic] private static int depth;
+
+                    public static int Depth => depth;
                 }
 
                 public static class Neighbour
@@ -72,7 +97,9 @@ public sealed class StaticStateTests
                 "Fixture.Planted.Cache",
                 "Fixture.Planted.<Held>k__BackingField",
                 "Fixture.StaticManagedTrackerTemplate_Impostor.Hits",
+                "Fixture.MutantControl.ActiveMutant",
                 "Microsoft.CodeCoverage.Instrumentation.Static.Tracker.Neighbour.Hits",
+                "Strykerpj21gpFK0syN5ug.Neighbour.Hits",
             ],
             ignoreOrder: true);
     }

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- Shaped like src/Ducky.Blazor: Razor SDK, browser platform, STJ and [LoggerMessage] source generators, IVT to two
+       test projects (the covered one and the concurrency one). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Web.Tests" />
+    <InternalsVisibleTo Include="Web.Concurrency.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+</Project>

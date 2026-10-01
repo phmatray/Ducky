@@ -31,6 +31,9 @@
         "CoverageGate",
         "ExclusionGate",
         "Format",
+        "Mutation",
+        "MutationPr",
+        "PropertyLong",
         "Restore",
         "Test"
       ]
@@ -117,6 +120,13 @@
           "type": "string",
           "description": "PR base for Stryker --since; default origin/$GITHUB_BASE_REF, else origin/{ReleaseBranch}"
         },
+        "Project": {
+          "type": "array",
+          "description": "Mutation: mutate only this project (repeatable); default every active mutated project",
+          "items": {
+            "type": "string"
+          }
+        },
         "ReleaseBranch": {
           "type": "string",
           "description": "Branch releases come from; flipped to main by the GA rename PR (§21)"
@@ -128,6 +138,10 @@
         "Solution": {
           "type": "string",
           "description": "Path to a solution file that is automatically loaded"
+        },
+        "StrictStages": {
+          "type": "boolean",
+          "description": "For -rc.N and GA tags: every stage counts as active; Mutation mutates and checks all seven projects (§17.8)"
         }
       }
     },

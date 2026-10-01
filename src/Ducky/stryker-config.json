@@ -1,0 +1,23 @@
+{
+  "stryker-config": {
+    "test-runner": "mtp",
+    "thresholds": {
+      "high": 90,
+      "low": 85,
+      "break": 85
+    },
+    "mutate": [
+      "**/*.cs"
+    ],
+    "test-projects": [
+      "../../test/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj",
+      "../../test/Ducky.Concurrency.Tests/Ducky.Concurrency.Tests.csproj",
+      "../../test/Ducky.Docs.Tests/Ducky.Docs.Tests.csproj",
+      "../../test/Ducky.Reactive.Tests/Ducky.Reactive.Tests.csproj",
+      "../../test/Ducky.Testing.Tests/Ducky.Testing.Tests.csproj",
+      "../../test/Ducky.Tests/Ducky.Tests.csproj"
+    ],
+    "additional-timeout": 5000,
+    "coverage-analysis": "off"
+  }
+}

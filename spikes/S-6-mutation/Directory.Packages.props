@@ -1,0 +1,7 @@
+<Project>
+  <!-- The repository pins (Directory.Packages.props), plus the Logging abstractions Ducky.Blazor gets through Ducky (SPEC §3). -->
+  <Import Project="../../Directory.Packages.props" />
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+  </ItemGroup>
+</Project>

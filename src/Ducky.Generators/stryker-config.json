@@ -1,0 +1,18 @@
+{
+  "stryker-config": {
+    "test-runner": "mtp",
+    "thresholds": {
+      "high": 90,
+      "low": 85,
+      "break": 85
+    },
+    "mutate": [
+      "**/*.cs"
+    ],
+    "test-projects": [
+      "../../test/Ducky.Generators.Tests/Ducky.Generators.Tests.csproj"
+    ],
+    "additional-timeout": 5000,
+    "coverage-analysis": "off"
+  }
+}

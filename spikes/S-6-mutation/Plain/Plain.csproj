@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Plain SDK library, net10.0 (the Ducky, Ducky.Reactive, Ducky.Draft and Ducky.Testing shape). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>

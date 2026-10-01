@@ -1,0 +1,6 @@
+# The spike libraries follow src/: CA2007 on every await (SPEC §17.1), so S-6 checks it accepts ConfigureAwaitOptions.
+[{Plain,Web}/**.cs]
+dotnet_diagnostic.CA2007.severity = warning
+
+[*.Tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none

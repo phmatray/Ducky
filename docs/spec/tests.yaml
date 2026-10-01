@@ -1,0 +1,14 @@
+# Staged test manifest (SPEC §4, §17.8, §19, §24). M0-06 adds the tests: entries and the invariants: map and documents
+# the stage rules; M0-05 needs only activeStage and the mutated projects' stages, which Mutation and MutationPr read.
+activeStage: 1
+
+# §17.8: the §24 step that gives each mutated project real logic. A project above activeStage is not mutated (its
+# skeleton type yields no mutant); Mutation --strict-stages mutates all seven.
+projects:
+  Ducky: 2
+  Ducky.Generators: 7
+  Ducky.Testing: 9
+  Ducky.Blazor: 10
+  Ducky.Reactive: 16
+  Ducky.Draft: 17
+  Ducky.Draft.Generators: 17

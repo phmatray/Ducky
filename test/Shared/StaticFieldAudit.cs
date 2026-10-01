@@ -36,7 +36,7 @@ internal static class StaticFieldAudit
     public static IReadOnlyList<string> Violations(Assembly assembly) =>
     [
         .. from type in assembly.GetTypes()
-           where !InCompilerGeneratedType(type) && !IsCoverageTracker(type)
+           where !InCompilerGeneratedType(type) && !IsCoverageTracker(type) && !IsStrykerHelper(type)
            from field in type.GetFields(DeclaredStatics)
            where !field.IsLiteral && (!field.IsInitOnly || !IsAllowedReadonly(field))
            select $"{type.FullName}.{field.Name}",
@@ -72,4 +72,11 @@ internal static class StaticFieldAudit
     private static bool IsCoverageTracker(Type type) =>
         type.Namespace == "Microsoft.CodeCoverage.Instrumentation.Static.Tracker"
         && type.Name.StartsWith("StaticManagedTrackerTemplate_", StringComparison.Ordinal);
+
+    // §17.5: the helper types Stryker.NET injects into the audited assembly during a mutation run (tool state, not
+    // library state), in a per-run namespace "Stryker" + random letters and digits (spike S-6). Namespace shape and
+    // name must both match.
+    private static bool IsStrykerHelper(Type type) =>
+        type.Namespace is { Length: > 7 } ns && ns.StartsWith("Stryker", StringComparison.Ordinal) && ns[7..].All(char.IsAsciiLetterOrDigit)
+        && type.Name is "MutantControl" or "MutantContext";
 }
