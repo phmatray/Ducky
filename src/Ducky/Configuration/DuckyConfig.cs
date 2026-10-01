@@ -10,6 +10,7 @@ internal sealed class DuckyConfig(
     ServiceLifetime lifetime,
     bool isBrowser,
     int maxDispatchDepth,
+    TimeSpan disposeTimeout,
     DuckyConfig.SliceRegistration[] slices,
     DuckyError[] sliceErrors,
     (string Source, Exception Thrown)[] sliceFailures,
@@ -20,6 +21,8 @@ internal sealed class DuckyConfig(
     public bool IsBrowser => isBrowser;
 
     public int MaxDispatchDepth => maxDispatchDepth;
+
+    public TimeSpan DisposeTimeout => disposeTimeout;
 
     public IEnumerable<Slice> CreateSlices() => slices.Select(slice => slice.Create());
 

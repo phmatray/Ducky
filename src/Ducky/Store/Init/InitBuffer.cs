@@ -23,12 +23,18 @@ internal sealed partial class Dispatcher
         return _sharedInit.Task.WaitAsync(cancellationToken);
     }
 
-    // Called once, by the initializer, when init completes.
+    // Called once, by the initializer, when init completes. After disposal it does nothing: dispose completed the shared
+    // init task, and StoreInitialized is never reduced on a disposed store.
     internal void MarkReady()
     {
         bool drain;
         lock (_gate)
         {
+            if (_state == StoreState.Disposed)
+            {
+                return;
+            }
+
             _state = StoreState.Ready;
             var init = new Pending(new StoreInitialized(), Origin.System, 0, 0, false, false, _sharedInit);
             init.Id = init.CorrelationId = ++_lastId;
@@ -62,13 +68,14 @@ internal sealed partial class Dispatcher
     }
 }
 
-// Created -> Initializing -> Ready (Disposed comes with M1-11). Initializing is set by the first buffered enqueue,
-// the one that flags startInit (§6.3); the other triggers start init without changing it.
+// Created -> Initializing -> Ready -> Disposed (Disposed from any state, at dispose step 1). Initializing is set by the
+// first buffered enqueue, the one that flags startInit (§6.3); the other triggers start init without changing it.
 internal enum StoreState
 {
     Created,
     Initializing,
     Ready,
+    Disposed,
 }
 
 // The batched restore action (§5.7), internal: IStore.Restore copies the values when it is called.

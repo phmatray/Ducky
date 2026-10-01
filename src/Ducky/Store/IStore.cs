@@ -4,7 +4,7 @@ namespace Ducky;
 /// The store. In the browser there is one per app; on the server there is one per DI scope (the request or the circuit),
 /// so code resolving it from another scope gets a different, empty store.
 /// </summary>
-public interface IStore : IDispatcher
+public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
 {
     /// <summary>
     /// Gets the current state: a lock-free read of the last committed snapshot. The first read starts init; when every
