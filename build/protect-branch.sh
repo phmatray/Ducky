@@ -5,14 +5,15 @@
 set -euo pipefail
 branch="${1:-v2}"
 
-# Squash only; the squash commit takes the PR title, which pr-title.yml checks as a Conventional Commit.
+# Squash for single-change PRs (the squash commit takes the PR title, which pr-title.yml checks as a Conventional Commit);
+# rebase for milestone PRs, which keep one commit per story (owner decision). History stays linear either way.
 # Auto-merge on: Renovate's platformAutomerge merges through it, behind the required checks (§20.2).
 gh api -X PATCH 'repos/{owner}/{repo}' --input - >/dev/null <<'JSON'
 {
   "allow_auto_merge": true,
   "allow_squash_merge": true,
   "allow_merge_commit": false,
-  "allow_rebase_merge": false,
+  "allow_rebase_merge": true,
   "squash_merge_commit_title": "PR_TITLE",
   "squash_merge_commit_message": "PR_BODY"
 }

@@ -2055,7 +2055,7 @@ Hand-written as well: `pr-title.yml` (`amannn/action-semantic-pull-request`) and
 `build/protect-branch.sh` is a checked-in, idempotent `gh api` script, run for `v2` now and for `main` at GA:
 - Pull request required, **0 approvals** (solo maintainer; CODEOWNERS is informational).
 - Required status checks (strict, i.e. the branch must be up to date), exactly the job names that report: `ci`, `ci-cross-windows`, `ci-cross-macos`, `e2e`, `aot`, `mutation`, `pr-title`.
-- Linear history, squash merges only, no force-push or deletion, conversation resolution required, **admins included**.
+- Linear history, squash or rebase merges (rebase for milestone PRs that keep one commit per story; owner decision), no merge commits, no force-push or deletion, conversation resolution required, **admins included**.
 - Tag ruleset on `v*`: only the maintainer may create them. Rulesets can't restrict tags to commits reachable from a branch, so `Publish` enforces reachability itself (`git merge-base --is-ancestor`, §19).
 - Renovate: automerge only minor and patch updates of dev dependencies, only through platform automerge behind the required checks. Roslyn and R3 majors are on an ignore list.
 

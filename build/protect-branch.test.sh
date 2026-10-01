@@ -65,7 +65,7 @@ check "$protection" '.required_linear_history == true and .allow_force_pushes ==
   "linear history, no force-push, no deletion"
 check "$protection" '.required_conversation_resolution == true' "conversation resolution"
 check "$protection" '[.required_status_checks.checks[].app_id] | unique == [15368]' "checks pinned to the GitHub Actions app"
-check "$repo" '.allow_squash_merge == true and .allow_merge_commit == false and .allow_rebase_merge == false' "squash only"
+check "$repo" '.allow_squash_merge == true and .allow_merge_commit == false and .allow_rebase_merge == true' "squash or rebase, never merge commits"
 check "$repo" '.allow_auto_merge == true' "platform automerge behind the required checks, for Renovate (§20.2)"
 check "$repo" '.squash_merge_commit_title == "PR_TITLE"' "squash commit takes the PR title (pr-title.yml)"
 ruleset="$(find "$work/state" -name 'ruleset_*')"
