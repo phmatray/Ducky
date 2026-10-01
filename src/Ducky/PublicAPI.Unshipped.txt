@@ -2,3 +2,82 @@
 Ducky.ActionTypeAttribute
 Ducky.ActionTypeAttribute.ActionTypeAttribute(string! name) -> void
 Ducky.ActionTypeAttribute.Name.get -> string!
+Ducky.DispatchLoopException
+Ducky.DispatchLoopException.ActionType.get -> string!
+Ducky.DispatchLoopException.Depth.get -> int
+Ducky.DispatchResult
+Ducky.DispatchResult.Disposed = 4 -> Ducky.DispatchResult
+Ducky.DispatchResult.Dropped = 2 -> Ducky.DispatchResult
+Ducky.DispatchResult.Failed = 3 -> Ducky.DispatchResult
+Ducky.DispatchResult.Reduced = 0 -> Ducky.DispatchResult
+Ducky.DispatchResult.Vetoed = 1 -> Ducky.DispatchResult
+Ducky.DuckyConfigurationException
+Ducky.DuckyConfigurationException.Errors.get -> System.Collections.Generic.IReadOnlyList<Ducky.DuckyError!>!
+Ducky.DuckyError
+Ducky.DuckyError.<Clone>$() -> Ducky.DuckyError!
+Ducky.DuckyError.Code.get -> string!
+Ducky.DuckyError.Code.init -> void
+Ducky.DuckyError.Deconstruct(out string! Code, out string! Message, out string! Fix, out string! HelpLink) -> void
+Ducky.DuckyError.DuckyError(string! Code, string! Message, string! Fix, string! HelpLink) -> void
+Ducky.DuckyError.Equals(Ducky.DuckyError? other) -> bool
+Ducky.DuckyError.Fix.get -> string!
+Ducky.DuckyError.Fix.init -> void
+Ducky.DuckyError.HelpLink.get -> string!
+Ducky.DuckyError.HelpLink.init -> void
+Ducky.DuckyError.Message.get -> string!
+Ducky.DuckyError.Message.init -> void
+Ducky.EffectFailed
+Ducky.EffectFailed.<Clone>$() -> Ducky.EffectFailed!
+Ducky.EffectFailed.ActionType.get -> string!
+Ducky.EffectFailed.ActionType.init -> void
+Ducky.EffectFailed.Deconstruct(out string! EffectType, out string! ActionType, out System.Exception! Exception) -> void
+Ducky.EffectFailed.EffectFailed(string! EffectType, string! ActionType, System.Exception! Exception) -> void
+Ducky.EffectFailed.EffectType.get -> string!
+Ducky.EffectFailed.EffectType.init -> void
+Ducky.EffectFailed.Equals(Ducky.EffectFailed? other) -> bool
+Ducky.EffectFailed.Exception.get -> System.Exception!
+Ducky.EffectFailed.Exception.init -> void
+Ducky.Origin
+Ducky.Origin.CrossTab = 3 -> Ducky.Origin
+Ducky.Origin.DevTools = 4 -> Ducky.Origin
+Ducky.Origin.Effect = 1 -> Ducky.Origin
+Ducky.Origin.Hydration = 2 -> Ducky.Origin
+Ducky.Origin.Local = 0 -> Ducky.Origin
+Ducky.Origin.System = 5 -> Ducky.Origin
+Ducky.ReducerFailed
+Ducky.ReducerFailed.<Clone>$() -> Ducky.ReducerFailed!
+Ducky.ReducerFailed.ActionType.get -> string!
+Ducky.ReducerFailed.ActionType.init -> void
+Ducky.ReducerFailed.Deconstruct(out string! ActionType, out string? SliceKey, out System.Exception! Exception) -> void
+Ducky.ReducerFailed.Equals(Ducky.ReducerFailed? other) -> bool
+Ducky.ReducerFailed.Exception.get -> System.Exception!
+Ducky.ReducerFailed.Exception.init -> void
+Ducky.ReducerFailed.ReducerFailed(string! ActionType, string? SliceKey, System.Exception! Exception) -> void
+Ducky.ReducerFailed.SliceKey.get -> string?
+Ducky.ReducerFailed.SliceKey.init -> void
+Ducky.StoreInitialized
+Ducky.StoreInitialized.<Clone>$() -> Ducky.StoreInitialized!
+Ducky.StoreInitialized.Equals(Ducky.StoreInitialized? other) -> bool
+Ducky.StoreInitialized.StoreInitialized() -> void
+Ducky.UnhandledActionException
+Ducky.UnhandledActionException.ActionType.get -> string!
+override Ducky.DuckyError.Equals(object? obj) -> bool
+override Ducky.DuckyError.GetHashCode() -> int
+override Ducky.DuckyError.ToString() -> string!
+override Ducky.EffectFailed.Equals(object? obj) -> bool
+override Ducky.EffectFailed.GetHashCode() -> int
+override Ducky.EffectFailed.ToString() -> string!
+override Ducky.ReducerFailed.Equals(object? obj) -> bool
+override Ducky.ReducerFailed.GetHashCode() -> int
+override Ducky.ReducerFailed.ToString() -> string!
+override Ducky.StoreInitialized.Equals(object? obj) -> bool
+override Ducky.StoreInitialized.GetHashCode() -> int
+override Ducky.StoreInitialized.ToString() -> string!
+static Ducky.DuckyError.operator !=(Ducky.DuckyError? left, Ducky.DuckyError? right) -> bool
+static Ducky.DuckyError.operator ==(Ducky.DuckyError? left, Ducky.DuckyError? right) -> bool
+static Ducky.EffectFailed.operator !=(Ducky.EffectFailed? left, Ducky.EffectFailed? right) -> bool
+static Ducky.EffectFailed.operator ==(Ducky.EffectFailed? left, Ducky.EffectFailed? right) -> bool
+static Ducky.ReducerFailed.operator !=(Ducky.ReducerFailed? left, Ducky.ReducerFailed? right) -> bool
+static Ducky.ReducerFailed.operator ==(Ducky.ReducerFailed? left, Ducky.ReducerFailed? right) -> bool
+static Ducky.StoreInitialized.operator !=(Ducky.StoreInitialized? left, Ducky.StoreInitialized? right) -> bool
+static Ducky.StoreInitialized.operator ==(Ducky.StoreInitialized? left, Ducky.StoreInitialized? right) -> bool
