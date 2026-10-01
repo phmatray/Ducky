@@ -100,6 +100,38 @@ internal sealed class DuckyStore : IStore
         return completion.Task;
     }
 
+    // Select's interleaving seam (§6.8, §17.1): invoked between the add and the State read; null in production.
+    internal Action? AfterSubscribeHook { get; set; }
+
+    // §6.8: start init (it may drain inline before the subscription exists), add with last = Unset, read State after the
+    // add and install last with a CAS from Unset. Without onChange nothing is subscribed: nothing runs on the drainer.
+    // A selector that throws at step 3 fails Select and is unsubscribed: no Selection exists to dispose it. After
+    // disposal Subscribe holds nothing and no drain runs again, so the selection is inert.
+    public Selection<T> Select<T>(Func<StateSnapshot, T> selector, Action<T>? onChange = null, IEqualityComparer<T>? comparer = null)
+    {
+        ArgumentNullException.ThrowIfNull(selector);
+        Dispatcher.StartInit();
+        if (onChange is null)
+        {
+            return Selection<T>.Create(() => selector(Dispatcher.State));
+        }
+
+        var subscription = new Subscription<T>(selector, onChange, comparer ?? EqualityComparer<T>.Default);
+        Dispatcher.Subscribe(subscription);
+        try
+        {
+            AfterSubscribeHook?.Invoke();
+            subscription.Install(Dispatcher.State);
+        }
+        catch
+        {
+            Dispatcher.Unsubscribe(subscription);
+            throw;
+        }
+
+        return Selection<T>.Create(() => selector(Dispatcher.State), onDispose: () => Dispatcher.Unsubscribe(subscription));
+    }
+
     // Never starts init, and never enters the init buffer (§5.2).
     public void Restore(IReadOnlyDictionary<string, object> values, Origin origin)
     {

@@ -2,9 +2,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Ducky;
 
-// SPEC §6.11 steps 1-3 and phase 5a (INV-29). Every caller gets the one disposal task, published before any step runs, so
-// a call made re-entrantly from step 2's callbacks starts nothing. The other waits and phases (materialization, init,
-// effect runs, subscribers) come with those features; when step 3 times out they chain on the drain's exit, like 5a.
+// SPEC §6.11 steps 1-3, phase 5a and step 6 (INV-29). Every caller gets the one disposal task, published before any
+// step runs, so a call made re-entrantly from step 2's callbacks starts nothing. The other waits and phases
+// (materialization, init, effect runs) come with those features; when step 3 times out they chain on the drain's exit.
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The lifetime CTS is never disposed: tokens taken from it may be read after disposal, and it owns no timer or linked registration.")]
 internal sealed partial class Dispatcher
 {
@@ -23,6 +23,11 @@ internal sealed partial class Dispatcher
     // The bound step 3 actually waits with, which middleware read as DisposeTimeout (§5.6).
     internal TimeSpan DisposeTimeout => _disposeTimeout;
 
+    private Task? _disposalSteps;
+
+    // For tests: every disposal step, those chained past a step-3 timeout included; null before disposal.
+    internal Task? DisposalSteps => Volatile.Read(ref _disposalSteps);
+
     // The store lifetime, cancelled at step 2: effect runs and init link their tokens to it.
     internal CancellationToken Lifetime => _lifetime.Token;
 
@@ -36,7 +41,7 @@ internal sealed partial class Dispatcher
             return published.Task;
         }
 
-        _ = RunDisposalAsync(disposal);
+        Volatile.Write(ref _disposalSteps, RunDisposalAsync(disposal));
         return disposal.Task;
     }
 
@@ -64,11 +69,11 @@ internal sealed partial class Dispatcher
             {
                 // DisposeAsync completes at the bound; the later steps still run, chained on the drain's exit.
                 Log.DrainExitTimedOut(logger, _disposeTimeout);
-                _ = DisposeMiddlewareAsync(drainExited);
-                return;
+                disposal.TrySetResult();
             }
 
             await DisposeMiddlewareAsync(drainExited).ConfigureAwait(false);
+            ClearSubscribers();
         }
         finally
         {
