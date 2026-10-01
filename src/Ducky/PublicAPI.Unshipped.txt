@@ -81,3 +81,12 @@ static Ducky.ReducerFailed.operator !=(Ducky.ReducerFailed? left, Ducky.ReducerF
 static Ducky.ReducerFailed.operator ==(Ducky.ReducerFailed? left, Ducky.ReducerFailed? right) -> bool
 static Ducky.StoreInitialized.operator !=(Ducky.StoreInitialized? left, Ducky.StoreInitialized? right) -> bool
 static Ducky.StoreInitialized.operator ==(Ducky.StoreInitialized? left, Ducky.StoreInitialized? right) -> bool
+abstract Ducky.Slice.StateType.get -> System.Type!
+abstract Ducky.Slice<TState>.Initial.get -> TState!
+Ducky.Slice
+Ducky.Slice<TState>
+Ducky.Slice<TState>.On<TAction>(System.Func<TState!, TAction, TState!>! reducer) -> void
+Ducky.Slice<TState>.On<TAction>(System.Func<TState!, TState!>! reducer) -> void
+Ducky.Slice<TState>.Slice() -> void
+override sealed Ducky.Slice<TState>.StateType.get -> System.Type!
+virtual Ducky.Slice.Key.get -> string!
