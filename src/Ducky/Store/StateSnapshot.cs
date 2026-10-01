@@ -106,4 +106,7 @@ public sealed class StateSnapshot
 
     // A ulong shift count is taken modulo 64, so 1UL << ordinal is the ordinal's bit within its word.
     private bool IsRestored(int ordinal) => (_restored[ordinal >> 6] & (1UL << ordinal)) != 0;
+
+    // The state at a registry ordinal: the dispatcher's lookup-free read (SPEC §6.4 step 6).
+    internal object this[int ordinal] => _states[ordinal];
 }
