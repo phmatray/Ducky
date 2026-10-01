@@ -1,0 +1,114 @@
+@page "/s5"
+@using System.Diagnostics
+@using System.Text
+@inject IJSRuntime JS
+
+@* S-5 (SPEC §23, §11.5, §11.9): the IJSStreamReference read path on Interactive Server. *@
+<button id="run" @onclick="Run">run</button>
+<button id="ping" @onclick="() => _pings++">ping @_pings</button>
+<pre id="s5">@_log</pre>
+@if (RendererInfo.IsInteractive)
+{
+  <span id="ready">ready</span>
+}
+@if (_done)
+{
+  <span id="s5-done">done</span>
+}
+
+@code {
+  private const int MaxPayloadBytes = 3 * 1024 * 1024;
+  private readonly StringBuilder _log = new();
+  private int _pings;
+  private bool _done;
+
+  private async Task Run()
+  {
+    await using var module = await JS.InvokeAsync<IJSObjectReference>("import", "./spike.js");
+    _log.AppendLine($"renderer={RendererInfo.Name}");
+    foreach (var size in new[] { 100 * 1024, 2 * 1024 * 1024 })
+    {
+      await RoundTrip(module, size);
+    }
+
+    await module.InvokeVoidAsync("storageRemove", "local", "s5");
+    await Pull(module, "storageGetStream", "removed key (empty Uint8Array)");
+    await Pull(module, "nulStream", "one NUL byte (Uint8Array(1))");
+
+    try
+    {
+      await using var nothing = await module.InvokeAsync<IJSStreamReference>("returnNull");
+      _log.AppendLine($"null return: Length={nothing.Length}");
+    }
+    catch (Exception e)
+    {
+      _log.AppendLine($"null return: {e.GetType().Name}: {e.Message.Split('\n')[0]}");
+    }
+
+    await module.InvokeVoidAsync("storageSet", "local", "s5", Payload(2 * 1024 * 1024));
+    try
+    {
+      await using var big = await module.InvokeAsync<IJSStreamReference>("storageGetStream", "local", "s5");
+      _log.Append($"over limit: Length={big.Length}; ");
+      await using var stream = await big.OpenReadStreamAsync(1024 * 1024);
+      _log.AppendLine("open with maxAllowedSize 1 MiB succeeded");
+    }
+    catch (Exception e)
+    {
+      _log.AppendLine($"open with maxAllowedSize 1 MiB threw {e.GetType().Name}: {e.Message.Split('\n')[0]}");
+    }
+
+    _log.AppendLine($"after: {await module.InvokeAsync<string>("echo", "circuit alive")}");
+    await module.InvokeVoidAsync("storageRemove", "local", "s5");
+    _done = true;
+  }
+
+  private async Task Pull(IJSObjectReference module, string export, string what)
+  {
+    try
+    {
+      await using var reference = await module.InvokeAsync<IJSStreamReference>(export, "local", "s5");
+      await using var stream = await reference.OpenReadStreamAsync(MaxPayloadBytes);
+      var read = await ReadAll(stream);
+      _log.AppendLine($"{what}: Length={reference.Length}, read {read.Length} bytes");
+    }
+    catch (Exception e)
+    {
+      _log.AppendLine($"{what}: {e.GetType().Name}: {e.Message.Split('\n')[0]}");
+    }
+  }
+
+  private async Task RoundTrip(IJSObjectReference module, int size)
+  {
+    var payload = Payload(size);
+    var watch = Stopwatch.StartNew();
+    await module.InvokeVoidAsync("storageSet", "local", "s5", payload);
+    var utf8 = await module.InvokeAsync<int>("utf8Length", "local", "s5");
+    await using var reference = await module.InvokeAsync<IJSStreamReference>("storageGetStream", "local", "s5");
+    await using var stream = await reference.OpenReadStreamAsync(MaxPayloadBytes);
+    var bytes = await ReadAll(stream);
+    var equal = Encoding.UTF8.GetString(bytes) == payload;
+    _log.AppendLine($"{size} bytes: Length={reference.Length} utf8={utf8} read={bytes.Length} equal={equal} in {watch.ElapsedMilliseconds} ms");
+  }
+
+  private static async Task<byte[]> ReadAll(Stream stream)
+  {
+    using var buffer = new MemoryStream();
+    await stream.CopyToAsync(buffer);
+    return buffer.ToArray();
+  }
+
+  // An envelope-shaped ASCII JSON value of exactly n UTF-8 bytes.
+  private static string Payload(int n)
+  {
+    const string head = "{\"v\":1,\"slices\":{\"big\":\"";
+    const string tail = "\"}}";
+    return head + string.Create(n - head.Length - tail.Length, 0, (span, _) =>
+    {
+      for (var i = 0; i < span.Length; i++)
+      {
+        span[i] = (char)('a' + (i % 26));
+      }
+    }) + tail;
+  }
+}

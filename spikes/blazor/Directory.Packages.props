@@ -1,0 +1,10 @@
+<Project>
+  <!-- The repository pins (Directory.Packages.props), plus the Blazor packages of the prototype apps (SPEC §23). -->
+  <Import Project="../../Directory.Packages.props" />
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Authentication.WebAssembly.Msal" Version="10.0.12" />
+  </ItemGroup>
+</Project>

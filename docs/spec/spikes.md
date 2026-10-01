@@ -64,6 +64,100 @@ triggered and was not evaluated.
 
 Not measured here: Linux and Windows. CoverageGate runs there once the CI workflows arrive (M0-11).
 
+## S-3: the AOT-clean prerender seed path (M0-13)
+
+**Question.** Does a trimmed AOT WebAssembly app persist and take a `byte[]` seed with zero IL warnings, through a
+`JsonTypeInfo`-based `PersistentComponentState` API if .NET 10 has one, or through the audited `byte[]` suppression?
+
+**Setup.** `spikes/blazor` (one Blazor Web App, `SPIKE_MODES=wasm`), run 2026-10-01 on macOS arm64 with SDK 10.0.401,
+ASP.NET Core 10.0.12 and Chromium (Playwright 1.63). The prerender pass registers `RegisterOnPersisting(…,
+RenderMode.InteractiveAuto)` and writes `PersistAsJson<byte[]>("ducky:seed", utf8)`; the WASM store (a singleton with
+its own store scope) takes it with `TryTakeFromJson<byte[]>`. The client is published with `-p:RunAOTCompilation=true`
+and `TrimMode=full` (42 assemblies AOT-compiled), once with the suppression and once without (`-p:SeedPath=Json`).
+The system SDKs had no usable wasm-tools (10.0.302's workload set is missing manifests, 10.0.401 has none), so the AOT
+publish used a private 10.0.401 with wasm-tools in a scratch directory; nothing was installed system-wide.
+
+**Answer: yes, through the audited suppression.** .NET 10.0.12 has no `JsonTypeInfo` overload: the public surface of
+`PersistentComponentState` is `RegisterOnPersisting` (with and without a render mode), `RegisterOnRestoring`,
+`PersistAsJson<T>` and `TryTakeFromJson<T>`, both `[RequiresUnreferencedCode]` and neither `[RequiresDynamicCode]`.
+`PersistAsBytes`/`TryTakeBytes` exist but are internal, and `PersistentComponentStateSerializer<T>` only serves
+`[PersistentState]` properties. With one `[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "byte[] is
+intrinsic to STJ")]` on each of the two seed calls, the AOT publish reports no IL warning from the app's code, and the
+AOT app takes the prerender seed (`taken through the store scope: {"src":"prerender",…}`). Without it, the two call
+sites report IL2026 twice each (the trim analyzer at build, ILLink at publish). No IL3050 suppression is needed.
+
+**Consequences.**
+
+- §10's audited suppression stands, as one IL2026 justification carried by exactly two attributes, because
+  `UnconditionalSuppressMessage` applies per member: one on the member making the persist call, one on the member making
+  the take call, and no IL3050. §10's bullet now says so. The seed stays `PersistAsJson<byte[]>` (base64 inside the
+  state dictionary), so §11.4's wire estimate is unchanged.
+- **The Blazor WebAssembly SDK hides trim warnings by default**: it sets `SuppressTrimAnalysisWarnings=true` unless
+  `TrimmerDefaultAction` is `link`, so a trimmed publish reports no IL warning at all. `WasmTrimmedSmoke`'s publish in
+  the `AotSmoke` target (M14-06) must pass `-p:SuppressTrimAnalysisWarnings=false`. This and the next three bullets
+  amend the publish arguments of §10's `Samples.Wasm` smoke bullet and of §19's `AotSmoke` row, and M14-06.
+- Every trimmed Blazor WASM publish on 10.0.12 then reports IL2104 for `Microsoft.AspNetCore.Components` and
+  `Microsoft.JSInterop`, the framework's own warnings (with `TrimmerSingleWarn=false`: IL2065, IL2072 and IL2111 inside
+  `DotNetDispatcher`, `ComponentFactory`, `ComponentProperties` and `CascadingParameterState`). They fail the publish
+  under warnings as errors, so the target passes `-p:ILLinkTreatWarningsAsErrors=false`, fails unless the output reports
+  IL2104 for both assemblies (the positive control: with the warnings hidden the output is empty and a scan for unwanted
+  warnings alone would pass), and fails on any other IL warning.
+- Any `Routes`/`App` that renders `<Router>` trips the trim analysis through the generated `OpenComponent<Router>`
+  (`Router.NotFoundPage` is a DAM-annotated property): IL2111 from the build-time analyzer, IL2110 from ILLink once
+  the component is kept. Ducky.Blazor renders no Router. The sample needs a type-level suppression on that component,
+  justified as the framework's.
+- `TrimMode=full` trims away whatever the trimmer cannot see being used: in a Web App client the server-referenced root
+  component went ("Root component type 'Client.Routes' could not be found"), and routed pages are found only by
+  reflection. The prototype makes its client assembly a `TrimmerRootAssembly`, which keeps it analysed. The trimmed
+  sample of M14-06 does the same, or `WasmTrimmedSmoke` fails with a blank page.
+
+Not measured here: Linux and Windows (the `aot` job publishes on Linux; M14-06 checks the IL2104 allowlist and the AOT
+publish there again), and Firefox and WebKit (Chromium only).
+
+## S-5: the `IJSStreamReference` read path on Server (M0-13)
+
+**Question.** Does a Server app round-trip about 2 MB from `localStorage` through `IJSStreamReference` without closing
+the circuit, and does a pull export returning an empty `Uint8Array` yield a zero-length reference (§11.9)?
+
+**Setup.** `spikes/blazor`, `/s5`, same run as S-3, `SPIKE_MODES=server` (and again on the WASM side, with
+`SPIKE_MODES=wasm`, Debug and AOT). .NET writes an envelope-shaped ASCII value of 100 KiB and 2 MiB with
+`storageSet(area, key, value)` (one string argument, .NET to JS), `storageGetStream` returns
+`new TextEncoder().encode(localStorage.getItem(key) ?? "")`, and .NET reads it with `OpenReadStreamAsync(3 MiB)` under
+`await using`. Then the removed key, a one-byte array, `null`, and a 2 MiB value opened with `maxAllowedSize` 1 MiB.
+
+**Answer: the round trip yes; the empty array no.**
+
+| Case | Interactive Server | WebAssembly |
+|---|---|---|
+| 100 KiB and 2 MiB | `Length` = UTF-8 size, bytes equal, 17 ms and 47 ms | the same, 20 ms and 30 ms (AOT) |
+| empty `Uint8Array` | `JSException`: "Length must be a positive value. (Parameter 'totalLength')" | the same `JSException` |
+| `new Uint8Array(1)` | `Length` 1, 1 byte read | the same |
+| `null` | `JSException`: "Cannot read properties of null (reading 'buffer')" | the same |
+| 2 MiB, `maxAllowedSize` 1 MiB | the reference is created (`Length` 2097152); `OpenReadStreamAsync` throws `ArgumentOutOfRangeException` | the same |
+
+The circuit stayed open throughout (no `closed` in the circuit log, a later click re-rendered, no reconnect UI). In an
+earlier run the empty-array `JSException` escaped the click handler and the circuit died (`CircuitHost` event 111): an
+unhandled pull failure is fatal to the circuit, so every pull call site catches.
+
+**Fallback (triggered): the pull exports never return an empty array.** `storageGetStream` (M6-01, read by M6-09 and
+M7-02b) and `devtoolsTakeMessage` (M8-01, read by M8-03b) return `new Uint8Array(1)` (one NUL byte) when nothing is
+there, and .NET treats a reference with `Length <= 1` as not found: an envelope and a DevTools message are JSON objects,
+never shorter than 2 bytes. That replaces "an empty `Uint8Array`" and "`Length == 0`" in INV-23 (§3), §11.5 step 4,
+§11.7, §11.8, §11.9, ADR-0030 and the stories M6-01, M6-09, M7-02b, M8-01 and M8-03b, all amended to match. The harness
+spec is renamed `DuckyJs_PullExports_ReturnOneByteWhenGone` (SPEC, `tests.yaml`, plan) and asserts the one-byte return;
+`CrossTab_TooLargeKeyRemovedBeforePull_RealRuntime_ResetsSlice` asserts the one-byte reference; the fake references of
+the bUnit `CrossTab_TooLargeKeyRemovedBeforePull_ResetsSlice` and of `DevTools_LargeImport_ReadViaStream` (its
+taken-message case) have `Length` 1. The `null` rule of §11.9 is confirmed.
+
+**The over-`MaxPayloadBytes` path is decided from `Length`.** The reference arrives with its size (2097152 above), so
+§11.5 and §11.8 treat `reference.Length > MaxPayloadBytes` as not found with Warning 2023 before calling
+`OpenReadStreamAsync`, inside the `await using` of the reference. `maxAllowedSize` stays as a backstop; its
+`ArgumentOutOfRangeException`, if caught at all, is caught around the `OpenReadStreamAsync` call only, so an unrelated
+one from the read or the envelope parsing is never turned into a silent "not found".
+
+Not measured here: Linux and Windows, Firefox and WebKit (Chromium only), and values near the 5 MiB `localStorage`
+quota.
+
 ## S-6: Stryker.NET with the MTP test runner (M0-05)
 
 **Question.** Does Stryker.NET with `test-runner: mtp` report a score, with `--since` and with a full run, for a plain
@@ -160,6 +254,90 @@ made in a plain clone with one changed line per project (commands in the spike's
 
 Not measured here: Linux and Windows (the `mutation` and `nightly-mutation` workflows arrive with M0-11), and run times
 at scale (S-9).
+
+## S-7: .NET 10 render-mode and service questions (M0-13)
+
+**Question.** The six questions of §23 S-7, before M5-04 designs the `InteractivityGate`.
+
+**Setup.** `spikes/blazor`, same run as S-3, the one Web App in its three configurations: `server` (Interactive Server
+only), `wasm` (Interactive WebAssembly only) and `auto` (both render modes, `InteractiveAuto` on `Routes`, as the Auto
+template). Development environment, so the server's scope validation is on; the AOT publish of S-3 repeated the
+`wasm` answers in Production. Cookie sign-in with a `NameIdentifier` claim; the store subscribes to
+`AuthenticationStateChanged` on its store-scope provider and calls a delegate shaped like `DuckyScopes.NameIdentifier`
+(`(await provider.GetAuthenticationStateAsync()).User.FindFirst(ClaimTypes.NameIdentifier)?.Value`), recording whether
+its task has completed before any await.
+
+**Answers.**
+
+1. **`PersistentComponentState` and `IJSRuntime` in WASM: yes, identical.** Both are singletons
+   (`PersistentComponentState` from a factory, `IJSRuntime` the `DefaultWebAssemblyJSRuntime` instance), and the
+   renderer scope, the store scope and the root return the same instances, in the `wasm` app and on the WebAssembly side
+   of `auto`. The root, measured in a second run of `wasm` and `auto` (same day and versions), is the provider the
+   singleton store is constructed from; resolving the scoped `AuthenticationStateProvider` from it throws under the
+   Development scope validation, as a root should. On the server both are scoped and the DI scope is the store scope
+   (renderer and store resolve the same instance; the root throws under scope validation). **`WebAssemblyHost.Services`,
+   what Program.cs reaches as `host.Services`, is not the root:** it is the renderer's scope itself (the same provider
+   object, so it resolves the scoped `AuthenticationStateProvider` to the renderer's instance). §6.10's "from the root
+   (for example a Program.cs preload through `host.Services`)" was inaccurate and now names `host.Services` as the
+   renderer scope; a singleton store is the same instance either way.
+2. **`AuthenticationStateProvider` is scoped everywhere measured:** `DeserializedAuthenticationStateProvider`
+   (`AddAuthenticationStateDeserialization`, the Web App template's WASM side), `RemoteAuthenticationService<…>`
+   (`AddOidcAuthentication` and `AddMsalAuthentication`) and `ServerAuthenticationStateProvider`. In the browser the
+   store scope gets a different instance from the renderer's, as §6.10 and §11.6 assume; the hand-off stays mandatory.
+3. **The synchronous `InvalidOperationException` from the prerender import: only without server interactivity.** In
+   the `wasm` app the prerender `IJSRuntime` is `UnsupportedJavaScriptRuntime` and the import throws synchronously
+   ("…cannot be issued during server-side static rendering…"). In the `server` and `auto` apps it is `RemoteJSRuntime`,
+   and the call returns a task that is **already faulted** with `InvalidOperationException` ("…the component is being
+   statically rendered…"); nothing is thrown. Interactive runtimes (circuit and WASM) return a pending task that
+   completes. So this answer is **no** for every app that configures Interactive Server, the Auto template included.
+4. **A paused and resumed circuit delivers `ducky:seed` to a scoped service: yes.** After three increments,
+   `Blazor.pauseCircuit()` ran the store's `InteractiveAuto` callback (`src: "pause"`), the circuit closed, and after
+   `Blazor.resumeCircuit()` the new circuit's new store took `{"src":"pause","counter":3}` in its first component's
+   `OnInitialized`. One client-side caveat for the E2E twins: after a reconnect forced with
+   `Blazor._internal.forceCloseConnection()`, `pauseCircuit()` returns `true` without sending `PauseCircuit`, and
+   `resumeCircuit()` is then refused ("The circuit host '…' has already been initialized"), in every run. Pause before
+   forcing a reconnect, or on a fresh page.
+5. **`RegisterOnPersisting(…, RenderMode.InteractiveAuto)` persists the seed in single-mode and both-modes apps: yes.**
+   The seed went into the server state of the `server` app, the WebAssembly state of the `wasm` app, and both of them in
+   the `auto` app, and was taken on the Server side (first visit) and on the WebAssembly side (once its resources were
+   cached). A null-mode registration from the same non-component service is accepted in both single-mode apps (both keys
+   persisted), but in the `auto` app persisting throws `InvalidOperationException` ("The registered callback
+   PersistNullMode must be associated with a component or define an explicit render mode type during registration",
+   from `ComponentStatePersistenceManager.InferRenderModes`) and the whole response is a 500: §11.4's explicit mode is
+   required, and the failure is worse than a lost seed.
+6. **Reconnect raises `AuthenticationStateChanged` on the live store: yes, and the scope completes synchronously.** After
+   `forceCloseConnection()` the circuit reconnected (`connection down`, `connection up`, same circuit, same store and
+   provider instance), the event fired once with its task completed, and the `NameIdentifier` delegate had completed
+   with the same user (`alice`) before any await, which is the case §11.6's re-assertion check absorbs. **Resume raises
+   nothing on a live store:** a resumed circuit is a new DI scope, so its store is new and is created after the user is
+   set; it saw no event, and its epoch-0 resolution completed synchronously with the user.
+
+**Fallbacks triggered.**
+
+- **The probe (answer 3).** M5-04's gate probe treats both shapes as `NonInteractive`: a synchronous
+  `InvalidOperationException` from the import, or a returned task that is already faulted with an
+  `InvalidOperationException` (checked without awaiting). Any other outcome is `Interactive`, and only a task that is
+  not faulted is kept as the module handle. That amends §11.4's probe bullet, ADR-0029, M5-04 and
+  `Gate_Unknown_ProbeDetectsPrerender`, whose fake runtime gets both shapes in bUnit and whose E2E twin runs against the
+  Server and Auto samples.
+- **The `DuckyComponent` hand-off for the other services (§23 rule): enabled.** Answer 3 is a no, and §23 says any no
+  enables the fallback of §6.10. M5-04's `InteractivityGate` hand-off therefore carries the renderer-scope
+  `PersistentComponentState` and `IJSRuntime` along with the renderer `IServiceProvider` (from which the
+  `AuthenticationStateProvider` is taken, §11.6), and `PrerenderHandoff` and `JsBridge` use the handed-over instances
+  once a component has registered; before that (a Program.cs preload) they use the store scope's. §6.10 and M5-04 now
+  say so. Answer 1 measured the same instances in every scope on 10.0.12, so on that version the fallback changes no
+  behaviour and no real-runtime test can tell; `Gate_Wasm_HandsOverPersistentStateAndJsRuntime` (bUnit, a fake renderer
+  scope whose instances differ from the store scope's) checks the routing, so it holds when an upgrade makes either
+  service scoped in WASM. Dropping the fallback on the strength of answer 1 would amend the rule of §23 and §6.10: an
+  owner decision, which this record does not make.
+- Answers 2, 4 and 5 confirm §6.10 and §11.4 as written. Answer 6 confirms §11.6 for reconnect (`ConnectCircuit`) only:
+  §11.6's "spike S-7 confirms it for .NET 10 reconnect and resume" was wrong for `ResumeCircuit`, which creates a new
+  store and raises no event on a live one. That is a wording correction with no design change, made in §11.6.
+  `Circuit_ReconnectWithScopedSlices_NoResetFlicker` relies on answer 6; on resume no re-assertion is needed.
+
+Not measured here: Linux and Windows, Firefox and WebKit (Chromium only), and running OIDC or MSAL apps: answer 2's
+`AddOidcAuthentication` and `AddMsalAuthentication` lifetimes come from their service registrations, not from apps that
+sign in through them.
 
 ## S-8: workflow job names from `DuckyGitHubActionsAttribute` (M0-11)
 

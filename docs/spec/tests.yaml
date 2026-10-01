@@ -201,7 +201,7 @@ tests:
   - { name: DuckyInitializer_ShowsLoadingUntilReady, projects: [Ducky.Blazor.Tests], stage: 10 }
   - { name: DuckyJs_DevToolsLargeMessage_PullBranch, projects: [Ducky.E2E], stage: 15 }
   - { name: DuckyJs_PrunedIdReRegisteredOnNextWrite, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
-  - { name: DuckyJs_PullExports_ReturnEmptyWhenGone, projects: [Ducky.E2E], invariants: [INV-23], stage: 12 }
+  - { name: DuckyJs_PullExports_ReturnOneByteWhenGone, projects: [Ducky.E2E], invariants: [INV-23], stage: 12 }
   - { name: DuckyJs_ResyncBackoff_CapsAt30s_ThenReReadsAll, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
   - { name: DuckySelect_OnlyFragmentRerenders, projects: [Ducky.Blazor.Tests], stage: 10 }
   - { name: DuckySelect_SelectorParameterChange_Reevaluates, projects: [Ducky.Blazor.Tests], stage: 10 }
@@ -235,6 +235,7 @@ tests:
   - { name: ForeignBase_StoreSelect_Works, projects: [Ducky.Blazor.Tests], stage: 10 }
   - { name: Gate_Unknown_ProbeDetectsPrerender, projects: [Ducky.Blazor.Tests, Ducky.E2E], stage: 18 }
   - { name: Gate_Wasm_ComponentRegistrationVisibleToMiddleware, projects: [Ducky.Blazor.Tests], stage: 11 }
+  - { name: Gate_Wasm_HandsOverPersistentStateAndJsRuntime, projects: [Ducky.Blazor.Tests], stage: 11 }
   - { name: 'Generated_CompilesClean_{Shape}', projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], invariants: [INV-25], stage: 17 }
   - { name: Helper_RecordStructWithDefaults_DispatchesDefaultValues, projects: [Ducky.Generators.Tests], invariants: [INV-25], stage: 7 }
   - { name: HintNames_UniqueAndValid, projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], invariants: [INV-25], stage: 17 }

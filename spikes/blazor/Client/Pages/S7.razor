@@ -1,0 +1,34 @@
+@page "/s7"
+@implements IDisposable
+@inject SpikeStore Store
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+
+@* S-7 (SPEC §23): every answer this host can give, printed for the driver. *@
+<pre id="mode">renderer=@RendererInfo.Name interactive=@RendererInfo.IsInteractive browser=@OperatingSystem.IsBrowser() store=@Store.Id</pre>
+<pre id="identity">@Store.Identity</pre>
+<pre id="probe">@Store.Probe</pre>
+<pre id="seed">@Store.Seed</pre>
+<pre id="nullmode">@Store.NullMode</pre>
+<pre id="lifetimes">@_lifetimes</pre>
+<pre id="auth">@string.Join('\n', Store.AuthEvents)</pre>
+<button id="inc" @onclick="() => Store.Counter++">counter @Store.Counter</button>
+@if (RendererInfo.IsInteractive)
+{
+  <span id="ready">ready</span>
+}
+
+@code {
+  private string _lifetimes = "";
+
+  protected override void OnInitialized()
+  {
+    Store.Touch(Services, RendererInfo, Navigation.Uri.Contains("nullmode=1", StringComparison.Ordinal));
+    _lifetimes = OperatingSystem.IsBrowser() ? Lifetimes.Describe() : "";
+    Store.Changed += OnChanged;
+  }
+
+  public void Dispose() => Store.Changed -= OnChanged;
+
+  private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+}

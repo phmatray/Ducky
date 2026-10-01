@@ -1083,10 +1083,11 @@ Ducky.Blazor foundation (AddBlazor, JsBridge, fakes on a real ComponentStatePers
 - **Unblocks:** M6-04, M6-07, M8-02
 - **Area:** `src/Ducky.Blazor/Interactivity`
 - **Invariants:** INV-15, INV-19
-- **Scope:** Internal gate, one per store, reached through the store-owned PersistenceSlice registration (it follows the store's lifetime; never a scoped service): Unknown/Interactive/NonInteractive; IsBrowser => Interactive; the first toucher (DuckyComponent, DuckySelect and StoreSelectionExtensions.Select through its services parameter, DuckyInitializer) records RendererInfo.IsInteractive and hands over its scoped IServiceProvider; one synchronous probe through JsBridge when still Unknown (a synchronous InvalidOperationException => NonInteractive, else Interactive and keep the module task); a synchronous OnFirstRegistration(Action) callback run outside locks. SubscriptionCore and DuckyInitializer resolve the gate with GetService and skip recording and hand-off when AddBlazor() was not called. Built on the S-7 prototype answers (M0-13).
+- **Scope:** Internal gate, one per store, reached through the store-owned PersistenceSlice registration (it follows the store's lifetime; never a scoped service): Unknown/Interactive/NonInteractive; IsBrowser => Interactive; the first toucher (DuckyComponent, DuckySelect and StoreSelectionExtensions.Select through its services parameter, DuckyInitializer) records RendererInfo.IsInteractive and hands over its scoped IServiceProvider with its PersistentComponentState and IJSRuntime (the S-7 fallback, §6.10: PrerenderHandoff and JsBridge use the handed-over instances once a component has registered); one synchronous probe through JsBridge when still Unknown (a synchronous InvalidOperationException, or a returned task already faulted with one, checked without awaiting => NonInteractive; else Interactive, keeping the module task only when it is not faulted; S-7); a synchronous OnFirstRegistration(Action) callback run outside locks. SubscriptionCore and DuckyInitializer resolve the gate with GetService and skip recording and hand-off when AddBlazor() was not called. Built on the S-7 prototype answers (M0-13, docs/spec/spikes.md S-7).
 - **Acceptance tests:**
-  - `Gate_Unknown_ProbeDetectsPrerender` (bUnit; its E2E twin is in M14-03)
+  - `Gate_Unknown_ProbeDetectsPrerender` (bUnit, a fake runtime with both prerender shapes; its E2E twin is in M14-03)
   - `Gate_Wasm_ComponentRegistrationVisibleToMiddleware`
+  - `Gate_Wasm_HandsOverPersistentStateAndJsRuntime` (bUnit, a fake renderer scope whose PersistentComponentState and IJSRuntime differ from the store scope's: seed taken and persisted, JsBridge import and calls, through the renderer instances after registration and the store scope's before)
   - `Component_WithoutAddBlazor_SelectsAndRerenders`
   - `StoreSelectionExtensions_Wasm_HandsOverScopedServices`
   - Gate_OnFirstRegistration_RunsSynchronouslyInsideSelect (non-normative)
@@ -1103,11 +1104,11 @@ Prerender<T> and the prerender handoff (seed take, write, browser wait; step 11)
 - **Unblocks:** M6-07, M7-01
 - **Area:** `src/Ducky.Blazor/wwwroot/ducky.js, test/Ducky.E2E/harness, test/Ducky.PackageSmoke`
 - **Invariants:** INV-23
-- **Scope:** Replace the M0-02 stub with the real module (one plain ES module): storageGet(area, key, maxInlineBytes) measuring UTF-8 of JSON.stringify and returning the too-large sentinel, storageGetStream returning an empty Uint8Array when nothing is kept, storageSet/storageRemove(area, key, id) returning false for an unregistered id (relay to other ids comes in M7-01). Harness specs in Ducky.E2E on Playwright's clock; the JS gate measures the real ducky.js at 100%. PackageSmoke step 5: publish the WASM and Server consumers from packages and assert ducky.js in the static web assets output (§17.9).
+- **Scope:** Replace the M0-02 stub with the real module (one plain ES module): storageGet(area, key, maxInlineBytes) measuring UTF-8 of JSON.stringify and returning the too-large sentinel, storageGetStream returning new Uint8Array(1) (one NUL byte, never an empty array: S-5) when nothing is kept, storageSet/storageRemove(area, key, id) returning false for an unregistered id (relay to other ids comes in M7-01). Harness specs in Ducky.E2E on Playwright's clock; the JS gate measures the real ducky.js at 100%. PackageSmoke step 5: publish the WASM and Server consumers from packages and assert ducky.js in the static web assets output (§17.9).
 - **Acceptance tests:**
   - DuckyJs_StorageGet_ReturnsSentinelAboveUtf8Budget (non-normative harness spec)
   - DuckyJs_StorageSetGetRemove_RoundTrip (non-normative harness spec)
-  - `DuckyJs_PullExports_ReturnEmptyWhenGone` (storageGetStream; extended to devtoolsTakeMessage in M8-01)
+  - `DuckyJs_PullExports_ReturnOneByteWhenGone` (storageGetStream; extended to devtoolsTakeMessage in M8-01)
   - `E2E` JS gate: 100% block coverage of ducky.js
   - `PackageSmoke`: the published WASM and Server consumers serve ducky.js
 - **Done:** Common DoD including the JS coverage gate. Deletes the Ducky.E2E Skeleton_{Project}_Smoke test and its manifest entry (§24 step 1).
@@ -1233,7 +1234,7 @@ Prerender<T> and the prerender handoff (seed take, write, browser wait; step 11)
 - **Unblocks:** M16-04
 - **Area:** `src/Ducky.Blazor/Persistence/Providers/Stream`
 - **Invariants:** INV-23
-- **Scope:** The too-large sentinel switches to storageGetStream with maxAllowedSize MaxPayloadBytes (D11, path per S-5). Every stream reference is read under await using, the over-limit path included; a zero-length reference is not found; a value above MaxPayloadBytes is not found for that key, with Warning 2023, and never fails the attempt or escapes the [JSInvokable] handler.
+- **Scope:** The too-large sentinel switches to storageGetStream with maxAllowedSize MaxPayloadBytes (D11, path per S-5). Every stream reference is read under await using, the over-limit path included; a reference of Length <= 1 is not found (S-5, docs/spec/spikes.md); a value above MaxPayloadBytes (reference.Length checked before OpenReadStreamAsync) is not found for that key, with Warning 2023, and never fails the attempt or escapes the [JSInvokable] handler.
 - **Acceptance tests:**
   - `LargeRead_UsesStreamAboveInlineLimit`
   - `LargeRead_MaxPayloadBytesBoundary`
@@ -1380,7 +1381,7 @@ ducky.js watch/relay/resync with pruning and repair, the .NET CrossTabSync with 
 - **Unblocks:** M16-04
 - **Area:** `src/Ducky.Blazor/CrossTab/Receipts`
 - **Invariants:** INV-16, INV-17, INV-18
-- **Scope:** Absence is a payload for the echo guard: a removal or missing-value receipt (the re-read-all path included) bumps the key's sequence number under _issue first, so it orders against hydration, then restores the initial state; a null receipt sets the baseline to the local serialization of the initial state and signals, so a pending write dedupes away; a receipt for a key whose baseline is already absent restores nothing. A zero-length stream reference reads as a removal. storageSet/storageRemove returning false re-issues watchStorage and runs the re-read-all path per registered area. Scoped keys are matched against the scope of the current epoch under _issue (none accepted between an epoch bump and the new scope's recording), re-checked when the restore is issued.
+- **Scope:** Absence is a payload for the echo guard: a removal or missing-value receipt (the re-read-all path included) bumps the key's sequence number under _issue first, so it orders against hydration, then restores the initial state; a null receipt sets the baseline to the local serialization of the initial state and signals, so a pending write dedupes away; a receipt for a key whose baseline is already absent restores nothing. A stream reference of Length <= 1 reads as a removal (S-5; the fake reference of CrossTab_TooLargeKeyRemovedBeforePull_ResetsSlice has Length 1). storageSet/storageRemove returning false re-issues watchStorage and runs the re-read-all path per registered area. Scoped keys are matched against the scope of the current epoch under _issue (none accepted between an epoch bump and the new scope's recording), re-checked when the restore is issued.
 - **Acceptance tests:**
   - `CrossTab_RemovalReceipt_NoWriteBack`
   - `CrossTab_RemovalDuringHydration_RemovalWins`
@@ -1414,11 +1415,11 @@ Redux DevTools extension bridge: outbound FSA with sanitizers, failure projectio
 - **Unblocks:** M8-03b
 - **Area:** `src/Ducky.Blazor/wwwroot/ducky.js, test/Ducky.E2E/harness`
 - **Invariants:** INV-23, INV-28
-- **Scope:** devtoolsConnect(id, ref, configJson, pruneAfterMs) => bool (false without the extension), devtoolsInit, devtoolsSend (false for an unregistered id), devtoolsDisconnect; inbound messages forwarded as strings with state stripped from JUMP_*; larger messages use the pull pattern: devtoolsTakeMessage(id, seq) returns the kept message, or an empty Uint8Array when none is kept.
+- **Scope:** devtoolsConnect(id, ref, configJson, pruneAfterMs) => bool (false without the extension), devtoolsInit, devtoolsSend (false for an unregistered id), devtoolsDisconnect; inbound messages forwarded as strings with state stripped from JUMP_*; larger messages use the pull pattern: devtoolsTakeMessage(id, seq) returns the kept message, or new Uint8Array(1) when none is kept (S-5).
 - **Acceptance tests:**
   - DuckyJs_DevtoolsConnect_NoExtension_ReturnsFalse (non-normative harness spec)
   - `DuckyJs_DevToolsLargeMessage_PullBranch`
-  - `DuckyJs_PullExports_ReturnEmptyWhenGone` (extended to devtoolsTakeMessage)
+  - `DuckyJs_PullExports_ReturnOneByteWhenGone` (extended to devtoolsTakeMessage)
   - `E2E` JS gate: 100% block coverage of ducky.js
 - **Done:** Common DoD including the JS coverage gate.
 
@@ -1463,7 +1464,7 @@ Redux DevTools extension bridge: outbound FSA with sanitizers, failure projectio
 - **Unblocks:** M16-04
 - **Area:** `src/Ducky.Blazor/DevTools/Inbound/Pull, test/Ducky.Concurrency.Tests/DevTools`
 - **Invariants:** INV-23, INV-28
-- **Scope:** tooLarge messages are pulled with devtoolsTakeMessage through IJSStreamReference under await using (above MaxPayloadBytes ignored with Warning 2023; a zero-length reference ignored with a Debug log); JUMP_* works from the stripped inline message; IMPORT_STATE deserializes each key with its declared StateType from IStore.Slices; jumps delivered concurrently with the drainer's sends restore the entry their index names.
+- **Scope:** tooLarge messages are pulled with devtoolsTakeMessage through IJSStreamReference under await using (above MaxPayloadBytes ignored with Warning 2023; a reference of Length <= 1 ignored with a Debug log, S-5; the over-limit check reads reference.Length before OpenReadStreamAsync); JUMP_* works from the stripped inline message; IMPORT_STATE deserializes each key with its declared StateType from IStore.Slices; jumps delivered concurrently with the drainer's sends restore the entry their index names.
 - **Acceptance tests:**
   - `DevTools_JumpMessage_StateStrippedInline`
   - `DevTools_LargeImport_ReadViaStream`
@@ -2280,10 +2281,11 @@ Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §1
 - **Unblocks:** M16-04
 - **Area:** `build/Build.Aot.cs, test/Ducky.E2E/Aot`
 - **Invariants:** INV-24
-- **Scope:** AotSmoke target from stage 18: publish Samples.Wasm with -p:RunAOTCompilation=true -p:TrimMode=full -p:RestoreLockedMode=false -o artifacts/wasm-trimmed, install Playwright Chromium, run Ducky.E2E with --filter-method "*.WasmTrimmedSmoke", DUCKY_REQUIRE_TRIMMED_PUBLISH=1 and DUCKY_TRIMMED_PUBLISH_DIR; the fixture skips only when DUCKY_REQUIRE_TRIMMED_PUBLISH is unset; the target parses the TRX and fails unless exactly one test ran and passed with zero skipped. The test injects a fake __REDUX_DEVTOOLS_EXTENSION__: a non-empty todos/added payload, a persisted slice that survives a reload, a Trace stack (possibly <unknown> frames).
+- **Scope:** AotSmoke target from stage 18: publish Samples.Wasm with -p:RunAOTCompilation=true -p:TrimMode=full -p:RestoreLockedMode=false -p:SuppressTrimAnalysisWarnings=false -p:ILLinkTreatWarningsAsErrors=false -o artifacts/wasm-trimmed and fail unless the output reports IL2104 for both Microsoft.AspNetCore.Components and Microsoft.JSInterop (positive control: trim warnings were visible) and on any other IL warning (the sample is a TrimmerRootAssembly; S-3, §10; when a framework release fixes either IL2104 the owner updates the allowlist), install Playwright Chromium, run Ducky.E2E with --filter-method "*.WasmTrimmedSmoke", DUCKY_REQUIRE_TRIMMED_PUBLISH=1 and DUCKY_TRIMMED_PUBLISH_DIR; the fixture skips only when DUCKY_REQUIRE_TRIMMED_PUBLISH is unset; the target parses the TRX and fails unless exactly one test ran and passed with zero skipped. The test injects a fake __REDUX_DEVTOOLS_EXTENSION__: a non-empty todos/added payload, a persisted slice that survives a reload, a Trace stack (possibly <unknown> frames).
 - **Acceptance tests:**
   - `WasmTrimmedSmoke`
   - Planted check: a publish written to another directory fails WasmTrimmedSmoke in the aot job instead of skipping it
+  - Planted check: a Samples.Wasm publish without -p:SuppressTrimAnalysisWarnings=false (no IL2104 reported), and a sample with an unsuppressed RequiresUnreferencedCode call (IL2026), each fail the AotSmoke target
 - **Done:** Common DoD; aot job green.
 
 ### M15 — Docs and migration guides
