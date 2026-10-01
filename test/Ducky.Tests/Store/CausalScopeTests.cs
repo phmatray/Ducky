@@ -26,20 +26,21 @@ public sealed class CausalScopeTests
 
         (await store.DispatchAsync(new Step("loop"))).ShouldBe(DispatchResult.Reduced);
 
-        // Depths 0..64 are reduced (MaxDispatchDepth is 64), all on one chain; the child at depth 65 is dropped.
+        // Depths 0..64 are reduced (MaxDispatchDepth is 64), all on one chain; the child at depth 65 is dropped. Id 2 is
+        // StoreInitialized, queued at MarkReady after the first Step was buffered (M1-10).
         scopes.Select(s => s.Depth).ShouldBe(Enumerable.Range(0, 65));
-        scopes.Select(s => s.Seq).ShouldBe(Enumerable.Range(1, 65).Select(i => (long)i));
+        scopes.Select(s => s.Seq).ShouldBe([1L, .. Enumerable.Range(3, 64).Select(i => (long)i)]);
         scopes.ShouldAllBe(s => s.CorrelationId == 1 && !s.InFailure);
         var results = await Task.WhenAll(children);
         results.Length.ShouldBe(65);
         results[..64].ShouldAllBe(r => r == DispatchResult.Reduced);
         results[64].ShouldBe(DispatchResult.Dropped);
 
-        // The store is still live, and the next unrelated dispatch starts a new chain at depth 0 (Id 67 is the drop's
+        // The store is still live, and the next unrelated dispatch starts a new chain at depth 0 (Id 68 is the drop's
         // ReducerFailed, M1-07).
         slice.OnStep = _ => scopes.Add(store.Dispatcher.Causal.ShouldNotBeNull());
         (await store.DispatchAsync(new Step("next"))).ShouldBe(DispatchResult.Reduced);
-        scopes[^1].ShouldBe(new Cause(68, 0, 68, false));
+        scopes[^1].ShouldBe(new Cause(69, 0, 69, false));
     }
 
     // Non-normative: Process restores the drainer's scope and resets _processingSeq, so nothing leaks to the caller.
@@ -73,9 +74,10 @@ public sealed class CausalScopeTests
         store.Dispatch(new Step("parent"));
 
         store.Dispatcher.Causal.ShouldBeNull();
+        // Id 2 is StoreInitialized, queued at MarkReady after "parent" was buffered (M1-10).
         var parent = new Cause(1, 0, 1, false);
         seen["parent"].ShouldBe(parent);
-        var child = new Cause(2, 1, 1, false);
+        var child = new Cause(3, 1, 1, false);
         seen["child"].ShouldBe(child);
 
         // A continuation on the flow of the last action processed, once the store is idle: _processingSeq is back to 0,
@@ -86,13 +88,13 @@ public sealed class CausalScopeTests
             store.Dispatch(new Step("continuation"));
             store.Dispatcher.Causal.ShouldBe(child);
         }, null);
-        seen["continuation"].ShouldBe(new Cause(3, 0, 1, false));
+        seen["continuation"].ShouldBe(new Cause(4, 0, 1, false));
         store.Dispatcher.Causal.ShouldBeNull();
 
         store.Dispatch(new Step("other"));
 
-        seen["other"].ShouldBe(new Cause(4, 0, 4, false));
-        seen["foreign"].ShouldBe(new Cause(5, 0, 1, false));
+        seen["other"].ShouldBe(new Cause(5, 0, 5, false));
+        seen["foreign"].ShouldBe(new Cause(6, 0, 1, false));
         store.Dispatcher.Causal.ShouldBeNull();
     }
 
@@ -121,9 +123,10 @@ public sealed class CausalScopeTests
         // A chain already descending from a failure action, seeded through the internal API.
         store.Dispatcher.Enqueue(new Pending(new Step("parent"), Origin.Local, 0, 0, true, false, null));
 
+        // Id 2 is StoreInitialized (M1-10).
         seen["parent"].ShouldBe(new Cause(1, 0, 1, true));
-        seen["child"].ShouldBe(new Cause(2, 1, 1, true));
+        seen["child"].ShouldBe(new Cause(3, 1, 1, true));
         ExecutionContext.Run(childFlow!, _ => store.Dispatch(new Step("continuation")), null);
-        seen["continuation"].ShouldBe(new Cause(3, 0, 1, false));
+        seen["continuation"].ShouldBe(new Cause(4, 0, 1, false));
     }
 }

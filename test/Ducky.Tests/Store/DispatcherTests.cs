@@ -181,8 +181,9 @@ public sealed class DispatcherTests
         dispatcher.Enqueue(first);
         Volatile.Write(ref insideEnqueue, false);
 
+        // Id 2 is StoreInitialized, queued at MarkReady after first was buffered (M1-10).
         first.Id.ShouldBe(1);
-        nested.Id.ShouldBe(2);
+        nested.Id.ShouldBe(3);
         completedDuringDrain.ShouldBeFalse();
         var exited = duringDrain.ShouldNotBeNull();
         exited.IsCompletedSuccessfully.ShouldBeTrue();
@@ -191,7 +192,7 @@ public sealed class DispatcherTests
 
         var third = new Pending(new Bump(), Origin.Local, 0, 0, false, false, null);
         dispatcher.Enqueue(third);
-        third.Id.ShouldBe(3);
+        third.Id.ShouldBe(4);
         dispatcher.DrainExited.ShouldNotBeSameAs(exited);
         dispatcher.DrainExited.ShouldNotBeNull().IsCompletedSuccessfully.ShouldBeTrue();
     }

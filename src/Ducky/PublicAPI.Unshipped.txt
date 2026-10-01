@@ -121,5 +121,7 @@ Ducky.IDispatcher.Dispatch(object! action) -> void
 Ducky.IDispatcher.DispatchAsync(object! action) -> System.Threading.Tasks.Task<Ducky.DispatchResult>!
 Ducky.IStore
 Ducky.IStore.InitialState.get -> Ducky.StateSnapshot!
+Ducky.IStore.InitializeAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Ducky.IStore.Restore(System.Collections.Generic.IReadOnlyDictionary<string!, object!>! values, Ducky.Origin origin) -> void
 Ducky.IStore.Slices.get -> System.Collections.Generic.IReadOnlyList<Ducky.Slice!>!
 Ducky.IStore.State.get -> Ducky.StateSnapshot!

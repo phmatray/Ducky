@@ -24,7 +24,7 @@ public sealed class FailureRouterTests
         failed.ActionType.ShouldBe(typeof(Boom).ToString());
         failed.SliceKey.ShouldBe("boom");
         failed.Exception.ShouldBeOfType<InvalidOperationException>().Message.ShouldBe("boom");
-        scopes.ShouldBe([new Cause(3, 0, 2, true)]);
+        scopes.ShouldBe([new Cause(4, 0, 3, true)]); // Id 2 is StoreInitialized (M1-10)
         store.State.Get<Seen>().Count.ShouldBe(1);
         store.State.Get<Count>().Value.ShouldBe(1);
         logger.Collector.GetSnapshot().ShouldHaveSingleItem().Id.Id.ShouldBe(1000);
@@ -92,7 +92,8 @@ public sealed class FailureRouterTests
         };
         failures.OnFailed = _ => scopes.Add(store.Dispatcher.Causal.ShouldNotBeNull());
 
-        // Two unrelated actions first, so the loop's correlation id (3) differs from every Id the router could pick up.
+        // Two unrelated actions first, so the loop's correlation id (4; Id 2 is StoreInitialized) differs from every Id the
+        // router could pick up.
         store.Dispatch(new Bump());
         store.Dispatch(new Bump());
         (await store.DispatchAsync(new Step("loop"))).ShouldBe(DispatchResult.Reduced);
@@ -105,8 +106,8 @@ public sealed class FailureRouterTests
         loop.ActionType.ShouldBe(typeof(Step).ToString());
         loop.Depth.ShouldBe(65);
 
-        // Ids 3..68 are the loop (the last one dropped); the failure is Id 69, depth 0, on the loop's chain.
-        scopes.ShouldBe([new Cause(69, 0, 3, true)]);
+        // Ids 4..69 are the loop (the last one dropped); the failure is Id 70, depth 0, on the loop's chain.
+        scopes.ShouldBe([new Cause(70, 0, 4, true)]);
         store.State.Get<Seen>().Count.ShouldBe(1);
         logger.Collector.Count.ShouldBe(0);
     }
