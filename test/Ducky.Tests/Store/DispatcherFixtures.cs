@@ -56,3 +56,19 @@ internal sealed class BoomSlice : Slice<Flag>
 
     protected override Flag Initial => new(false);
 }
+
+internal sealed record Step(string Name);
+
+// Step runs OnStep with the action, so a test can observe the causal scope and dispatch from inside a reducer.
+internal sealed class StepSlice : Slice<Count>
+{
+    public StepSlice() => On<Step>((state, step) =>
+    {
+        OnStep?.Invoke(step);
+        return state;
+    });
+
+    public Action<Step>? OnStep { get; set; }
+
+    protected override Count Initial => new(0);
+}

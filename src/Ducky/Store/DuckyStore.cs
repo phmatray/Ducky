@@ -31,14 +31,14 @@ internal sealed class DuckyStore
     public void Dispatch(object action)
     {
         ArgumentNullException.ThrowIfNull(action);
-        Dispatcher.Enqueue(new Pending(action, Origin.Local, null));
+        Dispatcher.Enqueue(Dispatcher.NewPending(action, Origin.Local, null));
     }
 
     public Task<DispatchResult> DispatchAsync(object action)
     {
         ArgumentNullException.ThrowIfNull(action);
         var completion = new TaskCompletionSource<DispatchResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        Dispatcher.Enqueue(new Pending(action, Origin.Local, completion));
+        Dispatcher.Enqueue(Dispatcher.NewPending(action, Origin.Local, completion));
         return completion.Task;
     }
 }
