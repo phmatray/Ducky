@@ -126,3 +126,18 @@ Ducky.IStore.Restore(System.Collections.Generic.IReadOnlyDictionary<string!, obj
 Ducky.IStore.Slices.get -> System.Collections.Generic.IReadOnlyList<Ducky.Slice!>!
 Ducky.IStore.State.get -> Ducky.StateSnapshot!
 Ducky.IStore.WhenIdleAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Ducky.Selector
+Ducky.SelectorDef<T>
+Ducky.SelectorDef<T>.Create() -> System.Func<Ducky.StateSnapshot!, T>!
+Ducky.SelectorDef<T>.Evaluate(Ducky.StateSnapshot! state) -> T
+Ducky.SelectorDef<TArg, T>
+Ducky.SelectorDef<TArg, T>.Create(System.Func<TArg>! argument, System.Collections.Generic.IEqualityComparer<TArg>? argComparer = null) -> System.Func<Ducky.StateSnapshot!, T>!
+Ducky.SelectorDef<TArg, T>.Evaluate(Ducky.StateSnapshot! state, TArg arg) -> T
+static Ducky.Selector.Define<T1, T2, T3, T4, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<Ducky.StateSnapshot!, T2>! in2, System.Func<Ducky.StateSnapshot!, T3>! in3, System.Func<Ducky.StateSnapshot!, T4>! in4, System.Func<T1, T2, T3, T4, T>! projector) -> Ducky.SelectorDef<T>!
+static Ducky.Selector.Define<T1, T2, T3, T4, TArg, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<Ducky.StateSnapshot!, T2>! in2, System.Func<Ducky.StateSnapshot!, T3>! in3, System.Func<Ducky.StateSnapshot!, T4>! in4, System.Func<T1, T2, T3, T4, TArg, T>! projector) -> Ducky.SelectorDef<TArg, T>!
+static Ducky.Selector.Define<T1, T2, T3, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<Ducky.StateSnapshot!, T2>! in2, System.Func<Ducky.StateSnapshot!, T3>! in3, System.Func<T1, T2, T3, T>! projector) -> Ducky.SelectorDef<T>!
+static Ducky.Selector.Define<T1, T2, T3, TArg, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<Ducky.StateSnapshot!, T2>! in2, System.Func<Ducky.StateSnapshot!, T3>! in3, System.Func<T1, T2, T3, TArg, T>! projector) -> Ducky.SelectorDef<TArg, T>!
+static Ducky.Selector.Define<T1, T2, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<Ducky.StateSnapshot!, T2>! in2, System.Func<T1, T2, T>! projector) -> Ducky.SelectorDef<T>!
+static Ducky.Selector.Define<T1, T2, TArg, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<Ducky.StateSnapshot!, T2>! in2, System.Func<T1, T2, TArg, T>! projector) -> Ducky.SelectorDef<TArg, T>!
+static Ducky.Selector.Define<T1, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<T1, T>! projector) -> Ducky.SelectorDef<T>!
+static Ducky.Selector.Define<T1, TArg, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<T1, TArg, T>! projector) -> Ducky.SelectorDef<TArg, T>!
