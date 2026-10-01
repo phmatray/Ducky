@@ -212,8 +212,10 @@ par-6, 4-thread row measured 8.4 s and 16.7 s in two runs).
   10 s bound over the test would fail every nightly run (`CsCheck_Iter=10000` timed out at 10 s). The §17.3 bound
   therefore sits on each blocking step instead: every awaited `DispatchAsync`, the producers and the drain exit of the
   sync check wait through `Interleaving.Wait` (10 s, thread dump on expiry), so a deadlock fails within 10 s under any
-  `CsCheck_Iter`. `Interleaving.WithinProperty` bounds both CsCheck runs together: 10 s at CsCheck's default, a fixed
-  hour when `CsCheck_Iter` is set, inside the nightly job's 180 minutes.
+  `CsCheck_Iter`. `Interleaving.WithinProperty` bounds both CsCheck runs by progress, not by their length: it fails
+  once 10 s pass with no step entering or leaving `Interleaving.Wait`, so a hang inside a synchronous store call fails
+  within 10 s too, while a live run may take as long as its CPU budget needs (a first repeat on a cold 2-vCPU runner
+  took 10-15 s and failed the old 10 s whole-run bound).
 - **Still to measure.** Linux and Windows (`ubuntu-latest`, 4 vCPUs): lower `maxParallelOperations` to 5 only if 50
   repetitions exceed 3 minutes there. `Selection.Value` joins the operations at stage 5.
 

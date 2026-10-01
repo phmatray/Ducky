@@ -32,8 +32,8 @@ public sealed class LinearizabilityTests
         var read = Gen.Int.Select(_ => new object()).Operation<Actual, Model>(
             _ => "ReadState", (a, k) => a.Reads[k] = a.Store.State.Get<Log>().Entries, (m, k) => m.Reads[k] = [.. m.State]);
 
-        // One bound over both CsCheck runs (Interleaving.WithinProperty); inside, each iteration blocks at most the 10 s of
-        // Interleaving.Wait, so a deadlock fails with a thread dump within 10 s even under PropertyLong.
+        // Both CsCheck runs are bounded by progress (Interleaving.WithinProperty), not by their length: every blocking step
+        // goes through Interleaving.Wait, so a deadlock fails with a thread dump within 10 s even under PropertyLong.
         await Interleaving.WithinProperty(Task.Run(
             () =>
             {

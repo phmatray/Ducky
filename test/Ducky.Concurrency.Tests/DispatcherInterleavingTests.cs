@@ -153,7 +153,8 @@ public sealed class DispatcherInterleavingTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         using var start = new Barrier(Producers);
-        var producers = Enumerable.Range(0, Producers).Select(p => Task.Run(
+        // Dedicated threads, as in FireAndSettle: a party parked on the barrier must not hold a pool thread.
+        var producers = Enumerable.Range(0, Producers).Select(p => Task.Factory.StartNew(
             () =>
             {
                 start.SignalAndWait(cancellationToken);
@@ -165,7 +166,9 @@ public sealed class DispatcherInterleavingTests
 
                 return results;
             },
-            cancellationToken));
+            cancellationToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default));
         var all = await Task.WhenAll(producers);
         return await Task.WhenAll(all.SelectMany(r => r));
     }
