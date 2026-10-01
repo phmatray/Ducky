@@ -1,6 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ducky;
 
@@ -10,6 +8,7 @@ namespace Ducky;
 // shares this instance through the descriptor.
 internal sealed class DuckyConfig(
     ServiceLifetime lifetime,
+    bool isBrowser,
     int maxDispatchDepth,
     DuckyConfig.SliceRegistration[] slices,
     DuckyError[] sliceErrors,
@@ -18,18 +17,19 @@ internal sealed class DuckyConfig(
 {
     public ServiceLifetime Lifetime => lifetime;
 
-    public DuckyStore Build(IServiceProvider services)
+    public bool IsBrowser => isBrowser;
+
+    public int MaxDispatchDepth => maxDispatchDepth;
+
+    public IEnumerable<Slice> CreateSlices() => slices.Select(slice => slice.Create());
+
+    public void ThrowIfInvalid(IServiceProvider services)
     {
         var failure = services.GetRequiredService<ValidationState>().Ensure(() => Validate(services));
         if (failure is not null)
         {
             throw failure;
         }
-
-        return new DuckyStore(
-            slices.Select(slice => slice.Create()),
-            (ILogger?)services.GetService<ILogger<DuckyStore>>() ?? NullLogger.Instance,
-            maxDispatchDepth);
     }
 
     private DuckyConfigurationException? Validate(IServiceProvider services)
@@ -104,7 +104,7 @@ internal sealed class DuckyConfig(
                 {
                     throw new InvalidOperationException(
                         "An AddValidation rule resolved the store (or a service that depends on it) while the store was being validated. "
-                        + "Resolve only the services the rule checks, never DuckyStore, IStore, a slice or anything built from them.");
+                        + "Resolve only the services the rule checks, never IStore, IDispatcher, a slice or anything built from them.");
                 }
 
                 _validating = true;

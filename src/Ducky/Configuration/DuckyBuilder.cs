@@ -96,6 +96,9 @@ public sealed class DuckyBuilder
         return this;
     }
 
+    // Every type AddSlice was given, a throwing one included: each is injectable, and resolving it reports the errors.
+    internal IEnumerable<Type> SliceTypes => _sliceTypes;
+
     // Called once, when configure returned: the snapshot AddDucky registers.
-    internal DuckyConfig Freeze() => new(Lifetime, MaxDispatchDepth, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules]);
+    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules]);
 }

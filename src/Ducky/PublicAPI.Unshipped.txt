@@ -116,3 +116,10 @@ Ducky.DuckyBuilder.ThrowOnUnhandledAction.get -> bool
 Ducky.DuckyBuilder.ThrowOnUnhandledAction.set -> void
 Ducky.DuckyServiceCollectionExtensions
 static Ducky.DuckyServiceCollectionExtensions.AddDucky(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Ducky.DuckyBuilder!>! configure) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Ducky.IDispatcher
+Ducky.IDispatcher.Dispatch(object! action) -> void
+Ducky.IDispatcher.DispatchAsync(object! action) -> System.Threading.Tasks.Task<Ducky.DispatchResult>!
+Ducky.IStore
+Ducky.IStore.InitialState.get -> Ducky.StateSnapshot!
+Ducky.IStore.Slices.get -> System.Collections.Generic.IReadOnlyList<Ducky.Slice!>!
+Ducky.IStore.State.get -> Ducky.StateSnapshot!

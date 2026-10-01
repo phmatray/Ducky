@@ -27,7 +27,7 @@ public sealed class DuckyBuilderTests
         });
 
         using var provider = services.BuildServiceProvider();
-        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<DuckyStore>());
+        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
         exception.Errors.ShouldBe(
             [
                 DuckyErrors.TransientLifetime(),
@@ -60,7 +60,7 @@ public sealed class DuckyBuilderTests
             .AddValidation(_ => []));
 
         using var provider = services.BuildServiceProvider();
-        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<DuckyStore>());
+        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBe(
             [
@@ -83,7 +83,17 @@ public sealed class DuckyBuilderTests
 
         exception.Errors.ShouldBe([DuckyErrors.AddDuckyTwice()]);
         secondConfigureRan.ShouldBeFalse();
-        services.Count(s => s.ServiceType == typeof(DuckyStore)).ShouldBe(1);
+        services.Count(s => s.ServiceType == typeof(IStore)).ShouldBe(1);
+    }
+
+    // Non-normative: DUCKY300 means AddDucky ran twice, not that the app registered its own IStore (keyed or not).
+    [Fact]
+    public void AddDucky_AppRegisteredIStore_DoesNotThrow()
+    {
+        var services = new ServiceCollection();
+        services.AddKeyedSingleton<IStore>("other", (_, _) => null!);
+
+        Should.NotThrow(() => services.AddDucky(d => d.AddSlice<CartSlice>()));
     }
 
     // Non-normative: a valid configuration builds a store per resolution scope, each with its own slice instances in
@@ -108,8 +118,8 @@ public sealed class DuckyBuilderTests
         await using var provider = services.BuildServiceProvider();
         await using var first = provider.CreateAsyncScope();
         await using var second = provider.CreateAsyncScope();
-        var store = first.ServiceProvider.GetRequiredService<DuckyStore>();
-        var other = second.ServiceProvider.GetRequiredService<DuckyStore>();
+        var store = first.ServiceProvider.GetRequiredService<IStore>();
+        var other = second.ServiceProvider.GetRequiredService<IStore>();
 
         store.Slices.Select(s => s.GetType()).ShouldBe([typeof(CartSlice), typeof(OrderSlice), typeof(KeyedBoxSlice<int>)]);
         other.ShouldNotBeSameAs(store);
@@ -130,12 +140,12 @@ public sealed class DuckyBuilderTests
         services.AddDucky(d => d.AddSlice<CartSlice>());
 
         await using var provider = services.BuildServiceProvider();
-        var store = provider.GetRequiredService<DuckyStore>();
+        var store = provider.GetRequiredService<IStore>();
 
         (await store.DispatchAsync(new Explode())).ShouldBe(DispatchResult.Failed);
     }
 
-    // Non-normative: the §5.1 defaults. The full lifetime table, with Warning 1004, is M1-09's.
+    // Non-normative: the §5.1 defaults. The lifetime table, with Warning 1004, is in StoreIdentityTests.
     [Fact]
     public void Builder_Defaults_MatchSpec()
     {
@@ -151,28 +161,6 @@ public sealed class DuckyBuilderTests
         builder.IsBrowser.ShouldBeFalse();
     }
 
-    // Non-normative: the unset Lifetime is read after configure returns, so IsBrowser set inside configure decides it.
-    [Theory]
-    [InlineData(false, null, ServiceLifetime.Scoped)]
-    [InlineData(true, null, ServiceLifetime.Singleton)]
-    [InlineData(true, ServiceLifetime.Scoped, ServiceLifetime.Scoped)]
-    [InlineData(false, ServiceLifetime.Singleton, ServiceLifetime.Singleton)]
-    public void Lifetime_Unset_ResolvedFromIsBrowserAfterConfigure(bool isBrowser, ServiceLifetime? lifetime, ServiceLifetime expected)
-    {
-        var services = new ServiceCollection();
-        services.AddDucky(d =>
-        {
-            if (lifetime is { } explicitLifetime)
-            {
-                d.Lifetime = explicitLifetime;
-            }
-
-            d.IsBrowser = isBrowser;
-        });
-
-        services.Single(s => s.ServiceType == typeof(DuckyStore)).Lifetime.ShouldBe(expected);
-    }
-
     // Non-normative: a nested AddDucky inside configure is the second call, so the outer one throws DUCKY300.
     [Fact]
     public void AddDucky_NestedInConfigure_Throws()
@@ -183,7 +171,7 @@ public sealed class DuckyBuilderTests
             services.AddDucky(d => d.Services.AddDucky(inner => inner.AddSlice<CartSlice>())));
 
         exception.Errors.ShouldBe([DuckyErrors.AddDuckyTwice()]);
-        services.Count(s => s.ServiceType == typeof(DuckyStore)).ShouldBe(1);
+        services.Count(s => s.ServiceType == typeof(IStore)).ShouldBe(1);
     }
 
     // Non-normative (§8.1 "exception, once"): rules run once, at the first resolution, not once per scope.
@@ -201,9 +189,9 @@ public sealed class DuckyBuilderTests
         await using var provider = services.BuildServiceProvider();
         await using var first = provider.CreateAsyncScope();
         await using var second = provider.CreateAsyncScope();
-        var store = first.ServiceProvider.GetRequiredService<DuckyStore>();
+        var store = first.ServiceProvider.GetRequiredService<IStore>();
 
-        second.ServiceProvider.GetRequiredService<DuckyStore>().ShouldNotBeSameAs(store);
+        second.ServiceProvider.GetRequiredService<IStore>().ShouldNotBeSameAs(store);
         runs.ShouldBe(1);
     }
 
@@ -221,11 +209,11 @@ public sealed class DuckyBuilderTests
         }));
 
         using var first = services.BuildServiceProvider();
-        Should.Throw<DuckyConfigurationException>(() => first.GetRequiredService<DuckyStore>());
+        Should.Throw<DuckyConfigurationException>(() => first.GetRequiredService<IStore>());
         services.AddSingleton<Marker>();
         using var second = services.BuildServiceProvider();
 
-        second.GetRequiredService<DuckyStore>().ShouldNotBeNull();
+        second.GetRequiredService<IStore>().ShouldNotBeNull();
         runs.ShouldBe(2);
     }
 
@@ -243,9 +231,9 @@ public sealed class DuckyBuilderTests
 
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
-        var first = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<DuckyStore>());
+        var first = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
 
-        Should.Throw<DuckyConfigurationException>(() => scope.ServiceProvider.GetRequiredService<DuckyStore>()).ShouldBeSameAs(first);
+        Should.Throw<DuckyConfigurationException>(() => scope.ServiceProvider.GetRequiredService<IStore>()).ShouldBeSameAs(first);
         runs.ShouldBe(1);
     }
 
@@ -258,7 +246,7 @@ public sealed class DuckyBuilderTests
         services.AddDucky(d => d.AddSlice<ThrowingCtorSlice>().AddSlice<BadKeySlice>());
 
         using var provider = services.BuildServiceProvider();
-        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<DuckyStore>());
+        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBe([DuckyErrors.InvalidKey(typeof(BadKeySlice), "Bad_Key")]);
         exception.Message.ShouldBe(
@@ -281,7 +269,7 @@ public sealed class DuckyBuilderTests
             .AddValidation(_ => throw new NotSupportedException("rule")));
 
         using var provider = services.BuildServiceProvider();
-        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<DuckyStore>());
+        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBe([DuckyErrors.InvalidKey(typeof(NullKeySlice), null!), _appError], ignoreOrder: true);
         exception.InnerException.ShouldBeOfType<AggregateException>().InnerExceptions.Select(e => e.GetType())
@@ -303,7 +291,7 @@ public sealed class DuckyBuilderTests
         services.AddDucky(d => d.AddSlice<CartSlice>().AddSlice<ThrowingCtorSlice>());
 
         using var provider = services.BuildServiceProvider();
-        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<DuckyStore>());
+        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBeEmpty();
         exception.InnerException.ShouldBeOfType<InvalidOperationException>().Message.ShouldBe("ctor");
@@ -319,7 +307,7 @@ public sealed class DuckyBuilderTests
         services.AddDucky(d => d.AddValidation(_ => throw new NotSupportedException("rule")));
 
         using var provider = services.BuildServiceProvider();
-        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<DuckyStore>());
+        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBeEmpty();
         exception.InnerException.ShouldBeOfType<NotSupportedException>();
@@ -336,12 +324,12 @@ public sealed class DuckyBuilderTests
         services.AddDucky(d =>
         {
             d.Lifetime = lifetime;
-            d.AddValidation(sp => sp.GetService<DuckyStore>() is null ? [_appError] : []);
+            d.AddValidation(sp => sp.GetService<IStore>() is null ? [_appError] : []);
         });
 
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
-        var exception = Should.Throw<DuckyConfigurationException>(() => scope.ServiceProvider.GetRequiredService<DuckyStore>());
+        var exception = Should.Throw<DuckyConfigurationException>(() => scope.ServiceProvider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBeEmpty();
         exception.InnerException.ShouldBeOfType<InvalidOperationException>().Message.ShouldContain("AddValidation");
@@ -359,10 +347,10 @@ public sealed class DuckyBuilderTests
         builder!.Lifetime = ServiceLifetime.Transient;
         builder.AddSlice<OrderSlice>().AddValidation(_ => [_appError]);
 
-        services.Single(s => s.ServiceType == typeof(DuckyStore)).Lifetime.ShouldBe(ServiceLifetime.Scoped);
+        services.Single(s => s.ServiceType == typeof(IStore)).Lifetime.ShouldBe(ServiceLifetime.Scoped);
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
-        scope.ServiceProvider.GetRequiredService<DuckyStore>().Slices.ShouldHaveSingleItem().ShouldBeOfType<CartSlice>();
+        scope.ServiceProvider.GetRequiredService<IStore>().Slices.ShouldHaveSingleItem().ShouldBeOfType<CartSlice>();
     }
 
     // Non-normative: null arguments are programmer errors, thrown synchronously.
@@ -389,7 +377,7 @@ public sealed class DuckyBuilderTests
 
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
-        var store = scope.ServiceProvider.GetRequiredService<DuckyStore>();
+        var store = scope.ServiceProvider.GetRequiredService<IStore>();
         var children = new List<Task<DispatchResult>>();
         store.Slices.ShouldHaveSingleItem().ShouldBeOfType<DispatcherFixtures.StepSlice>().OnStep = _ =>
         {
