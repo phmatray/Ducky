@@ -1,6 +1,6 @@
 # Staged test manifest (SPEC §4, §17.1, §19, §24; PLAN P1). The only input of SpecTraceGate: name -> project(s) ->
 # invariant(s) -> stage. Rules: docs/spec/README.md. Every name appears in SPEC.md; a {Placeholder} matches \w+.
-activeStage: 1
+activeStage: 2
 
 # §17.8: the §24 step that gives each mutated project real logic. A project above activeStage is not mutated (its
 # skeleton type yields no mutant); Mutation --strict-stages mutates all seven.

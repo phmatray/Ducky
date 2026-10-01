@@ -24,6 +24,10 @@
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <MinVerMinimumMajorMinor>2.0</MinVerMinimumMajorMinor>
     <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    <!-- MinVer skips design-time builds, so Stryker's Buildalyzer analysis saw the SDK's 1.0.0.0 and compiled every mutant
+         as Ducky 1.0.0.0: test assemblies bound to 2.0.0.0 then failed to load it and killed every mutant (MutationPr's
+         always-failing-test check). MinVer's own AssemblyVersion, major.0.0.0, still wins in a real build. -->
+    <AssemblyVersion Condition="'$(DesignTimeBuild)' == 'true'">$([System.Version]::Parse('$(MinVerMinimumMajorMinor)').Major).0.0.0</AssemblyVersion>
     <!-- Packages (§3, §17.9): validation runs inside Pack (no baseline until the 2.0.0 GA push, SetBaseline); symbols as
          .snupkg; SourceLink comes with the SDK. The tombstone opts out of validation and symbols in its csproj. -->
     <EnablePackageValidation>true</EnablePackageValidation>

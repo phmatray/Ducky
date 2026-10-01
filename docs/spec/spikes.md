@@ -171,6 +171,52 @@ the detection column.
 
 Not measured here: Linux and Windows, and the real dispatcher (M1-14, stage 2).
 
+### S-4 re-run against the real dispatcher (M1-14, stage 2)
+
+**Setup.** `Linearizability_DispatchVsModel` in `test/Ducky.Concurrency.Tests/Linearizability`, run 2026-10-01 on the
+same machine, SDK and pins, Release, against `DuckyStore` with one `LogSlice` (the real `Dispatcher`: lock-protected
+queue, single drainer, snapshot commit per action). Same two operations and model as the spike (awaited `DispatchAsync`,
+`ReadState` of the log), plus the sync-`Dispatch` check of §17.3 row 13 in the same repetition: CsCheck `Sample`
+(`threads: 1`, `iter` CsCheck's) over 2 to 6 producers firing 1 to 50 `Dispatch` calls each on dedicated threads, then
+exactly-once and per-producer order once the last drain exits. Times are the test-run `duration` of the whole
+`LinearizabilityTests` class at 50 repetitions; sibling worktrees were building on the machine, so they are noisy (the
+par-6, 4-thread row measured 8.4 s and 16.7 s in two runs).
+
+**Answer: the spike's counts hold. `maxSequentialOperations: 10`, `maxParallelOperations: 6`, `iter` left to CsCheck.**
+
+| Counts (seq / par) | 50 reps, 10 threads | 50 reps, 4 threads | Slowest repetition (10 / 4 threads) |
+|---|---|---|---|
+| 10 / 5 | 7.2 s | 7.1 s | – |
+| 10 / **6** | 14.3 s, 16.2 s | 8.4 s, 16.7 s | 0.63 s / 0.82 s |
+| 10 / 7 | 54.3 s, one repetition over the 10 s bound | 12.0 s | – |
+
+- **Budget.** The whole `Ducky.Concurrency.Tests` suite (550 cases, every row-1 to row-13 test at 50 repetitions)
+  takes 14.6 s at 10 threads and 13.2 s at 4, about 1/12 of the 3-minute budget. One repetition on one thread (the
+  Stryker setting) takes 0.9 s. 7 parallel operations are ruled out: at 10 threads one repetition of a correct
+  dispatcher outran the 10 s bound (7! orders per check, oversubscribed cores).
+- **Detection on mutants of the real code** (each applied to `src/` and reverted): a naive dispatcher (every caller
+  processes in place, no lock, no drainer) fails 10 of 10 repetitions with shrunk counterexamples; a LIFO queue fails
+  5 of 5 (through the sync-`Dispatch` order check; LIFO between concurrent awaited dispatches is still linearizable); a
+  sync `Dispatch` that enqueues some actions twice fails 3 of 3 (exactly-once check). The stranded-action mutant
+  (`_draining = false` moved out of the empty-check lock, the stub's INV-03 bug) fails only 1 of 50 at 4 threads and 1
+  of 50 and 0 of 50 at 10, against the stub's 6 to 10: the real drain's release window is as narrow, and an awaited
+  `DispatchAsync` is a slower producer than the stub's. INV-03's release path stays with
+  `Dispatch_AfterDrainRelease_NoStrandedAction` and a future deterministic seam inside `Drain`; this property is the
+  INV-01/02/04/07 check. Completing a `DispatchAsync` before its reduce fails 2 of 10 here and 20 of 20 in
+  `DispatchAsync_QueuedBehindOtherThreadsDrain_CompletesAfterReduce`. Completing it after the reduce but before the
+  commit (INV-07) only shows when another operation starts in that gap, so the model comparison alone missed it (0 of
+  50): each awaited dispatch also reads its own write back, which fails that mutant 5 of 100 (the correct dispatcher
+  passes 150 of 150); `Snapshot_AfterConcurrentReduces_IsNeverStale` stays its main detector. Seqs are drawn from the
+  whole `int` range, so no two operations of one iteration are equal records.
+- **The bound under `PropertyLong`.** `CsCheck_Iter=100000` (§19) multiplies a repetition's work by 1 000, so a flat
+  10 s bound over the test would fail every nightly run (`CsCheck_Iter=10000` timed out at 10 s). The §17.3 bound
+  therefore sits on each blocking step instead: every awaited `DispatchAsync`, the producers and the drain exit of the
+  sync check wait through `Interleaving.Wait` (10 s, thread dump on expiry), so a deadlock fails within 10 s under any
+  `CsCheck_Iter`. `Interleaving.WithinProperty` bounds both CsCheck runs together: 10 s at CsCheck's default, a fixed
+  hour when `CsCheck_Iter` is set, inside the nightly job's 180 minutes.
+- **Still to measure.** Linux and Windows (`ubuntu-latest`, 4 vCPUs): lower `maxParallelOperations` to 5 only if 50
+  repetitions exceed 3 minutes there. `Selection.Value` joins the operations at stage 5.
+
 ## S-5: the `IJSStreamReference` read path on Server (M0-13)
 
 **Question.** Does a Server app round-trip about 2 MB from `localStorage` through `IJSStreamReference` without closing

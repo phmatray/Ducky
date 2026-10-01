@@ -21,15 +21,28 @@ internal static class Interleaving
         return await choreography;
     }
 
-    public static async Task Within(Task choreography)
+    public static Task Within(Task choreography) => Within(choreography, _bound);
+
+    // A whole CsCheck run: 10 s as above at CsCheck's default iterations. PropertyLong's CsCheck_Iter (§19) lengthens the run
+    // past any 10 s bound, so it gets a fixed hour, well inside the nightly job's 180 minutes; there each iteration still
+    // blocks through Wait, so a deadlock fails with a thread dump in 10 s.
+    public static Task WithinProperty(Task choreography) =>
+        Within(choreography, Environment.GetEnvironmentVariable("CsCheck_Iter") is { Length: > 0 } ? TimeSpan.FromHours(1) : _bound);
+
+    // The synchronous Within, for a step inside a CsCheck operation or sample (both synchronous).
+    public static void Wait(Task step) => Within(step).GetAwaiter().GetResult();
+
+    public static T Wait<T>(Task<T> step) => Within(step).GetAwaiter().GetResult();
+
+    private static async Task Within(Task choreography, TimeSpan bound)
     {
         try
         {
-            await choreography.WaitAsync(_bound, TimeProvider.System, TestContext.Current.CancellationToken);
+            await choreography.WaitAsync(bound, TimeProvider.System, TestContext.Current.CancellationToken);
         }
         catch (TimeoutException)
         {
-            Assert.Fail(ThreadDump(choreography));
+            Assert.Fail(ThreadDump(choreography, bound));
         }
     }
 
@@ -39,13 +52,13 @@ internal static class Interleaving
 
     // A managed stack of another thread needs a debugger (ClrMD, dotnet-stack); the OS thread states and the pool
     // counters are what the process can report about itself.
-    private static string ThreadDump(Task choreography)
+    private static string ThreadDump(Task choreography, TimeSpan bound)
     {
         using var process = Process.GetCurrentProcess();
         return string.Join(
             Environment.NewLine,
             [
-                $"Choreography still {choreography.Status} after {_bound.TotalSeconds} s: a deadlock or a stranded action.",
+                $"Choreography still {choreography.Status} after {bound.TotalSeconds} s: a deadlock or a stranded action.",
                 $"Thread pool: {ThreadPool.ThreadCount} threads, {ThreadPool.PendingWorkItemCount} pending, {ThreadPool.CompletedWorkItemCount} completed work items.",
                 .. process.Threads.Cast<ProcessThread>().Select(t => $"  OS thread {t.Id}: {Describe(t)}"),
             ]);
