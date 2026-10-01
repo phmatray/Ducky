@@ -56,6 +56,8 @@ internal sealed partial class Build
     // The copied design record, not user docs (§17.1).
     private static readonly string[] FenceExemptDocs = ["docs/spec/", "docs/adr/"];
 
+    private static readonly Regex RequiredChecks = new(@"checks: \[\(([^)]*)\)");
+
     private AbsolutePath Workflows => RootDirectory / ".github" / "workflows";
 
     private Target VerifyWorkflows => _ => _
@@ -73,7 +75,14 @@ internal sealed partial class Build
                     workingDirectory: RootDirectory, environmentVariables: environment, logOutput: false).AssertZeroExitCode();
             }
 
+            // The fake-gh test of the branch protection script (idempotence, payload); bash and jq are on the Linux runner.
+            if (!OperatingSystem.IsWindows())
+            {
+                ProcessTasks.StartProcess("bash", "build/protect-branch.test.sh", RootDirectory).AssertZeroExitCode();
+            }
+
             var violations = WorkflowViolations(ReadYaml(generated), ReadYaml(Workflows))
+                .Concat(RequiredCheckViolations(ReadYaml(Workflows), (RootDirectory / "build" / "protect-branch.sh").ReadAllText()))
                 .Concat(WorkflowSelfCheck())
                 .ToList();
             violations.ForEach(v => Log.Error(v));
@@ -221,6 +230,54 @@ internal sealed partial class Build
             Name: job.Value is YamlMappingNode body && body.Children.TryGetValue("name", out var name) ? ((YamlScalarNode)name).Value! : ((YamlScalarNode)job.Key).Value!))];
     }
 
+    // §20.2: the required checks in build/protect-branch.sh are exactly the job names that report on a pull request.
+    // The checks list is the jq array `checks: [("ci", ...)`; a workflow that is not YAML is reported by WorkflowViolations.
+    private static IEnumerable<string> RequiredCheckViolations(Dictionary<string, string> committed, string protectScript)
+    {
+        var list = RequiredChecks.Match(protectScript);
+        if (!list.Success)
+        {
+            return ["build/protect-branch.sh: no required checks list `checks: [(\"...\", ...)` found"];
+        }
+
+        var required = Regex.Matches(list.Groups[1].Value, "\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
+        var onPullRequest = committed.Where(c => OnPullRequest(c.Value)).SelectMany(c => Jobs(c.Value)).Select(j => j.Name).ToHashSet(StringComparer.Ordinal);
+        return [
+            .. onPullRequest.Except(required).Order(StringComparer.Ordinal)
+                .Select(j => $"job '{j}' runs on pull requests but is not a required check in build/protect-branch.sh (§20.2)"),
+            .. required.Except(onPullRequest).Order(StringComparer.Ordinal)
+                .Select(c => $"build/protect-branch.sh requires check '{c}', which no pull-request job reports (§20.2)"),
+        ];
+    }
+
+    // True when the workflow's on: names pull_request or pull_request_target, in any of its shapes (scalar, list, mapping).
+    private static bool OnPullRequest(string workflow)
+    {
+        var stream = new YamlStream();
+        try
+        {
+            stream.Load(new StringReader(workflow));
+        }
+        catch (YamlException)
+        {
+            return false;
+        }
+
+        if (stream.Documents.FirstOrDefault()?.RootNode is not YamlMappingNode root || !root.Children.TryGetValue("on", out var on))
+        {
+            return false;
+        }
+
+        var events = on switch
+        {
+            YamlScalarNode e => [e],
+            YamlSequenceNode list => list.Children.OfType<YamlScalarNode>(),
+            YamlMappingNode map => map.Children.Keys.OfType<YamlScalarNode>(),
+            _ => [],
+        };
+        return events.Any(e => e.Value is "pull_request" or "pull_request_target");
+    }
+
     // Every snippet is a #region of a compiled, tested file (§17.1).
     private static IEnumerable<string> DocsFenceViolations(IEnumerable<(string Path, string Text)> docs) =>
         docs.Where(d => !FenceExemptDocs.Any(e => d.Path.StartsWith(e, StringComparison.Ordinal)))
@@ -245,6 +302,18 @@ internal sealed partial class Build
         }
         static Dictionary<string, string> Fallout(Dictionary<string, string> workflows) =>
             workflows.ToDictionary(w => w.Key, w => w.Value.Replace($"    name: {Path.GetFileNameWithoutExtension(w.Key)}\n", "    name: ubuntu-latest\n", StringComparison.Ordinal));
+        // Every trigger shape GitHub accepts (scalar, inline list, block mapping); a job without name: reports its key.
+        static string Pr(string on, string job) => $"name: {job}\non: {on}\njobs:\n  {job}:\n    runs-on: ubuntu-latest\n";
+        var prWorkflows = new Dictionary<string, string>
+        {
+            ["ci.yml"] = Pr("[push, pull_request]", "ci"),
+            ["pr-title.yml"] = Pr("\n  pull_request_target:\n    types: [opened]", "pr-title"),
+            ["e2e.yml"] = Pr("pull_request", "e2e"),
+            ["nightly.yml"] = Pr("\n  schedule:\n    - cron: '0 2 * * *'", "nightly"),
+            ["broken.yml"] = "jobs: [\n",
+        };
+        static string ProtectScript(params string[] checks) =>
+            $"jq -n '{{\n    checks: [({string.Join(", ", checks.Select(c => $"\"{c}\""))})\n      | {{context: ., app_id: 15368}}]\n}}'\n";
         (string Case, List<string> Violations, string Expected)[] planted =
         [
             ("a hand edit to ci.yml", [.. WorkflowViolations(Generated(), Committed(c => c["ci.yml"] += "    timeout-minutes: 5\n"))],
@@ -259,6 +328,12 @@ internal sealed partial class Build
                 "ci.yml: job 'ci' is named 'ubuntu-latest', not after its workflow 'ci' (S-8)"),
             ("Fallout's default job names, shared by two workflows", [.. WorkflowViolations(Fallout(Generated()), Fallout(Committed()))],
                 "job name 'ubuntu-latest' is not unique: aot.yml, ci.yml"),
+            ("a pull-request job missing from the required checks", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title"))],
+                "job 'e2e' runs on pull requests but is not a required check in build/protect-branch.sh"),
+            ("a required check no pull-request job reports", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e", "nightly"))],
+                "build/protect-branch.sh requires check 'nightly', which no pull-request job reports"),
+            ("a protect-branch.sh without a checks list", [.. RequiredCheckViolations(prWorkflows, "echo hi\n")],
+                "build/protect-branch.sh: no required checks list"),
             ("a committed workflow that is not YAML", [.. WorkflowViolations(Generated(), Committed(c => c["broken.yml"] = "jobs: [\n"))],
                 "broken.yml: not valid YAML"),
         ];
@@ -269,6 +344,10 @@ internal sealed partial class Build
         foreach (var violation in WorkflowViolations(Generated(), Committed(c => c["ci.yml"] = c["ci.yml"].ReplaceLineEndings("\r\n"))))
         {
             yield return $"WorkflowSelfCheck: a CRLF checkout of ci.yml must pass, got: {violation}";
+        }
+        foreach (var violation in RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e")))
+        {
+            yield return $"WorkflowSelfCheck: the unplanted required checks must pass, got: {violation}";
         }
         foreach (var (plantedCase, violations, expected) in planted.Where(p => !p.Violations.Any(v => v.Contains(p.Expected, StringComparison.Ordinal))))
         {
