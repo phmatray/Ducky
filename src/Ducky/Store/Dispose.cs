@@ -77,12 +77,14 @@ internal sealed partial class Dispatcher
     {
         Pending[] detached;
         TaskCompletionSource? exited;
+        TaskCompletionSource? idle;
         lock (_gate)
         {
             _state = StoreState.Disposed;
             detached = [.. _queue, .. _initBuffer];
             _queue.Clear();
             exited = _drainExited;
+            idle = _idleWaiters;
         }
 
         foreach (var p in detached)
@@ -94,6 +96,9 @@ internal sealed partial class Dispatcher
 
         // A no-op when StoreInitialized completed it (processed or detached above); otherwise Ready was never reached.
         _sharedInit.TrySetResult(DispatchResult.Disposed);
+
+        // Now, not at the end: a wait registered before disposal ends only here, and Disposed registers no new one.
+        idle?.TrySetResult();
         return exited;
     }
 

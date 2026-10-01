@@ -116,6 +116,7 @@ internal sealed partial class Dispatcher(
         {
             Pending? p;
             TaskCompletionSource? exited = null;
+            TaskCompletionSource? idle = null;
             lock (_gate)
             {
                 // The empty check and the release share one critical section (INV-03).
@@ -123,12 +124,14 @@ internal sealed partial class Dispatcher(
                 {
                     _draining = false;
                     exited = _drainExited;
+                    idle = TakeIdleWaitersIfIdleLocked();
                 }
             }
 
             if (p is null)
             {
                 exited!.TrySetResult();
+                idle?.TrySetResult();
                 return;
             }
 
