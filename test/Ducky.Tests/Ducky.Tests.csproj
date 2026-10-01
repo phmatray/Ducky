@@ -13,6 +13,7 @@
     <PackageReference Include="Shouldly" />
     <PackageReference Include="CsCheck" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
     <!-- Compiles the planted fixture of NoStaticMutableFields_DetectsPlantedMutableStatic. -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>

@@ -11,7 +11,9 @@ internal sealed partial class Dispatcher(
     StateSnapshot initial,
     SafeLogger logger,
     int maxDispatchDepth,
-    Func<Task>[] inits)
+    Func<Task>[] inits,
+    TimeSpan disposeTimeout,
+    TimeProvider timeProvider)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();
@@ -39,33 +41,49 @@ internal sealed partial class Dispatcher(
     internal Action<object>? BeforeProcessHook { get; set; }
 
     // Before Ready a user action (Local, Effect) goes to the init buffer and starts init; every other action goes to the
-    // main queue (§6.3). Init starts and the drain runs outside the lock, on the caller's context (INV-05).
+    // main queue (§6.3). Once Disposed the action completes Disposed and is logged at Debug. Init starts, the drain runs
+    // and the after-disposal path completes outside the lock, on the caller's context (INV-05).
     internal void Enqueue(Pending p)
     {
+        var disposed = false;
         var startInit = false;
         var drain = false;
         lock (_gate)
         {
-            p.Id = ++_lastId;
-            if (p.CorrelationId == 0)
+            if (_state == StoreState.Disposed)
             {
-                p.CorrelationId = p.Id;
-            }
-
-            if (_state != StoreState.Ready && p.Origin is Origin.Local or Origin.Effect)
-            {
-                _initBuffer.Enqueue(p);
-                if (_state == StoreState.Created)
-                {
-                    _state = StoreState.Initializing;
-                    startInit = true;
-                }
+                disposed = true;
             }
             else
             {
-                _queue.Enqueue(p);
-                drain = BeginDrainLocked();
+                p.Id = ++_lastId;
+                if (p.CorrelationId == 0)
+                {
+                    p.CorrelationId = p.Id;
+                }
+
+                if (_state != StoreState.Ready && p.Origin is Origin.Local or Origin.Effect)
+                {
+                    _initBuffer.Enqueue(p);
+                    if (_state == StoreState.Created)
+                    {
+                        _state = StoreState.Initializing;
+                        startInit = true;
+                    }
+                }
+                else
+                {
+                    _queue.Enqueue(p);
+                    drain = BeginDrainLocked();
+                }
             }
+        }
+
+        if (disposed)
+        {
+            p.Complete(DispatchResult.Disposed);
+            Log.DispatchAfterDispose(logger, p.Action.GetType());
+            return;
         }
 
         if (startInit)

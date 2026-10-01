@@ -8,11 +8,14 @@ namespace Ducky;
 internal sealed class DuckyStore : IStore
 {
     // inits: the internal stand-in for middleware init (§6.7) that Ducky.Tests uses until middleware lands (M4-03).
+    // disposeTimeout and timeProvider default to DuckyBuilder's DisposeTimeout and TimeProvider.System.
     internal DuckyStore(
         IEnumerable<Slice> slices,
         ILogger logger,
         int maxDispatchDepth = Dispatcher.DefaultMaxDispatchDepth,
-        Func<Task>[]? inits = null)
+        Func<Task>[]? inits = null,
+        TimeSpan? disposeTimeout = null,
+        TimeProvider? timeProvider = null)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -23,7 +26,14 @@ internal sealed class DuckyStore : IStore
         var registry = new Registry(owned);
         Slices = Array.AsReadOnly(owned);
         InitialState = new StateSnapshot(registry);
-        Dispatcher = new Dispatcher(registry, InitialState, new SafeLogger(logger), maxDispatchDepth, inits ?? []);
+        Dispatcher = new Dispatcher(
+            registry,
+            InitialState,
+            new SafeLogger(logger),
+            maxDispatchDepth,
+            inits ?? [],
+            disposeTimeout ?? TimeSpan.FromSeconds(2),
+            timeProvider ?? TimeProvider.System);
     }
 
     // The IStore factory AddDucky registers (§6.10): validates once per container (INV-31), then builds this store.
@@ -37,7 +47,12 @@ internal sealed class DuckyStore : IStore
             Log.SingletonOutsideBrowser(new SafeLogger(logger));
         }
 
-        return new DuckyStore(config.CreateSlices(), logger, config.MaxDispatchDepth)
+        return new DuckyStore(
+            config.CreateSlices(),
+            logger,
+            config.MaxDispatchDepth,
+            disposeTimeout: config.DisposeTimeout,
+            timeProvider: services.GetRequiredService<TimeProvider>())
         {
             Scope = singleton ? services.CreateAsyncScope() : null,
         };
@@ -92,4 +107,9 @@ internal sealed class DuckyStore : IStore
     }
 
     public Task InitializeAsync(CancellationToken cancellationToken = default) => Dispatcher.InitializeAsync(cancellationToken);
+
+    // Idempotent: every caller, a re-entrant one included, gets the one disposal task (§6.11).
+    public ValueTask DisposeAsync() => new(Dispatcher.DisposeAsync());
+
+    public void Dispose() => Dispatcher.Dispose();
 }
