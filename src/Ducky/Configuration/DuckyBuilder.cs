@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +15,8 @@ public sealed class DuckyBuilder
     private readonly List<DuckyError> _sliceErrors = [];
     private readonly List<(string Source, Exception Thrown)> _sliceFailures = [];
     private readonly List<Func<IServiceProvider, IEnumerable<DuckyError>>> _rules = [];
+    private readonly HashSet<Type> _middlewareTypes = [];
+    private readonly List<Func<IServiceProvider, Middleware>> _middleware = [];
     private ServiceLifetime? _lifetime;
 
     internal DuckyBuilder(IServiceCollection services) => Services = services;
@@ -86,6 +89,20 @@ public sealed class DuckyBuilder
         return this;
     }
 
+    /// <summary>Registers a middleware. A second call for the same type does nothing: the first call fixes its position.</summary>
+    /// <typeparam name="TMiddleware">The middleware type, created by the store from its scope.</typeparam>
+    /// <returns>This builder.</returns>
+    public DuckyBuilder Use<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TMiddleware>()
+        where TMiddleware : Middleware
+    {
+        if (_middlewareTypes.Add(typeof(TMiddleware)))
+        {
+            _middleware.Add(static services => ActivatorUtilities.CreateInstance<TMiddleware>(services));
+        }
+
+        return this;
+    }
+
     /// <summary>Adds a rule run with the core rules at the first store resolution, on the final configuration.</summary>
     /// <param name="rule">Returns the problems it finds; none when the configuration is valid.</param>
     /// <returns>This builder.</returns>
@@ -100,5 +117,5 @@ public sealed class DuckyBuilder
     internal IEnumerable<Type> SliceTypes => _sliceTypes;
 
     // Called once, when configure returned: the snapshot AddDucky registers.
-    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules]);
+    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware]);
 }

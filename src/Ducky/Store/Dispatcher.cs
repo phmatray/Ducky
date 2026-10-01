@@ -13,7 +13,8 @@ internal sealed partial class Dispatcher(
     int maxDispatchDepth,
     Func<Task>[] inits,
     TimeSpan disposeTimeout,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    Lazy<Middleware[]> middleware)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();
@@ -22,6 +23,9 @@ internal sealed partial class Dispatcher(
     private bool _draining;
     private long _lastId;
     private TaskCompletionSource? _drainExited;
+
+    // Created by the first drain, on the drainer; once the last drain has exited, IsValueCreated is final (§6.11 5a).
+    private readonly Lazy<Middleware[]> _middleware = middleware;
 
     internal StateSnapshot State => Volatile.Read(ref _snapshot);
 
@@ -156,7 +160,7 @@ internal sealed partial class Dispatcher(
         }
     }
 
-    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs) and 6-8 so far.
+    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs), 4, 5 and 9 (MiddlewarePipeline.cs) and 6-8 so far.
     private void Process(Pending p)
     {
         BeforeProcessHook?.Invoke(p.Action);
@@ -168,11 +172,15 @@ internal sealed partial class Dispatcher(
         var outer = EnterScope(p);
         try
         {
-            if (p.Action is HydrateSlices restore)
+            var middleware = _middleware.Value;
+            var previous = State;
+            var before = new ActionContext(p, TypeName(p.Action), previous, previous, []);
+            if (!Admitted(p, before, middleware))
             {
-                Hydrate(restore);
+                return;
             }
-            else if (!Reduce(p.Action))
+
+            if (!BeforeReduce(before, middleware) || !Reduce(p.Action))
             {
                 p.Complete(DispatchResult.Failed);
                 return;
@@ -180,6 +188,8 @@ internal sealed partial class Dispatcher(
 
             Commit(p.Origin);
             p.Complete(DispatchResult.Reduced);
+            var state = State;
+            AfterReduce(new ActionContext(p, before.ActionType, previous, state, ChangedKeys(previous, state)), middleware);
         }
         finally
         {
@@ -187,9 +197,15 @@ internal sealed partial class Dispatcher(
         }
     }
 
-    // Step 6: every reducer writes into the scratch list; one throw discards it all (INV-08).
+    // Step 6: every reducer writes into the scratch list; one throw discards it all (INV-08). A restore never fails.
     private bool Reduce(object action)
     {
+        if (action is HydrateSlices restore)
+        {
+            Hydrate(restore);
+            return true;
+        }
+
         _scratch.Clear();
         var current = State;
         var slices = registry.Slices;
@@ -208,10 +224,7 @@ internal sealed partial class Dispatcher(
             {
                 var sliceKey = registry.Keys[ordinal];
                 Log.ReducerThrew(logger, ex, sliceKey, action.GetType());
-
-                // Step 2 installed this action's scope.
-                var scope = _causal.Value!;
-                RouteFailure(new(TypeName(action), sliceKey, ex), scope.CorrelationId, scope.InFailure);
+                RouteScopedFailure(action, sliceKey, ex);
                 return false;
             }
         }

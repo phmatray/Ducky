@@ -141,3 +141,22 @@ static Ducky.Selector.Define<T1, T2, T>(System.Func<Ducky.StateSnapshot!, T1>! i
 static Ducky.Selector.Define<T1, T2, TArg, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<Ducky.StateSnapshot!, T2>! in2, System.Func<T1, T2, TArg, T>! projector) -> Ducky.SelectorDef<TArg, T>!
 static Ducky.Selector.Define<T1, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<T1, T>! projector) -> Ducky.SelectorDef<T>!
 static Ducky.Selector.Define<T1, TArg, T>(System.Func<Ducky.StateSnapshot!, T1>! in1, System.Func<T1, TArg, T>! projector) -> Ducky.SelectorDef<TArg, T>!
+Ducky.ActionContext
+Ducky.ActionContext.Action.get -> object!
+Ducky.ActionContext.ActionType.get -> string!
+Ducky.ActionContext.ChangedKeys.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Ducky.ActionContext.CorrelationId.get -> long
+Ducky.ActionContext.Depth.get -> int
+Ducky.ActionContext.Id.get -> long
+Ducky.ActionContext.Origin.get -> Ducky.Origin
+Ducky.ActionContext.PreviousState.get -> Ducky.StateSnapshot!
+Ducky.ActionContext.State.get -> Ducky.StateSnapshot!
+Ducky.DuckyBuilder.Use<TMiddleware>() -> Ducky.DuckyBuilder!
+Ducky.Middleware
+Ducky.Middleware.DisposeTimeout.get -> System.TimeSpan
+Ducky.Middleware.Middleware() -> void
+Ducky.Middleware.Store.get -> Ducky.IStore!
+virtual Ducky.Middleware.AfterReduce(Ducky.ActionContext! context) -> void
+virtual Ducky.Middleware.BeforeReduce(Ducky.ActionContext! context) -> void
+virtual Ducky.Middleware.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual Ducky.Middleware.MayDispatch(Ducky.ActionContext! context) -> bool

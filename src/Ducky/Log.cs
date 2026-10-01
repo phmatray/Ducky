@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 namespace Ducky;
 
 // Core log events (SPEC §9): EventIds 1000-1999, types and keys only, never values. Reserved by later stories:
-// 1014-1017. M1-05 uses 1000, M1-07 1001, M1-09 1004, M1-11 1002, 1010, 1011 and 1013.
+// 1014, 1016, 1017. M1-05 uses 1000, M1-07 1001, M1-09 1004, M1-11 1002, 1010, 1011 and 1013, M4-01 1015, 1020 and 1021.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 1000, Level = LogLevel.Error, Message = "Reducer of slice '{SliceKey}' threw while reducing {ActionType}")]
@@ -29,4 +29,13 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 1013, Level = LogLevel.Error, Message = "A cancellation callback threw")]
     internal static partial void CancellationCallbackThrew(SafeLogger logger, AggregateException exception);
+
+    [LoggerMessage(EventId = 1015, Level = LogLevel.Error, Message = "DisposeAsync of middleware {Middleware} threw")]
+    internal static partial void MiddlewareDisposeThrew(SafeLogger logger, Exception exception, Type middleware);
+
+    [LoggerMessage(EventId = 1020, Level = LogLevel.Debug, Message = "{ActionType} vetoed by {Middleware}")]
+    internal static partial void Vetoed(SafeLogger logger, Type actionType, Type middleware);
+
+    [LoggerMessage(EventId = 1021, Level = LogLevel.Error, Message = "{Middleware}.{Hook} threw while handling {ActionType}")]
+    internal static partial void MiddlewareHookThrew(SafeLogger logger, Exception exception, Type middleware, string hook, Type actionType);
 }

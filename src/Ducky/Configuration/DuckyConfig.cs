@@ -14,7 +14,8 @@ internal sealed class DuckyConfig(
     DuckyConfig.SliceRegistration[] slices,
     DuckyError[] sliceErrors,
     (string Source, Exception Thrown)[] sliceFailures,
-    Func<IServiceProvider, IEnumerable<DuckyError>>[] rules)
+    Func<IServiceProvider, IEnumerable<DuckyError>>[] rules,
+    Func<IServiceProvider, Middleware>[] middleware)
 {
     public ServiceLifetime Lifetime => lifetime;
 
@@ -25,6 +26,9 @@ internal sealed class DuckyConfig(
     public TimeSpan DisposeTimeout => disposeTimeout;
 
     public IEnumerable<Slice> CreateSlices() => slices.Select(slice => slice.Create());
+
+    // In registration order, from the store's services (§6.10).
+    public Middleware[] CreateMiddleware(IServiceProvider services) => Array.ConvertAll(middleware, create => create(services));
 
     public void ThrowIfInvalid(IServiceProvider services)
     {

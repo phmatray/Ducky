@@ -2,9 +2,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Ducky;
 
-// SPEC §6.11 steps 1-3 (INV-29). Every caller gets the one disposal task, published before any step runs, so a call
-// made re-entrantly from step 2's callbacks starts nothing. Steps 4-6 (materialization, middleware, effect runs,
-// subscribers) come with those features; when step 3 times out they chain on the drain's exit.
+// SPEC §6.11 steps 1-3 and phase 5a (INV-29). Every caller gets the one disposal task, published before any step runs, so
+// a call made re-entrantly from step 2's callbacks starts nothing. The other waits and phases (materialization, init,
+// effect runs, subscribers) come with those features; when step 3 times out they chain on the drain's exit, like 5a.
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The lifetime CTS is never disposed: tokens taken from it may be read after disposal, and it owns no timer or linked registration.")]
 internal sealed partial class Dispatcher
 {
@@ -19,6 +19,9 @@ internal sealed partial class Dispatcher
         : TimeSpan.FromTicks(Math.Clamp(disposeTimeout.Ticks, 0, MaxDisposeTimeoutTicks));
 
     private TaskCompletionSource? _disposal;
+
+    // The bound step 3 actually waits with, which middleware read as DisposeTimeout (§5.6).
+    internal TimeSpan DisposeTimeout => _disposeTimeout;
 
     // The store lifetime, cancelled at step 2: effect runs and init link their tokens to it.
     internal CancellationToken Lifetime => _lifetime.Token;
@@ -54,19 +57,52 @@ internal sealed partial class Dispatcher
 
             // Step 3, also when the caller is the drainer: it gets an incomplete task, and the drainer, finding the queue
             // empty, exits. A drain that outlasts DisposeTimeout no longer holds DisposeAsync.
-            if (exited is not null)
+            var drainExited = exited?.Task ?? Task.CompletedTask;
+            var wait = drainExited.WaitAsync(_disposeTimeout, timeProvider);
+            await wait.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            if (!wait.IsCompletedSuccessfully)
             {
-                var wait = exited.Task.WaitAsync(_disposeTimeout, timeProvider);
-                await wait.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-                if (!wait.IsCompletedSuccessfully)
-                {
-                    Log.DrainExitTimedOut(logger, _disposeTimeout);
-                }
+                // DisposeAsync completes at the bound; the later steps still run, chained on the drain's exit.
+                Log.DrainExitTimedOut(logger, _disposeTimeout);
+                _ = DisposeMiddlewareAsync(drainExited);
+                return;
             }
+
+            await DisposeMiddlewareAsync(drainExited).ConfigureAwait(false);
         }
         finally
         {
             disposal.TrySetResult();
+        }
+    }
+
+    // Phase 5a, after the drain exited (never inline while one may be in flight): middleware in reverse registration order,
+    // each DisposeAsync in its own try/catch (Error 1015), so one throw never skips the others. Only a drain creates
+    // middleware, so once the last drain has exited, none created means none to dispose.
+    private async Task DisposeMiddlewareAsync(Task drainExited)
+    {
+#pragma warning disable VSTHRD003 // justification: the drain's exit is our own RunContinuationsAsynchronously TCS, never faulted
+        // Stryker disable once Boolean : either context only resumes after the drain exited, which is all 5a needs
+        await drainExited.ConfigureAwait(false);
+#pragma warning restore VSTHRD003
+        if (!_middleware.IsValueCreated)
+        {
+            return;
+        }
+
+        var middleware = _middleware.Value;
+        for (var i = middleware.Length - 1; i >= 0; i--)
+        {
+            try
+            {
+                await middleware[i].DisposeAsync().ConfigureAwait(false);
+            }
+#pragma warning disable CA1031 // justification: DisposeAsync is user code; its throw is logged and never faults disposal (§6.11)
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                Log.MiddlewareDisposeThrew(logger, ex, middleware[i].GetType());
+            }
         }
     }
 

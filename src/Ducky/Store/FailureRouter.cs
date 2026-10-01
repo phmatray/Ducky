@@ -17,6 +17,13 @@ internal sealed partial class Dispatcher
         Enqueue(new Pending(failure, Origin.System, 0, correlationId, false, true, null));
     }
 
+    // Steps 4-6 run under the failed action's own scope, installed by step 2.
+    private void RouteScopedFailure(object action, string? sliceKey, Exception ex)
+    {
+        var scope = _causal.Value!;
+        RouteFailure(new(TypeName(action), sliceKey, ex), scope.CorrelationId, scope.InFailure);
+    }
+
     // ponytail: Type.ToString() is Namespace.Name; the per-store cached action type names of §9 replace it (M4-07).
     private static string TypeName(object action) => action.GetType().ToString();
 }
