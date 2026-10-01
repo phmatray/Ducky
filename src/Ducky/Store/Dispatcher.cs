@@ -6,7 +6,7 @@ namespace Ducky;
 // The single drainer (SPEC §6.3): whoever enqueues while no drain is active drains the whole queue inline, so reducers
 // never run concurrently (INV-01) and a dispatch from a reducer is queued, never nested. No user code, log call or
 // completion runs under _gate (INV-05).
-internal sealed class Dispatcher(Registry registry, StateSnapshot initial, SafeLogger logger)
+internal sealed partial class Dispatcher(Registry registry, StateSnapshot initial, SafeLogger logger)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();
@@ -39,6 +39,11 @@ internal sealed class Dispatcher(Registry registry, StateSnapshot initial, SafeL
         lock (_gate)
         {
             p.Id = ++_lastId;
+            if (p.CorrelationId == 0)
+            {
+                p.CorrelationId = p.Id;
+            }
+
             _queue.Enqueue(p);
             if (!_draining)
             {
@@ -98,18 +103,31 @@ internal sealed class Dispatcher(Registry registry, StateSnapshot initial, SafeL
         }
     }
 
-    // SPEC §6.4, one method per step; this story adds steps 6-8.
+    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs) and 6-8 so far.
     private void Process(Pending p)
     {
         BeforeProcessHook?.Invoke(p.Action);
-        if (!Reduce(p.Action))
+        if (DepthExceeded(p))
         {
-            p.Complete(DispatchResult.Failed);
             return;
         }
 
-        Commit(p.Origin);
-        p.Complete(DispatchResult.Reduced);
+        var outer = EnterScope(p);
+        try
+        {
+            if (!Reduce(p.Action))
+            {
+                p.Complete(DispatchResult.Failed);
+                return;
+            }
+
+            Commit(p.Origin);
+            p.Complete(DispatchResult.Reduced);
+        }
+        finally
+        {
+            ExitScope(outer);
+        }
     }
 
     // Step 6: every reducer writes into the scratch list; one throw discards it all (INV-08).
