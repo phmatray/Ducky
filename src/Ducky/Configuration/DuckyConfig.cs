@@ -11,6 +11,7 @@ internal sealed class DuckyConfig(
     ServiceLifetime lifetime,
     bool isBrowser,
     int maxDispatchDepth,
+    TimeSpan initTimeout,
     TimeSpan disposeTimeout,
     DuckyConfig.SliceRegistration[] slices,
     DuckyError[] sliceErrors,
@@ -25,6 +26,8 @@ internal sealed class DuckyConfig(
     public bool IsBrowser => isBrowser;
 
     public int MaxDispatchDepth => maxDispatchDepth;
+
+    public TimeSpan InitTimeout => initTimeout;
 
     public TimeSpan DisposeTimeout => disposeTimeout;
 

@@ -165,7 +165,7 @@ public sealed class DuckyBuilder
     internal IEnumerable<Type> SliceTypes => _sliceTypes;
 
     // Called once, when configure returned: the snapshot AddDucky registers.
-    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
+    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, InitTimeout, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
         [.. _effects.Values.Select(effect => effect.CtorCheck).OfType<CtorCheck.Requirement>().Concat(_ctorChecks).Distinct()]);
 
     // Runs at the store's first use. A throwing constructor becomes DUCKY353 wrapping what it threw (§5.1), which the

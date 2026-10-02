@@ -7,12 +7,15 @@ namespace Ducky;
 internal sealed partial class Dispatcher
 {
     private readonly Queue<Pending> _initBuffer = new();
-    private readonly InitCoordinator _initializer = new(inits);
+    private readonly InitCoordinator _initializer = new(materialized, logger, timeProvider, ClampTimeout(initTimeout), lifetime.Token);
 
     // The shared init task: StoreInitialized's Pending carries it, so it completes once StoreInitialized is processed,
     // never from MarkReady (another thread may be draining, with StoreInitialized still queued).
     private readonly TaskCompletionSource<DispatchResult> _sharedInit = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private StoreState _state;
+
+    // For dispose's init waits on InitTasks (§6.11 step 4, M4-03c) and for tests.
+    internal InitCoordinator Initializer => _initializer;
 
     internal void StartInit() => _initializer.Start(this);
 

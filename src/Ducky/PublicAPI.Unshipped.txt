@@ -160,6 +160,7 @@ Ducky.Middleware.Store.get -> Ducky.IStore!
 virtual Ducky.Middleware.AfterReduce(Ducky.ActionContext! context) -> void
 virtual Ducky.Middleware.BeforeReduce(Ducky.ActionContext! context) -> void
 virtual Ducky.Middleware.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual Ducky.Middleware.InitializeAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
 virtual Ducky.Middleware.MayDispatch(Ducky.ActionContext! context) -> bool
 Ducky.IStore.Select<T>(System.Func<Ducky.StateSnapshot!, T>! selector, System.Action<T>? onChange = null, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
 Ducky.Selection<T>

@@ -54,7 +54,7 @@ public sealed class IdleTests
     public async Task WhenIdle_CallerTokenCancels_OnlyThatWait()
     {
         var gate = new InitGate();
-        var store = new DuckyStore([new TrailSlice()], NullLogger.Instance, inits: [gate.Init]);
+        var store = new DuckyStore([new TrailSlice()], NullLogger.Instance, middleware: () => [gate]);
         using var cts = new CancellationTokenSource();
         var other = store.WhenIdleAsync(CancellationToken.None);
         var cancelled = store.WhenIdleAsync(cts.Token);
@@ -81,7 +81,7 @@ public sealed class IdleTests
     public void WhenIdle_StartsInit()
     {
         var gate = new InitGate();
-        var store = new DuckyStore([new TrailSlice(), new CountSlice()], NullLogger.Instance, inits: [gate.Init]);
+        var store = new DuckyStore([new TrailSlice(), new CountSlice()], NullLogger.Instance, middleware: () => [gate]);
 
         var idle = store.WhenIdleAsync(CancellationToken.None);
 
@@ -105,12 +105,12 @@ public sealed class IdleTests
     public async Task WhenIdle_Dispose_CompletesWaitersAtStepOne()
     {
         var gate = new InitGate();
-        var store = new DuckyStore([new TrailSlice()], NullLogger.Instance, inits: [gate.Init]);
+        var store = new DuckyStore([new TrailSlice()], NullLogger.Instance, middleware: () => [gate]);
         var beforeReady = store.WhenIdleAsync(CancellationToken.None);
         await store.DisposeAsync();
         beforeReady.IsCompletedSuccessfully.ShouldBeTrue();
 
-        var disposed = new DuckyStore([new TrailSlice()], NullLogger.Instance, inits: [gate.Init]);
+        var disposed = new DuckyStore([new TrailSlice()], NullLogger.Instance, middleware: () => [gate]);
         await disposed.DisposeAsync();
         disposed.WhenIdleAsync(TestContext.Current.CancellationToken).IsCompletedSuccessfully.ShouldBeTrue();
 

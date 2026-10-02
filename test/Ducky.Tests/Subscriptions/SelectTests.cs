@@ -100,7 +100,7 @@ public sealed class SelectTests
     public void Select_StartsInit(bool withOnChange)
     {
         var gate = new InitGate();
-        var store = new DuckyStore([new CountSlice()], NullLogger.Instance, inits: [gate.Init]);
+        var store = new DuckyStore([new CountSlice()], NullLogger.Instance, middleware: () => [gate]);
 
         using var selection = store.Select(s => s.Get<Count>().Value, withOnChange ? _ => { } : null);
 
