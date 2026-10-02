@@ -65,7 +65,8 @@ internal sealed partial class Dispatcher
     }
 
     // Step 11: each effect registered for the action's exact type starts inline, on the drainer, up to its handler's first
-    // await. Runs only after a successful reduce for now (the failure rule is M4-01b).
+    // await. Runs after a commit and after a BeforeReduce or reducer failure alike: effects react to the action, not to the
+    // commit (§6.4, M4-01b).
     private void StartEffects(ActionContext trigger, Dictionary<Type, EffectRunner[]> index)
     {
         if (!index.TryGetValue(trigger.Action.GetType(), out var runners))

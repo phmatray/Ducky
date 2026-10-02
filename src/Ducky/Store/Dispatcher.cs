@@ -219,16 +219,23 @@ internal sealed partial class Dispatcher(
                 return;
             }
 
-            if (!BeforeReduce(before, middleware) || !Reduce(p.Action))
+            // A failure in steps 5-6 commits nothing and skips steps 7 and 10, but AfterReduce still sees the action, with
+            // before's State == PreviousState and no changed key, and its effects still start: they react to the action, not
+            // to the commit, so a throwing StoreInitialized reducer can't disable the load effects (§6.4, INV-08, INV-13).
+            var after = before;
+            var changed = false;
+            if (BeforeReduce(before, middleware) && Reduce(p.Action))
+            {
+                changed = Commit(p.Origin);
+                p.Complete(DispatchResult.Reduced);
+                var state = State;
+                after = new ActionContext(p, before.ActionType, previous, state, ChangedKeys(previous, state));
+            }
+            else
             {
                 p.Complete(DispatchResult.Failed);
-                return;
             }
 
-            var changed = Commit(p.Origin);
-            p.Complete(DispatchResult.Reduced);
-            var state = State;
-            var after = new ActionContext(p, before.ActionType, previous, state, ChangedKeys(previous, state));
             AfterReduce(after, middleware);
             if (changed)
             {
