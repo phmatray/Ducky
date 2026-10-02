@@ -50,18 +50,21 @@ internal sealed partial class Dispatcher
         return true;
     }
 
-    // Step 2. Returns the drainer's previous scope, which ExitScope restores.
-    private Cause? EnterScope(Pending p)
+    // Step 2. Returns the drainer's previous scopes, which ExitScope restores. The effect-run scope is cleared: a drain
+    // owned by an effect continuation processes other producers' actions, which are not that run's (§6.4, §6.6).
+    private (Cause? Causal, EffectRunToken? Run) EnterScope(Pending p)
     {
-        var outer = _causal.Value;
+        var outer = (_causal.Value, _effectRun.Value);
         Volatile.Write(ref _processingSeq, p.Id);
         _causal.Value = new(p.Id, p.Depth, p.CorrelationId, p.InFailure || p.IsFailure);
+        _effectRun.Value = null;
         return outer;
     }
 
-    private void ExitScope(Cause? outer)
+    private void ExitScope((Cause? Causal, EffectRunToken? Run) outer)
     {
-        _causal.Value = outer;
+        _causal.Value = outer.Causal;
+        _effectRun.Value = outer.Run;
         Volatile.Write(ref _processingSeq, 0);
     }
 }

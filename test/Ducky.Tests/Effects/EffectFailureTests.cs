@@ -110,7 +110,7 @@ public sealed class EffectFailureTests
         });
         var store = new DuckyStore([new SeenSlice()], logger, effects: () => [(failing, false), (onFailed, false)]);
         (await store.DispatchAsync(new Load(1))).ShouldBe(DispatchResult.Reduced);
-        await store.WhenIdleAsync(TestContext.Current.CancellationToken);
+        handled.ShouldHaveSingleItem(); // the drain ran inline: EffectFailed is reduced and the run awaits release
 
         release.SetResult();
         await store.WhenIdleAsync(TestContext.Current.CancellationToken);
