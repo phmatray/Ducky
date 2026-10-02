@@ -18,6 +18,7 @@ public sealed class DuckyBuilder
     private readonly HashSet<Type> _middlewareTypes = [];
     private readonly List<Func<IServiceProvider, Middleware>> _middleware = [];
     private readonly OrderedDictionary<Type, DuckyConfig.EffectRegistration> _effects = [];
+    private readonly List<CtorCheck.Requirement> _ctorChecks = [];
     private ServiceLifetime? _lifetime;
 
     internal DuckyBuilder(IServiceCollection services) => Services = services;
@@ -114,7 +115,7 @@ public sealed class DuckyBuilder
     public DuckyBuilder AddEffect<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEffect>()
         where TEffect : Effect
     {
-        _effects.TryAdd(typeof(TEffect), new(static services => Construct<TEffect>(services), Owned: true));
+        _effects.TryAdd(typeof(TEffect), new(static services => Construct<TEffect>(services), new(typeof(TEffect), "AddEffect<T>")));
         return this;
     }
 
@@ -129,7 +130,7 @@ public sealed class DuckyBuilder
         where TEffect : Effect
     {
         ArgumentNullException.ThrowIfNull(instance);
-        _effects[typeof(TEffect)] = new(_ => instance, Owned: false);
+        _effects[typeof(TEffect)] = new(_ => instance, CtorCheck: null);
         return this;
     }
 
@@ -143,11 +144,29 @@ public sealed class DuckyBuilder
         return this;
     }
 
+    /// <summary>
+    /// Queues <paramref name="type"/> for the DUCKY309 constructor check at the first store resolution, for a type the
+    /// store doesn't construct itself (such as a reactive effect). The check passes when one of the constructors
+    /// <c>ActivatorUtilities</c> would pick can resolve every parameter without a default value.
+    /// </summary>
+    /// <param name="type">The type whose constructor dependencies must resolve.</param>
+    /// <param name="requiredBy">What needs the type, named in the error (for example <c>AddReactiveEffect&lt;T&gt;</c>).</param>
+    /// <returns>This builder.</returns>
+    public DuckyBuilder RequireResolvableConstructor(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type, string requiredBy)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(requiredBy);
+        _ctorChecks.Add(new(type, requiredBy));
+        return this;
+    }
+
     // Every type AddSlice was given, a throwing one included: each is injectable, and resolving it reports the errors.
     internal IEnumerable<Type> SliceTypes => _sliceTypes;
 
     // Called once, when configure returned: the snapshot AddDucky registers.
-    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values]);
+    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
+        [.. _effects.Values.Select(effect => effect.CtorCheck).OfType<CtorCheck.Requirement>().Concat(_ctorChecks).Distinct()]);
 
     // Runs at the store's first use. A throwing constructor becomes DUCKY353 wrapping what it threw (§5.1), which the
     // store caches and rethrows at every later use.

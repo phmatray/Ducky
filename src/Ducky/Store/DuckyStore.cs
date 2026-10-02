@@ -44,8 +44,8 @@ internal sealed class DuckyStore : IStore
     // The IStore factory AddDucky registers (§6.10): validates once per container (INV-31), then builds this store.
     internal static DuckyStore Create(IServiceProvider services, DuckyConfig config)
     {
-        config.ThrowIfInvalid(services);
         var logger = (ILogger?)services.GetService<ILogger<DuckyStore>>() ?? NullLogger.Instance;
+        config.ThrowIfInvalid(services, logger);
         var singleton = config.Lifetime == ServiceLifetime.Singleton;
         if (singleton && !config.IsBrowser)
         {

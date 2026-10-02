@@ -187,3 +187,4 @@ abstract Ducky.Effect<TAction>.Handle(TAction action, Ducky.EffectContext! conte
 virtual Ducky.Effect.LongRunning.get -> bool
 virtual Ducky.Effect<TAction>.ConcurrencyKey(TAction action) -> object?
 virtual Ducky.Effect<TAction>.Policy.get -> Ducky.Concurrency
+Ducky.DuckyBuilder.RequireResolvableConstructor(System.Type! type, string! requiredBy) -> Ducky.DuckyBuilder!
