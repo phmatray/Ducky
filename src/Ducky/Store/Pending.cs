@@ -30,5 +30,8 @@ internal sealed class Pending(
     // InFailure, so failures under it are logged only (INV-12).
     internal bool IsFailure { get; } = isFailure;
 
+    // The effect run that dispatched it through EffectContext, checked again at step 3 (§6.4, §6.6); null otherwise.
+    internal EffectRunToken? Run { get; set; }
+
     internal void Complete(DispatchResult result) => completion?.TrySetResult(result);
 }

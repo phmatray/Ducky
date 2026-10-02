@@ -2,8 +2,12 @@ namespace Ducky;
 
 // One per run (SPEC §6.6). CountedForIdle is true for a non-LongRunning run until its idle decrement; it is written and
 // read under the store's _gate.
-internal sealed class EffectRunToken
+internal sealed class EffectRunToken(CancellationToken token)
 {
+    // The run's token: the store lifetime for Merge, the slot's linked token for Switch. Several runs may share one
+    // token, so a run's identity is this object, never the token (§6.6).
+    public CancellationToken Token { get; } = token;
+
     public bool CountedForIdle { get; set; }
 }
 

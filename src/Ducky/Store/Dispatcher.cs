@@ -111,8 +111,7 @@ internal sealed partial class Dispatcher(
 
         if (disposed)
         {
-            p.Complete(DispatchResult.Disposed);
-            Log.DispatchAfterDispose(logger, p.Action.GetType());
+            CompleteDisposed(p);
             return;
         }
 
@@ -125,6 +124,13 @@ internal sealed partial class Dispatcher(
         {
             Drain();
         }
+    }
+
+    // A dispatch after disposal began: Disposed, never Dropped, and not counted (INV-02).
+    private void CompleteDisposed(Pending p)
+    {
+        p.Complete(DispatchResult.Disposed);
+        Log.DispatchAfterDispose(logger, p.Action.GetType());
     }
 
     // Under _gate: true when the caller became the drainer.
@@ -186,8 +192,8 @@ internal sealed partial class Dispatcher(
         }
     }
 
-    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs), 4, 5 and 9 (MiddlewarePipeline.cs), 6-8, 10
-    // (Notify.cs) and 11 (EffectRuns.cs) so far.
+    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs), 3 and 11 (EffectRuns.cs), 4, 5 and 9
+    // (MiddlewarePipeline.cs), 6-8, 10 (Notify.cs) so far.
     private void Process(Pending p)
     {
         BeforeProcessHook?.Invoke(p.Action);
@@ -199,6 +205,11 @@ internal sealed partial class Dispatcher(
         var outer = EnterScope(p);
         try
         {
+            if (RunCancelled(p))
+            {
+                return;
+            }
+
             var materialized = _materialized.Value;
             var middleware = materialized.Middleware;
             var previous = State;
