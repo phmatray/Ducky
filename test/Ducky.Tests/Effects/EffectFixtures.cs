@@ -170,3 +170,26 @@ internal sealed class JournalMiddleware(EffectJournal journal) : Middleware
         return base.DisposeAsync();
     }
 }
+
+// A scoped dependency of a store-created effect: it records its disposal by its scope in the journal.
+internal sealed class ScopedProbe(EffectJournal journal) : IDisposable
+{
+    public void Dispose() => journal.Disposed.Add(nameof(ScopedProbe));
+}
+
+internal sealed class ScopedEffect(ScopedProbe probe, EffectJournal journal) : Effect<Load>, IDisposable
+{
+    public ScopedProbe Probe => probe;
+
+    public override Task Handle(Load action, EffectContext context, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public void Dispose() => journal.Disposed.Add(nameof(ScopedEffect));
+}
+
+// Resolves a scoped dependency from the store scope, then throws: only the scope can release that dependency.
+internal sealed class ScopedThrowingEffect : Effect<Load>
+{
+    public ScopedThrowingEffect(ScopedProbe probe) => throw new FormatException(probe.GetType().Name);
+
+    public override Task Handle(Load action, EffectContext context, CancellationToken cancellationToken) => Task.CompletedTask;
+}

@@ -2,9 +2,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Ducky;
 
-// SPEC §6.11 steps 1-3, phases 5a-5b and step 6 (INV-29). Every caller gets the one disposal task, published before any
-// step runs, so a call made re-entrantly from step 2's callbacks starts nothing. The other waits and phases
-// (init, effect runs) come with those features; when step 3 times out they chain on the drain's exit.
+// SPEC §6.11 steps 1-3, the step-4 run wait, phases 5a-5b and step 6 (INV-29). Every caller gets the one disposal task,
+// published before any step runs, so a call made re-entrantly from step 2's callbacks starts nothing. The other step-4
+// waits (materialization, init) come with those features; when step 3 times out the rest chains on the drain's exit.
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The lifetime CTS is never disposed: tokens taken from it may be read after disposal, and it owns no timer or linked registration.")]
 internal sealed partial class Dispatcher
 {
@@ -40,6 +40,8 @@ internal sealed partial class Dispatcher
     // Never faults: nothing below throws but a fatal exception (SafeLogger rethrows only OutOfMemoryException).
     internal Task DisposeAsync()
     {
+        // Before anything else, so a run that calls this, first or later, is never waited for by step 4.
+        _effectRun.Value?.DisposeCalled.TrySetResult();
         var disposal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var published = Interlocked.CompareExchange(ref _disposal, disposal, null);
         if (published is not null)
@@ -78,7 +80,7 @@ internal sealed partial class Dispatcher
                 disposal.TrySetResult();
             }
 
-            await DisposeMaterializedAsync(drainExited).ConfigureAwait(false);
+            await DisposeMaterializedAsync(drainExited, disposal).ConfigureAwait(false);
             ClearSubscribers();
         }
         finally
@@ -88,9 +90,9 @@ internal sealed partial class Dispatcher
     }
 
     // Phases 5a and 5b, after the drain exited (never inline while one may be in flight): middleware in reverse registration
-    // order, then the store-owned effects in reverse (the run wait before 5b comes with M2-03b). Nothing materialized means
-    // nothing to dispose; a faulted materialization built nothing it kept (disposing its partial work is M4-05b's).
-    private async Task DisposeMaterializedAsync(Task drainExited)
+    // order, then, after the run wait, the store-owned effects in reverse and the store scope. Nothing materialized (or a
+    // faulted materialization, which kept nothing; disposing its partial work is M4-05b's) leaves only the store scope.
+    private async Task DisposeMaterializedAsync(Task drainExited, TaskCompletionSource disposal)
     {
 #pragma warning disable VSTHRD003 // justification: the drain's exit is our own RunContinuationsAsynchronously TCS, never faulted
         // Stryker disable once Boolean : either context only resumes after the drain exited, which is all 5a needs
@@ -98,16 +100,32 @@ internal sealed partial class Dispatcher
 #pragma warning restore VSTHRD003
         if (!_materialized.IsValueCreated)
         {
+            // The scope exists from DuckyStore.Create on; disposing one that resolved nothing constructs nothing.
+            await DisposeReversedAsync([storeScope]).ConfigureAwait(ConfigureAwaitOptions.None);
             return;
         }
 
+        // Step 4's run wait starts with the drain's exit, so it sees every run step 11 registered; 5a does not wait for it.
+        var runs = RunWaitAsync();
+        Task bounded = runs.WaitAsync(_disposeTimeout, timeProvider);
         var materialized = _materialized.Value;
         await DisposeReversedAsync(materialized.Middleware).ConfigureAwait(ConfigureAwaitOptions.None);
-        await DisposeReversedAsync(materialized.OwnedEffects).ConfigureAwait(ConfigureAwaitOptions.None);
+        await bounded.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        if (!bounded.IsCompletedSuccessfully)
+        {
+            // A hung run holds only 5b: step 6 runs now (RunDisposalAsync's later call is a no-op) and DisposeAsync
+            // completes at the bound, so no subscriber closure stays reachable; 5b stays chained on the runs.
+            ClearSubscribers();
+            disposal.TrySetResult();
+            await runs.ConfigureAwait(false);
+        }
+
+        // 5b: owned effects in reverse construction order, then the store scope (browser) last; a null scope is skipped.
+        await DisposeReversedAsync([storeScope, .. materialized.OwnedEffects]).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     // Each disposal in its own try/catch (Error 1015), so one throw never skips the others.
-    private async Task DisposeReversedAsync(object[] owned)
+    private async Task DisposeReversedAsync(object?[] owned)
     {
         for (var i = owned.Length - 1; i >= 0; i--)
         {
@@ -127,7 +145,7 @@ internal sealed partial class Dispatcher
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                Log.DisposeThrew(logger, ex, owned[i].GetType());
+                Log.DisposeThrew(logger, ex, owned[i]!.GetType());
             }
         }
     }

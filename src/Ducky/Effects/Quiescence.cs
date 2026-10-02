@@ -1,12 +1,16 @@
 namespace Ducky;
 
-// One per run (SPEC §6.6). CountedForIdle is true for a non-LongRunning run until its idle decrement; it is written and
-// read under the store's _gate.
-internal sealed class EffectRunToken(CancellationToken token)
+// A new object per run (SPEC §6.6). Token is the store lifetime for Merge, the slot's linked token for Switch; several runs
+// may share one, so a run's identity is this object or its Id, never the token. CountedForIdle is true for a
+// non-LongRunning run until its idle decrement; it is written and read under the store's _gate. DisposeCalled completes
+// when the run calls its store's DisposeAsync (§6.11).
+internal sealed class EffectRunToken(long id, CancellationToken token)
 {
-    // The run's token: the store lifetime for Merge, the slot's linked token for Switch. Several runs may share one
-    // token, so a run's identity is this object, never the token (§6.6).
-    public CancellationToken Token { get; } = token;
+    public long Id => id;
+
+    public CancellationToken Token => token;
+
+    public TaskCompletionSource DisposeCalled { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public bool CountedForIdle { get; set; }
 }

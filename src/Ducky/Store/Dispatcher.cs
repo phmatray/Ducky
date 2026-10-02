@@ -14,6 +14,7 @@ internal sealed partial class Dispatcher(
     TimeSpan initTimeout,
     TimeSpan disposeTimeout,
     TimeProvider timeProvider,
+    IAsyncDisposable? storeScope,
     Lazy<Materialized> materialized,
     CancellationTokenSource lifetime)
 {
