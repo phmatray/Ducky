@@ -221,7 +221,7 @@ internal sealed partial class Dispatcher(
             AfterReduce(after, middleware);
             if (changed)
             {
-                Notify();
+                Notify(p.Action.GetType());
             }
 
             StartEffects(after, materialized.Effects);

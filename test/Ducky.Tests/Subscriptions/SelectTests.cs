@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Ducky.Tests;
 
 // SPEC §5.2 (IStore.Select, Selection<T>), §6.8 (Select order, the drainer's CAS-or-compare), §6.4 step 10, §6.11
-// (after disposal); INV-13, INV-21. Isolation of throwing subscribers and the _disposed flag come with M3-01b.
+// (after disposal); INV-13, INV-21. Isolation of throwing subscribers and the _disposed flag: SubscriberTests.
 public sealed class SelectTests
 {
     private sealed record Box(int Value);
