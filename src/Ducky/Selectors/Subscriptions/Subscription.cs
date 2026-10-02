@@ -5,7 +5,15 @@ namespace Ducky;
 // writes it, so a commit racing the registration is never lost.
 internal abstract class Subscription
 {
-    // Process step 10, on the drainer.
+    // Set by Selection.Dispose before the removal and read by the drainer right before the selector, so a subscription
+    // disposed after step 10 captured the array is skipped. A callback already running may still finish (§6.8).
+    private volatile bool _disposed;
+
+    internal bool Disposed => _disposed;
+
+    internal void Dispose() => _disposed = true;
+
+    // Process step 10, on the drainer: the selector, the comparer and onChange, in one try/catch held by the caller.
     internal abstract void Notify(StateSnapshot state);
 }
 
@@ -26,10 +34,9 @@ internal sealed class Subscription<T>(Func<StateSnapshot, T> selector, Action<T>
             return;
         }
 
-        // M3-01b: a throw must leave `last` unchanged (§6.8), so with the per-subscription try/catch this write moves
-        // after onChange; that story also adds the _disposed check before the selector.
-        Volatile.Write(ref _last, new(next));
+        // After onChange, so a throw leaves `last` unchanged (§6.8, INV-09) and the next change notifies again.
         onChange(next);
+        Volatile.Write(ref _last, new(next));
     }
 
     // A reference holder, so `last` can be CASed from Unset whatever T is.
