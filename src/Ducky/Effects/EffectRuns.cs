@@ -24,8 +24,10 @@ internal sealed partial class Dispatcher
 
     // Never faults. A Merge run takes the store-lifetime token itself: no per-run CTS, so nothing to dispose. An OCE for
     // that token, or any OCE once it is cancelled (store disposal), is ours, never a failure (§6.6); anything else, a
-    // synchronous throw included, is EffectFailed at depth 0 on the trigger's chain, or a log line under a failure action
-    // (INV-12).
+    // synchronous throw included (this is a plain async method), is logged (Error 1003) and becomes EffectFailed at depth
+    // 0 on the trigger's chain, or only a log line under a failure action (INV-12): inFailure is captured by the drainer
+    // at start, so a run resumed on any thread keeps it. Nothing here waits on the cancellable token, so a fault raised
+    // after cancellation is still observed (the 1.x lost fault).
     private async Task RunAsync(Effect effect, ActionContext trigger, bool inFailure)
     {
         var token = Lifetime;
@@ -40,6 +42,7 @@ internal sealed partial class Dispatcher
         catch (Exception ex)
 #pragma warning restore CA1031
         {
+            Log.EffectThrew(logger, ex, effect.GetType(), trigger.Action.GetType());
             RouteFailure(new EffectFailed(effect.GetType().ToString(), trigger.ActionType, ex), ex, trigger.ActionType, trigger.CorrelationId, inFailure);
         }
     }
