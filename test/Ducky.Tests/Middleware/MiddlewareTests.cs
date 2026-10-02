@@ -449,7 +449,7 @@ public sealed class MiddlewareTests
         records.ShouldAllBe(r => r.Id.Id == 1015 && r.Level == LogLevel.Error);
         records[0].Exception.ShouldBeSameAs(asyncThrow);
         records[1].Exception.ShouldBeSameAs(syncThrow);
-        records[0].Message.ShouldBe($"DisposeAsync of middleware {typeof(Recorder)} threw");
+        records[0].Message.ShouldBe($"Disposing {typeof(Recorder)} threw");
     }
 
     [Fact]

@@ -11,6 +11,10 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     /// init completes synchronously and no other drain is active, it already reflects <see cref="StoreInitialized"/>.
     /// Await <see cref="InitializeAsync"/> for the guarantee.
     /// </summary>
+    /// <exception cref="DuckyConfigurationException">
+    /// DUCKY353: the store's effects or middleware could not be constructed. Every call rethrows the same cached
+    /// instance, never once disposal has begun.
+    /// </exception>
     StateSnapshot State { get; }
 
     /// <summary>Gets every slice's initial state, built once when the store was created (version 0).</summary>
@@ -32,6 +36,10 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     /// <param name="comparer">Decides whether the value changed; <see cref="EqualityComparer{T}.Default"/> when null.</param>
     /// <returns>The selection; dispose it to unsubscribe <paramref name="onChange"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="selector"/> is null.</exception>
+    /// <exception cref="DuckyConfigurationException">
+    /// DUCKY353: the store's effects or middleware could not be constructed. Every call rethrows the same cached
+    /// instance, never once disposal has begun.
+    /// </exception>
 #pragma warning disable CA1716 // justification: Select is the one selection signature of the library (SPEC §5.2, §5.9)
     Selection<T> Select<T>(Func<StateSnapshot, T> selector, Action<T>? onChange = null, IEqualityComparer<T>? comparer = null);
 #pragma warning restore CA1716
@@ -46,6 +54,10 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     /// <param name="origin"><see cref="Origin.Hydration"/>, <see cref="Origin.CrossTab"/> or <see cref="Origin.DevTools"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="values"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="origin"/> is not a restore origin.</exception>
+    /// <exception cref="DuckyConfigurationException">
+    /// DUCKY353: the store's effects or middleware could not be constructed. Every call rethrows the same cached
+    /// instance, never once disposal has begun.
+    /// </exception>
     void Restore(IReadOnlyDictionary<string, object> values, Origin origin);
 
     /// <summary>
@@ -54,6 +66,10 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     /// </summary>
     /// <param name="cancellationToken">Cancels this caller's wait only, never init.</param>
     /// <returns>A task that completes once <see cref="StoreInitialized"/> has been processed; it never faults.</returns>
+    /// <exception cref="DuckyConfigurationException">
+    /// DUCKY353: the store's effects or middleware could not be constructed. Every call rethrows the same cached
+    /// instance, never once disposal has begun.
+    /// </exception>
     Task InitializeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -64,5 +80,9 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     /// </summary>
     /// <param name="cancellationToken">Cancels this caller's wait only, never init or any other wait.</param>
     /// <returns>A task that completes once the store is idle or disposed; it never faults.</returns>
+    /// <exception cref="DuckyConfigurationException">
+    /// DUCKY353: the store's effects or middleware could not be constructed. Every call rethrows the same cached
+    /// instance, never once disposal has begun.
+    /// </exception>
     Task WhenIdleAsync(CancellationToken cancellationToken = default);
 }

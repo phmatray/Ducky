@@ -45,7 +45,8 @@ internal sealed partial class Dispatcher
 
         // _causal is still the drainer's ambient scope here, so the failure takes p's chain and InFailure explicitly.
         var type = TypeName(p.Action);
-        RouteFailure(new(type, null, new DispatchLoopException(type, p.Depth)), p.CorrelationId, p.InFailure);
+        var loop = new DispatchLoopException(type, p.Depth);
+        RouteFailure(new ReducerFailed(type, null, loop), loop, type, p.CorrelationId, p.InFailure);
         return true;
     }
 

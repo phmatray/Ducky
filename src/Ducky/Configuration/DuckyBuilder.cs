@@ -17,6 +17,7 @@ public sealed class DuckyBuilder
     private readonly List<Func<IServiceProvider, IEnumerable<DuckyError>>> _rules = [];
     private readonly HashSet<Type> _middlewareTypes = [];
     private readonly List<Func<IServiceProvider, Middleware>> _middleware = [];
+    private readonly OrderedDictionary<Type, DuckyConfig.EffectRegistration> _effects = [];
     private ServiceLifetime? _lifetime;
 
     internal DuckyBuilder(IServiceCollection services) => Services = services;
@@ -103,6 +104,35 @@ public sealed class DuckyBuilder
         return this;
     }
 
+    /// <summary>
+    /// Registers an effect. The store creates it from its scope on its first use, owns it and disposes it; registering
+    /// the type in DI as well changes nothing. A second call for the same type does nothing, and so does a call for a
+    /// type registered with <see cref="AddEffect{TEffect}(TEffect)"/>: one runner per effect type.
+    /// </summary>
+    /// <typeparam name="TEffect">The effect type.</typeparam>
+    /// <returns>This builder.</returns>
+    public DuckyBuilder AddEffect<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEffect>()
+        where TEffect : Effect
+    {
+        _effects.TryAdd(typeof(TEffect), new(static services => Construct<TEffect>(services), Owned: true));
+        return this;
+    }
+
+    /// <summary>
+    /// Registers an effect instance, which replaces a registration of the same <typeparamref name="TEffect"/> whatever the
+    /// call order, even when the instance derives from it (a test double). The store uses it but never disposes it.
+    /// </summary>
+    /// <typeparam name="TEffect">The effect type the registration is keyed by, not the instance's runtime type.</typeparam>
+    /// <param name="instance">The effect.</param>
+    /// <returns>This builder.</returns>
+    public DuckyBuilder AddEffect<TEffect>(TEffect instance)
+        where TEffect : Effect
+    {
+        ArgumentNullException.ThrowIfNull(instance);
+        _effects[typeof(TEffect)] = new(_ => instance, Owned: false);
+        return this;
+    }
+
     /// <summary>Adds a rule run with the core rules at the first store resolution, on the final configuration.</summary>
     /// <param name="rule">Returns the problems it finds; none when the configuration is valid.</param>
     /// <returns>This builder.</returns>
@@ -117,5 +147,20 @@ public sealed class DuckyBuilder
     internal IEnumerable<Type> SliceTypes => _sliceTypes;
 
     // Called once, when configure returned: the snapshot AddDucky registers.
-    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware]);
+    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values]);
+
+    // Runs at the store's first use. A throwing constructor becomes DUCKY353 wrapping what it threw (§5.1), which the
+    // store caches and rethrows at every later use.
+    private static TEffect Construct<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEffect>(IServiceProvider services)
+        where TEffect : Effect
+    {
+        try
+        {
+            return ActivatorUtilities.CreateInstance<TEffect>(services);
+        }
+        catch (Exception exception)
+        {
+            throw new DuckyConfigurationException([DuckyErrors.ConstructorThrew(typeof(TEffect), exception)], exception);
+        }
+    }
 }
