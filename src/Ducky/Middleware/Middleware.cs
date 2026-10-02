@@ -67,8 +67,12 @@ public abstract partial class Middleware : IAsyncDisposable
     {
     }
 
-    /// <summary>Runs after the reduce, in registration order. A throw is logged and the other middleware still run.</summary>
-    /// <param name="context">The action, with the state it committed.</param>
+    /// <summary>
+    /// Runs after the reduce, in registration order, also for an action that failed in BeforeReduce or a reducer (it
+    /// committed nothing: State equals PreviousState and ChangedKeys is empty). A throw is logged and the other middleware
+    /// still run.
+    /// </summary>
+    /// <param name="context">The action, with the state after the reduce.</param>
     public virtual void AfterReduce(ActionContext context)
     {
     }
