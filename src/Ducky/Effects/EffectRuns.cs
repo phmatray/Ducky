@@ -1,7 +1,7 @@
 namespace Ducky;
 
-// SPEC §6.4 step 11 and §6.6 (EFF-01, INV-11): the Merge runner. Switch, Exhaust, Queue, idle counting and the run
-// registry come with M2-03, M2-03b, M2-04 and M2-05.
+// SPEC §6.4 step 11 and §6.6 (EFF-01, INV-11): the Merge runner; idle counting and the effect-run scope are in
+// Quiescence.cs (M2-03). Switch, Exhaust, Queue and the run registry come with M2-03b, M2-04 and M2-05.
 internal sealed partial class Dispatcher
 {
     internal TimeProvider Time => timeProvider;
@@ -31,8 +31,10 @@ internal sealed partial class Dispatcher
     private async Task RunAsync(Effect effect, ActionContext trigger, bool inFailure)
     {
         var token = Lifetime;
+        var run = new EffectRunToken();
         try
         {
+            BeginRun(effect, run);
             await effect.RunAsync(trigger.Action, new EffectContext(this, trigger), token).ConfigureAwait(ConfigureAwaitOptions.None);
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == token || token.IsCancellationRequested)
@@ -44,6 +46,10 @@ internal sealed partial class Dispatcher
         {
             Log.EffectThrew(logger, ex, effect.GetType(), trigger.Action.GetType());
             RouteFailure(new EffectFailed(effect.GetType().ToString(), trigger.ActionType, ex), ex, trigger.ActionType, trigger.CorrelationId, inFailure);
+        }
+        finally
+        {
+            EndRun(run);
         }
     }
 }

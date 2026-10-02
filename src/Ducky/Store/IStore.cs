@@ -73,16 +73,21 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     Task InitializeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Starts init if it has not started, and waits until the store is idle: initialized, with nothing queued and no
-    /// drain running. Use it after <see cref="IDispatcher.DispatchAsync(object)"/> to also wait for what that action
-    /// caused. After disposal it completes at once. A middleware that awaits it from its init waits until init times out,
-    /// because idle requires initialization.
+    /// Starts init if it has not started, and waits until the store is idle: initialized, with nothing queued, no
+    /// drain running and no effect run in progress (runs of a <see cref="Effect.LongRunning"/> effect are not waited
+    /// for). Use it after <see cref="IDispatcher.DispatchAsync(object)"/> to also wait for what that action caused,
+    /// effects included. After disposal it completes at once. A middleware that awaits it from its init waits until
+    /// init times out, because idle requires initialization.
     /// </summary>
     /// <param name="cancellationToken">Cancels this caller's wait only, never init or any other wait.</param>
     /// <returns>A task that completes once the store is idle or disposed; it never faults.</returns>
     /// <exception cref="DuckyConfigurationException">
     /// DUCKY353: the store's effects or middleware could not be constructed. Every call rethrows the same cached
     /// instance, never once disposal has begun.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Called from a run of one of this store's effects that is not <see cref="Effect.LongRunning"/>: that run would
+    /// wait for itself forever.
     /// </exception>
     Task WhenIdleAsync(CancellationToken cancellationToken = default);
 }

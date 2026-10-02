@@ -1,8 +1,8 @@
 namespace Ducky;
 
-// SPEC §6.3, §6.7, §7 rule 3: WhenIdleAsync. Idle is Ready, queue empty and not draining (running effects join with
-// M2-03). Every waiter shares one TCS, detached under _gate and completed after the lock is released (INV-05); a caller's
-// token cancels only its own WaitAsync. Dispose step 1 completes the waiters too (§6.11).
+// SPEC §6.3, §6.6, §6.7, §7 rule 3: WhenIdleAsync. Idle is Ready, queue empty, not draining and no non-LongRunning
+// effect run (Quiescence.cs). Every waiter shares one TCS, detached under _gate and completed after the lock is released
+// (INV-05); a caller's token cancels only its own WaitAsync. Dispose step 1 completes the waiters too (§6.11).
 internal sealed partial class Dispatcher
 {
     private TaskCompletionSource? _idleWaiters;
@@ -14,6 +14,7 @@ internal sealed partial class Dispatcher
         TaskCompletionSource waiters;
         lock (_gate)
         {
+            ThrowIfCountedRunLocked();
             if (_state == StoreState.Disposed || IsIdleLocked())
             {
                 return Task.CompletedTask;
@@ -27,7 +28,7 @@ internal sealed partial class Dispatcher
 
     // Not draining implies an empty queue: every enqueue on _queue starts a drain under _gate, and a drain releases only
     // once the queue is empty, in the same critical section (INV-03).
-    private bool IsIdleLocked() => _state == StoreState.Ready && !_draining;
+    private bool IsIdleLocked() => _state == StoreState.Ready && !_draining && _runningEffects == 0;
 
     // Detaches the waiters; completes nothing (the caller does, outside the lock).
     private TaskCompletionSource? TakeIdleWaitersIfIdleLocked()

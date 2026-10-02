@@ -40,6 +40,16 @@ internal sealed class Handler<TAction>(Func<TAction, EffectContext, Cancellation
     public object? KeyOf(TAction action) => ConcurrencyKey(action);
 }
 
+// A LongRunning effect whose handler is a delegate: WhenIdleAsync never waits for its runs (§6.6).
+internal sealed class LongRunningHandler<TAction>(Func<TAction, EffectContext, CancellationToken, Task> handle) : Effect<TAction>
+    where TAction : notnull
+{
+    public override bool LongRunning => true;
+
+    public override Task Handle(TAction action, EffectContext context, CancellationToken cancellationToken) =>
+        handle(action, context, cancellationToken);
+}
+
 // Implements both dispose interfaces, so a store that disposed an AddEffect(instance) instance would be caught either way.
 internal sealed class DisposableHandler : Effect<Load>, IAsyncDisposable, IDisposable
 {

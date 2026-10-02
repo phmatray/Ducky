@@ -5,7 +5,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Ducky.Tests;
 
 // SPEC §6.3 (idle waiters, no completion under _gate), §6.7 (WhenIdleAsync starts init), §6.11 step 1 (dispose completes
-// idle waiters), §7 rule 3; INV-13. Idle is Ready, queue empty and not draining; running effects join with M2-03.
+// idle waiters), §7 rule 3; INV-13. Idle is Ready, queue empty, not draining and no non-LongRunning effect run (§6.6,
+// QuiescenceTests).
 // A wait without a token is the waiters' own task (WaitAsync hands it back), so whether it has completed is observable
 // synchronously; with a cancellable token the completion reaches the caller's task only asynchronously.
 public sealed class IdleTests
