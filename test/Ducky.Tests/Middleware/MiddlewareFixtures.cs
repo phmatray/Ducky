@@ -18,6 +18,8 @@ internal sealed class Recorder(string name, List<string> journal) : Middleware
 
     public TimeSpan AttachedDisposeTimeout => DisposeTimeout;
 
+    public void System(object action, bool isFailure = false) => DispatchSystem(action, isFailure);
+
     public override bool MayDispatch(ActionContext context)
     {
         Record(nameof(MayDispatch), context);

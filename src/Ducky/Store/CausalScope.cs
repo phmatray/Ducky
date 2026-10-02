@@ -19,17 +19,18 @@ internal sealed partial class Dispatcher
     // Called on the producer's flow to create the Pending, for every origin, before Enqueue (§6.3). No scope: depth 0
     // and a new chain (Enqueue sets CorrelationId to the Id). The scope of the action being processed: a synchronous
     // child. Any other scope: the parent has finished, so this is an asynchronous continuation that keeps the
-    // correlation and restarts the depth budget. Core failure actions bypass this with an explicit cause (§6.5, INV-06).
-    internal Pending NewPending(object action, Origin origin, TaskCompletionSource<DispatchResult>? completion)
+    // correlation and restarts the depth budget. Core failure actions bypass this with an explicit cause (§6.5, INV-06);
+    // a DispatchSystem failure action (isFailure) follows it.
+    internal Pending NewPending(object action, Origin origin, TaskCompletionSource<DispatchResult>? completion, bool isFailure = false)
     {
         var c = _causal.Value;
         if (c is null)
         {
-            return new(action, origin, 0, 0, false, false, completion);
+            return new(action, origin, 0, 0, false, isFailure, completion);
         }
 
         var child = c.Seq == Volatile.Read(ref _processingSeq);
-        return new(action, origin, child ? c.Depth + 1 : 0, c.CorrelationId, child && c.InFailure, false, completion);
+        return new(action, origin, child ? c.Depth + 1 : 0, c.CorrelationId, child && c.InFailure, isFailure, completion);
     }
 
     // Step 1. Runs before step 2 installs p's scope.
