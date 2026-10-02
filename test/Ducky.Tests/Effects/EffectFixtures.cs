@@ -40,6 +40,20 @@ internal sealed class Handler<TAction>(Func<TAction, EffectContext, Cancellation
     public object? KeyOf(TAction action) => ConcurrencyKey(action);
 }
 
+// A Switch effect whose handler is a delegate; without a key function every run shares the one global slot (§5.5, §6.6).
+internal sealed class SwitchHandler<TAction>(
+    Func<TAction, EffectContext, CancellationToken, Task> handle,
+    Func<TAction, object?>? key = null) : Effect<TAction>
+    where TAction : notnull
+{
+    public override Concurrency Policy => Concurrency.Switch;
+
+    public override Task Handle(TAction action, EffectContext context, CancellationToken cancellationToken) =>
+        handle(action, context, cancellationToken);
+
+    protected override object? ConcurrencyKey(TAction action) => key?.Invoke(action);
+}
+
 // A LongRunning effect whose handler is a delegate: WhenIdleAsync never waits for its runs (§6.6).
 internal sealed class LongRunningHandler<TAction>(Func<TAction, EffectContext, CancellationToken, Task> handle) : Effect<TAction>
     where TAction : notnull

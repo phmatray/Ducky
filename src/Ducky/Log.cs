@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 namespace Ducky;
 
 // Core log events (SPEC §9): EventIds 1000-1999, types and keys only, never values. Reserved by later stories:
-// 1014, 1016, 1017. M1-05 uses 1000, M1-07 1001, M1-09 1004, M1-11 1002, 1010, 1011 and 1013, M4-01 1015 (widened to
-// effects by M2-01), 1020 and 1021, M2-02 1003, M2-08 1030, M4-03 1031 and 1032, M3-01b 1060.
+// 1016, 1017. M1-05 uses 1000, M1-07 1001, M1-09 1004, M1-11 1002, 1010, 1011 and 1013, M4-01 1015 (widened to
+// effects by M2-01), 1020 and 1021, M2-02 1003, M2-08 1030, M2-04 1014 and 1050, M4-03 1031 and 1032, M3-01b 1060.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 1000, Level = LogLevel.Error, Message = "Reducer of slice '{SliceKey}' threw while reducing {ActionType}")]
@@ -34,6 +34,9 @@ internal static partial class Log
     [LoggerMessage(EventId = 1013, Level = LogLevel.Error, Message = "A cancellation callback threw")]
     internal static partial void CancellationCallbackThrew(SafeLogger logger, AggregateException exception);
 
+    [LoggerMessage(EventId = 1014, Level = LogLevel.Warning, Message = "A cancellation callback of a superseded Switch run threw")]
+    internal static partial void CancelCallbackThrew(SafeLogger logger, AggregateException exception);
+
     [LoggerMessage(EventId = 1015, Level = LogLevel.Error, Message = "Disposing {Owned} threw")]
     internal static partial void DisposeThrew(SafeLogger logger, Exception exception, Type owned);
 
@@ -51,6 +54,9 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 1032, Level = LogLevel.Error, Message = "InitializeAsync of middleware {Middleware} failed; init counts it as finished")]
     internal static partial void MiddlewareInitFailed(SafeLogger logger, Exception exception, Type middleware);
+
+    [LoggerMessage(EventId = 1050, Level = LogLevel.Debug, Message = "{ActionType} dropped: the effect run that dispatched it was superseded")]
+    internal static partial void RunDropped(SafeLogger logger, Type actionType);
 
     [LoggerMessage(EventId = 1060, Level = LogLevel.Error, Message = "A subscriber threw while notified of {ActionType}; it stays subscribed")]
     internal static partial void SubscriberThrew(SafeLogger logger, Exception exception, Type actionType);

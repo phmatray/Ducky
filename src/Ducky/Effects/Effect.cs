@@ -20,6 +20,12 @@ public abstract class Effect
     internal abstract Type ActionType { get; }
 
     internal abstract Task RunAsync(object action, EffectContext context, CancellationToken cancellationToken);
+
+    // The registration's policy, read once when the store builds its EffectRunner (§6.6).
+    internal abstract Concurrency RunPolicy { get; }
+
+    // The run's concurrency key: user code, which the runner calls inside the run's try/catch (§6.6).
+    internal abstract object? KeyOf(object action);
 }
 
 /// <summary>Reacts to every action of the exact type <typeparamref name="TAction"/> once it is processed.</summary>
@@ -62,6 +68,10 @@ public abstract class Effect<TAction> : Effect
 
     internal sealed override Task RunAsync(object action, EffectContext context, CancellationToken cancellationToken) =>
         Handle((TAction)action, context, cancellationToken);
+
+    internal sealed override Concurrency RunPolicy => Policy;
+
+    internal sealed override object? KeyOf(object action) => ConcurrencyKey((TAction)action);
 }
 
 /// <summary>How the runs of one effect relate to each other.</summary>
@@ -69,4 +79,10 @@ public enum Concurrency
 {
     /// <summary>Every action starts a run, concurrently with the runs already in flight.</summary>
     Merge,
+
+    /// <summary>
+    /// A new action cancels the run in flight for the same key, and that superseded run can no longer dispatch
+    /// (<see cref="DispatchResult.Dropped"/>): only the latest run per key publishes its result.
+    /// </summary>
+    Switch,
 }
