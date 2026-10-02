@@ -85,4 +85,16 @@ public enum Concurrency
     /// (<see cref="DispatchResult.Dropped"/>): only the latest run per key publishes its result.
     /// </summary>
     Switch,
+
+    /// <summary>
+    /// While a run is in flight for a key, a new action for that key starts no run: its effect is dropped (the action
+    /// itself is still reduced).
+    /// </summary>
+    Exhaust,
+
+    /// <summary>
+    /// Runs for one key never overlap: each starts when the previous one for that key has completed, in dispatch order.
+    /// A run still waiting when the store is disposed never invokes its handler.
+    /// </summary>
+    Queue,
 }

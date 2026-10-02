@@ -21,15 +21,25 @@ internal sealed partial class EffectRunner(Effect effect)
     internal int SlotCount => _slots.Count;
 }
 
-// Immutable, one per start (§6.6). Switch: the run's Cts, linked to the store lifetime.
-internal sealed class Slot(CancellationTokenSource cts)
+// Immutable once published, one per start (§6.6). Switch: the run's Cts, linked to the store lifetime. Queue: Done,
+// completed by the run's finally (RunContinuationsAsynchronously, never faulted). Exhaust: neither, the slot is only a
+// running marker.
+internal sealed class Slot(CancellationTokenSource? cts = null, TaskCompletionSource? done = null)
 {
-    internal CancellationTokenSource Cts { get; } = cts;
+    internal CancellationTokenSource? Cts { get; } = cts;
+
+    internal TaskCompletionSource? Done { get; } = done;
+
+    // The key object the dictionary stores for this slot, set on the drainer by Install before the slot is published: the
+    // run's own key on an add, the replaced slot's Key on a replace (AddOrUpdate keeps the stored key). The run removes
+    // with it, so object.Equals short-circuits on the reference and no user Equals runs (§6.6).
+    internal SlotKey? Key { get; set; }
 }
 
-// The installed key, its user GetHashCode taken once, at install, inside the run's try (§6.6). The run's compare-and-remove
-// in its finally then runs no user code: a cached hash, and object.Equals short-circuits on the reference of the key the run
-// installed, so a key whose equality throws can never leave the finally before the idle decrement.
+// The installed key, its user GetHashCode taken once, at install, inside the run's try (§6.6), so the run's compare-and-remove
+// in its finally never rehashes. The run removes with the stored key object (Slot.Key) and object.Equals short-circuits on
+// the reference, so that removal runs no user code; only a hash collision with a distinct key can call the user's Equals,
+// and EffectRunner.Release survives a throw there.
 internal sealed class SlotKey(object key)
 {
     internal int Hash { get; } = key.GetHashCode();

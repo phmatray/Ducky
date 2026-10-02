@@ -174,6 +174,8 @@ static Ducky.StoreExtensions.Select<TState, T>(this Ducky.IStore! store, System.
 Ducky.Concurrency
 Ducky.Concurrency.Merge = 0 -> Ducky.Concurrency
 Ducky.Concurrency.Switch = 1 -> Ducky.Concurrency
+Ducky.Concurrency.Exhaust = 2 -> Ducky.Concurrency
+Ducky.Concurrency.Queue = 3 -> Ducky.Concurrency
 Ducky.DuckyBuilder.AddEffect<TEffect>() -> Ducky.DuckyBuilder!
 Ducky.DuckyBuilder.AddEffect<TEffect>(TEffect! instance) -> Ducky.DuckyBuilder!
 Ducky.Effect

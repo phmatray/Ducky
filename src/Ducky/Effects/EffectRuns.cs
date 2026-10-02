@@ -1,8 +1,8 @@
 namespace Ducky;
 
 // SPEC §6.4 steps 3 and 11 and §6.6 (EFF-01, INV-11): starting runs through each effect's EffectRunner, and the run check
-// of EffectContext dispatches; idle counting and the effect-run scope are in Quiescence.cs (M2-03), the Switch slots in
-// Policies/Switch.cs, the run registry in RunRegistry.cs (M2-03b). Exhaust and Queue come with M2-05.
+// of EffectContext dispatches; idle counting and the effect-run scope are in Quiescence.cs (M2-03), the slots in
+// Policies/Switch.cs and Policies/ExhaustQueue.cs (M2-05), the run registry in RunRegistry.cs (M2-03b).
 internal sealed partial class Dispatcher
 {
     internal TimeProvider Time => timeProvider;
@@ -86,7 +86,7 @@ internal sealed partial class Dispatcher
         foreach (var runner in runners)
         {
             var slot = runner.NewSlot(Lifetime);
-            var run = new EffectRunToken(Interlocked.Increment(ref _lastRunId), slot?.Cts.Token ?? Lifetime);
+            var run = new EffectRunToken(Interlocked.Increment(ref _lastRunId), slot?.Cts?.Token ?? Lifetime);
             Register(RunAsync(runner, slot, run, trigger, inFailure), run);
         }
     }
@@ -95,12 +95,13 @@ internal sealed partial class Dispatcher
     // registry). A Merge run takes the store-lifetime token itself: no per-run CTS, so nothing to dispose. A Switch run
     // takes its slot's linked token; the key is computed and the slot installed inside the try, so a throwing key function
     // is this effect's EffectFailed only, and the finally compare-and-removes the run's own slot (or disposes a slot never
-    // installed) before the idle decrement (§6.6 finally order); the removal runs no user code (SlotKey), so the decrement
-    // always runs. An OCE for the run's token, or any OCE once it is cancelled (supersession or store disposal), is ours,
-    // never a failure (§6.6); anything else, a synchronous throw included (this is a plain async method), is logged (Error
-    // 1003) and becomes EffectFailed at depth 0 on the trigger's chain, or only a log line under a failure action
-    // (INV-12): inFailure is captured by the drainer at start, so a run resumed on any thread keeps it. Nothing here waits
-    // on the cancellable token, so a fault raised after cancellation is still observed (the 1.x lost fault).
+    // installed) before the idle decrement (§6.6 finally order); a throw of the user's key Equals during that removal (a
+    // hash collision only) is logged (Error 1003) and the decrement still runs. An OCE for the run's token, or any OCE once
+    // it is cancelled (supersession or store disposal), is ours, never a failure (§6.6); anything else, a synchronous throw
+    // included (this is a plain async method), is logged (Error 1003) and becomes EffectFailed at depth 0 on the trigger's
+    // chain, or only a log line under a failure action (INV-12): inFailure is captured by the drainer at start, so a run
+    // resumed on any thread keeps it. Nothing here waits on the cancellable token, so a fault raised after cancellation is
+    // still observed (the 1.x lost fault).
     private async Task RunAsync(EffectRunner runner, Slot? slot, EffectRunToken run, ActionContext trigger, bool inFailure)
     {
         var effect = runner.Effect;
@@ -110,7 +111,25 @@ internal sealed partial class Dispatcher
             BeginRun(effect, run);
             if (slot is not null)
             {
-                key = runner.Install(trigger.Action, slot, logger);
+                key = runner.Install(trigger.Action, slot, logger, out var prev);
+                if (key is null)
+                {
+                    DropEffect(effect, trigger.Action);
+                    return;
+                }
+
+                // Queue: wait for the predecessor's Done, which never faults, so the wait ends only by its completion or by
+                // our run token (store disposal), whose OperationCanceledException is ours and skips the handler. A
+                // predecessor completing as disposal cancels the lifetime may win the wait: the handler still never starts
+                // (§6.6 Queue). Switch, Exhaust and a key's first Queue run reach the handler as Merge does, even with an
+                // already-cancelled token (INV-11).
+                if (prev?.Done is { } done)
+                {
+                    await done.Task.WaitAsync(run.Token).ConfigureAwait(ConfigureAwaitOptions.None);
+
+                    // Stryker disable once Statement : prev was installed, so its Done was incomplete; only a pool thread completing it between the cancel and the resume reaches it
+                    run.Token.ThrowIfCancellationRequested();
+                }
             }
 
             await effect.RunAsync(trigger.Action, new EffectContext(this, trigger, run), run.Token).ConfigureAwait(ConfigureAwaitOptions.None);
@@ -129,7 +148,16 @@ internal sealed partial class Dispatcher
         {
             if (slot is not null)
             {
-                runner.Release(key, slot);
+                try
+                {
+                    runner.Release(key, slot);
+                }
+#pragma warning disable CA1031 // justification: the user's key Equals threw during the removal; the idle decrement must still run
+                catch (Exception ex)
+#pragma warning restore CA1031
+                {
+                    Log.EffectThrew(logger, ex, effect.GetType(), trigger.Action.GetType());
+                }
             }
 
             EndRun(run);
