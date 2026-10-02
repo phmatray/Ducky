@@ -4,8 +4,8 @@ namespace Ducky;
 
 // Core log events (SPEC §9): EventIds 1000-1999, types and keys only, never values. Reserved by later stories:
 // 1016, 1017. M1-05 uses 1000, M1-07 1001, M1-09 1004, M1-11 1002, 1010, 1011 and 1013, M4-01 1015 (widened to
-// effects by M2-01), 1020 and 1021, M2-02 1003, M2-08 1030, M2-04 1014 and 1050, M4-03 1031 and 1032, M2-03b 1040,
-// M3-01b 1060.
+// effects by M2-01), 1020 and 1021, M2-02 1003, M2-08 1030, M2-04 1014 and 1050, M2-05 1051, M4-03 1031 and 1032,
+// M2-03b 1040, M3-01b 1060.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 1000, Level = LogLevel.Error, Message = "Reducer of slice '{SliceKey}' threw while reducing {ActionType}")]
@@ -61,6 +61,9 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 1050, Level = LogLevel.Debug, Message = "{ActionType} dropped: the effect run that dispatched it was superseded")]
     internal static partial void RunDropped(SafeLogger logger, Type actionType);
+
+    [LoggerMessage(EventId = 1051, Level = LogLevel.Debug, Message = "{Effect} dropped {ActionType}: a run for the same key is in flight")]
+    internal static partial void EffectDropped(SafeLogger logger, Type effect, Type actionType);
 
     [LoggerMessage(EventId = 1060, Level = LogLevel.Error, Message = "A subscriber threw while notified of {ActionType}; it stays subscribed")]
     internal static partial void SubscriberThrew(SafeLogger logger, Exception exception, Type actionType);
