@@ -187,6 +187,11 @@ Ducky.EffectContext.DispatchAsync(object! action) -> System.Threading.Tasks.Task
 Ducky.EffectContext.State.get -> Ducky.StateSnapshot!
 Ducky.EffectContext.Time.get -> System.TimeProvider!
 Ducky.EffectContext.Trigger.get -> Ducky.ActionContext!
+Ducky.EffectContextExtensions
+Ducky.EffectGroup
+Ducky.EffectGroup.EffectGroup() -> void
+Ducky.EffectGroup.On<TAction>(System.Func<TAction, Ducky.EffectContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! handler, Ducky.Concurrency policy = Ducky.Concurrency.Merge, System.Func<TAction, object?>? key = null) -> void
+static Ducky.EffectContextExtensions.Run<TResult>(this Ducky.EffectContext! context, object! started, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! work, System.Func<TResult, object!>! succeeded, System.Func<System.Exception!, object!>! failed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Ducky.Effect<TAction>.Handle(TAction action, Ducky.EffectContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 virtual Ducky.Effect.LongRunning.get -> bool
 virtual Ducky.Effect<TAction>.ConcurrencyKey(TAction action) -> object?

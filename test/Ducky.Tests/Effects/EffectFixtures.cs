@@ -11,6 +11,11 @@ internal sealed record Derived : Base;
 
 internal sealed record Seen(IReadOnlyList<object> Actions);
 
+// The started and failed actions of EffectContextExtensions.Run (§5.5); Loaded is its succeeded action.
+internal sealed record RunStarted(int Id);
+
+internal sealed record RunFailed(Exception Exception);
+
 // Records every action it reduces, EffectFailed included, in processing order.
 internal sealed class SeenSlice : Slice<Seen>
 {
@@ -21,6 +26,8 @@ internal sealed class SeenSlice : Slice<Seen>
         On<Base>(Add);
         On<Derived>(Add);
         On<EffectFailed>(Add);
+        On<RunStarted>(Add);
+        On<RunFailed>(Add);
     }
 
     protected override Seen Initial => new([]);
@@ -192,4 +199,40 @@ internal sealed class ScopedThrowingEffect : Effect<Load>
     public ScopedThrowingEffect(ScopedProbe probe) => throw new FormatException(probe.GetType().Name);
 
     public override Task Handle(Load action, EffectContext context, CancellationToken cancellationToken) => Task.CompletedTask;
+}
+
+// An EffectGroup whose constructor registers what the test passes in; Register after construction reaches On's
+// constructor-only check (§5.5).
+internal sealed class Group : EffectGroup
+{
+    public Group(Action<Group> configure) => configure(this);
+
+    public void Register<TAction>(
+        Func<TAction, EffectContext, CancellationToken, Task> handler,
+        Concurrency policy = Concurrency.Merge,
+        Func<TAction, object?>? key = null)
+        where TAction : notnull => On(handler, policy, key);
+}
+
+// DUCKY308 from the constructor, which the store reports as DUCKY353 at its first use (§5.1, §6.6).
+internal sealed class DuplicateGroup : EffectGroup
+{
+    public DuplicateGroup()
+    {
+        On<Load>((_, _, _) => Task.CompletedTask);
+        On<Load>((_, _, _) => Task.CompletedTask, Concurrency.Switch);
+    }
+}
+
+// DUCKY307 from the constructor: an interface is never an action's exact runtime type.
+internal sealed class NonConcreteGroup : EffectGroup
+{
+    public NonConcreteGroup() => On<IDisposable>((_, _, _) => Task.CompletedTask);
+}
+
+// The I/O boundary of EffectContext_Run_HttpTimeout_DispatchesFailed: never answers, so HttpClient's own timeout fires.
+internal sealed class SilentHandler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+        new TaskCompletionSource<HttpResponseMessage>().Task.WaitAsync(cancellationToken);
 }

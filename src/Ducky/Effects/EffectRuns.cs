@@ -132,9 +132,9 @@ internal sealed partial class Dispatcher
                 }
             }
 
-            await effect.RunAsync(trigger.Action, new EffectContext(this, trigger, run), run.Token).ConfigureAwait(ConfigureAwaitOptions.None);
+            await runner.RunAsync(trigger.Action, new EffectContext(this, trigger, run), run.Token).ConfigureAwait(ConfigureAwaitOptions.None);
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == run.Token || run.Token.IsCancellationRequested)
+        catch (OperationCanceledException ex) when (run.IsCancellation(ex))
         {
         }
 #pragma warning disable CA1031 // justification: an effect is user code; its throw becomes EffectFailed, never a fault (§6.6)

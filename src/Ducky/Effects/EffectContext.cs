@@ -13,6 +13,9 @@ public sealed class EffectContext : IDispatcher
         Trigger = trigger;
     }
 
+    // The run this context belongs to: EffectContextExtensions.Run classifies cancellation by its token (§5.5, §6.6).
+    internal EffectRunToken Run => _run;
+
     /// <summary>Gets the latest snapshot: each read returns the state as it is now, not as it was when the run started.</summary>
     public StateSnapshot State => _dispatcher.State;
 
