@@ -11,6 +11,7 @@ internal sealed partial class Dispatcher(
     StateSnapshot initial,
     SafeLogger logger,
     int maxDispatchDepth,
+    int initBufferCapacity,
     TimeSpan initTimeout,
     TimeSpan disposeTimeout,
     TimeProvider timeProvider,
@@ -78,6 +79,7 @@ internal sealed partial class Dispatcher(
     {
         var disposed = false;
         var startInit = false;
+        var abort = false;
         var drain = false;
         lock (_gate)
         {
@@ -101,6 +103,8 @@ internal sealed partial class Dispatcher(
                         _state = StoreState.Initializing;
                         startInit = true;
                     }
+
+                    abort = _initBuffer.Count > initBufferCapacity; // soft bound: nothing is dropped (INV-13)
                 }
                 else
                 {
@@ -119,6 +123,11 @@ internal sealed partial class Dispatcher(
         if (startInit)
         {
             StartInit();
+        }
+
+        if (abort)
+        {
+            _initializer.RequestOverflowAbort(this); // queues the abort, never runs it here; a no-op until Running (§6.7)
         }
 
         if (drain)
