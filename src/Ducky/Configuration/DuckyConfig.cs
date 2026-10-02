@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Ducky;
 
@@ -16,7 +17,8 @@ internal sealed class DuckyConfig(
     (string Source, Exception Thrown)[] sliceFailures,
     Func<IServiceProvider, IEnumerable<DuckyError>>[] rules,
     Func<IServiceProvider, Middleware>[] middleware,
-    DuckyConfig.EffectRegistration[] effects)
+    DuckyConfig.EffectRegistration[] effects,
+    CtorCheck.Requirement[] ctorChecks)
 {
     public ServiceLifetime Lifetime => lifetime;
 
@@ -35,16 +37,16 @@ internal sealed class DuckyConfig(
     public (Effect Effect, bool Owned)[] CreateEffects(IServiceProvider services) =>
         Array.ConvertAll(effects, effect => (effect.Create(services), effect.Owned));
 
-    public void ThrowIfInvalid(IServiceProvider services)
+    public void ThrowIfInvalid(IServiceProvider services, ILogger logger)
     {
-        var failure = services.GetRequiredService<ValidationState>().Ensure(() => Validate(services));
+        var failure = services.GetRequiredService<ValidationState>().Ensure(() => Validate(services, new SafeLogger(logger)));
         if (failure is not null)
         {
             throw failure;
         }
     }
 
-    private DuckyConfigurationException? Validate(IServiceProvider services)
+    private DuckyConfigurationException? Validate(IServiceProvider services, SafeLogger logger)
     {
         List<DuckyError> errors = [.. sliceErrors];
         List<(string Source, Exception Thrown)> failures = [.. sliceFailures];
@@ -77,6 +79,7 @@ internal sealed class DuckyConfig(
             }
         }
 
+        errors.AddRange(CtorCheck.Run(ctorChecks, services, logger));
         for (var i = 0; i < rules.Length; i++)
         {
             // A throwing rule keeps what it returned before the throw and hides none of the other errors.
@@ -98,8 +101,12 @@ internal sealed class DuckyConfig(
     // A slice read once through its throwaway instance by AddSlice; Create makes each store's own instance.
     internal readonly record struct SliceRegistration(Type Type, string Key, Type StateType, Func<Slice> Create);
 
-    // Owned: created by the store (AddEffect<T>), which disposes it; an AddEffect(instance) instance is not.
-    internal readonly record struct EffectRegistration(Func<IServiceProvider, Effect> Create, bool Owned);
+    // An AddEffect<T> registration is created by the store, which checks its constructor (DUCKY309), owns and disposes
+    // it; an AddEffect(instance) instance has no CtorCheck and is never disposed.
+    internal readonly record struct EffectRegistration(Func<IServiceProvider, Effect> Create, CtorCheck.Requirement? CtorCheck)
+    {
+        public bool Owned => CtorCheck is not null;
+    }
 
     // Registered by AddDucky through a factory, so each container creates its own (an instance registration would be
     // shared by every provider built from the collection, which is the bug this type exists to avoid).

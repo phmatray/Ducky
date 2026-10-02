@@ -4,7 +4,7 @@ namespace Ducky;
 
 // Core log events (SPEC §9): EventIds 1000-1999, types and keys only, never values. Reserved by later stories:
 // 1014, 1016, 1017. M1-05 uses 1000, M1-07 1001, M1-09 1004, M1-11 1002, 1010, 1011 and 1013, M4-01 1015 (widened to
-// effects by M2-01), 1020 and 1021, M2-02 1003.
+// effects by M2-01), 1020 and 1021, M2-02 1003, M2-08 1030.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 1000, Level = LogLevel.Error, Message = "Reducer of slice '{SliceKey}' threw while reducing {ActionType}")]
@@ -42,4 +42,7 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 1021, Level = LogLevel.Error, Message = "{Middleware}.{Hook} threw while handling {ActionType}")]
     internal static partial void MiddlewareHookThrew(SafeLogger logger, Exception exception, Type middleware, string hook, Type actionType);
+
+    [LoggerMessage(EventId = 1030, Level = LogLevel.Debug, Message = "Constructor check of {Type} skipped: the container offers no {Service}")]
+    internal static partial void CtorCheckSkipped(SafeLogger logger, Type type, Type service);
 }
