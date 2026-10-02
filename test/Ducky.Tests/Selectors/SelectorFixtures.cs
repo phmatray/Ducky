@@ -14,6 +14,8 @@ internal sealed record E(int Value);
 
 internal sealed record SetA(int Value);
 
+internal sealed record SetE(int Value);
+
 // A fresh instance per projection, so a test can tell a cached result from a recomputed one.
 internal sealed record Sum(int Total);
 
@@ -41,6 +43,8 @@ internal sealed class DSlice : Slice<D>
 
 internal sealed class ESlice : Slice<E>
 {
+    public ESlice() => On<SetE>((_, set) => new E(set.Value));
+
     protected override E Initial => new(0);
 }
 
