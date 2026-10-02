@@ -44,7 +44,7 @@ public sealed class DuckyBuilder
     public bool ThrowOnUnhandledAction { get; set; }
 
     /// <summary>Gets or sets the soft bound of the init buffer; overflow aborts init and drops nothing. Defaults to 1024.</summary>
-    public int InitBufferCapacity { get; set; } = 1024;
+    public int InitBufferCapacity { get; set; } = Dispatcher.DefaultInitBufferCapacity;
 
     /// <summary>Gets or sets how long init may take before the store becomes ready anyway. Defaults to 10 seconds.</summary>
     public TimeSpan InitTimeout { get; set; } = TimeSpan.FromSeconds(10);
@@ -165,7 +165,7 @@ public sealed class DuckyBuilder
     internal IEnumerable<Type> SliceTypes => _sliceTypes;
 
     // Called once, when configure returned: the snapshot AddDucky registers.
-    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, InitTimeout, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
+    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, InitBufferCapacity, InitTimeout, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
         [.. _effects.Values.Select(effect => effect.CtorCheck).OfType<CtorCheck.Requirement>().Concat(_ctorChecks).Distinct()]);
 
     // Runs at the store's first use. A throwing constructor becomes DUCKY353 wrapping what it threw (§5.1), which the

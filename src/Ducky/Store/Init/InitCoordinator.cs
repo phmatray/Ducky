@@ -4,11 +4,11 @@ namespace Ducky;
 
 // SPEC §6.7 (INV-13): the init state machine NotStarted -> Starting -> Running -> Completed. Start runs every middleware's
 // InitializeAsync up to its first await, publishes InitTasks and completes _prefixDone, then arms InitTimeout; Complete
-// (every init finished) or Abort (the timer) makes the store Ready, whichever wins the CAS from Running. Init never starts
-// under _gate (INV-05): the triggers call Start after releasing it. The overflow abort comes with M4-03b; Retire returning
-// _prefixDone, the timer disposal in Retire and the per-middleware dispose waits on InitTasks with M4-03c.
+// (every init finished) or Abort (the timer, or an overflow abort queued by Overflow.cs) makes the store Ready, whichever
+// wins the CAS from Running. Init never starts under _gate (INV-05): the triggers call Start after releasing it. Retire
+// returning _prefixDone, the timer disposal in Retire and the per-middleware dispose waits on InitTasks come with M4-03c.
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The timer is disposed by Complete and Abort; the init CTS is never disposed, because middleware may read its token after init.")]
-internal sealed class InitCoordinator(Lazy<Materialized> materialized, SafeLogger logger, TimeProvider timeProvider, TimeSpan initTimeout, CancellationToken lifetime)
+internal sealed partial class InitCoordinator(Lazy<Materialized> materialized, SafeLogger logger, TimeProvider timeProvider, TimeSpan initTimeout, CancellationToken lifetime)
 {
     private const int NotStarted = 0;
     private const int Starting = 1;
@@ -86,6 +86,13 @@ internal sealed class InitCoordinator(Lazy<Materialized> materialized, SafeLogge
             if (!inits.IsCompleted)
             {
                 _timer.Change(initTimeout, Timeout.InfiniteTimeSpan);
+
+                // Step 3: an overflow while Starting was a no-op; it aborts from here. With every init complete, Complete
+                // runs next on this thread and would win anyway, so nothing is queued.
+                if (dispatcher.InitBufferOverflowed)
+                {
+                    RequestOverflowAbort(dispatcher);
+                }
             }
 
             await inits.ConfigureAwait(ConfigureAwaitOptions.None);
@@ -127,7 +134,7 @@ internal sealed class InitCoordinator(Lazy<Materialized> materialized, SafeLogge
             return;
         }
 
-        // Stryker disable once Statement : equivalent, the one-shot timer is the caller and never fires again
+        // Stryker disable once Statement : equivalent, a timer that fires after this finds the CAS failing
         _timer!.Dispose();
         try
         {
@@ -147,8 +154,9 @@ internal sealed class InitCoordinator(Lazy<Materialized> materialized, SafeLogge
     internal void Retire() => Volatile.Write(ref _state, Completed);
 }
 
-// Why init ended before every middleware init finished (StoreInitAborted, §6.7). BufferOverflow comes with M4-03b.
+// Why init ended before every middleware init finished (StoreInitAborted, §6.7).
 internal enum InitAbortReason
 {
     InitTimeout,
+    BufferOverflow,
 }

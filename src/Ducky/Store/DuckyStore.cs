@@ -11,6 +11,7 @@ internal sealed class DuckyStore : IStore
     // effect not Owned (an AddEffect(instance) instance) is never disposed.
     // initTimeout, disposeTimeout and timeProvider default to DuckyBuilder's InitTimeout, DisposeTimeout and TimeProvider.System.
     // scope: the store scope a Singleton store owns (§6.10), disposed last by dispose phase 5b.
+    // initBufferCapacity: the soft bound of the init buffer, DuckyBuilder.InitBufferCapacity (§6.7).
     internal DuckyStore(
         IEnumerable<Slice> slices,
         ILogger logger,
@@ -20,7 +21,8 @@ internal sealed class DuckyStore : IStore
         TimeProvider? timeProvider = null,
         Func<Middleware[]>? middleware = null,
         Func<(Effect Effect, bool Owned)[]>? effects = null,
-        AsyncServiceScope? scope = null)
+        AsyncServiceScope? scope = null,
+        int initBufferCapacity = Dispatcher.DefaultInitBufferCapacity)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -37,6 +39,7 @@ internal sealed class DuckyStore : IStore
             InitialState,
             new SafeLogger(logger),
             maxDispatchDepth,
+            initBufferCapacity,
             initTimeout ?? TimeSpan.FromSeconds(10),
             disposeTimeout ?? TimeSpan.FromSeconds(2),
             timeProvider ?? TimeProvider.System,
@@ -67,7 +70,8 @@ internal sealed class DuckyStore : IStore
             timeProvider: services.GetRequiredService<TimeProvider>(),
             middleware: () => config.CreateMiddleware(storeServices),
             effects: () => config.CreateEffects(storeServices),
-            scope: scope);
+            scope: scope,
+            initBufferCapacity: config.InitBufferCapacity);
     }
 
     // Registry data: reading it starts nothing.
