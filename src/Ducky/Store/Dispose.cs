@@ -8,15 +8,18 @@ namespace Ducky;
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The lifetime CTS is never disposed: tokens taken from it may be read after disposal, and it owns no timer or linked registration.")]
 internal sealed partial class Dispatcher
 {
-    private const long MaxDisposeTimeoutTicks = (uint.MaxValue - 1L) * TimeSpan.TicksPerMillisecond;
+    private const long MaxTimeoutTicks = (uint.MaxValue - 1L) * TimeSpan.TicksPerMillisecond;
 
-    private readonly CancellationTokenSource _lifetime = new();
+    private readonly CancellationTokenSource _lifetime = lifetime;
 
-    // Task.WaitAsync accepts only Timeout.InfiniteTimeSpan or [0, uint.MaxValue - 1 ms]: a negative DisposeTimeout waits
-    // not at all and a larger one (TimeSpan.MaxValue meaning "forever") waits the longest bound, so step 3 never throws.
-    private readonly TimeSpan _disposeTimeout = disposeTimeout == Timeout.InfiniteTimeSpan
-        ? disposeTimeout
-        : TimeSpan.FromTicks(Math.Clamp(disposeTimeout.Ticks, 0, MaxDisposeTimeoutTicks));
+    // Task.WaitAsync and ITimer.Change accept only Timeout.InfiniteTimeSpan or [0, uint.MaxValue - 1 ms]: a negative
+    // timeout waits not at all and a larger one (TimeSpan.MaxValue meaning "forever") waits the longest bound, so neither
+    // dispose step 3 nor arming InitTimeout ever throws.
+    private static TimeSpan ClampTimeout(TimeSpan timeout) => timeout == Timeout.InfiniteTimeSpan
+        ? timeout
+        : TimeSpan.FromTicks(Math.Clamp(timeout.Ticks, 0, MaxTimeoutTicks));
+
+    private readonly TimeSpan _disposeTimeout = ClampTimeout(disposeTimeout);
 
     private TaskCompletionSource? _disposal;
 

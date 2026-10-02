@@ -33,6 +33,26 @@ public abstract partial class Middleware : IAsyncDisposable
         ?? throw new InvalidOperationException("The store attaches Store and DisposeTimeout after the constructor returns; use them from InitializeAsync or a hook.");
 
     /// <summary>
+    /// Initializes this middleware. The store starts every middleware's init, in registration order and without awaiting
+    /// between them, on its first use; user actions dispatched before every init finished wait in the init buffer.
+    /// </summary>
+    /// <param name="cancellationToken">Cancelled when init is aborted (the init timeout) or the store is disposed.</param>
+    /// <returns>A task that completes when this middleware is initialized.</returns>
+    /// <remarks>
+    /// <para>
+    /// The synchronous part (up to the first <see langword="await"/>) runs before the store's first use returns. Register
+    /// on <paramref name="cancellationToken"/> there, and never block in it. A throw, synchronous or not, is logged and
+    /// counts as a finished init.
+    /// </para>
+    /// <para>
+    /// Use <see cref="DispatchSystem"/> here: awaiting <see cref="IDispatcher.DispatchAsync(object)"/> of a user action
+    /// waits until <see cref="DuckyBuilder.InitTimeout"/>, because user actions are buffered until the store is ready.
+    /// Likewise, awaiting <see cref="IStore.WhenIdleAsync"/> waits until the init timeout, because idle requires ready.
+    /// </para>
+    /// </remarks>
+    public virtual ValueTask InitializeAsync(CancellationToken cancellationToken) => default;
+
+    /// <summary>
     /// Decides whether an action is processed. Consulted only for <see cref="Origin.Local"/> and <see cref="Origin.Effect"/>
     /// actions, in registration order: the first <see langword="false"/> completes the action
     /// <see cref="DispatchResult.Vetoed"/>, and a throw completes it <see cref="DispatchResult.Failed"/>.

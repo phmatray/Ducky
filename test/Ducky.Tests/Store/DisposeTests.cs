@@ -36,7 +36,7 @@ public sealed class DisposeTests
     {
         var logger = new FakeLogger();
         var gate = new InitGate();
-        var store = new DuckyStore([new TrailSlice()], logger, inits: [gate.Init]);
+        var store = new DuckyStore([new TrailSlice()], logger, middleware: () => [gate]);
         var buffered = store.DispatchAsync(new Mark("a"));
 
         store.Dispose();
@@ -56,7 +56,7 @@ public sealed class DisposeTests
     public async Task InitializeAsync_DisposedBeforeReady_Completes()
     {
         var gate = new InitGate();
-        var store = new DuckyStore([new TrailSlice()], NullLogger.Instance, inits: [gate.Init]);
+        var store = new DuckyStore([new TrailSlice()], NullLogger.Instance, middleware: () => [gate]);
         var initialized = store.InitializeAsync(TestContext.Current.CancellationToken);
         var buffered = store.DispatchAsync(new Mark("a"));
 
@@ -123,7 +123,7 @@ public sealed class DisposeTests
     public async Task AfterDispose_NeverInitialized_StateAndInitializeAsyncStartNoInit()
     {
         var gate = new InitGate();
-        var store = new DuckyStore([new CountSlice()], NullLogger.Instance, inits: [gate.Init]);
+        var store = new DuckyStore([new CountSlice()], NullLogger.Instance, middleware: () => [gate]);
         await store.DisposeAsync();
 
         _ = store.State;

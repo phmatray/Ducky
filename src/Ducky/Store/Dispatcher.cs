@@ -11,10 +11,11 @@ internal sealed partial class Dispatcher(
     StateSnapshot initial,
     SafeLogger logger,
     int maxDispatchDepth,
-    Func<Task>[] inits,
+    TimeSpan initTimeout,
     TimeSpan disposeTimeout,
     TimeProvider timeProvider,
-    Lazy<Materialized> materialized)
+    Lazy<Materialized> materialized,
+    CancellationTokenSource lifetime)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();

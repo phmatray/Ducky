@@ -34,19 +34,48 @@ internal sealed class OtherSlice : Slice<Other>
     protected override Other Initial => new(0);
 }
 
-// Stands in for middleware init (M4-03): the store's init stays Running until Release, and Started counts the calls.
-internal sealed class InitGate
+// A middleware whose init stays Running until Release; Started counts the InitializeAsync calls.
+internal sealed class InitGate : Middleware
 {
     private readonly TaskCompletionSource _gate = new();
 
     public int Started { get; private set; }
 
-    public Func<Task> Init => () =>
+    public CancellationToken Token { get; private set; }
+
+    public override ValueTask InitializeAsync(CancellationToken cancellationToken)
     {
         Started++;
-        return _gate.Task;
-    };
+        Token = cancellationToken;
+        return new(_gate.Task);
+    }
 
     // Completes inline, so the init continuation (Complete, then MarkReady) runs on the caller.
     public void Release() => _gate.SetResult();
+}
+
+// A middleware whose InitializeAsync is the delegate the test gives it, with Store exposed for the delegate to use.
+internal sealed class InitProbe(Func<InitProbe, CancellationToken, ValueTask> init) : Middleware
+{
+    public IStore AttachedStore => Store;
+
+    public void System(object action) => DispatchSystem(action);
+
+    public override ValueTask InitializeAsync(CancellationToken cancellationToken) => init(this, cancellationToken);
+}
+
+// Resolved from DI by Init_HangingMiddleware_TimesOutAndReleasesBuffer, which reads the init token through InitTokens.
+internal sealed class InitTokens
+{
+    public List<CancellationToken> Tokens { get; } = [];
+}
+
+// Its init ignores the token and never ends.
+internal sealed class Hanging(InitTokens tokens) : Middleware
+{
+    public override ValueTask InitializeAsync(CancellationToken cancellationToken)
+    {
+        tokens.Tokens.Add(cancellationToken);
+        return new(new TaskCompletionSource().Task);
+    }
 }

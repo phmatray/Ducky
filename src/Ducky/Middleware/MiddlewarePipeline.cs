@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 namespace Ducky;
 
 // SPEC §6.4 steps 4, 5 and 9: the middleware hooks, in registration order, each call isolated. The store creates the
-// middleware lazily, on the first drain (§6.6); phase 5a of dispose (Dispose.cs) disposes it.
+// middleware lazily, on its first use (§6.6); phase 5a of dispose (Dispose.cs) disposes it.
 internal sealed partial class Dispatcher
 {
     // Step 4, only for Local and Effect: the first false completes Vetoed, a throw is a failure that completes Failed.

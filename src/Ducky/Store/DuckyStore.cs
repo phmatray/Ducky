@@ -9,13 +9,12 @@ internal sealed class DuckyStore : IStore
 {
     // middleware and effects: create the store's middleware and effects in registration order, on its first use (§6.6); an
     // effect not Owned (an AddEffect(instance) instance) is never disposed.
-    // inits: the internal stand-in for middleware init (§6.7) that Ducky.Tests uses until middleware lands (M4-03).
-    // disposeTimeout and timeProvider default to DuckyBuilder's DisposeTimeout and TimeProvider.System.
+    // initTimeout, disposeTimeout and timeProvider default to DuckyBuilder's InitTimeout, DisposeTimeout and TimeProvider.System.
     internal DuckyStore(
         IEnumerable<Slice> slices,
         ILogger logger,
         int maxDispatchDepth = Dispatcher.DefaultMaxDispatchDepth,
-        Func<Task>[]? inits = null,
+        TimeSpan? initTimeout = null,
         TimeSpan? disposeTimeout = null,
         TimeProvider? timeProvider = null,
         Func<Middleware[]>? middleware = null,
@@ -35,10 +34,11 @@ internal sealed class DuckyStore : IStore
             InitialState,
             new SafeLogger(logger),
             maxDispatchDepth,
-            inits ?? [],
+            initTimeout ?? TimeSpan.FromSeconds(10),
             disposeTimeout ?? TimeSpan.FromSeconds(2),
             timeProvider ?? TimeProvider.System,
-            new(() => new(effects?.Invoke() ?? [], Attach(middleware?.Invoke() ?? [])), LazyThreadSafetyMode.ExecutionAndPublication));
+            new(() => new(effects?.Invoke() ?? [], Attach(middleware?.Invoke() ?? [])), LazyThreadSafetyMode.ExecutionAndPublication),
+            new());
     }
 
     // The IStore factory AddDucky registers (§6.10): validates once per container (INV-31), then builds this store.
@@ -58,6 +58,7 @@ internal sealed class DuckyStore : IStore
             config.CreateSlices(),
             logger,
             config.MaxDispatchDepth,
+            initTimeout: config.InitTimeout,
             disposeTimeout: config.DisposeTimeout,
             timeProvider: services.GetRequiredService<TimeProvider>(),
             middleware: () => config.CreateMiddleware(storeServices),
