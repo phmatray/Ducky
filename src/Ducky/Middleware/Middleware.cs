@@ -9,9 +9,9 @@ namespace Ducky;
 /// and concurrently with the asynchronous part of its init, so state shared between the hooks and init must be
 /// thread-safe, and code that runs after the init token was cancelled must not restore or dispatch stale data.
 /// </remarks>
-public abstract class Middleware : IAsyncDisposable
+public abstract partial class Middleware : IAsyncDisposable
 {
-    private Attachment? _attachment;
+    private DuckyStore? _store;
 
     /// <summary>Initializes a new instance of the <see cref="Middleware"/> class.</summary>
     protected Middleware()
@@ -20,16 +20,16 @@ public abstract class Middleware : IAsyncDisposable
 
     /// <summary>Gets the store this middleware belongs to.</summary>
     /// <exception cref="InvalidOperationException">The store has not attached itself yet (in the constructor).</exception>
-    protected IStore Store => Attached.Store;
+    protected IStore Store => Attached;
 
     /// <summary>
     /// Gets how long the store waits for <see cref="DisposeAsync"/>: <see cref="DuckyBuilder.DisposeTimeout"/>, clamped to
     /// a bound <see cref="Task.WaitAsync(TimeSpan)"/> accepts (a negative value becomes zero). Bound any flush by it.
     /// </summary>
     /// <exception cref="InvalidOperationException">The store has not attached itself yet (in the constructor).</exception>
-    protected TimeSpan DisposeTimeout => Attached.DisposeTimeout;
+    protected TimeSpan DisposeTimeout => Attached.Dispatcher.DisposeTimeout;
 
-    private Attachment Attached => _attachment
+    private DuckyStore Attached => _store
         ?? throw new InvalidOperationException("The store attaches Store and DisposeTimeout after the constructor returns; use them from InitializeAsync or a hook.");
 
     /// <summary>
@@ -63,7 +63,5 @@ public abstract class Middleware : IAsyncDisposable
 #pragma warning restore CA1816
 
     // Called by the store when it creates this middleware, before any hook or init runs.
-    internal void Attach(IStore store, TimeSpan disposeTimeout) => _attachment = new(store, disposeTimeout);
-
-    private sealed record Attachment(IStore Store, TimeSpan DisposeTimeout);
+    internal void Attach(DuckyStore store) => _store = store;
 }

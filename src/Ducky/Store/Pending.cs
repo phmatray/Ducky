@@ -26,7 +26,8 @@ internal sealed class Pending(
     // Assigned under _gate in enqueue order; the first Id is 1.
     internal long Id { get; set; }
 
-    // A core failure action (§6.4 steps 1 and 6): step 2 marks its scope InFailure, so failures under it are logged only.
+    // A failure action (a core one, §6.4 steps 1 and 6, or DispatchSystem with isFailure): step 2 marks its scope
+    // InFailure, so failures under it are logged only (INV-12).
     internal bool IsFailure { get; } = isFailure;
 
     internal void Complete(DispatchResult result) => completion?.TrySetResult(result);

@@ -160,7 +160,7 @@ internal sealed class DuckyStore : IStore
     {
         foreach (var m in middleware)
         {
-            m.Attach(this, Dispatcher.DisposeTimeout);
+            m.Attach(this);
         }
 
         return middleware;

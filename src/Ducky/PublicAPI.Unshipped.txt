@@ -153,6 +153,7 @@ Ducky.ActionContext.PreviousState.get -> Ducky.StateSnapshot!
 Ducky.ActionContext.State.get -> Ducky.StateSnapshot!
 Ducky.DuckyBuilder.Use<TMiddleware>() -> Ducky.DuckyBuilder!
 Ducky.Middleware
+Ducky.Middleware.DispatchSystem(object! action, bool isFailure = false) -> void
 Ducky.Middleware.DisposeTimeout.get -> System.TimeSpan
 Ducky.Middleware.Middleware() -> void
 Ducky.Middleware.Store.get -> Ducky.IStore!
