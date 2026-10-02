@@ -2,9 +2,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Ducky;
 
-// SPEC §6.11 steps 1-3, phase 5a and step 6 (INV-29). Every caller gets the one disposal task, published before any
+// SPEC §6.11 steps 1-3, phases 5a-5b and step 6 (INV-29). Every caller gets the one disposal task, published before any
 // step runs, so a call made re-entrantly from step 2's callbacks starts nothing. The other waits and phases
-// (materialization, init, effect runs) come with those features; when step 3 times out they chain on the drain's exit.
+// (init, effect runs) come with those features; when step 3 times out they chain on the drain's exit.
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The lifetime CTS is never disposed: tokens taken from it may be read after disposal, and it owns no timer or linked registration.")]
 internal sealed partial class Dispatcher
 {
@@ -30,6 +30,9 @@ internal sealed partial class Dispatcher
 
     // The store lifetime, cancelled at step 2: effect runs and init link their tokens to it.
     internal CancellationToken Lifetime => _lifetime.Token;
+
+    // One volatile read: the disposal task is published before step 1 runs.
+    internal bool DisposalBegan => Volatile.Read(ref _disposal) is not null;
 
     // Never faults: nothing below throws but a fatal exception (SafeLogger rethrows only OutOfMemoryException).
     internal Task DisposeAsync()
@@ -72,7 +75,7 @@ internal sealed partial class Dispatcher
                 disposal.TrySetResult();
             }
 
-            await DisposeMiddlewareAsync(drainExited).ConfigureAwait(false);
+            await DisposeMaterializedAsync(drainExited).ConfigureAwait(false);
             ClearSubscribers();
         }
         finally
@@ -81,32 +84,47 @@ internal sealed partial class Dispatcher
         }
     }
 
-    // Phase 5a, after the drain exited (never inline while one may be in flight): middleware in reverse registration order,
-    // each DisposeAsync in its own try/catch (Error 1015), so one throw never skips the others. Only a drain creates
-    // middleware, so once the last drain has exited, none created means none to dispose.
-    private async Task DisposeMiddlewareAsync(Task drainExited)
+    // Phases 5a and 5b, after the drain exited (never inline while one may be in flight): middleware in reverse registration
+    // order, then the store-owned effects in reverse (the run wait before 5b comes with M2-03b). Nothing materialized means
+    // nothing to dispose; a faulted materialization built nothing it kept (disposing its partial work is M4-05b's).
+    private async Task DisposeMaterializedAsync(Task drainExited)
     {
 #pragma warning disable VSTHRD003 // justification: the drain's exit is our own RunContinuationsAsynchronously TCS, never faulted
         // Stryker disable once Boolean : either context only resumes after the drain exited, which is all 5a needs
         await drainExited.ConfigureAwait(false);
 #pragma warning restore VSTHRD003
-        if (!_middleware.IsValueCreated)
+        if (!_materialized.IsValueCreated)
         {
             return;
         }
 
-        var middleware = _middleware.Value;
-        for (var i = middleware.Length - 1; i >= 0; i--)
+        var materialized = _materialized.Value;
+        await DisposeReversedAsync(materialized.Middleware).ConfigureAwait(ConfigureAwaitOptions.None);
+        await DisposeReversedAsync(materialized.OwnedEffects).ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    // Each disposal in its own try/catch (Error 1015), so one throw never skips the others.
+    private async Task DisposeReversedAsync(object[] owned)
+    {
+        for (var i = owned.Length - 1; i >= 0; i--)
         {
             try
             {
-                await middleware[i].DisposeAsync().ConfigureAwait(false);
+                switch (owned[i])
+                {
+                    case IAsyncDisposable disposable:
+                        await disposable.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.None);
+                        break;
+                    case IDisposable disposable:
+                        disposable.Dispose();
+                        break;
+                }
             }
-#pragma warning disable CA1031 // justification: DisposeAsync is user code; its throw is logged and never faults disposal (§6.11)
+#pragma warning disable CA1031 // justification: disposal is user code; its throw is logged and never faults disposal (§6.11)
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                Log.MiddlewareDisposeThrew(logger, ex, middleware[i].GetType());
+                Log.DisposeThrew(logger, ex, owned[i].GetType());
             }
         }
     }

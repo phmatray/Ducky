@@ -4,13 +4,13 @@ namespace Ducky;
 // line when it was raised while handling a failure action.
 internal sealed partial class Dispatcher
 {
-    // A core failure action is a System action at depth 0 on the failed action's chain (§6.5), marked IsFailure so that
-    // anything failing under it is logged only. Called on the drainer, so Enqueue only queues it.
-    private void RouteFailure(ReducerFailed failure, long correlationId, bool inFailure)
+    // A core failure action (ReducerFailed, EffectFailed) is a System action at depth 0 on the failed action's chain (§6.5),
+    // marked IsFailure so that anything failing under it is logged only.
+    private void RouteFailure(object failure, Exception exception, string actionType, long correlationId, bool inFailure)
     {
         if (inFailure)
         {
-            Log.FailureNotDispatched(logger, failure.Exception, failure.GetType(), failure.ActionType);
+            Log.FailureNotDispatched(logger, exception, failure.GetType(), actionType);
             return;
         }
 
@@ -21,7 +21,8 @@ internal sealed partial class Dispatcher
     private void RouteScopedFailure(object action, string? sliceKey, Exception ex)
     {
         var scope = _causal.Value!;
-        RouteFailure(new(TypeName(action), sliceKey, ex), scope.CorrelationId, scope.InFailure);
+        var type = TypeName(action);
+        RouteFailure(new ReducerFailed(type, sliceKey, ex), ex, type, scope.CorrelationId, scope.InFailure);
     }
 
     // ponytail: Type.ToString() is Namespace.Name; the per-store cached action type names of §9 replace it (M4-07).

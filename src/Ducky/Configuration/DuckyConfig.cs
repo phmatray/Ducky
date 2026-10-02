@@ -15,7 +15,8 @@ internal sealed class DuckyConfig(
     DuckyError[] sliceErrors,
     (string Source, Exception Thrown)[] sliceFailures,
     Func<IServiceProvider, IEnumerable<DuckyError>>[] rules,
-    Func<IServiceProvider, Middleware>[] middleware)
+    Func<IServiceProvider, Middleware>[] middleware,
+    DuckyConfig.EffectRegistration[] effects)
 {
     public ServiceLifetime Lifetime => lifetime;
 
@@ -29,6 +30,10 @@ internal sealed class DuckyConfig(
 
     // In registration order, from the store's services (§6.10).
     public Middleware[] CreateMiddleware(IServiceProvider services) => Array.ConvertAll(middleware, create => create(services));
+
+    // In registration order, from the store's services: one per effect type (§5.1).
+    public (Effect Effect, bool Owned)[] CreateEffects(IServiceProvider services) =>
+        Array.ConvertAll(effects, effect => (effect.Create(services), effect.Owned));
 
     public void ThrowIfInvalid(IServiceProvider services)
     {
@@ -92,6 +97,9 @@ internal sealed class DuckyConfig(
 
     // A slice read once through its throwaway instance by AddSlice; Create makes each store's own instance.
     internal readonly record struct SliceRegistration(Type Type, string Key, Type StateType, Func<Slice> Create);
+
+    // Owned: created by the store (AddEffect<T>), which disposes it; an AddEffect(instance) instance is not.
+    internal readonly record struct EffectRegistration(Func<IServiceProvider, Effect> Create, bool Owned);
 
     // Registered by AddDucky through a factory, so each container creates its own (an instance registration would be
     // shared by every provider built from the collection, which is the bug this type exists to avoid).

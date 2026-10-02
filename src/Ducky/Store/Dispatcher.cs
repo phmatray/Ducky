@@ -14,7 +14,7 @@ internal sealed partial class Dispatcher(
     Func<Task>[] inits,
     TimeSpan disposeTimeout,
     TimeProvider timeProvider,
-    Lazy<Middleware[]> middleware)
+    Lazy<Materialized> materialized)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();
@@ -24,8 +24,9 @@ internal sealed partial class Dispatcher(
     private long _lastId;
     private TaskCompletionSource? _drainExited;
 
-    // Created by the first drain, on the drainer; once the last drain has exited, IsValueCreated is final (§6.11 5a).
-    private readonly Lazy<Middleware[]> _middleware = middleware;
+    // Middleware and effects, built on the store's first use (§6.6), outside _gate. A constructor's DUCKY353 is cached by
+    // the Lazy, which rethrows that same instance at every later use.
+    private readonly Lazy<Materialized> _materialized = materialized;
 
     internal StateSnapshot State => Volatile.Read(ref _snapshot);
 
@@ -43,6 +44,30 @@ internal sealed partial class Dispatcher(
 
     // IVT-only seam (§6.3, §17.1): null in production, invoked with the action at the top of Process.
     internal Action<object>? BeforeProcessHook { get; set; }
+
+    // Called first by every materializing entry point (§6.6). Once disposal began nothing is built and nothing rethrown:
+    // the caller takes its after-disposal path (the race with a concurrent first use is closed by M4-05b).
+    internal void Materialize()
+    {
+        if (!DisposalBegan)
+        {
+            _ = _materialized.Value;
+        }
+    }
+
+    internal void Dispatch(object action, Origin origin)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        Enqueue(NewPending(action, origin, null));
+    }
+
+    internal Task<DispatchResult> DispatchAsync(object action, Origin origin)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        var completion = new TaskCompletionSource<DispatchResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Enqueue(NewPending(action, origin, completion));
+        return completion.Task;
+    }
 
     // Before Ready a user action (Local, Effect) goes to the init buffer and starts init; every other action goes to the
     // main queue (§6.3). Once Disposed the action completes Disposed and is logged at Debug. Init starts, the drain runs
@@ -160,7 +185,8 @@ internal sealed partial class Dispatcher(
         }
     }
 
-    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs), 4, 5 and 9 (MiddlewarePipeline.cs) and 6-8 so far.
+    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs), 4, 5 and 9 (MiddlewarePipeline.cs), 6-8, 10
+    // (Notify.cs) and 11 (EffectRuns.cs) so far.
     private void Process(Pending p)
     {
         BeforeProcessHook?.Invoke(p.Action);
@@ -172,7 +198,8 @@ internal sealed partial class Dispatcher(
         var outer = EnterScope(p);
         try
         {
-            var middleware = _middleware.Value;
+            var materialized = _materialized.Value;
+            var middleware = materialized.Middleware;
             var previous = State;
             var before = new ActionContext(p, TypeName(p.Action), previous, previous, []);
             if (!Admitted(p, before, middleware))
@@ -189,11 +216,14 @@ internal sealed partial class Dispatcher(
             var changed = Commit(p.Origin);
             p.Complete(DispatchResult.Reduced);
             var state = State;
-            AfterReduce(new ActionContext(p, before.ActionType, previous, state, ChangedKeys(previous, state)), middleware);
+            var after = new ActionContext(p, before.ActionType, previous, state, ChangedKeys(previous, state));
+            AfterReduce(after, middleware);
             if (changed)
             {
                 Notify();
             }
+
+            StartEffects(after, materialized.Effects);
         }
         finally
         {
