@@ -167,3 +167,5 @@ Ducky.Selection<T>.Value.get -> T
 override Ducky.Selection<T>.ToString() -> string?
 static Ducky.Selection<T>.Create(System.Func<T>! read, System.Action<T>? onRead = null, System.Action? onDispose = null) -> Ducky.Selection<T>!
 static Ducky.Selection<T>.implicit operator T(Ducky.Selection<T>! selection) -> T
+Ducky.StoreExtensions
+static Ducky.StoreExtensions.Select<TState, T>(this Ducky.IStore! store, System.Func<TState!, T>! selector, System.Action<T>? onChange = null, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
