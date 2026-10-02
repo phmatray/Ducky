@@ -53,3 +53,21 @@ internal sealed class RightSlice : Slice<Right>
 
     protected override Right Initial => new(0);
 }
+
+// An effect whose handler is a delegate (SPEC §5.5).
+internal sealed class Handler<TAction>(Func<TAction, EffectContext, CancellationToken, Task> handle) : Effect<TAction>
+    where TAction : notnull
+{
+    public override Task Handle(TAction action, EffectContext context, CancellationToken cancellationToken) =>
+        handle(action, context, cancellationToken);
+}
+
+// Runs OnDispose when the store disposes it (phase 5a, SPEC §6.11).
+internal sealed class DisposeProbe(Action onDispose) : Middleware
+{
+    public override ValueTask DisposeAsync()
+    {
+        onDispose();
+        return base.DisposeAsync();
+    }
+}

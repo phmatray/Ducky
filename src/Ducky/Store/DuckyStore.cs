@@ -10,6 +10,7 @@ internal sealed class DuckyStore : IStore
     // middleware and effects: create the store's middleware and effects in registration order, on its first use (§6.6); an
     // effect not Owned (an AddEffect(instance) instance) is never disposed.
     // initTimeout, disposeTimeout and timeProvider default to DuckyBuilder's InitTimeout, DisposeTimeout and TimeProvider.System.
+    // scope: the store scope a Singleton store owns (§6.10), disposed last by dispose phase 5b.
     internal DuckyStore(
         IEnumerable<Slice> slices,
         ILogger logger,
@@ -18,7 +19,8 @@ internal sealed class DuckyStore : IStore
         TimeSpan? disposeTimeout = null,
         TimeProvider? timeProvider = null,
         Func<Middleware[]>? middleware = null,
-        Func<(Effect Effect, bool Owned)[]>? effects = null)
+        Func<(Effect Effect, bool Owned)[]>? effects = null,
+        AsyncServiceScope? scope = null)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -28,6 +30,7 @@ internal sealed class DuckyStore : IStore
 
         var registry = new Registry(owned);
         Slices = Array.AsReadOnly(owned);
+        Scope = scope;
         InitialState = new StateSnapshot(registry);
         Dispatcher = new Dispatcher(
             registry,
@@ -37,6 +40,7 @@ internal sealed class DuckyStore : IStore
             initTimeout ?? TimeSpan.FromSeconds(10),
             disposeTimeout ?? TimeSpan.FromSeconds(2),
             timeProvider ?? TimeProvider.System,
+            scope,
             new(() => new(effects?.Invoke() ?? [], Attach(middleware?.Invoke() ?? [])), LazyThreadSafetyMode.ExecutionAndPublication),
             new());
     }
@@ -62,10 +66,8 @@ internal sealed class DuckyStore : IStore
             disposeTimeout: config.DisposeTimeout,
             timeProvider: services.GetRequiredService<TimeProvider>(),
             middleware: () => config.CreateMiddleware(storeServices),
-            effects: () => config.CreateEffects(storeServices))
-        {
-            Scope = scope,
-        };
+            effects: () => config.CreateEffects(storeServices),
+            scope: scope);
     }
 
     // Registry data: reading it starts nothing.
@@ -89,7 +91,7 @@ internal sealed class DuckyStore : IStore
 
     // The store scope (§6.10): a Singleton store lives in the root provider, so it owns one scope that its effects and
     // middleware resolve from (disposed by dispose step 5b). Null for a Scoped store, which resolves from its own DI scope.
-    internal AsyncServiceScope? Scope { get; init; }
+    internal AsyncServiceScope? Scope { get; }
 
     // Every entry point below materializes first, so a constructor's DUCKY353 is thrown synchronously (§6.6, §7 rule 4).
     public void Dispatch(object action)
