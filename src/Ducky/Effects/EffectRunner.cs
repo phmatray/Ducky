@@ -2,11 +2,17 @@ using System.Collections.Concurrent;
 
 namespace Ducky;
 
-// One per effect registration per store (SPEC §6.6, INV-11): the effect, its policy (read once, at materialization) and
-// its slots, keyed by a SlotKey over ConcurrencyKey(action) ?? NullKey (the private sentinel _nullKey). Every start
+// One per handled action type of an effect registration, per store (SPEC §6.6, INV-11): an Effect<T> has one, an
+// EffectGroup one per On<T>. It holds the effect, its action type, policy (read once, at materialization), key function
+// and handler, and its slots, keyed by a SlotKey over the key ?? NullKey (the private sentinel _nullKey). Every start
 // installs a new immutable Slot, and a completing run removes only its own slot (compare-and-remove), so an old run never
 // removes its successor's slot.
-internal sealed partial class EffectRunner(Effect effect)
+internal sealed partial class EffectRunner(
+    Effect effect,
+    Type actionType,
+    Concurrency policy,
+    Func<object, object?> keyOf,
+    Func<object, EffectContext, CancellationToken, Task> handle)
 {
     private static readonly object _nullKey = new();
 
@@ -15,10 +21,19 @@ internal sealed partial class EffectRunner(Effect effect)
 
     internal Effect Effect => effect;
 
-    internal Concurrency Policy { get; } = effect.RunPolicy;
+    // The exact action type the store's effect index maps to this runner (ADR-0008).
+    internal Type ActionType => actionType;
+
+    internal Concurrency Policy => policy;
 
     // The rule the effect tests assert: no non-LongRunning slot remains once WhenIdleAsync has completed.
     internal int SlotCount => _slots.Count;
+
+    // The run's concurrency key: user code, which the runner calls inside the run's try/catch (§6.6).
+    internal object? KeyOf(object action) => keyOf(action);
+
+    internal Task RunAsync(object action, EffectContext context, CancellationToken cancellationToken) =>
+        handle(action, context, cancellationToken);
 }
 
 // Immutable once published, one per start (§6.6). Switch: the run's Cts, linked to the store lifetime. Queue: Done,

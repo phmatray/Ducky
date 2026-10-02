@@ -1,7 +1,8 @@
 namespace Ducky;
 
 /// <summary>
-/// The base of every effect: derive from <see cref="Effect{TAction}"/>. Register it with
+/// The base of every effect: derive from <see cref="Effect{TAction}"/>, or from <see cref="EffectGroup"/> for several
+/// action types in one class. Register it with
 /// <see cref="DuckyBuilder.AddEffect{TEffect}()"/>: the store creates it on its first use, owns it and disposes it.
 /// </summary>
 public abstract class Effect
@@ -16,16 +17,9 @@ public abstract class Effect
     /// </summary>
     public virtual bool LongRunning => false;
 
-    // The exact action type the store's effect index maps to this effect (ADR-0008).
-    internal abstract Type ActionType { get; }
-
-    internal abstract Task RunAsync(object action, EffectContext context, CancellationToken cancellationToken);
-
-    // The registration's policy, read once when the store builds its EffectRunner (§6.6).
-    internal abstract Concurrency RunPolicy { get; }
-
-    // The run's concurrency key: user code, which the runner calls inside the run's try/catch (§6.6).
-    internal abstract object? KeyOf(object action);
+    // One new runner per handled action type, for each store that materializes this effect (§6.6): the store's effect
+    // index maps each runner's exact action type to it (ADR-0008).
+    internal abstract EffectRunner[] CreateRunners();
 }
 
 /// <summary>Reacts to every action of the exact type <typeparamref name="TAction"/> once it is processed.</summary>
@@ -64,14 +58,9 @@ public abstract class Effect<TAction> : Effect
     public abstract Task Handle(TAction action, EffectContext context, CancellationToken cancellationToken);
 #pragma warning restore VSTHRD200
 
-    internal sealed override Type ActionType => typeof(TAction);
-
-    internal sealed override Task RunAsync(object action, EffectContext context, CancellationToken cancellationToken) =>
-        Handle((TAction)action, context, cancellationToken);
-
-    internal sealed override Concurrency RunPolicy => Policy;
-
-    internal sealed override object? KeyOf(object action) => ConcurrencyKey((TAction)action);
+    // Policy is read once here, when the store builds the runner (§6.6).
+    internal sealed override EffectRunner[] CreateRunners() =>
+        [new(this, typeof(TAction), Policy, action => ConcurrencyKey((TAction)action), (action, context, token) => Handle((TAction)action, context, token))];
 }
 
 /// <summary>How the runs of one effect relate to each other.</summary>

@@ -23,7 +23,7 @@ internal sealed partial class EffectRunner
     // null when the key's marker is held (the effect is dropped), else the key, which TryAdd stored.
     internal SlotKey? Install(object action, Slot slot, SafeLogger logger, out Slot? prev)
     {
-        var key = new SlotKey(effect.KeyOf(action) ?? _nullKey);
+        var key = new SlotKey(KeyOf(action) ?? _nullKey);
         Slot? replaced = null;
         if (Policy == Concurrency.Exhaust)
         {

@@ -13,6 +13,11 @@ internal sealed class EffectRunToken(long id, CancellationToken token)
     public TaskCompletionSource DisposeCalled { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public bool CountedForIdle { get; set; }
+
+    // §6.6: an OperationCanceledException is this run's cancellation iff it is for the run's token or that token is
+    // cancelled; anything else, an HttpClient timeout included, is a failure.
+    public bool IsCancellation(OperationCanceledException exception) =>
+        exception.CancellationToken == Token || Token.IsCancellationRequested;
 }
 
 // Quiescence (SPEC §6.5, §6.6, §7.4): _runningEffects counts the non-LongRunning runs, and idle requires it to be zero.
