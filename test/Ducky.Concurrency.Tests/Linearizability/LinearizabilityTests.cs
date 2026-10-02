@@ -8,6 +8,7 @@ namespace Ducky.Concurrency.Tests;
 // operations, awaited DispatchAsync (effective at reduce) and ReadState, against a sequential reducer model. The final
 // state and every read must match one linearization. Selection.Value joins the operations when Selection<T> exists
 // (stage 5).
+[Collection(nameof(Interleaving))]
 public sealed class LinearizabilityTests
 {
     // The S-4 counts, re-measured on the real dispatcher (spikes.md). iter stays CsCheck's (100, or CsCheck_Iter), so

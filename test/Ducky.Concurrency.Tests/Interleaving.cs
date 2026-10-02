@@ -10,8 +10,9 @@ internal static class Interleaving
 {
     private static readonly TimeSpan _bound = TimeSpan.FromSeconds(10);
 
-    // ponytail: one process-wide stamp, so WithinProperty assumes no test calls Wait concurrently with it (only
-    // LinearizabilityTests calls Wait, one row at a time); make it per run if a parallel class starts using Wait.
+    // ponytail: one process-wide stamp, so WithinProperty assumes no test calls Wait concurrently with it: every class
+    // calling Wait joins [Collection(nameof(Interleaving))], whose tests run one at a time; make it per run if that
+    // serialization costs too much.
     private static long _lastStep;
 
     public static TheoryData<int> Repeat() =>
