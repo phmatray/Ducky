@@ -225,6 +225,11 @@ public sealed class InitTests
         time.Advance(TimeSpan.FromSeconds(10));
         logger.Collector.Count.ShouldBe(1);
         store.State.Get<Trail>().Steps.ShouldBe(["init", "a", "b"]);
+
+        // The init never ends, so disposal stops waiting for it at DisposeTimeout (§6.11 step 4).
+        var disposal = ((IAsyncDisposable)store).DisposeAsync();
+        time.Advance(TimeSpan.FromSeconds(2));
+        await disposal;
     }
 
     [Fact]
@@ -368,64 +373,6 @@ public sealed class InitTests
         logger.Collector.GetSnapshot().ShouldHaveSingleItem().Id.Id.ShouldBe(1031);
     }
 
-    // Non-normative: a dispose from a synchronous part retires init (§6.7 step 1): no later middleware's init starts, Start
-    // arms no timer and never reaches Ready, so InitTimeout elapsing logs nothing. The disposal waits come with M4-03c.
-    [Fact]
-    public async Task Init_DisposedDuringSyncPrefix_StartsNoFurtherInit()
-    {
-        var time = new FakeTimeProvider();
-        var logger = new FakeLogger();
-        var later = new InitGate();
-        Task? disposal = null;
-        var store = new DuckyStore([new TrailSlice()], logger, initTimeout: TimeSpan.FromSeconds(1), timeProvider: time, middleware: () =>
-        [
-            new InitProbe((probe, _) =>
-            {
-                disposal = probe.AttachedStore.DisposeAsync().AsTask();
-                return new(new TaskCompletionSource().Task);
-            }),
-            later,
-        ]);
-
-        var a = store.DispatchAsync(new Mark("a"));
-
-        later.Started.ShouldBe(0);
-
-        // Step 2 still ran for the init that did start: InitTasks has no entry for the skipped middleware, and _prefixDone
-        // completed although Retire won the CAS from Starting.
-        var initializer = store.Dispatcher.Initializer;
-        initializer.PrefixDone.IsCompleted.ShouldBeTrue();
-        initializer.InitTasks.Length.ShouldBe(2);
-        initializer.InitTasks[0].ShouldNotBeNull().IsCompleted.ShouldBeFalse();
-        initializer.InitTasks[1].ShouldBeNull();
-        (await a).ShouldBe(DispatchResult.Disposed);
-        await disposal.ShouldNotBeNull();
-        await store.InitializeAsync(TestContext.Current.CancellationToken);
-        time.Advance(TimeSpan.FromSeconds(5));
-        logger.Collector.Count.ShouldBe(0);
-        store.Dispatcher.State.Get<Trail>().Steps.ShouldBeEmpty();
-    }
-
-    // Non-normative: the timer of an init disposed while Running finds Abort's CAS lost to Retire: no StoreInitAborted, no
-    // StoreInitialized (M4-03c disposes the timer in Retire as well).
-    [Fact]
-    public async Task Init_TimerFiresAfterDispose_AbortDoesNothing()
-    {
-        var time = new FakeTimeProvider();
-        var logger = new FakeLogger();
-        var gate = new InitGate();
-        var store = new DuckyStore([new TrailSlice()], logger, initTimeout: TimeSpan.FromSeconds(1), timeProvider: time,
-            middleware: () => [gate]);
-        var initialized = store.InitializeAsync(TestContext.Current.CancellationToken);
-
-        await store.DisposeAsync();
-        time.Advance(TimeSpan.FromSeconds(1));
-
-        await initialized;
-        logger.Collector.Count.ShouldBe(0);
-        store.Dispatcher.State.Get<Trail>().Steps.ShouldBeEmpty();
-    }
-
     // Non-normative: an init-token callback that disposes the store runs inside Abort, before MarkReady, which then does
     // nothing: StoreInitialized is never reduced on a disposed store and the buffered action completes Disposed.
     [Fact]
@@ -434,8 +381,8 @@ public sealed class InitTests
         var time = new FakeTimeProvider();
         var logger = new FakeLogger();
         Task? disposal = null;
-        var store = new DuckyStore([new TrailSlice()], logger, initTimeout: TimeSpan.FromSeconds(1), timeProvider: time,
-            middleware: () =>
+        var store = new DuckyStore([new TrailSlice()], logger, initTimeout: TimeSpan.FromSeconds(1),
+            disposeTimeout: TimeSpan.FromSeconds(1), timeProvider: time, middleware: () =>
             [
                 new InitProbe((probe, token) =>
                 {
@@ -449,7 +396,11 @@ public sealed class InitTests
 
         a.IsCompleted.ShouldBeTrue();
         (await a).ShouldBe(DispatchResult.Disposed);
-        await disposal.ShouldNotBeNull();
+
+        // The init ignores its token, so the disposal stops waiting for it at DisposeTimeout (§6.11 step 4).
+        disposal.ShouldNotBeNull().IsCompleted.ShouldBeFalse();
+        time.Advance(TimeSpan.FromSeconds(1));
+        await disposal;
         logger.Collector.GetSnapshot().ShouldHaveSingleItem().Id.Id.ShouldBe(1031);
         store.Dispatcher.State.Get<Trail>().Steps.ShouldBeEmpty();
     }

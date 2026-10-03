@@ -107,8 +107,12 @@ public sealed class IdleTests
         var gate = new InitGate();
         var store = new DuckyStore([new TrailSlice()], NullLogger.Instance, middleware: () => [gate]);
         var beforeReady = store.WhenIdleAsync(CancellationToken.None);
-        await store.DisposeAsync();
+        var first = store.DisposeAsync().AsTask();
         beforeReady.IsCompletedSuccessfully.ShouldBeTrue();
+
+        // The gate's init ignores its token: phase 5a disposes it, and the disposal completes, once it ends.
+        gate.Release();
+        await first.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
 
         var disposed = new DuckyStore([new TrailSlice()], NullLogger.Instance, middleware: () => [gate]);
         await disposed.DisposeAsync();

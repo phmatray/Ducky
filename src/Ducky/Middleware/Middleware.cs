@@ -78,8 +78,11 @@ public abstract partial class Middleware : IAsyncDisposable
     }
 
     /// <summary>
-    /// Called once by the store's disposal, after its drain exited, in reverse registration order. A throw is logged and
-    /// the other middleware are still disposed.
+    /// Called once by the store's disposal, after its drain exited and after this middleware's own
+    /// <see cref="InitializeAsync"/> ended, in reverse registration order. An init still running after
+    /// <see cref="DisposeTimeout"/> delays only this call, which then runs when that init ends. The store waits for the
+    /// returned task for at most <see cref="DisposeTimeout"/>, then logs a warning and disposes the next middleware. A throw
+    /// is logged and the other middleware are still disposed.
     /// </summary>
     /// <returns>A task that completes when this middleware is disposed.</returns>
 #pragma warning disable CA1816 // justification: the store owns middleware and calls DisposeAsync once; a derived finalizer is its own concern

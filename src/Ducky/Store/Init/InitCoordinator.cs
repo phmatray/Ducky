@@ -5,9 +5,9 @@ namespace Ducky;
 // SPEC §6.7 (INV-13): the init state machine NotStarted -> Starting -> Running -> Completed. Start runs every middleware's
 // InitializeAsync up to its first await, publishes InitTasks and completes _prefixDone, then arms InitTimeout; Complete
 // (every init finished) or Abort (the timer, or an overflow abort queued by Overflow.cs) makes the store Ready, whichever
-// wins the CAS from Running. Init never starts under _gate (INV-05): the triggers call Start after releasing it. Retire
-// returning _prefixDone, the timer disposal in Retire and the per-middleware dispose waits on InitTasks come with M4-03c.
-[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The timer is disposed by Complete and Abort; the init CTS is never disposed, because middleware may read its token after init.")]
+// wins the CAS from Running. Init never starts under _gate (INV-05): the triggers call Start after releasing it. Dispose
+// retires init through Retire.cs.
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The timer is disposed by Complete, Abort and Retire; the init CTS is never disposed, because middleware may read its token after init.")]
 internal sealed partial class InitCoordinator(Lazy<Materialized> materialized, SafeLogger logger, TimeProvider timeProvider, TimeSpan initTimeout, CancellationToken lifetime)
 {
     private const int NotStarted = 0;
@@ -148,10 +148,6 @@ internal sealed partial class InitCoordinator(Lazy<Materialized> materialized, S
         Log.StoreInitAborted(logger, reason);
         dispatcher.MarkReady();
     }
-
-    // Dispose step 1 (§6.7): a Start that has not yet won NotStarted -> Starting loses its CAS and starts nothing; a Start
-    // inside its synchronous part starts no further init and arms nothing; a running init ends in a CAS that fails.
-    internal void Retire() => Volatile.Write(ref _state, Completed);
 }
 
 // Why init ended before every middleware init finished (StoreInitAborted, §6.7).
