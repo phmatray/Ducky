@@ -16,5 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Ducky/Ducky.csproj" />
+    <!-- The container AddDucky registers into. VersionOverride, not a PackageVersion: with transitive pinning a central
+         entry would move every locked test project's transitive 10.0.12 to CentralTransitive (NU1004). Same version. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="10.0.12" />
   </ItemGroup>
 </Project>

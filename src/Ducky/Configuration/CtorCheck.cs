@@ -13,8 +13,12 @@ internal static class CtorCheck
     {
         var isService = services.GetService<IServiceProviderIsService>();
         var isKeyedService = services.GetService<IServiceProviderIsKeyedService>();
-        foreach (var (type, requiredBy) in requirements)
+        // Not deconstructed: the generated Deconstruct's out parameter carries no annotation, so ILC reports IL2070 on
+        // GetConstructors below (the Roslyn trim analyzer misses it; the AotSmoke publish caught it).
+        foreach (var requirement in requirements)
         {
+            var type = requirement.Type;
+            var requiredBy = requirement.RequiredBy;
             if (isService is null)
             {
                 Log.CtorCheckSkipped(logger, type, typeof(IServiceProviderIsService));
@@ -65,8 +69,11 @@ internal static class CtorCheck
         }
     }
 
-    // A type to check and what registered it, named in the error. The annotation keeps its constructors under trimming.
+    // A type to check and what registered it, named in the error. The annotation keeps its constructors under trimming; it
+    // is on the parameter too, or ILC reports IL2069 for the generated constructor's store into the annotated field.
     internal sealed record Requirement(
-        [property: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type Type,
+        [param: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        [property: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        Type Type,
         string RequiredBy);
 }
