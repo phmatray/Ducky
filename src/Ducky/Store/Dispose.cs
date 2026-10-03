@@ -2,9 +2,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Ducky;
 
-// SPEC §6.11 steps 1-3, the step-4 run wait, phases 5a-5b and step 6 (INV-29). Every caller gets the one disposal task,
-// published before any step runs, so a call made re-entrantly from step 2's callbacks starts nothing. The other step-4
-// waits (materialization, init) come with those features; when step 3 times out the rest chains on the drain's exit.
+// SPEC §6.11 steps 1-3, the step-4 run and init waits, phases 5a-5b and step 6 (INV-29). Every caller gets the one
+// disposal task, published before any step runs, so a call made re-entrantly from step 2's callbacks starts nothing. The
+// materialization wait comes with M4-05b; when step 3 times out the rest chains on the drain's exit.
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The lifetime CTS is never disposed: tokens taken from it may be read after disposal, and it owns no timer or linked registration.")]
 internal sealed partial class Dispatcher
 {
@@ -65,7 +65,7 @@ internal sealed partial class Dispatcher
         // The finally completes the shared task on every path, so no exception can leave a DisposeAsync caller waiting.
         try
         {
-            var exited = Detach();
+            var (exited, retired) = Detach();
             CancelLifetime();
 
             // Step 3, also when the caller is the drainer: it gets an incomplete task, and the drainer, finding the queue
@@ -80,7 +80,7 @@ internal sealed partial class Dispatcher
                 disposal.TrySetResult();
             }
 
-            await DisposeMaterializedAsync(drainExited, disposal).ConfigureAwait(false);
+            await DisposeMaterializedAsync(drainExited, retired, disposal).ConfigureAwait(false);
             ClearSubscribers();
         }
         finally
@@ -92,7 +92,7 @@ internal sealed partial class Dispatcher
     // Phases 5a and 5b, after the drain exited (never inline while one may be in flight): middleware in reverse registration
     // order, then, after the run wait, the store-owned effects in reverse and the store scope. Nothing materialized (or a
     // faulted materialization, which kept nothing; disposing its partial work is M4-05b's) leaves only the store scope.
-    private async Task DisposeMaterializedAsync(Task drainExited, TaskCompletionSource disposal)
+    private async Task DisposeMaterializedAsync(Task drainExited, Task retired, TaskCompletionSource disposal)
     {
 #pragma warning disable VSTHRD003 // justification: the drain's exit is our own RunContinuationsAsynchronously TCS, never faulted
         // Stryker disable once Boolean : either context only resumes after the drain exited, which is all 5a needs
@@ -105,11 +105,14 @@ internal sealed partial class Dispatcher
             return;
         }
 
-        // Step 4's run wait starts with the drain's exit, so it sees every run step 11 registered; 5a does not wait for it.
+        // Step 4's waits start with the drain's exit, so the run wait sees every run step 11 registered; 5a does not wait
+        // for it, and starts the init waits itself.
         var runs = RunWaitAsync();
         Task bounded = runs.WaitAsync(_disposeTimeout, timeProvider);
         var materialized = _materialized.Value;
-        await DisposeReversedAsync(materialized.Middleware).ConfigureAwait(ConfigureAwaitOptions.None);
+#pragma warning disable VSTHRD003 // justification: our own phase; the Retire task it is handed is only observed
+        await DisposeMiddlewareAsync(materialized.Middleware, retired).ConfigureAwait(ConfigureAwaitOptions.None);
+#pragma warning restore VSTHRD003
         await bounded.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         if (!bounded.IsCompletedSuccessfully)
         {
@@ -122,6 +125,82 @@ internal sealed partial class Dispatcher
 
         // 5b: owned effects in reverse construction order, then the store scope (browser) last; a null scope is skipped.
         await DisposeReversedAsync([storeScope, .. materialized.OwnedEffects]).ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    // Phase 5a, in reverse registration order, with step 4's init waits started together: each middleware waits only for
+    // its own init task, after the prefix Retire returned, bounded by DisposeTimeout. One whose wait expired gets its
+    // DisposeAsync chained on that init alone (never run early; it may land after 5b), and 5a moves on at once.
+    private async Task DisposeMiddlewareAsync(Middleware[] middleware, Task retired)
+    {
+        var inits = new Task[middleware.Length];
+        var waits = new Task[middleware.Length];
+        for (var i = 0; i < middleware.Length; i++)
+        {
+            inits[i] = InitEndedAsync(retired, i);
+            waits[i] = inits[i].WaitAsync(_disposeTimeout, timeProvider);
+        }
+
+        for (var i = middleware.Length - 1; i >= 0; i--)
+        {
+            await waits[i].ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            if (waits[i].IsCompletedSuccessfully)
+            {
+                await DisposeBoundedAsync(middleware[i]).ConfigureAwait(ConfigureAwaitOptions.None);
+            }
+            else
+            {
+                _ = DisposeAfterAsync(inits[i], middleware[i]);
+            }
+        }
+    }
+
+    // Ends once this middleware's own init ended, or at once when it never started (InitTasks is published when the
+    // prefix completes, and is empty when init never ran). Never faults: an init fault is init's own Error 1032.
+    private async Task InitEndedAsync(Task retired, int index)
+    {
+#pragma warning disable VSTHRD003 // justification: _prefixDone and the init tasks are only observed here, never completed on our context
+        await retired.ConfigureAwait(ConfigureAwaitOptions.None);
+        var tasks = _initializer.InitTasks;
+        if (index < tasks.Length && tasks[index] is { } init)
+        {
+            await init.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        }
+#pragma warning restore VSTHRD003
+    }
+
+    private async Task DisposeAfterAsync(Task init, Middleware middleware)
+    {
+#pragma warning disable VSTHRD003 // justification: InitEndedAsync's own task, which never faults
+        await init.ConfigureAwait(ConfigureAwaitOptions.None);
+#pragma warning restore VSTHRD003
+        await DisposeBoundedAsync(middleware).ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    // Awaited with WaitAsync(DisposeTimeout): past it, Warning 1016 and the store moves on, leaving that DisposeAsync
+    // running but observed, so a throw, before or after the bound, is Error 1015 as in DisposeReversedAsync.
+    private async Task DisposeBoundedAsync(Middleware middleware)
+    {
+        var dispose = DisposeLoggedAsync(middleware);
+        await dispose.WaitAsync(_disposeTimeout, timeProvider).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        if (!dispose.IsCompleted)
+        {
+            Log.MiddlewareDisposeTimedOut(logger, middleware.GetType(), _disposeTimeout);
+        }
+    }
+
+    // Never faults: a throw is logged.
+    private async Task DisposeLoggedAsync(Middleware middleware)
+    {
+        try
+        {
+            await middleware.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.None);
+        }
+#pragma warning disable CA1031 // justification: disposal is user code; its throw is logged and never faults disposal (§6.11)
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            Log.DisposeThrew(logger, ex, middleware.GetType());
+        }
     }
 
     // Each disposal in its own try/catch (Error 1015), so one throw never skips the others.
@@ -152,8 +231,8 @@ internal sealed partial class Dispatcher
 
     // Step 1: Disposed closes Enqueue and MarkReady, and Retire closes init start; the detached actions complete outside
     // the lock. The init buffer is copied, not cleared: nothing reads it once Disposed. Returns the last drain's exit
-    // (complete when no drain runs).
-    private TaskCompletionSource? Detach()
+    // (complete when no drain runs) and the task Retire returned, which step 4's init waits start with.
+    private (TaskCompletionSource? Exited, Task Retired) Detach()
     {
         Pending[] detached;
         TaskCompletionSource? exited;
@@ -172,14 +251,14 @@ internal sealed partial class Dispatcher
             p.Complete(DispatchResult.Disposed);
         }
 
-        _initializer.Retire();
+        var retired = _initializer.Retire();
 
         // A no-op when StoreInitialized completed it (processed or detached above); otherwise Ready was never reached.
         _sharedInit.TrySetResult(DispatchResult.Disposed);
 
         // Now, not at the end: a wait registered before disposal ends only here, and Disposed registers no new one.
         idle?.TrySetResult();
-        return exited;
+        return (exited, retired);
     }
 
     // Step 2: callbacks run inline, possibly while a drain is in flight; Cancel runs them all even when one throws.

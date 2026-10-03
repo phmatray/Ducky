@@ -12,6 +12,9 @@ internal sealed class Recorder(string name, List<string> journal) : Middleware
 
     public Func<ValueTask>? OnDispose { get; set; }
 
+    // InitializeAsync runs this delegate, when set, with the init token.
+    public Func<CancellationToken, ValueTask>? OnInit { get; set; }
+
     public List<ActionContext> Contexts { get; } = [];
 
     public IStore AttachedStore => Store;
@@ -19,6 +22,8 @@ internal sealed class Recorder(string name, List<string> journal) : Middleware
     public TimeSpan AttachedDisposeTimeout => DisposeTimeout;
 
     public void System(object action, bool isFailure = false) => DispatchSystem(action, isFailure);
+
+    public override ValueTask InitializeAsync(CancellationToken cancellationToken) => OnInit?.Invoke(cancellationToken) ?? default;
 
     public override bool MayDispatch(ActionContext context)
     {

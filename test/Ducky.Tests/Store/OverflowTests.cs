@@ -30,9 +30,10 @@ public sealed class OverflowTests
         // InitBufferCapacity from DI, the production QueueWorkItem (the thread pool): the enqueue past the soft bound aborts
         // the hanging init, every buffered action is replayed in order after StoreInitialized, and StoreInitAborted is
         // logged once with its reason.
+        var time = new FakeTimeProvider();
         var logger = new FakeLogger<DuckyStore>();
         var services = new ServiceCollection()
-            .AddSingleton<TimeProvider>(new FakeTimeProvider())
+            .AddSingleton<TimeProvider>(time)
             .AddSingleton<ILogger<DuckyStore>>(logger)
             .AddSingleton<InitTokens>()
             .AddDucky(d =>
@@ -58,6 +59,13 @@ public sealed class OverflowTests
         Steps(store).ShouldBe(["init", "a", "b", "c"]);
         var record = logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         (record.Id.Id, record.Level, record.Message).ShouldBe((1031, LogLevel.Error, AbortedMessage));
+
+        // The init never ends, so disposal stops waiting for it at DisposeTimeout (§6.11 step 4). The pool drain has exited
+        // first, so DisposeAsync arms that wait before it returns, and the Advance below always reaches it.
+        await store.Dispatcher.DrainExited!.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        var disposal = ((IAsyncDisposable)store).DisposeAsync().AsTask();
+        time.Advance(TimeSpan.FromSeconds(2));
+        await disposal.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
     }
 
     [Fact]

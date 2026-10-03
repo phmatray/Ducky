@@ -1,10 +1,13 @@
 using Ducky.Tests.DispatcherFixtures;
+using Ducky.Tests.InitFixtures;
+using Ducky.Tests.MiddlewareFixtures;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Ducky.Tests.Diagnostics;
 
-// SPEC §6.3 (SafeLogger); INV-03.
+// SPEC §6.3 (SafeLogger), §6.7 and §6.11 (the lifecycle paths outside the drain); INV-03, INV-13, INV-29.
 public sealed class SafeLoggerTests
 {
     [Fact]
@@ -61,5 +64,55 @@ public sealed class SafeLoggerTests
         (await store.DispatchAsync(new Boom())).ShouldBe(DispatchResult.Failed);
         (await store.DispatchAsync(new Bump())).ShouldBe(DispatchResult.Reduced);
         provider.Logged.ShouldBe([1000]);
+    }
+
+    [Fact]
+    public async Task Lifecycle_ThrowingLoggerProvider_StoreReadyAndDisposeComplete()
+    {
+        // Every lifecycle log goes through SafeLogger, so a provider that throws on each call skips nothing: a faulted
+        // middleware init (1032) and a timer abort (1031) still reach Ready, a hung (1016) and a throwing (1015) middleware
+        // DisposeAsync still let DisposeAsync complete, a Dispatch after dispose (1002) does not throw, and an overflow
+        // abort (1031) still reaches Ready.
+        var time = new FakeTimeProvider();
+        var provider = new ThrowingLogger(_ => new InvalidOperationException("provider"));
+        var throwing = new Recorder("throwing", []) { OnDispose = () => throw new InvalidOperationException("dispose") };
+        var faulted = new Recorder("faulted", []) { OnInit = _ => ValueTask.FromException(new InvalidOperationException("init")) };
+        var waiting = new Recorder("waiting", []) { OnInit = t => new(Task.Delay(Timeout.InfiniteTimeSpan, time, t)) };
+        var hung = new Recorder("hung", []) { OnDispose = () => new(new TaskCompletionSource().Task) };
+        var store = new DuckyStore([new TrailSlice()], provider, initTimeout: TimeSpan.FromSeconds(1),
+            disposeTimeout: TimeSpan.FromSeconds(1), timeProvider: time, middleware: () => [throwing, faulted, waiting, hung]);
+        var initialized = store.InitializeAsync(TestContext.Current.CancellationToken);
+
+        time.Advance(TimeSpan.FromSeconds(1));
+
+        await initialized.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        store.State.Get<Trail>().Steps.ShouldBe(["init"]);
+        var disposal = store.DisposeAsync().AsTask();
+        time.Advance(TimeSpan.FromSeconds(1));
+        await disposal.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        disposal.IsCompletedSuccessfully.ShouldBeTrue();
+        Should.NotThrow(() => store.Dispatch(new Mark("late")));
+        provider.Logged.ShouldBe([1032, 1031, 1016, 1015, 1002]);
+
+        // An overflow abort (one abort wins per store, so a second store): its 1031 throws too, and the store still reaches
+        // Ready with every buffered action, then disposes past the init that never ends.
+        var overflowTime = new FakeTimeProvider();
+        var overflowProvider = new ThrowingLogger(_ => new InvalidOperationException("provider"));
+        var overflowed = new DuckyStore([new TrailSlice()], overflowProvider, disposeTimeout: TimeSpan.FromSeconds(1),
+            timeProvider: overflowTime, initBufferCapacity: 1,
+            middleware: () => [new InitProbe((_, _) => new(new TaskCompletionSource().Task))]);
+        List<Action> queued = [];
+        overflowed.Dispatcher.QueueWorkItem = queued.Add;
+        overflowed.Dispatch(new Mark("a"));
+        overflowed.Dispatch(new Mark("b"));
+
+        queued.ShouldHaveSingleItem()();
+
+        overflowed.State.Get<Trail>().Steps.ShouldBe(["init", "a", "b"]);
+        var overflowDisposal = overflowed.DisposeAsync().AsTask();
+        overflowTime.Advance(TimeSpan.FromSeconds(1));
+        await overflowDisposal.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        overflowDisposal.IsCompletedSuccessfully.ShouldBeTrue();
+        overflowProvider.Logged.ShouldBe([1031]);
     }
 }

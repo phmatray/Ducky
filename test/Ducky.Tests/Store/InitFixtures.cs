@@ -1,4 +1,6 @@
 // Slices and actions for InitTests (SPEC §6.3, §6.7). Reducers must be pure; these probes are not, on purpose.
+using Microsoft.Extensions.Time.Testing;
+
 namespace Ducky.Tests.InitFixtures;
 
 internal sealed record Mark(string Name);
@@ -62,6 +64,31 @@ internal sealed class InitProbe(Func<InitProbe, CancellationToken, ValueTask> in
     public void System(object action) => DispatchSystem(action);
 
     public override ValueTask InitializeAsync(CancellationToken cancellationToken) => init(this, cancellationToken);
+}
+
+// A FakeTimeProvider that counts the timer callbacks it runs, so a test can tell that a timer never fired.
+internal sealed class CountingTimeProvider(FakeTimeProvider inner) : TimeProvider
+{
+    private int _fired;
+
+    public int Fired => Volatile.Read(ref _fired);
+
+    public override long TimestampFrequency => inner.TimestampFrequency;
+
+    public override DateTimeOffset GetUtcNow() => inner.GetUtcNow();
+
+    public override long GetTimestamp() => inner.GetTimestamp();
+
+    public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period) =>
+        inner.CreateTimer(
+            s =>
+            {
+                Interlocked.Increment(ref _fired);
+                callback(s);
+            },
+            state,
+            dueTime,
+            period);
 }
 
 // Resolved from DI by Init_HangingMiddleware_TimesOutAndReleasesBuffer, which reads the init token through InitTokens.
