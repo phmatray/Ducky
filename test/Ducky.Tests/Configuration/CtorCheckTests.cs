@@ -39,6 +39,44 @@ public sealed class CtorCheckTests
             ignoreOrder: true);
     }
 
+    // Non-normative: a middleware's constructor dependencies are checked like an effect's (DUCKY309).
+    [Fact]
+    public void Build_MiddlewareCtorDependencyMissing_Reported()
+    {
+        var services = new ServiceCollection().AddSingleton<Marker>();
+        services.AddDucky(d => d
+            .AddSlice<CartSlice>()
+            .Use<MissingServiceMiddleware>()
+            .Use<ResolvableMiddleware>()
+            .Use<MissingServiceMiddleware>());
+
+        using var provider = services.BuildServiceProvider();
+        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
+
+        exception.Errors.ShouldBe([DuckyErrors.UnresolvableConstructor(typeof(MissingServiceMiddleware), "Use<T>", typeof(Unregistered), null)]);
+    }
+
+    // Non-normative: a middleware constructor that uses the store re-enters materialization, so that store call throws
+    // InvalidOperationException; the constructor throwing it becomes DUCKY353, as for an effect (§6.6, §7 rule 4).
+    [Fact]
+    public async Task Materialization_MiddlewareCtorUsesStore_Throws()
+    {
+        List<Exception> thrown = [];
+        var services = new ServiceCollection().AddSingleton(thrown);
+        services.AddDucky(d => d.AddSlice<CartSlice>().Use<StoreUsingMiddleware>());
+        await using var provider = services.BuildServiceProvider();
+        var store = provider.GetRequiredService<IStore>();
+
+        var exception = Should.Throw<DuckyConfigurationException>(() => store.Dispatch(new Ping()));
+
+        var reentrant = thrown.ShouldHaveSingleItem().ShouldBeOfType<InvalidOperationException>();
+        exception.InnerException.ShouldBeSameAs(reentrant);
+        exception.Errors.ShouldBe([DuckyErrors.ConstructorThrew(typeof(StoreUsingMiddleware), reentrant)]);
+        exception.Errors[0].Fix.ShouldBe(
+            "Fix the constructor of Ducky.Tests.CtorCheckFixtures.StoreUsingMiddleware so that it does not throw; the inner exception has the details.");
+        Should.Throw<DuckyConfigurationException>(() => _ = store.State).ShouldBeSameAs(exception);
+    }
+
     [Fact]
     public async Task Build_EffectCtorKeyedDependency_NotReported()
     {
@@ -63,6 +101,11 @@ public sealed class CtorCheckTests
         var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBe([DuckyErrors.UnresolvableConstructor(typeof(GithubEffect), ByAddEffect, typeof(Marker), "github")]);
+
+        // The keyed wording, spelled out: comparing with the factory alone can't catch a wrong branch in it.
+        var error = exception.Errors.ShouldHaveSingleItem();
+        error.Message.ShouldEndWith("can't be constructed: no constructor can resolve its Ducky.Tests.BuilderFixtures.Marker parameter with key 'github'.");
+        error.Fix.ShouldBe("Register Ducky.Tests.BuilderFixtures.Marker as a keyed service with key 'github', or give that parameter a default value.");
     }
 
     // Non-normative: a [ServiceKey] parameter never resolves, a defaulted one is never needed, and the candidates are
