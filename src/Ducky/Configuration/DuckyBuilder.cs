@@ -99,7 +99,8 @@ public sealed class DuckyBuilder
     {
         if (_middlewareTypes.Add(typeof(TMiddleware)))
         {
-            _middleware.Add(static services => ActivatorUtilities.CreateInstance<TMiddleware>(services));
+            _middleware.Add(static services => Construct<TMiddleware>(services));
+            _ctorChecks.Add(new(typeof(TMiddleware), "Use<T>"));
         }
 
         return this;
@@ -168,18 +169,19 @@ public sealed class DuckyBuilder
     internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, InitBufferCapacity, InitTimeout, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
         [.. _effects.Values.Select(effect => effect.CtorCheck).OfType<CtorCheck.Requirement>().Concat(_ctorChecks).Distinct()]);
 
-    // Runs at the store's first use. A throwing constructor becomes DUCKY353 wrapping what it threw (§5.1), which the
-    // store caches and rethrows at every later use.
-    private static TEffect Construct<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TEffect>(IServiceProvider services)
-        where TEffect : Effect
+    // Runs at the store's first use, for an effect or a middleware. A throwing constructor becomes DUCKY353 wrapping what it
+    // threw (§5.1), which the store caches and rethrows at every later use. That includes the InvalidOperationException a
+    // constructor that uses the store gets from re-entering materialization (§6.6).
+    private static T Construct<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(IServiceProvider services)
+        where T : class
     {
         try
         {
-            return ActivatorUtilities.CreateInstance<TEffect>(services);
+            return ActivatorUtilities.CreateInstance<T>(services);
         }
         catch (Exception exception)
         {
-            throw new DuckyConfigurationException([DuckyErrors.ConstructorThrew(typeof(TEffect), exception)], exception);
+            throw new DuckyConfigurationException([DuckyErrors.ConstructorThrew(typeof(T), exception)], exception);
         }
     }
 }

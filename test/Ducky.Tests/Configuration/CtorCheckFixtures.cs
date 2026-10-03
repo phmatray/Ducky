@@ -29,6 +29,28 @@ internal sealed class GithubEffect([FromKeyedServices("github")] Marker marker) 
 
 internal sealed class KeyedPlusMissingEffect([FromKeyedServices("github")] Marker marker, Unregistered missing) : PingEffect;
 
+internal sealed class MissingServiceMiddleware(CartSlice cart, Unregistered missing) : Middleware;
+
+internal sealed class ResolvableMiddleware(CartSlice cart, Marker marker) : Middleware;
+
+// Uses the store from its constructor (what DUCKY008 warns about): the store call re-enters materialization and throws.
+// The thrown exception is kept, then rethrown, so the test can compare it with the one DUCKY353 wraps.
+internal sealed class StoreUsingMiddleware : Middleware
+{
+    public StoreUsingMiddleware(IStore store, List<Exception> thrown)
+    {
+        try
+        {
+            store.Dispatch(new Ping());
+        }
+        catch (InvalidOperationException exception)
+        {
+            thrown.Add(exception);
+            throw;
+        }
+    }
+}
+
 internal sealed class QueuedType(Unregistered missing);
 
 internal sealed class ServiceKeyType([ServiceKey] string key);
