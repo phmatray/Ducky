@@ -1,6 +1,6 @@
 namespace Ducky.E2E;
 
-// The planted check of the JS block-coverage gate (M0-09), on real V8 output: the stub ducky.js plus one block that
+// The planted check of the JS block-coverage gate (M0-09), on real V8 output: ducky.js plus one block that
 // never runs, served as planted.js (so the E2E target's gate never sees it), must fail on exactly that block.
 public sealed class JsBlockCoverageTests
 {
@@ -33,7 +33,7 @@ public sealed class JsBlockCoverageTests
             """);
 
         result.ShouldBe("stub");
-        // Only the appended part is asserted, so the check survives the real module replacing the stub (M6-01).
+        // Only the appended part is asserted, so the check holds whatever ducky.js itself holds.
         var zero = JsBlockCoverage.ZeroBlocks(await harness.TakeCoverageAsync(url => url.EndsWith("/planted.js", StringComparison.Ordinal)))
             .Where(b => b.Start >= duckyJs.Length)
             .ToList();

@@ -12,7 +12,8 @@ using YamlDotNet.RepresentationModel;
 using static Fallout.Common.Tools.DotNet.DotNetTasks;
 
 // SPEC §3 (R-PKG-1, R-PKG-5, R-PKG-6), §17.9 and §19: Pack and PackageSmoke. PackageSmoke is staged (§17.9): this file
-// holds the step-1 checks; later consumers and assertions arrive with their features.
+// holds the step-1 checks and step 5 (the published consumers serve ducky.js); later consumers and assertions arrive with
+// their features.
 // SPEC §19, §20.1 and §21 (M16-03): the release targets Changelog, Publish, GitHubRelease, ReleaseGates, MutationForSha
 // and Release, and the checks of the hand-written release.yml.
 internal sealed partial class Build
@@ -106,6 +107,21 @@ internal sealed partial class Build
                 violations.Add($"{SmokeSolution.Name} failed to build (exit code {exitCode})");
             }
 
+            // Step 5, before the variants re-restore the Server consumer on the fake Ducky.Blazor. A failed step-1 build is
+            // already a violation, so publishing the same consumers would only throw away the ones collected so far.
+            foreach (var consumer in exitCode == 0 ? PublishedConsumers : [])
+            {
+                var output = Artifacts / "smoke-publish" / consumer;
+                output.CreateOrCleanDirectory();
+                var publishExit = 0;
+                DotNet($"publish {SmokeDirectory / consumer} -c Release --no-restore -p:DuckyVersion={version} -o {output}",
+                    exitHandler: p => publishExit = p.ExitCode);
+                violations.AddRange(publishExit != 0
+                    ? [$"the {consumer} consumer failed to publish (exit code {publishExit})"]
+                    : ServedDuckyJsViolations(consumer, FileNames(output)));
+            }
+            violations.AddRange(ServedDuckyJsSelfCheck());
+
             // Step 4 and the step-1 variants: each must fail with its diagnostic.
             (string Case, AbsolutePath Project, string Properties, string Code)[] variants =
             [
@@ -131,8 +147,39 @@ internal sealed partial class Build
 
             violations.ForEach(v => Log.Error(v));
             Assert.True(violations.Count == 0, $"PackageSmoke: {violations.Count} violation(s)");
-            Log.Information("PackageSmoke: Ducky {Version} packages passed the step-1 checks", version);
+            Log.Information("PackageSmoke: Ducky {Version} packages passed the step-1 and step-5 checks", version);
         });
+
+    // §17.9 step 5: a consuming app can serve the module only if its publish output holds it under
+    // wwwroot/_content/Ducky.Blazor/ (a fingerprinted name is allowed; a compressed copy alone is not the module).
+    private static readonly string[] PublishedConsumers = ["Wasm", "Server"];
+    private static readonly Regex ServedDuckyJs = new(@"^wwwroot/_content/Ducky\.Blazor/ducky(\.[^/]+)?\.js$");
+
+    private static IEnumerable<string> ServedDuckyJsViolations(string consumer, List<string> publishedFiles)
+    {
+        if (!publishedFiles.Any(ServedDuckyJs.IsMatch))
+        {
+            yield return $"the published {consumer} consumer has no wwwroot/_content/Ducky.Blazor/ducky.js: a consuming app can't serve the module";
+        }
+    }
+
+    private static IEnumerable<string> ServedDuckyJsSelfCheck()
+    {
+        foreach (var served in new[] { "wwwroot/_content/Ducky.Blazor/ducky.js", "wwwroot/_content/Ducky.Blazor/ducky.k3x9q2.js" })
+        {
+            foreach (var violation in ServedDuckyJsViolations("Wasm", ["Wasm.dll", served]))
+            {
+                yield return $"ServedDuckyJsSelfCheck: {served} must pass, got: {violation}";
+            }
+        }
+        foreach (var missing in new[] { "wwwroot/_content/Ducky.Blazor/ducky.js.gz", "wwwroot/_content/Other/ducky.js", "wwwroot/ducky.js" })
+        {
+            if (!ServedDuckyJsViolations("Wasm", ["Wasm.dll", missing]).Any())
+            {
+                yield return $"ServedDuckyJsSelfCheck: an output holding only {missing} must fail";
+            }
+        }
+    }
 
     // §19: the build reads the version only through MinVer's property; it is set by MinVer's target, not at evaluation.
     private string MinVerVersion()

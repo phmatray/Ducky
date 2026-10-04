@@ -9,7 +9,7 @@ using static Fallout.Common.Tools.DotNet.DotNetTasks;
 // SPEC §17.1 (JS), §19 (E2E, E2EAllBrowsers): Playwright specs of test/Ducky.E2E, then, in Chromium, the 100% block
 // coverage gate of ducky.js over the CDP precise coverage the harness wrote for every page (JsBlockCoverage, linked from
 // test/Ducky.E2E). Staged (§24): samples are published only once they exist in Ducky.slnx (stage 18); until then the
-// harness specs measure the one-export stub ducky.js, replaced by the real module at stage 12 (M6-01).
+// harness specs alone measure ducky.js.
 internal sealed partial class Build
 {
     private AbsolutePath E2EProject => RootDirectory / "test" / "Ducky.E2E" / "Ducky.E2E.csproj";
