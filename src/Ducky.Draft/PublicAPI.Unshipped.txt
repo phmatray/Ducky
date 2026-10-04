@@ -1,3 +1,29 @@
 #nullable enable
 Ducky.Draft.DraftableAttribute
 Ducky.Draft.DraftableAttribute.DraftableAttribute() -> void
+Ducky.Draft.IDraft<T>
+Ducky.Draft.IDraft<T>.Build() -> T!
+Ducky.Draft.IDraft<T>.IsDirty.get -> bool
+Ducky.Draft.IRevocable
+Ducky.Draft.IRevocable.Revoke() -> void
+Ducky.Draft.ListDraft<T>
+Ducky.Draft.ListDraft<T>.Add(T item) -> void
+Ducky.Draft.ListDraft<T>.AddRange(System.Collections.Generic.IEnumerable<T>! items) -> void
+Ducky.Draft.ListDraft<T>.BuildArray() -> System.Collections.Immutable.ImmutableArray<T>
+Ducky.Draft.ListDraft<T>.BuildList() -> System.Collections.Immutable.ImmutableList<T>!
+Ducky.Draft.ListDraft<T>.Clear() -> void
+Ducky.Draft.ListDraft<T>.Contains(T item) -> bool
+Ducky.Draft.ListDraft<T>.CopyTo(T[]! array, int arrayIndex) -> void
+Ducky.Draft.ListDraft<T>.Count.get -> int
+Ducky.Draft.ListDraft<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
+Ducky.Draft.ListDraft<T>.IndexOf(T item) -> int
+Ducky.Draft.ListDraft<T>.Insert(int index, T item) -> void
+Ducky.Draft.ListDraft<T>.IsDirty.get -> bool
+Ducky.Draft.ListDraft<T>.Remove(T item) -> bool
+Ducky.Draft.ListDraft<T>.RemoveAll(System.Predicate<T>! match) -> int
+Ducky.Draft.ListDraft<T>.RemoveAt(int index) -> void
+Ducky.Draft.ListDraft<T>.Sort(System.Comparison<T>! comparison) -> void
+Ducky.Draft.ListDraft<T>.this[int index].get -> T
+Ducky.Draft.ListDraft<T>.this[int index].set -> void
+static Ducky.Draft.ListDraft<T>.implicit operator Ducky.Draft.ListDraft<T>!(System.Collections.Immutable.ImmutableArray<T> array) -> Ducky.Draft.ListDraft<T>!
+static Ducky.Draft.ListDraft<T>.implicit operator Ducky.Draft.ListDraft<T>!(System.Collections.Immutable.ImmutableList<T>! list) -> Ducky.Draft.ListDraft<T>!
