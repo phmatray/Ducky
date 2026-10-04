@@ -183,11 +183,20 @@ internal sealed partial class Build
         output.CreateOrCleanDirectory();
         // The dotnet-stryker local tool (.config/dotnet-tools.json, the one pin), like reportgenerator in CoverageGate:
         // StrykerTasks would need a second pin as a PackageDownload of this project.
+        // The mtp runner hands each test host its active mutant through <temp>/stryker-mutant-<runner>.txt: under the
+        // shared temp directory, concurrent runs (parallel worktrees) overwrite each other's mutant ids and score the
+        // wrong mutants, so every run gets its own. A short one under /tmp, not under artifacts/: the test hosts' IPC
+        // sockets live there too, and a macOS socket path is capped at 104 bytes (a longer one fails test discovery).
+        var temp = (AbsolutePath)Path.Combine(OperatingSystem.IsWindows() ? Path.GetTempPath() : "/tmp", $"dks-{Guid.NewGuid():N}"[..12]);
+        temp.CreateDirectory();
         var environment = new Dictionary<string, string>(EnvironmentInfo.Variables)
         {
             ["DUCKY_REPEAT"] = "1",
             ["DUCKY_PROPERTY_SEEDS"] = "1",
             ["CsCheck_Threads"] = "1",
+            ["TMPDIR"] = temp,
+            ["TMP"] = temp,
+            ["TEMP"] = temp,
         };
         var sinceArgument = since is null ? "" : $"--since:{since}";
         var exitCode = 0;
@@ -195,6 +204,7 @@ internal sealed partial class Build
             workingDirectory: workspace / "src" / project,
             environmentVariables: environment,
             exitHandler: p => exitCode = p.ExitCode);
+        temp.DeleteDirectory();
 
         // Stryker writes the report even with zero mutants ("a mutant-free world"), so a missing one is a broken run.
         var report = output / "reports" / "mutation-report.json";

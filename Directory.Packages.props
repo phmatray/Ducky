@@ -17,6 +17,9 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
 
+    <!-- Ducky.Blazor's runtime dependencies (SPEC §3), added with the features that use them. -->
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.12" />
+
     <!-- R3 1.3.x: plain version, pinned by the lock file, packed as R3 >= 1.3.x (SPEC §3). -->
     <PackageVersion Include="R3" Version="1.3.1" />
 

@@ -15,3 +15,9 @@ override Ducky.Blazor.PersistenceFailed.GetHashCode() -> int
 override Ducky.Blazor.PersistenceFailed.ToString() -> string!
 static Ducky.Blazor.PersistenceFailed.operator !=(Ducky.Blazor.PersistenceFailed? left, Ducky.Blazor.PersistenceFailed? right) -> bool
 static Ducky.Blazor.PersistenceFailed.operator ==(Ducky.Blazor.PersistenceFailed? left, Ducky.Blazor.PersistenceFailed? right) -> bool
+Ducky.Blazor.BlazorOptions
+Ducky.Blazor.BlazorOptions.BlazorOptions() -> void
+Ducky.Blazor.BlazorOptions.KeyPrefix.get -> string!
+Ducky.Blazor.BlazorOptions.KeyPrefix.set -> void
+Ducky.Blazor.DuckyBlazorBuilderExtensions
+static Ducky.Blazor.DuckyBlazorBuilderExtensions.AddBlazor(this Ducky.DuckyBuilder! builder, System.Action<Ducky.Blazor.BlazorOptions!>? configure = null) -> Ducky.DuckyBuilder!
