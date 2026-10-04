@@ -23,6 +23,7 @@ internal sealed partial class Dispatcher(
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();
+    private readonly ActionTypes _actionTypes = new();
     private readonly List<(int Ordinal, object State)> _scratch = [];
     private StateSnapshot _snapshot = initial;
     private bool _draining;
