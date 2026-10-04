@@ -6,6 +6,10 @@ namespace Ducky;
 // dispatch order; the run's finally compare-and-removes its slot, then completes its Done (EffectRunner.Release).
 internal sealed partial class Dispatcher
 {
-    // The Exhaust drop (Debug 1051); M4-09 counts ducky.effect.dropped here.
-    private void DropEffect(Effect effect, object action) => Log.EffectDropped(logger, effect.GetType(), action.GetType());
+    // The Exhaust drop: Debug 1051 and ducky.effect.dropped.
+    private void DropEffect(Effect effect, object action)
+    {
+        Log.EffectDropped(logger, effect.GetType(), action.GetType());
+        telemetry.Add(telemetry.EffectDropped);
+    }
 }

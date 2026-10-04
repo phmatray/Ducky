@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Ducky;
 
 // FailureRouter (SPEC §6.4 steps 1 and 4-6, INV-12): every failure becomes exactly one core failure action, or a log
@@ -6,7 +8,7 @@ internal sealed partial class Dispatcher
 {
     // A core failure action (ReducerFailed, EffectFailed) is a System action at depth 0 on the failed action's chain (§6.5),
     // marked IsFailure so that anything failing under it is logged only.
-    private void RouteFailure(object failure, Exception exception, string actionType, long correlationId, bool inFailure)
+    private void RouteFailure(object failure, Exception exception, string actionType, long correlationId, bool inFailure, Activity? producer)
     {
         if (inFailure)
         {
@@ -14,7 +16,7 @@ internal sealed partial class Dispatcher
             return;
         }
 
-        Enqueue(new Pending(failure, Origin.System, 0, correlationId, false, true, null));
+        Enqueue(new Pending(failure, Origin.System, 0, correlationId, false, true, null, producer));
     }
 
     // Steps 4-6 run under the failed action's own scope, installed by step 2.
@@ -22,7 +24,7 @@ internal sealed partial class Dispatcher
     {
         var scope = _causal.Value!;
         var type = TypeName(action);
-        RouteFailure(new ReducerFailed(type, sliceKey, ex), ex, type, scope.CorrelationId, scope.InFailure);
+        RouteFailure(new ReducerFailed(type, sliceKey, ex), ex, type, scope.CorrelationId, scope.InFailure, Activity.Current);
     }
 
     // The per-store cached action type name (§9).

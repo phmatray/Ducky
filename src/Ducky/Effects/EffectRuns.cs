@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Ducky;
 
 // SPEC §6.4 steps 3 and 11 and §6.6 (EFF-01, INV-11): starting runs through each effect's EffectRunner, and the run check
@@ -62,6 +64,7 @@ internal sealed partial class Dispatcher
     {
         p.Complete(DispatchResult.Dropped);
         Log.RunDropped(logger, p.Action.GetType());
+        telemetry.Add(telemetry.DispatchDropped, new KeyValuePair<string, object?>("ducky.drop.reason", "run"));
     }
 
     // Step 11: each effect registered for the action's exact type starts inline, on the drainer, up to its handler's first
@@ -142,7 +145,8 @@ internal sealed partial class Dispatcher
 #pragma warning restore CA1031
         {
             Log.EffectThrew(logger, ex, effect.GetType(), trigger.Action.GetType());
-            RouteFailure(new EffectFailed(effect.GetType().ToString(), trigger.ActionType, ex), ex, trigger.ActionType, trigger.CorrelationId, inFailure);
+            telemetry.Add(telemetry.EffectFailures);
+            RouteFailure(new EffectFailed(effect.GetType().ToString(), trigger.ActionType, ex), ex, trigger.ActionType, trigger.CorrelationId, inFailure, Activity.Current);
         }
         finally
         {
