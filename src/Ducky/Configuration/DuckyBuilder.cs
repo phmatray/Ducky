@@ -1,5 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky;
@@ -19,6 +22,8 @@ public sealed class DuckyBuilder
     private readonly List<Func<IServiceProvider, Middleware>> _middleware = [];
     private readonly OrderedDictionary<Type, DuckyConfig.EffectRegistration> _effects = [];
     private readonly List<CtorCheck.Requirement> _ctorChecks = [];
+    private readonly List<(Type Type, string RequiredBy)> _jsonTypes = [];
+    private JsonSerializerOptions? _json;
     private ServiceLifetime? _lifetime;
 
     internal DuckyBuilder(IServiceCollection services) => Services = services;
@@ -164,12 +169,58 @@ public sealed class DuckyBuilder
         return this;
     }
 
+    /// <summary>
+    /// Sets the JSON type info the store serializes with (persistence, prerender seeds, DevTools). A
+    /// <see cref="JsonSerializerContext"/> brings its own options (its <c>[JsonSourceGenerationOptions]</c>); any other
+    /// resolver gets default options. The last <c>UseJson</c> call wins.
+    /// </summary>
+    /// <param name="resolver">Usually your <c>JsonSerializerContext.Default</c>.</param>
+    /// <returns>This builder.</returns>
+    public DuckyBuilder UseJson(IJsonTypeInfoResolver resolver)
+    {
+        ArgumentNullException.ThrowIfNull(resolver);
+        _json = resolver is JsonSerializerContext context
+            ? new JsonSerializerOptions(context.Options) { TypeInfoResolver = resolver }
+            : new JsonSerializerOptions { TypeInfoResolver = resolver };
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the JSON options the store serializes with. Only the reference is kept here: a null
+    /// <see cref="JsonSerializerOptions.TypeInfoResolver"/> is reported as DUCKY306 at the first store resolution, and the
+    /// store freezes a copy, never <paramref name="options"/> itself. The last <c>UseJson</c> call wins.
+    /// </summary>
+    /// <param name="options">Options whose <see cref="JsonSerializerOptions.TypeInfoResolver"/> is set.</param>
+    /// <returns>This builder.</returns>
+    public DuckyBuilder UseJson(JsonSerializerOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        _json = options;
+        return this;
+    }
+
+    /// <summary>
+    /// Requires JSON type info for <paramref name="type"/> from the <c>UseJson</c> resolver, checked with the other rules at
+    /// the first store resolution (DUCKY306).
+    /// </summary>
+    /// <param name="type">The type that must be serializable.</param>
+    /// <param name="requiredBy">What needs the type, named in the error (for example <c>Persist&lt;CartSlice&gt;</c>).</param>
+    /// <returns>This builder.</returns>
+    public DuckyBuilder RequireJsonTypeInfo(Type type, string requiredBy)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(requiredBy);
+        _jsonTypes.Add((type, requiredBy));
+        return this;
+    }
+
     // Every type AddSlice was given, a throwing one included: each is injectable, and resolving it reports the errors.
     internal IEnumerable<Type> SliceTypes => _sliceTypes;
 
     // Called once, when configure returned: the snapshot AddDucky registers.
     internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, ThrowOnUnhandledAction, InitBufferCapacity, InitTimeout, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
-        [.. _effects.Values.Select(effect => effect.CtorCheck).OfType<CtorCheck.Requirement>().Concat(_ctorChecks).Distinct()]);
+        [.. _effects.Values.Select(effect => effect.CtorCheck).OfType<CtorCheck.Requirement>().Concat(_ctorChecks).Distinct()],
+        _json, [.. _jsonTypes.Distinct()]);
 
     // Runs at the store's first use, for an effect or a middleware. A throwing constructor becomes DUCKY353 wrapping what it
     // threw (§5.1), which the store caches and rethrows at every later use. That includes the InvalidOperationException a

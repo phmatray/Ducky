@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -13,6 +14,7 @@ internal sealed class DuckyStore : IStore
     // scope: the store scope a Singleton store owns (§6.10), disposed last by dispose phase 5b.
     // initBufferCapacity: the soft bound of the init buffer, DuckyBuilder.InitBufferCapacity (§6.7).
     // throwOnUnhandledAction: DuckyBuilder.ThrowOnUnhandledAction, read by the unhandled check (§6.4 step 12).
+    // json: the options UseJson built (§10); none gives a store without type info.
     internal DuckyStore(
         IEnumerable<Slice> slices,
         ILogger logger,
@@ -24,7 +26,8 @@ internal sealed class DuckyStore : IStore
         Func<(Effect Effect, bool Owned)[]>? effects = null,
         AsyncServiceScope? scope = null,
         int initBufferCapacity = Dispatcher.DefaultInitBufferCapacity,
-        bool throwOnUnhandledAction = false)
+        bool throwOnUnhandledAction = false,
+        JsonSerializerOptions? json = null)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -36,10 +39,12 @@ internal sealed class DuckyStore : IStore
         Slices = Array.AsReadOnly(owned);
         Scope = scope;
         InitialState = new StateSnapshot(registry);
+        var safeLogger = new SafeLogger(logger);
+        Json = new DuckyJson(json ?? DuckyJson.NoTypeInfo(), safeLogger);
         Dispatcher = new Dispatcher(
             registry,
             InitialState,
-            new SafeLogger(logger),
+            safeLogger,
             maxDispatchDepth,
             throwOnUnhandledAction,
             initBufferCapacity,
@@ -48,7 +53,8 @@ internal sealed class DuckyStore : IStore
             timeProvider ?? TimeProvider.System,
             scope,
             new(() => new(effects?.Invoke() ?? [], Attach(middleware?.Invoke() ?? [])), LazyThreadSafetyMode.ExecutionAndPublication),
-            new());
+            new(),
+            Json);
     }
 
     // The IStore factory AddDucky registers (§6.10): validates once per container (INV-31), then builds this store.
@@ -75,13 +81,16 @@ internal sealed class DuckyStore : IStore
             effects: () => config.CreateEffects(storeServices),
             scope: scope,
             initBufferCapacity: config.InitBufferCapacity,
-            throwOnUnhandledAction: config.ThrowOnUnhandledAction);
+            throwOnUnhandledAction: config.ThrowOnUnhandledAction,
+            json: config.Json);
     }
 
     // Registry data: reading it starts nothing.
     public IReadOnlyList<Slice> Slices { get; }
 
     public StateSnapshot InitialState { get; }
+
+    public DuckyJson Json { get; }
 
     // Materializes and starts init (one volatile read each once done). A first read sees StoreInitialized reduced only when
     // every init completes synchronously and no other drain is active; InitializeAsync gives the guarantee.
@@ -147,7 +156,8 @@ internal sealed class DuckyStore : IStore
         return Selection<T>.Create(() => selector(Dispatcher.State), onDispose: () => Dispatcher.Unsubscribe(subscription));
     }
 
-    // Never starts init, and never enters the init buffer (§5.2).
+    // Never starts init, and never enters the init buffer (§5.2). A JsonElement is cloned here, so the caller may dispose
+    // its JsonDocument as soon as this returns.
     public void Restore(IReadOnlyDictionary<string, object> values, Origin origin)
     {
         ArgumentNullException.ThrowIfNull(values);
@@ -157,7 +167,7 @@ internal sealed class DuckyStore : IStore
         }
 
         Dispatcher.Materialize();
-        Dispatcher.Enqueue(Dispatcher.NewPending(new HydrateSlices([.. values]), origin, null));
+        Dispatcher.Enqueue(Dispatcher.NewPending(new HydrateSlices([.. values.Select(Detach)]), origin, null));
     }
 
     public Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -177,6 +187,10 @@ internal sealed class DuckyStore : IStore
     public ValueTask DisposeAsync() => new(Dispatcher.DisposeAsync());
 
     public void Dispose() => Dispatcher.Dispose();
+
+    // A JsonElement is cloned so the caller may dispose its document (§5.2).
+    private static KeyValuePair<string, object> Detach(KeyValuePair<string, object> entry) =>
+        entry.Value is JsonElement element ? new(entry.Key, element.Clone()) : entry;
 
     // Store and DisposeTimeout are attached before any hook or init can run (§5.6). The factory runs on the first use,
     // after the constructor assigned Dispatcher, so the timeout is the clamped one step 3 waits with.

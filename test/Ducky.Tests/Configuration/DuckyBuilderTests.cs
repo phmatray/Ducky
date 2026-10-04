@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Ducky.Tests.BuilderFixtures;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,8 +15,10 @@ public sealed class DuckyBuilderTests
     public void Build_WithFiveMisconfigurations_ReportsAllFive()
     {
         var services = new ServiceCollection();
+        var json = new JsonSerializerOptions();
 
-        // None of the five throws out of AddDucky, not even the two throwing slice constructors.
+        // None of them throws out of AddDucky, not even the two throwing slice constructors or the options without a
+        // resolver (§10).
         services.AddDucky(d =>
         {
             d.Lifetime = ServiceLifetime.Transient;
@@ -23,7 +26,8 @@ public sealed class DuckyBuilderTests
                 .AddSlice<BadKeySlice>()
                 .AddSlice<CartCopySlice>()
                 .AddSlice<NonConcreteHandlerSlice>()
-                .AddSlice<DuplicateHandlerSlice>();
+                .AddSlice<DuplicateHandlerSlice>()
+                .UseJson(json);
         });
 
         using var provider = services.BuildServiceProvider();
@@ -35,8 +39,12 @@ public sealed class DuckyBuilderTests
                 DuckyErrors.DuplicateKey("cart", typeof(CartSlice), typeof(CartCopySlice)),
                 DuckyErrors.NonConcreteHandlerType(typeof(NonConcreteHandlerSlice), typeof(AnyAction)),
                 DuckyErrors.DuplicateHandler(typeof(DuplicateHandlerSlice), typeof(AddItem)),
+                DuckyErrors.NullTypeInfoResolver(),
             ],
             ignoreOrder: true);
+
+        // The caller's options, which the app may share, are never frozen.
+        json.IsReadOnly.ShouldBeFalse();
         foreach (var error in exception.Errors)
         {
             exception.Message.ShouldContain(DuckyErrors.Format(error));

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -21,8 +22,20 @@ internal sealed class DuckyConfig(
     Func<IServiceProvider, IEnumerable<DuckyError>>[] rules,
     Func<IServiceProvider, Middleware>[] middleware,
     DuckyConfig.EffectRegistration[] effects,
-    CtorCheck.Requirement[] ctorChecks)
+    CtorCheck.Requirement[] ctorChecks,
+    JsonSerializerOptions? json,
+    (Type Type, string RequiredBy)[] jsonTypes)
 {
+    // The UseJson options as a frozen copy, made on first use: by validation, which first checks the resolver is set, or by
+    // the store, which is only built once validation passed. The caller's instance is never frozen (§10). Frozen before
+    // validation looks types up: mutable options skip configuring metadata, so a type STJ rejects would pass DUCKY306.
+    private readonly Lazy<JsonSerializerOptions> _json = new(() =>
+    {
+        var options = json is null ? DuckyJson.NoTypeInfo() : new JsonSerializerOptions(json);
+        options.MakeReadOnly();
+        return options;
+    });
+
     public ServiceLifetime Lifetime => lifetime;
 
     public bool IsBrowser => isBrowser;
@@ -36,6 +49,8 @@ internal sealed class DuckyConfig(
     public TimeSpan InitTimeout => initTimeout;
 
     public TimeSpan DisposeTimeout => disposeTimeout;
+
+    public JsonSerializerOptions Json => _json.Value;
 
     public IEnumerable<Slice> CreateSlices() => slices.Select(slice => slice.Create());
 
@@ -89,6 +104,29 @@ internal sealed class DuckyConfig(
         }
 
         errors.AddRange(CtorCheck.Run(ctorChecks, services, logger));
+        if (json is { TypeInfoResolver: null })
+        {
+            errors.Add(DuckyErrors.NullTypeInfoResolver());
+        }
+        else
+        {
+            foreach (var (type, requiredBy) in jsonTypes)
+            {
+                // A lookup STJ throws from (a misconfigured or invalid type) hides none of the other errors.
+                if (!DuckyJson.TryGetTypeInfo(Json, type, out _, out var failure))
+                {
+                    if (failure is null)
+                    {
+                        errors.Add(DuckyErrors.MissingJsonTypeInfo(type, requiredBy));
+                    }
+                    else
+                    {
+                        failures.Add(($"JSON type info of {type.FullName} (required by {requiredBy})", failure));
+                    }
+                }
+            }
+        }
+
         for (var i = 0; i < rules.Length; i++)
         {
             // A throwing rule keeps what it returned before the throw and hides none of the other errors.

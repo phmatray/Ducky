@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+using System.Text.Json;
 
 namespace Ducky;
 
@@ -32,8 +33,9 @@ public abstract class Slice
 
     internal abstract bool TryReduce(object state, object action, out object next);
 
-    // A restored value (SPEC §6.4 step 6): taken when it is the declared state type (JsonElement values come with M4-06).
-    internal abstract bool TryRestore(object value, out object state);
+    // A restored value (SPEC §6.4 step 6): taken when it is the declared state type, or a JsonElement deserialized with the
+    // declared state type's JsonTypeInfo (§10); a failure is logged with the slice key.
+    internal abstract bool TryRestore(object value, DuckyJson json, out object state);
 }
 
 /// <summary>
@@ -110,8 +112,19 @@ public abstract class Slice<TState> : Slice
         return false;
     }
 
-    internal override bool TryRestore(object value, out object state)
+    internal override bool TryRestore(object value, DuckyJson json, out object state)
     {
+        if (value is JsonElement element)
+        {
+            // JSON null deserializes, but is no state: never ignored silently either (§10).
+            if (json.TryDeserialize(element, typeof(TState), out var read, Key) && read is null)
+            {
+                json.LogUndeserializable(null, Key, typeof(TState));
+            }
+
+            value = read!;
+        }
+
         state = value;
         return value is TState;
     }
