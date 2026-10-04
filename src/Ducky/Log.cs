@@ -5,7 +5,7 @@ namespace Ducky;
 // Core log events (SPEC §9): EventIds 1000-1999, types and keys only, never values. Reserved by later stories:
 // 1017. M1-05 uses 1000, M1-07 1001, M1-09 1004, M1-11 1002, 1010, 1011 and 1013, M4-01 1015 (widened to
 // effects by M2-01), 1020 and 1021, M2-02 1003, M2-08 1030, M2-04 1014 and 1050, M2-05 1051, M4-03 1031 and 1032, M4-03c 1016,
-// M2-03b 1040, M3-01b 1060, M4-08 1080.
+// M2-03b 1040, M3-01b 1060, M4-06 1070 and 1071, M4-08 1080.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 1000, Level = LogLevel.Error, Message = "Reducer of slice '{SliceKey}' threw while reducing {ActionType}")]
@@ -70,6 +70,12 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 1060, Level = LogLevel.Error, Message = "A subscriber threw while notified of {ActionType}; it stays subscribed")]
     internal static partial void SubscriberThrew(SafeLogger logger, Exception exception, Type actionType);
+
+    [LoggerMessage(EventId = 1070, Level = LogLevel.Debug, Message = "{Type} could not be serialized (no JsonTypeInfo, or the serializer threw); logged once per type per store")]
+    internal static partial void Unserializable(SafeLogger logger, Exception? exception, Type type);
+
+    [LoggerMessage(EventId = 1071, Level = LogLevel.Warning, Message = "The value of '{Key}' could not be deserialized as {Type}")]
+    internal static partial void Undeserializable(SafeLogger logger, Exception? exception, string? key, Type type);
 
     [LoggerMessage(EventId = 1080, Level = LogLevel.Debug, Message = "Action {Type} matched no reducer or async effect (reactive effects and middleware not inspected)")]
     internal static partial void UnhandledAction(SafeLogger logger, Type type);

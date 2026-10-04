@@ -18,7 +18,8 @@ internal sealed partial class Dispatcher(
     TimeProvider timeProvider,
     IAsyncDisposable? storeScope,
     Lazy<Materialized> materialized,
-    CancellationTokenSource lifetime)
+    CancellationTokenSource lifetime,
+    DuckyJson json)
 {
     private readonly Lock _gate = new();
     private readonly Queue<Pending> _queue = new();

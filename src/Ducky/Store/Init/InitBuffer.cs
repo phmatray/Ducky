@@ -56,14 +56,15 @@ internal sealed partial class Dispatcher
         }
     }
 
-    // Step 6 for a restore: each named slice takes its value when it is the slice's state type. An unknown key or a value
-    // of another type restores nothing for that entry (JsonElement values come with M4-06).
+    // Step 6 for a restore: each named slice takes its value when it is the slice's state type, or a JsonElement that
+    // deserializes to it. An unknown key, a value of another type or a failed deserialization (logged by DuckyJson)
+    // restores nothing for that entry; the other entries still restore.
     private void Hydrate(HydrateSlices restore)
     {
         _scratch.Clear();
         foreach (var (key, value) in restore.Values)
         {
-            if (registry.ByKey.TryGetValue(key, out var ordinal) && registry.Slices[ordinal].TryRestore(value, out var state))
+            if (registry.ByKey.TryGetValue(key, out var ordinal) && registry.Slices[ordinal].TryRestore(value, json, out var state))
             {
                 _scratch.Add((ordinal, state));
             }

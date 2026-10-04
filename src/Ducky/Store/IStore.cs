@@ -44,9 +44,15 @@ public interface IStore : IDispatcher, IDisposable, IAsyncDisposable
     Selection<T> Select<T>(Func<StateSnapshot, T> selector, Action<T>? onChange = null, IEqualityComparer<T>? comparer = null);
 #pragma warning restore CA1716
 
+    /// <summary>Gets the store's JSON gateway, built from <see cref="DuckyBuilder.UseJson(System.Text.Json.JsonSerializerOptions)"/>.</summary>
+    DuckyJson Json { get; }
+
     /// <summary>
     /// Replaces the state of the named slices in one action that bypasses the init buffer and is never vetoed. Each value is
-    /// the slice's state instance; an unknown key or a value of another type restores nothing for that entry. Only
+    /// the slice's state instance or a <see cref="System.Text.Json.JsonElement"/>, which is cloned when this is called (so
+    /// the caller may dispose its <see cref="System.Text.Json.JsonDocument"/>) and deserialized with the slice's declared
+    /// state type through <see cref="Json"/>. An unknown key, a value of another type or a value that fails to deserialize
+    /// restores nothing for that entry, and the other entries still restore. Only
     /// <see cref="Origin.Hydration"/> marks a slice as restored (<see cref="StateSnapshot.WasRestored(string)"/>).
     /// Restoring does not start init.
     /// </summary>
