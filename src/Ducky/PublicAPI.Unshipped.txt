@@ -225,3 +225,24 @@ Ducky.PersistStorage.Server = 2 -> Ducky.PersistStorage
 Ducky.PersistStorage.Session = 1 -> Ducky.PersistStorage
 Ducky.PrerenderAttribute
 Ducky.PrerenderAttribute.PrerenderAttribute() -> void
+Ducky.IEntity<TKey>
+Ducky.IEntity<TKey>.Id.get -> TKey
+Ducky.MergeStrategy
+Ducky.MergeStrategy.FailIfDuplicate = 0 -> Ducky.MergeStrategy
+Ducky.MergeStrategy.PreferExisting = 1 -> Ducky.MergeStrategy
+Ducky.MergeStrategy.PreferIncoming = 2 -> Ducky.MergeStrategy
+Ducky.EntityState<TKey, TEntity>
+Ducky.EntityState<TKey, TEntity>.EntityState(System.Collections.Immutable.ImmutableList<TEntity!>! items) -> void
+static Ducky.EntityState<TKey, TEntity>.Empty.get -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.EntityState<TKey, TEntity>.Items.get -> System.Collections.Immutable.ImmutableList<TEntity!>!
+Ducky.EntityState<TKey, TEntity>.Count.get -> int
+Ducky.EntityState<TKey, TEntity>.Find(TKey id) -> TEntity?
+Ducky.EntityState<TKey, TEntity>.Contains(TKey id) -> bool
+Ducky.EntityState<TKey, TEntity>.SetAll(System.Collections.Generic.IEnumerable<TEntity!>! entities) -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.EntityState<TKey, TEntity>.Add(params System.ReadOnlySpan<TEntity!> entities) -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.EntityState<TKey, TEntity>.Upsert(params System.ReadOnlySpan<TEntity!> entities) -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.EntityState<TKey, TEntity>.Update(TKey id, System.Func<TEntity!, TEntity!>! update) -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.EntityState<TKey, TEntity>.Map(System.Func<TEntity!, TEntity!>! map) -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.EntityState<TKey, TEntity>.Remove(params System.ReadOnlySpan<TKey> ids) -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.EntityState<TKey, TEntity>.RemoveWhere(System.Func<TEntity!, bool>! predicate) -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.EntityState<TKey, TEntity>.Merge(System.Collections.Generic.IEnumerable<TEntity!>! entities, Ducky.MergeStrategy strategy) -> Ducky.EntityState<TKey, TEntity!>!
