@@ -36,13 +36,13 @@ internal sealed partial class Build
                 .Select(p => $"{p.Name}: --list-tests reported no test assembly for this project");
             var manifest = ParseManifest(Manifest.ReadAllText());
             var violations = unlisted
-                .Concat(SpecTraceViolations(manifest, Spec.ReadAllText(), listed, StrictStages, SpecInvariantIds))
+                .Concat(SpecTraceViolations(manifest, Spec.ReadAllText(), listed, StrictSpecTrace, SpecInvariantIds))
                 .Concat(SpecTraceSelfCheck())
                 .ToList();
             violations.ForEach(v => Log.Error(v));
             Assert.True(violations.Count == 0, $"SpecTraceGate: {violations.Count} violation(s)");
             Log.Information("SpecTraceGate: {Count} manifest entries, activeStage {Stage}{Strict}", manifest.Tests.Count,
-                manifest.ActiveStage, StrictStages ? " (strict)" : "");
+                manifest.ActiveStage, StrictSpecTrace ? " (strict)" : "");
         });
 
     private sealed class TestManifest

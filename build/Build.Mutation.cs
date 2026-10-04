@@ -85,27 +85,31 @@ internal sealed partial class Build
     // the target fails.
     private Target Mutation => _ => _
         .DependsOn(Compile)
-        .Executes(() =>
+        .Executes(() => RunMutation(StrictStages));
+
+    // Mutation's body, also run in-process by MutationForSha's fallback: a child build could not open the build.log
+    // this process holds.
+    private void RunMutation(bool strict)
+    {
+        var unknown = Project.Except(MutatedProjects.Keys).ToList();
+        Assert.True(unknown.Count == 0, $"--project: unknown [{string.Join(", ", unknown)}]; mutated projects are [{string.Join(", ", MutatedProjects.Keys)}]");
+        var projects = MutatedProjectsToRun(strict);
+        // A named project that is not run would leave the target green with nothing mutated.
+        var inactive = Project.Except(projects).ToList();
+        Assert.True(inactive.Count == 0, $"--project: [{string.Join(", ", inactive)}] above activeStage (stages logged above); pass --strict-stages to mutate them");
+        var failures = new List<string>();
+        var belowTarget = new List<(string Project, double Score)>();
+        foreach (var project in projects.Where(p => Project.Length == 0 || Project.Contains(p)))
         {
-            var unknown = Project.Except(MutatedProjects.Keys).ToList();
-            Assert.True(unknown.Count == 0, $"--project: unknown [{string.Join(", ", unknown)}]; mutated projects are [{string.Join(", ", MutatedProjects.Keys)}]");
-            var projects = MutatedProjectsToRun(StrictStages);
-            // A named project that is not run would leave the target green with nothing mutated.
-            var inactive = Project.Except(projects).ToList();
-            Assert.True(inactive.Count == 0, $"--project: [{string.Join(", ", inactive)}] above activeStage (stages logged above); pass --strict-stages to mutate them");
-            var failures = new List<string>();
-            var belowTarget = new List<(string Project, double Score)>();
-            foreach (var project in projects.Where(p => Project.Length == 0 || Project.Contains(p)))
+            if (Mutate(project, since: null, RootDirectory, failures) is { } score && score < TargetScore)
             {
-                if (Mutate(project, since: null, RootDirectory, failures) is { } score && score < TargetScore)
-                {
-                    belowTarget.Add((project, score));
-                }
+                belowTarget.Add((project, score));
             }
-            OpenScoreIssues(belowTarget, failures);
-            failures.ForEach(f => Log.Error(f));
-            Assert.True(failures.Count == 0, $"Mutation: {failures.Count} project(s) failed");
-        });
+        }
+        OpenScoreIssues(belowTarget, failures);
+        failures.ForEach(f => Log.Error(f));
+        Assert.True(failures.Count == 0, $"Mutation: {failures.Count} project(s) failed");
+    }
 
     // Nightly: long random CsCheck runs, covered projects and the SampleParallel models of Ducky.Concurrency.Tests.
     private Target PropertyLong => _ => _
