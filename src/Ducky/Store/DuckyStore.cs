@@ -12,6 +12,7 @@ internal sealed class DuckyStore : IStore
     // initTimeout, disposeTimeout and timeProvider default to DuckyBuilder's InitTimeout, DisposeTimeout and TimeProvider.System.
     // scope: the store scope a Singleton store owns (§6.10), disposed last by dispose phase 5b.
     // initBufferCapacity: the soft bound of the init buffer, DuckyBuilder.InitBufferCapacity (§6.7).
+    // throwOnUnhandledAction: DuckyBuilder.ThrowOnUnhandledAction, read by the unhandled check (§6.4 step 12).
     internal DuckyStore(
         IEnumerable<Slice> slices,
         ILogger logger,
@@ -22,7 +23,8 @@ internal sealed class DuckyStore : IStore
         Func<Middleware[]>? middleware = null,
         Func<(Effect Effect, bool Owned)[]>? effects = null,
         AsyncServiceScope? scope = null,
-        int initBufferCapacity = Dispatcher.DefaultInitBufferCapacity)
+        int initBufferCapacity = Dispatcher.DefaultInitBufferCapacity,
+        bool throwOnUnhandledAction = false)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -39,6 +41,7 @@ internal sealed class DuckyStore : IStore
             InitialState,
             new SafeLogger(logger),
             maxDispatchDepth,
+            throwOnUnhandledAction,
             initBufferCapacity,
             initTimeout ?? TimeSpan.FromSeconds(10),
             disposeTimeout ?? TimeSpan.FromSeconds(2),
@@ -71,7 +74,8 @@ internal sealed class DuckyStore : IStore
             middleware: () => config.CreateMiddleware(storeServices),
             effects: () => config.CreateEffects(storeServices),
             scope: scope,
-            initBufferCapacity: config.InitBufferCapacity);
+            initBufferCapacity: config.InitBufferCapacity,
+            throwOnUnhandledAction: config.ThrowOnUnhandledAction);
     }
 
     // Registry data: reading it starts nothing.

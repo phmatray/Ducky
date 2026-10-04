@@ -11,6 +11,7 @@ internal sealed partial class Dispatcher(
     StateSnapshot initial,
     SafeLogger logger,
     int maxDispatchDepth,
+    bool throwOnUnhandledAction,
     int initBufferCapacity,
     TimeSpan initTimeout,
     TimeSpan disposeTimeout,
@@ -203,7 +204,7 @@ internal sealed partial class Dispatcher(
     }
 
     // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs), 3 and 11 (EffectRuns.cs), 4, 5 and 9
-    // (MiddlewarePipeline.cs), 6-8, 10 (Notify.cs) so far.
+    // (MiddlewarePipeline.cs), 6-8, 10 (Notify.cs), 12 (Unhandled.cs) so far.
     private void Process(Pending p)
     {
         BeforeProcessHook?.Invoke(p.Action);
@@ -229,12 +230,13 @@ internal sealed partial class Dispatcher(
                 return;
             }
 
-            // A failure in steps 5-6 commits nothing and skips steps 7 and 10, but AfterReduce still sees the action, with
+            // A failure in steps 5-6 commits nothing and skips steps 7, 10 and 12, but AfterReduce still sees the action, with
             // before's State == PreviousState and no changed key, and its effects still start: they react to the action, not
             // to the commit, so a throwing StoreInitialized reducer can't disable the load effects (§6.4, INV-08, INV-13).
             var after = before;
             var changed = false;
-            if (BeforeReduce(before, middleware) && Reduce(p.Action))
+            var reduced = BeforeReduce(before, middleware) && Reduce(p.Action);
+            if (reduced)
             {
                 changed = Commit(p.Origin);
                 p.Complete(DispatchResult.Reduced);
@@ -253,6 +255,10 @@ internal sealed partial class Dispatcher(
             }
 
             StartEffects(after, materialized.Effects);
+            if (reduced)
+            {
+                CheckHandled(p, materialized.Effects);
+            }
         }
         finally
         {

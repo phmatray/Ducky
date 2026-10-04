@@ -11,6 +11,7 @@ internal sealed class DuckyConfig(
     ServiceLifetime lifetime,
     bool isBrowser,
     int maxDispatchDepth,
+    bool throwOnUnhandledAction,
     int initBufferCapacity,
     TimeSpan initTimeout,
     TimeSpan disposeTimeout,
@@ -27,6 +28,8 @@ internal sealed class DuckyConfig(
     public bool IsBrowser => isBrowser;
 
     public int MaxDispatchDepth => maxDispatchDepth;
+
+    public bool ThrowOnUnhandledAction => throwOnUnhandledAction;
 
     public int InitBufferCapacity => initBufferCapacity;
 

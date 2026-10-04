@@ -109,7 +109,7 @@ public sealed class FailureRouterTests
         // Ids 4..69 are the loop (the last one dropped); the failure is Id 70, depth 0, on the loop's chain.
         scopes.ShouldBe([new Cause(70, 0, 4, true)]);
         store.State.Get<Seen>().Count.ShouldBe(1);
-        logger.Collector.Count.ShouldBe(0);
+        logger.Collector.GetSnapshot().Select(r => r.Id.Id).ShouldBe([1080, 1080]); // only the two unhandled Bumps (§6.4 step 12)
     }
 
     [Fact]
