@@ -529,7 +529,7 @@ public sealed class TelemetryTests
 
     // A real IMeterFactory has no package here (Microsoft.Extensions.Diagnostics is not referenced); this one scopes every
     // Meter it creates to itself, as the framework's does, so MetricCollector can filter on it.
-    private sealed class TestMeterFactory : IMeterFactory
+    internal sealed class TestMeterFactory : IMeterFactory
     {
         private readonly List<Meter> _meters = [];
 
