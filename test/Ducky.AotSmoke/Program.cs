@@ -17,7 +17,8 @@ await CheckAsync("AotSmoke", async () =>
 
     await using var provider = new ServiceCollection()
         .AddSingleton<Journal>()
-        .AddDucky(d => d.AddSlice<CounterSlice>().AddEffect<MergeEffect>().AddEffect<PolicyEffects>())
+        .AddSingleton<SeenTypes>()
+        .AddDucky(d => d.AddSlice<CounterSlice>().AddEffect<MergeEffect>().AddEffect<PolicyEffects>().Use<TypeRecorder>())
         .BuildServiceProvider();
     await using var scope = provider.CreateAsyncScope();
     var store = scope.ServiceProvider.GetRequiredService<IStore>();
@@ -50,9 +51,15 @@ await CheckAsync("AotSmoke", async () =>
     journal.Gate.SetResult();
     await store.WhenIdleAsync();
 
+    // [ActionType] read at run time, after ILC, as ActionContext.ActionType (M4-07, §5.8). Folded in here (P8) while its
+    // own manifest entry ActionType_AttributeName_SurvivesAot (stage 6) is inactive: the PR that moves activeStage to 6
+    // splits it back out under that PASS name.
+    await store.DispatchAsync(new TodoAdded("milk"));
+
     // MergeEffect dispatches MergeDone per run: two more reductions.
     return reduced && running && journal.Runs(Concurrency.Exhaust) is [_] && journal.Runs(Concurrency.Queue) is [_, _]
-        && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3];
+        && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3]
+        && provider.GetRequiredService<SeenTypes>().Names is [.., "todos/added"];
 });
 
 return failed ? 1 : 0;
@@ -141,4 +148,17 @@ internal sealed class PolicyEffects : EffectGroup
         On<ExhaustFired>((_, _, token) => journal.Run(Concurrency.Exhaust, token), Concurrency.Exhaust);
         On<QueueFired>((_, _, token) => journal.Run(Concurrency.Queue, token), Concurrency.Queue);
     }
+}
+
+[ActionType("todos/added")]
+internal sealed record TodoAdded(string Text);
+
+internal sealed class SeenTypes
+{
+    public List<string> Names { get; } = [];
+}
+
+internal sealed class TypeRecorder(SeenTypes seen) : Middleware
+{
+    public override void AfterReduce(ActionContext context) => seen.Names.Add(context.ActionType);
 }

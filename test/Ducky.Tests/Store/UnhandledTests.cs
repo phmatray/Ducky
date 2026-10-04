@@ -79,9 +79,9 @@ public sealed class UnhandledTests
         failures.Failures.Count.ShouldBe(2);
         foreach (var failed in failures.Failures)
         {
-            failed.ActionType.ShouldBe(typeof(Unknown).ToString());
+            failed.ActionType.ShouldBe("Ducky.Tests.UnhandledTests.Unknown"); // a nested type is Outer.Inner (§9)
             failed.SliceKey.ShouldBeNull();
-            failed.Exception.ShouldBeOfType<UnhandledActionException>().ActionType.ShouldBe(typeof(Unknown).ToString());
+            failed.Exception.ShouldBeOfType<UnhandledActionException>().ActionType.ShouldBe("Ducky.Tests.UnhandledTests.Unknown"); // a nested type is Outer.Inner (§9)
         }
 
         store.State.Get<Count>().Value.ShouldBe(1);

@@ -25,6 +25,6 @@ internal sealed partial class Dispatcher
         RouteFailure(new ReducerFailed(type, sliceKey, ex), ex, type, scope.CorrelationId, scope.InFailure);
     }
 
-    // ponytail: Type.ToString() is Namespace.Name; the per-store cached action type names of §9 replace it (M4-07).
-    private static string TypeName(object action) => action.GetType().ToString();
+    // The per-store cached action type name (§9).
+    private string TypeName(object action) => _actionTypes.Of(action);
 }
