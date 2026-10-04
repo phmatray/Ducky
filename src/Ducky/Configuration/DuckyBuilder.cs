@@ -40,7 +40,9 @@ public sealed class DuckyBuilder
     /// <summary>Gets or sets the causal depth beyond which an action is dropped. Defaults to 64.</summary>
     public int MaxDispatchDepth { get; set; } = Dispatcher.DefaultMaxDispatchDepth;
 
-    /// <summary>Gets or sets a value indicating whether an action no slice handles is a failure. Defaults to false.</summary>
+    /// <summary>Gets or sets a value indicating whether a dispatched action that no reducer and no async effect handles
+    /// is a failure (<see cref="ReducerFailed"/> with an <see cref="UnhandledActionException"/>) rather than a Debug log.
+    /// Defaults to false.</summary>
     public bool ThrowOnUnhandledAction { get; set; }
 
     /// <summary>Gets or sets the soft bound of the init buffer; overflow aborts init and drops nothing. Defaults to 1024.</summary>
@@ -166,7 +168,7 @@ public sealed class DuckyBuilder
     internal IEnumerable<Type> SliceTypes => _sliceTypes;
 
     // Called once, when configure returned: the snapshot AddDucky registers.
-    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, InitBufferCapacity, InitTimeout, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
+    internal DuckyConfig Freeze() => new(Lifetime, IsBrowser, MaxDispatchDepth, ThrowOnUnhandledAction, InitBufferCapacity, InitTimeout, DisposeTimeout, [.. _slices], [.. _sliceErrors], [.. _sliceFailures], [.. _rules], [.. _middleware], [.. _effects.Values],
         [.. _effects.Values.Select(effect => effect.CtorCheck).OfType<CtorCheck.Requirement>().Concat(_ctorChecks).Distinct()]);
 
     // Runs at the store's first use, for an effect or a middleware. A throwing constructor becomes DUCKY353 wrapping what it
