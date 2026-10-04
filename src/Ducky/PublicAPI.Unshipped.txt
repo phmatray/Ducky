@@ -207,3 +207,21 @@ Ducky.DuckyJson.TryDeserialize(System.Text.Json.JsonElement json, System.Type! t
 Ducky.DuckyJson.TryGetTypeInfo(System.Type! type, out System.Text.Json.Serialization.Metadata.JsonTypeInfo? typeInfo) -> bool
 Ducky.DuckyJson.TrySerialize(object! value, System.Type! declaredType, out string? json) -> bool
 Ducky.IStore.Json.get -> Ducky.DuckyJson!
+Ducky.DuckyActionAttribute
+Ducky.DuckyActionAttribute.DuckyActionAttribute() -> void
+Ducky.DuckyActionAttribute.MethodName.get -> string?
+Ducky.DuckyActionAttribute.MethodName.init -> void
+Ducky.PersistAttribute
+Ducky.PersistAttribute.PersistAttribute() -> void
+Ducky.PersistAttribute.Storage.get -> Ducky.PersistStorage
+Ducky.PersistAttribute.Storage.init -> void
+Ducky.PersistAttribute.SyncAcrossTabs.get -> bool
+Ducky.PersistAttribute.SyncAcrossTabs.init -> void
+Ducky.PersistAttribute.Version.get -> int
+Ducky.PersistAttribute.Version.init -> void
+Ducky.PersistStorage
+Ducky.PersistStorage.Local = 0 -> Ducky.PersistStorage
+Ducky.PersistStorage.Server = 2 -> Ducky.PersistStorage
+Ducky.PersistStorage.Session = 1 -> Ducky.PersistStorage
+Ducky.PrerenderAttribute
+Ducky.PrerenderAttribute.PrerenderAttribute() -> void

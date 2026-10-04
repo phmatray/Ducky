@@ -17,8 +17,7 @@ await CheckAsync("AotSmoke", async () =>
 
     await using var provider = new ServiceCollection()
         .AddSingleton<Journal>()
-        .AddSingleton<SeenTypes>()
-        .AddDucky(d => d.AddSlice<CounterSlice>().AddEffect<MergeEffect>().AddEffect<PolicyEffects>().Use<TypeRecorder>())
+        .AddDucky(d => d.AddSlice<CounterSlice>().AddEffect<MergeEffect>().AddEffect<PolicyEffects>())
         .BuildServiceProvider();
     await using var scope = provider.CreateAsyncScope();
     var store = scope.ServiceProvider.GetRequiredService<IStore>();
@@ -51,15 +50,24 @@ await CheckAsync("AotSmoke", async () =>
     journal.Gate.SetResult();
     await store.WhenIdleAsync();
 
-    // [ActionType] read at run time, after ILC, as ActionContext.ActionType (M4-07, §5.8). Folded in here (P8) while its
-    // own manifest entry ActionType_AttributeName_SurvivesAot (stage 6) is inactive: the PR that moves activeStage to 6
-    // splits it back out under that PASS name.
-    await store.DispatchAsync(new TodoAdded("milk"));
-
     // MergeEffect dispatches MergeDone per run: two more reductions.
     return reduced && running && journal.Runs(Concurrency.Exhaust) is [_] && journal.Runs(Concurrency.Queue) is [_, _]
-        && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3]
-        && provider.GetRequiredService<SeenTypes>().Names is [.., "todos/added"];
+        && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3];
+});
+
+// [ActionType] read at run time, after ILC, as ActionContext.ActionType (M4-07, §5.8).
+await CheckAsync("ActionType_AttributeName_SurvivesAot", async () =>
+{
+    await using var provider = new ServiceCollection()
+        .AddSingleton<SeenTypes>()
+        .AddDucky(d => d.AddSlice<CounterSlice>().Use<TypeRecorder>())
+        .BuildServiceProvider();
+    await using var scope = provider.CreateAsyncScope();
+    var store = scope.ServiceProvider.GetRequiredService<IStore>();
+
+    await store.DispatchAsync(new TodoAdded("milk"));
+
+    return provider.GetRequiredService<SeenTypes>().Names is [.., "todos/added"];
 });
 
 return failed ? 1 : 0;
