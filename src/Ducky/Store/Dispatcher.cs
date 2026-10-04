@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +11,7 @@ internal sealed partial class Dispatcher(
     Registry registry,
     StateSnapshot initial,
     SafeLogger logger,
+    SafeTelemetry telemetry,
     int maxDispatchDepth,
     bool throwOnUnhandledAction,
     int initBufferCapacity,
@@ -176,7 +178,19 @@ internal sealed partial class Dispatcher(
 
             try
             {
-                Process(p);
+                // An effect continuation that became the drainer usually carries its trigger's span, stopped by Process since.
+                // No API sets a stopped activity current again, so ExitScope can't restore it: ProcessIsolatedAsync gives the
+                // drainer's ExecutionContext, and so its Activity.Current, back untouched (§6.4 step 2).
+                if (Activity.Current is { IsStopped: true })
+                {
+#pragma warning disable VSTHRD002 // justification: ProcessIsolatedAsync never awaits, the task is already complete
+                    ProcessIsolatedAsync(p).GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+                }
+                else
+                {
+                    Process(p);
+                }
             }
 #pragma warning disable CA1031 // justification: the last line of defence, nothing may escape Process (INV-03)
             catch (Exception ex)
@@ -195,8 +209,15 @@ internal sealed partial class Dispatcher(
         }
     }
 
-    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs), 3 and 11 (EffectRuns.cs), 4, 5 and 9
-    // (MiddlewarePipeline.cs), 6-8, 10 (Notify.cs), 12 (Unhandled.cs) so far.
+    // An async method that never awaits: its builder puts the caller's ExecutionContext back when it returns, whatever
+    // Process set in it, even while flow is suppressed (ExecutionContext.Capture is null then, so a captured copy can't do
+    // it). A throw comes back through GetResult.
+#pragma warning disable CS1998 // justification: never awaits, the builder's context restore is the point
+    private async Task ProcessIsolatedAsync(Pending p) => Process(p);
+#pragma warning restore CS1998
+
+    // SPEC §6.4, one method per step: steps 1-2 (CausalScope.cs; the span through SafeTelemetry, Telemetry.cs), 3 and 11
+    // (EffectRuns.cs), 4, 5 and 9 (MiddlewarePipeline.cs), 6-8, 10 (Notify.cs), 12 (Unhandled.cs) so far.
     private void Process(Pending p)
     {
         BeforeProcessHook?.Invoke(p.Action);
@@ -206,8 +227,11 @@ internal sealed partial class Dispatcher(
         }
 
         var outer = EnterScope(p);
+        Activity? span = null;
         try
         {
+            var type = TypeName(p.Action);
+            span = telemetry.StartActivity(p, type);
             if (RunCancelled(p))
             {
                 return;
@@ -216,7 +240,7 @@ internal sealed partial class Dispatcher(
             var materialized = _materialized.Value;
             var middleware = materialized.Middleware;
             var previous = State;
-            var before = new ActionContext(p, TypeName(p.Action), previous, previous, []);
+            var before = new ActionContext(p, type, previous, previous, []);
             if (!Admitted(p, before, middleware))
             {
                 return;
@@ -254,7 +278,7 @@ internal sealed partial class Dispatcher(
         }
         finally
         {
-            ExitScope(outer);
+            ExitScope(outer, span);
         }
     }
 

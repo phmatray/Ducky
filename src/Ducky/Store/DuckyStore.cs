@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,7 @@ internal sealed class DuckyStore : IStore
     // throwOnUnhandledAction: DuckyBuilder.ThrowOnUnhandledAction, read by the unhandled check (§6.4 step 12).
     // json: the options UseJson built (§10); none gives a store without type info.
     // disposeHook: resolves the server's StoreDisposeHook as the last step of materialization (§6.11); null otherwise.
+    // meterFactory: the container's IMeterFactory, if any; without one the store records no metrics (§9).
     internal DuckyStore(
         IEnumerable<Slice> slices,
         ILogger logger,
@@ -30,7 +32,8 @@ internal sealed class DuckyStore : IStore
         int initBufferCapacity = Dispatcher.DefaultInitBufferCapacity,
         bool throwOnUnhandledAction = false,
         JsonSerializerOptions? json = null,
-        Func<object>? disposeHook = null)
+        Func<object>? disposeHook = null,
+        IMeterFactory? meterFactory = null)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -48,6 +51,7 @@ internal sealed class DuckyStore : IStore
             registry,
             InitialState,
             safeLogger,
+            new SafeTelemetry(safeLogger, meterFactory),
             maxDispatchDepth,
             throwOnUnhandledAction,
             initBufferCapacity,
@@ -86,7 +90,8 @@ internal sealed class DuckyStore : IStore
             initBufferCapacity: config.InitBufferCapacity,
             throwOnUnhandledAction: config.ThrowOnUnhandledAction,
             json: config.Json,
-            disposeHook: singleton ? null : () => storeServices.GetRequiredService<StoreDisposeHook>());
+            disposeHook: singleton ? null : () => storeServices.GetRequiredService<StoreDisposeHook>(),
+            meterFactory: services.GetService<IMeterFactory>());
     }
 
     // Registry data: reading it starts nothing.

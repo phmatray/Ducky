@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Ducky;
 
 // One queued action (SPEC §6.3). Only DispatchAsync creates a completion, always with RunContinuationsAsynchronously
@@ -10,8 +12,22 @@ internal sealed class Pending(
     long correlationId,
     bool inFailure,
     bool isFailure,
-    TaskCompletionSource<DispatchResult>? completion)
+    TaskCompletionSource<DispatchResult>? completion,
+    Activity? producer)
 {
+    // The producer is the creating flow's activity unless given (a core failure action takes the failed action's).
+    internal Pending(
+        object action,
+        Origin origin,
+        int depth,
+        long correlationId,
+        bool inFailure,
+        bool isFailure,
+        TaskCompletionSource<DispatchResult>? completion)
+        : this(action, origin, depth, correlationId, inFailure, isFailure, completion, Activity.Current)
+    {
+    }
+
     internal object Action { get; } = action;
 
     internal Origin Origin { get; } = origin;
@@ -32,6 +48,13 @@ internal sealed class Pending(
 
     // The effect run that dispatched it through EffectContext, checked again at step 3 (§6.4, §6.6); null otherwise.
     internal EffectRunToken? Run { get; set; }
+
+    // The producer's activity, read on the producer's flow when the Pending is created, before Enqueue (a core failure
+    // action takes the failed action's): ambient while the action is processed and, through ParentActivity, the parent of
+    // its ducky.dispatch span, whichever flow drains it (§6.3, §6.4 step 2).
+    internal Activity? Producer { get; } = producer;
+
+    internal ActivityContext ParentActivity => Producer?.Context ?? default;
 
     internal void Complete(DispatchResult result) => completion?.TrySetResult(result);
 }

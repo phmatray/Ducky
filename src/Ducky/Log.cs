@@ -2,10 +2,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Ducky;
 
-// Core log events (SPEC §9): EventIds 1000-1999, types and keys only, never values. Reserved by later stories:
-// 1017. M1-05 uses 1000, M1-07 1001, M1-09 1004, M1-11 1002, 1010, 1011 and 1013, M4-01 1015 (widened to
-// effects by M2-01), 1020 and 1021, M2-02 1003, M2-08 1030, M2-04 1014 and 1050, M2-05 1051, M4-03 1031 and 1032, M4-03c 1016,
-// M2-03b 1040, M3-01b 1060, M4-06 1070 and 1071, M4-08 1080.
+// Core log events (SPEC §9): EventIds 1000-1999, types and keys only, never values. M1-05 uses 1000, M1-07 1001, M1-09
+// 1004, M1-11 1002, 1010, 1011 and 1013, M4-01 1015 (widened to effects by M2-01), 1020 and 1021, M2-02 1003, M2-08 1030,
+// M2-04 1014 and 1050, M2-05 1051, M4-03 1031 and 1032, M4-03c 1016, M2-03b 1040, M3-01b 1060, M4-06 1070 and 1071,
+// M4-08 1080, M4-09 1017.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 1000, Level = LogLevel.Error, Message = "Reducer of slice '{SliceKey}' threw while reducing {ActionType}")]
@@ -43,6 +43,9 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 1016, Level = LogLevel.Warning, Message = "DisposeAsync of middleware {Middleware} did not complete within DisposeTimeout ({DisposeTimeout}); disposal goes on without it")]
     internal static partial void MiddlewareDisposeTimedOut(SafeLogger logger, Type middleware, TimeSpan disposeTimeout);
+
+    [LoggerMessage(EventId = 1017, Level = LogLevel.Warning, Message = "A telemetry listener threw in {Call}; the step goes on")]
+    internal static partial void TelemetryFailed(SafeLogger logger, Exception exception, string call);
 
     [LoggerMessage(EventId = 1020, Level = LogLevel.Debug, Message = "{ActionType} vetoed by {Middleware}")]
     internal static partial void Vetoed(SafeLogger logger, Type actionType, Type middleware);
