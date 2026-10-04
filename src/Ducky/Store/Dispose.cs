@@ -65,7 +65,7 @@ internal sealed partial class Dispatcher
         // The finally completes the shared task on every path, so no exception can leave a DisposeAsync caller waiting.
         try
         {
-            var (exited, retired) = Detach();
+            var (exited, retired, materializing) = Detach();
             CancelLifetime();
 
             // Step 3, also when the caller is the drainer: it gets an incomplete task, and the drainer, finding the queue
@@ -80,7 +80,7 @@ internal sealed partial class Dispatcher
                 disposal.TrySetResult();
             }
 
-            await DisposeMaterializedAsync(drainExited, retired, disposal).ConfigureAwait(false);
+            await DisposeMaterializedAsync(drainExited, retired, materializing, disposal).ConfigureAwait(false);
             ClearSubscribers();
         }
         finally
@@ -91,16 +91,34 @@ internal sealed partial class Dispatcher
 
     // Phases 5a and 5b, after the drain exited (never inline while one may be in flight): middleware in reverse registration
     // order, then, after the run wait, the store-owned effects in reverse and the store scope. Nothing materialized (or a
-    // faulted materialization, which kept nothing; disposing its partial work is M4-05b's) leaves only the store scope.
-    private async Task DisposeMaterializedAsync(Task drainExited, Task retired, TaskCompletionSource disposal)
+    // faulted materialization, whose factory disposed its partial work, §6.6) leaves only the store scope.
+    private async Task DisposeMaterializedAsync(Task drainExited, Task retired, bool materializing, TaskCompletionSource disposal)
     {
 #pragma warning disable VSTHRD003 // justification: the drain's exit is our own RunContinuationsAsynchronously TCS, never faulted
         // Stryker disable once Boolean : either context only resumes after the drain exited, which is all 5a needs
         await drainExited.ConfigureAwait(false);
 #pragma warning restore VSTHRD003
-        if (!_materialized.IsValueCreated)
+        if (materializing)
         {
-            // The scope exists from DuckyStore.Create on; disposing one that resolved nothing constructs nothing.
+            // The materialization wait (step 4): what the factory builds, constructors running after this call included,
+            // is disposed below. Past the bound DisposeAsync completes, and 5a and 5b stay chained on the factory's end.
+            var built = _materializedSignal.Task.WaitAsync(_disposeTimeout, timeProvider);
+            await built.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            if (!built.IsCompletedSuccessfully)
+            {
+                // No subscriber can exist yet: Select materializes before it subscribes.
+                disposal.TrySetResult();
+#pragma warning disable VSTHRD003 // justification: our own RunContinuationsAsynchronously TCS, never faulted
+                await _materializedSignal.Task.ConfigureAwait(ConfigureAwaitOptions.None);
+#pragma warning restore VSTHRD003
+            }
+        }
+
+        var materialized = Volatile.Read(ref _built);
+        if (materialized is null)
+        {
+            // Never materialized, or the factory threw and disposed what it built. The scope exists from DuckyStore.Create
+            // on; disposing one that resolved nothing constructs nothing.
             await DisposeReversedAsync([storeScope]).ConfigureAwait(ConfigureAwaitOptions.None);
             return;
         }
@@ -109,7 +127,6 @@ internal sealed partial class Dispatcher
         // for it, and starts the init waits itself.
         var runs = RunWaitAsync();
         Task bounded = runs.WaitAsync(_disposeTimeout, timeProvider);
-        var materialized = _materialized.Value;
 #pragma warning disable VSTHRD003 // justification: our own phase; the Retire task it is handed is only observed
         await DisposeMiddlewareAsync(materialized.Middleware, retired).ConfigureAwait(ConfigureAwaitOptions.None);
 #pragma warning restore VSTHRD003
@@ -177,29 +194,15 @@ internal sealed partial class Dispatcher
     }
 
     // Awaited with WaitAsync(DisposeTimeout): past it, Warning 1016 and the store moves on, leaving that DisposeAsync
-    // running but observed, so a throw, before or after the bound, is Error 1015 as in DisposeReversedAsync.
+    // running but observed, so a throw, before or after the bound, is Error 1015 (DisposeOneAsync). It starts
+    // the disposal synchronously, on the caller.
     private async Task DisposeBoundedAsync(Middleware middleware)
     {
-        var dispose = DisposeLoggedAsync(middleware);
+        var dispose = DisposeOneAsync(middleware);
         await dispose.WaitAsync(_disposeTimeout, timeProvider).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         if (!dispose.IsCompleted)
         {
             Log.MiddlewareDisposeTimedOut(logger, middleware.GetType(), _disposeTimeout);
-        }
-    }
-
-    // Never faults: a throw is logged.
-    private async Task DisposeLoggedAsync(Middleware middleware)
-    {
-        try
-        {
-            await middleware.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.None);
-        }
-#pragma warning disable CA1031 // justification: disposal is user code; its throw is logged and never faults disposal (§6.11)
-        catch (Exception ex)
-#pragma warning restore CA1031
-        {
-            Log.DisposeThrew(logger, ex, middleware.GetType());
         }
     }
 
@@ -208,38 +211,46 @@ internal sealed partial class Dispatcher
     {
         for (var i = owned.Length - 1; i >= 0; i--)
         {
-            try
+            await DisposeOneAsync(owned[i]).ConfigureAwait(ConfigureAwaitOptions.None);
+        }
+    }
+
+    // Never faults: a throw, synchronous or not, is logged. The disposal starts synchronously, on the caller.
+    private async Task DisposeOneAsync(object? owned)
+    {
+        try
+        {
+            switch (owned)
             {
-                switch (owned[i])
-                {
-                    case IAsyncDisposable disposable:
-                        await disposable.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.None);
-                        break;
-                    case IDisposable disposable:
-                        disposable.Dispose();
-                        break;
-                }
+                case IAsyncDisposable disposable:
+                    await disposable.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.None);
+                    break;
+                case IDisposable disposable:
+                    disposable.Dispose();
+                    break;
             }
+        }
 #pragma warning disable CA1031 // justification: disposal is user code; its throw is logged and never faults disposal (§6.11)
-            catch (Exception ex)
+        catch (Exception ex)
 #pragma warning restore CA1031
-            {
-                Log.DisposeThrew(logger, ex, owned[i]!.GetType());
-            }
+        {
+            Log.DisposeThrew(logger, ex, owned!.GetType());
         }
     }
 
     // Step 1: Disposed closes Enqueue and MarkReady, and Retire closes init start; the detached actions complete outside
     // the lock. The init buffer is copied, not cleared: nothing reads it once Disposed. Returns the last drain's exit
     // (complete when no drain runs) and the task Retire returned, which step 4's init waits start with.
-    private (TaskCompletionSource? Exited, Task Retired) Detach()
+    private (TaskCompletionSource? Exited, Task Retired, bool Materializing) Detach()
     {
+        bool materializing;
         Pending[] detached;
         TaskCompletionSource? exited;
         TaskCompletionSource? idle;
         lock (_gate)
         {
-            _state = StoreState.Disposed;
+            _state = StoreState.Disposed; // closes materialization too (BeginMaterialize)
+            materializing = _materializationStarted;
             detached = [.. _queue, .. _initBuffer];
             _queue.Clear();
             exited = _drainExited;
@@ -258,7 +269,7 @@ internal sealed partial class Dispatcher
 
         // Now, not at the end: a wait registered before disposal ends only here, and Disposed registers no new one.
         idle?.TrySetResult();
-        return (exited, retired);
+        return (exited, retired, materializing);
     }
 
     // Step 2: callbacks run inline, possibly while a drain is in flight; Cancel runs them all even when one throws.

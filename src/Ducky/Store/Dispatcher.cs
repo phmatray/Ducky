@@ -30,8 +30,8 @@ internal sealed partial class Dispatcher(
     private long _lastId;
     private TaskCompletionSource? _drainExited;
 
-    // Middleware and effects, built on the store's first use (§6.6), outside _gate. A constructor's DUCKY353 is cached by
-    // the Lazy, which rethrows that same instance at every later use.
+    // Middleware and effects, built on the store's first use by Build (Materialization.cs, §6.6), outside _gate. A
+    // constructor's DUCKY353 is cached by the Lazy, which rethrows that same instance at every later use.
     private readonly Lazy<Materialized> _materialized = materialized;
 
     internal StateSnapshot State => Volatile.Read(ref _snapshot);
@@ -50,16 +50,6 @@ internal sealed partial class Dispatcher(
 
     // IVT-only seam (§6.3, §17.1): null in production, invoked with the action at the top of Process.
     internal Action<object>? BeforeProcessHook { get; set; }
-
-    // Called first by every materializing entry point (§6.6). Once disposal began nothing is built and nothing rethrown:
-    // the caller takes its after-disposal path (the race with a concurrent first use is closed by M4-05b).
-    internal void Materialize()
-    {
-        if (!DisposalBegan)
-        {
-            _ = _materialized.Value;
-        }
-    }
 
     internal void Dispatch(object action, Origin origin)
     {

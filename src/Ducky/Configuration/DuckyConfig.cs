@@ -54,12 +54,13 @@ internal sealed class DuckyConfig(
 
     public IEnumerable<Slice> CreateSlices() => slices.Select(slice => slice.Create());
 
-    // In registration order, from the store's services (§6.10).
-    public Middleware[] CreateMiddleware(IServiceProvider services) => Array.ConvertAll(middleware, create => create(services));
+    // In registration order, from the store's services (§6.10), one at a time as the store enumerates them, so a
+    // constructor's throw leaves the earlier instances to the store's cleanup (§6.6).
+    public IEnumerable<Middleware> CreateMiddleware(IServiceProvider services) => middleware.Select(create => create(services));
 
-    // In registration order, from the store's services: one per effect type (§5.1).
-    public (Effect Effect, bool Owned)[] CreateEffects(IServiceProvider services) =>
-        Array.ConvertAll(effects, effect => (effect.Create(services), effect.Owned));
+    // In registration order, from the store's services: one per effect type (§5.1), lazily like CreateMiddleware.
+    public IEnumerable<(Effect Effect, bool Owned)> CreateEffects(IServiceProvider services) =>
+        effects.Select(effect => (effect.Create(services), effect.Owned));
 
     public void ThrowIfInvalid(IServiceProvider services, ILogger logger)
     {

@@ -9,12 +9,14 @@ namespace Ducky;
 internal sealed class DuckyStore : IStore
 {
     // middleware and effects: create the store's middleware and effects in registration order, on its first use (§6.6); an
-    // effect not Owned (an AddEffect(instance) instance) is never disposed.
+    // effect not Owned (an AddEffect(instance) instance) is never disposed. A lazy sequence lets a constructor's throw
+    // dispose the instances built before it.
     // initTimeout, disposeTimeout and timeProvider default to DuckyBuilder's InitTimeout, DisposeTimeout and TimeProvider.System.
     // scope: the store scope a Singleton store owns (§6.10), disposed last by dispose phase 5b.
     // initBufferCapacity: the soft bound of the init buffer, DuckyBuilder.InitBufferCapacity (§6.7).
     // throwOnUnhandledAction: DuckyBuilder.ThrowOnUnhandledAction, read by the unhandled check (§6.4 step 12).
     // json: the options UseJson built (§10); none gives a store without type info.
+    // disposeHook: resolves the server's StoreDisposeHook as the last step of materialization (§6.11); null otherwise.
     internal DuckyStore(
         IEnumerable<Slice> slices,
         ILogger logger,
@@ -22,12 +24,13 @@ internal sealed class DuckyStore : IStore
         TimeSpan? initTimeout = null,
         TimeSpan? disposeTimeout = null,
         TimeProvider? timeProvider = null,
-        Func<Middleware[]>? middleware = null,
-        Func<(Effect Effect, bool Owned)[]>? effects = null,
+        Func<IEnumerable<Middleware>>? middleware = null,
+        Func<IEnumerable<(Effect Effect, bool Owned)>>? effects = null,
         AsyncServiceScope? scope = null,
         int initBufferCapacity = Dispatcher.DefaultInitBufferCapacity,
         bool throwOnUnhandledAction = false,
-        JsonSerializerOptions? json = null)
+        JsonSerializerOptions? json = null,
+        Func<object>? disposeHook = null)
     {
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
@@ -52,7 +55,7 @@ internal sealed class DuckyStore : IStore
             disposeTimeout ?? TimeSpan.FromSeconds(2),
             timeProvider ?? TimeProvider.System,
             scope,
-            new(() => new(effects?.Invoke() ?? [], Attach(middleware?.Invoke() ?? [])), LazyThreadSafetyMode.ExecutionAndPublication),
+            new(() => Build(effects, middleware, disposeHook), LazyThreadSafetyMode.ExecutionAndPublication),
             new(),
             Json);
     }
@@ -82,7 +85,8 @@ internal sealed class DuckyStore : IStore
             scope: scope,
             initBufferCapacity: config.InitBufferCapacity,
             throwOnUnhandledAction: config.ThrowOnUnhandledAction,
-            json: config.Json);
+            json: config.Json,
+            disposeHook: singleton ? null : () => storeServices.GetRequiredService<StoreDisposeHook>());
     }
 
     // Registry data: reading it starts nothing.
@@ -192,15 +196,19 @@ internal sealed class DuckyStore : IStore
     private static KeyValuePair<string, object> Detach(KeyValuePair<string, object> entry) =>
         entry.Value is JsonElement element ? new(entry.Key, element.Clone()) : entry;
 
-    // Store and DisposeTimeout are attached before any hook or init can run (§5.6). The factory runs on the first use,
-    // after the constructor assigned Dispatcher, so the timeout is the clamped one step 3 waits with.
-    private Middleware[] Attach(Middleware[] middleware)
-    {
-        foreach (var m in middleware)
-        {
-            m.Attach(this);
-        }
+    // The Lazy's factory (§6.6). It runs on the first use, after the constructor assigned Dispatcher.
+    private Materialized Build(
+        Func<IEnumerable<(Effect Effect, bool Owned)>>? effects,
+        Func<IEnumerable<Middleware>>? middleware,
+        Func<object>? disposeHook) =>
+        Dispatcher.Build(() => effects?.Invoke() ?? [], () => (middleware?.Invoke() ?? []).Select(Attach), disposeHook);
 
+    // Store and DisposeTimeout are attached as each middleware is built, before any hook or init can run (§5.6). The
+    // factory runs on the first use, after the constructor assigned Dispatcher, so the timeout is the clamped one step 3
+    // waits with.
+    private Middleware Attach(Middleware middleware)
+    {
+        middleware.Attach(this);
         return middleware;
     }
 }

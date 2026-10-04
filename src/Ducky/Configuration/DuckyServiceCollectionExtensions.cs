@@ -39,6 +39,8 @@ public static class DuckyServiceCollectionExtensions
             services.Add(ServiceDescriptor.Describe(type, sp => sp.GetRequiredService<IStore>().Slices.First(slice => slice.GetType() == type), lifetime));
         }
 
+        // Resolved last at a Scoped store's materialization, so the scope disposes it first (§6.11 server disposal order).
+        services.AddScoped(sp => new StoreDisposeHook(sp.GetRequiredService<IStore>()));
         services.TryAddSingleton(TimeProvider.System);
         return services;
     }
