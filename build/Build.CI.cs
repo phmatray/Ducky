@@ -84,6 +84,8 @@ internal sealed partial class Build
             var violations = WorkflowViolations(ReadYaml(generated), ReadYaml(Workflows))
                 .Concat(RequiredCheckViolations(ReadYaml(Workflows), (RootDirectory / "build" / "protect-branch.sh").ReadAllText()))
                 .Concat(WorkflowSelfCheck())
+                .Concat(ReleaseWorkflowViolations((Workflows / "release.yml").ReadAllText()).Select(v => $"release.yml: {v}"))
+                .Concat(ReleaseSelfCheck())
                 .ToList();
             violations.ForEach(v => Log.Error(v));
             Assert.True(violations.Count == 0,

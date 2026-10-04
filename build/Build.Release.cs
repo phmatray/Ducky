@@ -1,14 +1,20 @@
 using System.IO.Compression;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Fallout.Common;
 using Fallout.Common.IO;
+using Fallout.Common.Tooling;
+using Fallout.Common.Utilities;
 using Serilog;
+using YamlDotNet.RepresentationModel;
 using static Fallout.Common.Tools.DotNet.DotNetTasks;
 
 // SPEC §3 (R-PKG-1, R-PKG-5, R-PKG-6), §17.9 and §19: Pack and PackageSmoke. PackageSmoke is staged (§17.9): this file
 // holds the step-1 checks; later consumers and assertions arrive with their features.
+// SPEC §19, §20.1 and §21 (M16-03): the release targets Changelog, Publish, GitHubRelease, ReleaseGates, MutationForSha
+// and Release, and the checks of the hand-written release.yml.
 internal sealed partial class Build
 {
     // R-PKG-6: the five library IDs Pack sends to artifacts/packages (each with its .snupkg), and the tombstone.
@@ -444,5 +450,396 @@ internal sealed partial class Build
         {
             yield return $"GraphSelfCheck: {plantedCase} must report '{expected}', got [{string.Join("; ", violations)}]";
         }
+    }
+
+    private const string NuGetSource = "https://api.nuget.org/v3/index.json";
+
+    // ADR-0045: the tombstone is pushed once, with exactly this tag; prerelease and patch tags never push it (§19, §21).
+    private const string TombstoneTag = "v2.0.0";
+
+    private static readonly Regex VersionTag = new(@"^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$", RegexOptions.CultureInvariant);
+
+    // -rc.N and GA (or patch) tags release every stage: SpecTraceGate and Mutation run --strict-stages (§19).
+    private static readonly Regex StrictTag = new(@"^v\d+\.\d+\.\d+(-rc\.\d+)?$", RegexOptions.CultureInvariant);
+
+    // git-cliff, from Conventional Commits (cliff.toml); not a dotnet tool, so release.yml installs a pinned binary.
+    private Target Changelog => _ => _
+        .Before(Publish)
+        .Executes(() =>
+        {
+            var cliff = OperatingSystem.IsWindows() ? "git-cliff.exe" : "git-cliff";
+            Assert.True(EnvironmentInfo.Paths.Any(p => File.Exists(Path.Combine(p, cliff))),
+                "Changelog: git-cliff is not on PATH; install it (https://git-cliff.org/docs/installation: `brew install git-cliff` or `cargo install git-cliff`)");
+            var version = ReleaseVersionOrDefault();
+            ProcessTasks.StartProcess("git-cliff", $"--tag v{version} -o CHANGELOG.md", RootDirectory).AssertZeroExitCode();
+            Artifacts.CreateDirectory();
+            ProcessTasks.StartProcess("git-cliff", $"--latest --strip header -o {Artifacts / "notes.md"}", RootDirectory).AssertZeroExitCode();
+        });
+
+    // No DependsOn: in release.yml it pushes the packages release-gates built and uploaded, and a dependency would
+    // rebuild the tree while the short-lived key is live. Every check runs before the key is read.
+    private Target Publish => _ => _
+        .After(Ci, E2E, AotSmoke, MutationForSha, PackageSmoke)
+        .Executes(() =>
+        {
+            FailOnViolations(nameof(Publish), ReleaseSelfCheck());
+            var tag = ReleaseTag();
+            FailOnViolations(nameof(Publish),
+                [.. PublishViolations(tag, ReleaseBranch, t => IsReachable(RootDirectory, t, ReleaseBranch), FileNames(Packages), FileNames(Tombstones))]);
+            var apiKey = EnvironmentInfo.GetVariable("NUGET_API_KEY");
+            Assert.True(!string.IsNullOrEmpty(apiKey), "Publish: NUGET_API_KEY is not set (release.yml bridges it from NuGet/login)");
+            // Each .nupkg push also pushes the .snupkg beside it; no committed nuget.config sets a push source.
+            foreach (var directory in PushedDirectories(tag!))
+            {
+                DotNet($"nuget push {Artifacts / directory / "*.nupkg"} --source {NuGetSource} --api-key {apiKey:r} --skip-duplicate");
+            }
+        });
+
+    // --verify-tag: never let gh create a missing tag on the default branch. It opens no PR (§19).
+    private Target GitHubRelease => _ => _
+        .DependsOn(Publish, Changelog)
+        .Executes(() =>
+        {
+            var version = ReleaseVersionOrDefault();
+            var assets = string.Join(' ', Packages.GlobFiles("*").Select(f => f.ToString().DoubleQuoteIfNeeded()));
+            var prerelease = IsPrerelease(version) ? " --prerelease" : "";
+            ProcessTasks.StartProcess("gh", $"release create v{version} {assets:nq} --verify-tag --notes-file {Artifacts / "notes.md"}{prerelease:nq}",
+                RootDirectory).AssertZeroExitCode();
+        });
+
+    // release.yml uploads artifacts/packages and artifacts/tombstone after it; SpecTraceGate (in Ci) is strict for -rc.N
+    // and GA tags when ReleaseGates or Release is invoked.
+    private Target ReleaseGates => _ => _
+        .DependsOn(Ci, E2E, AotSmoke);
+
+    // DependsOn(Compile), as Mutation: the fallback runs Mutation's body in this process, since a child build could not open
+    // the build.log this run holds. The cost is a Compile in the release-mutation job even when a nightly run passes it.
+    private Target MutationForSha => _ => _
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            FailOnViolations(nameof(MutationForSha), ReleaseSelfCheck());
+            var sha = EnvironmentInfo.GetVariable("GITHUB_SHA") is { Length: > 0 } s ? s : Git(RootDirectory, $"rev-parse HEAD").Single();
+            var strict = StrictStages || ReleaseTag() is { } tag && StrictTag.IsMatch(tag);
+            var failure = NightlyMutationOrRun(sha,
+                () =>
+                {
+                    var query = ProcessTasks.StartProcess("gh", $"run list --workflow nightly-mutation.yml --commit {sha} --status success --json databaseId --limit 1",
+                        RootDirectory, logOutput: false).AssertWaitForExit();
+                    // stdout alone is the JSON; a failure reports stderr too.
+                    return (query.ExitCode, string.Join('\n', query.Output.Where(o => query.ExitCode != 0 || o.Type == OutputType.Std).Select(o => o.Text)));
+                },
+                () => RunMutation(strict));
+            Assert.True(failure is null, failure);
+        });
+
+    // Local convenience only; release.yml splits it into three jobs (§20.1).
+    private Target Release => _ => _
+        .DependsOn(ReleaseGates, MutationForSha, Publish, GitHubRelease);
+
+    // The tag being released: the pushed tag in release.yml, else the one v* tag on HEAD (the local Release chain).
+    private string? ReleaseTag() =>
+        EnvironmentInfo.GetVariable("GITHUB_REF") is { } gitRef && gitRef.StartsWith("refs/tags/", StringComparison.Ordinal)
+            ? gitRef["refs/tags/".Length..]
+            : Git(RootDirectory, $"tag --points-at HEAD --list v*") is [var tag] ? tag : null;
+
+    private string ReleaseVersionOrDefault() =>
+        ReleaseVersion ?? (ReleaseTag() is { } tag && VersionTag.IsMatch(tag) ? tag[1..] : MinVerVersion());
+
+    // SpecTraceGate's --strict: the switch, or a -rc.N/GA tag under ReleaseGates (§17.1, §19).
+    private bool StrictSpecTrace =>
+        StrictStages || (InvokedTargets.Any(t => t.Name is nameof(ReleaseGates) or nameof(Release)) && ReleaseTag() is { } tag && StrictTag.IsMatch(tag));
+
+    // gh's --prerelease for -alpha.N and -rc.N (any SemVer prerelease).
+    private static bool IsPrerelease(string version) => version.Contains('-', StringComparison.Ordinal);
+
+    private static string[] PushedDirectories(string tag) => tag == TombstoneTag ? ["packages", "tombstone"] : ["packages"];
+
+    // §19 Publish, before any push: a v* tag, Pack's exact-set check at the tag's version (Publish runs no MinVer: nothing
+    // is restored in the publish job), and the tag reachable from origin/{ReleaseBranch} (tag rulesets can't enforce it, §20.2).
+    private static IEnumerable<string> PublishViolations(string? tag, string releaseBranch, Func<string, bool> reachable, List<string> packages, List<string> tombstones)
+    {
+        if (tag is null || !VersionTag.IsMatch(tag))
+        {
+            yield return $"Publish requires a v* version tag on the released commit, got '{tag}'";
+            yield break;
+        }
+        foreach (var violation in PackageSetViolations(tag[1..], packages, tombstones))
+        {
+            yield return violation;
+        }
+        if (!reachable(tag))
+        {
+            yield return $"{tag} is not reachable from origin/{releaseBranch}: release tags are cut from {releaseBranch}";
+        }
+    }
+
+    // git merge-base --is-ancestor: 0 reachable, 1 not; any other exit (an unknown ref, no origin/{branch}) is an error.
+    private static bool IsReachable(AbsolutePath repository, string tag, string branch)
+    {
+        var exitCode = ProcessTasks.StartProcess("git", $"merge-base --is-ancestor {tag} origin/{branch}", repository, logOutput: false).AssertWaitForExit().ExitCode;
+        Assert.True(exitCode is 0 or 1, $"git merge-base --is-ancestor {tag} origin/{branch} failed (exit code {exitCode}): is origin/{branch} fetched?");
+        return exitCode == 0;
+    }
+
+    // §19 MutationForSha: a successful nightly-mutation run for the SHA passes; no run starts the full Mutation. A failed or
+    // unreadable query fails: reading it as "no run" would silently start a 330-minute run.
+    private static string? NightlyMutationOrRun(string sha, Func<(int ExitCode, string Output)> query, Action runMutation)
+    {
+        var (exitCode, output) = query();
+        if (exitCode != 0)
+        {
+            return $"MutationForSha: the nightly-mutation query failed (exit code {exitCode}), so no full run is started: {output}";
+        }
+        JsonNode? runs;
+        try
+        {
+            runs = JsonNode.Parse(output);
+        }
+        catch (JsonException)
+        {
+            runs = null;
+        }
+        if (runs is not JsonArray found)
+        {
+            return $"MutationForSha: the nightly-mutation query returned no JSON array, so no full run is started: {output}";
+        }
+        if (found.Count > 0)
+        {
+            Log.Information("MutationForSha: a successful nightly-mutation run exists for {Sha}", sha);
+            return null;
+        }
+        Log.Information("MutationForSha: no successful nightly-mutation run for {Sha}; running Mutation", sha);
+        runMutation();
+        return null;
+    }
+
+    // §20.1: the hand-written release.yml keeps its gates in front of the push: v* tags only, the three jobs with full
+    // history, publish behind both gate jobs (no if, no continue-on-error) and the nuget environment's approval, running
+    // Publish GitHubRelease unskipped.
+    private static IEnumerable<string> ReleaseWorkflowViolations(string workflow)
+    {
+        var stream = new YamlStream();
+        stream.Load(new StringReader(workflow));
+        var root = stream.Documents.FirstOrDefault()?.RootNode;
+        static YamlNode? At(YamlNode? node, params string[] path)
+        {
+            foreach (var key in path)
+            {
+                node = node is YamlMappingNode map && map.Children.TryGetValue(new YamlScalarNode(key), out var child) ? child : null;
+            }
+            return node;
+        }
+        static List<string> Scalars(YamlNode? node) => node switch
+        {
+            YamlScalarNode scalar => [scalar.Value!],
+            YamlSequenceNode list => [.. list.Children.OfType<YamlScalarNode>().Select(s => s.Value!)],
+            YamlMappingNode map => [.. map.Children.Select(c => $"{c.Key}: {c.Value}")],
+            _ => [],
+        };
+
+        if (At(root, "on") is not YamlMappingNode on || on.Children.Count != 1 || Scalars(At(on, "push", "tags")) is not ["v*"] || At(on, "push") is not YamlMappingNode { Children.Count: 1 })
+        {
+            yield return "release.yml must run on v* tags only (on: push: tags: ['v*'])";
+        }
+
+        (string Job, string Run, string[] Permissions)[] expected =
+        [
+            ("release-gates", "./build.sh ReleaseGates", []),
+            ("release-mutation", "./build.sh MutationForSha", ["actions: read", "contents: read", "issues: write"]),
+            ("publish", "./build.sh Publish GitHubRelease", ["contents: write", "id-token: write"]),
+        ];
+        var jobs = Scalars(At(root, "jobs")).Select(j => j[..j.IndexOf(':', StringComparison.Ordinal)]).Order(StringComparer.Ordinal).ToList();
+        if (!jobs.SequenceEqual(expected.Select(e => e.Job).Order(StringComparer.Ordinal)))
+        {
+            yield return $"release.yml must have exactly the jobs [{string.Join(", ", expected.Select(e => e.Job))}], has [{string.Join(", ", jobs)}]";
+        }
+        foreach (var (job, run, permissions) in expected)
+        {
+            var steps = (At(root, "jobs", job, "steps") as YamlSequenceNode)?.Children ?? [];
+            if (!steps.Any(s => Scalars(At(s, "uses")) is [var uses] && uses.StartsWith("actions/checkout@", StringComparison.Ordinal)
+                    && Scalars(At(s, "with", "fetch-depth")) is ["0"]))
+            {
+                yield return $"{job}: checkout must set fetch-depth: 0 (MinVer, git-cliff and the reachability check need full history)";
+            }
+            var runs = steps.SelectMany(s => Scalars(At(s, "run"))).SelectMany(r => r.Split('\n')).Select(l => l.Trim()).ToList();
+            if (!runs.Contains(run, StringComparer.Ordinal) || runs.Any(r => r.StartsWith("./build.sh", StringComparison.Ordinal) && r != run))
+            {
+                yield return $"{job}: must run exactly {run} (no --skip, no other build invocation)";
+            }
+            if (permissions.Length > 0 && !Scalars(At(root, "jobs", job, "permissions")).Order(StringComparer.Ordinal).SequenceEqual(permissions))
+            {
+                yield return $"{job}: permissions must be [{string.Join(", ", permissions)}]";
+            }
+            if (At(root, "jobs", job, "continue-on-error") is not null || steps.Any(s => At(s, "continue-on-error") is not null))
+            {
+                yield return $"{job}: must not set continue-on-error (a failing gate would count as a success)";
+            }
+            if (steps.Any(s => At(s, "if") is not null && Scalars(At(s, "run")).Any(r => r.Contains("./build.sh", StringComparison.Ordinal))))
+            {
+                yield return $"{job}: the ./build.sh step must have no if (a skipped gate passes)";
+            }
+        }
+
+        if (Scalars(At(root, "jobs", "publish", "environment")) is not ["nuget"] && Scalars(At(root, "jobs", "publish", "environment", "name")) is not ["nuget"])
+        {
+            yield return "publish: environment must be nuget (its required reviewer approves every push)";
+        }
+        var needs = Scalars(At(root, "jobs", "publish", "needs"));
+        if (!needs.Contains("release-gates") || !needs.Contains("release-mutation"))
+        {
+            yield return "publish: needs must hold release-gates and release-mutation (nothing is pushed before every gate passed)";
+        }
+        if (At(root, "jobs", "publish", "if") is not null)
+        {
+            yield return "publish: must have no if (always() or !cancelled() would run it after a failed gate)";
+        }
+    }
+
+    // The acceptance checks of M16-03: the tombstone and prerelease decisions, the reachability refusal on a planted
+    // repository, a failing gh query, and release.yml's gates on a miniature workflow.
+    private static List<string> ReleaseSelfCheck()
+    {
+        var failures = new List<string>();
+        void Expect(bool condition, string message)
+        {
+            if (!condition)
+            {
+                failures.Add($"ReleaseSelfCheck: {message}");
+            }
+        }
+
+        foreach (var (tag, expected) in new[]
+                 {
+                     ("v2.0.0-alpha.1", "packages"), ("v2.0.0-rc.1", "packages"), ("v2.0.1", "packages"), ("v2.0.0", "packages, tombstone"),
+                 })
+        {
+            Expect(string.Join(", ", PushedDirectories(tag)) == expected, $"{tag} must push [{expected}], pushes [{string.Join(", ", PushedDirectories(tag))}]");
+        }
+        foreach (var (version, prerelease) in new[] { ("2.0.0-alpha.1", true), ("2.0.0-rc.2", true), ("2.0.0", false), ("2.0.1", false) })
+        {
+            Expect(IsPrerelease(version) == prerelease, $"{version} must {(prerelease ? "" : "not ")}be a prerelease");
+        }
+        foreach (var (tag, strict) in new[] { ("v2.0.0-alpha.1", false), ("v2.0.0-rc.1", true), ("v2.0.0", true), ("v2.0.1", true) })
+        {
+            Expect(StrictTag.IsMatch(tag) == strict, $"{tag} must {(strict ? "" : "not ")}run --strict-stages");
+        }
+
+        // A repository whose origin/v2 holds v2.0.0-alpha.1, with v2.0.0-alpha.2 on a commit off that branch.
+        var repository = (AbsolutePath)Directory.CreateTempSubdirectory("ducky-release-").FullName;
+        try
+        {
+            const string commit = "-c user.name=Release -c user.email=release@localhost -c commit.gpgsign=false commit --quiet --allow-empty --no-verify -m";
+            // Lightweight, unsigned tags whatever the developer's tag.gpgSign (a signed tag would wait for a message).
+            const string tag = "-c tag.gpgSign=false tag";
+            Git(repository, $"init --quiet --initial-branch=v2");
+            Git(repository, $"{commit:nq} on-v2");
+            Git(repository, $"{tag:nq} v2.0.0-alpha.1");
+            Git(repository, $"update-ref refs/remotes/origin/v2 HEAD");
+            Git(repository, $"checkout --quiet -b topic");
+            Git(repository, $"{commit:nq} off-v2");
+            Git(repository, $"{tag:nq} v2.0.0-alpha.2");
+            static List<string> Libraries(string version) =>
+                [.. LibraryPackages.SelectMany(id => new[] { $"{id}.{version}.nupkg", $"{id}.{version}.snupkg" })];
+            List<string> Violations(string? tag, List<string> packages) =>
+                [.. PublishViolations(tag, "v2", t => IsReachable(repository, t, "v2"), packages, [TombstonePackage])];
+
+            var reachable = Violations("v2.0.0-alpha.1", Libraries("2.0.0-alpha.1"));
+            Expect(reachable.Count == 0, $"v2.0.0-alpha.1 on origin/v2 must publish, got [{string.Join("; ", reachable)}]");
+            (string Case, List<string> Violations, string Expected)[] planted =
+            [
+                ("a tag off origin/v2", Violations("v2.0.0-alpha.2", Libraries("2.0.0-alpha.2")), "v2.0.0-alpha.2 is not reachable from origin/v2"),
+                ("no tag", Violations(null, Libraries("2.0.0-alpha.1")), "Publish requires a v* version tag"),
+                ("a tag without v", Violations("2.0.0-alpha.1", Libraries("2.0.0-alpha.1")), "Publish requires a v* version tag"),
+                ("packages of another version", Violations("v2.0.0-alpha.1", Libraries("2.0.0-alpha.0.7")), "artifacts/packages is missing Ducky.2.0.0-alpha.1.nupkg"),
+            ];
+            foreach (var (plantedCase, violations, expected) in planted)
+            {
+                Expect(violations.Any(v => v.Contains(expected, StringComparison.Ordinal)), $"{plantedCase} must report '{expected}', got [{string.Join("; ", violations)}]");
+            }
+        }
+        finally
+        {
+            repository.DeleteDirectory();
+        }
+
+        // MutationForSha: only a successful query decides; a failure never starts the full run.
+        (string Case, int ExitCode, string Output, bool Fails, bool Runs)[] queries =
+        [
+            ("a failing gh query (HTTP 403)", 1, "HTTP 403: Resource not accessible by integration", true, false),
+            ("a query that is not JSON", 0, "<html>rate limited</html>", true, false),
+            ("no successful nightly-mutation run", 0, "[]", false, true),
+            ("a successful nightly-mutation run", 0, "[{\"databaseId\":42}]", false, false),
+        ];
+        foreach (var (queryCase, exitCode, output, fails, runs) in queries)
+        {
+            var ran = false;
+            var failure = NightlyMutationOrRun("abc123", () => (exitCode, output), () => ran = true);
+            Expect((failure is not null) == fails && ran == runs,
+                $"{queryCase} must {(fails ? "fail" : "pass")} and {(runs ? "" : "not ")}run Mutation; got failure '{failure}', ran {ran}");
+        }
+
+        // release.yml: publish waits for both gate jobs and the nuget environment's approval.
+        const string workflow = """
+            on:
+              push:
+                tags: ['v*']
+            jobs:
+              release-gates:
+                steps:
+                  - uses: actions/checkout@v7
+                    with:
+                      fetch-depth: 0
+                  - run: ./build.sh ReleaseGates
+              release-mutation:
+                permissions:
+                  contents: read
+                  actions: read
+                  issues: write
+                steps:
+                  - uses: actions/checkout@v7
+                    with:
+                      fetch-depth: 0
+                  - run: ./build.sh MutationForSha
+              publish:
+                needs: [release-gates, release-mutation]
+                environment: nuget
+                permissions:
+                  id-token: write
+                  contents: write
+                steps:
+                  - uses: actions/checkout@v7
+                    with:
+                      fetch-depth: 0
+                  - run: ./build.sh Publish GitHubRelease
+            """;
+        var unplanted = ReleaseWorkflowViolations(workflow).ToList();
+        Expect(unplanted.Count == 0, $"the unplanted release.yml must pass, got [{string.Join("; ", unplanted)}]");
+        (string Case, string From, string To, string Expected)[] workflows =
+        [
+            ("publish without the nuget environment", "    environment: nuget\n", "", "publish: environment must be nuget"),
+            ("publish not waiting for release-mutation", "[release-gates, release-mutation]", "[release-gates]", "publish: needs must hold release-gates and release-mutation"),
+            ("a shallow checkout", "          fetch-depth: 0\n      - run: ./build.sh MutationForSha", "          fetch-depth: 1\n      - run: ./build.sh MutationForSha",
+                "release-mutation: checkout must set fetch-depth: 0"),
+            ("publish skipping targets", "./build.sh Publish GitHubRelease", "./build.sh Publish GitHubRelease --skip Restore", "publish: must run exactly ./build.sh Publish GitHubRelease"),
+            ("release-mutation without issues: write", "      issues: write\n", "      issues: read\n", "release-mutation: permissions must be"),
+            ("publish without id-token: write", "      id-token: write\n", "", "publish: permissions must be"),
+            ("a branch trigger", "tags: ['v*']", "branches: [v2]", "release.yml must run on v* tags only"),
+            ("a fourth job", "jobs:\n", "jobs:\n  extra:\n    steps: []\n", "release.yml must have exactly the jobs"),
+            ("publish running after a failed gate", "    needs: [release-gates, release-mutation]\n", "    needs: [release-gates, release-mutation]\n    if: always()\n",
+                "publish: must have no if"),
+            ("a gate job continuing on error", "  release-mutation:\n", "  release-mutation:\n    continue-on-error: true\n", "release-mutation: must not set continue-on-error"),
+            ("a gate step continuing on error", "      - run: ./build.sh ReleaseGates\n", "      - run: ./build.sh ReleaseGates\n        continue-on-error: true\n",
+                "release-gates: must not set continue-on-error"),
+            ("a skipped gate step", "      - run: ./build.sh MutationForSha\n", "      - run: ./build.sh MutationForSha\n        if: false\n",
+                "release-mutation: the ./build.sh step must have no if"),
+        ];
+        foreach (var (workflowCase, from, to, expected) in workflows)
+        {
+            Expect(workflow.Contains(from, StringComparison.Ordinal), $"{workflowCase}: the fixture lacks '{from}'");
+            var violations = ReleaseWorkflowViolations(workflow.Replace(from, to, StringComparison.Ordinal)).ToList();
+            Expect(violations.Any(v => v.Contains(expected, StringComparison.Ordinal)), $"{workflowCase} must report '{expected}', got [{string.Join("; ", violations)}]");
+        }
+        return failures;
     }
 }

@@ -1,0 +1,97 @@
+# Hand-written (SPEC §20.1): VerifyWorkflows does not regenerate it, but checks its gates (ReleaseWorkflowViolations in
+# build/Build.Release.cs) and that its job names are unique across workflows (§20.2).
+# A v* tag runs the gates and the mutation check in parallel; publish waits for both and for the nuget environment's
+# approval, then pushes the uploaded packages with a short-lived trusted-publishing key.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release-gates:
+    name: release-gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: 'Setup: .NET SDK'
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: 'Install: wasm-tools'
+        run: dotnet workload install wasm-tools
+      - name: 'Run: ReleaseGates'
+        run: ./build.sh ReleaseGates
+      - name: 'Upload: packages'
+        uses: actions/upload-artifact@v5
+        with:
+          name: packages
+          path: |
+            artifacts/packages
+            artifacts/tombstone
+          if-no-files-found: error
+
+  release-mutation:
+    name: release-mutation
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: 'Setup: .NET SDK'
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: 'Run: MutationForSha'
+        run: ./build.sh MutationForSha
+
+  publish:
+    name: publish
+    needs: [release-gates, release-mutation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: nuget
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: 'Setup: .NET SDK'
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: 'Install: git-cliff'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff@2.14.2
+      - name: 'Download: packages'
+        uses: actions/download-artifact@v5
+        with:
+          name: packages
+          path: artifacts
+      - name: 'NuGet: trusted publishing login'
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: phmatray
+      - name: 'NuGet: API key'
+        run: echo "NUGET_API_KEY=${{ steps.login.outputs.NUGET_API_KEY }}" >> "$GITHUB_ENV"
+      - name: 'Run: Publish GitHubRelease'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./build.sh Publish GitHubRelease
