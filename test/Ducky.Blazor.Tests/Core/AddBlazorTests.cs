@@ -67,8 +67,9 @@ public sealed class AddBlazorTests
         await using var scope = provider.CreateAsyncScope();
         var store = scope.ServiceProvider.GetRequiredService<IStore>();
 
-        store.Slices.ShouldHaveSingleItem().ShouldBeOfType<CounterSlice>();
+        store.Slices.Select(static slice => slice.GetType()).ShouldBe([typeof(PersistenceSlice), typeof(CounterSlice)]);
         services.Count(descriptor => descriptor.ServiceType == typeof(CounterSlice)).ShouldBe(1);
+        services.Count(descriptor => descriptor.ServiceType == typeof(PersistenceSlice)).ShouldBe(1);
         services.Count(descriptor => descriptor.ServiceType == typeof(BlazorOptions)).ShouldBe(1);
         (await store.DispatchAsync(new Increment())).ShouldBe(DispatchResult.Reduced);
         store.State.Get<Counter>().Value.ShouldBe(1);

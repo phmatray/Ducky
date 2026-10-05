@@ -22,8 +22,8 @@ public static class StoreSelectionExtensions
     /// <param name="selector">Projects a snapshot to the value; must be pure.</param>
     /// <param name="invokeAsync">The component's <c>InvokeAsync</c>.</param>
     /// <param name="stateHasChanged">The component's <c>StateHasChanged</c>.</param>
-    /// <param name="rendererInfo">The component's <c>RendererInfo</c>.</param>
-    /// <param name="services">The component's injected <see cref="IServiceProvider"/>.</param>
+    /// <param name="rendererInfo">The component's <c>RendererInfo</c>: the first toucher tells the store whether it renders interactively.</param>
+    /// <param name="services">The component's injected <see cref="IServiceProvider"/>, handed over to the store as its renderer scope.</param>
     /// <param name="comparer">Decides whether the value changed; <see cref="EqualityComparer{T}.Default"/> when null.</param>
     /// <returns>The selection.</returns>
     /// <exception cref="ArgumentNullException">An argument other than <paramref name="comparer"/> is null.</exception>
@@ -42,7 +42,7 @@ public static class StoreSelectionExtensions
         ArgumentNullException.ThrowIfNull(stateHasChanged);
         ArgumentNullException.ThrowIfNull(rendererInfo);
         ArgumentNullException.ThrowIfNull(services);
-        var core = SubscriptionCore.Create(store, services, invokeAsync, stateHasChanged);
+        var core = SubscriptionCore.Create(store, services, () => rendererInfo, invokeAsync, stateHasChanged);
         var selection = core.Select(selector, comparer);
         return Selection<T>.Create(() => selection.Value, onDispose: core.Dispose);
     }

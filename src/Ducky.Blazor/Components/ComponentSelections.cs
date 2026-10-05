@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Components;
+
 namespace Ducky.Blazor;
 
 /// <summary>
@@ -13,6 +15,7 @@ internal sealed class ComponentSelections
         object component,
         IStore store,
         IServiceProvider services,
+        Func<RendererInfo> renderer,
         Func<Func<Task>, Task> invokeAsync,
         Action stateHasChanged,
         Func<StateSnapshot, T> selector,
@@ -24,7 +27,7 @@ internal sealed class ComponentSelections
             throw new InvalidOperationException(BlazorErrors.Format(BlazorErrors.SelectAfterFirstRender(component.GetType())));
         }
 
-        _core ??= SubscriptionCore.Create(store, services, invokeAsync, stateHasChanged);
+        _core ??= SubscriptionCore.Create(store, services, renderer, invokeAsync, stateHasChanged);
         return _core.Select(selector, comparer);
     }
 

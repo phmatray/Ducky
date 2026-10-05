@@ -24,6 +24,7 @@ public static class DuckyBlazorBuilderExtensions
             builder.Services.AddSingleton(new BlazorRegistration(options)).AddSingleton(options);
             // Stryker disable once Statement : the placeholders are inert until M6-04 and M6-07 fill them; their positions are asserted there
             builder.Use<PrerenderHandoff>().Use<PersistenceMiddleware>();
+            builder.AddSlice<PersistenceSlice>();
         }
 
         configure?.Invoke(options);

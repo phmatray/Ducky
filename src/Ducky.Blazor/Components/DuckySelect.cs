@@ -46,7 +46,7 @@ public sealed class DuckySelect<TResult> : ComponentBase, IDisposable
         if (!ReferenceEquals(selector, Selector) || !ReferenceEquals(comparer, Comparer))
         {
             _core?.Dispose();
-            _core = SubscriptionCore.Create(Store, Services, InvokeAsync, StateHasChanged);
+            _core = SubscriptionCore.Create(Store, Services, () => RendererInfo, InvokeAsync, StateHasChanged);
             _selection = _core.Select(Selector, Comparer);
         }
 
