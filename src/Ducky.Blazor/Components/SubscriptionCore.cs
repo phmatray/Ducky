@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -19,9 +20,16 @@ internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invo
     private volatile bool _disposed;
     private int _scheduled;
 
-    /// <summary>Creates a core that logs through the container's <see cref="ILogger{TCategoryName}"/>, when there is one.</summary>
-    public static SubscriptionCore Create(IStore store, IServiceProvider services, Func<Func<Task>, Task> invokeAsync, Action stateHasChanged) =>
-        new(store, invokeAsync, stateHasChanged, (ILogger?)services.GetService<ILogger<SubscriptionCore>>() ?? NullLogger.Instance);
+    /// <summary>
+    /// Creates a core that logs through the container's <see cref="ILogger{TCategoryName}"/>, when there is one. It first
+    /// records the renderer and hands over <paramref name="services"/> to the store's gate (§11.2), before anything
+    /// touches the store.
+    /// </summary>
+    public static SubscriptionCore Create(IStore store, IServiceProvider services, Func<RendererInfo> renderer, Func<Func<Task>, Task> invokeAsync, Action stateHasChanged)
+    {
+        InteractivityGate.HandOver(services, renderer);
+        return new(store, invokeAsync, stateHasChanged, (ILogger?)services.GetService<ILogger<SubscriptionCore>>() ?? NullLogger.Instance);
+    }
 
     /// <summary>
     /// Registers a selection. Its <see cref="Selection{T}.Value"/> evaluates on read, so a parameter change shows on the

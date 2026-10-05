@@ -60,3 +60,20 @@ Ducky.Blazor.DuckySelect<TResult>.Selector.set -> void
 Ducky.Blazor.StoreSelectionExtensions
 static Ducky.Blazor.StoreSelectionExtensions.Select<T>(this Ducky.IStore! store, System.Func<Ducky.StateSnapshot!, T>! selector, System.Func<System.Func<System.Threading.Tasks.Task!>!, System.Threading.Tasks.Task!>! invokeAsync, System.Action! stateHasChanged, Microsoft.AspNetCore.Components.RendererInfo! rendererInfo, System.IServiceProvider! services, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
 override Ducky.Blazor.DuckySelect<TResult>.SetParametersAsync(Microsoft.AspNetCore.Components.ParameterView parameters) -> System.Threading.Tasks.Task!
+Ducky.Blazor.PersistenceState
+Ducky.Blazor.PersistenceState.<Clone>$() -> Ducky.Blazor.PersistenceState!
+Ducky.Blazor.PersistenceState.Deconstruct(out Ducky.Blazor.PersistenceStatus Status) -> void
+Ducky.Blazor.PersistenceState.Equals(Ducky.Blazor.PersistenceState? other) -> bool
+Ducky.Blazor.PersistenceState.PersistenceState(Ducky.Blazor.PersistenceStatus Status) -> void
+Ducky.Blazor.PersistenceState.Status.get -> Ducky.Blazor.PersistenceStatus
+Ducky.Blazor.PersistenceState.Status.init -> void
+override Ducky.Blazor.PersistenceState.Equals(object? obj) -> bool
+override Ducky.Blazor.PersistenceState.GetHashCode() -> int
+override Ducky.Blazor.PersistenceState.ToString() -> string!
+static Ducky.Blazor.PersistenceState.operator !=(Ducky.Blazor.PersistenceState? left, Ducky.Blazor.PersistenceState? right) -> bool
+static Ducky.Blazor.PersistenceState.operator ==(Ducky.Blazor.PersistenceState? left, Ducky.Blazor.PersistenceState? right) -> bool
+Ducky.Blazor.PersistenceStatus
+Ducky.Blazor.PersistenceStatus.Failed = 3 -> Ducky.Blazor.PersistenceStatus
+Ducky.Blazor.PersistenceStatus.Hydrated = 2 -> Ducky.Blazor.PersistenceStatus
+Ducky.Blazor.PersistenceStatus.Hydrating = 1 -> Ducky.Blazor.PersistenceStatus
+Ducky.Blazor.PersistenceStatus.NotStarted = 0 -> Ducky.Blazor.PersistenceStatus

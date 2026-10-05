@@ -25,9 +25,17 @@ public sealed class DuckyInitializer : ComponentBase
     [Inject]
     private IStore Store { get; set; } = null!;
 
+    [Inject]
+    private IServiceProvider Services { get; set; } = null!;
+
     /// <inheritdoc/>
-    // The lifecycle task is the init task (never faults): ComponentBase awaits it, then renders ChildContent.
-    protected override Task OnInitializedAsync() => _init = Store.InitializeAsync();
+    // The hand-off comes first (§11.2): init may need the renderer's services. The lifecycle task is the init task (never
+    // faults): ComponentBase awaits it, then renders ChildContent.
+    protected override Task OnInitializedAsync()
+    {
+        InteractivityGate.HandOver(Services, () => RendererInfo);
+        return _init = Store.InitializeAsync();
+    }
 
     /// <inheritdoc/>
     protected override void BuildRenderTree(RenderTreeBuilder builder)

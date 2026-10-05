@@ -10,7 +10,7 @@ namespace Ducky.Blazor;
 /// poisons the calls that follow it. A call or a disposal interrupted by a disconnected circuit or an interop timeout
 /// reports "not delivered" with a Debug log (EventId 2000).
 /// </summary>
-internal sealed class JsBridge(IJSRuntime runtime, ILogger logger) : IAsyncDisposable
+internal sealed class JsBridge(Func<IJSRuntime> runtime, ILogger logger) : IAsyncDisposable
 {
     internal const string ModulePath = "./_content/Ducky.Blazor/ducky.js";
 
@@ -21,7 +21,14 @@ internal sealed class JsBridge(IJSRuntime runtime, ILogger logger) : IAsyncDispo
     private readonly SafeLogger _logger = new(logger);
     private readonly Lock _gate = new();
     private Task<IJSObjectReference>? _module;
+    private IJSRuntime? _moduleRuntime;
     private bool _disposed;
+
+    /// <summary>A bridge over one runtime.</summary>
+    public JsBridge(IJSRuntime runtime, ILogger logger)
+        : this(() => runtime, logger)
+    {
+    }
 
     /// <summary>
     /// The pending or successful import, started on first use and again after a faulted or cancelled one. A synchronous
@@ -33,11 +40,17 @@ internal sealed class JsBridge(IJSRuntime runtime, ILogger logger) : IAsyncDispo
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            if (_module is not { IsFaulted: false, IsCanceled: false })
+            // The runtime is read at every use: the gate's hand-off switches it to the renderer's (§6.10), which imports anew.
+            // ponytail: the import it replaces is dropped: a module that succeeded is not disposed, and one still pending that
+            // only the probe saw is never observed, so a later fault reaches TaskScheduler.UnobservedTaskException (no crash by
+            // default). Both need two different runtimes, which .NET 10 never hands over (S-7); retire the old task when one does.
+            var current = runtime();
+            if (_module is not { IsFaulted: false, IsCanceled: false } || !ReferenceEquals(current, _moduleRuntime))
             {
 #pragma warning disable RS0030 // justification: JsBridge is the single interop wrapper (§10, INV-23)
-                _module = runtime.InvokeAsync<IJSObjectReference>("import", [ModulePath]).AsTask();
+                _module = current.InvokeAsync<IJSObjectReference>("import", [ModulePath]).AsTask();
 #pragma warning restore RS0030
+                _moduleRuntime = current;
             }
 
             return _module;

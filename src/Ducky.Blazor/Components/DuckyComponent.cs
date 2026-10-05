@@ -36,7 +36,7 @@ public abstract class DuckyComponent : ComponentBase, IHandleAfterRender, IDispo
     /// <exception cref="ArgumentNullException"><paramref name="selector"/> is null.</exception>
     /// <exception cref="InvalidOperationException">DUCKY352: called after the component's first render.</exception>
     protected Selection<T> Select<T>(Func<StateSnapshot, T> selector, IEqualityComparer<T>? comparer = null) =>
-        _selections.Select(this, Store, Services, InvokeAsync, StateHasChanged, selector, comparer);
+        _selections.Select(this, Store, Services, () => RendererInfo, InvokeAsync, StateHasChanged, selector, comparer);
 
     /// <summary>Registers a selection over one slice's state; see <see cref="Select{T}(Func{StateSnapshot, T}, IEqualityComparer{T})"/>.</summary>
     /// <typeparam name="TState">The slice's state type.</typeparam>

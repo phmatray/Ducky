@@ -17,7 +17,7 @@ public abstract class DuckyLayout : LayoutComponentBase, IHandleAfterRender, IDi
 #pragma warning disable RS0026 // justification: SPEC §11.1 fixes both Select overloads, each with an optional comparer
     /// <inheritdoc cref="DuckyComponent.Select{T}(Func{StateSnapshot, T}, IEqualityComparer{T})"/>
     protected Selection<T> Select<T>(Func<StateSnapshot, T> selector, IEqualityComparer<T>? comparer = null) =>
-        _selections.Select(this, Store, Services, InvokeAsync, StateHasChanged, selector, comparer);
+        _selections.Select(this, Store, Services, () => RendererInfo, InvokeAsync, StateHasChanged, selector, comparer);
 
     /// <inheritdoc cref="DuckyComponent.Select{TState, T}(Func{TState, T}, IEqualityComparer{T})"/>
     protected Selection<T> Select<TState, T>(Func<TState, T> selector, IEqualityComparer<T>? comparer = null)
