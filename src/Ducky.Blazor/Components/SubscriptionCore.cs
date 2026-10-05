@@ -1,4 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ducky.Blazor;
 
@@ -16,6 +18,10 @@ internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invo
     private Selection<StateSnapshot>? _subscription;
     private volatile bool _disposed;
     private int _scheduled;
+
+    /// <summary>Creates a core that logs through the container's <see cref="ILogger{TCategoryName}"/>, when there is one.</summary>
+    public static SubscriptionCore Create(IStore store, IServiceProvider services, Func<Func<Task>, Task> invokeAsync, Action stateHasChanged) =>
+        new(store, invokeAsync, stateHasChanged, (ILogger?)services.GetService<ILogger<SubscriptionCore>>() ?? NullLogger.Instance);
 
     /// <summary>
     /// Registers a selection. Its <see cref="Selection{T}.Value"/> evaluates on read, so a parameter change shows on the
