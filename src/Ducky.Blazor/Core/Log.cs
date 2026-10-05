@@ -4,6 +4,7 @@ namespace Ducky.Blazor;
 
 // Ducky.Blazor log events (SPEC §9): EventIds 2000-2999, types and keys only, never values. Assigned by SPEC §6.3 and §11
 // (the source of truth); M5-02 uses 2000, M5-03 (SubscriptionCore) 2001-2003, M6-02 2030-2033 (the envelope reader).
+// 2010 (a seed that is not an envelope) is NOT assigned by SPEC: M6-04 took it pending an owner note so §11.4 assigns it.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -17,6 +18,9 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2003, Level = LogLevel.Warning, Message = "Requesting a component's re-render after a change failed; the next commit checks it again")]
     internal static partial void RenderRequestFailed(SafeLogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 2010, Level = LogLevel.Warning, Message = "The prerender seed is not a seed envelope; nothing was restored from it")]
+    internal static partial void UnreadableSeed(SafeLogger logger, Exception? exception);
 
     [LoggerMessage(EventId = 2030, Level = LogLevel.Debug, Message = "The value of '{Key}' is not a 2.x envelope (1.x or foreign data); discarded")]
     internal static partial void NotAnEnvelope(SafeLogger logger, string key);
