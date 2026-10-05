@@ -30,6 +30,8 @@
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.10.0" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
+    <!-- Component tests (SPEC §17.2: bUnit 2.x, sets RendererInfo). -->
+    <PackageVersion Include="bunit" Version="2.11.3" />
     <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
