@@ -1,7 +1,5 @@
 namespace Ducky.Blazor;
 
-// Placeholders whose positions AddBlazor fixes (SPEC §11.1): inert until the prerender handoff (§11.4) and the
-// persistence middleware (§11.5) fill them.
-internal sealed class PrerenderHandoff : Middleware;
-
+// A placeholder whose position AddBlazor fixes (SPEC §11.1), after the prerender handoff: inert until the persistence
+// middleware (§11.5) fills it.
 internal sealed class PersistenceMiddleware : Middleware;

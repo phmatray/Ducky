@@ -77,3 +77,5 @@ Ducky.Blazor.PersistenceStatus.Failed = 3 -> Ducky.Blazor.PersistenceStatus
 Ducky.Blazor.PersistenceStatus.Hydrated = 2 -> Ducky.Blazor.PersistenceStatus
 Ducky.Blazor.PersistenceStatus.Hydrating = 1 -> Ducky.Blazor.PersistenceStatus
 Ducky.Blazor.PersistenceStatus.NotStarted = 0 -> Ducky.Blazor.PersistenceStatus
+static Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<TSlice, TState>(this Ducky.DuckyBuilder! builder, System.Func<TState!, bool>! include) -> Ducky.DuckyBuilder!
+static Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<TSlice>(this Ducky.DuckyBuilder! builder) -> Ducky.DuckyBuilder!

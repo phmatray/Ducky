@@ -113,8 +113,8 @@ public sealed class InteractivityGateTests : BunitContext
         // Before any component registered: the store scope's instances.
         (await bridge.TryInvokeAsync<bool>("storageRemove", Ct, "local", "k", 1)).Delivered.ShouldBeTrue();
         storeJs.Calls.Select(static call => call.Identifier).ShouldBe(["import", "storageRemove"]);
-        Take(Gate.PersistentStateOr(storeState)).ShouldBe("store");
-        PersistSeed(Gate.PersistentStateOr(storeState), "before");
+        Take(Gate.PersistentStateOr(storeState).ShouldNotBeNull()).ShouldBe("store");
+        PersistSeed(Gate.PersistentStateOr(storeState).ShouldNotBeNull(), "before");
 
         Renderer.SetRendererInfo(_wasm);
         Render<CounterView>();
@@ -123,7 +123,7 @@ public sealed class InteractivityGateTests : BunitContext
         (await bridge.TryInvokeAsync<bool>("storageRemove", Ct, "local", "k", 1)).Delivered.ShouldBeTrue();
         rendererJs.Calls.Select(static call => call.Identifier).ShouldBe(["import", "storageRemove"]);
         storeJs.Calls.Count.ShouldBe(2);
-        var state = Gate.PersistentStateOr(storeState);
+        var state = Gate.PersistentStateOr(storeState).ShouldNotBeNull();
         Take(state).ShouldBe("renderer");
         PersistSeed(state, "next");
         await rendererManager.PersistStateAsync(rendererStore, Renderer);
