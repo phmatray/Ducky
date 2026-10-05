@@ -8,9 +8,10 @@ namespace Ducky.Tests.Contract;
 
 // SPEC §7.4, §8.1, INV-10. The never-fault set of the core: IDispatcher.DispatchAsync, EffectContext.DispatchAsync,
 // IStore.DisposeAsync, and InitializeAsync/WhenIdleAsync with a non-cancelled token (SliceStore.SetAsync arrives with
-// SliceStore, M9-01b; DuckyComponent.DispatchAsync with Ducky.Blazor). Their tasks never fault or cancel under any failure
-// injection; the §7.4 programmer errors are thrown synchronously and are not faults, so every argument is non-null and
-// the configuration constructible. The first carve-out: only the cancelled caller's own wait completes Canceled.
+// SliceStore, M9-01b; DuckyComponent.DispatchAsync is Ducky.Blazor.Tests' Api_DuckyComponentDispatchAsync_NeverFaults).
+// Their tasks never fault or cancel under any failure injection; the §7.4 programmer errors are thrown synchronously and
+// are not faults, so every argument is non-null and the configuration constructible. The first carve-out: only the
+// cancelled caller's own wait completes Canceled.
 public sealed class NeverFaultTests
 {
     private const string DispatchAsync = "IDispatcher.DispatchAsync";

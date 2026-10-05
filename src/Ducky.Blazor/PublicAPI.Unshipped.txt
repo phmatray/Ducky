@@ -21,3 +21,24 @@ Ducky.Blazor.BlazorOptions.KeyPrefix.get -> string!
 Ducky.Blazor.BlazorOptions.KeyPrefix.set -> void
 Ducky.Blazor.DuckyBlazorBuilderExtensions
 static Ducky.Blazor.DuckyBlazorBuilderExtensions.AddBlazor(this Ducky.DuckyBuilder! builder, System.Action<Ducky.Blazor.BlazorOptions!>? configure = null) -> Ducky.DuckyBuilder!
+Ducky.Blazor.DuckyComponent
+Ducky.Blazor.DuckyComponent.Dispatch(object! action) -> void
+Ducky.Blazor.DuckyComponent.DispatchAsync(object! action) -> System.Threading.Tasks.Task<Ducky.DispatchResult>!
+Ducky.Blazor.DuckyComponent.Dispose() -> void
+Ducky.Blazor.DuckyComponent.DuckyComponent() -> void
+Ducky.Blazor.DuckyComponent.Select<T>(System.Func<Ducky.StateSnapshot!, T>! selector, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
+Ducky.Blazor.DuckyComponent.Select<TState, T>(System.Func<TState!, T>! selector, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
+Ducky.Blazor.DuckyComponent.Store.get -> Ducky.IStore!
+Ducky.Blazor.DuckyComponent<TState>
+Ducky.Blazor.DuckyComponent<TState>.DuckyComponent() -> void
+Ducky.Blazor.DuckyComponent<TState>.State.get -> TState!
+Ducky.Blazor.DuckyLayout
+Ducky.Blazor.DuckyLayout.Dispatch(object! action) -> void
+Ducky.Blazor.DuckyLayout.DispatchAsync(object! action) -> System.Threading.Tasks.Task<Ducky.DispatchResult>!
+Ducky.Blazor.DuckyLayout.Dispose() -> void
+Ducky.Blazor.DuckyLayout.DuckyLayout() -> void
+Ducky.Blazor.DuckyLayout.Select<T>(System.Func<Ducky.StateSnapshot!, T>! selector, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
+Ducky.Blazor.DuckyLayout.Select<TState, T>(System.Func<TState!, T>! selector, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
+Ducky.Blazor.DuckyLayout.Store.get -> Ducky.IStore!
+virtual Ducky.Blazor.DuckyComponent.Dispose(bool disposing) -> void
+virtual Ducky.Blazor.DuckyLayout.Dispose(bool disposing) -> void
