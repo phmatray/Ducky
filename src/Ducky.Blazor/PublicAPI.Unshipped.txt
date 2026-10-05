@@ -42,3 +42,21 @@ Ducky.Blazor.DuckyLayout.Select<TState, T>(System.Func<TState!, T>! selector, Sy
 Ducky.Blazor.DuckyLayout.Store.get -> Ducky.IStore!
 virtual Ducky.Blazor.DuckyComponent.Dispose(bool disposing) -> void
 virtual Ducky.Blazor.DuckyLayout.Dispose(bool disposing) -> void
+Ducky.Blazor.DuckyInitializer
+Ducky.Blazor.DuckyInitializer.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Ducky.Blazor.DuckyInitializer.ChildContent.set -> void
+Ducky.Blazor.DuckyInitializer.DuckyInitializer() -> void
+Ducky.Blazor.DuckyInitializer.Loading.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Ducky.Blazor.DuckyInitializer.Loading.set -> void
+Ducky.Blazor.DuckySelect<TResult>
+Ducky.Blazor.DuckySelect<TResult>.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment<TResult>?
+Ducky.Blazor.DuckySelect<TResult>.ChildContent.set -> void
+Ducky.Blazor.DuckySelect<TResult>.Comparer.get -> System.Collections.Generic.IEqualityComparer<TResult>?
+Ducky.Blazor.DuckySelect<TResult>.Comparer.set -> void
+Ducky.Blazor.DuckySelect<TResult>.Dispose() -> void
+Ducky.Blazor.DuckySelect<TResult>.DuckySelect() -> void
+Ducky.Blazor.DuckySelect<TResult>.Selector.get -> System.Func<Ducky.StateSnapshot!, TResult>!
+Ducky.Blazor.DuckySelect<TResult>.Selector.set -> void
+Ducky.Blazor.StoreSelectionExtensions
+static Ducky.Blazor.StoreSelectionExtensions.Select<T>(this Ducky.IStore! store, System.Func<Ducky.StateSnapshot!, T>! selector, System.Func<System.Func<System.Threading.Tasks.Task!>!, System.Threading.Tasks.Task!>! invokeAsync, System.Action! stateHasChanged, Microsoft.AspNetCore.Components.RendererInfo! rendererInfo, System.IServiceProvider! services, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
+override Ducky.Blazor.DuckySelect<TResult>.SetParametersAsync(Microsoft.AspNetCore.Components.ParameterView parameters) -> System.Threading.Tasks.Task!

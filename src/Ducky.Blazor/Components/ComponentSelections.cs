@@ -1,7 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace Ducky.Blazor;
 
 /// <summary>
@@ -28,7 +24,7 @@ internal sealed class ComponentSelections
             throw new InvalidOperationException(BlazorErrors.Format(BlazorErrors.SelectAfterFirstRender(component.GetType())));
         }
 
-        _core ??= new(store, invokeAsync, stateHasChanged, (ILogger?)services.GetService<ILogger<SubscriptionCore>>() ?? NullLogger.Instance);
+        _core ??= SubscriptionCore.Create(store, services, invokeAsync, stateHasChanged);
         return _core.Select(selector, comparer);
     }
 
