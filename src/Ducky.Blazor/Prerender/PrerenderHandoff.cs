@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.JSInterop;
 
 namespace Ducky.Blazor;
 
@@ -18,9 +19,14 @@ internal sealed class PrerenderHandoff : Middleware
     private readonly BlazorRegistration _registration;
     private readonly PersistenceSlice _persistence;
     private readonly PersistentComponentState? _storeScope;
+    private readonly IJSRuntime? _jsRuntime;
     private readonly TimeProvider _time;
     private readonly SafeLogger _logger;
     private int _settled; // the browser's once-flag: the first-registration callback or the timeout settles the wait
+
+    // The seed, written once per store: a page whose app configures both render modes persists through one store per
+    // payload, and the framework calls the registration once per payload.
+    private Task<byte[]?>? _seed;
 
     public PrerenderHandoff(BlazorRegistration registration, PersistenceSlice persistence, IServiceProvider services)
     {
@@ -28,6 +34,7 @@ internal sealed class PrerenderHandoff : Middleware
 
         // GetService: a host without Blazor's services (a console, a test container) has nothing to take or persist.
         _storeScope = services.GetService<PersistentComponentState>();
+        _jsRuntime = services.GetService<IJSRuntime>();
         _time = services.GetRequiredService<TimeProvider>();
         _logger = new((ILogger?)services.GetService<ILogger<PrerenderHandoff>>() ?? NullLogger.Instance);
         if (registration.Prerender.Count == 0)
@@ -183,12 +190,59 @@ internal sealed class PrerenderHandoff : Middleware
         return new(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, MaxDepth = maxDepth + 2 });
     }
 
-    // M6-05: idle wait (PrerenderIdleTimeout, Warning 2014), src, PrerenderSeedMaxWireBytes budget, Warning 2021 for an
-    // unserializable slice, Debug log for include=false. Until then this interim writer seeds whatever the store holds.
+    // The seed is persisted as PersistAsJson<byte[]> of the UTF-8 envelope, never as a string (§11.4 wire estimate).
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "byte[] is intrinsic to STJ")]
-    private Task PersistAsync(PersistentComponentState state)
+    private async Task PersistAsync(PersistentComponentState state)
     {
-        state.PersistAsJson(SeedKey, SeedEnvelope.Write(Store, _registration.Prerender));
-        return Task.CompletedTask;
+        _seed ??= WriteSeedAsync();
+
+        // Back on the renderer's context: the framework reads what its callbacks persist once they all completed.
+        // Stryker disable once Boolean : no SynchronizationContext is captured outside a renderer, as in these tests
+        if (await _seed.ConfigureAwait(true) is { } seed)
+        {
+            state.PersistAsJson(SeedKey, seed);
+        }
+    }
+
+    // §11.4 OnPersisting: only from an idle store, waited for at most PrerenderIdleTimeout (LongRunning effects and
+    // Ducky.Reactive never count as running), else nothing and Warning 2014; then one snapshot. The circuit store's
+    // callback runs when .NET pauses the circuit: a pause seed. It never depends on an Unknown gate: decided after the idle
+    // wait, by one probe if no component recorded its renderer. Any failure only costs the seed (Warning 2012): a faulted
+    // callback would fail the page's whole state persistence, other PersistentComponentState users included.
+    private async Task<byte[]?> WriteSeedAsync()
+    {
+        try
+        {
+            var timeout = _registration.Options.PrerenderIdleTimeout;
+            using (var idle = new CancellationTokenSource(timeout, _time))
+            {
+                try
+                {
+                    await Store.WhenIdleAsync(idle.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    Log.SeedIdleTimeout(_logger, timeout);
+                    return null;
+                }
+            }
+
+            // PersistentComponentState comes with Blazor's services, IJSRuntime included.
+            string src;
+            var bridge = _persistence.Gate.CreateBridge(_jsRuntime!, _logger);
+            await using (bridge.ConfigureAwait(false))
+            {
+                src = _persistence.Gate.Resolve(_registration.Options.IsBrowser, bridge) == InteractivityMode.Interactive ? "pause" : "prerender";
+            }
+
+            return SeedWriter.Write(Store, _registration, src, _logger);
+        }
+#pragma warning disable CA1031 // justification: the seed is best effort, the page's other persisted state is not (§11.4)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+#pragma warning restore CA1031
+        {
+            Log.SeedWriteFailed(_logger, exception);
+            return null;
+        }
     }
 }

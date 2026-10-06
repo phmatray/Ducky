@@ -6,6 +6,8 @@ namespace Ducky.Blazor;
 // (the source of truth); M5-02 uses 2000, M5-03 (SubscriptionCore) 2001-2003, M6-02 2030-2033 (the envelope reader).
 // 2010 (a seed that is not an envelope) is NOT assigned by SPEC: M6-04 took it pending an owner note so §11.4 assigns it.
 // M6-06 uses 2022 (§11.4) and 2025, which SPEC does not assign either (the browser seed restore skipped after an abort or a dispose).
+// M6-05 uses 2014 and 2021 (§11.4) and takes, on the same terms, 2011 (the include predicate's Debug log, which §11.4
+// leaves unnumbered) and 2012 (a seed write that failed, which §11.4 doesn't name).
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -22,6 +24,18 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2010, Level = LogLevel.Warning, Message = "The prerender seed is not a seed envelope; nothing was restored from it")]
     internal static partial void UnreadableSeed(SafeLogger logger, Exception? exception);
+
+    [LoggerMessage(EventId = 2011, Level = LogLevel.Debug, Message = "Slice '{Key}' was left out of the prerender seed: its include predicate is false for the current state")]
+    internal static partial void SeedSliceExcluded(SafeLogger logger, string key);
+
+    [LoggerMessage(EventId = 2012, Level = LogLevel.Warning, Message = "The prerender seed could not be written: no seed was persisted, and the interactive side loads again")]
+    internal static partial void SeedWriteFailed(SafeLogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 2014, Level = LogLevel.Warning, Message = "The store was not idle within PrerenderIdleTimeout ({Timeout}): no prerender seed was persisted, and the interactive side loads again")]
+    internal static partial void SeedIdleTimeout(SafeLogger logger, TimeSpan timeout);
+
+    [LoggerMessage(EventId = 2021, Level = LogLevel.Warning, Message = "Slice '{Key}' was left out of the prerender seed: its include predicate threw, its state can't be serialized, or it would push the seed's estimated wire size past PrerenderSeedMaxWireBytes; the interactive side loads it again")]
+    internal static partial void SeedSliceOmitted(SafeLogger logger, string key, Exception? exception);
 
     [LoggerMessage(EventId = 2022, Level = LogLevel.Warning, Message = "No prerender seed arrived within PrerenderSeedWaitTimeout ({Timeout}): don't await a preload before RunAsync, or render <DuckyInitializer> (or a Ducky component) first")]
     internal static partial void SeedWaitTimedOut(SafeLogger logger, TimeSpan timeout);
