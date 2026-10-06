@@ -127,8 +127,11 @@ internal sealed class InteractivityGate
     /// <summary>The handed-over renderer instance once a component registered, <paramref name="storeScope"/>'s before.</summary>
     public PersistentComponentState? PersistentStateOr(PersistentComponentState? storeScope) => _persistentState ?? storeScope;
 
-    /// <summary>A bridge that imports and calls through the handed-over runtime once a component registered, <paramref name="storeScope"/>'s before.</summary>
-    public JsBridge CreateBridge(IJSRuntime storeScope, ILogger logger) => new(() => _jsRuntime ?? storeScope, logger);
+    /// <summary>
+    /// A bridge that imports and calls through the handed-over runtime once a component registered, <paramref name="storeScope"/>'s
+    /// before (none in a host without JS, where every import fails as non-interactive).
+    /// </summary>
+    public JsBridge CreateBridge(IJSRuntime? storeScope, ILogger logger) => new(() => _jsRuntime ?? storeScope, logger);
 
     private InteractivityMode Mode => (InteractivityMode)Volatile.Read(ref _mode);
 

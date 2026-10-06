@@ -28,4 +28,10 @@ internal sealed class PersistenceSlice : Slice<PersistenceState>
 
     // Always Hydrated: a slice built with new() can't know whether anything is persisted.
     protected override PersistenceState Initial => new(PersistenceStatus.Hydrated);
+
+    /// <summary>
+    /// The store's persistence middleware once built: its attempt, key set, epoch-to-scope map and baselines are what the
+    /// pause seed reads (§11.4).
+    /// </summary>
+    public PersistenceMiddleware? Middleware { get; set; }
 }

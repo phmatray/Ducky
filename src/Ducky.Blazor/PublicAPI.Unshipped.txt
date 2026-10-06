@@ -139,3 +139,5 @@ Ducky.Blazor.BlazorOptions.PrerenderIdleTimeout.get -> System.TimeSpan
 Ducky.Blazor.BlazorOptions.PrerenderIdleTimeout.set -> void
 Ducky.Blazor.BlazorOptions.PrerenderSeedMaxWireBytes.get -> int
 Ducky.Blazor.BlazorOptions.PrerenderSeedMaxWireBytes.set -> void
+Ducky.Blazor.BlazorOptions.InlinePayloadBytes.get -> int
+Ducky.Blazor.BlazorOptions.InlinePayloadBytes.set -> void

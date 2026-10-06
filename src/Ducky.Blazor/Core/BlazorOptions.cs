@@ -48,6 +48,12 @@ public sealed class BlazorOptions
     /// </summary>
     public int PrerenderSeedMaxWireBytes { get; set; } = 20 * 1024;
 
+    /// <summary>
+    /// The largest stored value, in UTF-8 bytes of its JSON encoding, that crosses from JS to .NET inline. Default 16 KiB,
+    /// well below Blazor Server's 32 KB <c>MaximumReceiveMessageSize</c> (SPEC §11.5, D11).
+    /// </summary>
+    public int InlinePayloadBytes { get; set; } = 16 * 1024;
+
     // §5.1: read once, here, and read back by every browser-dependent branch when it runs. Settable so the package's
     // tests can set it inside configure.
 #pragma warning disable RS0030 // justification: the single IsBrowser read of this package (§5.1)
