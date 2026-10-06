@@ -10,7 +10,7 @@ namespace Ducky.Blazor;
 // SPEC §11.5: one per store, registered by AddBlazor right after the prerender handoff, inert without Persist<T> slices.
 // Every restore and terminal it issues is issued under _issue together with the decision behind it, so they reach the
 // queue in decision order (an inline drain under it is allowed: the lock is reentrant and never taken under _gate).
-internal sealed class PersistenceMiddleware : Middleware
+internal sealed partial class PersistenceMiddleware : Middleware
 {
     private readonly Lock _issue = new();
     private readonly BlazorRegistration _registration;
@@ -81,6 +81,7 @@ internal sealed class PersistenceMiddleware : Middleware
         // Attempt 0: epoch 0 (no scope switch yet), its key set every readable key. The init-phase deadline and the init
         // token each end the attempt if it has not ended (step 7); the linked token only bounds the scope wait and the reads.
         var attempt = new Attempt(0, [.. slices.Select(static persisted => persisted.Slice.Key)]);
+        _writers = slices.ToDictionary(static persisted => persisted.Slice.Key, persisted => new PersistenceWriter(this, persisted.Slice, persisted.Options));
         _initToken = cancellationToken;
         _deadline = new(_registration.Options.HydrationTimeout, _time);
         _hydration = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _deadline.Token);
@@ -108,6 +109,11 @@ internal sealed class PersistenceMiddleware : Middleware
         // After init ended (§6.11): a HydrateAsync still awaiting a late scope delegate holds an already-cancelled token.
         _hydration?.Dispose();
         _deadline?.Dispose();
+        foreach (var writer in _writers.Values)
+        {
+            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+            await writer.DisposeAsync().ConfigureAwait(false);
+        }
 
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         await _bridge.DisposeAsync().ConfigureAwait(false);
