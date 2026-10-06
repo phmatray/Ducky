@@ -16,7 +16,7 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
     // a read that never happened is not "not found", so it fails the attempt rather than restore nothing (§11.5 step 7).
     public async ValueTask<string?> GetAsync(PersistStorage storage, string key, CancellationToken cancellationToken)
     {
-        var area = storage == PersistStorage.Local ? "local" : "session";
+        var area = Area(storage);
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         var (delivered, value) = await bridge.TryInvokeAsync<string>("storageGet", cancellationToken, area, key, options.InlinePayloadBytes).ConfigureAwait(false);
         ThrowIfInterrupted(delivered, area, key);
@@ -97,4 +97,15 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
             Log.InteropInterrupted(_logger, exception, "dispose");
         }
     }
+
+    // Whether the write was delivered: false for a disconnect or an interop timeout (Debug only); any other failure throws.
+    // ponytail: storageSet's "id not registered" answer is ignored until cross-tab (§11.7) re-registers a pruned id.
+    public async ValueTask<bool> SetAsync(PersistStorage storage, string key, string value, string id, CancellationToken cancellationToken)
+    {
+        // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+        var (delivered, _) = await bridge.TryInvokeAsync<bool>("storageSet", cancellationToken, Area(storage), key, value, id).ConfigureAwait(false);
+        return delivered;
+    }
+
+    private static string Area(PersistStorage storage) => storage == PersistStorage.Local ? "local" : "session";
 }

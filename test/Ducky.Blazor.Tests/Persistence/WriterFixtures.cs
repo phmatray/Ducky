@@ -1,0 +1,239 @@
+using System.Collections.Concurrent;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading.Channels;
+using Ducky.Blazor.Tests.Core;
+using Ducky.Blazor.Tests.Fakes;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
+using Microsoft.JSInterop;
+
+namespace Ducky.Blazor.Tests.Persistence;
+
+internal sealed record Level(double Value);
+
+internal sealed record SetLevel(double Value);
+
+// A double, so a NaN fails serialization (§10).
+internal sealed class LevelSlice : Slice<Level>
+{
+    public LevelSlice() => On<SetLevel>(static (_, action) => new(action.Value));
+
+    protected override Level Initial => new(0);
+}
+
+internal sealed record Dial(int Value);
+
+internal sealed record SetDial(int Value);
+
+internal sealed class DialSlice : Slice<Dial>
+{
+    public DialSlice() => On<SetDial>(static (_, action) => new(action.Value));
+
+    protected override Dial Initial => new(0);
+}
+
+internal sealed record Crashes(int Count);
+
+// Throws on PersistenceFailed: dispatched with isFailure, that throw is logged, never routed as a ReducerFailed (INV-12).
+internal sealed class CrashOnPersistenceFailedSlice : Slice<Crashes>
+{
+    public CrashOnPersistenceFailedSlice() => On<PersistenceFailed>(static _ => throw new InvalidOperationException("reducer throws"));
+
+    protected override Crashes Initial => new(0);
+}
+
+// Every PersistenceFailed the store processed, in order.
+internal sealed class FailureInbox
+{
+    public Channel<PersistenceFailed> Failures { get; } = Channel.CreateUnbounded<PersistenceFailed>();
+}
+
+internal sealed class FailureTap(FailureInbox inbox) : Middleware
+{
+    public override void AfterReduce(ActionContext context)
+    {
+        if (context.Action is PersistenceFailed failed)
+        {
+            inbox.Failures.Writer.TryWrite(failed);
+        }
+    }
+}
+
+// Lets a test raise a System-origin change (a DispatchSystem from another middleware) at any moment, init included.
+internal sealed class SystemSender : Middleware
+{
+    public SystemSender(SystemLine line) => line.Send = DispatchSystem;
+}
+
+internal sealed class SystemLine
+{
+    public Action<object, bool>? Send { get; set; }
+}
+
+// Registered before AddBlazor: dispatches during its own init, before persistence's synchronous prefix has run.
+internal sealed class EarlyChange : Middleware
+{
+    public override ValueTask InitializeAsync(CancellationToken cancellationToken)
+    {
+        DispatchSystem(new SetLevel(2));
+        DispatchSystem(new Increment());
+        return default;
+    }
+}
+
+// One storageSet call: what the writer stored, and its payload s.
+internal sealed record StoredWrite(string Area, string Key, string Value, string Id)
+{
+    public string Payload => JsonDocument.Parse(Value).RootElement.GetProperty("s").GetRawText();
+}
+
+// A FakeTimeProvider that reports each timer as it is created, so a test advances time only once the writer waits.
+internal sealed class WatchedTime() : FakeTimeProvider(new DateTimeOffset(2026, 9, 30, 12, 0, 0, TimeSpan.Zero))
+{
+    private readonly Channel<TimeSpan> _timers = Channel.CreateUnbounded<TimeSpan>();
+
+    public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+    {
+        var timer = base.CreateTimer(callback, state, dueTime, period);
+        _timers.Writer.TryWrite(dueTime);
+        return timer;
+    }
+
+    /// <summary>Waits until a timer of <paramref name="dueTime"/> has been created.</summary>
+    public async Task TimerAsync(TimeSpan dueTime)
+    {
+        while (await _timers.Reader.ReadAsync(Xunit.TestContext.Current.CancellationToken).AsTask().WaitAsync(TimeSpan.FromSeconds(10)) != dueTime)
+        {
+        }
+    }
+}
+
+// One store over a FakeJsRuntime whose storage is a dictionary (§17.2): storageSet records each write and answers what
+// OnSet decides (a value, a Task<object?> to hold or fail the call, or a throw).
+internal sealed class WriterHarness : IAsyncDisposable
+{
+    private readonly ServiceProvider _provider;
+    private readonly AsyncServiceScope _scope;
+    private readonly Channel<StoredWrite> _writes = Channel.CreateUnbounded<StoredWrite>();
+
+    public WriterHarness(Action<DuckyBuilder> configure, bool browser = true, Action<DuckyBuilder>? early = null)
+    {
+        OnGet = Get;
+        Js.Respond = (identifier, args) => identifier switch
+        {
+            "import" => Js,
+            "storageGet" => OnGet(args),
+            "storageSet" => Set(new((string)args[0]!, (string)args[1]!, (string)args[2]!, (string)args[3]!)),
+            _ => null,
+        };
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IJSRuntime>(Js).AddSingleton<TimeProvider>(Time).AddSingleton(Log).AddSingleton(Inbox).AddSingleton(Line);
+        services.AddDucky(d =>
+        {
+            d.UseJson(WriterJson.Default).AddSlice<LevelSlice>().AddSlice<DialSlice>().AddSlice<CounterSlice>();
+            early?.Invoke(d);
+            d.AddBlazor(o => o.IsBrowser = browser);
+            configure(d);
+            d.Use<HydrationRecorder>().Use<FailureTap>().Use<SystemSender>();
+        });
+        _provider = services.BuildServiceProvider();
+        _scope = _provider.CreateAsyncScope();
+    }
+
+    public FakeJsRuntime Js { get; } = new();
+
+    public WatchedTime Time { get; } = new();
+
+    public HydrationLog Log { get; } = new();
+
+    public FailureInbox Inbox { get; } = new();
+
+    public SystemLine Line { get; } = new();
+
+    public ConcurrentDictionary<(string Area, string Key), string> Storage { get; } = new();
+
+    /// <summary>What storageGet answers; by default the stored value.</summary>
+    public Func<object?[], object?> OnGet { get; set; }
+
+    /// <summary>What storageSet answers once the write is recorded; by default true (the id is registered).</summary>
+    public Func<StoredWrite, object?> OnSet { get; set; } = static _ => true;
+
+    public IStore Store => _scope.ServiceProvider.GetRequiredService<IStore>();
+
+    public PersistenceMiddleware Middleware => _scope.ServiceProvider.GetRequiredService<PersistenceSlice>().Middleware.ShouldNotBeNull();
+
+    public IReadOnlyList<StoredWrite> Written => [.. Js.Calls.Where(static call => call.Identifier == "storageSet").Select(static call => new StoredWrite((string)call.Args[0]!, (string)call.Args[1]!, (string)call.Args[2]!, (string)call.Args[3]!))];
+
+    public static string Payload(object state) => JsonSerializer.Serialize(state, state.GetType(), WriterJson.Default);
+
+    public Task InitializeAsync() => Store.InitializeAsync(Xunit.TestContext.Current.CancellationToken);
+
+    /// <summary>The next storageSet call, in call order.</summary>
+    public Task<StoredWrite> NextWriteAsync() =>
+        _writes.Reader.ReadAsync(Xunit.TestContext.Current.CancellationToken).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+
+    /// <summary>Takes the storageSet calls already made, without waiting.</summary>
+    public List<StoredWrite> TakeWrites()
+    {
+        List<StoredWrite> taken = [];
+        while (_writes.Reader.TryRead(out var write))
+        {
+            taken.Add(write);
+        }
+
+        return taken;
+    }
+
+    /// <summary>Waits until at least one more storageSet call has been made.</summary>
+    public Task WriteArrivedAsync() =>
+        _writes.Reader.WaitToReadAsync(Xunit.TestContext.Current.CancellationToken).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+
+    /// <summary>The next PersistenceFailed the store processed.</summary>
+    public Task<PersistenceFailed> NextFailureAsync() =>
+        Inbox.Failures.Reader.ReadAsync(Xunit.TestContext.Current.CancellationToken).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+
+    /// <summary>Waits until the writer of <paramref name="key"/> has ended <paramref name="iterations"/> iterations.</summary>
+    public Task IterationsAsync(string key, int iterations) => Until(() => Middleware.Writers[key].Iterations >= iterations);
+
+    /// <summary>Yields until <paramref name="condition"/> holds, bounded by 10 s.</summary>
+    public static async Task Until(Func<bool> condition)
+    {
+        using var bound = CancellationTokenSource.CreateLinkedTokenSource(Xunit.TestContext.Current.CancellationToken);
+        bound.CancelAfter(TimeSpan.FromSeconds(10));
+        while (!condition())
+        {
+            bound.Token.ThrowIfCancellationRequested();
+            await Task.Yield();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _scope.DisposeAsync();
+        await _provider.DisposeAsync();
+    }
+
+    private object? Set(StoredWrite write)
+    {
+        Log.Add($"write:{write.Key}:{write.Payload}");
+
+        // Announced once OnSet has run (or thrown), so a test that sees the write also sees what OnSet did with it.
+        try
+        {
+            return OnSet(write);
+        }
+        finally
+        {
+            _writes.Writer.TryWrite(write);
+        }
+    }
+
+    private string? Get(object?[] args) => Storage.GetValueOrDefault(((string)args[0]!, (string)args[1]!));
+}
+
+[JsonSerializable(typeof(Level))]
+[JsonSerializable(typeof(Dial))]
+[JsonSerializable(typeof(Counter))]
+internal sealed partial class WriterJson : JsonSerializerContext;
