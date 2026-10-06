@@ -8,6 +8,7 @@ namespace Ducky.Blazor;
 // M6-06 uses 2022 (§11.4) and 2025, which SPEC does not assign either (the browser seed restore skipped after an abort or a dispose).
 // M6-05 uses 2014 and 2021 (§11.4) and takes, on the same terms, 2011 (the include predicate's Debug log, which §11.4
 // leaves unnumbered) and 2012 (a seed write that failed, which §11.4 doesn't name).
+// M6-07 uses 2040, not assigned by SPEC either: a too-large value read as not found until M6-09's stream path replaces it.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -54,4 +55,7 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2033, Level = LogLevel.Warning, Message = "The envelope of '{Key}' could not be read as {Type} (malformed, a migration failed or the state is null); the state is kept")]
     internal static partial void UnreadableEnvelope(SafeLogger logger, Exception? exception, string key, Type type);
+
+    [LoggerMessage(EventId = 2040, Level = LogLevel.Debug, Message = "The value of '{Key}' is above InlinePayloadBytes ({InlinePayloadBytes}); read as not found")]
+    internal static partial void TooLargeReadSkipped(SafeLogger logger, string key, int inlinePayloadBytes);
 }

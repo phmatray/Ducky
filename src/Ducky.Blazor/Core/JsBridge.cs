@@ -10,7 +10,7 @@ namespace Ducky.Blazor;
 /// poisons the calls that follow it. A call or a disposal interrupted by a disconnected circuit or an interop timeout
 /// reports "not delivered" with a Debug log (EventId 2000).
 /// </summary>
-internal sealed class JsBridge(Func<IJSRuntime> runtime, ILogger logger) : IAsyncDisposable
+internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsyncDisposable
 {
     internal const string ModulePath = "./_content/Ducky.Blazor/ducky.js";
 
@@ -44,7 +44,8 @@ internal sealed class JsBridge(Func<IJSRuntime> runtime, ILogger logger) : IAsyn
             // ponytail: the import it replaces is dropped: a module that succeeded is not disposed, and one still pending that
             // only the probe saw is never observed, so a later fault reaches TaskScheduler.UnobservedTaskException (no crash by
             // default). Both need two different runtimes, which .NET 10 never hands over (S-7); retire the old task when one does.
-            var current = runtime();
+            // A host without JS (a console or plain DI host) has no runtime: like UnsupportedJavaScriptRuntime, non-interactive.
+            var current = runtime() ?? throw new InvalidOperationException("No IJSRuntime is registered: JS interop is unavailable in this host.");
             if (_module is not { IsFaulted: false, IsCanceled: false } || !ReferenceEquals(current, _moduleRuntime))
             {
 #pragma warning disable RS0030 // justification: JsBridge is the single interop wrapper (§10, INV-23)

@@ -25,9 +25,10 @@ public sealed class DuckyInitializerTests : BunitContext
 
         _hold.Released.SetResult();
         await Services.GetRequiredService<IStore>().InitializeAsync(Xunit.TestContext.Current.CancellationToken);
-        await cut.InvokeAsync(() => { });
 
-        cut.Markup.ShouldBe("ready");
+        // The component's own continuation of the init task renders ChildContent on the renderer, ordered after this
+        // await by nothing: wait for it (progress-based) rather than assume it ran first.
+        cut.WaitForAssertion(() => cut.Markup.ShouldBe("ready"));
     }
 
     [Fact]
