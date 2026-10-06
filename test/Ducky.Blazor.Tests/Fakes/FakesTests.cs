@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.JSInterop;
 
 namespace Ducky.Blazor.Tests.Fakes;
 
@@ -53,6 +54,7 @@ public sealed class FakesTests
         var reference = new FakeJsStreamReference(Encoding.UTF8.GetBytes("{}"));
 
         reference.Length.ShouldBe(2);
+        reference.Opened.ShouldBeFalse();
         await Should.ThrowAsync<ArgumentOutOfRangeException>(reference.OpenReadStreamAsync(maxAllowedSize: 1, TestContext.Current.CancellationToken).AsTask());
         await using (reference)
         {
@@ -61,6 +63,10 @@ public sealed class FakesTests
         }
 
         reference.Disposed.ShouldBeTrue();
+
+        var dropped = new FakeJsStreamReference([0]) { OnDispose = new JSDisconnectedException("gone") };
+        (await Should.ThrowAsync<JSDisconnectedException>(dropped.DisposeAsync().AsTask())).ShouldBeSameAs(dropped.OnDispose);
+        dropped.Disposed.ShouldBeTrue();
     }
 
     [Fact]

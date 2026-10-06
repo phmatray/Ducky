@@ -8,7 +8,8 @@ namespace Ducky.Blazor;
 // M6-06 uses 2022 (§11.4) and 2025, which SPEC does not assign either (the browser seed restore skipped after an abort or a dispose).
 // M6-05 uses 2014 and 2021 (§11.4) and takes, on the same terms, 2011 (the include predicate's Debug log, which §11.4
 // leaves unnumbered) and 2012 (a seed write that failed, which §11.4 doesn't name).
-// M6-07 uses 2040, not assigned by SPEC either: a too-large value read as not found until M6-09's stream path replaces it.
+// M6-09 uses 2023 (§11.5: a stored value above MaxPayloadBytes) and takes 2026, not assigned by SPEC, for the per-key
+// Warning of a failed pull (§11.5 step 4: "a failed pull is caught per key", which §11.5 leaves unnumbered).
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -41,8 +42,14 @@ internal static partial class Log
     [LoggerMessage(EventId = 2022, Level = LogLevel.Warning, Message = "No prerender seed arrived within PrerenderSeedWaitTimeout ({Timeout}): don't await a preload before RunAsync, or render <DuckyInitializer> (or a Ducky component) first")]
     internal static partial void SeedWaitTimedOut(SafeLogger logger, TimeSpan timeout);
 
+    [LoggerMessage(EventId = 2023, Level = LogLevel.Warning, Message = "The value of '{Key}' is {Length} bytes, above MaxPayloadBytes ({MaxPayloadBytes}); read as not found until the next write replaces it")]
+    internal static partial void PayloadTooLarge(SafeLogger logger, string key, long length, int maxPayloadBytes);
+
     [LoggerMessage(EventId = 2025, Level = LogLevel.Debug, Message = "Init ended (overflow abort or store disposed) before the browser's prerender seed settled; the seed is not restored, the live store is authoritative")]
     internal static partial void SeedSkippedAfterAbort(SafeLogger logger);
+
+    [LoggerMessage(EventId = 2026, Level = LogLevel.Warning, Message = "Pulling the value of '{Key}' through storageGetStream failed; read as not found")]
+    internal static partial void PullFailed(SafeLogger logger, Exception exception, string key);
 
     [LoggerMessage(EventId = 2030, Level = LogLevel.Debug, Message = "The value of '{Key}' is not a 2.x envelope (1.x or foreign data); discarded")]
     internal static partial void NotAnEnvelope(SafeLogger logger, string key);
@@ -55,7 +62,4 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2033, Level = LogLevel.Warning, Message = "The envelope of '{Key}' could not be read as {Type} (malformed, a migration failed or the state is null); the state is kept")]
     internal static partial void UnreadableEnvelope(SafeLogger logger, Exception? exception, string key, Type type);
-
-    [LoggerMessage(EventId = 2040, Level = LogLevel.Debug, Message = "The value of '{Key}' is above InlinePayloadBytes ({InlinePayloadBytes}); read as not found")]
-    internal static partial void TooLargeReadSkipped(SafeLogger logger, string key, int inlinePayloadBytes);
 }

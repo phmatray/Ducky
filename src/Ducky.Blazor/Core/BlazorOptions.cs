@@ -54,6 +54,12 @@ public sealed class BlazorOptions
     /// </summary>
     public int InlinePayloadBytes { get; set; } = 16 * 1024;
 
+    /// <summary>
+    /// The largest stored value, in UTF-8 bytes, read through <c>IJSStreamReference</c>. A larger one reads as not found,
+    /// with a Warning, and the next write replaces it. Default 5 MiB (SPEC §11.5, D11).
+    /// </summary>
+    public int MaxPayloadBytes { get; set; } = 5 * 1024 * 1024;
+
     // §5.1: read once, here, and read back by every browser-dependent branch when it runs. Settable so the package's
     // tests can set it inside configure.
 #pragma warning disable RS0030 // justification: the single IsBrowser read of this package (§5.1)

@@ -15,13 +15,15 @@ namespace Ducky.Blazor.Tests.Persistence;
 
 // SPEC §11.5 (hydration at init: readable slices by gate, attempt 0 under _issue, one restore, exactly one terminal),
 // §11.4 (the gate and its probe); INV-14. Storage is ducky.js behind a FakeJsRuntime (§17.2): storageGet answers from
-// a dictionary keyed by area and storage key.
+// a dictionary keyed by area and storage key; a FakeJsStreamReference stored there is a value above InlinePayloadBytes,
+// which storageGet answers with the too-large sentinel and storageGetStream pulls (§11.9).
 public sealed class HydrationTests : BunitContext
 {
     private const int InlinePayloadBytes = 16 * 1024;
     private static TimeSpan HydrationTimeout => TimeSpan.FromSeconds(5);
     private readonly FakeJsRuntime _js = new();
     private readonly Dictionary<(string Area, string Key), object?> _storage = [];
+    private readonly List<FakeJsStreamReference> _pulled = [];
     private readonly HydrationLog _log = new();
     private readonly FakeLogCollector _logs;
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 9, 30, 12, 0, 0, TimeSpan.Zero));
@@ -32,7 +34,11 @@ public sealed class HydrationTests : BunitContext
         _js.Respond = (identifier, args) => identifier switch
         {
             "import" => _js,
-            "storageGet" => _storage.GetValueOrDefault(((string)args[0]!, (string)args[1]!)),
+            "storageGet" => _storage.GetValueOrDefault(((string)args[0]!, (string)args[1]!)) is FakeJsStreamReference
+                ? BrowserStorageProvider.TooLarge
+                : _storage.GetValueOrDefault(((string)args[0]!, (string)args[1]!)),
+            "storageGetStream" => Pulled(_storage.GetValueOrDefault(((string)args[0]!, (string)args[1]!)) as FakeJsStreamReference
+                ?? new FakeJsStreamReference([0])), // ducky.js's one NUL byte: nothing stored any more (S-5)
             _ => null,
         };
 
@@ -377,23 +383,159 @@ public sealed class HydrationTests : BunitContext
     }
 
     [Fact]
-    public async Task Hydration_ValueAboveInlineBudget_NotFoundWithoutWarning()
+    public async Task LargeRead_UsesStreamAboveInlineLimit()
     {
-        // (non-normative) Until the stream path (§11.5, D11), ducky.js's too-large sentinel reads as not found with a Debug
-        // log, never as a malformed envelope.
-        Browser(static d => d.Persist<CounterSlice>());
-        _storage[("local", "ducky:counter")] = BrowserStorageProvider.TooLarge;
+        // §11.5 step 4, D11: above InlinePayloadBytes storageGet answers the sentinel and the value is pulled through
+        // storageGetStream (strings only cross, INV-23), decoded as UTF-8; a key removed between the two calls pulls one
+        // NUL byte (Length <= 1, S-5) and reads as not found. Every reference is disposed after it is read.
+        Browser(static d => d.AddSlice<TodosSlice>()
+            .Persist<CounterSlice>().Persist<TodosSlice>().Persist<TallySlice>(static o => o.Storage = PersistStorage.Session));
+        var title = new string('é', InlinePayloadBytes);
+        _storage[("local", "ducky:counter")] = Envelope("""{"Value":3}""");
+        _storage[("local", "ducky:todos")] = Stream(Envelope($$"""{"Items":[{"Id":1,"Title":"{{title}}"}]}"""));
+        _storage[("session", "ducky:tally")] = BrowserStorageProvider.TooLarge; // the sentinel, then gone before the pull
 
         await Store.InitializeAsync(Ct);
 
-        _log.Entries.ShouldContain("completed:False:0:System Hydrated:0");
+        Store.State.Get<Counter>().ShouldBe(new Counter(3));
+        Store.State.Get<EntityState<int, Todo>>().Items.ShouldHaveSingleItem().Title.ShouldBe(title);
+        Store.State.WasRestored<Tally>().ShouldBeFalse();
+        _log.Entries.ShouldContain("completed:True:0:System Hydrated:0");
+        _js.Calls.Where(static c => c.Identifier == "storageGetStream").Select(static c => c.Args)
+            .ShouldBe([["session", "ducky:tally"], ["local", "ducky:todos"]]); // in slice registration order
+        _pulled.Count.ShouldBe(2);
+        _pulled.ShouldAllBe(static r => r.Disposed);
+        _pulled[0].Opened.ShouldBeFalse(); // the one-byte reference of the removed key is never read
+        _logs.GetSnapshot().ShouldNotContain(static r => r.Level >= LogLevel.Warning);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task LargeRead_MaxPayloadBytesBoundary(int over)
+    {
+        // §11.5 step 4: a value at MaxPayloadBytes restores (maxAllowedSize is MaxPayloadBytes, the fake faults above it);
+        // one byte above reads as not found with Warning 2023 naming the key and its size, decided from Length before the
+        // stream is opened, and its reference is disposed all the same. The other keys restore.
+        const int MaxPayloadBytes = 64 * 1024;
+        Browser(static d => d.AddBlazor(static o => o.MaxPayloadBytes = MaxPayloadBytes).Persist<CounterSlice>().Persist<TallySlice>());
+        _storage[("local", "ducky:counter")] = Envelope("""{"Value":3}""");
+        var envelope = Envelope("""{"Value":7}""");
+        _storage[("local", "ducky:tally")] = Stream(envelope.PadRight(MaxPayloadBytes + over));
+
+        await Store.InitializeAsync(Ct);
+
+        Store.State.Get<Counter>().ShouldBe(new Counter(3));
+        Store.State.WasRestored<Tally>().ShouldBe(over == 0);
+        Store.State.Get<Tally>().ShouldBe(over == 0 ? new Tally(7) : Store.InitialState.Get<Tally>());
+        _log.Entries.ShouldContain("completed:True:0:System Hydrated:0");
+        _pulled.ShouldHaveSingleItem().Disposed.ShouldBeTrue();
+        _pulled[0].Opened.ShouldBe(over == 0);
+        var warnings = _logs.GetSnapshot().Where(static r => r.Level >= LogLevel.Warning).ToList();
+        if (over == 0)
+        {
+            warnings.ShouldBeEmpty();
+            return;
+        }
+
+        var warning = warnings.ShouldHaveSingleItem();
+        warning.Id.Id.ShouldBe(2023);
+        warning.Level.ShouldBe(LogLevel.Warning);
+        warning.Message.ShouldContain("ducky:tally");
+        warning.Message.ShouldContain((MaxPayloadBytes + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    [Fact]
+    public async Task LargeRead_PullFails_KeyNotFound_OtherSlicesRestored()
+    {
+        // §11.5 step 4, "a failed pull is caught per key and never fails the attempt": storageGetStream rejecting (the
+        // runtime refusing the export's return, S-5) reads that key as not found with a Warning naming it; the others restore.
+        Browser(static d => d.Persist<CounterSlice>().Persist<TallySlice>(static o => o.Storage = PersistStorage.Session));
+        _storage[("local", "ducky:counter")] = Stream(Envelope("""{"Value":3}"""));
+        _storage[("session", "ducky:tally")] = Envelope("""{"Value":7}""");
+        var respond = _js.Respond;
+        var failure = new JSException("Length must be a positive value");
+        _js.Respond = (identifier, args) => identifier == "storageGetStream" ? Task.FromException<object?>(failure) : respond(identifier, args);
+
+        await Store.InitializeAsync(Ct);
+
         Store.State.WasRestored<Counter>().ShouldBeFalse();
-        var records = _logs.GetSnapshot();
-        records.ShouldNotContain(static r => r.Level >= LogLevel.Warning);
-        var tooLarge = records.Where(static r => r.Id.Id == 2040).ShouldHaveSingleItem();
-        tooLarge.Level.ShouldBe(LogLevel.Debug);
-        tooLarge.Message.ShouldContain("ducky:counter");
-        tooLarge.Message.ShouldContain(InlinePayloadBytes.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Store.State.Get<Tally>().ShouldBe(new Tally(7));
+        _log.Entries.ShouldContain("completed:True:0:System Hydrated:0");
+        var warning = _logs.GetSnapshot().Where(static r => r.Level >= LogLevel.Warning).ShouldHaveSingleItem();
+        (warning.Id.Id, warning.Level).ShouldBe((2026, LogLevel.Warning));
+        warning.Message.ShouldContain("'ducky:counter'");
+        warning.Exception.ShouldBeSameAs(failure);
+    }
+
+    [Theory]
+    [InlineData("value")]
+    [InlineData("gone")]
+    [InlineData("over")]
+    public async Task LargeRead_DisposeDisconnected_ReadStands(string pulled)
+    {
+        // §11.9: a .NET-side disposal of an IJSStreamReference catches JSDisconnectedException. A circuit dropped after the
+        // pull delivered never turns a value read in full, or a key read as not found, into a failed attempt.
+        const int MaxPayloadBytes = 64 * 1024;
+        Browser(static d => d.AddBlazor(static o => o.MaxPayloadBytes = MaxPayloadBytes).Persist<CounterSlice>());
+        _storage[("local", "ducky:counter")] = BrowserStorageProvider.TooLarge;
+        var content = pulled switch
+        {
+            "value" => Envelope("""{"Value":3}"""),
+            "gone" => "\0",
+            _ => new string(' ', MaxPayloadBytes + 1),
+        };
+        var respond = _js.Respond;
+        _js.Respond = (identifier, args) => identifier == "storageGetStream"
+            ? Pulled(new(System.Text.Encoding.UTF8.GetBytes(content)) { OnDispose = new JSDisconnectedException("circuit gone") })
+            : respond(identifier, args);
+
+        await Store.InitializeAsync(Ct);
+
+        _log.Entries.ShouldContain($"completed:{pulled == "value"}:0:System Hydrated:0"); // restoredAny: only the value restores
+        Store.State.WasRestored<Counter>().ShouldBe(pulled == "value");
+        _pulled.ShouldHaveSingleItem().Disposed.ShouldBeTrue();
+        _logs.GetSnapshot().ShouldContain(static r => r.Id.Id == 2000 && r.Message.Contains("'dispose'") && r.Exception is JSDisconnectedException);
+    }
+
+    [Fact]
+    public async Task LargeRead_PullInterrupted_AttemptFailed()
+    {
+        // (non-normative) How "a failed pull is caught per key" (§11.5 step 4) is read here: a pull that FAILED (the runtime
+        // rejected it: LargeRead_PullFails_KeyNotFound_OtherSlicesRestored) is not found for that key, but a pull that never
+        // happened (a disconnect, an interop timeout or the token) is an interrupted read, as for storageGet, and fails the
+        // attempt (step 7): read as not found, the slice's load would run and its next write replace the stored value.
+        Services.AddSingleton<HydrationFailures>();
+        Browser(static d => d.Persist<CounterSlice>().Use<HydrationFailureRecorder>());
+        _storage[("local", "ducky:counter")] = Stream(Envelope("""{"Value":3}"""));
+        var respond = _js.Respond;
+        _js.Respond = (identifier, args) => identifier == "storageGetStream"
+            ? Task.FromException<object?>(new JSDisconnectedException("circuit gone"))
+            : respond(identifier, args);
+
+        await Store.InitializeAsync(Ct);
+
+        _log.Entries.ShouldContain("failed:InvalidOperationException:0:System Failed:0");
+        Services.GetRequiredService<HydrationFailures>().ShouldHaveSingleItem().ShouldContain("'ducky:counter' from local storage");
+        Store.State.WasRestored<Counter>().ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Hydration_OneOversizedKey_OtherSlicesRestored()
+    {
+        // INV-14: one key above MaxPayloadBytes (the default, 5 MiB) is not found for that key only; it never fails the
+        // attempt, and the other slices restore in the one restore.
+        Browser(static d => d.Persist<CounterSlice>().Persist<TallySlice>(static o => o.Storage = PersistStorage.Session));
+        _storage[("local", "ducky:counter")] = Stream(Envelope("""{"Value":3}""").PadRight((5 * 1024 * 1024) + 1));
+        _storage[("session", "ducky:tally")] = Envelope("""{"Value":7}""");
+
+        await Store.InitializeAsync(Ct);
+
+        Store.State.WasRestored<Counter>().ShouldBeFalse();
+        Store.State.Get<Tally>().ShouldBe(new Tally(7));
+        _log.Entries.ShouldContain("completed:True:0:System Hydrated:0");
+        Store.State.Get<PersistenceState>().Status.ShouldBe(PersistenceStatus.Hydrated);
+        _logs.GetSnapshot().Where(static r => r.Level >= LogLevel.Warning).ShouldHaveSingleItem().Id.Id.ShouldBe(2023);
     }
 
     [Fact]
@@ -534,6 +676,14 @@ public sealed class HydrationTests : BunitContext
 
     private string Envelope(string payload) => EnvelopeWriter.Write(payload, version: 1, _time.GetUtcNow());
 
+    private static FakeJsStreamReference Stream(string value) => new(System.Text.Encoding.UTF8.GetBytes(value));
+
+    private FakeJsStreamReference Pulled(FakeJsStreamReference reference)
+    {
+        _pulled.Add(reference);
+        return reference;
+    }
+
     // A WASM store: one per app, interactive by construction.
     private void Browser(Action<DuckyBuilder> ducky, bool js = true) => Configure(d => ducky(d.AddBlazor(static o => o.IsBrowser = true)), js);
 
@@ -558,5 +708,19 @@ public sealed class HydrationTests : BunitContext
             ducky(d);
             d.Use<HydrationRecorder>();
         });
+    }
+}
+
+// The messages of the HydrationFailed terminals, in processing order.
+internal sealed class HydrationFailures : System.Collections.Concurrent.ConcurrentQueue<string>;
+
+internal sealed class HydrationFailureRecorder(HydrationFailures failures) : Middleware
+{
+    public override void AfterReduce(ActionContext context)
+    {
+        if (context.Action is HydrationFailed failed)
+        {
+            failures.Enqueue(failed.Message);
+        }
     }
 }

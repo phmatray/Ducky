@@ -156,6 +156,26 @@ public sealed class JsBridgeTests
     }
 
     [Fact]
+    public async Task JsBridge_PullCancelledByCaller_LateReferenceDisposed()
+    {
+        // INV-23, §11.9: every IJSStreamReference is disposed. A pull the caller stopped waiting for still completes on the
+        // runtime; the reference it hands back late is disposed, so its Uint8Array is not left pinned in the circuit.
+        var js = new FakeJsRuntime();
+        await using var bridge = new JsBridge(js, NullLogger.Instance);
+        TaskCompletionSource<object?> pending = new(); // continuations run inline: SetResult returns once they have run
+        js.Respond = (identifier, _) => identifier == "import" ? js : pending.Task;
+        using var cts = new CancellationTokenSource();
+
+        var pull = bridge.TryInvokeAsync<IJSStreamReference>("storageGetStream", cts.Token, "local", "ducky:counter");
+        await cts.CancelAsync();
+        (await pull).ShouldBe((false, null));
+
+        var late = new FakeJsStreamReference([1, 2]) { OnDispose = new JSDisconnectedException("gone") };
+        pending.SetResult(late);
+        late.Disposed.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task JsBridge_Import_SynchronousThrow_ReachesCaller_NotCached()
     {
         // The prerender shape (§11.4): the runtime throws synchronously, and the caller sees it; the next call imports again.
