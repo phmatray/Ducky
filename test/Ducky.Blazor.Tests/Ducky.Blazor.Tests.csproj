@@ -15,6 +15,8 @@
     <PackageReference Include="bunit" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <!-- To measure the seed's real Interactive Server wire encoding (SPEC §11.4 wire estimate). -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
   </ItemGroup>
 
   <ItemGroup>

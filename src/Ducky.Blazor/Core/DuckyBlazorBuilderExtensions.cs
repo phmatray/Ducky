@@ -40,6 +40,10 @@ public static partial class DuckyBlazorBuilderExtensions
     /// never retry: register such a slice with <see cref="Prerender{TSlice, TState}"/> and an <c>include</c> that
     /// excludes error and incomplete states.
     /// </para>
+    /// <para>
+    /// A slice that would push the seed past <see cref="BlazorOptions.PrerenderSeedMaxWireBytes"/> is left out, and the
+    /// interactive side loads it again.
+    /// </para>
     /// </remarks>
     /// <typeparam name="TSlice">The slice, added with <see cref="DuckyBuilder.AddSlice{TSlice}"/>.</typeparam>
     /// <param name="builder">The builder.</param>

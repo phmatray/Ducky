@@ -18,7 +18,7 @@ namespace Ducky.Blazor.Tests.Prerender;
 // SPEC §11.4 (the prerender handoff outside the browser: seed take, SeedSettled, the Interactive Auto persisting
 // registration, the browser's bounded wait for the seed); INV-15. Both sides drive a real ComponentStatePersistenceManager over a FakeComponentStateStore (§17.2):
 // this context is the interactive side, a second BunitContext the prerender pass or the paused circuit.
-public sealed class PrerenderHandoffTests : BunitContext
+public sealed partial class PrerenderHandoffTests : BunitContext
 {
     private const string SeedKey = "ducky:seed";
     private static readonly RendererInfo _static = new("Static", isInteractive: false);
@@ -74,7 +74,9 @@ public sealed class PrerenderHandoffTests : BunitContext
             store.Dispatch(new ProductsLoaded(7));
         });
 
-        // The resumed circuit is a fresh store: the Prerender<T> slice comes back from the seed, the other one resets.
+        // A pause seed. The resumed circuit is a fresh store: the Prerender<T> slice comes back from the seed, the other
+        // one resets.
+        Envelope(seed).GetProperty("src").GetString().ShouldBe("pause");
         await InteractiveAsync(seed, static d => d.AddSlice<ProductsSlice>().Prerender<CounterSlice>());
         Render<CounterView>().Markup.ShouldBe("4");
         Store.State.Get<Products>().ShouldBe(new Products(0, null));
@@ -107,6 +109,7 @@ public sealed class PrerenderHandoffTests : BunitContext
         seed.State.Keys.ShouldBe([SeedKey]);
         var envelope = JsonDocument.Parse(JsonSerializer.Deserialize<byte[]>(seed.State[SeedKey])).RootElement;
         envelope.GetProperty("v").GetInt32().ShouldBe(1);
+        envelope.GetProperty("src").GetString().ShouldBe("prerender");
         envelope.GetProperty("slices").GetProperty(new CounterSlice().Key).GetProperty("value").GetInt32().ShouldBe(1);
     }
 
@@ -130,17 +133,20 @@ public sealed class PrerenderHandoffTests : BunitContext
     {
         // (non-normative) A slice whose include predicate is false, or whose state can't be serialized, is left out; the
         // others, a slice whose predicate holds included, are still seeded, and the left-out slice loads again on the
-        // interactive side. M6-05 adds the budget Warning 2021 (§10) for the unserializable slice and its assertion here.
+        // interactive side. The predicate logs Debug 2011, the unserializable state the budget Warning 2021 (§10).
         static void Setup(DuckyBuilder d) => d
             .AddSlice<RatioSlice>().Prerender<RatioSlice>()
             .Prerender<ProductsSlice, Products>(static p => p.Error is null).AddEffect<LoadProducts>()
             .Prerender<CounterSlice, Counter>(static c => c.Value > 0);
+        var logs = new FakeLogCollector();
         var seed = await PrerenderAsync(Setup, static store =>
         {
             Increment(store, 5);
             store.Dispatch(new ProductsFailed("relative URL"));
             store.Dispatch(new SetRatio(double.NaN));
-        });
+        }, logs);
+        logs.GetSnapshot().Where(static r => r.Id.Id == 2011).ShouldHaveSingleItem().Message.ShouldContain(new ProductsSlice().Key);
+        logs.GetSnapshot().Where(static r => r.Id.Id == 2021).ShouldHaveSingleItem().Message.ShouldContain(new RatioSlice().Key);
 
         await InteractiveAsync(seed, Setup);
         Render<CounterView>().Markup.ShouldBe("5");
@@ -479,8 +485,19 @@ public sealed class PrerenderHandoffTests : BunitContext
     }
 
     // One side of the handoff: a real persistence manager and a Ducky store with Ducky.Blazor, rendered by `context`.
-    private static void Configure(BunitContext context, RendererInfo renderer, Action<DuckyBuilder> ducky, Loads loads)
+    private static void Configure(
+        BunitContext context, RendererInfo renderer, Action<DuckyBuilder> ducky, Loads loads, FakeLogCollector? logs = null, TimeProvider? time = null)
     {
+        if (logs is not null)
+        {
+            context.Services.AddLogging(b => b.SetMinimumLevel(LogLevel.Debug).AddProvider(new FakeLoggerProvider(logs)));
+        }
+
+        if (time is not null)
+        {
+            context.Services.AddSingleton(time);
+        }
+
         context.Services.AddSingleton(static sp => new ComponentStatePersistenceManager(NullLogger<ComponentStatePersistenceManager>.Instance, sp));
         context.Services.AddSingleton(static sp => sp.GetRequiredService<ComponentStatePersistenceManager>().State);
         context.Services.AddSingleton(loads);
@@ -489,19 +506,19 @@ public sealed class PrerenderHandoffTests : BunitContext
     }
 
     // The prerender pass: a static render touches the store, then the framework persists the page's state.
-    private Task<FakeComponentStateStore> PrerenderAsync(Action<DuckyBuilder> ducky, Action<IStore>? act = null) =>
-        PersistAsync(_static, ducky, act);
+    private Task<FakeComponentStateStore> PrerenderAsync(Action<DuckyBuilder> ducky, Action<IStore>? act = null, FakeLogCollector? logs = null) =>
+        PersistAsync(_static, ducky, act, logs);
 
-    private async Task<FakeComponentStateStore> PersistAsync(RendererInfo renderer, Action<DuckyBuilder> ducky, Action<IStore>? act = null)
+    private async Task<FakeComponentStateStore> PersistAsync(
+        RendererInfo renderer, Action<DuckyBuilder> ducky, Action<IStore>? act = null, FakeLogCollector? logs = null)
     {
         await using var side = new BunitContext();
-        Configure(side, renderer, ducky, _loads);
+        Configure(side, renderer, ducky, _loads, logs);
         side.Render<CounterView>();
         var store = side.Services.GetRequiredService<IStore>();
         act?.Invoke(store);
-        await store.WhenIdleAsync(Ct);
         var persisted = new FakeComponentStateStore();
-        await side.Services.GetRequiredService<ComponentStatePersistenceManager>().PersistStateAsync(persisted, side.Renderer);
+        await Persist(side, persisted);
         return persisted;
     }
 
@@ -518,6 +535,10 @@ public sealed class PrerenderHandoffTests : BunitContext
     // What WASM's RunAsync does before the first render: restore the page's persistent state.
     private Task RunAsync(FakeComponentStateStore seed) =>
         Services.GetRequiredService<ComponentStatePersistenceManager>().RestoreStateAsync(seed);
+
+    // The framework persisting the page's (or the paused circuit's) state into `persisted`, through every registration.
+    private static Task Persist(BunitContext side, IPersistentComponentStateStore persisted) =>
+        side.Services.GetRequiredService<ComponentStatePersistenceManager>().PersistStateAsync(persisted, side.Renderer);
 
     // The interactive side, its persistent state restored from `seed` as the circuit (or WASM host) does before rendering.
     private async Task InteractiveAsync(FakeComponentStateStore seed, Action<DuckyBuilder> ducky)

@@ -33,6 +33,21 @@ public sealed class BlazorOptions
     /// </summary>
     public TimeSpan PrerenderSeedWaitTimeout { get; set; } = TimeSpan.FromMilliseconds(250);
 
+    /// <summary>
+    /// How long the prerender seed waits for the store to go idle (no effect running except <c>LongRunning</c> ones, and
+    /// no Ducky.Reactive work). On timeout no seed is persisted, a Warning is logged once per store, and the interactive
+    /// side loads again. Default 5 seconds.
+    /// </summary>
+    public TimeSpan PrerenderIdleTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// The most bytes the prerender seed may add, by estimate, to the Interactive Server start-circuit message. A slice
+    /// that would push the seed past it is left out (logged once per slice), and the interactive side loads it again. The
+    /// page shares SignalR's 32 KB <c>MaximumReceiveMessageSize</c> with every other <c>PersistentComponentState</c> user,
+    /// such as the template's authentication state. Default 20 KB; the same budget applies, conservatively, to WebAssembly.
+    /// </summary>
+    public int PrerenderSeedMaxWireBytes { get; set; } = 20 * 1024;
+
     // §5.1: read once, here, and read back by every browser-dependent branch when it runs. Settable so the package's
     // tests can set it inside configure.
 #pragma warning disable RS0030 // justification: the single IsBrowser read of this package (§5.1)

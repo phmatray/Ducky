@@ -135,3 +135,7 @@ static Ducky.Blazor.HydrationCompleted.operator !=(Ducky.Blazor.HydrationComplet
 static Ducky.Blazor.HydrationCompleted.operator ==(Ducky.Blazor.HydrationCompleted? left, Ducky.Blazor.HydrationCompleted? right) -> bool
 static Ducky.Blazor.HydrationFailed.operator !=(Ducky.Blazor.HydrationFailed? left, Ducky.Blazor.HydrationFailed? right) -> bool
 static Ducky.Blazor.HydrationFailed.operator ==(Ducky.Blazor.HydrationFailed? left, Ducky.Blazor.HydrationFailed? right) -> bool
+Ducky.Blazor.BlazorOptions.PrerenderIdleTimeout.get -> System.TimeSpan
+Ducky.Blazor.BlazorOptions.PrerenderIdleTimeout.set -> void
+Ducky.Blazor.BlazorOptions.PrerenderSeedMaxWireBytes.get -> int
+Ducky.Blazor.BlazorOptions.PrerenderSeedMaxWireBytes.set -> void
