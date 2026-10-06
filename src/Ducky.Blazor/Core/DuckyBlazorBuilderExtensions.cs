@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Ducky.Blazor;
 
 /// <summary>Registers Ducky.Blazor on a <see cref="DuckyBuilder"/>.</summary>
-public static class DuckyBlazorBuilderExtensions
+public static partial class DuckyBlazorBuilderExtensions
 {
     /// <summary>
     /// Adds Ducky.Blazor to the store. Registration is idempotent: the first call registers the prerender handoff and then
@@ -73,9 +73,8 @@ public static class DuckyBlazorBuilderExtensions
         return Prerender(builder, typeof(TSlice), typeof(TState), state => include((TState)state));
     }
 
-    // The last call for a slice wins, like the last value written to an option. DUCKY310 for a Prerender<T> slice never
-    // added with AddSlice is M6-03's AddValidation rule (over Registration.Prerender's keys); until it lands, such a slice
-    // is never seeded, silently.
+    // The last call for a slice wins, like the last value written to an option. A slice never added with AddSlice is
+    // DUCKY310, reported by the registration's validation rule.
     private static DuckyBuilder Prerender(DuckyBuilder builder, Type slice, Type state, Func<object, bool>? include)
     {
         Registration(builder).Prerender[slice] = include;
@@ -106,13 +105,86 @@ public static class DuckyBlazorBuilderExtensions
         builder.Services.AddSingleton(registration).AddSingleton(registration.Options);
         builder.Use<PrerenderHandoff>().Use<PersistenceMiddleware>();
         builder.AddSlice<PersistenceSlice>();
+
+        // At first resolution, on the final composed options: a later call may still fix what an earlier one set (§11.1).
+        builder.AddValidation(_ => registration.Validate(builder));
         return registration;
     }
 }
 
-// What AddBlazor, Prerender<T> and (later) Persist<T> compose for one builder; its registration marks the first AddBlazor.
-internal sealed record BlazorRegistration(BlazorOptions Options)
+// What AddBlazor, Prerender<T> and Persist<T> compose for one builder; its registration marks the first AddBlazor.
+internal sealed class BlazorRegistration(BlazorOptions options)
 {
+    public BlazorOptions Options { get; } = options;
+
     /// <summary>The Prerender&lt;T&gt; slice types, each with its include predicate (null: always seeded).</summary>
     public Dictionary<Type, Func<object, bool>?> Prerender { get; } = [];
+
+    /// <summary>The persisted slice types in first-call order, each with its configure delegates and composed options.</summary>
+    public OrderedDictionary<Type, PersistLayers> Persist { get; } = [];
+
+    // DUCKY310 per Prerender<T> slice, then DUCKY316. Each persisted slice has its own rule, ValidatePersist.
+    public IEnumerable<DuckyError> Validate(DuckyBuilder builder)
+    {
+        foreach (var slice in Prerender.Keys.Where(slice => !Added(builder, slice)))
+        {
+            yield return BlazorErrors.SliceNotAdded("Prerender", slice);
+        }
+
+        if (Bound(Options.HydrationTimeout) >= Bound(builder.InitTimeout))
+        {
+            yield return BlazorErrors.HydrationTimeoutNotBelowInitTimeout(Options.HydrationTimeout, builder.InitTimeout);
+        }
+
+        if (Bound(Options.PrerenderSeedWaitTimeout) >= Bound(Options.HydrationTimeout))
+        {
+            yield return BlazorErrors.SeedWaitNotBelowHydrationTimeout(Options.PrerenderSeedWaitTimeout, Options.HydrationTimeout);
+        }
+
+        // Timeout.InfiniteTimeSpan (-1 ms) never fires, so it is the longest timeout, not the shortest.
+        static TimeSpan Bound(TimeSpan timeout) => timeout == Timeout.InfiniteTimeSpan ? TimeSpan.MaxValue : timeout;
+    }
+
+    // DUCKY310-312 for one persisted slice: its own AddValidation rule, so a throwing configure delegate fails only this
+    // rule, after its DUCKY310, and the core reports that failure, named after the slice, with every other error and every
+    // other slice's failure (INV-31).
+    public static IEnumerable<DuckyError> ValidatePersist(DuckyBuilder builder, Type slice, PersistLayers layers)
+    {
+        if (!Added(builder, slice))
+        {
+            yield return BlazorErrors.SliceNotAdded("Persist", slice);
+        }
+
+        PersistOptions options;
+        try
+        {
+            options = layers.Options;
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException($"Persist<{BlazorErrors.Display(slice)}> configure threw.", exception);
+        }
+
+        List<int> missing = [];
+        for (var from = 1; from < options.Version; from++)
+        {
+            if (!options.Migrations.ContainsKey(from))
+            {
+                missing.Add(from);
+            }
+        }
+
+        if (missing.Count > 0)
+        {
+            yield return BlazorErrors.MigrationGap(slice, options.Version, missing);
+        }
+
+        if (options.SyncAcrossTabs && options.Storage != PersistStorage.Local)
+        {
+            yield return BlazorErrors.SyncAcrossTabsWithoutLocal(slice, options.Storage);
+        }
+    }
+
+    // A slice is added when AddDucky registered it for injection, which it does for every AddSlice<T>.
+    private static bool Added(DuckyBuilder builder, Type slice) => builder.Services.Any(descriptor => descriptor.ServiceType == slice);
 }

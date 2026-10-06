@@ -19,6 +19,20 @@ public sealed class ErrorModelTests
             [$"on Ducky.Blazor.Tests.Core.ErrorModelTests.Generic<{ViewName}[]> after"], [$"of Ducky.Blazor.Tests.Core.ErrorModelTests.Generic<{ViewName}[]> and"]),
         (nameof(BlazorErrors.SelectAfterFirstRender), BlazorErrors.SelectAfterFirstRender(typeof(Generic<List<View>[,]>)), "DUCKY352",
             [$"on Ducky.Blazor.Tests.Core.ErrorModelTests.Generic<System.Collections.Generic.List<{ViewName}>[,]> after"], []),
+        (nameof(BlazorErrors.SliceNotAdded), BlazorErrors.SliceNotAdded("Persist", typeof(View)), "DUCKY310",
+            [$"Persist<{ViewName}> was called", $"{ViewName} was never added"], [$"AddSlice<{ViewName}>()", $"the Persist<{ViewName}> call"]),
+        (nameof(BlazorErrors.SliceNotAdded), BlazorErrors.SliceNotAdded("Prerender", typeof(View)), "DUCKY310",
+            [$"Prerender<{ViewName}> was called"], [$"AddSlice<{ViewName}>()", $"the Prerender<{ViewName}> call"]),
+        (nameof(BlazorErrors.MigrationGap), BlazorErrors.MigrationGap(typeof(View), 4, [1, 3]), "DUCKY311",
+            [$"{ViewName} is persisted with Version = 4", "no step from version 1, 3."], ["Migrate(1, …) and Migrate(3, …)", $"Persist<{ViewName}>", "version 4"]),
+        (nameof(BlazorErrors.MigrationGap), BlazorErrors.MigrationGap(typeof(View), 2, [1]), "DUCKY311",
+            ["no step from version 1."], ["Add Migrate(1, …) to"]),
+        (nameof(BlazorErrors.SyncAcrossTabsWithoutLocal), BlazorErrors.SyncAcrossTabsWithoutLocal(typeof(View), PersistStorage.Session), "DUCKY312",
+            [$"{ViewName} sets SyncAcrossTabs with PersistStorage.Session", "only with PersistStorage.Local"], ["Storage = PersistStorage.Local", $"Persist<{ViewName}>", "SyncAcrossTabs"]),
+        (nameof(BlazorErrors.HydrationTimeoutNotBelowInitTimeout), BlazorErrors.HydrationTimeoutNotBelowInitTimeout(TimeSpan.FromSeconds(10.5), TimeSpan.FromSeconds(10)), "DUCKY316",
+            ["BlazorOptions.HydrationTimeout (00:00:10.5000000)", "DuckyBuilder.InitTimeout (00:00:10)"], ["BlazorOptions.HydrationTimeout below DuckyBuilder.InitTimeout"]),
+        (nameof(BlazorErrors.SeedWaitNotBelowHydrationTimeout), BlazorErrors.SeedWaitNotBelowHydrationTimeout(TimeSpan.FromSeconds(5.25), TimeSpan.FromSeconds(5)), "DUCKY316",
+            ["BlazorOptions.PrerenderSeedWaitTimeout (00:00:05.2500000)", "BlazorOptions.HydrationTimeout (00:00:05)"], ["BlazorOptions.PrerenderSeedWaitTimeout below BlazorOptions.HydrationTimeout"]),
     ];
 
     [Fact]
@@ -30,7 +44,7 @@ public sealed class ErrorModelTests
         try
         {
             var rows = Rows();
-            rows.Select(row => row.Code).Distinct().ShouldBe(["DUCKY352"]);
+            rows.Select(row => row.Code).Distinct().ShouldBe(["DUCKY352", "DUCKY310", "DUCKY311", "DUCKY312", "DUCKY316"]);
 
             // Every catalogue factory has a row, so a new factory can't skip the template.
             typeof(BlazorErrors).GetMethods(BindingFlags.Public | BindingFlags.Static)

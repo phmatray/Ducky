@@ -4,6 +4,16 @@ namespace Ducky.Blazor;
 // which follows the store's lifetime, is how every party reaches the store's one InteractivityGate (§11.4), from any scope.
 internal sealed class PersistenceSlice : Slice<PersistenceState>
 {
+    public PersistenceSlice()
+    {
+        // A terminal of another epoch belongs to a superseded attempt: ignored (INV-14, defence in depth).
+        On<HydrationCompleted>(static (state, action) => action.ScopeEpoch == state.ScopeEpoch ? state with { Status = PersistenceStatus.Hydrated } : state);
+        On<HydrationFailed>(static (state, action) => action.ScopeEpoch == state.ScopeEpoch ? state with { Status = PersistenceStatus.Failed } : state);
+
+        // Storage only (§11.5): handled, so strict mode never reports the public clear as unhandled.
+        On<ClearPersistedState>(static state => state);
+    }
+
     public override string Key => "@ducky/persistence";
 
     public InteractivityGate Gate { get; } = new();

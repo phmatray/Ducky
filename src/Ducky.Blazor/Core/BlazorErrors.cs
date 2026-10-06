@@ -15,6 +15,31 @@ internal static class BlazorErrors
         $"Select was called on {Display(componentType)} after its first render, when its selections are already registered.",
         $"Call Select in OnInitialized of {Display(componentType)} and keep the Selection<T> in a field; a selector may read parameters, so a parameter change needs no new Select.");
 
+    public static DuckyError SliceNotAdded(string call, Type slice) => Create(
+        "DUCKY310",
+        $"{call}<{Display(slice)}> was called, but {Display(slice)} was never added to the store.",
+        $"Call AddSlice<{Display(slice)}>() in AddDucky, or remove the {call}<{Display(slice)}> call.");
+
+    public static DuckyError MigrationGap(Type slice, int version, IEnumerable<int> missing) => Create(
+        "DUCKY311",
+        $"{Display(slice)} is persisted with Version = {version}, but its migration chain has no step from version {string.Join(", ", missing)}.",
+        $"Add {string.Join(" and ", missing.Select(static from => $"Migrate({from}, …)"))} to Persist<{Display(slice)}>, so a stored state of every older version reaches version {version}.");
+
+    public static DuckyError SyncAcrossTabsWithoutLocal(Type slice, PersistStorage storage) => Create(
+        "DUCKY312",
+        $"{Display(slice)} sets SyncAcrossTabs with PersistStorage.{storage}, but tabs are kept in sync only with PersistStorage.Local.",
+        $"Set Storage = PersistStorage.Local in Persist<{Display(slice)}>, or turn SyncAcrossTabs off.");
+
+    public static DuckyError HydrationTimeoutNotBelowInitTimeout(TimeSpan hydrationTimeout, TimeSpan initTimeout) => Create(
+        "DUCKY316",
+        $"BlazorOptions.HydrationTimeout ({hydrationTimeout:c}) is not shorter than DuckyBuilder.InitTimeout ({initTimeout:c}), so init would abort before hydration times out.",
+        "Set BlazorOptions.HydrationTimeout below DuckyBuilder.InitTimeout, or raise InitTimeout.");
+
+    public static DuckyError SeedWaitNotBelowHydrationTimeout(TimeSpan seedWait, TimeSpan hydrationTimeout) => Create(
+        "DUCKY316",
+        $"BlazorOptions.PrerenderSeedWaitTimeout ({seedWait:c}) is not shorter than BlazorOptions.HydrationTimeout ({hydrationTimeout:c}), so hydration would time out while it waits for the prerender seed.",
+        "Set BlazorOptions.PrerenderSeedWaitTimeout below BlazorOptions.HydrationTimeout, or raise HydrationTimeout.");
+
     private static DuckyError Create(string code, string message, string fix) =>
         new(code, message, fix, $"https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/{code}.md");
 
@@ -22,7 +47,7 @@ internal static class BlazorErrors
     // which is internal to Ducky).
     // ponytail: no open generics (a component's runtime type is closed), and a type nested in a generic type lists every
     // generic argument at the end (Outer.Inner<T>), like the core's.
-    private static string Display(Type type) => type.IsGenericType
+    internal static string Display(Type type) => type.IsGenericType
         ? $"{Regex.Replace(type.GetGenericTypeDefinition().FullName!, @"`\d+", "").Replace('+', '.')}<{string.Join(", ", type.GetGenericArguments().Select(Display))}>"
         : type.IsArray ? $"{Display(type.GetElementType()!)}[{new string(',', type.GetArrayRank() - 1)}]"
         : type.FullName!.Replace('+', '.');
