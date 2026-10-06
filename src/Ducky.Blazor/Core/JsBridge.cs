@@ -65,6 +65,7 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
     internal async ValueTask<(bool Delivered, T? Value)> TryInvokeAsync<[DynamicallyAccessedMembers(JsonSerialized)] T>(
         string identifier, CancellationToken cancellationToken, params JsArg[] args)
     {
+        Task<T>? invoke = null;
         try
         {
             // The token bounds this caller's wait only: the shared import keeps running for the others.
@@ -72,14 +73,22 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
 #pragma warning disable RS0030 // justification: JsBridge is the single interop wrapper (§10, INV-23)
             // The token-free overload keeps JSRuntime.DefaultAsyncTimeout (one given a token, even None, switches it off),
             // so a call pending on a dropped circuit still times out (§8.1); the token bounds only this caller's wait.
-            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-            var value = await module.InvokeAsync<T>(identifier, Array.ConvertAll(args, static arg => arg.Value))
-                .AsTask().WaitAsync(cancellationToken).ConfigureAwait(false);
+            invoke = module.InvokeAsync<T>(identifier, Array.ConvertAll(args, static arg => arg.Value)).AsTask();
 #pragma warning restore RS0030
+            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+            var value = await invoke.WaitAsync(cancellationToken).ConfigureAwait(false);
             return (true, value);
         }
         catch (Exception exception) when (exception is JSDisconnectedException or TaskCanceledException)
         {
+            // INV-23: a pull the caller's token abandoned may still hand back a reference, disposed when it does.
+            // ponytail: one the interop timeout dropped never reaches .NET (the runtime discards the late result); the
+            // circuit's teardown frees it.
+            if (invoke is Task<IJSStreamReference> pull)
+            {
+                _ = DisposeLateAsync(pull);
+            }
+
             Log.InteropInterrupted(_logger, exception, identifier);
             return (false, default);
         }
@@ -103,20 +112,33 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
         // ponytail: an import still pending at dispose is not awaited (it could hang on a dead circuit); the circuit's
         // teardown releases its handle.
 #pragma warning disable VSTHRD103 // justification: Result of a task that completed successfully never blocks
-        return module is { IsCompletedSuccessfully: true } ? DisposeModuleAsync(module.Result) : default;
+        return module is { IsCompletedSuccessfully: true } ? DisposeQuietlyAsync(module.Result) : default;
 #pragma warning restore VSTHRD103
     }
 
-    private async ValueTask DisposeModuleAsync(IJSObjectReference module)
+    private async ValueTask DisposeQuietlyAsync(IAsyncDisposable reference)
     {
         try
         {
             // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-            await module.DisposeAsync().ConfigureAwait(false);
+            await reference.DisposeAsync().ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is JSDisconnectedException or TaskCanceledException)
         {
             Log.InteropInterrupted(_logger, exception, "dispose");
+        }
+    }
+
+    // A pull the caller stopped waiting for: the reference it hands back, if it ever does, is disposed (INV-23).
+    private async Task DisposeLateAsync(Task<IJSStreamReference> pull)
+    {
+        await ((Task)pull).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        if (pull.IsCompletedSuccessfully)
+        {
+#pragma warning disable VSTHRD103 // justification: Result of a task that completed successfully never blocks
+            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+            await DisposeQuietlyAsync(pull.Result).ConfigureAwait(false);
+#pragma warning restore VSTHRD103
         }
     }
 }
