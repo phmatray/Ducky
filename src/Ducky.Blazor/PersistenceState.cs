@@ -5,7 +5,14 @@ namespace Ducky.Blazor;
 /// drainer, so a loading UI selects it like any state.
 /// </summary>
 /// <param name="Status">Where hydration stands.</param>
-public sealed record PersistenceState(PersistenceStatus Status);
+public sealed record PersistenceState(PersistenceStatus Status)
+{
+    /// <summary>
+    /// Gets the scope epoch, allocated from a counter by each scope switch (SPEC §11.6). The slice ignores a terminal whose
+    /// epoch differs.
+    /// </summary>
+    internal int ScopeEpoch { get; init; }
+}
 
 /// <summary>Where the hydration of persisted slices stands.</summary>
 public enum PersistenceStatus

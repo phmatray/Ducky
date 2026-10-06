@@ -81,3 +81,57 @@ Ducky.Blazor.PersistenceStatus.Hydrating = 1 -> Ducky.Blazor.PersistenceStatus
 Ducky.Blazor.PersistenceStatus.NotStarted = 0 -> Ducky.Blazor.PersistenceStatus
 static Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<TSlice, TState>(this Ducky.DuckyBuilder! builder, System.Func<TState!, bool>! include) -> Ducky.DuckyBuilder!
 static Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<TSlice>(this Ducky.DuckyBuilder! builder) -> Ducky.DuckyBuilder!
+Ducky.Blazor.BlazorOptions.HydrationTimeout.get -> System.TimeSpan
+Ducky.Blazor.BlazorOptions.HydrationTimeout.set -> void
+Ducky.Blazor.BlazorOptions.Scope.get -> System.Func<System.IServiceProvider!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<string?>>?
+Ducky.Blazor.BlazorOptions.Scope.set -> void
+Ducky.Blazor.ClearPersistedState
+Ducky.Blazor.ClearPersistedState.<Clone>$() -> Ducky.Blazor.ClearPersistedState!
+Ducky.Blazor.ClearPersistedState.ClearPersistedState() -> void
+Ducky.Blazor.ClearPersistedState.Equals(Ducky.Blazor.ClearPersistedState? other) -> bool
+Ducky.Blazor.HydrationCompleted
+Ducky.Blazor.HydrationCompleted.<Clone>$() -> Ducky.Blazor.HydrationCompleted!
+Ducky.Blazor.HydrationCompleted.Deconstruct(out bool StateRestored) -> void
+Ducky.Blazor.HydrationCompleted.Equals(Ducky.Blazor.HydrationCompleted? other) -> bool
+Ducky.Blazor.HydrationCompleted.HydrationCompleted(bool StateRestored) -> void
+Ducky.Blazor.HydrationCompleted.StateRestored.get -> bool
+Ducky.Blazor.HydrationCompleted.StateRestored.init -> void
+Ducky.Blazor.HydrationFailed
+Ducky.Blazor.HydrationFailed.<Clone>$() -> Ducky.Blazor.HydrationFailed!
+Ducky.Blazor.HydrationFailed.Deconstruct(out string! ErrorType, out string! Message) -> void
+Ducky.Blazor.HydrationFailed.Equals(Ducky.Blazor.HydrationFailed? other) -> bool
+Ducky.Blazor.HydrationFailed.ErrorType.get -> string!
+Ducky.Blazor.HydrationFailed.ErrorType.init -> void
+Ducky.Blazor.HydrationFailed.HydrationFailed(string! ErrorType, string! Message) -> void
+Ducky.Blazor.HydrationFailed.Message.get -> string!
+Ducky.Blazor.HydrationFailed.Message.init -> void
+Ducky.Blazor.PersistOptions
+Ducky.Blazor.PersistOptions.Debounce.get -> System.TimeSpan?
+Ducky.Blazor.PersistOptions.Debounce.set -> void
+Ducky.Blazor.PersistOptions.MaxAge.get -> System.TimeSpan?
+Ducky.Blazor.PersistOptions.MaxAge.set -> void
+Ducky.Blazor.PersistOptions.Migrate(int fromVersion, System.Func<System.Text.Json.Nodes.JsonNode!, System.Text.Json.Nodes.JsonNode!>! step) -> Ducky.Blazor.PersistOptions!
+Ducky.Blazor.PersistOptions.PersistOptions() -> void
+Ducky.Blazor.PersistOptions.Storage.get -> Ducky.PersistStorage
+Ducky.Blazor.PersistOptions.Storage.set -> void
+Ducky.Blazor.PersistOptions.SyncAcrossTabs.get -> bool
+Ducky.Blazor.PersistOptions.SyncAcrossTabs.set -> void
+Ducky.Blazor.PersistOptions.Version.get -> int
+Ducky.Blazor.PersistOptions.Version.set -> void
+override Ducky.Blazor.ClearPersistedState.Equals(object? obj) -> bool
+override Ducky.Blazor.ClearPersistedState.GetHashCode() -> int
+override Ducky.Blazor.ClearPersistedState.ToString() -> string!
+override Ducky.Blazor.HydrationCompleted.Equals(object? obj) -> bool
+override Ducky.Blazor.HydrationCompleted.GetHashCode() -> int
+override Ducky.Blazor.HydrationCompleted.ToString() -> string!
+override Ducky.Blazor.HydrationFailed.Equals(object? obj) -> bool
+override Ducky.Blazor.HydrationFailed.GetHashCode() -> int
+override Ducky.Blazor.HydrationFailed.ToString() -> string!
+static Ducky.Blazor.ClearPersistedState.operator !=(Ducky.Blazor.ClearPersistedState? left, Ducky.Blazor.ClearPersistedState? right) -> bool
+static Ducky.Blazor.ClearPersistedState.operator ==(Ducky.Blazor.ClearPersistedState? left, Ducky.Blazor.ClearPersistedState? right) -> bool
+static Ducky.Blazor.DuckyBlazorBuilderExtensions.Persist<TSlice>(this Ducky.DuckyBuilder! builder, System.Action<Ducky.Blazor.PersistOptions!>? configure = null) -> Ducky.DuckyBuilder!
+static Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<TSlice>(this Ducky.DuckyBuilder! builder, System.Action<Ducky.Blazor.PersistOptions!>! configure) -> Ducky.DuckyBuilder!
+static Ducky.Blazor.HydrationCompleted.operator !=(Ducky.Blazor.HydrationCompleted? left, Ducky.Blazor.HydrationCompleted? right) -> bool
+static Ducky.Blazor.HydrationCompleted.operator ==(Ducky.Blazor.HydrationCompleted? left, Ducky.Blazor.HydrationCompleted? right) -> bool
+static Ducky.Blazor.HydrationFailed.operator !=(Ducky.Blazor.HydrationFailed? left, Ducky.Blazor.HydrationFailed? right) -> bool
+static Ducky.Blazor.HydrationFailed.operator ==(Ducky.Blazor.HydrationFailed? left, Ducky.Blazor.HydrationFailed? right) -> bool
