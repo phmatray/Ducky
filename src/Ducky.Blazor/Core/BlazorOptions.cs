@@ -9,6 +9,12 @@ public sealed class BlazorOptions
     /// <summary>The first segment of every storage key, <c>{prefix}:{scope?}:{sliceKey}</c>. Default <c>"ducky"</c>.</summary>
     public string KeyPrefix { get; set; } = "ducky";
 
+    /// <summary>
+    /// In the browser only, how long init waits for the prerender seed when the first component has not registered yet
+    /// (a preload in <c>Program.cs</c> started init before <c>RunAsync</c>). Default 250 ms.
+    /// </summary>
+    public TimeSpan PrerenderSeedWaitTimeout { get; set; } = TimeSpan.FromMilliseconds(250);
+
     // §5.1: read once, here, and read back by every browser-dependent branch when it runs. Settable so the package's
     // tests can set it inside configure.
 #pragma warning disable RS0030 // justification: the single IsBrowser read of this package (§5.1)

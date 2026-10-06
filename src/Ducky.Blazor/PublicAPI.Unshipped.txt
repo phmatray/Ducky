@@ -19,6 +19,8 @@ Ducky.Blazor.BlazorOptions
 Ducky.Blazor.BlazorOptions.BlazorOptions() -> void
 Ducky.Blazor.BlazorOptions.KeyPrefix.get -> string!
 Ducky.Blazor.BlazorOptions.KeyPrefix.set -> void
+Ducky.Blazor.BlazorOptions.PrerenderSeedWaitTimeout.get -> System.TimeSpan
+Ducky.Blazor.BlazorOptions.PrerenderSeedWaitTimeout.set -> void
 Ducky.Blazor.DuckyBlazorBuilderExtensions
 static Ducky.Blazor.DuckyBlazorBuilderExtensions.AddBlazor(this Ducky.DuckyBuilder! builder, System.Action<Ducky.Blazor.BlazorOptions!>? configure = null) -> Ducky.DuckyBuilder!
 Ducky.Blazor.DuckyComponent
