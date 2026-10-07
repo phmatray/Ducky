@@ -267,29 +267,20 @@ public sealed class WriterTests
     }
 
     [Fact]
-    public async Task Write_ScopeUnknownAfterTimeout_NotWrittenUntilRecorded()
+    public async Task Write_NullScope_SkippedWithoutDeferral()
     {
-        // (non-normative) A timeout terminal before the scope resolved: a change finds no scope recorded for its epoch and
-        // writes nothing (no I/O for a key it can't name); once the late scope is recorded, writes use it. Which value is
-        // written first after the recording is M6-10b's (§11.5 case (b)), so it is not asserted here.
-        var scope = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        // (non-normative) A scope recorded as null names no key: a scoped change does no I/O and is not deferred (the next
+        // switch resets scoped slices anyway).
         await using var h = new WriterHarness(
-            d => d.Persist<LevelSlice>(static o => o.Debounce = TimeSpan.Zero).AddBlazor(o => o.Scope = (_, _) => new(scope.Task)),
+            static d => d.Persist<LevelSlice>(static o => o.Debounce = TimeSpan.Zero).AddBlazor(static o => o.Scope = static (_, _) => new((string?)null)),
             browser: false);
-        var init = h.InitializeAsync();
-        await h.Time.TimerAsync(TimeSpan.FromSeconds(5));
-        h.Time.Advance(TimeSpan.FromSeconds(5));
-        await init;
-        h.Store.State.Get<PersistenceState>().Status.ShouldBe(PersistenceStatus.Failed);
+        await h.InitializeAsync();
 
         h.Store.Dispatch(new SetLevel(1));
         await h.IterationsAsync("level", 1);
+        h.Middleware.Scopes[0].ShouldBeNull();
+        h.Middleware.Deferred.ShouldBeEmpty();
         h.Written.ShouldBeEmpty();
-
-        scope.SetResult("bob");
-        await WriterHarness.Until(() => h.Middleware.Scopes.ContainsKey(0));
-        h.Store.Dispatch(new SetLevel(2));
-        (await h.NextWriteAsync()).Key.ShouldBe("ducky:bob:level");
     }
 
     [Fact]

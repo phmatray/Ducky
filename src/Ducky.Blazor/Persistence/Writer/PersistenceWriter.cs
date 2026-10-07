@@ -30,13 +30,7 @@ internal sealed partial class PersistenceMiddleware
         }
         else if (context.PreviousState.Get<PersistenceState>().Status == PersistenceStatus.Hydrating)
         {
-            foreach (var key in Deferred.Keys)
-            {
-                if (Deferred.TryRemove(key, out _))
-                {
-                    Signal(key);
-                }
-            }
+            ReleaseDeferred();
         }
 
         if (context.Origin is Origin.Hydration or Origin.CrossTab or Origin.DevTools)
@@ -59,9 +53,22 @@ internal sealed partial class PersistenceMiddleware
 
     private void Signal(string key) => _writers.GetValueOrDefault(key)?.Signal();
 
+    // The two releases of _deferred (a terminal, a scope recording): each key is taken with TryRemove and signalled only by
+    // the side that took it, so against a writer's own recheck it is signalled exactly once.
+    private void ReleaseDeferred()
+    {
+        foreach (var key in Deferred.Keys)
+        {
+            if (Deferred.TryRemove(key, out _))
+            {
+                Signal(key);
+            }
+        }
+    }
+
     // {prefix} for unscoped keys; with a Scope, {prefix}:{scope} for the scope recorded for the epoch, or null when that
     // scope is null or not recorded yet: no I/O for a key that can't be named.
-    // ponytail: an unrecorded scope is skipped without deferral; M6-10b defers it until the scope is recorded (case (b)).
+    // A scope not recorded yet never reaches it: ShouldSkip defers that key (case (b)).
     private string? WritePrefix(int epoch)
     {
         var options = _registration.Options;
@@ -71,6 +78,18 @@ internal sealed partial class PersistenceMiddleware
         }
 
         return Scopes.GetValueOrDefault(epoch) is { } scope ? $"{options.KeyPrefix}:{scope}" : null;
+    }
+
+    // §11.5 "hydration skip": the one predicate of the skip and of its recheck. (a) a read in flight owns the key: Hydrating,
+    // and the key in the key set of the snapshot's epoch; (b) a scoped key whose epoch scope is not recorded yet can't be
+    // named. Lock-free: Scopes is published before the drain that releases (b).
+    // ponytail: every writer's key is in attempt 0's key set, so (a) is the Status alone and the predicate takes no key;
+    // per-epoch key sets (and the key argument) come with scope switches (§11.6).
+    private bool ShouldSkip(StateSnapshot snap)
+    {
+        var persistence = snap.Get<PersistenceState>();
+        return persistence.Status == PersistenceStatus.Hydrating
+            || (_registration.Options.Scope is not null && !Scopes.ContainsKey(persistence.ScopeEpoch));
     }
 
     /// <summary>
@@ -144,18 +163,13 @@ internal sealed partial class PersistenceMiddleware
         private async Task WriteAsync(CancellationToken token)
         {
             var snap = _owner.Store.State;
-            var persistence = snap.Get<PersistenceState>();
-
-            // The hydration skip: the read in flight owns the key, and the terminal signals it again.
-            // ponytail: every writer's key is in attempt 0's key set; per-epoch key sets come with scope switches (§11.6), and
-            // the add-then-recheck against a terminal that races this skip with M6-10b.
-            if (persistence.Status == PersistenceStatus.Hydrating)
+            if (_owner.ShouldSkip(snap))
             {
-                _owner.Deferred.TryAdd(_slice.Key, 0);
+                Defer();
                 return;
             }
 
-            if (_owner.WritePrefix(persistence.ScopeEpoch) is not { } prefix)
+            if (_owner.WritePrefix(snap.Get<PersistenceState>().ScopeEpoch) is not { } prefix)
             {
                 return;
             }
@@ -198,6 +212,23 @@ internal sealed partial class PersistenceMiddleware
 
             _owner.LastKnownPayload[key] = payload;
             _failing = false;
+        }
+
+        // §11.5 "A skipped key stays dirty": the skip consumed the signal, so the key joins _deferred.
+        private void Defer()
+        {
+            var hook = _owner._registration.Options.AfterDeferHook;
+            hook?.Invoke(_slice.Key, DeferPoint.BeforeAdd);
+            _owner.Deferred.TryAdd(_slice.Key, 0);
+            hook?.Invoke(_slice.Key, DeferPoint.AfterAdd);
+
+            // Add-then-recheck: a release that ran between the snapshot read and the add found nothing to take. If the skip
+            // no longer holds, take the key back; only a successful TryRemove signals, so a release that took it first is
+            // the one signal.
+            if (!_owner.ShouldSkip(_owner.Store.State) && _owner.Deferred.TryRemove(_slice.Key, out _))
+            {
+                Signal();
+            }
         }
 
         // Once per failure streak, as a failure action (INV-12); a successful write ends the streak.
