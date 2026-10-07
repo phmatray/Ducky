@@ -1734,7 +1734,7 @@
    "invariants": [
     "INV-16"
    ],
-   "scope": "Stage 12. One predicate ShouldSkip(snap, key) (Hydrating and key in the epoch's key set, or scoped with the epoch's scope still unknown) for the skip and for add-then-recheck: after adding a key to _deferred the writer re-reads Store.State and the epoch-to-scope map and, if the skip no longer holds, TryRemoves it and re-signals itself; AfterReduce removes per key with TryRemove and signals what it removed, so each key is signalled exactly once; recording a scope under _issue publishes the map and drains _deferred. Internal IVT hook BlazorOptions.AfterDeferHook(string key, DeferPoint point) with BeforeAdd and AfterAdd.",
+   "scope": "Stage 12. One predicate ShouldSkip(snap, key) (Hydrating and key in the epoch's key set, or scoped with the epoch's scope still unknown) for the skip and for add-then-recheck: after adding a key to _deferred the writer re-reads Store.State and the epoch-to-scope map and, if the skip no longer holds, TryRemoves it and re-signals itself; AfterReduce removes per key with TryRemove and signals what it removed, so each key is signalled exactly once; recording a scope under _issue publishes the map and, once the attempt's terminal is issued, drains _deferred (SPEC §11.5 erratum: an earlier drain could write a key ahead of the read). Internal IVT hook BlazorOptions.AfterDeferHook(string key, DeferPoint point) with BeforeAdd and AfterAdd.",
    "acceptance_tests": [
     "Write_SkipRacesTerminal_DeferredKeyStillWritten (Ducky.Concurrency.Tests)",
     "Write_TerminalBetweenReadAndDefer_WriterRechecksAndResignals_Deterministic",

@@ -60,6 +60,10 @@ public sealed class BlazorOptions
     /// </summary>
     public int MaxPayloadBytes { get; set; } = 5 * 1024 * 1024;
 
+    // §11.5 "A skipped key stays dirty": the writers' interleaving hook, invoked with the key around the add to _deferred.
+    // Null in production; set inside configure by Ducky.Blazor.Tests (ordered) and Ducky.Concurrency.Tests (jitter only).
+    internal Action<string, DeferPoint>? AfterDeferHook { get; set; }
+
     // §5.1: read once, here, and read back by every browser-dependent branch when it runs. Settable so the package's
     // tests can set it inside configure.
 #pragma warning disable RS0030 // justification: the single IsBrowser read of this package (§5.1)

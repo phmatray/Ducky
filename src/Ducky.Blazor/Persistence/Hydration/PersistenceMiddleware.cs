@@ -232,6 +232,17 @@ internal sealed partial class PersistenceMiddleware : Middleware
         lock (_issue)
         {
             Volatile.Write(ref _scopes, _scopes.SetItem(attempt.Epoch, scope));
+
+            // The release of case (b) (§11.5 "A skipped key stays dirty"), published map first. Only once the attempt's
+            // terminal is issued: before it, that terminal releases every deferred key after this map, and a release here
+            // could let a key deferred before the synchronous prefix be written ahead of the read, from a snapshot in which
+            // the prefix's Hydrating restore (queued behind a drain in progress) is not reduced yet (SPEC §11.5 step 4;
+            // pinned by Write_ChangeBeforeFirstRead_ScopeResolvedSynchronously_NotWrittenBeforeRead, init started from
+            // inside the change's drain).
+            if (attempt.Terminal == 2)
+            {
+                ReleaseDeferred();
+            }
         }
 
         return scope is null ? null : $"{options.KeyPrefix}:{scope}";

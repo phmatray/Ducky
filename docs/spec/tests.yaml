@@ -466,6 +466,7 @@ tests:
   - { name: WhenIdle_IgnoresLongRunningEffects, projects: [Ducky.Tests], stage: 4 }
   - { name: WhenIdle_NeverCompletesWhileEffectCausedActionPending, projects: [Ducky.Tests], stage: 4 }
   - { name: Write_AfterClear_SameContent_IsWritten, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Write_ChangeBeforeFirstRead_ScopeResolvedSynchronously_NotWrittenBeforeRead, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
   - { name: Write_SkipRacesTerminal_DeferredKeyStillWritten, projects: [Ducky.Concurrency.Tests], invariants: [INV-16], stage: 12 }
   - { name: Write_TerminalAfterDeferAdd_AfterReduceSignalsOnce_Deterministic, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
   - { name: Write_TerminalBeforeScopeResolved_NoSpin_WrittenOnceScopeRecorded, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
