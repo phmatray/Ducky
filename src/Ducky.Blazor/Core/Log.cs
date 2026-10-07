@@ -10,6 +10,7 @@ namespace Ducky.Blazor;
 // leaves unnumbered) and 2012 (a seed write that failed, which §11.4 doesn't name).
 // M6-09 uses 2023 (§11.5: a stored value above MaxPayloadBytes) and takes 2026, not assigned by SPEC, for the per-key
 // Warning of a failed pull (§11.5 step 4: "a failed pull is caught per key", which §11.5 leaves unnumbered).
+// M6-11 uses 2024 (§6.3: a telemetry listener threw, Ducky.Blazor's twin of Ducky's 1017).
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -44,6 +45,9 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2023, Level = LogLevel.Warning, Message = "The value of '{Key}' is {Length} bytes, above MaxPayloadBytes ({MaxPayloadBytes}); read as not found until the next write replaces it")]
     internal static partial void PayloadTooLarge(SafeLogger logger, string key, long length, int maxPayloadBytes);
+
+    [LoggerMessage(EventId = 2024, Level = LogLevel.Warning, Message = "A telemetry listener threw in {Call}; the step goes on")]
+    internal static partial void TelemetryFailed(SafeLogger logger, Exception exception, string call);
 
     [LoggerMessage(EventId = 2025, Level = LogLevel.Debug, Message = "Init ended (overflow abort or store disposed) before the browser's prerender seed settled; the seed is not restored, the live store is authoritative")]
     internal static partial void SeedSkippedAfterAbort(SafeLogger logger);

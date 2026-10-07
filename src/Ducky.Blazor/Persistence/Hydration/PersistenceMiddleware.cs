@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -20,6 +21,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
     private readonly BrowserStorageProvider _browser;
     private readonly TimeProvider _time;
     private readonly ILogger _logger;
+    private readonly SafeTelemetry _telemetry;
     private readonly TaskCompletionSource _initDone = new(TaskCreationOptions.RunContinuationsAsynchronously); // the init task
     private ImmutableDictionary<int, string?> _scopes = ImmutableDictionary<int, string?>.Empty;
     private bool _initPhase; // under _issue: set with attempt 0, cleared with the init-phase terminal
@@ -36,6 +38,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
         _bridge = persistence.Gate.CreateBridge(services.GetService<IJSRuntime>(), _logger);
         _browser = new(_bridge, registration.Options, _logger);
         _time = services.GetRequiredService<TimeProvider>();
+        _telemetry = new(new(_logger), services.GetService<IMeterFactory>());
         persistence.Middleware = this;
     }
 
@@ -106,14 +109,11 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
     public override async ValueTask DisposeAsync()
     {
-        // After init ended (§6.11): a HydrateAsync still awaiting a late scope delegate holds an already-cancelled token.
+        // Phase 5a, after init ended (§6.11): a HydrateAsync still awaiting a late scope delegate holds an already-cancelled
+        // token. The flush (§11.5) runs before the module is disposed.
         _hydration?.Dispose();
         _deadline?.Dispose();
-        foreach (var writer in _writers.Values)
-        {
-            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-            await writer.DisposeAsync().ConfigureAwait(false);
-        }
+        await FlushAsync().ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         await _bridge.DisposeAsync().ConfigureAwait(false);

@@ -46,6 +46,10 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
             // default). Both need two different runtimes, which .NET 10 never hands over (S-7); retire the old task when one does.
             // A host without JS (a console or plain DI host) has no runtime: like UnsupportedJavaScriptRuntime, non-interactive.
             var current = runtime() ?? throw new InvalidOperationException("No IJSRuntime is registered: JS interop is unavailable in this host.");
+            // ponytail: a faulted or cancelled import is imported again; §11.5 also re-issues the watchStorage registration
+            // (§11.7) once that re-import succeeds. No registration exists before M7-02, which must re-register here and pin it
+            // with a variant of ServerBrowserStorage_ImportFailsOnDisconnect_ReimportedAfterReconnect (WriterRetryTests)
+            // asserting a watchStorage call after the successful re-import (M7-02's plan.json scope does not mention it).
             if (_module is not { IsFaulted: false, IsCanceled: false } || !ReferenceEquals(current, _moduleRuntime))
             {
 #pragma warning disable RS0030 // justification: JsBridge is the single interop wrapper (§10, INV-23)

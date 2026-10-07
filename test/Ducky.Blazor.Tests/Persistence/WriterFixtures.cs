@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.Metrics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
@@ -82,6 +83,74 @@ internal sealed class EarlyChange : Middleware
     }
 }
 
+internal sealed record StartHung;
+
+// A run that ignores its token and never ends (a listener on a non-cancellable read, §6.11 5a).
+internal sealed class HungEffect : Effect<StartHung>
+{
+    public override Task Handle(StartHung action, EffectContext context, CancellationToken cancellationToken) => new TaskCompletionSource().Task;
+}
+
+// Its init ignores the token and never ends (the supported case of Init_HangingMiddleware_TimesOutAndReleasesBuffer).
+internal sealed class HangingInit : Middleware
+{
+    public override ValueTask InitializeAsync(CancellationToken cancellationToken) => new(new TaskCompletionSource().Task);
+}
+
+// Scopes every Meter it creates to itself, as the framework's factory does, so a listener can pick this store's meters.
+internal sealed class TestMeterFactory : IMeterFactory
+{
+    private readonly ConcurrentQueue<Meter> _meters = new();
+
+    public Meter Create(MeterOptions options)
+    {
+        var meter = new Meter(new MeterOptions(options.Name) { Version = options.Version, Tags = options.Tags, Scope = this });
+        _meters.Enqueue(meter);
+        return meter;
+    }
+
+    public void Dispose()
+    {
+        foreach (var meter in _meters)
+        {
+            meter.Dispose();
+        }
+    }
+}
+
+// A MeterListener whose callback throws (an InvalidOperationException unless told otherwise) on every ducky.persistence.*
+// measurement of one factory's meters, after noting it.
+internal sealed class ThrowingMeterListener : IDisposable
+{
+    private readonly MeterListener _listener = new();
+    private readonly Exception? _exception;
+
+    public ThrowingMeterListener(IMeterFactory factory, Exception? exception = null)
+    {
+        _exception = exception;
+        _listener.InstrumentPublished = (instrument, listener) =>
+        {
+            if (instrument.Meter.Scope == factory && instrument.Name.StartsWith("ducky.persistence.", StringComparison.Ordinal))
+            {
+                listener.EnableMeasurementEvents(instrument);
+            }
+        };
+        _listener.SetMeasurementEventCallback<long>((instrument, _, _, _) => Throw(instrument));
+        _listener.SetMeasurementEventCallback<double>((instrument, _, _, _) => Throw(instrument));
+        _listener.Start();
+    }
+
+    public ConcurrentQueue<string> Measured { get; } = new();
+
+    public void Dispose() => _listener.Dispose();
+
+    private void Throw(Instrument instrument)
+    {
+        Measured.Enqueue(instrument.Name);
+        throw _exception ?? new InvalidOperationException("listener throws");
+    }
+}
+
 // One storageSet call: what the writer stored, and its payload s.
 internal sealed record StoredWrite(string Area, string Key, string Value, string Id)
 {
@@ -117,7 +186,7 @@ internal sealed class WriterHarness : IAsyncDisposable
     private readonly AsyncServiceScope _scope;
     private readonly Channel<StoredWrite> _writes = Channel.CreateUnbounded<StoredWrite>();
 
-    public WriterHarness(Action<DuckyBuilder> configure, bool browser = true, Action<DuckyBuilder>? early = null)
+    public WriterHarness(Action<DuckyBuilder> configure, bool browser = true, Action<DuckyBuilder>? early = null, Action<IServiceCollection>? services = null)
     {
         OnGet = Get;
         Js.Respond = (identifier, args) => identifier switch
@@ -128,9 +197,11 @@ internal sealed class WriterHarness : IAsyncDisposable
             _ => null,
         };
 
-        var services = new ServiceCollection();
-        services.AddSingleton<IJSRuntime>(Js).AddSingleton<TimeProvider>(Time).AddSingleton(Log).AddSingleton(Inbox).AddSingleton(Line);
-        services.AddDucky(d =>
+        var collection = new ServiceCollection();
+        collection.AddSingleton<IJSRuntime>(Js).AddSingleton<TimeProvider>(Time).AddSingleton(Log).AddSingleton(Inbox).AddSingleton(Line);
+        collection.AddSingleton<IMeterFactory>(Meters);
+        services?.Invoke(collection);
+        collection.AddDucky(d =>
         {
             d.UseJson(WriterJson.Default).AddSlice<LevelSlice>().AddSlice<DialSlice>().AddSlice<CounterSlice>();
             early?.Invoke(d);
@@ -138,13 +209,16 @@ internal sealed class WriterHarness : IAsyncDisposable
             configure(d);
             d.Use<HydrationRecorder>().Use<FailureTap>().Use<SystemSender>();
         });
-        _provider = services.BuildServiceProvider();
+        _provider = collection.BuildServiceProvider();
         _scope = _provider.CreateAsyncScope();
     }
 
     public FakeJsRuntime Js { get; } = new();
 
     public WatchedTime Time { get; } = new();
+
+    /// <summary>The store's IMeterFactory: every Meter it creates is scoped to it.</summary>
+    public TestMeterFactory Meters { get; } = new();
 
     public HydrationLog Log { get; } = new();
 
@@ -209,10 +283,14 @@ internal sealed class WriterHarness : IAsyncDisposable
         }
     }
 
+    /// <summary>Disposes the store itself (the scope's later dispose is a no-op for it).</summary>
+    public Task DisposeStoreAsync() => Store.DisposeAsync().AsTask();
+
     public async ValueTask DisposeAsync()
     {
         await _scope.DisposeAsync();
         await _provider.DisposeAsync();
+        Meters.Dispose();
     }
 
     private object? Set(StoredWrite write)
