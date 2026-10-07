@@ -1,3 +1,4 @@
+using CsCheck;
 using Ducky.Blazor;
 using Ducky.ConcurrencyTests;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,6 +73,109 @@ public sealed class HydrationInterleavingTests
             "Tick Hydrated",
             "Tick Hydrated",
         ]);
+    }
+
+    // §11.5 "Before StoreInitialized", §17.3 row 6: the attempt's read completes (its continuation claims, restores and
+    // issues HydrationCompleted under _issue, inline on the completing thread) while an init-buffer overflow abort runs on
+    // another thread (its init-token callback claims and issues HydrationFailed under _issue, then Abort reaches
+    // MarkReady). Whatever the interleaving, exactly one terminal is processed, before StoreInitialized; a restore is
+    // never processed after it, and the buffered actions are replayed after StoreInitialized. The deterministic twin is
+    // HydrationTests.Hydration_ReadCompletesConcurrentlyWithInitAbort_TerminalPrecedesStoreInitialized_Deterministic.
+    [Theory]
+    [MemberData(nameof(Interleaving.Repeat), MemberType = typeof(Interleaving))]
+    public async Task Hydration_ReadCompletesConcurrentlyWithInitAbort_TerminalPrecedesStoreInitialized(int repeat)
+    {
+        _ = repeat;
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var read = Gen.Int.Operation<Race, Model>(_ => "CompleteRead", (a, _) => a.CompleteRead(), (_, _) => { });
+        var abort = Gen.Int.Operation<Race, Model>(_ => "AbortInit", (a, _) => a.AbortInit(), (_, _) => { });
+
+        // Bounded by progress (Interleaving.WithinProperty): every blocking step goes through Interleaving.Wait.
+        await Interleaving.WithinProperty(Task.Run(
+            () => Gen.Const(() => (new Race(), new Model())).SampleParallel(
+                read,
+                abort,
+                equal: static (a, _) => a.TerminalPrecedesStoreInitialized,
+                // Two distinct, idempotent operations: more parallel slots add threads, not interleavings, and none runs
+                // sequentially first, so a sample with both is always a real race.
+                maxSequentialOperations: 0,
+                maxParallelOperations: 2),
+            cancellationToken));
+    }
+
+    // One store per sample, never disposed (its timers are on a FakeTimeProvider that never moves): init started, its one
+    // read pending, and two buffered user actions over InitBufferCapacity, so the overflow abort is queued, captured
+    // rather than run. Each operation does its part once, whichever thread gets there first; the check does whatever
+    // the run left undone, then waits for init and the last drain.
+    private sealed class Race
+    {
+        private readonly TaskCompletionSource<object?> _read = new(); // inline continuations: the completing thread hydrates
+        private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 10, 6, 12, 0, 0, TimeSpan.Zero));
+        private readonly Choreography _choreography = new();
+        private readonly DuckyStore _store;
+        private readonly Task _initialized;
+        private Action? _abort;
+        private bool? _verdict;
+
+        public Race()
+        {
+            var provider = new ServiceCollection()
+                .AddSingleton<TimeProvider>(_time)
+                .AddSingleton<IJSRuntime>(new Js(_read.Task))
+                .AddSingleton(_choreography)
+                .AddDucky(d =>
+                {
+                    d.InitBufferCapacity = 1;
+                    d.UseJson(ConcurrencyJson.Default).AddSlice<SavedSlice>()
+                        .AddBlazor(static o => (o.IsBrowser, o.HydrationTimeout) = (true, _hydrationTimeout))
+                        .Persist<SavedSlice>();
+                    d.Use<Choreographer>();
+                })
+                .BuildServiceProvider();
+            _store = (DuckyStore)provider.GetRequiredService<IStore>();
+            List<Action> queued = [];
+            _store.Dispatcher.QueueWorkItem = queued.Add;
+            _initialized = _store.InitializeAsync(TestContext.Current.CancellationToken);
+            _store.Dispatch(new Tick());
+            _store.Dispatch(new Tick());
+            _abort = queued.ShouldHaveSingleItem();
+        }
+
+        // Once, after the run (equal may be called once per linearization tried).
+        public bool TerminalPrecedesStoreInitialized => _verdict ??= Check();
+
+        public void CompleteRead() => _read.TrySetResult(EnvelopeWriter.Write("""{"Value":3}""", version: 1, _time.GetUtcNow()));
+
+        public void AbortInit() => Interlocked.Exchange(ref _abort, null)?.Invoke();
+
+        public override string ToString() => string.Join(", ", _choreography.Entries);
+
+        private bool Check()
+        {
+            CompleteRead();
+            AbortInit();
+            Interleaving.Wait(_initialized);
+            Interleaving.Wait(Interleaving.Settled(_store));
+
+            var entries = _choreography.Entries;
+            var terminals = entries.Select((entry, index) => (entry, index))
+                .Where(static e => e.entry.StartsWith("HydrationCompleted ", StringComparison.Ordinal) || e.entry.StartsWith("HydrationFailed ", StringComparison.Ordinal))
+                .Select(static e => e.index)
+                .ToList();
+            var initialized = entries.ToList().FindIndex(static e => e.StartsWith("StoreInitialized ", StringComparison.Ordinal));
+            var lastRestore = entries.ToList().FindLastIndex(static e => e.StartsWith("restore ", StringComparison.Ordinal));
+            return terminals.Count == 1
+                && terminals[0] < initialized
+                && lastRestore < terminals[0]
+                && entries.Skip(initialized + 1).SequenceEqual(entries[terminals[0]].StartsWith("HydrationCompleted", StringComparison.Ordinal)
+                    ? ["Tick Hydrated", "Tick Hydrated"]
+                    : ["Tick Failed", "Tick Failed"]);
+        }
+    }
+
+    private sealed class Model
+    {
+        public override string ToString() => "any interleaving";
     }
 
     private static Thread Start(Action work)
