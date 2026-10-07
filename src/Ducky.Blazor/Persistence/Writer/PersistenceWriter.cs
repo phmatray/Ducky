@@ -92,14 +92,59 @@ internal sealed partial class PersistenceMiddleware
             || (_registration.Options.Scope is not null && !Scopes.ContainsKey(persistence.ScopeEpoch));
     }
 
+    // §11.5 "Flush on DisposeAsync", phase 5a: the deferred keys are released, every loop skips its debounce and backoff
+    // and makes one attempt per dirty key, bounded by DisposeTimeout; then the loops stop, and each key still dirty (or
+    // still deferred) is counted ducky.persistence.lost.
+    private async Task FlushAsync()
+    {
+        // The drain has exited: nothing else takes deferred keys any more. Released only once the Hydrating restore was
+        // reduced: a restore detached by dispose step 1 left Store.State at the initial Hydrated status, so a key deferred
+        // before the first read would be written over storage never read. Unreleased, it stays deferred and is counted lost;
+        // released, its attempt meets the hydration skip again (or writes, once the read has ended).
+        if (_signalling)
+        {
+            ReleaseDeferred();
+        }
+
+        var writers = _writers.ToArray();
+        var flushed = Task.WhenAll(writers.Select(static writer => writer.Value.FlushAsync()));
+        await flushed.WaitAsync(DisposeTimeout, _time).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        foreach (var (key, writer) in writers)
+        {
+            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+            await writer.DisposeAsync().ConfigureAwait(false);
+            if (writer.Dirty || Deferred.ContainsKey(key))
+            {
+                _telemetry.Add(_telemetry.Lost);
+            }
+        }
+    }
+
+    // §11.5: a failed write is retried after 1 s, doubling up to 30 s.
+    private static TimeSpan FirstBackoff => TimeSpan.FromSeconds(1);
+
+    private static TimeSpan MaxBackoff => TimeSpan.FromSeconds(30);
+
+    // How one attempt ended: the key is clean, or it stays dirty until a terminal signals it (the hydration skip), or until
+    // a retry (a provider failure).
+    private enum Outcome
+    {
+        Clean,
+        Deferred,
+        Failed,
+    }
+
     /// <summary>
     /// One persisted key's write loop (§11.5): the channel carries a wake-up only, so signals raised during a debounce or a
     /// write coalesce into one more iteration, which reads the state current when it runs. One write per key is in flight.
+    /// A failed write is retried with a backoff of 1 s doubling to 30 s; the dispose flush ends the debounce and the
+    /// backoff, makes no further retry, and the loop ends once no signal is left.
     /// </summary>
     internal sealed class PersistenceWriter : IAsyncDisposable
     {
         private readonly Channel<bool> _signal = Channel.CreateBounded<bool>(new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest });
         private readonly CancellationTokenSource _stop = new(); // its own: not linked to the store's lifetime
+        private readonly CancellationTokenSource _hurry; // the dispose flush: ends every wait (linked to _stop)
         private readonly PersistenceMiddleware _owner;
         private readonly Slice _slice;
         private readonly PersistOptions _options;
@@ -110,12 +155,15 @@ internal sealed partial class PersistenceMiddleware
 
         private bool _failing; // loop only: a failure streak has been reported
         private int _iterations;
+        private long _signals; // signals raised so far
+        private long _clean; // the signals the last clean attempt covered: the key is dirty while they differ
 
         public PersistenceWriter(PersistenceMiddleware owner, Slice slice, PersistOptions options)
         {
             (_owner, _slice, _options) = (owner, slice, options);
             _debounce = options.Debounce ?? (owner._registration.Options.IsBrowser ? TimeSpan.Zero : ServerBrowserStorageDebounce);
-            _loop = RunAsync(_stop.Token);
+            _hurry = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token);
+            _loop = RunAsync(_stop.Token, _hurry.Token);
         }
 
         /// <summary>Whether a signal is waiting for the next iteration.</summary>
@@ -124,33 +172,70 @@ internal sealed partial class PersistenceMiddleware
         /// <summary>The iterations ended so far.</summary>
         internal int Iterations => Volatile.Read(ref _iterations);
 
-        public void Signal() => _signal.Writer.TryWrite(true);
+        /// <summary>Whether a change signalled to this key has not been written (or found already stored) yet.</summary>
+        internal bool Dirty => Interlocked.Read(ref _signals) != Interlocked.Read(ref _clean);
 
-        // ponytail: dispose cancels the loop; the phase-5a flush of dirty keys comes with M6-11.
+        /// <summary>Whether the dispose flush has begun.</summary>
+        internal bool Flushing => _hurry.IsCancellationRequested;
+
+        // Counted before the wake-up: an attempt that reads the count and then the state covers every change it counted.
+        public void Signal()
+        {
+            Interlocked.Increment(ref _signals);
+            _signal.Writer.TryWrite(true);
+        }
+
+        // The flush: every wait ends at once, and the loop ends after its next attempt, or at once when it has nothing left.
+        public async Task FlushAsync()
+        {
+            await _hurry.CancelAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+#pragma warning disable VSTHRD003 // justification: the loop this writer started; it never faults
+            await _loop.ConfigureAwait(ConfigureAwaitOptions.None);
+#pragma warning restore VSTHRD003
+        }
+
         public async ValueTask DisposeAsync()
         {
             await _stop.CancelAsync().ConfigureAwait(ConfigureAwaitOptions.None);
 #pragma warning disable VSTHRD003 // justification: the loop this writer started; it never faults and ends once its token is cancelled
             await _loop.ConfigureAwait(ConfigureAwaitOptions.None);
 #pragma warning restore VSTHRD003
+            _hurry.Dispose();
             _stop.Dispose();
         }
 
-        private async Task RunAsync(CancellationToken token)
+        private async Task RunAsync(CancellationToken stop, CancellationToken hurry)
         {
             try
             {
-                while (true)
+                while (await WaitAsync(hurry).ConfigureAwait(ConfigureAwaitOptions.None))
                 {
-                    // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-                    await _signal.Reader.ReadAsync(token).ConfigureAwait(false);
-                    if (_debounce > TimeSpan.Zero)
+                    await PauseAsync(_debounce, hurry).ConfigureAwait(ConfigureAwaitOptions.None);
+                    var backoff = FirstBackoff;
+                    Outcome outcome;
+                    while (true)
                     {
-                        await Task.Delay(_debounce, _owner._time, token).ConfigureAwait(ConfigureAwaitOptions.None);
+                        // Once the flush has begun, this attempt is the key's last: no backoff follows it.
+                        var last = hurry.IsCancellationRequested;
+                        outcome = await WriteAsync(stop).ConfigureAwait(ConfigureAwaitOptions.None);
+                        if (outcome != Outcome.Failed || last)
+                        {
+                            break;
+                        }
+
+                        await PauseAsync(backoff, hurry).ConfigureAwait(ConfigureAwaitOptions.None);
+                        backoff = TimeSpan.FromTicks(Math.Min(backoff.Ticks * 2, MaxBackoff.Ticks));
                     }
 
-                    await WriteAsync(token).ConfigureAwait(ConfigureAwaitOptions.None);
                     Interlocked.Increment(ref _iterations);
+
+                    // A failure ends the retries only on the flush's last attempt: the key stays dirty and is done. A clean or
+                    // deferred key goes back to WaitAsync, which still takes a signal raised meanwhile (a write's change, or
+                    // Defer's recheck once the skip no longer holds) and otherwise ends the loop.
+                    if (outcome == Outcome.Failed)
+                    {
+                        return;
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -159,19 +244,57 @@ internal sealed partial class PersistenceMiddleware
             }
         }
 
-        // One snapshot gives both the value and the key, so the last write is the final committed state (INV-07, INV-16).
-        private async Task WriteAsync(CancellationToken token)
+        // The next signal; once the flush has begun (ReadAsync then refuses at once), only one already raised, if any.
+        private async Task<bool> WaitAsync(CancellationToken hurry)
         {
+            try
+            {
+                // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+                await _signal.Reader.ReadAsync(hurry).ConfigureAwait(false);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return _signal.Reader.TryRead(out _);
+            }
+        }
+
+        // A debounce or a backoff on the TimeProvider, which the flush ends early; once the loop is stopped, nothing follows.
+        private async Task PauseAsync(TimeSpan delay, CancellationToken hurry)
+        {
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay, _owner._time, hurry).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            }
+
+            _stop.Token.ThrowIfCancellationRequested();
+        }
+
+        // One snapshot gives both the value and the key, so the last write is the final committed state (INV-07, INV-16).
+        private async Task<Outcome> WriteAsync(CancellationToken token)
+        {
+            var signals = Interlocked.Read(ref _signals);
             var snap = _owner.Store.State;
             if (_owner.ShouldSkip(snap))
             {
                 Defer();
-                return;
+                return Outcome.Deferred;
             }
 
+            var outcome = await WriteAsync(snap, token).ConfigureAwait(ConfigureAwaitOptions.None);
+            if (outcome == Outcome.Clean)
+            {
+                Interlocked.Exchange(ref _clean, signals);
+            }
+
+            return outcome;
+        }
+
+        private async Task<Outcome> WriteAsync(StateSnapshot snap, CancellationToken token)
+        {
             if (_owner.WritePrefix(snap.Get<PersistenceState>().ScopeEpoch) is not { } prefix)
             {
-                return;
+                return Outcome.Clean;
             }
 
             // The same state would fail again: reported, and the signal is consumed, so the next change is written (§10).
@@ -180,7 +303,7 @@ internal sealed partial class PersistenceMiddleware
             if (!_owner.Store.Json.TrySerialize(snap.Get(_slice.Key), _slice.StateType, out var payload))
             {
                 Fail(SerializationFailed, $"The state of '{_slice.Key}' could not be serialized as {_slice.StateType.Name}.");
-                return;
+                return Outcome.Clean;
             }
 
             var key = $"{prefix}:{_slice.Key}";
@@ -188,18 +311,18 @@ internal sealed partial class PersistenceMiddleware
             if (_owner.LastKnownPayload.TryGetValue(key, out var last) && last == payload)
             {
                 _failing = false;
-                return;
+                return Outcome.Clean;
             }
 
+            var started = _owner._time.GetTimestamp();
             try
             {
-                // ponytail: an interrupted write (a disconnect, an interop timeout) keeps the key dirty until its next change;
-                // the retry with backoff comes with M6-11.
+                // A disconnect or an interop timeout is not delivered (Debug only, no PersistenceFailed): retried all the same.
                 var envelope = EnvelopeWriter.Write(payload, _options.Version, _owner._time.GetUtcNow());
                 // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
                 if (!await _owner._browser.SetAsync(_options.Storage, key, envelope, _owner._id, token).ConfigureAwait(false))
                 {
-                    return;
+                    return Outcome.Failed;
                 }
             }
 #pragma warning disable CA1031 // justification: any provider failure is reported as PersistenceFailed and keeps the baseline (§11.5)
@@ -207,11 +330,15 @@ internal sealed partial class PersistenceMiddleware
 #pragma warning restore CA1031
             {
                 Fail(exception.GetType().Name, exception.Message);
-                return;
+                return Outcome.Failed;
             }
 
+            // Telemetry first: a throwing listener never skips the baseline (SafeTelemetry, INV-03).
+            _owner._telemetry.Record(_owner._telemetry.SaveDuration, _owner._time.GetElapsedTime(started).TotalMilliseconds);
+            _owner._telemetry.Add(_owner._telemetry.Saves);
             _owner.LastKnownPayload[key] = payload;
             _failing = false;
+            return Outcome.Clean;
         }
 
         // §11.5 "A skipped key stays dirty": the skip consumed the signal, so the key joins _deferred.

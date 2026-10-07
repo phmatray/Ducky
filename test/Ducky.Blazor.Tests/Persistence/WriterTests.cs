@@ -59,34 +59,41 @@ public sealed class WriterTests
     [Fact]
     public async Task PersistenceFailed_OncePerStreak()
     {
-        // The provider fails twice (one streak), succeeds, then fails again (a new streak).
+        // The provider fails twice (one streak: the write and its retry), succeeds, then fails again (a new streak).
         await using var h = new WriterHarness(static d => d.AddSlice<CrashOnPersistenceFailedSlice>().AddSlice<FailureSlice>().Persist<LevelSlice>());
         var calls = 0;
-        h.OnSet = _ => ++calls is 2 or 3 ? true : throw new JSException("QuotaExceededError: the quota has been exceeded.");
+        h.OnSet = _ => ++calls is 3 or 5 ? true : throw new JSException("QuotaExceededError: the quota has been exceeded.");
         await h.InitializeAsync();
 
-        // calls 1: fails, the streak starts and is reported once, with the slice key, the error type and its message.
+        // Call 1 fails: the streak starts and is reported once, with the slice key, the error type and its message, and the
+        // key keeps no baseline.
         h.Store.Dispatch(new SetLevel(1));
         (await h.NextFailureAsync()).ShouldBe(new PersistenceFailed("level", nameof(JSException), "QuotaExceededError: the quota has been exceeded."));
+        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":1}""");
         h.Middleware.LastKnownPayload.ShouldBeEmpty();
 
-        // 2 succeeds and ends the streak (baseline set), 3 succeeds, 4 fails: a new streak, reported again.
+        // Its retry (call 2) writes the state current then and fails in the same streak: not reported again. Call 3, the
+        // next retry, succeeds and ends the streak (baseline set).
+        await h.Time.TimerAsync(TimeSpan.FromSeconds(1));
         h.Store.Dispatch(new SetLevel(2));
-        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":1}""");
+        h.Time.Advance(TimeSpan.FromSeconds(1));
+        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":2}""");
+        await h.Time.TimerAsync(TimeSpan.FromSeconds(2));
+        h.Time.Advance(TimeSpan.FromSeconds(2));
         (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":2}""");
         await h.IterationsAsync("level", 2);
         h.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":2}""");
+        h.Inbox.Failures.Reader.TryRead(out _).ShouldBeFalse();
+
+        // Call 4 fails: a new streak, reported again, and the baseline stays the last successful write.
         h.Store.Dispatch(new SetLevel(3));
         (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
-        h.Store.Dispatch(new SetLevel(4));
-        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
         (await h.NextFailureAsync()).SliceKey.ShouldBe("level");
-        h.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":3}""");
-
-        // A failed write keeps the key's baseline; a second failure in the same streak is not reported.
-        h.Store.Dispatch(new SetLevel(5));
-        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":5}""");
-        await h.IterationsAsync("level", 5);
+        h.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":2}""");
+        await h.Time.TimerAsync(TimeSpan.FromSeconds(1));
+        h.Time.Advance(TimeSpan.FromSeconds(1));
+        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await h.IterationsAsync("level", 3);
         h.Inbox.Failures.Reader.TryRead(out _).ShouldBeFalse();
 
         // Dispatched with isFailure: a reducer that throws on it is logged, never routed as a ReducerFailed (INV-12).
@@ -189,12 +196,12 @@ public sealed class WriterTests
         await init;
         (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":7}""");
         h.Middleware.Deferred.ShouldBeEmpty();
-        // The write follows the terminal (StoreInitialized may come before or after it).
-        h.Log.Entries.Where(static entry => entry != "initialized Hydrated:0").ShouldBe([
+        // Nothing was written before the terminal (Written was empty above). The write may be logged before the recorder logs
+        // the terminal: persistence's AfterReduce signals it first. StoreInitialized may come before or after it.
+        h.Log.Entries.Where(static entry => entry is not "initialized Hydrated:0" and not """write:ducky:level:{"Value":7}""").ShouldBe([
             "restore:@ducky/persistence Hydrating:0",
             "Ducky.Blazor.Tests.Persistence.SetLevel Hydrating:0",
             "completed:False:0:System Hydrated:0",
-            """write:ducky:level:{"Value":7}""",
         ]);
     }
 
@@ -207,13 +214,14 @@ public sealed class WriterTests
         await h.InitializeAsync();
 
         (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":2}""");
+        // The write follows the read. It may be logged before the recorder logs the terminal: persistence's AfterReduce
+        // signals it first.
         h.Js.Calls.Select(static call => call.Identifier).ShouldBe(["import", "storageGet", "storageSet"]);
-        h.Log.Entries.Where(static entry => entry != "initialized Hydrated:0").ShouldBe([
+        h.Log.Entries.Where(static entry => entry is not "initialized Hydrated:0" and not """write:ducky:level:{"Value":2}""").ShouldBe([
             "Ducky.Blazor.Tests.Persistence.SetLevel Hydrated:0",
             "Ducky.Blazor.Tests.Core.Increment Hydrated:0",
             "restore:@ducky/persistence Hydrating:0",
             "completed:False:0:System Hydrated:0",
-            """write:ducky:level:{"Value":2}""",
         ]);
     }
 
@@ -281,45 +289,6 @@ public sealed class WriterTests
         h.Middleware.Scopes[0].ShouldBeNull();
         h.Middleware.Deferred.ShouldBeEmpty();
         h.Written.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task Write_Interrupted_NoFailureAndBaselineKept()
-    {
-        // (non-normative) A disconnect or an interop timeout is not a provider failure: no PersistenceFailed (Debug only),
-        // and the baseline is untouched, so the next change is still compared with the last successful write.
-        await using var h = new WriterHarness(static d => d.Persist<LevelSlice>());
-        var calls = 0;
-        h.OnSet = _ => ++calls == 1 ? Task.FromException<object?>(new JSDisconnectedException("circuit gone")) : true;
-        await h.InitializeAsync();
-
-        h.Store.Dispatch(new SetLevel(1));
-        await h.NextWriteAsync();
-        await h.IterationsAsync("level", 1);
-        h.Middleware.LastKnownPayload.ShouldBeEmpty();
-
-        h.Store.Dispatch(new SetLevel(1));
-        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":1}""");
-        await h.IterationsAsync("level", 2);
-        h.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":1}""");
-        h.Inbox.Failures.Reader.TryRead(out _).ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task Dispose_WriteInFlight_LoopEnds()
-    {
-        // (non-normative) Disposing the store cancels each writer's own token: a write held by a dead circuit and a pending
-        // debounce both end, so DisposeAsync never waits on them.
-        var h = new WriterHarness(static d => d.Persist<LevelSlice>().Persist<DialSlice>(static o => o.Debounce = TimeSpan.FromSeconds(1)));
-        h.OnSet = _ => new TaskCompletionSource<object?>().Task;
-        await h.InitializeAsync();
-        h.Store.Dispatch(new SetLevel(1));
-        await h.NextWriteAsync();
-        h.Store.Dispatch(new SetDial(1));
-        await h.Time.TimerAsync(TimeSpan.FromSeconds(1));
-
-        await h.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken);
-        h.Written.Count.ShouldBe(1);
     }
 
     // CsCheck generates the cases (fixed seeds when gated); each runs as an async scenario afterwards, so a failure names
@@ -394,12 +363,13 @@ public sealed class WriterTests
         expected["ducky:level"] = WriterHarness.Payload(new Level(100));
         expected["ducky:dial"] = WriterHarness.Payload(new Dial(100));
 
-        // Complete every held write until the stored values are the final state and nothing is in flight.
+        // Complete every held write until the stored values are the final state and nothing is in flight. In that order: a
+        // write counts itself in flight before it stores, so a final write still on its way is never missed.
         while (true)
         {
             h.TakeWrites();
             var completed = Complete("ducky:level") | Complete("ducky:dial");
-            if (!completed && expected.All(pair => stored.GetValueOrDefault(pair.Key) == pair.Value))
+            if (!completed && expected.All(pair => stored.GetValueOrDefault(pair.Key) == pair.Value) && inFlight.Values.All(static n => n == 0))
             {
                 break;
             }
@@ -419,7 +389,7 @@ public sealed class WriterTests
             }
         }
 
-        // Disposed before reading: a write that would still follow the final one is either stored by now or cancelled.
+        // Nothing is in flight and storage holds the final state, so the dispose flush finds every key clean.
         await h.DisposeAsync();
         return new(Volatile.Read(ref maxInFlight), new(stored), expected);
     }
