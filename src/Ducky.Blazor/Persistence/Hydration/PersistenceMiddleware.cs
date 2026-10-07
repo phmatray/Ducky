@@ -22,6 +22,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
     private readonly TimeProvider _time;
     private readonly ILogger _logger;
     private readonly SafeTelemetry _telemetry;
+    private readonly SafeLogger _log;
     private readonly TaskCompletionSource _initDone = new(TaskCreationOptions.RunContinuationsAsynchronously); // the init task
     private ImmutableDictionary<int, string?> _scopes = ImmutableDictionary<int, string?>.Empty;
     private bool _initPhase; // under _issue: set with attempt 0, cleared with the init-phase terminal
@@ -33,6 +34,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
     {
         (_registration, _persistence, _services) = (registration, persistence, services);
         _logger = (ILogger?)services.GetService<ILogger<PersistenceMiddleware>>() ?? NullLogger.Instance;
+        _log = new(_logger);
 
         // The store scope's runtime (none in a host without JS) until a component hands over its renderer's (§6.10).
         _bridge = persistence.Gate.CreateBridge(services.GetService<IJSRuntime>(), _logger);
@@ -190,6 +192,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
             // Lost to the deadline or the init abort: their HydrationFailed is the terminal, the results are discarded.
             if (!Claim(attempt, new HydrationCompleted(values.Count > 0) { ScopeEpoch = attempt.Epoch }))
             {
+                Log.HydrationResultDiscarded(_log, attempt.Epoch);
                 return;
             }
 
@@ -281,7 +284,8 @@ internal sealed partial class PersistenceMiddleware : Middleware
         return true;
     }
 
-    // Under _issue: issues the claimed terminal once (1 -> 2), which ends the init phase.
+    // Under _issue: issues the claimed terminal once (1 -> 2), which ends the init phase and disarms its timer (§11.5 step 7).
+    // Disarmed, not disposed: this can run inside that timer's own callback, and the linked _hydration still holds its token.
     private void IssueTerminal(Attempt attempt)
     {
         if (attempt.Terminal != 1)
@@ -289,7 +293,13 @@ internal sealed partial class PersistenceMiddleware : Middleware
             return;
         }
 
-        (attempt.Terminal, _initPhase) = (2, false);
+        if (_initPhase)
+        {
+            _initPhase = false;
+            _deadline!.CancelAfter(Timeout.InfiniteTimeSpan);
+        }
+
+        attempt.Terminal = 2;
         DispatchSystem(attempt.Pending!, isFailure: attempt.Pending is HydrationFailed);
         _initDone.TrySetResult();
     }

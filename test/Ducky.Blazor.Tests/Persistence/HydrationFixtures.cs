@@ -36,6 +36,19 @@ internal sealed class UnwritableSlice : Slice<Unwritable>
     protected override Unwritable Initial => new();
 }
 
+// Throws on both hydration terminals: a throw on one dispatched with isFailure (HydrationFailed) is only logged, a throw on
+// one dispatched normally (HydrationCompleted) is routed as a ReducerFailed (INV-12, §11.5 step 7).
+internal sealed class CrashOnHydrationTerminalSlice : Slice<Crashes>
+{
+    public CrashOnHydrationTerminalSlice()
+    {
+        On<HydrationFailed>(static _ => throw new InvalidOperationException("reducer throws"));
+        On<HydrationCompleted>(static _ => throw new InvalidOperationException("reducer throws"));
+    }
+
+    protected override Crashes Initial => new(0);
+}
+
 // One line per action the store processed, in processing order: what it was and the persistence state it left.
 internal sealed class HydrationLog
 {
@@ -52,6 +65,15 @@ internal sealed class HydrationLog
             }
         }
     }
+
+    /// <summary>The store's init token, recorded by <see cref="HydrationRecorder"/>.</summary>
+    public CancellationToken InitToken { get; set; }
+
+    /// <summary>
+    /// Completed with the thread that cancels the init token (an init abort), by a callback registered after
+    /// PersistenceMiddleware's, so it runs just before that one.
+    /// </summary>
+    public TaskCompletionSource<Thread> AbortThread { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /// <summary>Runs on the processing thread right after each entry is added, inside the store's drain.</summary>
     public Action<string>? OnEntry { get; set; }
@@ -70,6 +92,13 @@ internal sealed class HydrationLog
 // Registered after AddBlazor: sees every action, the restores and the terminals included, after its reduce.
 internal sealed class HydrationRecorder(HydrationLog log) : Middleware
 {
+    public override ValueTask InitializeAsync(CancellationToken cancellationToken)
+    {
+        log.InitToken = cancellationToken;
+        cancellationToken.UnsafeRegister(static l => ((HydrationLog)l!).AbortThread.TrySetResult(Thread.CurrentThread), log);
+        return default;
+    }
+
     public override void AfterReduce(ActionContext context)
     {
         var what = context.Action switch

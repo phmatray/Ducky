@@ -27,10 +27,12 @@ public sealed class HydrationTests : BunitContext
     private readonly HydrationLog _log = new();
     private readonly FakeLogCollector _logs;
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 9, 30, 12, 0, 0, TimeSpan.Zero));
+    private readonly CountingTimeProvider _clock;
     private Action<string>? _onLog;
 
     public HydrationTests()
     {
+        _clock = new(_time);
         _js.Respond = (identifier, args) => identifier switch
         {
             "import" => _js,
@@ -273,9 +275,219 @@ public sealed class HydrationTests : BunitContext
     }
 
     [Fact]
-    public async Task Hydration_HungReadPastHydrationTimeout_FailedBeforeStoreInitialized()
+    public async Task Hydration_LoadThrows_FailedGateReleasedPersistenceResumes()
     {
-        // (non-normative) §11.5 step 7: the init-phase deadline armed in the synchronous prefix ends attempt 0 with
+        // §11.5 step 7, §7 (failure table): a read that throws (storage disabled) ends the attempt in HydrationFailed, a
+        // failure action of epoch 0, before StoreInitialized. Init is released at once (the action buffered during it is
+        // replayed after StoreInitialized, never held for HydrationTimeout), and the store goes on: Status is Failed, not
+        // Hydrating, so nothing is held back as "still hydrating" any more, and the init-phase deadline does nothing later.
+        var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _storage[("local", "ducky:counter")] = read.Task;
+        Browser(static d => d.Persist<CounterSlice>());
+        int? baselineAtTerminal = null; // read inside the drain, before the buffered Increment is replayed
+        _log.OnEntry = entry =>
+        {
+            if (entry.StartsWith("failed:", StringComparison.Ordinal))
+            {
+                baselineAtTerminal = Middleware.LastKnownPayload.Count;
+            }
+        };
+
+        var initialized = Store.InitializeAsync(Ct);
+        Store.Dispatch(new Increment());
+        read.SetException(new JSException("SecurityError: the operation is insecure"));
+        await initialized;
+        await Store.WhenIdleAsync(Ct);
+
+        _log.Entries.ShouldBe([
+            "restore:@ducky/persistence Hydrating:0",
+            "failed:JSException:0:System Failed:0",
+            "initialized Failed:0",
+            "Ducky.Blazor.Tests.Core.Increment Failed:0",
+        ]);
+        Store.State.WasRestored<Counter>().ShouldBeFalse();
+        Middleware.Current.ShouldNotBeNull().Terminal.ShouldBe(2);
+        baselineAtTerminal.ShouldBe(0); // the failed read set no baseline
+
+        // The terminal disarmed the init-phase timer (§11.5 step 7): reaching HydrationTimeout fires nothing.
+        await Store.DispatchAsync(new Increment());
+        _time.Advance(HydrationTimeout);
+        _clock.Fired.ShouldBe(0);
+        Store.State.Get<Counter>().ShouldBe(new Counter(2));
+        _log.Entries.Count.ShouldBe(5);
+
+        // Persistence resumes: the writer's hydration skip (§11.5 Writes, ShouldSkip case (a)) holds only while Status is
+        // Hydrating, and a change to Failed is what drains _deferred, so no key is held back after the failure. The writer
+        // ends on Counter(2), written once (the replayed Increment's Counter(1) may or may not be written before it).
+        Store.State.Get<PersistenceState>().Status.ShouldBe(PersistenceStatus.Failed);
+        await WriterHarness.Until(() => Middleware.LastKnownPayload.GetValueOrDefault("ducky:counter") == """{"Value":2}""");
+        var written = _js.Calls
+            .Where(static call => call.Identifier == "storageSet" && (string)call.Args[1]! == "ducky:counter")
+            .Select(static call => new StoredWrite((string)call.Args[0]!, (string)call.Args[1]!, (string)call.Args[2]!, (string)call.Args[3]!).Payload)
+            .ToList();
+        written.Count(static payload => payload == """{"Value":2}""").ShouldBe(1);
+        written[^1].ShouldBe("""{"Value":2}""");
+    }
+
+    [Theory]
+    [InlineData("load throws")]
+    [InlineData("timeout")]
+    [InlineData("completed")]
+    public async Task Hydration_Terminal_IssuedAsFailureOnlyWhenFailed(string outcome)
+    {
+        // §11.5 step 7, INV-12: HydrationFailed is dispatched with isFailure, so a reducer that throws on it is logged only
+        // (1001) and never routed as a ReducerFailed; HydrationCompleted is dispatched normally, so the same throw is routed.
+        // A throwing reducer discards the action's whole reduce, which is why the named failure tests above go without it.
+        var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _storage[("local", "ducky:counter")] = outcome == "completed" ? Envelope("""{"Value":3}""") : read.Task;
+        Browser(static d => d.Persist<CounterSlice>().AddSlice<CrashOnHydrationTerminalSlice>().AddSlice<FailureSlice>());
+
+        var initialized = Store.InitializeAsync(Ct);
+        if (outcome == "load throws")
+        {
+            read.SetException(new JSException("SecurityError: the operation is insecure"));
+        }
+        else if (outcome == "timeout")
+        {
+            _time.Advance(HydrationTimeout);
+        }
+
+        await initialized;
+        await Store.WhenIdleAsync(Ct);
+
+        var routed = Store.State.Get<Failures>().Items;
+        var loggedOnly = _logs.GetSnapshot().Where(static r => r.Id.Id == 1001).ToList();
+        if (outcome == "completed")
+        {
+            routed.ShouldHaveSingleItem().ActionType.ShouldBe(typeof(HydrationCompleted).FullName);
+            loggedOnly.ShouldBeEmpty();
+        }
+        else
+        {
+            routed.ShouldBeEmpty();
+            loggedOnly.ShouldHaveSingleItem().Message.ShouldContain(nameof(HydrationFailed));
+        }
+    }
+
+    [Theory]
+    [InlineData("read first")]
+    [InlineData("abort first")]
+    public async Task Hydration_ReadCompletesConcurrentlyWithInitAbort_TerminalPrecedesStoreInitialized_Deterministic(string winner)
+    {
+        // The TCS-gated twin of the Ducky.Concurrency.Tests race (§11.5 "Before StoreInitialized", §6.7): an init-buffer
+        // overflow aborts init (the abort runs on a pool thread) while the attempt's read result is in hand.
+        // - read first: the winner claims, and its restore drains inline while it holds _issue. There the second Increment
+        //   overflows the init buffer, and the winner blocks until the abort's init-token callbacks have started (the
+        //   recorder's completes AbortThread just before the persistence one runs), then until that thread is waiting, on
+        //   _issue. So the abort has won the init CAS (Complete waits for the init task, which the winner's terminal
+        //   completes) and its callback gets _issue only after the winner's terminal is queued: had it not waited for
+        //   _issue, Abort would reach MarkReady first and StoreInitialized would precede HydrationCompleted.
+        // - abort first: the read has completed, but the attempt still waits for the prerender seed to settle (no component
+        //   registers, so only the abort settles it). The init-token callback claims and issues HydrationFailed; the result
+        //   then loses the claim and is discarded with a Debug log, never restored after StoreInitialized.
+        var read = new TaskCompletionSource<object?>();
+        var discarded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _storage[("local", "ducky:counter")] = winner == "read first" ? read.Task : Envelope("""{"Value":3}""");
+        var abortEnded = false; // the abort reached MarkReady: logged after its init-token callbacks returned
+        _onLog = line =>
+        {
+            if (line.Contains("read result of hydration attempt", StringComparison.Ordinal))
+            {
+                discarded.TrySetResult();
+            }
+
+            if (line.Contains("Store init aborted", StringComparison.Ordinal))
+            {
+                Volatile.Write(ref abortEnded, true);
+            }
+        };
+        Browser(d =>
+        {
+            d.InitBufferCapacity = 1;
+            d.Persist<CounterSlice>();
+            if (winner == "abort first")
+            {
+                d.Prerender<TallySlice>();
+            }
+        });
+        var blockedOnIssue = false;
+        _log.OnEntry = entry =>
+        {
+            if (entry.StartsWith("restore:counter", StringComparison.Ordinal))
+            {
+                Store.Dispatch(new Increment());
+                Store.Dispatch(new Increment());
+
+                // A blocking wait, so a cold pool sees this thread blocked and runs the queued abort. The bound only keeps
+                // a regression from hanging the run; asserted outside the drain, which isolates a throw.
+                if (!_log.AbortThread.Task.Wait(TimeSpan.FromSeconds(30), Ct))
+                {
+                    return;
+                }
+
+                // The abort thread is running its callbacks; its next wait is EndInitPhase's lock (_issue), which this
+                // thread holds, unless it skips _issue and ends (abortEnded). Either comes within a few instructions, so
+                // this spin needs no bound.
+                var abort = _log.AbortThread.Task.Result;
+                var spin = default(SpinWait);
+                while (!Volatile.Read(ref abortEnded) && (abort.ThreadState & System.Threading.ThreadState.WaitSleepJoin) == 0)
+                {
+                    spin.SpinOnce(sleep1Threshold: -1);
+                }
+
+                blockedOnIssue = !Volatile.Read(ref abortEnded);
+            }
+        };
+
+        var initialized = Store.InitializeAsync(Ct);
+        if (winner == "read first")
+        {
+            read.SetResult(Envelope("""{"Value":3}"""));
+        }
+        else
+        {
+            Store.Dispatch(new Increment());
+            Store.Dispatch(new Increment());
+        }
+
+        await initialized;
+        await Store.WhenIdleAsync(Ct);
+
+        if (winner == "read first")
+        {
+            blockedOnIssue.ShouldBeTrue("the abort ended without waiting for _issue, which the winner held");
+            _log.Entries.ShouldBe([
+                "restore:@ducky/persistence Hydrating:0",
+                "restore:counter Hydrating:0",
+                "completed:True:0:System Hydrated:0",
+                "initialized Hydrated:0",
+                "Ducky.Blazor.Tests.Core.Increment Hydrated:0",
+                "Ducky.Blazor.Tests.Core.Increment Hydrated:0",
+            ]);
+            Store.State.Get<Counter>().ShouldBe(new Counter(5));
+            discarded.Task.IsCompleted.ShouldBeFalse();
+            _log.InitToken.IsCancellationRequested.ShouldBeTrue();
+        }
+        else
+        {
+            // The fake clock never moves here: the wall-clock bound only keeps a regression from hanging the run.
+            await discarded.Task.WaitAsync(TimeSpan.FromSeconds(30), Ct);
+            _log.Entries.ShouldBe([
+                "restore:@ducky/persistence Hydrating:0",
+                "failed:OperationCanceledException:0:System Failed:0",
+                "initialized Failed:0",
+                "Ducky.Blazor.Tests.Core.Increment Failed:0",
+                "Ducky.Blazor.Tests.Core.Increment Failed:0",
+            ]);
+            Store.State.Get<Counter>().ShouldBe(new Counter(2));
+            Store.State.WasRestored<Counter>().ShouldBeFalse(); // with the 2041 log above: the result was discarded
+        }
+    }
+
+    [Fact]
+    public async Task Hydration_Timeout_Failed()
+    {
+        // §11.5 step 7: the init-phase deadline armed in the synchronous prefix ends attempt 0 with
         // HydrationFailed, before StoreInitialized and long before InitTimeout. The cancelled read never restores.
         var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         _storage[("local", "ducky:counter")] = read.Task;
@@ -297,9 +509,9 @@ public sealed class HydrationTests : BunitContext
     }
 
     [Fact]
-    public async Task Hydration_InitAbortedDuringRead_FailedNotCompleted()
+    public async Task Hydration_InitAborted_OneTerminal()
     {
-        // (non-normative) §11.5 step 7, §6.7: an init abort (here an init-buffer overflow) cancels the init token while the
+        // §11.5 step 7, §6.7: an init abort (here an init-buffer overflow) cancels the init token while the
         // read is pending; the registration made in the synchronous prefix issues HydrationFailed before StoreInitialized,
         // and the interrupted read never counts as "nothing stored".
         var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -314,22 +526,24 @@ public sealed class HydrationTests : BunitContext
         Store.Dispatch(new Increment());
         Store.Dispatch(new Increment());
         await initialized;
+        await Store.WhenIdleAsync(Ct);
 
-        _log.Entries.Take(3).ShouldBe([
+        _log.Entries.ShouldBe([
             "restore:@ducky/persistence Hydrating:0",
             "failed:OperationCanceledException:0:System Failed:0",
             "initialized Failed:0",
+            "Ducky.Blazor.Tests.Core.Increment Failed:0",
+            "Ducky.Blazor.Tests.Core.Increment Failed:0",
         ]);
-        _log.Entries.ShouldNotContain(static e => e.StartsWith("completed:", StringComparison.Ordinal));
         Store.State.WasRestored<Counter>().ShouldBeFalse();
     }
 
     [Fact]
-    public async Task Hydration_DeadlineBeforeResultIssued_ResultDiscarded()
+    public async Task Hydration_ResultAfterTimeout_IsDiscarded()
     {
-        // (non-normative) §11.5 step 6: the deadline fires after the reads ended but before the result reached _issue (here,
-        // from inside the last read, as its Warning is logged); the deadline's HydrationFailed is the one terminal and the
-        // result is discarded: no restore, no baseline.
+        // §11.5 step 6: the deadline fires after the reads ended but before the result reached _issue (here, from inside
+        // the last read, as its Warning is logged); the deadline's HydrationFailed is the one terminal and the late result
+        // is discarded, with a Debug log: no restore, no baseline.
         Browser(static d => d.Persist<CounterSlice>().Persist<TallySlice>());
         _storage[("local", "ducky:counter")] = Envelope("""{"Value":3}""");
         _storage[("local", "ducky:tally")] = "not json";
@@ -350,6 +564,8 @@ public sealed class HydrationTests : BunitContext
         ]);
         Store.State.WasRestored<Counter>().ShouldBeFalse();
         Middleware.LastKnownPayload.ShouldBeEmpty();
+        var discarded = _logs.GetSnapshot().Where(static r => r.Id.Id == 2041).ShouldHaveSingleItem();
+        discarded.Level.ShouldBe(LogLevel.Debug);
     }
 
     [Fact]
@@ -699,7 +915,7 @@ public sealed class HydrationTests : BunitContext
             Services.AddSingleton<IJSRuntime>(_js);
         }
 
-        Services.AddSingleton<TimeProvider>(_time);
+        Services.AddSingleton<TimeProvider>(_clock);
         Services.AddSingleton(_log);
         Services.AddLogging(b => b.SetMinimumLevel(LogLevel.Debug).AddProvider(new FakeLoggerProvider(_logs)));
         Services.AddDucky(d =>
@@ -708,6 +924,31 @@ public sealed class HydrationTests : BunitContext
             ducky(d);
             d.Use<HydrationRecorder>();
         });
+    }
+
+    // The store's clock: _time, counting the timer callbacks it runs, so a test can tell that a timer never fired.
+    private sealed class CountingTimeProvider(FakeTimeProvider inner) : TimeProvider
+    {
+        private int _fired;
+
+        public int Fired => Volatile.Read(ref _fired);
+
+        public override long TimestampFrequency => inner.TimestampFrequency;
+
+        public override DateTimeOffset GetUtcNow() => inner.GetUtcNow();
+
+        public override long GetTimestamp() => inner.GetTimestamp();
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period) =>
+            inner.CreateTimer(
+                s =>
+                {
+                    Interlocked.Increment(ref _fired);
+                    callback(s);
+                },
+                state,
+                dueTime,
+                period);
     }
 }
 
