@@ -541,3 +541,99 @@ files gain the root's `MinVer` reference.
 
 Not measured here: `ubuntu-latest` (no CI run was made for this story; the stage-13 and stage-17 measurements are
 made there), and projects with real logic.
+
+**Update (M0-15, 2026-10-08).** The split arrived before stage 13, by file rather than by project: PR #262's
+`mutation` check took 1 h 18 min on a 2-vCPU runner with `Ducky` alone active, so `mutation` and `nightly-mutation`
+now run four shard jobs over disjoint file partitions of every active project, each under its own `timeout-minutes`
+(330 for the nightly shards), with `fail-fast: false` and the failure report in the one aggregate job, as designed
+above; `MutationForSha` still finds one `nightly-mutation` run per SHA. `release-mutation` is not split yet. Local
+measurements are in the M0-15 record below.
+
+## M0-15: Stryker `--mutate` patterns for shards and baseline reruns
+
+**Question.** Owner-added story M0-15 shards the mutation runs and reruns individual mutants against a baseline. Two
+platform questions first: (a) does a `--mutate` pattern given on the command line replace the `mutate` of
+`stryker-config.json`, so a shard can mutate only its own files while the configuration stays as `ExclusionGate` pins
+it? (b) does Stryker 4.16 with `test-runner: mtp` honour a line-span pattern such as `File.cs{10..20}` precisely enough
+to rerun individual mutants? If (b) failed, the baseline part of the story would be dropped.
+
+**Setup.** `spikes/S-6-mutation/Plain`, run 2026-10-08 on macOS arm64 with SDK 10.0.401 and `dotnet-stryker` 4.16.0,
+`DUCKY_REPEAT=1 dotnet stryker --reporter Json --mutate "**/Budget.cs{…}"`. The full run has 20 mutants, 13 tested.
+
+**Answers.**
+
+- **(a) Yes.** With any `--mutate` on the command line, every mutant outside it came back `Ignored` "Removed by mutate
+  filter"; the configuration's `**/*.cs` was not added to it. So the shards pass their files as `--mutate <file>`
+  patterns (project-relative, as the configuration's glob) and `stryker-config.json` is unchanged.
+- **(b) Not as line spans; yes as character spans.** `{15..15}` and `{20..21}`, the lines of the `if` condition and of
+  `_used += amount`, selected no mutant at all: the numbers are character offsets in the file, not lines. With a
+  mutant's own location turned into 0-based offsets (end exclusive), `Budget.cs{470..495}` (`_used + amount >
+  capacity`) tested exactly the four mutants on that node (three on the comparison and the arithmetic one nested in
+  it), `{552..567}` exactly the one on `_used += amount`, and `{470..484}` exactly the nested arithmetic one. A span
+  reruns every mutant whose span lies inside it: a mutant's own span reruns it, plus any mutant nested in it or on the
+  same node. That superset is sound for a rerun (the extra results are fresh too), so the baseline part ships with
+  character spans (`MutationPr`'s `PlanRerun`); the owner's line-span example would have rerun nothing.
+- **The report.** Stryker's JSON report lists every file of the project, with zero mutants too (also under `--since`:
+  in a plain clone of `Plain` with a second file `Other.cs`, `--since:<sha>` with no change, with `--mutate
+  "**/Budget.cs"` while only `Other.cs` changed, and with `--mutate "**/Other.cs"`, each listed both files, the
+  unselected mutants `Removed by since filter` or `Removed by mutate filter`; so a partition file missing from its
+  shard's report means a broken run, and the aggregate fails on it), and each file's
+  `source` equals the file read as UTF-8 without BOM (all 66 files of `src/Ducky` matched), which is how a baseline
+  run tells an unchanged file from an edited one. Mutant identity across runs of an unchanged file is the mutator,
+  replacement and location: the four shards and the single run below produced the same 1362 keys.
+
+**Shards on the real project.** `./build.sh Mutation --project Ducky` (single process) against
+`./build.sh Mutation --project Ducky --shard <i>/4` for i = 1..4 and `./build.sh MutationAggregate --project Ducky`,
+same commit (`ca64410`, `activeStage` 6), same machine (Apple M1 Max, 10 logical CPUs, Stryker's default concurrency 5).
+Every run ran alone in this worktree, one after another (logs: set A, single 07:35–08:32, shards 08:33–09:20, shard 3
+again 09:22–09:30; set B, single 09:46–10:50, shards 10:50–13:09), but the machine was shared with the sibling
+worktrees' builds (load average 57 / 149 / 209 over 1 / 5 / 15 min at 13:18; set B's shards took 27 to 39 min each
+against set A's 8 to 15). Set A's times:
+
+| Run | Files | Mutants tested | Stryker time |
+|---|---|---|---|
+| single process | 66 | 913 | 56 min 28 s |
+| shard 1/4 | 17 | 195 | 10 min 56 s |
+| shard 2/4 | 17 | 242 | 12 min 55 s |
+| shard 3/4 | 16 | 182 | 7 min 41 s |
+| shard 4/4 | 16 | 294 | 15 min 22 s |
+| aggregate | 66 | – | 5 s (no compile) |
+
+- **Same mutants.** The merged report has exactly the single run's 1362 mutants (same file, mutator, replacement and
+  location), 912 of them scored in both.
+- **Score: the shards reproduce the single run within the run-to-run noise of the single run itself.** Two complete
+  sets, each a single run and four shards on the same commit:
+
+  | Run | Detected of 912 | Score | `Timeout` | `Survived` |
+  |---|---|---|---|---|
+  | single A | 896 | 98.25% | 13 | 16 |
+  | shards A, merged | 905 | 99.23% | 33 | 7 |
+  | single B | 903 | 99.01% | 24 | 9 |
+  | shards B, merged | 906 | 99.34% | 24 | 6 |
+
+  Mutants that changed status: single A vs single B 13 (11 of them to `Timeout` in B), shards A vs shards B 25, single
+  A vs shards A 25, single B vs shards B 17 (8 to `Timeout` in the shards, 8 from it: same `Timeout` count, 24). The
+  two single runs differ by 7 detected mutants, as much as single B and shards A (2) or single A and shards B (10)
+  differ, and the one-way drift towards `Timeout` that set A shows between its single run and its shards shows between
+  the two single runs too, so it follows the machine's load, not the partition. Like for like, on the 870 mutants that
+  are `Timeout` in none of the four runs, the four score 869, 870, 869 and 869 of 870: identical but for one flaky
+  `First()` → `FirstOrDefault()` mutant. All the other differences are in the 42 mutants that are `Timeout` in at
+  least one run (10 in all four). Stryker's timeout is the initial test run's time scaled plus `additional-timeout`
+  (5000 ms), so a mutant whose tests run close to it times out under load, whatever the partition; with
+  `coverage-analysis: "off"` every mutant runs the whole suite in its own test session in a shard as in a single run,
+  so a shard changes which mutants share the machine, not how one is tested. The acceptance test (same mutants, same
+  score) is met within that measured noise. `Timeout` counting as detected under load predates this story, and so
+  does the flaky kill; both are worth a story of their own (CI's 2-vCPU runners run one mutant at a time).
+- **Wall-clock.** The four shards together tested the same 913 mutants in 47 min of Stryker time against 56 min, each
+  repeating Stryker's fixed cost (about 30 s of analysis and builds and the initial test run here); on CI they run in
+  parallel, so the `mutation` check takes about the slowest shard plus that fixed cost. Line count balanced the shards
+  within a factor of two of mutants tested (182 to 294); the real CI timing is measured on the PR.
+
+**Baseline run on the real project.** With that merged report as the baseline of `HEAD` and one new, untracked test
+file in `test/Ducky.Tests`, `./build.sh MutationPr --base-ref HEAD` planned a baseline run ("only added test files"),
+handed Stryker 40 character spans (the baseline's 7 `Survived` and 33 `Timeout` mutants; no `NoCoverage`), which
+tested 50 mutants (the extra 10 nested in those spans), and scored the merged report 912 mutants, 99.34%, in 3 min 31 s
+of Stryker time against the 56-minute full run that the added test file triggered before; one of the 40 changed
+status, within the noise above.
+
+Not measured here: `ubuntu-latest` (2 vCPU; Stryker's default concurrency there is 1).
