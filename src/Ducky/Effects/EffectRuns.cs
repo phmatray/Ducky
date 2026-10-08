@@ -38,6 +38,21 @@ internal sealed partial class Dispatcher
         Enqueue(p);
     }
 
+    // SliceStore.Set/SetAsync (§12): materializes first, like IStore.Dispatch, then scopes itself to this store's own
+    // effect run, if the caller's flow is in one (Origin.Effect with the run's checks, as EffectContext.Dispatch); anywhere
+    // else, a subscriber or hook during a drain an effect continuation owns included (Process clears the scope), Local.
+    internal void DispatchSet(object action, TaskCompletionSource<DispatchResult>? completion)
+    {
+        Materialize();
+        if (_effectRun.Value is { } run)
+        {
+            DispatchFromRun(action, run, completion);
+            return;
+        }
+
+        Enqueue(NewPending(action, Origin.Local, completion));
+    }
+
     // Step 3, with the same precedence: a run-tagged action whose token was cancelled after it was enqueued completes
     // Disposed if the store's disposal began, and is otherwise a stale result of a superseded Switch run, dropped here,
     // at process time, so FIFO can't let a result queued before the supersession through.

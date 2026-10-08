@@ -10,9 +10,9 @@ internal sealed class ActionTypes
 {
     private readonly ConcurrentDictionary<Type, string> _names = new();
 
-    public string Of(object action) => _names.GetOrAdd(action.GetType(), Compute);
+    // SetState<T> carries its own {sliceKey}/{name} (§12): one SliceStore's changes have different names.
+    public string Of(object action) => action is SetState set ? set.ActionType : _names.GetOrAdd(action.GetType(), Compute);
 
-    // SetState<T> => {sliceKey}/{name} joins with SetState itself (M9-01, stage 8).
     private static string Compute(Type type) =>
         type.GetCustomAttribute<ActionTypeAttribute>(inherit: false)?.Name
         ?? (type == typeof(HydrateSlices) ? "@ducky/restore" : Format(type));
