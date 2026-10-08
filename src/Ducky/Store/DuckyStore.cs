@@ -62,6 +62,12 @@ internal sealed class DuckyStore : IStore
             new(() => Build(effects, middleware, disposeHook), LazyThreadSafetyMode.ExecutionAndPublication),
             new(),
             Json);
+
+        // Last, once the store is whole: a SliceStore dispatches through it (§12).
+        foreach (var slice in owned)
+        {
+            slice.Attach(this);
+        }
     }
 
     // The IStore factory AddDucky registers (§6.10): validates once per container (INV-31), then builds this store.

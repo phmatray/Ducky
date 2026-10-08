@@ -36,6 +36,11 @@ public abstract class Slice
     // A restored value (SPEC §6.4 step 6): taken when it is the declared state type, or a JsonElement deserialized with the
     // declared state type's JsonTypeInfo (§10); a failure is logged with the slice key.
     internal abstract bool TryRestore(object value, DuckyJson json, out object state);
+
+    // The store attaches itself to the slice instances it owns when it is built (§12); only a SliceStore keeps it.
+    internal virtual void Attach(DuckyStore store)
+    {
+    }
 }
 
 /// <summary>

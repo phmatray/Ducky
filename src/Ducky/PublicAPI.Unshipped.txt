@@ -246,3 +246,8 @@ Ducky.EntityState<TKey, TEntity>.Map(System.Func<TEntity!, TEntity!>! map) -> Du
 Ducky.EntityState<TKey, TEntity>.Remove(params System.ReadOnlySpan<TKey> ids) -> Ducky.EntityState<TKey, TEntity!>!
 Ducky.EntityState<TKey, TEntity>.RemoveWhere(System.Func<TEntity!, bool>! predicate) -> Ducky.EntityState<TKey, TEntity!>!
 Ducky.EntityState<TKey, TEntity>.Merge(System.Collections.Generic.IEnumerable<TEntity!>! entities, Ducky.MergeStrategy strategy) -> Ducky.EntityState<TKey, TEntity!>!
+Ducky.SliceStore<TState>
+Ducky.SliceStore<TState>.Set(System.Func<TState!, TState!>! mutator, string! name = "") -> void
+Ducky.SliceStore<TState>.SetAsync(System.Func<TState!, TState!>! mutator, string! name = "") -> System.Threading.Tasks.Task<Ducky.DispatchResult>!
+Ducky.SliceStore<TState>.SliceStore() -> void
+Ducky.SliceStore<TState>.State.get -> TState!
