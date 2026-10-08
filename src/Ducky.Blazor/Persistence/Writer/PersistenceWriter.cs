@@ -100,7 +100,7 @@ internal sealed partial class PersistenceMiddleware
     // {prefix} for unscoped keys; with a Scope, {prefix}:{scope} for the scope recorded for the epoch, or null when that
     // scope is null or not recorded yet: no I/O for a key that can't be named.
     // A write never meets a scope not recorded yet: ShouldSkip defers that key (case (b)).
-    private string? WritePrefix(int epoch)
+    internal string? WritePrefix(int epoch)
     {
         var options = _registration.Options;
         if (options.Scope is null)

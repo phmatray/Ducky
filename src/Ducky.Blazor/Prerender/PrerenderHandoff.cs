@@ -166,9 +166,9 @@ internal sealed class PrerenderHandoff : Middleware
                 return false;
             }
 
-            if (JsonSerializer.Deserialize(utf8.AsSpan(), WireContext().SeedEnvelope)?.Slices is { } slices)
+            if (JsonSerializer.Deserialize(utf8.AsSpan(), WireContext().SeedEnvelope) is { Slices: { } slices } seed)
             {
-                Store.Restore(slices, Origin.Hydration);
+                Restore(seed, slices);
             }
             else
             {
@@ -183,11 +183,53 @@ internal sealed class PrerenderHandoff : Middleware
         return true;
     }
 
+    // §11.4: a persisted key whose recorded version differs from its PersistOptions.Version, or is missing, never comes from
+    // a seed (Debug 2015): a seed can outlive a deploy, and only storage goes through EnvelopeReader's migrations. The
+    // unscoped browser-storage keys a pause seed lists as dirty and restores are handed to persistence before SeedSettled
+    // completes: their storage restore is skipped and their writers rewrite storage after the terminal (§11.5 step 6). A
+    // dirty value that does not deserialize is no value the seed restored: left out (its Warning logged here), so storage
+    // applies and is never overwritten with the initial state. Scoped keys (every key once Scope is set) keep prerender
+    // precedence until the scope-hash hand-off (M12-07): a circuit resumed under another user never writes the seed's
+    // value under that user's key.
+    private void Restore(SeedEnvelope seed, Dictionary<string, object> slices)
+    {
+        List<string> dirty = [];
+        foreach (var slice in Store.Slices.Where(slice => slices.ContainsKey(slice.Key)))
+        {
+            if (_registration.Persist.GetValueOrDefault(slice.GetType())?.Options is not { } options)
+            {
+                continue;
+            }
+
+            if (!(seed.Ver.TryGetValue(slice.Key, out var version) && version == options.Version))
+            {
+                slices.Remove(slice.Key);
+                Log.SeedKeyVersionSkewed(_logger, slice.Key);
+            }
+            else if (_registration.Options.Scope is null && options.Storage is not PersistStorage.Server && seed.Dirty.Contains(slice.Key))
+            {
+                if (!Store.Json.TryDeserialize((JsonElement)slices[slice.Key], slice.StateType, out var state, slice.Key))
+                {
+                    slices.Remove(slice.Key);
+                }
+                else if (state is not null)
+                {
+                    slices[slice.Key] = state;
+                    dirty.Add(slice.Key);
+                }
+            }
+        }
+
+        _persistence.SeedDirty = dirty;
+        Store.Restore(slices, Origin.Hydration);
+    }
+
     // The states sit two levels below the envelope root, written at the store's MaxDepth: read them back at that depth.
     private BlazorWireContext WireContext()
     {
         var maxDepth = Store.Json.Options.MaxDepth is 0 ? 64 : Store.Json.Options.MaxDepth;
-        return new(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, MaxDepth = maxDepth + 2 });
+        // RespectNullableAnnotations: a null ver or dirty is an unreadable seed (JsonException), never a null reference.
+        return new(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, MaxDepth = maxDepth + 2, RespectNullableAnnotations = true });
     }
 
     // The seed is persisted as PersistAsJson<byte[]> of the UTF-8 envelope, never as a string (§11.4 wire estimate).
@@ -235,7 +277,7 @@ internal sealed class PrerenderHandoff : Middleware
                 src = _persistence.Gate.Resolve(_registration.Options.IsBrowser, bridge) == InteractivityMode.Interactive ? "pause" : "prerender";
             }
 
-            return SeedWriter.Write(Store, _registration, src, _logger);
+            return SeedWriter.Write(Store, _registration, src, _persistence.Middleware!, _logger);
         }
 #pragma warning disable CA1031 // justification: the seed is best effort, the page's other persisted state is not (§11.4)
         catch (Exception exception) when (exception is not OutOfMemoryException)

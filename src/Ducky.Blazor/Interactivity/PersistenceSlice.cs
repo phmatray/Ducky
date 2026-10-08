@@ -26,6 +26,12 @@ internal sealed class PersistenceSlice : Slice<PersistenceState>
     /// </summary>
     public TaskCompletionSource SeedSettled { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+    /// <summary>
+    /// The unscoped browser-storage keys a pause seed listed as dirty and restored (§11.4), set before <see cref="SeedSettled"/>
+    /// completes: persistence skips their storage restore, and the first terminal takes them and releases them to their writers.
+    /// </summary>
+    public IReadOnlyList<string> SeedDirty { get; set; } = [];
+
     // Always Hydrated: a slice built with new() can't know whether anything is persisted.
     protected override PersistenceState Initial => new(PersistenceStatus.Hydrated);
 
