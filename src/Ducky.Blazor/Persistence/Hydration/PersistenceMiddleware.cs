@@ -189,6 +189,13 @@ internal sealed partial class PersistenceMiddleware : Middleware
         // ponytail: attempt 0 is always current until scope switches (§11.6) arrive with their supersession check.
         lock (_issue)
         {
+            // §11.4: a pause seed's dirty key keeps the seed's value over storage, so it is no key restored from storage. Its
+            // baseline is still the stored value, and IssueTerminal defers it, so its writer rewrites storage with the seed's.
+            foreach (var key in _persistence.SeedDirty)
+            {
+                values.Remove(key);
+            }
+
             // Lost to the deadline or the init abort: their HydrationFailed is the terminal, the results are discarded.
             if (!Claim(attempt, new HydrationCompleted(values.Count > 0) { ScopeEpoch = attempt.Epoch }))
             {
@@ -299,6 +306,14 @@ internal sealed partial class PersistenceMiddleware : Middleware
             _deadline!.CancelAfter(Timeout.InfiniteTimeSpan);
         }
 
+        // §11.4: a pause seed's dirty keys, restored by the handoff, are rewritten after whichever terminal comes first, a
+        // failed one included (the release of the deferred keys), and only once: a later attempt reads them like any key.
+        foreach (var key in _persistence.SeedDirty)
+        {
+            Deferred.TryAdd(key, 0);
+        }
+
+        _persistence.SeedDirty = [];
         attempt.Terminal = 2;
         DispatchSystem(attempt.Pending!, isFailure: attempt.Pending is HydrationFailed);
         _initDone.TrySetResult();

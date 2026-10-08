@@ -3,8 +3,9 @@ using System.Text.Json;
 
 namespace Ducky.Blazor;
 
-// SPEC §11.4 OnPersisting, once the store is idle: the seed {"v":1,"src":…,"slices":{key: state}} of the Prerender<T>
-// slices, from one snapshot, in slice registration order, within PrerenderSeedMaxWireBytes by the wire estimate.
+// SPEC §11.4 OnPersisting, once the store is idle: the seed {"v":1,"src":…,"dirty":[…]?,"ver":{…}?,"slices":{key: state}}
+// of the Prerender<T> slices, everything from one snapshot, in slice registration order, within PrerenderSeedMaxWireBytes
+// by the wire estimate.
 internal static class SeedWriter
 {
     // The page's state dictionary entry plus the data-protection header, IV, padding and MAC (§11.4).
@@ -14,11 +15,13 @@ internal static class SeedWriter
     /// The seed of <paramref name="registration"/>'s Prerender&lt;T&gt; slices of <paramref name="store"/>, every value read
     /// from one snapshot. A slice whose include predicate is false is left out (Debug 2011); one whose predicate throws,
     /// whose state can't be serialized, or whose inclusion would push the estimate past the budget, with Warning 2021.
+    /// Each persisted key carried records its version; a pause seed lists the carried browser-storage keys that are dirty against
+    /// <paramref name="persistence"/>'s baselines.
     /// </summary>
-    public static byte[] Write(IStore store, BlazorRegistration registration, string src, SafeLogger logger)
+    public static byte[] Write(IStore store, BlazorRegistration registration, string src, PersistenceMiddleware persistence, SafeLogger logger)
     {
         var snap = store.State;
-        List<KeyValuePair<string, string>> slices = [];
+        List<Carried> slices = [];
         var seed = Envelope(src, slices);
         foreach (var slice in store.Slices)
         {
@@ -46,7 +49,9 @@ internal static class SeedWriter
 
             if (failure is null && store.Json.TrySerialize(state, slice.StateType, out var json))
             {
-                slices.Add(new(slice.Key, json));
+                // Only a browser-storage key can be dirty: the pause override never applies to Server storage (§11.4).
+                var options = registration.Persist.GetValueOrDefault(slice.GetType())?.Options;
+                slices.Add(new(slice.Key, json, options?.Version, options is { Storage: not PersistStorage.Server } && src == "pause" && IsDirty(store, persistence, snap, slice, json)));
                 var candidate = Envelope(src, slices);
                 if (WireEstimate(candidate.Length) <= registration.Options.PrerenderSeedMaxWireBytes)
                 {
@@ -75,8 +80,19 @@ internal static class SeedWriter
 
     private static long Thirds(long bytes) => (bytes + 2) / 3;
 
+    // §11.4 pause: dirty iff the local serialization in snap differs from LastKnownPayload (the last successful write, read
+    // or receipt), an absent baseline comparing as the initial state's serialization (§11.7): the circuit holds a change
+    // storage may not have. The key is named for snap's epoch; a scope not known for it names no stored key, so the value
+    // compares with the initial state (M12-07 leaves such keys out of the seed).
+    private static bool IsDirty(IStore store, PersistenceMiddleware persistence, StateSnapshot snap, Slice slice, string json)
+    {
+        var key = $"{persistence.WritePrefix(snap.Get<PersistenceState>().ScopeEpoch)}:{slice.Key}";
+        _ = store.Json.TrySerialize(store.InitialState.Get(slice.Key), slice.StateType, out var initial);
+        return json != persistence.LastKnownPayload.GetValueOrDefault(key, initial!);
+    }
+
     // ponytail: rewritten whole for each candidate slice, O(slices²) bytes, bounded by the budget (20 KB by default).
-    private static byte[] Envelope(string src, List<KeyValuePair<string, string>> slices)
+    private static byte[] Envelope(string src, List<Carried> slices)
     {
         var buffer = new ArrayBufferWriter<byte>();
         using (var writer = new Utf8JsonWriter(buffer))
@@ -84,13 +100,35 @@ internal static class SeedWriter
             writer.WriteStartObject();
             writer.WriteNumber("v", 1);
             writer.WriteString("src", src);
-            writer.WriteStartObject("slices");
-            foreach (var (key, json) in slices)
+            if (slices.Any(static slice => slice.Dirty))
             {
-                writer.WritePropertyName(key);
+                writer.WriteStartArray("dirty");
+                foreach (var slice in slices.Where(static slice => slice.Dirty))
+                {
+                    writer.WriteStringValue(slice.Key);
+                }
+
+                writer.WriteEndArray();
+            }
+
+            if (slices.Any(static slice => slice.Version is not null))
+            {
+                writer.WriteStartObject("ver");
+                foreach (var slice in slices.Where(static slice => slice.Version is not null))
+                {
+                    writer.WriteNumber(slice.Key, slice.Version!.Value);
+                }
+
+                writer.WriteEndObject();
+            }
+
+            writer.WriteStartObject("slices");
+            foreach (var slice in slices)
+            {
+                writer.WritePropertyName(slice.Key);
 
                 // The serializer's own output, valid at the options' MaxDepth (as EnvelopeWriter writes it).
-                writer.WriteRawValue(json, skipInputValidation: true);
+                writer.WriteRawValue(slice.Json, skipInputValidation: true);
             }
 
             writer.WriteEndObject();
@@ -99,4 +137,7 @@ internal static class SeedWriter
 
         return buffer.WrittenSpan.ToArray();
     }
+
+    // One slice in the seed: its state, its PersistOptions.Version when persisted, and whether a pause found it dirty.
+    private sealed record Carried(string Key, string Json, int? Version, bool Dirty);
 }
