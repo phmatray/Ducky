@@ -12,6 +12,7 @@ namespace Ducky.Blazor;
 // Warning of a failed pull (§11.5 step 4: "a failed pull is caught per key", which §11.5 leaves unnumbered).
 // M6-11 uses 2024 (§6.3: a telemetry listener threw, Ducky.Blazor's twin of Ducky's 1017).
 // M6-08 uses 2041, not assigned by SPEC either: §11.5 step 6 says only "discard and log" for a result whose claim is lost.
+// M6-12 takes 2040, not assigned by SPEC, for the Debug log of a clear that skips a key it can't name (§11.5 ClearPersistedState).
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -67,6 +68,9 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2033, Level = LogLevel.Warning, Message = "The envelope of '{Key}' could not be read as {Type} (malformed, a migration failed or the state is null); the state is kept")]
     internal static partial void UnreadableEnvelope(SafeLogger logger, Exception? exception, string key, Type type);
+
+    [LoggerMessage(EventId = 2040, Level = LogLevel.Debug, Message = "ClearPersistedState skipped slice '{Key}': the scope of the clear's epoch is null or not resolved yet, so no key names it")]
+    internal static partial void ClearSkipped(SafeLogger logger, string key);
 
     [LoggerMessage(EventId = 2041, Level = LogLevel.Debug, Message = "The read result of hydration attempt {Epoch} was discarded: the HydrationTimeout deadline or an init abort already ended the attempt")]
     internal static partial void HydrationResultDiscarded(SafeLogger logger, int epoch);

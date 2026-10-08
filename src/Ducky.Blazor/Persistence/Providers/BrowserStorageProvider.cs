@@ -107,5 +107,13 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
         return delivered;
     }
 
+    // Removes the one exact key (§11.5 ClearPersistedState); whether it was delivered, as for SetAsync.
+    public async ValueTask<bool> RemoveAsync(PersistStorage storage, string key, string id, CancellationToken cancellationToken)
+    {
+        // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+        var (delivered, _) = await bridge.TryInvokeAsync<bool>("storageRemove", cancellationToken, Area(storage), key, id).ConfigureAwait(false);
+        return delivered;
+    }
+
     private static string Area(PersistStorage storage) => storage == PersistStorage.Local ? "local" : "session";
 }

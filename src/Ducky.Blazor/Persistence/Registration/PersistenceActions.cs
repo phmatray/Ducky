@@ -20,4 +20,8 @@ public sealed record HydrationFailed(string ErrorType, string Message)
 /// <summary>
 /// Removes the stored state of each persisted slice, under its exact key. Storage only: the store's state is unchanged.
 /// </summary>
+/// <remarks>
+/// A change signalled before the clear is not written back; the next change is written even if it equals what was stored.
+/// An app that also wants its state reset handles this action (or its own, such as a sign-out) in its slices.
+/// </remarks>
 public sealed record ClearPersistedState;

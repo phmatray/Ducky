@@ -157,6 +157,9 @@ internal sealed record StoredWrite(string Area, string Key, string Value, string
     public string Payload => JsonDocument.Parse(Value).RootElement.GetProperty("s").GetRawText();
 }
 
+// One storageRemove call.
+internal sealed record StoredRemoval(string Area, string Key, string Id);
+
 // A FakeTimeProvider that reports each timer as it is created, so a test advances time only once the writer waits.
 internal sealed class WatchedTime() : FakeTimeProvider(new DateTimeOffset(2026, 9, 30, 12, 0, 0, TimeSpan.Zero))
 {
@@ -185,6 +188,7 @@ internal sealed class WriterHarness : IAsyncDisposable
     private readonly ServiceProvider _provider;
     private readonly AsyncServiceScope _scope;
     private readonly Channel<StoredWrite> _writes = Channel.CreateUnbounded<StoredWrite>();
+    private readonly Channel<StoredRemoval> _removals = Channel.CreateUnbounded<StoredRemoval>();
 
     public WriterHarness(Action<DuckyBuilder> configure, bool browser = true, Action<DuckyBuilder>? early = null, Action<IServiceCollection>? services = null)
     {
@@ -194,6 +198,7 @@ internal sealed class WriterHarness : IAsyncDisposable
             "import" => Js,
             "storageGet" => OnGet(args),
             "storageSet" => Set(new((string)args[0]!, (string)args[1]!, (string)args[2]!, (string)args[3]!)),
+            "storageRemove" => Remove(new((string)args[0]!, (string)args[1]!, (string)args[2]!)),
             _ => null,
         };
 
@@ -238,6 +243,9 @@ internal sealed class WriterHarness : IAsyncDisposable
 
     public PersistenceMiddleware Middleware => _scope.ServiceProvider.GetRequiredService<PersistenceSlice>().Middleware.ShouldNotBeNull();
 
+    /// <summary>What storageRemove answers once the key is removed from <see cref="Storage"/>; by default true.</summary>
+    public Func<StoredRemoval, object?> OnRemove { get; set; } = static _ => true;
+
     public IReadOnlyList<StoredWrite> Written => [.. Js.Calls.Where(static call => call.Identifier == "storageSet").Select(static call => new StoredWrite((string)call.Args[0]!, (string)call.Args[1]!, (string)call.Args[2]!, (string)call.Args[3]!))];
 
     public static string Payload(object state) => JsonSerializer.Serialize(state, state.GetType(), WriterJson.Default);
@@ -247,6 +255,10 @@ internal sealed class WriterHarness : IAsyncDisposable
     /// <summary>The next storageSet call, in call order.</summary>
     public Task<StoredWrite> NextWriteAsync() =>
         _writes.Reader.ReadAsync(Xunit.TestContext.Current.CancellationToken).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+
+    /// <summary>The next storageRemove call, in call order.</summary>
+    public Task<StoredRemoval> NextRemovalAsync() =>
+        _removals.Reader.ReadAsync(Xunit.TestContext.Current.CancellationToken).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
 
     /// <summary>Takes the storageSet calls already made, without waiting.</summary>
     public List<StoredWrite> TakeWrites()
@@ -305,6 +317,20 @@ internal sealed class WriterHarness : IAsyncDisposable
         finally
         {
             _writes.Writer.TryWrite(write);
+        }
+    }
+
+    private object? Remove(StoredRemoval removal)
+    {
+        Log.Add($"remove:{removal.Key}");
+        Storage.TryRemove((removal.Area, removal.Key), out _);
+        try
+        {
+            return OnRemove(removal);
+        }
+        finally
+        {
+            _removals.Writer.TryWrite(removal);
         }
     }
 

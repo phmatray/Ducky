@@ -17,8 +17,11 @@ internal sealed partial class PersistenceMiddleware
     /// <summary>The writer of each persisted key readable in this host, created by the synchronous init prefix.</summary>
     internal IReadOnlyDictionary<string, PersistenceWriter> Writers => _writers;
 
-    /// <summary>The keys whose signal waits for a terminal (§11.5 "A skipped key stays dirty").</summary>
-    internal ConcurrentDictionary<string, byte> Deferred { get; } = new();
+    /// <summary>
+    /// The keys whose signal waits for a terminal (§11.5 "A skipped key stays dirty"), each with its writer's clear count
+    /// when it was deferred: a clear posted since discards it.
+    /// </summary>
+    internal ConcurrentDictionary<string, long> Deferred { get; } = new();
 
     // Runs on the drainer. A terminal releases the deferred keys; a change of any origin but a restore signals its writer,
     // once the synchronous prefix has run (nothing is written before the first read: earlier changes are only deferred).
@@ -38,6 +41,11 @@ internal sealed partial class PersistenceMiddleware
             return;
         }
 
+        if (context.Action is ClearPersistedState)
+        {
+            Clear(context.State);
+        }
+
         foreach (var key in context.ChangedKeys)
         {
             if (_signalling)
@@ -46,29 +54,52 @@ internal sealed partial class PersistenceMiddleware
             }
             else
             {
-                Deferred.TryAdd(key, 0);
+                Defer(key, _writers.GetValueOrDefault(key)?.Clears ?? 0);
             }
         }
     }
 
     private void Signal(string key) => _writers.GetValueOrDefault(key)?.Signal();
 
+    // The newest deferral wins: one made after a clear is never replaced by one a clear discards.
+    private void Defer(string key, long clears) =>
+        Deferred.AddOrUpdate(key, static (_, clears) => clears, static (_, old, clears) => Math.Max(old, clears), clears);
+
+    // §11.5 ClearPersistedState: a removal to each persisted key's writer, keyed from the epoch of the snapshot the clear was
+    // reduced against; a key whose scope is null or not recorded yet can't be named and is skipped. No prefix clear.
+    private void Clear(StateSnapshot state)
+    {
+        var prefix = WritePrefix(state.Get<PersistenceState>().ScopeEpoch);
+        foreach (var (key, writer) in _writers)
+        {
+            if (prefix is null)
+            {
+                Log.ClearSkipped(_log, key);
+            }
+            else
+            {
+                writer.Remove($"{prefix}:{key}");
+            }
+        }
+    }
+
     // The two releases of _deferred (a terminal, a scope recording): each key is taken with TryRemove and signalled only by
-    // the side that took it, so against a writer's own recheck it is signalled exactly once.
+    // the side that took it, so against a writer's own recheck it is signalled exactly once; a deferral older than the
+    // writer's last clear is dropped instead (§11.5: the clear discards the signals raised before it).
     private void ReleaseDeferred()
     {
         foreach (var key in Deferred.Keys)
         {
-            if (Deferred.TryRemove(key, out _))
+            if (Deferred.TryRemove(key, out var clears))
             {
-                Signal(key);
+                _writers.GetValueOrDefault(key)?.Release(clears);
             }
         }
     }
 
     // {prefix} for unscoped keys; with a Scope, {prefix}:{scope} for the scope recorded for the epoch, or null when that
     // scope is null or not recorded yet: no I/O for a key that can't be named.
-    // A scope not recorded yet never reaches it: ShouldSkip defers that key (case (b)).
+    // A write never meets a scope not recorded yet: ShouldSkip defers that key (case (b)).
     private string? WritePrefix(int epoch)
     {
         var options = _registration.Options;
@@ -113,7 +144,7 @@ internal sealed partial class PersistenceMiddleware
         {
             // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
             await writer.DisposeAsync().ConfigureAwait(false);
-            if (writer.Dirty || Deferred.ContainsKey(key))
+            if (writer.Dirty || writer.RemovalPending || Deferred.ContainsKey(key))
             {
                 _telemetry.Add(_telemetry.Lost);
             }
@@ -153,6 +184,11 @@ internal sealed partial class PersistenceMiddleware
         // PersistenceFailed.ErrorType of a state that could not be serialized.
         internal const string SerializationFailed = nameof(SerializationFailed);
 
+        private readonly ConcurrentQueue<Removal> _removals = new(); // the pending removal commands, oldest first
+        private readonly Lock _gate = new(); // orders a release against a removal's stamp
+        private long _clears; // removal commands posted so far
+        private TaskCompletionSource? _woken; // completed by the first command posted since the current attempt began
+
         private bool _failing; // loop only: a failure streak has been reported
         private int _iterations;
         private long _signals; // signals raised so far
@@ -175,6 +211,12 @@ internal sealed partial class PersistenceMiddleware
         /// <summary>Whether a change signalled to this key has not been written (or found already stored) yet.</summary>
         internal bool Dirty => Interlocked.Read(ref _signals) != Interlocked.Read(ref _clean);
 
+        /// <summary>The removal commands posted so far: a deferral made before the last one is discarded.</summary>
+        internal long Clears => Interlocked.Read(ref _clears);
+
+        /// <summary>Whether a removal has not succeeded yet: storage may still hold the cleared value.</summary>
+        internal bool RemovalPending => !_removals.IsEmpty;
+
         /// <summary>Whether the dispose flush has begun.</summary>
         internal bool Flushing => _hurry.IsCancellationRequested;
 
@@ -183,6 +225,35 @@ internal sealed partial class PersistenceMiddleware
         {
             Interlocked.Increment(ref _signals);
             _signal.Writer.TryWrite(true);
+        }
+
+        // §11.5 ClearPersistedState, on the drainer: a removal of the exact key, stamped with the signals raised so far, which
+        // it discards. Enqueued before _woken is read, and the loop publishes _woken before it reads the queue (both fenced):
+        // the attempt serves the removal, or the backoff after it ends at once.
+        public void Remove(string key)
+        {
+            lock (_gate)
+            {
+                Interlocked.Increment(ref _clears);
+                _removals.Enqueue(new(key, Interlocked.Read(ref _signals)));
+            }
+
+            Volatile.Read(ref _woken)?.TrySetResult();
+            _signal.Writer.TryWrite(true);
+        }
+
+        // A deferral's release (a terminal, a scope recording, the recheck): signalled unless a clear was posted since the
+        // deferral. Under the gate, a release either comes before a clear, which then stamps its signal and discards it, or
+        // after it, and is dropped: a change deferred before a clear never brings the key back.
+        public void Release(long clears)
+        {
+            lock (_gate)
+            {
+                if (clears == _clears)
+                {
+                    Signal();
+                }
+            }
         }
 
         // The flush: every wait ends at once, and the loop ends after its next attempt, or at once when it has nothing left.
@@ -217,14 +288,19 @@ internal sealed partial class PersistenceMiddleware
                     {
                         // Once the flush has begun, this attempt is the key's last: no backoff follows it.
                         var last = hurry.IsCancellationRequested;
-                        outcome = await WriteAsync(stop).ConfigureAwait(ConfigureAwaitOptions.None);
+                        var woken = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                        Interlocked.Exchange(ref _woken, woken);
+                        outcome = await AttemptAsync(stop).ConfigureAwait(ConfigureAwaitOptions.None);
                         if (outcome != Outcome.Failed || last)
                         {
                             break;
                         }
 
-                        await PauseAsync(backoff, hurry).ConfigureAwait(ConfigureAwaitOptions.None);
-                        backoff = TimeSpan.FromTicks(Math.Min(backoff.Ticks * 2, MaxBackoff.Ticks));
+                        // A sleep a command ended resumes at the step it had reached.
+                        if (await BackoffAsync(backoff, woken, hurry).ConfigureAwait(ConfigureAwaitOptions.None))
+                        {
+                            backoff = TimeSpan.FromTicks(Math.Min(backoff.Ticks * 2, MaxBackoff.Ticks));
+                        }
                     }
 
                     Interlocked.Increment(ref _iterations);
@@ -270,14 +346,50 @@ internal sealed partial class PersistenceMiddleware
             _stop.Token.ThrowIfCancellationRequested();
         }
 
+        // A retry backoff, which the flush ends, and so does a command posted since the failed attempt began (woken): the
+        // next attempt then runs at once, the removal first. True when the full step was slept.
+        private async Task<bool> BackoffAsync(TimeSpan delay, TaskCompletionSource woken, CancellationToken hurry)
+        {
+            using var sleep = CancellationTokenSource.CreateLinkedTokenSource(hurry);
+            var slept = Task.Delay(delay, _owner._time, sleep.Token);
+#pragma warning disable VSTHRD003 // justification: this loop's own RunContinuationsAsynchronously TCS, completed by a command or never
+            var first = await Task.WhenAny(slept, woken.Task).ConfigureAwait(ConfigureAwaitOptions.None);
+#pragma warning restore VSTHRD003
+            // Stryker disable once Statement : frees the timer of a sleep a command ended; left running, it only completes unobserved
+            await sleep.CancelAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+            _stop.Token.ThrowIfCancellationRequested();
+            return first == slept;
+        }
+
+        // From the top: the pending removals in order, each discarding the signals raised before its clear and resetting the
+        // baseline to absent, then the key if still dirty, so a change signalled before a clear never brings the key back.
+        private async Task<Outcome> AttemptAsync(CancellationToken token)
+        {
+            while (_removals.TryPeek(out var removal))
+            {
+                if (!await DeliverAsync(() => _owner._browser.RemoveAsync(_options.Storage, removal.Key, _owner._id, token)).ConfigureAwait(ConfigureAwaitOptions.None))
+                {
+                    return Outcome.Failed;
+                }
+
+                _removals.TryDequeue(out _);
+                _owner.LastKnownPayload.TryRemove(removal.Key, out _);
+                Interlocked.Exchange(ref _clean, removal.Stamp);
+                _failing = false;
+            }
+
+            return Dirty ? await WriteAsync(token).ConfigureAwait(ConfigureAwaitOptions.None) : Outcome.Clean;
+        }
+
         // One snapshot gives both the value and the key, so the last write is the final committed state (INV-07, INV-16).
         private async Task<Outcome> WriteAsync(CancellationToken token)
         {
             var signals = Interlocked.Read(ref _signals);
+            var clears = Clears; // read before the snapshot: a clear reduced after it makes this deferral stale
             var snap = _owner.Store.State;
             if (_owner.ShouldSkip(snap))
             {
-                Defer();
+                Defer(clears);
                 return Outcome.Deferred;
             }
 
@@ -315,21 +427,9 @@ internal sealed partial class PersistenceMiddleware
             }
 
             var started = _owner._time.GetTimestamp();
-            try
+            var envelope = EnvelopeWriter.Write(payload, _options.Version, _owner._time.GetUtcNow());
+            if (!await DeliverAsync(() => _owner._browser.SetAsync(_options.Storage, key, envelope, _owner._id, token)).ConfigureAwait(ConfigureAwaitOptions.None))
             {
-                // A disconnect or an interop timeout is not delivered (Debug only, no PersistenceFailed): retried all the same.
-                var envelope = EnvelopeWriter.Write(payload, _options.Version, _owner._time.GetUtcNow());
-                // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-                if (!await _owner._browser.SetAsync(_options.Storage, key, envelope, _owner._id, token).ConfigureAwait(false))
-                {
-                    return Outcome.Failed;
-                }
-            }
-#pragma warning disable CA1031 // justification: any provider failure is reported as PersistenceFailed and keeps the baseline (§11.5)
-            catch (Exception exception)
-#pragma warning restore CA1031
-            {
-                Fail(exception.GetType().Name, exception.Message);
                 return Outcome.Failed;
             }
 
@@ -341,20 +441,38 @@ internal sealed partial class PersistenceMiddleware
             return Outcome.Clean;
         }
 
+        // One provider call (a write or a removal): false when it failed, which keeps the baseline (§11.5). A disconnect or an
+        // interop timeout is not delivered (Debug only, no PersistenceFailed); any other failure starts a streak.
+        private async Task<bool> DeliverAsync(Func<ValueTask<bool>> call)
+        {
+            try
+            {
+                // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+                return await call().ConfigureAwait(false);
+            }
+#pragma warning disable CA1031 // justification: any provider failure is reported as PersistenceFailed and keeps the baseline (§11.5)
+            catch (Exception exception)
+#pragma warning restore CA1031
+            {
+                Fail(exception.GetType().Name, exception.Message);
+                return false;
+            }
+        }
+
         // §11.5 "A skipped key stays dirty": the skip consumed the signal, so the key joins _deferred.
-        private void Defer()
+        private void Defer(long clears)
         {
             var hook = _owner._registration.Options.AfterDeferHook;
             hook?.Invoke(_slice.Key, DeferPoint.BeforeAdd);
-            _owner.Deferred.TryAdd(_slice.Key, 0);
+            _owner.Defer(_slice.Key, clears);
             hook?.Invoke(_slice.Key, DeferPoint.AfterAdd);
 
             // Add-then-recheck: a release that ran between the snapshot read and the add found nothing to take. If the skip
             // no longer holds, take the key back; only a successful TryRemove signals, so a release that took it first is
             // the one signal.
-            if (!_owner.ShouldSkip(_owner.Store.State) && _owner.Deferred.TryRemove(_slice.Key, out _))
+            if (!_owner.ShouldSkip(_owner.Store.State) && _owner.Deferred.TryRemove(_slice.Key, out var taken))
             {
-                Signal();
+                Release(taken);
             }
         }
 
@@ -369,5 +487,8 @@ internal sealed partial class PersistenceMiddleware
             _failing = true;
             _owner.DispatchSystem(new PersistenceFailed(_slice.Key, errorType, message), isFailure: true);
         }
+
+        // A removal command: the exact storage key, and the signals raised before the clear.
+        private sealed record Removal(string Key, long Stamp);
     }
 }
