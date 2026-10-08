@@ -1,4 +1,32 @@
 #nullable enable
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.Build() -> System.Collections.Immutable.ImmutableDictionary<TKey, TValue!>!
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.Clear() -> void
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.ContainsKey(TKey key) -> bool
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.Count.get -> int
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.DictionaryDraft(System.Collections.Immutable.ImmutableDictionary<TKey, TValue!>! source, System.Func<TValue!, TDraft!>! createDraft) -> void
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<TKey, TDraft!>>!
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.IsDirty.get -> bool
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.Keys.get -> System.Collections.Generic.IEnumerable<TKey>!
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.Remove(TKey key) -> bool
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.Set(TKey key, TValue! value) -> void
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.this[TKey key].get -> TDraft!
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.TryGetValue(TKey key, out TDraft! value) -> bool
+Ducky.Draft.DictionaryDraft<TKey, TValue, TDraft>.Values.get -> System.Collections.Generic.IEnumerable<TDraft!>!
+Ducky.Draft.DictionaryDraft<TKey, TValue>
+Ducky.Draft.DictionaryDraft<TKey, TValue>.Add(TKey key, TValue value) -> void
+Ducky.Draft.DictionaryDraft<TKey, TValue>.Build() -> System.Collections.Immutable.ImmutableDictionary<TKey, TValue>!
+Ducky.Draft.DictionaryDraft<TKey, TValue>.Clear() -> void
+Ducky.Draft.DictionaryDraft<TKey, TValue>.ContainsKey(TKey key) -> bool
+Ducky.Draft.DictionaryDraft<TKey, TValue>.Count.get -> int
+Ducky.Draft.DictionaryDraft<TKey, TValue>.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<TKey, TValue>>!
+Ducky.Draft.DictionaryDraft<TKey, TValue>.IsDirty.get -> bool
+Ducky.Draft.DictionaryDraft<TKey, TValue>.Keys.get -> System.Collections.Generic.IEnumerable<TKey>!
+Ducky.Draft.DictionaryDraft<TKey, TValue>.Remove(TKey key) -> bool
+Ducky.Draft.DictionaryDraft<TKey, TValue>.this[TKey key].get -> TValue
+Ducky.Draft.DictionaryDraft<TKey, TValue>.this[TKey key].set -> void
+Ducky.Draft.DictionaryDraft<TKey, TValue>.TryGetValue(TKey key, out TValue value) -> bool
+Ducky.Draft.DictionaryDraft<TKey, TValue>.Values.get -> System.Collections.Generic.IEnumerable<TValue>!
 Ducky.Draft.DraftableAttribute
 Ducky.Draft.DraftableAttribute.DraftableAttribute() -> void
 Ducky.Draft.IDraft<T>
@@ -6,6 +34,21 @@ Ducky.Draft.IDraft<T>.Build() -> T!
 Ducky.Draft.IDraft<T>.IsDirty.get -> bool
 Ducky.Draft.IRevocable
 Ducky.Draft.IRevocable.Revoke() -> void
+Ducky.Draft.ListDraft<T, TDraft>
+Ducky.Draft.ListDraft<T, TDraft>.Add(T! item) -> void
+Ducky.Draft.ListDraft<T, TDraft>.BuildArray() -> System.Collections.Immutable.ImmutableArray<T!>
+Ducky.Draft.ListDraft<T, TDraft>.BuildList() -> System.Collections.Immutable.ImmutableList<T!>!
+Ducky.Draft.ListDraft<T, TDraft>.Clear() -> void
+Ducky.Draft.ListDraft<T, TDraft>.Count.get -> int
+Ducky.Draft.ListDraft<T, TDraft>.GetEnumerator() -> System.Collections.Generic.IEnumerator<TDraft!>!
+Ducky.Draft.ListDraft<T, TDraft>.Insert(int index, T! item) -> void
+Ducky.Draft.ListDraft<T, TDraft>.IsDirty.get -> bool
+Ducky.Draft.ListDraft<T, TDraft>.ListDraft(System.Collections.Immutable.ImmutableArray<T!> source, System.Func<T!, TDraft!>! createDraft) -> void
+Ducky.Draft.ListDraft<T, TDraft>.ListDraft(System.Collections.Immutable.ImmutableList<T!>! source, System.Func<T!, TDraft!>! createDraft) -> void
+Ducky.Draft.ListDraft<T, TDraft>.RemoveAll(System.Predicate<TDraft!>! match) -> int
+Ducky.Draft.ListDraft<T, TDraft>.RemoveAt(int index) -> void
+Ducky.Draft.ListDraft<T, TDraft>.Set(int index, T! item) -> void
+Ducky.Draft.ListDraft<T, TDraft>.this[int index].get -> TDraft!
 Ducky.Draft.ListDraft<T>
 Ducky.Draft.ListDraft<T>.Add(T item) -> void
 Ducky.Draft.ListDraft<T>.AddRange(System.Collections.Generic.IEnumerable<T>! items) -> void
@@ -25,5 +68,29 @@ Ducky.Draft.ListDraft<T>.RemoveAt(int index) -> void
 Ducky.Draft.ListDraft<T>.Sort(System.Comparison<T>! comparison) -> void
 Ducky.Draft.ListDraft<T>.this[int index].get -> T
 Ducky.Draft.ListDraft<T>.this[int index].set -> void
+Ducky.Draft.SetDraft<T>
+Ducky.Draft.SetDraft<T>.Add(T item) -> bool
+Ducky.Draft.SetDraft<T>.BuildHashSet() -> System.Collections.Immutable.ImmutableHashSet<T>!
+Ducky.Draft.SetDraft<T>.BuildSortedSet() -> System.Collections.Immutable.ImmutableSortedSet<T>!
+Ducky.Draft.SetDraft<T>.Clear() -> void
+Ducky.Draft.SetDraft<T>.Contains(T item) -> bool
+Ducky.Draft.SetDraft<T>.CopyTo(T[]! array, int arrayIndex) -> void
+Ducky.Draft.SetDraft<T>.Count.get -> int
+Ducky.Draft.SetDraft<T>.ExceptWith(System.Collections.Generic.IEnumerable<T>! other) -> void
+Ducky.Draft.SetDraft<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
+Ducky.Draft.SetDraft<T>.IntersectWith(System.Collections.Generic.IEnumerable<T>! other) -> void
+Ducky.Draft.SetDraft<T>.IsDirty.get -> bool
+Ducky.Draft.SetDraft<T>.IsProperSubsetOf(System.Collections.Generic.IEnumerable<T>! other) -> bool
+Ducky.Draft.SetDraft<T>.IsProperSupersetOf(System.Collections.Generic.IEnumerable<T>! other) -> bool
+Ducky.Draft.SetDraft<T>.IsSubsetOf(System.Collections.Generic.IEnumerable<T>! other) -> bool
+Ducky.Draft.SetDraft<T>.IsSupersetOf(System.Collections.Generic.IEnumerable<T>! other) -> bool
+Ducky.Draft.SetDraft<T>.Overlaps(System.Collections.Generic.IEnumerable<T>! other) -> bool
+Ducky.Draft.SetDraft<T>.Remove(T item) -> bool
+Ducky.Draft.SetDraft<T>.SetEquals(System.Collections.Generic.IEnumerable<T>! other) -> bool
+Ducky.Draft.SetDraft<T>.SymmetricExceptWith(System.Collections.Generic.IEnumerable<T>! other) -> void
+Ducky.Draft.SetDraft<T>.UnionWith(System.Collections.Generic.IEnumerable<T>! other) -> void
+static Ducky.Draft.DictionaryDraft<TKey, TValue>.implicit operator Ducky.Draft.DictionaryDraft<TKey, TValue>!(System.Collections.Immutable.ImmutableDictionary<TKey, TValue>! source) -> Ducky.Draft.DictionaryDraft<TKey, TValue>!
 static Ducky.Draft.ListDraft<T>.implicit operator Ducky.Draft.ListDraft<T>!(System.Collections.Immutable.ImmutableArray<T> array) -> Ducky.Draft.ListDraft<T>!
 static Ducky.Draft.ListDraft<T>.implicit operator Ducky.Draft.ListDraft<T>!(System.Collections.Immutable.ImmutableList<T>! list) -> Ducky.Draft.ListDraft<T>!
+static Ducky.Draft.SetDraft<T>.implicit operator Ducky.Draft.SetDraft<T>!(System.Collections.Immutable.ImmutableHashSet<T>! source) -> Ducky.Draft.SetDraft<T>!
+static Ducky.Draft.SetDraft<T>.implicit operator Ducky.Draft.SetDraft<T>!(System.Collections.Immutable.ImmutableSortedSet<T>! source) -> Ducky.Draft.SetDraft<T>!

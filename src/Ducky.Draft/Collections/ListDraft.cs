@@ -187,16 +187,16 @@ public sealed class ListDraft<T> : IList<T>, IReadOnlyList<T>, IRevocable
     /// <param name="comparison">The comparison.</param>
     public void Sort(Comparison<T> comparison) => Write.Sort(comparison);
 
+    /// <summary>
+    /// Writes <paramref name="item"/> at <paramref name="index"/> even when it equals the current element, so an element draft's
+    /// result flushed by reference survives an <c>Equals</c> that ignores the edited member (INV-26).
+    /// </summary>
+    /// <param name="index">The index.</param>
+    /// <param name="item">The item.</param>
+    internal void Replace(int index, T item) => Write[index] = item;
+
     /// <inheritdoc />
     void IRevocable.Revoke() => _revoked = true;
 
-    private void Guard()
-    {
-        if (_revoked)
-        {
-            throw new ObjectDisposedException(
-                nameof(ListDraft<T>),
-                "draft revoked: Produce returned, or an assignment or structural operation replaced it");
-        }
-    }
+    private void Guard() => Drafts.ThrowIfRevoked(_revoked, nameof(ListDraft<T>));
 }
