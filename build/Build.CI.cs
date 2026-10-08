@@ -10,7 +10,8 @@ using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 // SPEC §20.1: the workflows generated from these attributes (VerifyWorkflows keeps .github/workflows in sync), and the
-// Docs target (v0: the fence check of §17.1). nightly-audit joins with Audit and Benchmarks (M16-01).
+// Docs target (v0: the fence check of §17.1). nightly-audit joins with Audit and Benchmarks (M16-01). mutation.yml and
+// nightly-mutation.yml are hand-written shard matrices (M0-15), checked by MutationWorkflowViolations.
 [DuckyGitHubActions("ci", GitHubActionsImage.UbuntuLatest, FetchDepth = 0,
     OnPullRequestBranches = ["v2", "main"], OnPushBranches = ["v2", "main"],
     ConcurrencyGroup = "${{ github.workflow }}-${{ github.ref }}", ConcurrencyCancelInProgress = true,
@@ -27,12 +28,6 @@ using YamlDotNet.RepresentationModel;
     OnPushBranches = ["v2", "main"], InvokedTargets = [nameof(E2E)])]
 [DuckyGitHubActions("aot", GitHubActionsImage.UbuntuLatest, OnPullRequestBranches = ["v2", "main"],
     OnPushBranches = ["v2", "main"], InvokedTargets = [nameof(AotSmoke)])]
-[DuckyGitHubActions("mutation", GitHubActionsImage.UbuntuLatest, FetchDepth = 0,
-    OnPullRequestBranches = ["v2", "main"], InvokedTargets = [nameof(MutationPr)])]
-[DuckyGitHubActions("nightly-mutation", GitHubActionsImage.UbuntuLatest, OnCronSchedule = "0 2 * * *", TimeoutMinutes = 330,
-    EnableGitHubToken = true, WritePermissions = [GitHubActionsPermissions.Issues],
-    ReadPermissions = [GitHubActionsPermissions.Contents, GitHubActionsPermissions.Actions],
-    InvokedTargets = [nameof(Mutation)])]
 [DuckyGitHubActions("nightly-e2e", GitHubActionsImage.UbuntuLatest, OnCronSchedule = "0 3 * * *", TimeoutMinutes = 90,
     EnableGitHubToken = true, WritePermissions = [GitHubActionsPermissions.Issues],
     ReadPermissions = [GitHubActionsPermissions.Contents, GitHubActionsPermissions.Actions],
@@ -86,6 +81,8 @@ internal sealed partial class Build
                 .Concat(WorkflowSelfCheck())
                 .Concat(ReleaseWorkflowViolations((Workflows / "release.yml").ReadAllText()).Select(v => $"release.yml: {v}"))
                 .Concat(ReleaseSelfCheck())
+                .Concat(((string[])["mutation.yml", "nightly-mutation.yml"]).SelectMany(f => MutationWorkflowViolations(f, (Workflows / f).ReadAllText())))
+                .Concat(MutationSelfCheck())
                 .ToList();
             violations.ForEach(v => Log.Error(v));
             Assert.True(violations.Count == 0,
@@ -243,13 +240,35 @@ internal sealed partial class Build
         }
 
         var required = Regex.Matches(list.Groups[1].Value, "\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
-        var onPullRequest = committed.Where(c => OnPullRequest(c.Value)).SelectMany(c => Jobs(c.Value)).Select(j => j.Name).ToHashSet(StringComparer.Ordinal);
+        var onPullRequest = committed.Where(c => OnPullRequest(c.Value)).SelectMany(c => ReportingJobs(c.Value, required)).ToHashSet(StringComparer.Ordinal);
         return [
             .. onPullRequest.Except(required).Order(StringComparer.Ordinal)
                 .Select(j => $"job '{j}' runs on pull requests but is not a required check in build/protect-branch.sh (§20.2)"),
             .. required.Except(onPullRequest).Order(StringComparer.Ordinal)
                 .Select(c => $"build/protect-branch.sh requires check '{c}', which no pull-request job reports (§20.2)"),
         ];
+    }
+
+    // The job names a pull-request workflow reports on their own: every job, minus those that a required job with
+    // `if: always()` needs, directly or through other needed jobs (a shard matrix reports through its required aggregate,
+    // M0-15). Without always() a failed needed job skips the required one, which branch protection counts as passing.
+    private static IEnumerable<string> ReportingJobs(string workflow, HashSet<string> required)
+    {
+        var stream = new YamlStream();
+        stream.Load(new StringReader(workflow));
+        var root = stream.Documents.FirstOrDefault()?.RootNode;
+        var jobs = Jobs(workflow);
+        var covered = jobs.Where(j => required.Contains(j.Name) && YamlScalars(YamlAt(root, "jobs", j.Key, "if")) is ["always()"])
+            .Select(j => j.Key).ToHashSet(StringComparer.Ordinal);
+        var pending = new Stack<string>(covered);
+        while (pending.TryPop(out var key))
+        {
+            foreach (var need in YamlScalars(YamlAt(root, "jobs", key, "needs")).Where(covered.Add))
+            {
+                pending.Push(need);
+            }
+        }
+        return jobs.Where(j => required.Contains(j.Name) || !covered.Contains(j.Key)).Select(j => j.Name);
     }
 
     // True when the workflow's on: names pull_request or pull_request_target, in any of its shapes (scalar, list, mapping).
@@ -313,6 +332,9 @@ internal sealed partial class Build
             ["e2e.yml"] = Pr("pull_request", "e2e"),
             ["nightly.yml"] = Pr("\n  schedule:\n    - cron: '0 2 * * *'", "nightly"),
             ["broken.yml"] = "jobs: [\n",
+            // A matrix behind one required aggregate (M0-15): the jobs it needs, directly or not, report through it.
+            ["mutation.yml"] = "name: mutation\non: pull_request\njobs:\n  mutation-plan:\n    runs-on: ubuntu-latest\n  mutation-shard:\n" +
+                "    name: mutation-shard-${{ matrix.shard }}\n    needs: mutation-plan\n  mutation:\n    needs: [mutation-shard]\n    if: always()\n",
         };
         static string ProtectScript(params string[] checks) =>
             $"jq -n '{{\n    checks: [({string.Join(", ", checks.Select(c => $"\"{c}\""))})\n      | {{context: ., app_id: 15368}}]\n}}'\n";
@@ -330,10 +352,15 @@ internal sealed partial class Build
                 "ci.yml: job 'ci' is named 'ubuntu-latest', not after its workflow 'ci' (S-8)"),
             ("Fallout's default job names, shared by two workflows", [.. WorkflowViolations(Fallout(Generated()), Fallout(Committed()))],
                 "job name 'ubuntu-latest' is not unique: aot.yml, ci.yml"),
-            ("a pull-request job missing from the required checks", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title"))],
+            ("a pull-request job missing from the required checks", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "mutation"))],
                 "job 'e2e' runs on pull requests but is not a required check in build/protect-branch.sh"),
-            ("a required check no pull-request job reports", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e", "nightly"))],
+            ("a required check no pull-request job reports", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e", "mutation", "nightly"))],
                 "build/protect-branch.sh requires check 'nightly', which no pull-request job reports"),
+            ("a matrix job that no required job needs", [.. RequiredCheckViolations(new(prWorkflows) { ["mutation.yml"] = prWorkflows["mutation.yml"].Replace("    needs: [mutation-shard]\n", "", StringComparison.Ordinal) },
+                ProtectScript("ci", "pr-title", "e2e", "mutation"))], "job 'mutation-shard-${{ matrix.shard }}' runs on pull requests but is not a required check"),
+            // A required job without if: always() is skipped, which branch protection counts as passing, when a job it needs fails.
+            ("a required job that a failed job it needs would skip", [.. RequiredCheckViolations(new(prWorkflows) { ["mutation.yml"] = prWorkflows["mutation.yml"].Replace("    if: always()\n", "", StringComparison.Ordinal) },
+                ProtectScript("ci", "pr-title", "e2e", "mutation"))], "job 'mutation-plan' runs on pull requests but is not a required check"),
             ("a protect-branch.sh without a checks list", [.. RequiredCheckViolations(prWorkflows, "echo hi\n")],
                 "build/protect-branch.sh: no required checks list"),
             ("a committed workflow that is not YAML", [.. WorkflowViolations(Generated(), Committed(c => c["broken.yml"] = "jobs: [\n"))],
@@ -347,7 +374,7 @@ internal sealed partial class Build
         {
             yield return $"WorkflowSelfCheck: a CRLF checkout of ci.yml must pass, got: {violation}";
         }
-        foreach (var violation in RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e")))
+        foreach (var violation in RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e", "mutation")))
         {
             yield return $"WorkflowSelfCheck: the unplanted required checks must pass, got: {violation}";
         }

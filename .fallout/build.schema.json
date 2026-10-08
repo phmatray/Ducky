@@ -38,8 +38,11 @@
         "Format",
         "GitHubRelease",
         "Mutation",
+        "MutationAggregate",
         "MutationForSha",
+        "MutationPlan",
         "MutationPr",
+        "MutationPrAggregate",
         "Pack",
         "PackageSmoke",
         "PropertyLong",
@@ -154,6 +157,15 @@
         "ReleaseVersion": {
           "type": "string",
           "description": "Version (no v) of the release notes, the GitHub release and ShipPublicApi's analyzer release; default GITHUB_REF_NAME minus v, else MinVerVersion"
+        },
+        "Shard": {
+          "type": "string",
+          "description": "Mutation and MutationPr: run only shard <index>/<count> of each project's files (CI's matrix); its report goes to artifacts/mutation-shards/<index> for MutationAggregate or MutationPrAggregate"
+        },
+        "Shards": {
+          "type": "integer",
+          "format": "int32",
+          "description": "MutationAggregate and MutationPrAggregate: the number of shards that must have reported"
         },
         "Solution": {
           "type": "string",

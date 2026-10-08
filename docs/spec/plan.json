@@ -360,6 +360,25 @@
    "done_definition": "Only docs/spec/spikes.md and the timeout-minutes values are merged. S-4 re-runs at stage 2 (Linearizability_DispatchVsModel); S-9 is re-measured at stages 13 and 17."
   },
   {
+   "id": "M0-15",
+   "milestone": "M0",
+   "title": "Mutation CI: skip irrelevant PRs, shard runs, additive-test baseline",
+   "size": "M",
+   "depends_on": [
+    "M0-05"
+   ],
+   "area": "build/Build.Mutation.cs, build/Build.MutationShards.cs, build/Build.CI.cs, .github/workflows/mutation.yml, .github/workflows/nightly-mutation.yml",
+   "invariants": [],
+   "scope": "Stage 1. Owner-added (2026-10-08): cut the wall-clock of the CI mutation check without lowering the bar (same thresholds 90/85/85, same mutants, same tests per mutant, coverage-analysis off, stryker-config.json keys unchanged, the zero-mutant and no-score checks unchanged). (1) Skip: MutationPlan (and MutationPrAggregate, MutationPr) compute MutationPr's plan; when no path changed since the merge base is in src/, a full-run trigger of an active project (SPEC §17.8), build/Build.Mutation*.cs or .github/workflows/mutation.yml, and no project became active, the required mutation check passes without compiling or running Stryker. (2) Shards: mutation.yml and nightly-mutation.yml become hand-written matrices of 4 shard jobs (Mutation/MutationPr --shard <i>/<n>, a deterministic disjoint partition of each project's .cs files by line count, passed as CLI --mutate patterns with --break-at 0) plus one aggregate job keeping the check names mutation and nightly-mutation (MutationPrAggregate/MutationAggregate --shards <n>, default 4), which fails on a missing, duplicated, failed or miscounted shard, an overlapping or incomplete partition or a mutate filter that missed a file, then applies the single-run checks to the merged report; VerifyWorkflows checks both workflows (MutationWorkflowViolations) and lets a job that a required job needs report through it. (3) Baseline: nightly-mutation also runs on every push to v2 and caches each project's merged report by commit SHA; MutationPr reuses the merge base's report when every full-run trigger of a project is a newly added .cs file in one of its test projects: it reruns the changed files whole and the baseline's Survived/NoCoverage/Timeout mutants of unchanged files by character span (spike: Stryker 4.16 honours File.cs{start..end} character spans, not line spans), taking the baseline for the rest; anything else, or a missing, stale or unreadable baseline, keeps the full run.",
+   "acceptance_tests": [
+    "Planted checks (MutationSelfCheck, run by VerifyWorkflows; non-normative): the skip predicate per trigger class, the plan modes and the baseline eligibility rule, the partitioner (deterministic, disjoint, complete), the aggregator (missing shard, shard of another commit, overlapping partition, owned file missing from its shard's report, zero mutants, scores at 84.99/85/90), the baseline rerun and merge (target not rerun or not tested, whole file missing, aborted-run baseline), and the two workflows",
+    "./build.sh Mutation --project Ducky with --shard 1/4 .. 4/4 and MutationAggregate reproduces the single-run score and mutant count of the same commit",
+    "Spike: Stryker 4.16 with test-runner mtp reruns individual mutants through a character-span --mutate pattern (docs/spec/spikes.md)",
+    "Ci, ExclusionGate and VerifyWorkflows green"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1). The real CI timing is measured on the PR."
+  },
+  {
    "id": "M1-01",
    "milestone": "M1",
    "title": "SliceKey derivation and validation",

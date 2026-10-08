@@ -37,48 +37,37 @@ internal sealed partial class Build
     private AbsolutePath Manifest => RootDirectory / "docs" / "spec" / "tests.yaml";
 
     // --since per active project; Stryker scores only the mutants of changed files, and a diff without any is green,
-    // unless a test, shared-helper or build input changed (CanChangeResultsOf): that project gets a full run.
+    // unless a test, shared-helper or build input changed (CanChangeResultsOf): that project gets a full run, or a baseline
+    // run when the only such changes are added test files (PlanProjects). Nothing relevant changed: no Stryker run at all.
+    // With --shard, only the shard's files are mutated and the checks wait for MutationPrAggregate.
     private Target MutationPr => _ => _
         .DependsOn(Compile)
         .Executes(() =>
         {
-            var projects = MutatedProjectsToRun(strict: false);
-            var baseRef = BaseRef ?? $"origin/{(EnvironmentInfo.GetVariable("GITHUB_BASE_REF") is { Length: > 0 } b ? b : ReleaseBranch)}";
-            var since = Git(RootDirectory, $"rev-parse --verify {baseRef + "^{commit}"}").Single();
-            var mergeBase = Git(RootDirectory, $"merge-base {since} HEAD").Single();
-            // activeStage only moves up (PLAN P1): a lowered one would stop mutating active projects, so it fails before the
-            // no-active-project return. The change that raises it seldom touches the project's .cs files, so a --since run
-            // would score none of the code that landed while the project was inactive: a project active now but not at the
-            // base gets a full run.
-            var (activeStage, _) = ManifestStages(Manifest.ReadAllText());
-            var (baseStage, activeAtBase) = ActiveProjectsAt(mergeBase);
-            Assert.True(activeStage >= baseStage, $"{Relative(Manifest)}: activeStage {activeStage} is below {baseStage} at the merge base {mergeBase}; it never moves down");
-            if (projects.Count == 0)
+            var shard = StartShard();
+            var pr = PlanMutationPr(baseline: true);
+            if (pr.Plan is null)
             {
                 return;
             }
-            var workspace = MutationWorkspace(since);
-            var changed = ChangedPaths(workspace, mergeBase);
+            var workspace = MutationWorkspace(pr.Since);
+            var changed = pr.Changed.Select(c => c.Path).ToList();
             var failures = new List<string>();
-            foreach (var project in projects)
+            foreach (var (project, mode, _) in pr.Plan)
             {
-                if (!activeAtBase.Contains(project))
+                var since = mode == SinceMode ? pr.Since : null;
+                var output = Artifacts / "mutation" / project;
+                if (shard is { } s)
                 {
-                    Log.Information("{Project}: inactive at the merge base {MergeBase}, active now; full run", project, mergeBase);
-                    Mutate(project, since: null, workspace, failures);
-                    continue;
+                    RunShard(nameof(MutationPr), project, mode, since, pr.MergeBase, workspace, s, changed, failures);
                 }
-                var testDirectories = TestProjectsOf(project).Select(p => p[..(p.LastIndexOf('/') + 1)]).ToList();
-                if (changed.FirstOrDefault(path => CanChangeResultsOf(project, testDirectories, path)) is { } trigger)
+                else if (RunProject(project, mode, since, pr.MergeBase, workspace, null, output, changed, failures) is { } report)
                 {
-                    Log.Information("{Project}: {Path} can change its results without changing a mutant; full run", project, trigger);
-                    Mutate(project, since: null, workspace, failures);
-                    continue;
+                    CheckReport(project, since, report, changed, failures, Relative(output));
                 }
-                Mutate(project, since, workspace, failures, changed);
             }
             failures.ForEach(f => Log.Error(f));
-            Assert.True(failures.Count == 0, $"MutationPr: {failures.Count} project(s) failed");
+            Assert.True(failures.Count == 0, $"MutationPr: {failures.Count} failure(s)");
         });
 
     // Nightly full run per active project (or --project); below 90% an issue is opened, below 85% or with zero mutants
@@ -88,8 +77,42 @@ internal sealed partial class Build
         .Executes(() => RunMutation(StrictStages));
 
     // Mutation's body, also run in-process by MutationForSha's fallback: a child build could not open the build.log
-    // this process holds.
+    // this process holds. With --shard, only the shard's files are mutated and the checks wait for MutationAggregate.
     private void RunMutation(bool strict)
+    {
+        var shard = StartShard();
+        var failures = new List<string>();
+        var belowTarget = new List<(string Project, double Score)>();
+        foreach (var project in MutationProjects(strict))
+        {
+            var output = Artifacts / "mutation" / project;
+            if (shard is { } s)
+            {
+                RunShard(nameof(Mutation), project, FullMode, null, null, RootDirectory, s, [], failures);
+                continue;
+            }
+            var before = failures.Count;
+            if (RunProject(project, FullMode, null, null, RootDirectory, null, output, [], failures) is not { } report)
+            {
+                continue;
+            }
+            if (CheckReport(project, null, report, null, failures, Relative(output)) is { } score && OpensScoreIssue(score))
+            {
+                belowTarget.Add((project, score));
+            }
+            // A failed run (a Stryker exit code, a broken report) is no baseline: it may hold Pending mutants.
+            if (failures.Count == before)
+            {
+                WriteBaseline(project, report);
+            }
+        }
+        OpenScoreIssues(belowTarget, failures);
+        failures.ForEach(f => Log.Error(f));
+        Assert.True(failures.Count == 0, $"Mutation: {failures.Count} project(s) failed");
+    }
+
+    // The active projects (all seven when strict), narrowed to --project.
+    private List<string> MutationProjects(bool strict)
     {
         var unknown = Project.Except(MutatedProjects.Keys).ToList();
         Assert.True(unknown.Count == 0, $"--project: unknown [{string.Join(", ", unknown)}]; mutated projects are [{string.Join(", ", MutatedProjects.Keys)}]");
@@ -97,18 +120,7 @@ internal sealed partial class Build
         // A named project that is not run would leave the target green with nothing mutated.
         var inactive = Project.Except(projects).ToList();
         Assert.True(inactive.Count == 0, $"--project: [{string.Join(", ", inactive)}] above activeStage (stages logged above); pass --strict-stages to mutate them");
-        var failures = new List<string>();
-        var belowTarget = new List<(string Project, double Score)>();
-        foreach (var project in projects.Where(p => Project.Length == 0 || Project.Contains(p)))
-        {
-            if (Mutate(project, since: null, RootDirectory, failures) is { } score && score < TargetScore)
-            {
-                belowTarget.Add((project, score));
-            }
-        }
-        OpenScoreIssues(belowTarget, failures);
-        failures.ForEach(f => Log.Error(f));
-        Assert.True(failures.Count == 0, $"Mutation: {failures.Count} project(s) failed");
+        return [.. projects.Where(p => Project.Length == 0 || Project.Contains(p))];
     }
 
     // Nightly: long random CsCheck runs, covered projects and the SampleParallel models of Ducky.Concurrency.Tests.
@@ -173,17 +185,41 @@ internal sealed partial class Build
         return (activeStage, [.. stages.Where(s => s.Value <= activeStage).Select(s => s.Key)]);
     }
 
-    // Runs Stryker from <workspace>/src/<project> (its stryker-config.json) and returns the score, or null when no
-    // mutant counts. The test hosts inherit the Stryker process environment (S-6): one repetition, fixed seeds, one
-    // CsCheck thread. Logs the mutants ignored by `// Stryker disable once` comments (§17.8: CI reports the count).
-    // Added to failures: a missing or unreadable report, zero mutants on a full run (since null; a --since run may
-    // legitimately have none), a score below the break threshold, a failed run, a disable that ignored mutants beyond
-    // DisableReach lines below it, a Killed mutant without killedBy, and, on a full run, tests that killed every killed
-    // mutant across several files (they fail on every mutated build, whatever the active mutant, S-6).
-    // `changed`: for a --since run, the paths changed since the merge base, to cross-check Stryker's diff.
-    private double? Mutate(string project, string? since, AbsolutePath workspace, List<string> failures, List<string>? changed = null)
+    // MutationPr's base, merge base, changed paths (with git's status letter) and plan (PlanProjects); baseline: whether a
+    // restored baseline report may be used (the aggregate and plan jobs have none and only need the modes it allows).
+    private (string Since, string MergeBase, List<(char Status, string Path)> Changed, List<(string Project, string Mode, string Why)>? Plan) PlanMutationPr(bool baseline)
     {
-        var output = Artifacts / "mutation" / project;
+        var projects = MutatedProjectsToRun(strict: false);
+        var baseRef = BaseRef ?? $"origin/{(EnvironmentInfo.GetVariable("GITHUB_BASE_REF") is { Length: > 0 } b ? b : ReleaseBranch)}";
+        var since = Git(RootDirectory, $"rev-parse --verify {baseRef + "^{commit}"}").Single();
+        var mergeBase = Git(RootDirectory, $"merge-base {since} HEAD").Single();
+        // activeStage only moves up (PLAN P1): a lowered one would stop mutating active projects, so it fails before the
+        // no-active-project return. The change that raises it seldom touches the project's .cs files, so a --since run
+        // would score none of the code that landed while the project was inactive: a project active now but not at the
+        // base gets a full run.
+        var (activeStage, _) = ManifestStages(Manifest.ReadAllText());
+        var (baseStage, activeAtBase) = ActiveProjectsAt(mergeBase);
+        Assert.True(activeStage >= baseStage, $"{Relative(Manifest)}: activeStage {activeStage} is below {baseStage} at the merge base {mergeBase}; it never moves down");
+        var changed = ChangedPaths(RootDirectory, mergeBase);
+        var plan = PlanProjects(projects, activeAtBase, projects.ToDictionary(p => p, TestDirectoriesOf), changed,
+            project => baseline ? ParseBaseline(BaselineFile(project).FileExists() ? BaselineFile(project).ReadAllText() : null, mergeBase).Problem : null);
+        if (plan is null)
+        {
+            Log.Information("MutationPr: nothing changed since {MergeBase} can change a mutation result of [{Projects}]; no Stryker run", mergeBase, string.Join(", ", projects));
+        }
+        foreach (var (project, mode, why) in plan ?? [])
+        {
+            Log.Information("{Project}: {Mode} run: {Why}", project, mode, why);
+        }
+        return (since, mergeBase, changed, plan);
+    }
+
+    // Runs Stryker from <workspace>/src/<project> (its stryker-config.json), on the given project-relative --mutate patterns
+    // when filters is not null, and returns its report with repository-relative file keys, or null when Stryker wrote none.
+    // The test hosts inherit the Stryker process environment (S-6): one repetition, fixed seeds, one CsCheck thread.
+    // --break-at 0: the break threshold is CheckReport's, on the whole project's score (a shard's or a rerun's is partial).
+    private JsonObject? Stryker(string project, string? since, AbsolutePath workspace, List<string>? filters, AbsolutePath output, List<string> failures)
+    {
         output.CreateOrCleanDirectory();
         // The dotnet-stryker local tool (.config/dotnet-tools.json, the one pin), like reportgenerator in CoverageGate:
         // StrykerTasks would need a second pin as a PackageDownload of this project.
@@ -203,23 +239,41 @@ internal sealed partial class Build
             ["TEMP"] = temp,
         };
         var sinceArgument = since is null ? "" : $"--since:{since}";
+        var mutateArguments = string.Concat((filters ?? []).Select(f => $" --mutate \"{f}\""));
         var exitCode = 0;
-        DotNet($"stryker --test-runner mtp --reporter Progress --reporter Html --reporter Json --output {output} {sinceArgument:nq}",
+        DotNet($"stryker --test-runner mtp --reporter Progress --reporter Html --reporter Json --break-at 0 --output {output} {sinceArgument:nq}{mutateArguments:nq}",
             workingDirectory: workspace / "src" / project,
             environmentVariables: environment,
             exitHandler: p => exitCode = p.ExitCode);
         temp.DeleteDirectory();
+        if (exitCode != 0)
+        {
+            failures.Add($"{project}: Stryker exited with code {exitCode}");
+        }
 
         // Stryker writes the report even with zero mutants ("a mutant-free world"), so a missing one is a broken run.
         var report = output / "reports" / "mutation-report.json";
-        if (!report.FileExists() || JsonNode.Parse(report.ReadAllText()) is not JsonObject { } root || root["files"] is not JsonObject files)
+        if (!report.FileExists() || JsonNode.Parse(report.ReadAllText()) is not JsonObject { } root || root["files"] is not JsonObject reported)
         {
             failures.Add($"{project}: Stryker wrote no readable {Relative(report)} with a \"files\" object (exit {exitCode})");
             return null;
         }
-        var mutants = (from file in files
+        root["files"] = new JsonObject(reported.Select(f => KeyValuePair.Create(Path.GetRelativePath(workspace, f.Key).Replace('\\', '/'), f.Value?.DeepClone())));
+        return root;
+    }
+
+    // MutationPr's and Mutation's checks of one project's report (a single run's, or merged from shards or a baseline),
+    // returning the score, or null when no mutant counts. Logs the mutants ignored by `// Stryker disable once` comments
+    // (§17.8: CI reports the count). Added to failures: zero mutants on a full run (since null; a --since run may
+    // legitimately have none), a score below the break threshold, a disable that ignored mutants beyond DisableReach lines
+    // below it, a Killed mutant without killedBy, and, on a full run, tests that killed every killed mutant across several
+    // files (they fail on every mutated build, whatever the active mutant, S-6).
+    // `changed`: for a --since run, the paths changed since the merge base, to cross-check Stryker's diff.
+    private static double? CheckReport(string project, string? since, JsonObject root, List<string>? changed, List<string> failures, string location)
+    {
+        var mutants = (from file in (JsonObject)root["files"]!
                        from mutant in file.Value!["mutants"]!.AsArray()
-                       select (File: Path.GetRelativePath(workspace, file.Key).Replace('\\', '/'), Source: (string?)file.Value["source"] ?? "", Mutant: mutant!))
+                       select (File: file.Key, Source: (string?)file.Value["source"] ?? "", Mutant: mutant!))
             .ToList();
         var statuses = mutants.Select(m => (string)m.Mutant["status"]!).ToList();
         var detected = statuses.Count(s => s is "Killed" or "Timeout");
@@ -237,7 +291,7 @@ internal sealed partial class Build
         }
         else if (score < BreakScore)
         {
-            failures.Add($"{project}: mutation score {score:F2}% is below the break threshold {BreakScore}% (report: {Relative(output)})");
+            failures.Add($"{project}: mutation score {score:F2}% is below the break threshold {BreakScore}% (report: {location})");
         }
         // S-6: a --since diff of the wrong tree (a linked worktree) leaves the mutants of a changed file Ignored by the since
         // filter, and the run green with nothing scored. Stryker rescores every mutant of a changed file, so none may carry a
@@ -247,10 +301,6 @@ internal sealed partial class Build
                           let reasons = mutants.Where(m => m.File == path).Select(m => (string?)m.Mutant["statusReason"] ?? "").ToList()
                           where reasons.Any(r => r == "Removed by since filter" || r.StartsWith("Mutant not changed", StringComparison.Ordinal))
                           select $"{project}: {path} changed since {since} but Stryker saw no changed mutant in it: the --since diff is wrong");
-        if (exitCode != 0 && !(score < BreakScore))
-        {
-            failures.Add($"{project}: Stryker exited with code {exitCode}");
-        }
 
         // Stryker's own filters give reasons starting "Removed by" or "Mutant"; any other Ignored reason is a comment's
         // (ExclusionGate rejects a comment reason that starts like Stryker's).
@@ -341,11 +391,12 @@ internal sealed partial class Build
         return clone;
     }
 
-    // Paths changed since the merge base, committed or not, unquoted. --no-renames: a moved file lists its old path too, so
-    // a test moved out of its project's directory still triggers CanChangeResultsOf.
-    private static List<string> ChangedPaths(AbsolutePath workspace, string mergeBase) =>
-        [.. Git(workspace, $"-c core.quotePath=false diff --name-only --no-renames {mergeBase}"),
-            .. Git(workspace, $"-c core.quotePath=false ls-files --others --exclude-standard")];
+    // Paths changed since the merge base, committed or not, unquoted, with git's status letter (an untracked file is 'A').
+    // --no-renames: a moved file lists its old path too (D) and its new one (A), so a test moved out of its project's
+    // directory still triggers CanChangeResultsOf, and a renamed test is never an added one.
+    private static List<(char Status, string Path)> ChangedPaths(AbsolutePath workspace, string mergeBase) =>
+        [.. Git(workspace, $"-c core.quotePath=false diff --name-status --no-renames {mergeBase}").Select(l => (l[0], l[(l.IndexOf('\t', StringComparison.Ordinal) + 1)..])),
+            .. Git(workspace, $"-c core.quotePath=false ls-files --others --exclude-standard").Select(p => ('A', p))];
 
     // git's standard output lines; a non-zero exit fails the target.
     private static List<string> Git(AbsolutePath directory, ArgumentStringHandler arguments) =>
@@ -501,6 +552,9 @@ internal sealed partial class Build
             .Order(StringComparer.Ordinal)
             .ToList();
     }
+
+    // The directories of the project's test-projects, each ending in '/'.
+    private List<string> TestDirectoriesOf(string project) => [.. TestProjectsOf(project).Select(p => p[..(p.LastIndexOf('/') + 1)])];
 
     // Transitive ProjectReferences that bring an assembly (ReferenceOutputAssembly="false" feeds analyzers only).
     private static HashSet<AbsolutePath> ReferencedAssemblies(AbsolutePath projectFile)

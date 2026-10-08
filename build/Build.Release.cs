@@ -661,6 +661,25 @@ internal sealed partial class Build
         return null;
     }
 
+    // The node at a path of mapping keys, or null.
+    private static YamlNode? YamlAt(YamlNode? node, params string[] path)
+    {
+        foreach (var key in path)
+        {
+            node = node is YamlMappingNode map && map.Children.TryGetValue(new YamlScalarNode(key), out var child) ? child : null;
+        }
+        return node;
+    }
+
+    // A scalar as one item, a list's scalars, a mapping's entries as "key: value".
+    private static List<string> YamlScalars(YamlNode? node) => node switch
+    {
+        YamlScalarNode scalar => [scalar.Value!],
+        YamlSequenceNode list => [.. list.Children.OfType<YamlScalarNode>().Select(s => s.Value!)],
+        YamlMappingNode map => [.. map.Children.Select(c => $"{c.Key}: {c.Value}")],
+        _ => [],
+    };
+
     // §20.1: the hand-written release.yml keeps its gates in front of the push: v* tags only, the three jobs with full
     // history, publish behind both gate jobs (no if, no continue-on-error) and the nuget environment's approval, running
     // Publish GitHubRelease unskipped.
@@ -669,23 +688,8 @@ internal sealed partial class Build
         var stream = new YamlStream();
         stream.Load(new StringReader(workflow));
         var root = stream.Documents.FirstOrDefault()?.RootNode;
-        static YamlNode? At(YamlNode? node, params string[] path)
-        {
-            foreach (var key in path)
-            {
-                node = node is YamlMappingNode map && map.Children.TryGetValue(new YamlScalarNode(key), out var child) ? child : null;
-            }
-            return node;
-        }
-        static List<string> Scalars(YamlNode? node) => node switch
-        {
-            YamlScalarNode scalar => [scalar.Value!],
-            YamlSequenceNode list => [.. list.Children.OfType<YamlScalarNode>().Select(s => s.Value!)],
-            YamlMappingNode map => [.. map.Children.Select(c => $"{c.Key}: {c.Value}")],
-            _ => [],
-        };
 
-        if (At(root, "on") is not YamlMappingNode on || on.Children.Count != 1 || Scalars(At(on, "push", "tags")) is not ["v*"] || At(on, "push") is not YamlMappingNode { Children.Count: 1 })
+        if (YamlAt(root, "on") is not YamlMappingNode on || on.Children.Count != 1 || YamlScalars(YamlAt(on, "push", "tags")) is not ["v*"] || YamlAt(on, "push") is not YamlMappingNode { Children.Count: 1 })
         {
             yield return "release.yml must run on v* tags only (on: push: tags: ['v*'])";
         }
@@ -696,48 +700,48 @@ internal sealed partial class Build
             ("release-mutation", "./build.sh MutationForSha", ["actions: read", "contents: read", "issues: write"]),
             ("publish", "./build.sh Publish GitHubRelease", ["contents: write", "id-token: write"]),
         ];
-        var jobs = Scalars(At(root, "jobs")).Select(j => j[..j.IndexOf(':', StringComparison.Ordinal)]).Order(StringComparer.Ordinal).ToList();
+        var jobs = YamlScalars(YamlAt(root, "jobs")).Select(j => j[..j.IndexOf(':', StringComparison.Ordinal)]).Order(StringComparer.Ordinal).ToList();
         if (!jobs.SequenceEqual(expected.Select(e => e.Job).Order(StringComparer.Ordinal)))
         {
             yield return $"release.yml must have exactly the jobs [{string.Join(", ", expected.Select(e => e.Job))}], has [{string.Join(", ", jobs)}]";
         }
         foreach (var (job, run, permissions) in expected)
         {
-            var steps = (At(root, "jobs", job, "steps") as YamlSequenceNode)?.Children ?? [];
-            if (!steps.Any(s => Scalars(At(s, "uses")) is [var uses] && uses.StartsWith("actions/checkout@", StringComparison.Ordinal)
-                    && Scalars(At(s, "with", "fetch-depth")) is ["0"]))
+            var steps = (YamlAt(root, "jobs", job, "steps") as YamlSequenceNode)?.Children ?? [];
+            if (!steps.Any(s => YamlScalars(YamlAt(s, "uses")) is [var uses] && uses.StartsWith("actions/checkout@", StringComparison.Ordinal)
+                    && YamlScalars(YamlAt(s, "with", "fetch-depth")) is ["0"]))
             {
                 yield return $"{job}: checkout must set fetch-depth: 0 (MinVer, git-cliff and the reachability check need full history)";
             }
-            var runs = steps.SelectMany(s => Scalars(At(s, "run"))).SelectMany(r => r.Split('\n')).Select(l => l.Trim()).ToList();
+            var runs = steps.SelectMany(s => YamlScalars(YamlAt(s, "run"))).SelectMany(r => r.Split('\n')).Select(l => l.Trim()).ToList();
             if (!runs.Contains(run, StringComparer.Ordinal) || runs.Any(r => r.StartsWith("./build.sh", StringComparison.Ordinal) && r != run))
             {
                 yield return $"{job}: must run exactly {run} (no --skip, no other build invocation)";
             }
-            if (permissions.Length > 0 && !Scalars(At(root, "jobs", job, "permissions")).Order(StringComparer.Ordinal).SequenceEqual(permissions))
+            if (permissions.Length > 0 && !YamlScalars(YamlAt(root, "jobs", job, "permissions")).Order(StringComparer.Ordinal).SequenceEqual(permissions))
             {
                 yield return $"{job}: permissions must be [{string.Join(", ", permissions)}]";
             }
-            if (At(root, "jobs", job, "continue-on-error") is not null || steps.Any(s => At(s, "continue-on-error") is not null))
+            if (YamlAt(root, "jobs", job, "continue-on-error") is not null || steps.Any(s => YamlAt(s, "continue-on-error") is not null))
             {
                 yield return $"{job}: must not set continue-on-error (a failing gate would count as a success)";
             }
-            if (steps.Any(s => At(s, "if") is not null && Scalars(At(s, "run")).Any(r => r.Contains("./build.sh", StringComparison.Ordinal))))
+            if (steps.Any(s => YamlAt(s, "if") is not null && YamlScalars(YamlAt(s, "run")).Any(r => r.Contains("./build.sh", StringComparison.Ordinal))))
             {
                 yield return $"{job}: the ./build.sh step must have no if (a skipped gate passes)";
             }
         }
 
-        if (Scalars(At(root, "jobs", "publish", "environment")) is not ["nuget"] && Scalars(At(root, "jobs", "publish", "environment", "name")) is not ["nuget"])
+        if (YamlScalars(YamlAt(root, "jobs", "publish", "environment")) is not ["nuget"] && YamlScalars(YamlAt(root, "jobs", "publish", "environment", "name")) is not ["nuget"])
         {
             yield return "publish: environment must be nuget (its required reviewer approves every push)";
         }
-        var needs = Scalars(At(root, "jobs", "publish", "needs"));
+        var needs = YamlScalars(YamlAt(root, "jobs", "publish", "needs"));
         if (!needs.Contains("release-gates") || !needs.Contains("release-mutation"))
         {
             yield return "publish: needs must hold release-gates and release-mutation (nothing is pushed before every gate passed)";
         }
-        if (At(root, "jobs", "publish", "if") is not null)
+        if (YamlAt(root, "jobs", "publish", "if") is not null)
         {
             yield return "publish: must have no if (always() or !cancelled() would run it after a failed gate)";
         }
