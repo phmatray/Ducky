@@ -40,7 +40,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
         _bridge = persistence.Gate.CreateBridge(services.GetService<IJSRuntime>(), _logger);
         _browser = new(_bridge, registration.Options, _logger);
         _time = services.GetRequiredService<TimeProvider>();
-        _telemetry = new(new(_logger), services.GetService<IMeterFactory>());
+        _telemetry = new(_log, services.GetService<IMeterFactory>());
         persistence.Middleware = this;
     }
 
