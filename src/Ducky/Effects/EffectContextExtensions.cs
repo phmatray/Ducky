@@ -52,13 +52,16 @@ public static class EffectContextExtensions
         CancellationToken cancellationToken)
     {
         context.Dispatch(started);
-        TResult result;
+        // Definitely assigned up front: a mutant that removes the catch's return must still compile, or Stryker's safe mode
+        // turns every mutant of this method into an unscored CompileError (SPEC §17.8).
+        TResult result = default!;
         try
         {
             result = await work(cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         }
 #pragma warning disable CA1031 // justification: every failure of the work becomes failed(ex) (SPEC §5.5); only this run's cancellation propagates
-        catch (Exception ex) when (ex is not OperationCanceledException oce || !context.Run.IsCancellation(oce))
+        // A cast, not a pattern variable: a mutant of the filter must not leave a pattern variable unassigned (CS0165, §17.8).
+        catch (Exception ex) when (ex is not OperationCanceledException || !context.Run.IsCancellation((OperationCanceledException)ex))
 #pragma warning restore CA1031
         {
             context.Dispatch(failed(ex));

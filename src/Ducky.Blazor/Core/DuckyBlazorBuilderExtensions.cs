@@ -159,7 +159,9 @@ internal sealed class BlazorRegistration(BlazorOptions options)
             yield return BlazorErrors.SliceNotAdded("Persist", slice);
         }
 
-        PersistOptions options;
+        // Definitely assigned up front: a mutant that removes the catch's throw must still compile, or Stryker's safe mode
+        // turns every mutant of this method into an unscored CompileError (SPEC §17.8).
+        PersistOptions options = null!;
         try
         {
             options = layers.Options;

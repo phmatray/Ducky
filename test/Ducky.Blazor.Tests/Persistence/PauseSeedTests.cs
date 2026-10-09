@@ -152,13 +152,13 @@ public sealed class PauseSeedTests : BunitContext
     }
 
     [Theory]
-    [InlineData("""{"v":1,"src":"pause","dirty":[null],"ver":{"counter":1},"slices":{"counter":{"Value":4}}}""", "restore:counter Hydrated:0")]
-    [InlineData("""{"v":1,"src":"pause","dirty":["counter"],"ver":{"counter":1},"slices":{"counter":{"Value":"four"}}}""", "restore: Hydrated:0")]
-    public async Task PauseSeed_UnusableDirtyEntry_StorageRestoredAndNotOverwritten(string seed, string seedRestore)
+    [InlineData("""{"v":1,"src":"pause","dirty":[null],"ver":{"counter":1},"slices":{"counter":{"Value":4}}}""", "restore:counter Hydrated:0", 0)]
+    [InlineData("""{"v":1,"src":"pause","dirty":["counter"],"ver":{"counter":1},"slices":{"counter":{"Value":"four"}}}""", "restore: Hydrated:0", 1)]
+    public async Task PauseSeed_UnusableDirtyEntry_StorageRestoredAndNotOverwritten(string seed, string seedRestore, int undeserializable)
     {
         // (non-normative) A null dirty entry is no key (the seed is still restored), and a dirty value the store can't
         // restore (a state type changed without a Version bump) is not a value the seed restored (§11.5 step 6): storage
-        // applies, and nothing overwrites it.
+        // applies, and nothing overwrites it. That value is left out of the seed restore, so its Warning 1071 is logged once.
         _storage[("local", Key)] = Envelope(3, version: 1);
 
         Configure();
@@ -168,6 +168,7 @@ public sealed class PauseSeedTests : BunitContext
 
         Store.State.Get<Counter>().ShouldBe(new Counter(3));
         _log.Entries[0].ShouldBe(seedRestore);
+        _logs.GetSnapshot().Count(static r => r.Id.Id == 1071).ShouldBe(undeserializable);
         await AssertNothingWrittenAsync(Envelope(3, version: 1));
     }
 
