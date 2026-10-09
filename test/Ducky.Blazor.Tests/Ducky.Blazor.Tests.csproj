@@ -17,6 +17,8 @@
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
     <!-- To measure the seed's real Interactive Server wire encoding (SPEC §11.4 wire estimate). -->
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
+    <!-- Compiles the 1.x usages of Tombstones_DeriveFromEach_ReportsDuckyM00n (SPEC §22.1). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
   <ItemGroup>
