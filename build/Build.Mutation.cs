@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Fallout.Common;
 using Fallout.Common.CI.GitHubActions;
@@ -108,7 +109,7 @@ internal sealed partial class Build
         }
         OpenScoreIssues(belowTarget, failures);
         failures.ForEach(f => Log.Error(f));
-        Assert.True(failures.Count == 0, $"Mutation: {failures.Count} project(s) failed");
+        Assert.True(failures.Count == 0, $"Mutation: {failures.Count} failure(s)");
     }
 
     // The active projects (all seven when strict), narrowed to --project.
@@ -241,7 +242,8 @@ internal sealed partial class Build
         var sinceArgument = since is null ? "" : $"--since:{since}";
         var mutateArguments = string.Concat((filters ?? []).Select(f => $" --mutate \"{f}\""));
         var exitCode = 0;
-        DotNet($"stryker --test-runner mtp --reporter Progress --reporter Html --reporter Json --break-at 0 --output {output} {sinceArgument:nq}{mutateArguments:nq}",
+        // --verbosity info on the command line, over any stryker-config.json key: SafeModeFailures reads the INF Safe Mode line.
+        var log = DotNet($"stryker --test-runner mtp --verbosity info --reporter Progress --reporter Html --reporter Json --break-at 0 --output {output} {sinceArgument:nq}{mutateArguments:nq}",
             workingDirectory: workspace / "src" / project,
             environmentVariables: environment,
             exitHandler: p => exitCode = p.ExitCode);
@@ -250,6 +252,8 @@ internal sealed partial class Build
         {
             failures.Add($"{project}: Stryker exited with code {exitCode}");
         }
+        // In a shard these land in the shard's failures, which MergeShards reports, so both aggregates fail on them too.
+        failures.AddRange(SafeModeFailures(project, workspace, log.Select(o => o.Text)));
 
         // Stryker writes the report even with zero mutants ("a mutant-free world"), so a missing one is a broken run.
         var report = output / "reports" / "mutation-report.json";
@@ -261,6 +265,43 @@ internal sealed partial class Build
         root["files"] = new JsonObject(reported.Select(f => KeyValuePair.Create(Path.GetRelativePath(workspace, f.Key).Replace('\\', '/'), f.Value?.DeepClone())));
         return root;
     }
+
+    // §17.8 (M0-16): Stryker's Safe Mode records in its console output, one failure each. A compile error Stryker cannot
+    // attribute to a mutation (CS0165, CS0177, CS0161: a removed return/throw/continue/assignment that definite assignment
+    // relied on) makes it mark every mutant of the method CompileError, which no score counts; the report cannot tell them
+    // from ordinary rolled-back mutants (both "Mutant caused compile errors"), so the log line it writes just before is read.
+    private static List<string> SafeModeFailures(string project, string workspace, IEnumerable<string> output)
+    {
+        var failures = new List<string>();
+        var pending = new List<Match>();
+        string Cause(Match error) =>
+            $"{Path.GetRelativePath(workspace, error.Groups["file"].Value).Replace('\\', '/')}: {error.Groups["id"]} at {error.Groups["at"]} " +
+            $"of the mutated tree: {error.Groups["message"]}";
+        foreach (var line in output)
+        {
+            if (UnattributedCompileError.Match(line) is { Success: true } unattributed)
+            {
+                pending.Add(unattributed);
+            }
+            else if (SafeMode.Match(line) is { Success: true } safeMode)
+            {
+                var cause = pending.Count == 0 ? "an unattributed compile error" : string.Join("; ", pending.Select(Cause));
+                failures.Add($"{project}: Stryker Safe Mode in {safeMode.Groups["scope"]} ({cause}): every mutant there is CompileError and counts " +
+                    "in no score; give the local a definite assignment so that every mutant compiles (§17.8)");
+                pending.Clear();
+            }
+        }
+        // An unattributed compile error no Safe Mode line followed (that line hidden by a lower verbosity, or reworded):
+        // Stryker still dropped the mutants around it, so it fails on its own.
+        failures.AddRange(pending.Select(error => $"{project}: Stryker could not attribute a compile error ({Cause(error)}) and no Safe Mode line " +
+            "followed: the mutants around it are CompileError and count in no score; give the local a definite assignment (§17.8)"));
+        return failures;
+    }
+
+    private static readonly Regex UnattributedCompileError =
+        new(@"An unidentified mutation in (?<file>.+?) resulted in a compile error \(at (?<at>\d+:\d+)\) with id: (?<id>\w+), message: (?<message>.*?)(?: \(Source code: .*)?$");
+
+    private static readonly Regex SafeMode = new(@"Safe Mode! Stryker will remove all mutations in (?<scope>.+) and mark them as 'compile error'\.");
 
     // MutationPr's and Mutation's checks of one project's report (a single run's, or merged from shards or a baseline),
     // returning the score, or null when no mutant counts. Logs the mutants ignored by `// Stryker disable once` comments

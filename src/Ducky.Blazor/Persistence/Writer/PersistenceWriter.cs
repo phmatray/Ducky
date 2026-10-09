@@ -283,7 +283,9 @@ internal sealed partial class PersistenceMiddleware
                 {
                     await PauseAsync(_debounce, hurry).ConfigureAwait(ConfigureAwaitOptions.None);
                     var backoff = FirstBackoff;
-                    Outcome outcome;
+                    // Definitely assigned up front: a mutant that removes the attempt's assignment must still compile, or
+                    // Stryker's safe mode turns every mutant of this method into an unscored CompileError (SPEC §17.8).
+                    var outcome = Outcome.Clean;
                     while (true)
                     {
                         // Once the flush has begun, this attempt is the key's last: no backoff follows it.

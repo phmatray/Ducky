@@ -315,6 +315,30 @@ public sealed class WriterRetryTests
     }
 
     [Fact]
+    public async Task Dispose_FlushAttemptFails_KeyDoneDespitePendingChange()
+    {
+        // (non-normative) The flush's attempt is the key's last: when it fails, the key stays dirty and is counted lost, and
+        // the loop ends there even with a change signalled meanwhile, which a further attempt would otherwise take.
+        await using var h = new WriterHarness(static d => d.Persist<LevelSlice>());
+        using var lost = new MetricCollector<long>(h.Meters, "Ducky", "ducky.persistence.lost");
+        var held = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var calls = 0;
+        h.OnSet = _ => ++calls == 1 ? held.Task : throw new JSException("QuotaExceededError");
+        await h.InitializeAsync();
+        h.Store.Dispatch(new SetLevel(1));
+        await h.NextWriteAsync();
+        h.Store.Dispatch(new SetLevel(2));
+
+        var disposal = h.DisposeStoreAsync();
+        await WriterHarness.Until(() => h.Middleware.Writers["level"].Flushing);
+        held.SetException(new JSException("QuotaExceededError"));
+
+        await disposal.WaitAsync(_bound, TestContext.Current.CancellationToken);
+        await WriterHarness.Until(() => lost.GetMeasurementSnapshot().Sum(static measurement => measurement.Value) == 1);
+        calls.ShouldBe(2);
+    }
+
+    [Fact]
     public async Task Dispose_WriteHeldPastDisposeTimeout_CountedLostAndLoopEnds()
     {
         // (non-normative) A write held by a dead circuit and a change in its debounce: the flush ends the debounce at once

@@ -196,7 +196,10 @@ internal sealed class PrerenderHandoff : Middleware
         List<string> dirty = [];
         foreach (var slice in Store.Slices.Where(slice => slices.ContainsKey(slice.Key)))
         {
-            if (_registration.Persist.GetValueOrDefault(slice.GetType())?.Options is not { } options)
+            // Not a pattern variable: a mutant that removes the continue must still compile, or Stryker's safe mode turns
+            // every mutant of this method into an unscored CompileError (SPEC §17.8).
+            var options = _registration.Persist.GetValueOrDefault(slice.GetType())?.Options;
+            if (options is null)
             {
                 continue;
             }

@@ -704,6 +704,31 @@ internal sealed partial class Build
         var sparse = PartitionFiles([("src/P/A.cs", 3), ("src/P/B.cs", 2)], 4);
         Expect(sparse.Count == 4 && sparse.Count(p => p.Count == 0) == 2, $"two files over four shards must leave two empty shards, got {Show(sparse.Select(Show))}");
 
+        // Safe Mode (M0-16): Stryker's own output with an unattributed compile error fails, naming file, method and error;
+        // ordinary output (a mutant-free world, mutants found and rolled back) passes.
+        string[] safeModeOutput =
+        [
+            "[15:21:56 INF] 1077 mutants created",
+            "[15:21:57 WRN] An unidentified mutation in /w/src/Ducky/Effects/EffectContextExtensions.cs resulted in a compile error (at 66:35) with id: CS0165, message: Use of unassigned local variable 'result' (Source code: result)",
+            "[15:21:57 INF] Safe Mode! Stryker will remove all mutations in RunCoreAsync and mark them as 'compile error'.",
+        ];
+        var safeMode = SafeModeFailures("Ducky", "/w", safeModeOutput);
+        string[] named = ["Ducky: ", "src/Ducky/Effects/EffectContextExtensions.cs", "RunCoreAsync", "CS0165 at 66:35", "Use of unassigned local variable 'result'"];
+        Expect(safeMode is [var safeModeFailure] && named.All(p => safeModeFailure.Contains(p, StringComparison.Ordinal)),
+            $"a Safe Mode record must fail with the file, the method and the compile error, got {Show(safeMode)}");
+        // The WRN line alone (the INF Safe Mode line hidden by a warning verbosity) still fails, naming file and error.
+        var warningOnly = SafeModeFailures("Ducky", "/w", safeModeOutput[..2]);
+        Expect(warningOnly is [var warningFailure] && named.Where(p => p != "RunCoreAsync").All(p => warningFailure.Contains(p, StringComparison.Ordinal)),
+            $"an unattributed compile error without a Safe Mode line must fail with the file and the compile error, got {Show(warningOnly)}");
+        string[] cleanOutput =
+        [
+            "[15:16:27 WRN] It's a mutant-free world, nothing to test.",
+            "[15:21:56 INF] 1077 mutants created",
+            "[15:21:57 DBG] Found mutant 12 of type 'Statement' controlled by 'IfEngine'.",
+            "[15:21:57 DBG] RolledBack to if (true) {}",
+        ];
+        Expect(SafeModeFailures("Ducky", "/w", cleanOutput).Count == 0, $"output without Safe Mode must pass, got {Show(SafeModeFailures("Ducky", "/w", cleanOutput))}");
+
         // Reports: one mutant per line, a unique killing test per mutant so the always-failing check stays quiet.
         var nextTest = 0;
         JsonObject Mutant(string status, int line, string? reason = null, string mutator = "Equality") => new()
@@ -765,6 +790,8 @@ internal sealed partial class Build
                 "P: src/P/C.cs is in shard 1's partition but missing from its report"),
             ("a shard in a mode the plan forbids", Shards(), [SinceMode], 2, "P: shard 1 ran in mode full; the plan allows [since]"),
             ("a failed shard", Shards(s => s[1]["failures"] = new JsonArray("P: Stryker exited with code 1")), null, 2, "P: shard 2: P: Stryker exited with code 1"),
+            ("a shard in Stryker Safe Mode (M0-16)", Shards(s => s[1]["failures"] = new JsonArray(SafeModeFailures("P", "/w", safeModeOutput).Select(f => (JsonNode)f).ToArray())), null, 2,
+                "P: shard 2: P: Stryker Safe Mode in RunCoreAsync (src/Ducky/Effects/EffectContextExtensions.cs: CS0165 at 66:35"),
             ("a shard without a report", Shards(s => s[1]["report"] = null), null, 2, "P: shard 2 has no report"),
             ("an overlapping partition", Shards(s => s[1]["files"] = new JsonArray("src/P/B.cs", "src/P/C.cs")), null, 2, "P: src/P/C.cs is in shards 1 and 2"),
             ("a file in no partition", Shards(s => s[1]["files"] = new JsonArray()), null, 2, "P: src/P/B.cs is in no shard"),

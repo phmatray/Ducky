@@ -379,6 +379,24 @@
    "done_definition": "Common DoD (PLAN.md §1). The real CI timing is measured on the PR."
   },
   {
+   "id": "M0-16",
+   "milestone": "M0",
+   "title": "No Stryker safe mode: gate and fix the four untested methods",
+   "size": "M",
+   "depends_on": [
+    "M0-15"
+   ],
+   "area": "build/Build.Mutation.cs, build/Build.MutationShards.cs, src/Ducky/Effects/EffectContextExtensions.cs, src/Ducky.Blazor/Core/DuckyBlazorBuilderExtensions.cs, src/Ducky.Blazor/Prerender/PrerenderHandoff.cs, src/Ducky.Blazor/Persistence/Writer/PersistenceWriter.cs, test/Ducky.Blazor.Tests/Persistence/WriterRetryTests.cs, test/Ducky.Blazor.Tests/Persistence/PauseSeedTests.cs",
+   "invariants": [],
+   "scope": "Stage 1. Owner-added (2026-10-08); fixes code from M2-07 and the M6 stories. Stryker 4.16 enters Safe Mode when a mutant causes a compile error it cannot attribute to a mutation (CS0165, CS0177 or CS0161: typically a statement mutant that removes the return, throw, continue or assignment that definite assignment relies on): it then marks every mutant of the enclosing method CompileError, which counts in no score, so the method is silently untested while the score looks fine. Measured on every full run: EffectContextExtensions.RunCoreAsync (Ducky; the owner estimated 88 mutants lost, and full runs measured 91 → 83 CompileError and 921 → 927 tested mutants once its local was definitely assigned), DuckyBlazorBuilderExtensions.ValidatePersist, PrerenderHandoff.Restore and PersistenceWriter.RunAsync (Ducky.Blazor). (1) Gate: Mutation, MutationPr, MutationAggregate and MutationPrAggregate fail when Stryker reported Safe Mode for any mutated project, read from Stryker's own output and naming the file, the method and the compile error; a shard records it in its failures, which the aggregate reports (SPEC §17.8). (2) Fix: each of the four methods gives its local a definite assignment (or stops using a pattern variable) so every mutant compiles, without changing behaviour; tests are added or strengthened until the newly scored mutants die; 100% line and branch coverage holds; no Stryker disable comment hides them. Ducky.Testing, Ducky.Generators and Ducky.Draft are checked with --strict-stages and fixed the same way if needed.",
+   "acceptance_tests": [
+    "Planted checks (MutationSelfCheck, run by VerifyWorkflows; non-normative): Stryker output with a Safe Mode record fails with the file, the method and the compile error; output with ordinary rolled-back compile errors and no Safe Mode passes",
+    "./build.sh Mutation --project Ducky and ./build.sh Mutation --project Ducky.Blazor --strict-stages report zero Safe Mode and a score >= 90; the mutant counts and scores before and after are reported with the story",
+    "Ci, ExclusionGate, VerifyWorkflows and MutationPr green"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M1-01",
    "milestone": "M1",
    "title": "SliceKey derivation and validation",

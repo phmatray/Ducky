@@ -2,7 +2,7 @@
 
 Status: plan derived from `SPEC.md` (authoritative, including review rounds "2 (recovered)" through 7 of `REVIEW-LOG.md`) and `adr/0001-0047`. Where this plan and the spec disagree, the spec wins; every planning decision that goes beyond the spec is listed in §3.
 
-153 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
+154 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
 
 ## 1. Workflow: strict TDD under full gates
 
@@ -51,7 +51,7 @@ Every story after M0-01 is one issue and one squash-merged PR on `v2`, and it fo
 
 | Milestone | Title | Stories | Goal |
 |---|---|---|---|
-| M0 | Engineering skeleton | 15 | Orphan v2 branch with every gate live before any feature code (§24 step 1): locked restore, warnings-as-errors analyzers, signing, Fallout targets (Restore, Format, Compile, Test, ConcurrencyTest, CoverageGate 100%, MutationPr/Mutation, SpecTraceGate over the staged manifest, ExclusionGate, AotSmoke, E2E with the ducky.js block gate over a stub, Pack + package validation + staged PackageSmoke, PublicAPI tracking, VerifyWorkflows, Docs fence check), generated GitHub Actions calling Fallout, and branch protection. Every library has one public type with a test and every test project one skeleton test. S-1, S-2, S-6, S-8 closed; week-1 prototypes for S-3, S-4, S-5, S-7 and S-9. |
+| M0 | Engineering skeleton | 16 | Orphan v2 branch with every gate live before any feature code (§24 step 1): locked restore, warnings-as-errors analyzers, signing, Fallout targets (Restore, Format, Compile, Test, ConcurrencyTest, CoverageGate 100%, MutationPr/Mutation, SpecTraceGate over the staged manifest, ExclusionGate, AotSmoke, E2E with the ducky.js block gate over a stub, Pack + package validation + staged PackageSmoke, PublicAPI tracking, VerifyWorkflows, Docs fence check), generated GitHub Actions calling Fallout, and branch protection. Every library has one public type with a test and every test project one skeleton test. S-1, S-2, S-6, S-8 closed; week-1 prototypes for S-3, S-4, S-5, S-7 and S-9. |
 | M1 | Core store | 15 | Slices, slice keys, snapshot, single-drainer dispatcher, drain catch-all and SafeLogger, per-store causal scope, failure router, builder and aggregated configuration errors, DI lifetimes, init buffer with zero middleware, core dispose, WhenIdleAsync, and TST-03 concurrency items 1-5, 7, 11-13 (S-4 regression). |
 | M2 | Effects | 10 | Effect<T>, EffectGroup, EffectContext and ctx.Run; Merge/Switch/Exhaust/Queue with the slot compare-and-remove rule, failure observation, quiescence with CountedForIdle, the run registry and effect-aware dispose (phase 5b), the policy matrix and model-based property (INV-11), keyed DUCKY309. |
 | M3 | Selectors and subscriptions | 6 | SubscriberList, IStore.Select, Selection<T>, the typed fast path, Selector.Define memoization (INV-09, INV-21), subscriber isolation in covered tests, and the AOT smoke for the core. |
@@ -77,7 +77,7 @@ Stories per stage (P1: `activeStage` reaches N once every story listed at N or b
 
 | Stage | §24 step | Stories |
 |---|---|---|
-| 1 | skeleton, gates, spike prototypes | M0-01, M0-02, M0-03, M0-04, M0-05, M0-06, M0-07, M0-08, M0-09, M0-10, M0-11, M0-12, M0-13, M0-14, M0-15 |
+| 1 | skeleton, gates, spike prototypes | M0-01, M0-02, M0-03, M0-04, M0-05, M0-06, M0-07, M0-08, M0-09, M0-10, M0-11, M0-12, M0-13, M0-14, M0-15, M0-16 |
 | 2 | slice, snapshot, dispatcher, causal scope, TST-03 | M1-01, M1-02, M1-03, M1-04, M1-05, M1-05b, M1-06, M1-08, M1-09, M1-13, M1-14 |
 | 3 | init lifecycle, middleware, failure router, dispose | M1-07, M1-10, M1-11, M1-12, M4-01, M4-02, M4-03, M4-03b, M4-03c, M4-04 |
 | 4 | effects and policies | M2-01, M2-02, M2-03, M2-03b, M2-04, M2-05, M2-06, M2-07, M2-08, M2-09, M4-05, M4-05b |
@@ -322,7 +322,7 @@ Orphan v2 branch with every gate live before any feature code (§24 step 1): loc
 
 - **Stage:** 1
 - **Depends on:** M0-05
-- **Unblocks:** —
+- **Unblocks:** M0-16
 - **Area:** `build/Build.Mutation.cs, build/Build.MutationShards.cs, build/Build.CI.cs, .github/workflows/mutation.yml, .github/workflows/nightly-mutation.yml`
 - **Invariants:** —
 - **Scope:** Stage 1. Owner-added (2026-10-08): cut the wall-clock of the CI mutation check without lowering the bar (same thresholds 90/85/85, same mutants, same tests per mutant, coverage-analysis off, stryker-config.json keys unchanged, the zero-mutant and no-score checks unchanged). (1) Skip: MutationPlan (and MutationPrAggregate, MutationPr) compute MutationPr's plan; when no path changed since the merge base is in src/, a full-run trigger of an active project (SPEC §17.8), build/Build.Mutation*.cs or .github/workflows/mutation.yml, and no project became active, the required mutation check passes without compiling or running Stryker. (2) Shards: mutation.yml and nightly-mutation.yml become hand-written matrices of 4 shard jobs (Mutation/MutationPr --shard <i>/<n>, a deterministic disjoint partition of each project's .cs files by line count, passed as CLI --mutate patterns with --break-at 0) plus one aggregate job keeping the check names mutation and nightly-mutation (MutationPrAggregate/MutationAggregate --shards <n>, default 4), which fails on a missing, duplicated, failed or miscounted shard, an overlapping or incomplete partition or a mutate filter that missed a file, then applies the single-run checks to the merged report; VerifyWorkflows checks both workflows (MutationWorkflowViolations) and lets a job that a required job needs report through it. (3) Baseline: nightly-mutation also runs on every push to v2 and caches each project's merged report by commit SHA; MutationPr reuses the merge base's report when every full-run trigger of a project is a newly added .cs file in one of its test projects: it reruns the changed files whole and the baseline's Survived/NoCoverage/Timeout mutants of unchanged files by character span (spike: Stryker 4.16 honours File.cs{start..end} character spans, not line spans), taking the baseline for the rest; anything else, or a missing, stale or unreadable baseline, keeps the full run.
@@ -332,6 +332,20 @@ Orphan v2 branch with every gate live before any feature code (§24 step 1): loc
   - Spike: Stryker 4.16 with test-runner mtp reruns individual mutants through a character-span --mutate pattern (docs/spec/spikes.md)
   - Ci, ExclusionGate and VerifyWorkflows green
 - **Done:** Common DoD (PLAN.md §1). The real CI timing is measured on the PR.
+
+#### M0-16 No Stryker safe mode: gate and fix the four untested methods (M)
+
+- **Stage:** 1
+- **Depends on:** M0-15
+- **Unblocks:** —
+- **Area:** `build/Build.Mutation.cs, build/Build.MutationShards.cs, src/Ducky/Effects/EffectContextExtensions.cs, src/Ducky.Blazor/Core/DuckyBlazorBuilderExtensions.cs, src/Ducky.Blazor/Prerender/PrerenderHandoff.cs, src/Ducky.Blazor/Persistence/Writer/PersistenceWriter.cs, test/Ducky.Blazor.Tests/Persistence/WriterRetryTests.cs, test/Ducky.Blazor.Tests/Persistence/PauseSeedTests.cs`
+- **Invariants:** —
+- **Scope:** Stage 1. Owner-added (2026-10-08); fixes code from M2-07 and the M6 stories. Stryker 4.16 enters Safe Mode when a mutant causes a compile error it cannot attribute to a mutation (CS0165, CS0177 or CS0161: typically a statement mutant that removes the return, throw, continue or assignment that definite assignment relies on): it then marks every mutant of the enclosing method CompileError, which counts in no score, so the method is silently untested while the score looks fine. Measured on every full run: EffectContextExtensions.RunCoreAsync (Ducky; the owner estimated 88 mutants lost, and full runs measured 91 → 83 CompileError and 921 → 927 tested mutants once its local was definitely assigned), DuckyBlazorBuilderExtensions.ValidatePersist, PrerenderHandoff.Restore and PersistenceWriter.RunAsync (Ducky.Blazor). (1) Gate: Mutation, MutationPr, MutationAggregate and MutationPrAggregate fail when Stryker reported Safe Mode for any mutated project, read from Stryker's own output and naming the file, the method and the compile error; a shard records it in its failures, which the aggregate reports (SPEC §17.8). (2) Fix: each of the four methods gives its local a definite assignment (or stops using a pattern variable) so every mutant compiles, without changing behaviour; tests are added or strengthened until the newly scored mutants die; 100% line and branch coverage holds; no Stryker disable comment hides them. Ducky.Testing, Ducky.Generators and Ducky.Draft are checked with --strict-stages and fixed the same way if needed.
+- **Acceptance tests:**
+  - Planted checks (MutationSelfCheck, run by VerifyWorkflows; non-normative): Stryker output with a Safe Mode record fails with the file, the method and the compile error; output with ordinary rolled-back compile errors and no Safe Mode passes
+  - ./build.sh Mutation --project Ducky and ./build.sh Mutation --project Ducky.Blazor --strict-stages report zero Safe Mode and a score >= 90; the mutant counts and scores before and after are reported with the story
+  - Ci, ExclusionGate, VerifyWorkflows and MutationPr green
+- **Done:** Common DoD (PLAN.md §1).
 
 ### M1 — Core store
 
