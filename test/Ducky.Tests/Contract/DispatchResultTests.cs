@@ -1,4 +1,5 @@
 using Ducky.Tests.ContractFixtures;
+using Ducky.Tests.SliceStoreFixtures;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using TestMeterFactory = Ducky.Tests.Diagnostics.TelemetryTests.TestMeterFactory;
@@ -7,7 +8,8 @@ namespace Ducky.Tests.Contract;
 
 // SPEC §5.2, §6.4 steps 1, 3 and 4-8, §6.6, §6.11, §17.5; INV-10, INV-02. Every DispatchResult a DispatchAsync task can
 // complete with, one row per path. Each Dropped path counts ducky.dispatch.dropped once with its reason; the
-// after-disposal rows complete Disposed and count nothing. The SliceStore rows arrive with SliceStore (M9-01b).
+// after-disposal rows complete Disposed and count nothing. The SliceStore rows (§12) go through SetAsync, Set's
+// awaitable twin: the same call-time checks, with a result to assert.
 public sealed class DispatchResultTests
 {
     public static TheoryData<string> Paths() =>
@@ -18,8 +20,10 @@ public sealed class DispatchResultTests
         "Dropped: depth",
         "Dropped: step-3 run check",
         "Dropped: EffectContext call-time run check",
+        "Dropped: SliceStore.Set in a superseded run",
         "Disposed",
         "Disposed: EffectContext of a Merge run after DisposeAsync began",
+        "Disposed: SliceStore.SetAsync in a Switch run after DisposeAsync began",
         "Disposed: run-tagged action processed after dispose steps 1-2",
     ];
 
@@ -37,8 +41,10 @@ public sealed class DispatchResultTests
             "Dropped: depth" => (await DroppedByDepth(meters), DispatchResult.Dropped, "depth"),
             "Dropped: step-3 run check" => (await DroppedAtProcess(meters), DispatchResult.Dropped, "run"),
             "Dropped: EffectContext call-time run check" => (await DroppedAtCall(meters), DispatchResult.Dropped, "run"),
+            "Dropped: SliceStore.Set in a superseded run" => (await DroppedSliceStoreSet(meters), DispatchResult.Dropped, "run"),
             "Disposed" => (await Disposed(meters), DispatchResult.Disposed, null),
             "Disposed: EffectContext of a Merge run after DisposeAsync began" => (await DisposedMergeRun(meters), DispatchResult.Disposed, null),
+            "Disposed: SliceStore.SetAsync in a Switch run after DisposeAsync began" => (await DisposedSliceStoreSet(meters), DispatchResult.Disposed, null),
             "Disposed: run-tagged action processed after dispose steps 1-2" => (await DisposedAtProcess(meters), DispatchResult.Disposed, (string?)null),
             _ => throw new ArgumentOutOfRangeException(nameof(path), path, null),
         };
@@ -53,9 +59,10 @@ public sealed class DispatchResultTests
         JournalSlice? slice = null,
         Middleware? middleware = null,
         Effect? effect = null,
-        int maxDispatchDepth = 64) =>
+        int maxDispatchDepth = 64,
+        CartStore? cart = null) =>
         new(
-            [slice ?? new JournalSlice()],
+            cart is null ? [slice ?? new JournalSlice()] : [slice ?? new JournalSlice(), cart],
             NullLogger.Instance,
             maxDispatchDepth,
             middleware: () => middleware is null ? [] : [middleware],
@@ -134,6 +141,27 @@ public sealed class DispatchResultTests
         }
     }
 
+    // §12: a superseded Switch run that ignores its token calls the store-owned SliceStore's SetAsync after its await; the
+    // run's scope makes it Origin.Effect, so the call-time run check drops it, on a live store.
+    private static async Task<DispatchResult> DroppedSliceStoreSet(TestMeterFactory meters)
+    {
+        var cart = new CartStore();
+        var effect = new ParkedEffect(Concurrency.Switch) { OnResume = () => cart.AddAsync("stale") };
+        await using var store = Store(meters, effect: effect, cart: cart);
+        try
+        {
+            (await store.DispatchAsync(new Go(1))).ShouldBe(DispatchResult.Reduced);
+            (await store.DispatchAsync(new Go(2))).ShouldBe(DispatchResult.Reduced);
+            effect.Release();
+            (await effect.Resumed[2].Task).ShouldBe(DispatchResult.Reduced);
+            return await effect.Resumed[1].Task;
+        }
+        finally
+        {
+            effect.Release();
+        }
+    }
+
     private static async Task<DispatchResult> Disposed(TestMeterFactory meters)
     {
         var store = Store(meters);
@@ -153,6 +181,28 @@ public sealed class DispatchResultTests
             var disposing = store.DisposeAsync();
             var result = await effect.Contexts[1].DispatchAsync(new Child(1));
             effect.Release();
+            await disposing;
+            return result;
+        }
+        finally
+        {
+            effect.Release();
+        }
+    }
+
+    // §12: once DisposeAsync began, a Switch run's SetAsync completes Disposed, never Dropped, although disposal cancelled
+    // the run's token: the disposal check comes first (§6.6).
+    private static async Task<DispatchResult> DisposedSliceStoreSet(TestMeterFactory meters)
+    {
+        var cart = new CartStore();
+        var effect = new ParkedEffect(Concurrency.Switch) { OnResume = () => cart.AddAsync("late") };
+        var store = Store(meters, effect: effect, cart: cart);
+        try
+        {
+            (await store.DispatchAsync(new Go(1))).ShouldBe(DispatchResult.Reduced);
+            var disposing = store.DisposeAsync();
+            effect.Release();
+            var result = await effect.Resumed[1].Task;
             await disposing;
             return result;
         }
