@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Ducky;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -52,7 +54,8 @@ await CheckAsync("AotSmoke", async () =>
 
     // MergeEffect dispatches MergeDone per run: two more reductions.
     return reduced && running && journal.Runs(Concurrency.Exhaust) is [_] && journal.Runs(Concurrency.Queue) is [_, _]
-        && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3];
+        && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3]
+        && await SliceStoreAndEntityStateAsync();
 });
 
 // [ActionType] read at run time, after ILC, as ActionContext.ActionType (M4-07, §5.8).
@@ -71,6 +74,47 @@ await CheckAsync("ActionType_AttributeName_SurvivesAot", async () =>
 });
 
 return failed ? 1 : 0;
+
+// The injected SliceStore is the store-owned slice: Set and SetAsync reduce EntityState operations through the store, and
+// its state round-trips through the UseJson context into a second store's Hydration restore.
+static async Task<bool> SliceStoreAndEntityStateAsync()
+{
+    await using var provider = new ServiceCollection()
+        .AddDucky(d => d.AddSlice<TodoStore>().UseJson(SmokeJson.Default))
+        .BuildServiceProvider();
+    await using var scope = provider.CreateAsyncScope();
+    var store = scope.ServiceProvider.GetRequiredService<IStore>();
+    var todos = scope.ServiceProvider.GetRequiredService<TodoStore>();
+
+    todos.Add(new Todo(1, "milk"));
+    todos.Add(new Todo(2, "eggs"));
+    var toggled = await todos.ToggleAsync(1) == DispatchResult.Reduced;
+    var state = todos.State;
+    var entities = toggled && ReferenceEquals(state, store.State.Get<EntityState<int, Todo>>())
+        && state is { Count: 2, Items: [{ Id: 1, Done: true }, { Id: 2, Done: false }] }
+        && state.Find(2)?.Text == "eggs" && !state.Contains(3) && ReferenceEquals(state.Remove(3), state);
+
+    if (!store.Json.TrySerialize(state, typeof(EntityState<int, Todo>), out var json))
+    {
+        return false;
+    }
+
+    await using var restoredProvider = new ServiceCollection()
+        .AddDucky(d => d.AddSlice<TodoStore>().UseJson(SmokeJson.Default))
+        .BuildServiceProvider();
+    await using var restoredScope = restoredProvider.CreateAsyncScope();
+    var restoredStore = restoredScope.ServiceProvider.GetRequiredService<IStore>();
+    using (var document = JsonDocument.Parse(json))
+    {
+        restoredStore.Restore(new Dictionary<string, object> { [todos.Key] = document.RootElement }, Origin.Hydration);
+    }
+    await restoredStore.WhenIdleAsync();
+
+    return entities && restoredStore.State.WasRestored(todos.Key)
+        && restoredScope.ServiceProvider.GetRequiredService<TodoStore>().State is
+        { Items: [{ Id: 1, Text: "milk", Done: true }, { Id: 2, Text: "eggs", Done: false }] } restored
+        && restored.Find(1)?.Text == "milk";
+}
 
 async Task CheckAsync(string name, Func<Task<bool>> assertion)
 {
@@ -170,3 +214,17 @@ internal sealed class TypeRecorder(SeenTypes seen) : Middleware
 {
     public override void AfterReduce(ActionContext context) => seen.Names.Add(context.ActionType);
 }
+
+internal sealed record Todo(int Id, string Text, bool Done = false) : IEntity<int>;
+
+internal sealed class TodoStore : SliceStore<EntityState<int, Todo>>
+{
+    protected override EntityState<int, Todo> Initial => EntityState<int, Todo>.Empty;
+
+    public void Add(Todo todo) => Set(s => s.Add(todo));
+
+    public Task<DispatchResult> ToggleAsync(int id) => SetAsync(s => s.Update(id, t => t with { Done = !t.Done }));
+}
+
+[JsonSerializable(typeof(EntityState<int, Todo>))]
+internal sealed partial class SmokeJson : JsonSerializerContext;
