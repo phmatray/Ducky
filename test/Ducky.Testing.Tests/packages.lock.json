@@ -323,7 +323,9 @@
       "ducky.testing": {
         "type": "Project",
         "dependencies": {
-          "Ducky": "[1.0.0, )"
+          "Ducky": "[1.0.0, )",
+          "Microsoft.Extensions.DependencyInjection": "[10.0.12, )",
+          "Microsoft.Extensions.TimeProvider.Testing": "[10.10.0, )"
         }
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
@@ -340,6 +342,12 @@
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.12"
         }
+      },
+      "Microsoft.Extensions.TimeProvider.Testing": {
+        "type": "CentralTransitive",
+        "requested": "[10.10.0, )",
+        "resolved": "10.10.0",
+        "contentHash": "8duZdxuO3Oo8tlyQXVq1drXee6GJC9DjUU97Pq3YaIqf92jrAHsWxbbRKwvjQI48Mer3IANwUKF0elqvHeY4Rw=="
       }
     }
   }
