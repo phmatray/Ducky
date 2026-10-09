@@ -144,7 +144,8 @@ internal sealed class FaultyEffect(Fault fault) : Effect<Go>
 }
 
 // A Merge or Switch effect on Go that hands its context out and parks until Release, so a test dispatches from a run that is
-// superseded, or whose store is disposing. Its prefix dispatches Child(Id) when DispatchChild is set.
+// superseded, or whose store is disposing. Its prefix dispatches Child(Id) when DispatchChild is set; once released, the run
+// calls OnResume, when set, from its own flow and completes Resumed[Id] with its result (a SliceStore SetAsync, §12).
 internal sealed class ParkedEffect(Concurrency policy) : Effect<Go>
 {
     private readonly TaskCompletionSource _gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -157,6 +158,10 @@ internal sealed class ParkedEffect(Concurrency policy) : Effect<Go>
 
     public Dictionary<int, Task<DispatchResult>> Children { get; } = [];
 
+    public Func<Task<DispatchResult>>? OnResume { get; init; }
+
+    public Dictionary<int, TaskCompletionSource<DispatchResult>> Resumed { get; } = [];
+
     public void Release() => _gate.TrySetResult();
 
     public override async Task Handle(Go action, EffectContext context, CancellationToken cancellationToken)
@@ -167,6 +172,18 @@ internal sealed class ParkedEffect(Concurrency policy) : Effect<Go>
             Children[action.Id] = context.DispatchAsync(new Child(action.Id));
         }
 
+        var resumed = Resumed[action.Id] = new(TaskCreationOptions.RunContinuationsAsynchronously);
         await _gate.Task.ConfigureAwait(false);
+        if (OnResume is { } resume)
+        {
+            try
+            {
+                resumed.SetResult(await resume().ConfigureAwait(false));
+            }
+            catch (Exception exception)
+            {
+                resumed.SetException(exception);
+            }
+        }
     }
 }
