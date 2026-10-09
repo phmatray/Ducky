@@ -143,3 +143,4 @@ Ducky.Blazor.BlazorOptions.InlinePayloadBytes.get -> int
 Ducky.Blazor.BlazorOptions.InlinePayloadBytes.set -> void
 Ducky.Blazor.BlazorOptions.MaxPayloadBytes.get -> int
 Ducky.Blazor.BlazorOptions.MaxPayloadBytes.set -> void
+Ducky.Blazor.DuckyLayout<TState>

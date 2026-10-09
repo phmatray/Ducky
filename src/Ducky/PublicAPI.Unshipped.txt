@@ -251,3 +251,18 @@ Ducky.SliceStore<TState>.Set(System.Func<TState!, TState!>! mutator, string! nam
 Ducky.SliceStore<TState>.SetAsync(System.Func<TState!, TState!>! mutator, string! name = "") -> System.Threading.Tasks.Task<Ducky.DispatchResult>!
 Ducky.SliceStore<TState>.SliceStore() -> void
 Ducky.SliceStore<TState>.State.get -> TState!
+Ducky.AsyncEffect<TAction>
+Ducky.Fsa
+Ducky.Fsa<TPayload, TMeta>
+Ducky.Fsa<TPayload>
+Ducky.FsaError
+Ducky.FsaError<TMeta>
+Ducky.FsaMeta<TMeta>
+Ducky.IAsyncEffect
+Ducky.IKeyedAction
+Ducky.IReactiveEffect
+Ducky.ISlice<TState>
+Ducky.IState
+Ducky.MemoizedSelector
+Ducky.NormalizedState<TKey, TEntity, TState>
+Ducky.SliceReducers<TState>
