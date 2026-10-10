@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Ducky.Testing.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -178,6 +179,48 @@ public sealed class TestStoreTests
         store.Processed.Select(c => c.Action).ShouldContain(a => a is StoreInitialized);
     }
 
+    // §15: the store's dispose bounds run on the FakeTimeProvider, so an effect run that ignores its token would hang
+    // DisposeAsync forever; TestStore bounds it in real time and names the bound, the likely causes and the last actions.
+    // The outer 30 s bound turns a missing bound into a TimeoutException instead of a hung run.
+    [Fact]
+    public async Task TestStore_DisposeWithHungEffectRun_FailsWithinWallClockBound()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var outer = TimeSpan.FromSeconds(30);
+        var cancellationToken = TestContext.Current.CancellationToken;
+        try
+        {
+            var store = TestStore.Create(d => d.AddSlice<CounterSlice>().AddEffect<HangEffect>(), s => s.AddSingleton(gate));
+            store.WallClockTimeout.ShouldBe(TimeSpan.FromSeconds(10));
+            store.WallClockTimeout = TimeSpan.FromMilliseconds(200);
+            for (var i = 0; i < 5; i++)
+            {
+                await store.DispatchAsync(new Increment());
+            }
+
+            await store.DispatchAsync(new Hang());
+
+            var settled = await Should.ThrowAsync<DuckyAssertionException>(() => store.Settled().WaitAsync(outer, cancellationToken));
+            settled.Message.ShouldContain("00:00:00.2000000");
+            var elapsed = Stopwatch.StartNew();
+            var thrown = await Should.ThrowAsync<DuckyAssertionException>(
+                () => store.DisposeAsync().AsTask().WaitAsync(outer, cancellationToken));
+            elapsed.Stop();
+
+            elapsed.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(5));
+            thrown.InnerException.ShouldBeOfType<TimeoutException>();
+            thrown.Message.ShouldContain("00:00:00.2000000");
+            thrown.Message.ShouldContain("ignores cancellation");
+            thrown.Message.ShouldContain($"{store.Processed[^2].ActionType}, {store.Processed[^1].ActionType}.");
+            thrown.Message.ShouldContain(store.Processed[^5].ActionType);
+            thrown.Message.ShouldNotContain(store.Processed[0].ActionType);
+        }
+        finally
+        {
+            gate.TrySetResult();
+        }
+    }
+
     public static TheoryData<ServiceLifetime> Lifetimes => new() { ServiceLifetime.Singleton, ServiceLifetime.Scoped };
 
     // Dispose and DisposeAsync dispose the real store, whichever container owns it: a later dispatch completes Disposed.
@@ -201,5 +244,29 @@ public sealed class TestStoreTests
     {
         Should.Throw<ArgumentNullException>(() => TestStore.Create(null!)).ParamName.ShouldBe("configure");
         Should.Throw<ArgumentNullException>(() => TestStore.Create(_ => { }, null, null!)).ParamName.ShouldBe("failureTypes");
+    }
+
+    // §15 names a hung middleware init as a likely cause: StoreInitialized is never reduced, so Processed is empty and
+    // the message says so instead of leaving the slot blank.
+    [Fact]
+    public async Task TestStore_DisposeWithHungMiddlewareInit_NamesNoActions()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            var store = TestStore.Create(d => d.AddSlice<CounterSlice>().Use<HangInitMiddleware>(), s => s.AddSingleton(gate));
+            store.WallClockTimeout = TimeSpan.FromMilliseconds(200);
+            store.Dispatch(new Increment());
+
+            var thrown = await Should.ThrowAsync<DuckyAssertionException>(
+                () => store.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken));
+
+            store.Processed.ShouldBeEmpty();
+            thrown.Message.ShouldContain("Last processed actions: (none).");
+        }
+        finally
+        {
+            gate.TrySetResult();
+        }
     }
 }

@@ -8,7 +8,7 @@ namespace Ducky.Testing;
 /// A real store for tests, built on Ducky's public API: it runs on a <see cref="FakeTimeProvider"/>, treats unhandled
 /// actions as failures, and records every processed action and every failure.
 /// </summary>
-public sealed class TestStore : IStore
+public sealed partial class TestStore : IStore
 {
     private readonly ServiceProvider _services;
     private readonly AsyncServiceScope _scope;
@@ -112,12 +112,19 @@ public sealed class TestStore : IStore
     /// Waits until the store is idle (<see cref="WhenIdleAsync"/>), within a real-time bound. Like
     /// <see cref="WhenIdleAsync"/>, it does not wait for <see cref="Effect.LongRunning"/> effects.
     /// </summary>
-    /// <param name="timeout">The real-time bound; 10 seconds when null.</param>
+    /// <param name="timeout">The real-time bound; <see cref="WallClockTimeout"/> when null.</param>
     /// <returns>A task that completes once the store is idle.</returns>
     /// <exception cref="DuckyAssertionException">The store was not idle within <paramref name="timeout"/> (on the task).</exception>
     /// <exception cref="InvalidOperationException">Called from a run of one of this store's effects that is not long-running.</exception>
 #pragma warning disable VSTHRD200 // justification: the spec's name (SPEC §15), read as an assertion: await store.Settled()
-    public Task Settled(TimeSpan? timeout = null) => BoundAsync(_store.WhenIdleAsync(), timeout ?? TimeSpan.FromSeconds(10));
+    public Task Settled(TimeSpan? timeout = null)
+    {
+        var bound = timeout ?? WallClockTimeout;
+        return BoundAsync(
+            _store.WhenIdleAsync(),
+            bound,
+            () => $"The store was not idle after {bound} of real time: an effect run or an action it causes is still pending.");
+    }
 #pragma warning restore VSTHRD200
 
     /// <inheritdoc/>
@@ -141,34 +148,16 @@ public sealed class TestStore : IStore
     /// <inheritdoc/>
     public Task WhenIdleAsync(CancellationToken cancellationToken = default) => _store.WhenIdleAsync(cancellationToken);
 
-    /// <summary>Disposes the store and its container.</summary>
-    public void Dispose()
-    {
-        _scope.Dispose();
-        _services.Dispose();
-    }
-
-    /// <summary>Disposes the store and its container.</summary>
-    /// <returns>A task that completes once the store is disposed.</returns>
-    public async ValueTask DisposeAsync()
-    {
-        // Stryker disable once Boolean : ConfigureAwait is unobservable without a SynchronizationContext
-        await _scope.DisposeAsync().ConfigureAwait(false);
-
-        // Stryker disable once Boolean : ConfigureAwait is unobservable without a SynchronizationContext
-        await _services.DisposeAsync().ConfigureAwait(false);
-    }
-
-    private static async Task BoundAsync(Task idle, TimeSpan timeout)
+    // A real-time bound over a task whose own bounds run on Time, which nobody advances while the test waits.
+    private static async Task BoundAsync(Task task, TimeSpan timeout, Func<string> message)
     {
         try
         {
-            await idle.WaitAsync(timeout, TimeProvider.System).ConfigureAwait(ConfigureAwaitOptions.None);
+            await task.WaitAsync(timeout, TimeProvider.System).ConfigureAwait(ConfigureAwaitOptions.None);
         }
         catch (TimeoutException exception)
         {
-            throw new DuckyAssertionException(
-                $"The store was not idle after {timeout} of real time: an effect run or an action it causes is still pending.", exception);
+            throw new DuckyAssertionException(message(), exception);
         }
     }
 }

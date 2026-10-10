@@ -90,3 +90,18 @@ internal sealed class GatedInitMiddleware(TaskCompletionSource gate) : Middlewar
     public override async ValueTask InitializeAsync(CancellationToken cancellationToken) =>
         await gate.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
 }
+
+internal sealed record Hang;
+
+// Ignores its token: it waits on the gate the test completes, so the store's dispose bounds (on the FakeTimeProvider
+// nobody advances) never end the run.
+internal sealed class HangEffect(TaskCompletionSource gate) : Effect<Hang>
+{
+    public override Task Handle(Hang action, EffectContext context, CancellationToken cancellationToken) => gate.Task;
+}
+
+// Ignores its token: its init ends only when the test completes the gate, so StoreInitialized is never reduced.
+internal sealed class HangInitMiddleware(TaskCompletionSource gate) : Middleware
+{
+    public override ValueTask InitializeAsync(CancellationToken cancellationToken) => new(gate.Task);
+}
