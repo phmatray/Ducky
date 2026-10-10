@@ -21,3 +21,5 @@ Ducky.Testing.TestStore.State.get -> Ducky.StateSnapshot!
 Ducky.Testing.TestStore.Time.get -> Microsoft.Extensions.Time.Testing.FakeTimeProvider!
 Ducky.Testing.TestStore.WhenIdleAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Ducky.Testing.TestStore.Create(System.Action<Ducky.DuckyBuilder!>! configure, System.Action<Microsoft.Extensions.DependencyInjection.IServiceCollection!>? services = null, params System.Type![]! failureTypes) -> Ducky.Testing.TestStore!
+Ducky.Testing.TestStore.WallClockTimeout.get -> System.TimeSpan
+Ducky.Testing.TestStore.WallClockTimeout.set -> void

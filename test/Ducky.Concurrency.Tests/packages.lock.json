@@ -384,6 +384,14 @@
           "Microsoft.AspNetCore.Components.Web": "[10.0.12, )"
         }
       },
+      "ducky.testing": {
+        "type": "Project",
+        "dependencies": {
+          "Ducky": "[1.0.0, )",
+          "Microsoft.Extensions.DependencyInjection": "[10.0.12, )",
+          "Microsoft.Extensions.TimeProvider.Testing": "[10.10.0, )"
+        }
+      },
       "Microsoft.AspNetCore.Components.Web": {
         "type": "CentralTransitive",
         "requested": "[10.0.12, )",
