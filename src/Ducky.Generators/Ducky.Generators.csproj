@@ -11,6 +11,14 @@
     <InternalsVisibleTo Include="Ducky.Generators.Tests" Key="$(DuckyPublicKey)" />
   </ItemGroup>
 
+  <!-- Shared generator helpers, linked per use (SPEC §16.1). -->
+  <ItemGroup>
+    <Compile Include="../Shared.Generators/AssemblyNameSanitizer.cs" Link="Shared/AssemblyNameSanitizer.cs" />
+    <Compile Include="../Shared.Generators/CodeWriter.cs" Link="Shared/CodeWriter.cs" />
+    <Compile Include="../Shared.Generators/EquatableArray.cs" Link="Shared/EquatableArray.cs" />
+    <Compile Include="../Shared.Generators/IdentifierSanitizer.cs" Link="Shared/IdentifierSanitizer.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
   </ItemGroup>

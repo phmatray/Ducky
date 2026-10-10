@@ -57,6 +57,12 @@
       "automerge": false
     },
     {
+      "description": "Verify 33.0.0 moved from MIT to an EULA (OSMF) whose SponsorCheck fails the build until a sponsorship or exemption is declared: the owner decides before any major bump (Directory.Packages.props).",
+      "matchPackageNames": ["Verify.XunitV3", "Verify.SourceGenerators"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       "description": "The ILLink pack stays on the 10.0 line of the net10.0 target (Directory.Build.targets).",
       "matchPackageNames": ["Microsoft.NET.ILLink.Tasks"],
       "matchUpdateTypes": ["major", "minor"],

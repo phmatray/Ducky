@@ -32,6 +32,11 @@
     <!-- Ducky.Blazor.Tests: the Interactive Server data protection the prerender seed's wire estimate covers (SPEC §11.4). -->
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
+    <!-- Generator snapshots (SPEC §16.1, GEN-06): Verify.SourceGenerators over the xUnit v3 adapter. 32.0.1 is the last
+         MIT Verify: 33.x ships under an EULA whose SponsorCheck fails the build until a sponsorship or exemption is
+         declared, an owner decision (.github/renovate.json holds the major). -->
+    <PackageVersion Include="Verify.SourceGenerators" Version="2.5.0" />
+    <PackageVersion Include="Verify.XunitV3" Version="32.0.1" />
     <!-- Component tests (SPEC §17.2: bUnit 2.x, sets RendererInfo). -->
     <PackageVersion Include="bunit" Version="2.11.3" />
     <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
