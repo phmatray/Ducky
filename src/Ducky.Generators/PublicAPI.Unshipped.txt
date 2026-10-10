@@ -2,3 +2,6 @@
 Ducky.Generators.DispatchExtensionsGenerator
 Ducky.Generators.DispatchExtensionsGenerator.DispatchExtensionsGenerator() -> void
 Ducky.Generators.DispatchExtensionsGenerator.Initialize(Microsoft.CodeAnalysis.IncrementalGeneratorInitializationContext context) -> void
+Ducky.Generators.RegistrationGenerator
+Ducky.Generators.RegistrationGenerator.Initialize(Microsoft.CodeAnalysis.IncrementalGeneratorInitializationContext context) -> void
+Ducky.Generators.RegistrationGenerator.RegistrationGenerator() -> void

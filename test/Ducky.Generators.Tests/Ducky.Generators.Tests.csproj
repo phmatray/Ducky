@@ -11,6 +11,8 @@
     <ProjectReference Include="../../src/Ducky.Generators/Ducky.Generators.csproj" />
     <!-- The real Ducky.dll for test compilations, never stubs (GEN-06, SPEC §16.1). -->
     <ProjectReference Include="../../src/Ducky/Ducky.csproj" />
+    <!-- The real Ducky.Blazor.dll for the GEN-02 gates on its methods (GEN-06, SPEC §16.1). -->
+    <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
   </ItemGroup>
 
   <ItemGroup>
