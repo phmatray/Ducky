@@ -203,7 +203,8 @@ internal sealed partial class Build
         Assert.True(activeStage >= baseStage, $"{Relative(Manifest)}: activeStage {activeStage} is below {baseStage} at the merge base {mergeBase}; it never moves down");
         var changed = ChangedPaths(RootDirectory, mergeBase);
         var plan = PlanProjects(projects, activeAtBase, projects.ToDictionary(p => p, TestDirectoriesOf), changed,
-            project => baseline ? ParseBaseline(BaselineFile(project).FileExists() ? BaselineFile(project).ReadAllText() : null, mergeBase).Problem : null);
+            project => baseline ? ParseBaseline(BaselineFile(project).FileExists() ? BaselineFile(project).ReadAllText() : null, mergeBase).Problem : null,
+            projects.ToDictionary(p => p, p => ProjectFiles(RootDirectory, p).Where(f => !f.StartsWith($"src/{p}/", StringComparison.Ordinal)).ToList()));
         if (plan is null)
         {
             Log.Information("MutationPr: nothing changed since {MergeBase} can change a mutation result of [{Projects}]; no Stryker run", mergeBase, string.Join(", ", projects));
@@ -337,8 +338,10 @@ internal sealed partial class Build
         // S-6: a --since diff of the wrong tree (a linked worktree) leaves the mutants of a changed file Ignored by the since
         // filter, and the run green with nothing scored. Stryker rescores every mutant of a changed file, so none may carry a
         // since-filter reason. Any, not All: mutants under a disable comment keep the comment's reason even in that bad run.
+        // Every reported file counts, linked ones (src/Shared.Generators) included: PlanProjects gives a changed linked file
+        // a full run, so one reaching this check in a --since run is a planner bug. A path outside the report has no mutant.
         failures.AddRange(from path in changed ?? []
-                          where path.StartsWith($"src/{project}/", StringComparison.Ordinal) && path.EndsWith(".cs", StringComparison.Ordinal)
+                          where path.EndsWith(".cs", StringComparison.Ordinal)
                           let reasons = mutants.Where(m => m.File == path).Select(m => (string?)m.Mutant["statusReason"] ?? "").ToList()
                           where reasons.Any(r => r == "Removed by since filter" || r.StartsWith("Mutant not changed", StringComparison.Ordinal))
                           select $"{project}: {path} changed since {since} but Stryker saw no changed mutant in it: the --since diff is wrong");

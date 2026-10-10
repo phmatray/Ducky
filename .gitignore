@@ -9,6 +9,9 @@ coverage*/
 *.coverage
 *.cobertura.xml
 
+# Verify snapshots awaiting review (the accepted ones are *.verified.*)
+*.received.*
+
 # Tooling and IDEs
 .vs/
 .vscode/

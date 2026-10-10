@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Fallout.Common;
 using Fallout.Common.IO;
 using Serilog;
@@ -164,8 +165,7 @@ internal sealed partial class Build
     private JsonObject? RunProject(string project, string mode, string? since, string? mergeBase, AbsolutePath workspace, List<string>? files,
         AbsolutePath output, List<string> changed, List<string> failures)
     {
-        var prefix = $"src/{project}/";
-        var filters = files?.Select(f => f[prefix.Length..]).ToList();
+        var filters = files?.Select(f => MutateFilter(project, f)).ToList();
         if (mode != BaselineMode)
         {
             return Stryker(project, since, workspace, filters, output, failures);
@@ -208,19 +208,29 @@ internal sealed partial class Build
             .FirstOrDefault(c => c.Path.StartsWith("src/", StringComparison.Ordinal) || CanChangeResultsOf(project, directories, c.Path)).Path;
     }
 
-    // The files Stryker mutates: every .cs file of src/<project> outside bin/ and obj/, repository-relative. They go to
-    // Stryker as literal --mutate patterns, so none may hold a glob character.
+    // The files Stryker mutates: every .cs file of src/<project> outside bin/ and obj/, and the files its csproj links from
+    // outside it (src/Shared.Generators, SPEC §16.1), repository-relative. They go to Stryker as literal --mutate patterns
+    // (MutateFilter), so none may hold a glob character.
     private static List<string> ProjectFiles(AbsolutePath workspace, string project)
     {
-        var files = (workspace / "src" / project).GlobFiles("**/*.cs")
+        var directory = workspace / "src" / project;
+        var linked = XDocument.Load(directory / $"{project}.csproj").Descendants("Compile")
+            .Select(c => ((string?)c.Attribute("Include"))?.Replace('\\', '/'))
+            .Where(i => i?.StartsWith("../", StringComparison.Ordinal) == true)
+            .Select(i => (AbsolutePath)Path.GetFullPath(Path.Combine(directory, i!)));
+        var files = directory.GlobFiles("**/*.cs")
+            .Where(f => !directory.GetUnixRelativePathTo(f).ToString().Split('/').Any(s => s is "bin" or "obj"))
+            .Concat(linked)
             .Select(f => workspace.GetUnixRelativePathTo(f).ToString())
-            .Where(f => !f.Split('/').Any(s => s is "bin" or "obj"))
             .Order(StringComparer.Ordinal)
             .ToList();
         var globbed = files.Where(f => f.IndexOfAny(['*', '?', '[', ']', '{', '}', '!']) >= 0).ToList();
         Assert.True(globbed.Count == 0, $"[{string.Join(", ", globbed)}]: a glob character in a file name would break the shards' --mutate patterns");
         return files;
     }
+
+    // A repository-relative project file as Stryker's --mutate pattern: relative to src/<project> (../ for a linked file).
+    private static string MutateFilter(string project, string file) => Path.GetRelativePath($"src/{project}", file).Replace('\\', '/');
 
     // A changed path that can change some active project's mutation result: any src/ file, a full-run trigger of an active
     // project (CanChangeResultsOf), the mutation build code and the PR mutation workflow.
@@ -234,7 +244,8 @@ internal sealed partial class Build
     // else per project a --since run, a full run (a newly active project, or a trigger of CanChangeResultsOf), or a baseline
     // run when every trigger is a newly added .cs file in one of its test projects and the merge base's baseline is usable.
     private static List<(string Project, string Mode, string Why)>? PlanProjects(List<string> projects, List<string> activeAtBase,
-        Dictionary<string, List<string>> testDirectories, List<(char Status, string Path)> changed, Func<string, string?> baselineProblem)
+        Dictionary<string, List<string>> testDirectories, List<(char Status, string Path)> changed, Func<string, string?> baselineProblem,
+        Dictionary<string, List<string>>? linkedFiles = null)
     {
         if (projects.Count == 0 || (projects.All(activeAtBase.Contains) && !changed.Any(c => MutationRelevant(c.Path, testDirectories))))
         {
@@ -245,6 +256,12 @@ internal sealed partial class Build
             if (!activeAtBase.Contains(project))
             {
                 return (project, FullMode, "inactive at the merge base, active now");
+            }
+            // Stryker 4.16 matches its --since diff against the unnormalized src/<project>/../X.cs path of a linked file, so
+            // it since-filters every mutant of a changed linked file: only a full run scores it.
+            if (changed.FirstOrDefault(c => linkedFiles?.GetValueOrDefault(project)?.Contains(c.Path) == true).Path is { } linked)
+            {
+                return (project, FullMode, $"{linked} is linked: Stryker's --since filter cannot see a linked file");
             }
             var triggers = changed.Where(c => CanChangeResultsOf(project, testDirectories[project], c.Path)).ToList();
             if (triggers.Count == 0)
@@ -422,7 +439,6 @@ internal sealed partial class Build
     private static RerunPlan PlanRerun(string project, JsonObject baselineFiles, List<string> scope, Func<string, string?> currentText, List<string> changed)
     {
         var plan = new RerunPlan([], [], []);
-        var prefix = $"src/{project}/";
         foreach (var file in scope)
         {
             var text = currentText(file);
@@ -434,7 +450,7 @@ internal sealed partial class Build
                 || text.Replace("\r\n", "\n", StringComparison.Ordinal).AsSpan().IndexOfAny('\r', '\u0085', '\u2028') >= 0 || text.Contains('\u2029', StringComparison.Ordinal))
             {
                 plan.WholeFiles.Add(file);
-                plan.Filters.Add(file[prefix.Length..]);
+                plan.Filters.Add(MutateFilter(project, file));
                 continue;
             }
             var lineStarts = new List<int> { 0 };
@@ -442,7 +458,7 @@ internal sealed partial class Build
             int Offset(JsonNode position) => lineStarts[(int)position["line"]! - 1] + (int)position["column"]! - 1;
             foreach (var mutant in mutants.Where(m => RerunStatuses.Contains((string?)m["status"])))
             {
-                var filter = $"{file[prefix.Length..]}{{{Offset(mutant["location"]!["start"]!)}..{Offset(mutant["location"]!["end"]!)}}}";
+                var filter = $"{MutateFilter(project, file)}{{{Offset(mutant["location"]!["start"]!)}..{Offset(mutant["location"]!["end"]!)}}}";
                 if (!plan.Filters.Contains(filter))
                 {
                     plan.Filters.Add(filter);
@@ -640,7 +656,7 @@ internal sealed partial class Build
         // Skip predicate and plan: Ducky active at the base and now, its test projects as in src/Ducky/stryker-config.json.
         var directories = new Dictionary<string, List<string>> { ["Ducky"] = ["test/Ducky.Concurrency.Tests/", "test/Ducky.Tests/"] };
         List<(string Project, string Mode, string Why)>? Plan(string? baselineProblem, params (char Status, string Path)[] changed) =>
-            PlanProjects(["Ducky"], ["Ducky"], directories, [.. changed], _ => baselineProblem);
+            PlanProjects(["Ducky"], ["Ducky"], directories, [.. changed], _ => baselineProblem, new() { ["Ducky"] = ["src/Shared.Generators/X.cs"] });
         var irrelevant = new (char, string)[]
         {
             ('M', "docs/spec/SPEC.md"), ('M', "docs/spec/tests.yaml"), ('M', ".github/workflows/ci.yml"), ('M', "build/Build.Gates.cs"),
@@ -678,6 +694,9 @@ internal sealed partial class Build
             ("an added shared helper", null, [('A', "test/Shared/NewHelper.cs")], FullMode),
             ("an added test and a build input", null, [('A', "test/Ducky.Tests/NewTests.cs"), ('M', "Directory.Build.props")], FullMode),
             ("an added test and a type change", null, [('A', "test/Ducky.Tests/NewTests.cs"), ('T', "test/Ducky.Tests/Link.cs")], FullMode),
+            ("a changed linked file", null, [('M', "src/Shared.Generators/X.cs")], FullMode),
+            ("an added test and a changed linked file", null, [('A', "test/Ducky.Tests/NewTests.cs"), ('M', "src/Shared.Generators/X.cs")], FullMode),
+            ("a changed shared file the project does not link", null, [('M', "src/Shared.Generators/Other.cs")], SinceMode),
         ];
         foreach (var (modeCase, problem, changed, mode) in modes)
         {
@@ -728,6 +747,25 @@ internal sealed partial class Build
             "[15:21:57 DBG] RolledBack to if (true) {}",
         ];
         Expect(SafeModeFailures("Ducky", "/w", cleanOutput).Count == 0, $"output without Safe Mode must pass, got {Show(SafeModeFailures("Ducky", "/w", cleanOutput))}");
+
+        // Linked sources (src/Shared.Generators, SPEC §16.1) are the project's files too, with a ../ --mutate filter.
+        var linked = (AbsolutePath)Path.Combine(Path.GetTempPath(), $"dks-self-{Guid.NewGuid():N}");
+        try
+        {
+            (linked / "src" / "P" / "A.cs").WriteAllText("class A { }\n");
+            (linked / "src" / "Shared.Generators" / "X.cs").WriteAllText("class X { }\n");
+            (linked / "src" / "Shared.Generators" / "Unlinked.cs").WriteAllText("class U { }\n");
+            (linked / "src" / "P" / "P.csproj").WriteAllText(
+                "<Project><ItemGroup><Compile Include=\"../Shared.Generators/X.cs\" Link=\"Shared/X.cs\" /></ItemGroup></Project>");
+            var files = ProjectFiles(linked, "P");
+            Expect(files.SequenceEqual(["src/P/A.cs", "src/Shared.Generators/X.cs"]), $"ProjectFiles must list the project's files and its linked ones only, got {Show(files)}");
+            Expect(files.Select(f => MutateFilter("P", f)).SequenceEqual(["A.cs", "../Shared.Generators/X.cs"]),
+                $"the --mutate filters must be project-relative, got {Show(files.Select(f => MutateFilter("P", f)))}");
+        }
+        finally
+        {
+            linked.DeleteDirectory();
+        }
 
         // Reports: one mutant per line, a unique killing test per mutant so the always-failing check stays quiet.
         var nextTest = 0;
@@ -822,6 +860,9 @@ internal sealed partial class Build
         var zeroSince = new List<string>();
         CheckReport("P", "base", Report(("src/P/A.cs", [])), [], zeroSince, "report");
         Expect(zeroSince.Count == 0, $"a --since run with zero mutants must pass, got {Show(zeroSince)}");
+        var linkedSince = new List<string>();
+        CheckReport("P", "base", Report(("src/Shared.Generators/X.cs", [Mutant("Killed", 1), Mutant("Ignored", 2, "Removed by since filter")])), ["src/Shared.Generators/X.cs"], linkedSince, "report");
+        Expect(linkedSince.Any(f => f.Contains("the --since diff is wrong", StringComparison.Ordinal)), $"a changed linked file with since-filtered mutants must fail, got {Show(linkedSince)}");
 
         // Baseline: eligibility of the stored report, then the rerun of an unchanged file's non-killed mutants by character span.
         const string baselineText = """{"commit":"base","project":"P","report":{"files":{}}}""";
@@ -869,6 +910,10 @@ internal sealed partial class Build
         Expect(crlf.Filters is ["A.cs{33..38}"], $"CRLF line ends must count in the offsets, got {Show(crlf.Filters)}");
         var nothing = PlanRerun("P", baselineFiles, ["src/P/B.cs"], f => current.GetValueOrDefault(f), []);
         Expect(nothing.Filters.Count == 0, $"an unchanged file without non-killed mutants must not rerun, got {Show(nothing.Filters)}");
+        var linkedRerun = PlanRerun("P", new JsonObject { ["src/Shared.Generators/X.cs"] = Entry("class X { int F; }\n", Located("Survived", 1, 11, 17, "Statement")) },
+            ["src/Shared.Generators/X.cs", "src/Shared.Generators/Y.cs"], f => f.EndsWith("X.cs", StringComparison.Ordinal) ? "class X { int F; }\n" : "class Y { }\n", []);
+        Expect(linkedRerun.Filters.SequenceEqual(["../Shared.Generators/X.cs{10..16}", "../Shared.Generators/Y.cs"]),
+            $"a linked file must rerun through a ../ filter, got {Show(linkedRerun.Filters)}");
 
         var rerunReport = new JsonObject
         {
