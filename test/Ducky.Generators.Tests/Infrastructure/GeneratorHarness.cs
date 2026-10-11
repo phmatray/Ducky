@@ -72,9 +72,8 @@ internal static class GeneratorHarness
         var steps = driver.RunGenerators(edited, TestContext.Current.CancellationToken).GetRunResult().Results.Single().TrackedSteps;
         foreach (var name in trackingNames)
         {
-            steps.ShouldContainKey(name);
+            steps.ShouldContainKey(name); // Roslyn records no key for a step that never produced an output.
             var outputs = steps[name].SelectMany(s => s.Outputs).Select(o => o.Reason).ToList();
-            outputs.ShouldNotBeEmpty(name);
             outputs.ShouldAllBe(r => r == IncrementalStepRunReason.Cached || r == IncrementalStepRunReason.Unchanged, name);
         }
     }

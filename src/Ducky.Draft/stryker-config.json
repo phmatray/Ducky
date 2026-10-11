@@ -10,6 +10,7 @@
       "**/*.cs"
     ],
     "test-projects": [
+      "../../test/Ducky.Draft.Generators.Tests/Ducky.Draft.Generators.Tests.csproj",
       "../../test/Ducky.Draft.Tests/Ducky.Draft.Tests.csproj"
     ],
     "additional-timeout": 5000,

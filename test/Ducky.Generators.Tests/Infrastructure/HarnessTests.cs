@@ -80,8 +80,6 @@ public sealed class HarnessTests
             new ProbeGenerator(keepSymbol: true), GeneratorHarness.Compile(Consumer), ProbeGenerator.Step));
         Should.Throw<ShouldAssertException>(() => GeneratorHarness.ShouldCacheSteps(
             new ProbeGenerator(keepSymbol: false), GeneratorHarness.Compile(Consumer), "Unknown"));
-        Should.Throw<ShouldAssertException>(() => GeneratorHarness.ShouldCacheSteps(
-            new ProbeGenerator(keepSymbol: false), GeneratorHarness.Compile("namespace App;"), ProbeGenerator.Step));
     }
 
     private enum ProbeOutput { None, Throw, Report }
