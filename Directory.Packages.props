@@ -37,6 +37,9 @@
          declared, an owner decision (.github/renovate.json holds the major). -->
     <PackageVersion Include="Verify.SourceGenerators" Version="2.5.0" />
     <PackageVersion Include="Verify.XunitV3" Version="32.0.1" />
+    <!-- Analyzer verifier tests (SPEC §16.2). Its Workspaces dependency floats at 1.0.1: pinned here to the Roslyn floor above. -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.4" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
     <!-- Component tests (SPEC §17.2: bUnit 2.x, sets RendererInfo). -->
     <PackageVersion Include="bunit" Version="2.11.3" />
     <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
