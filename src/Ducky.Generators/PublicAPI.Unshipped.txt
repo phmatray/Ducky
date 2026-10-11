@@ -13,3 +13,7 @@ Ducky.Generators.SelectInRenderAnalyzer
 Ducky.Generators.SelectInRenderAnalyzer.SelectInRenderAnalyzer() -> void
 override Ducky.Generators.SelectInRenderAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override Ducky.Generators.SelectInRenderAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+Ducky.Generators.StructuralAnalyzer
+Ducky.Generators.StructuralAnalyzer.StructuralAnalyzer() -> void
+override Ducky.Generators.StructuralAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Generators.StructuralAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
