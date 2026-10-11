@@ -23,3 +23,17 @@ Ducky.Testing.TestStore.WhenIdleAsync(System.Threading.CancellationToken cancell
 static Ducky.Testing.TestStore.Create(System.Action<Ducky.DuckyBuilder!>! configure, System.Action<Microsoft.Extensions.DependencyInjection.IServiceCollection!>? services = null, params System.Type![]! failureTypes) -> Ducky.Testing.TestStore!
 Ducky.Testing.TestStore.WallClockTimeout.get -> System.TimeSpan
 Ducky.Testing.TestStore.WallClockTimeout.set -> void
+Ducky.Testing.EffectRun
+Ducky.Testing.EffectRun.Dispatched.get -> System.Collections.Generic.IReadOnlyList<object!>!
+Ducky.Testing.EffectRun.Failures.get -> System.Collections.Generic.IReadOnlyList<object!>!
+Ducky.Testing.EffectTest
+Ducky.Testing.SliceTest
+Ducky.Testing.SliceTest<TState>
+Ducky.Testing.SliceTest<TState>.Given(TState! state) -> Ducky.Testing.SliceTest<TState!>!
+Ducky.Testing.SliceTest<TState>.Then(System.Action<TState!>! assert) -> void
+Ducky.Testing.SliceTest<TState>.Then(TState! expected) -> void
+Ducky.Testing.SliceTest<TState>.ThenUnchanged() -> void
+Ducky.Testing.SliceTest<TState>.When(params object![]! actions) -> Ducky.Testing.SliceTest<TState!>!
+static Ducky.Testing.EffectTest.Run<TEffect, TAction>(TAction action, System.Action<Ducky.DuckyBuilder!>? configure = null, System.Action<Ducky.Testing.TestStore!>? arrange = null, System.Action<Microsoft.Extensions.DependencyInjection.IServiceCollection!>? services = null) -> System.Threading.Tasks.Task<Ducky.Testing.EffectRun!>!
+static Ducky.Testing.EffectTest.Run<TEffect, TAction>(TEffect! effect, TAction action, System.Action<Ducky.DuckyBuilder!>? configure = null, System.Action<Ducky.Testing.TestStore!>? arrange = null) -> System.Threading.Tasks.Task<Ducky.Testing.EffectRun!>!
+static Ducky.Testing.SliceTest.For<TSlice, TState>() -> Ducky.Testing.SliceTest<TState!>!
