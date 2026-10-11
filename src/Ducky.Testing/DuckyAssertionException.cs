@@ -12,4 +12,9 @@ public sealed class DuckyAssertionException : Exception
         : base(message, innerException)
     {
     }
+
+    internal DuckyAssertionException(string message)
+        : base(message)
+    {
+    }
 }
