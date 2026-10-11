@@ -1,0 +1,7 @@
+// Error DUCKY020 at (5,72)-(5,82): 'App.GoneAction' gets no dispatch helper: it is marked [Obsolete(error: true)]
+// Error DUCKY020 at (8,45)-(8,51): 'App.GoneHost.InGone' gets no dispatch helper: it is marked [Obsolete(error: true)]
+// Error DUCKY020 at (10,41)-(10,49): 'App.GoneCtor' gets no dispatch helper: it has no accessible constructor that is usable with new, not [Obsolete(error: true)], takes no error-obsolete parameter type and sets every required member
+// Error DUCKY020 at (14,41)-(14,52): 'App.GoneElement' gets no dispatch helper: it has no accessible constructor that is usable with new, not [Obsolete(error: true)], takes no error-obsolete parameter type and sets every required member
+// Error DUCKY020 at (18,41)-(18,50): 'App.GoneArray' gets no dispatch helper: it has no accessible constructor that is usable with new, not [Obsolete(error: true)], takes no error-obsolete parameter type and sets every required member
+// Error DUCKY020 at (22,41)-(22,54): 'App.GoneContainer' gets no dispatch helper: it has no accessible constructor that is usable with new, not [Obsolete(error: true)], takes no error-obsolete parameter type and sets every required member
+// Error DUCKY020 at (27,41)-(27,68): 'App.GoneTypeArgumentOfContainer' gets no dispatch helper: it has no accessible constructor that is usable with new, not [Obsolete(error: true)], takes no error-obsolete parameter type and sets every required member

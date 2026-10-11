@@ -5,5 +5,8 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
+DUCKY020 | Ducky | Error | DispatchDiagnostics
+DUCKY021 | Ducky | Warning | DispatchDiagnostics
 DUCKY022 | Ducky | Warning | RegistrationDiagnostics
 DUCKY023 | Ducky | Warning | RegistrationDiagnostics
+DUCKY024 | Ducky | Info | DispatchDiagnostics

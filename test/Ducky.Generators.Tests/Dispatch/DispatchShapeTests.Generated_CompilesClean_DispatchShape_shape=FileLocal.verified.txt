@@ -1,0 +1,2 @@
+// Error DUCKY020 at (2,39)-(2,44): 'App.Local' gets no dispatch helper: it is file-local or not accessible from its namespace
+// Error DUCKY020 at (5,45)-(5,52): 'App.LocalHost.InLocal' gets no dispatch helper: it is file-local or not accessible from its namespace
