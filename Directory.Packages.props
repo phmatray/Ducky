@@ -36,7 +36,7 @@
     <PackageVersion Include="bunit" Version="2.11.3" />
     <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
 
     <!-- Fallout build (SPEC §19, ADR-0035): exact pin. -->
     <PackageVersion Include="Fallout.Common" Version="[10.4.0]" />
