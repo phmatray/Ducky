@@ -26,6 +26,14 @@
     <PackageReference Include="Verify.XunitV3" />
   </ItemGroup>
 
+  <!-- DUCKY009: the Razor source generator as a plain reference; ExcludeAssets keeps the toolset's build targets out. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Compilers.Razor.Toolset" ExcludeAssets="all" PrivateAssets="all" GeneratePathProperty="true" />
+    <Reference Include="$(PkgMicrosoft_Net_Compilers_Razor_Toolset)/source-generators/Microsoft.CodeAnalysis.Razor.Compiler.dll" />
+    <Reference Include="$(PkgMicrosoft_Net_Compilers_Razor_Toolset)/source-generators/Microsoft.AspNetCore.Razor.Utilities.Shared.dll" />
+    <Reference Include="$(PkgMicrosoft_Net_Compilers_Razor_Toolset)/source-generators/Microsoft.Extensions.ObjectPool.dll" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="Shouldly" />
     <Using Include="Xunit" />

@@ -45,6 +45,12 @@
           "Microsoft.Extensions.Telemetry.Abstractions": "10.10.0"
         }
       },
+      "Microsoft.Net.Compilers.Razor.Toolset": {
+        "type": "Direct",
+        "requested": "[9.0.0-preview.25264.2, )",
+        "resolved": "9.0.0-preview.25264.2",
+        "contentHash": "n+xsg/u1Z1vr05yvfPP/SMsXmRoAMjFqkvuW3QjS8yVHS6dgPgxYNr3Tv2OSJtPGM0UleUfOezS+SC8Q9sKfmA=="
+      },
       "Microsoft.Testing.Extensions.CodeCoverage": {
         "type": "Direct",
         "requested": "[18.11.2, )",

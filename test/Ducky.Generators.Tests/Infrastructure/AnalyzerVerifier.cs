@@ -24,9 +24,13 @@ internal static class AnalyzerVerifier<TAnalyzer>
         return test.RunAsync(TestContext.Current.CancellationToken);
     }
 
-    public static CSharpAnalyzerTest<TAnalyzer, DefaultVerifier> Test(string source)
+    public static CSharpAnalyzerTest<TAnalyzer, DefaultVerifier> Test(string source) => Test<CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>>(source);
+
+    // A derived test type, e.g. one that adds source generators (RazorAnalyzerTest).
+    public static TTest Test<TTest>(string source)
+        where TTest : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>, new()
     {
-        var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
+        var test = new TTest
         {
             TestCode = source,
             ReferenceAssemblies = new ReferenceAssemblies("net10.0"),

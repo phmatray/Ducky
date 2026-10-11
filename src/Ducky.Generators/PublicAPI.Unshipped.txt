@@ -9,3 +9,7 @@ Ducky.Generators.PurityAnalyzer
 Ducky.Generators.PurityAnalyzer.PurityAnalyzer() -> void
 override Ducky.Generators.PurityAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override Ducky.Generators.PurityAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+Ducky.Generators.SelectInRenderAnalyzer
+Ducky.Generators.SelectInRenderAnalyzer.SelectInRenderAnalyzer() -> void
+override Ducky.Generators.SelectInRenderAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Generators.SelectInRenderAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
