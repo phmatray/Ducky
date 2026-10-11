@@ -5,3 +5,7 @@ Ducky.Generators.DispatchExtensionsGenerator.Initialize(Microsoft.CodeAnalysis.I
 Ducky.Generators.RegistrationGenerator
 Ducky.Generators.RegistrationGenerator.Initialize(Microsoft.CodeAnalysis.IncrementalGeneratorInitializationContext context) -> void
 Ducky.Generators.RegistrationGenerator.RegistrationGenerator() -> void
+Ducky.Generators.PurityAnalyzer
+Ducky.Generators.PurityAnalyzer.PurityAnalyzer() -> void
+override Ducky.Generators.PurityAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Generators.PurityAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
