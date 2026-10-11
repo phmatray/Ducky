@@ -40,6 +40,11 @@
     <!-- Analyzer verifier tests (SPEC §16.2). Its Workspaces dependency floats at 1.0.1: pinned here to the Roslyn floor above. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.4" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
+    <!-- DUCKY009 tests (SPEC §16.2): the real Razor source generator in the driver, taken from the Razor toolset package
+         (its source-generators folder, never its build targets). This build targets Roslyn 4.14, so it loads on the S-1
+         floor; the SDK's own copy and the Microsoft.CodeAnalysis.Razor.Compiler package need a newer Roslyn or a
+         dependency that isn't on nuget.org. -->
+    <PackageVersion Include="Microsoft.Net.Compilers.Razor.Toolset" Version="9.0.0-preview.25264.2" />
     <!-- Component tests (SPEC §17.2: bUnit 2.x, sets RendererInfo). -->
     <PackageVersion Include="bunit" Version="2.11.3" />
     <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
