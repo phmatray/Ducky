@@ -2,10 +2,15 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
+    <!-- Verify's solution discovery sees three .slnx files at the root and warns; name the one this project belongs to. -->
+    <SolutionDir Condition="'$(SolutionDir)' == ''">$(RepoRoot)</SolutionDir>
+    <SolutionName Condition="'$(SolutionName)' == ''">Ducky</SolutionName>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/Ducky.Draft.Generators/Ducky.Draft.Generators.csproj" />
+    <!-- The real Ducky.Draft.dll for test compilations, never stubs (GEN-06, SPEC §16.1). -->
+    <ProjectReference Include="../../src/Ducky.Draft/Ducky.Draft.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -14,6 +19,8 @@
     <PackageReference Include="CsCheck" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Verify.SourceGenerators" />
+    <PackageReference Include="Verify.XunitV3" />
   </ItemGroup>
 
   <ItemGroup>
