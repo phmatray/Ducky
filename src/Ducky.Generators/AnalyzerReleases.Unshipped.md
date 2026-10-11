@@ -8,7 +8,13 @@ Rule ID | Category | Severity | Notes
 DUCKY001 | Ducky | Warning | PurityDiagnostics
 DUCKY002 | Ducky | Warning | PurityDiagnostics
 DUCKY003 | Ducky | Warning | PurityDiagnostics
+DUCKY005 | Ducky | Error | StructuralDiagnostics
 DUCKY009 | Ducky | Warning | SelectDiagnostics
+DUCKY011 | Ducky | Info | StructuralDiagnostics
+DUCKY012 | Ducky | Info | StructuralDiagnostics
+DUCKY013 | Ducky | Warning | StructuralDiagnostics
+DUCKY014 | Ducky | Error | StructuralDiagnostics
+DUCKY015 | Ducky | Error | StructuralDiagnostics
 DUCKY020 | Ducky | Error | DispatchDiagnostics
 DUCKY021 | Ducky | Warning | DispatchDiagnostics
 DUCKY022 | Ducky | Warning | RegistrationDiagnostics
