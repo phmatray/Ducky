@@ -10,7 +10,7 @@ public sealed class DispatchDescriptorsTests
     public static TheoryData<string, DiagnosticSeverity, string, string> Catalogue => new()
     {
         { "DUCKY020", DiagnosticSeverity.Error, "Invalid [DuckyAction] type", "'{0}' gets no dispatch helper: {1}" },
-        { "DUCKY021", DiagnosticSeverity.Warning, "Dispatch helper name collides with a store member", "The dispatch helpers of '{0}' are skipped: '{1}' or '{1}Async' is a member of IDispatcher, IStore, EffectContext or object, which C# binds before an extension method; set MethodName" },
+        { "DUCKY021", DiagnosticSeverity.Warning, "Dispatch helper name collides with a store member", "The dispatch helpers of '{0}' are skipped: '{1}' or '{1}Async' is a member of IDispatcher, IStore, EffectContext, TestStore or object, which C# binds before an extension method; set MethodName" },
         { "DUCKY024", DiagnosticSeverity.Info, "Ambiguous dispatch helpers", "The dispatch helper '{0}' of '{1}' has the same name and parameter types as the one of '{2}': a call that sees both is ambiguous (CS0121); set MethodName on one of them" },
     };
 

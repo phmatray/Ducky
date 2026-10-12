@@ -20,7 +20,7 @@ internal static class DispatchDiagnostics
 
     private const string CollisionId = "DUCKY021";
     private const string CollisionTitle = "Dispatch helper name collides with a store member";
-    private const string CollisionMessage = "The dispatch helpers of '{0}' are skipped: '{1}' or '{1}Async' is a member of IDispatcher, IStore, EffectContext or object, which C# binds before an extension method; set MethodName";
+    private const string CollisionMessage = "The dispatch helpers of '{0}' are skipped: '{1}' or '{1}Async' is a member of IDispatcher, IStore, EffectContext, TestStore or object, which C# binds before an extension method; set MethodName";
     private const string CollisionHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY021.md";
 
     private const string AmbiguousId = "DUCKY024";

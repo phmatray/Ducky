@@ -27,7 +27,10 @@ public sealed class DispatchExtensionsGenerator : IIncrementalGenerator
 
     // DUCKY021: C# binds an accessible instance member before an extension method, so a helper named like a public
     // member of a receiver type (or of object) would never be called. IDispatcher comes with either interface list.
-    private static ImmutableArray<string> Receivers => ["Ducky.IStore", "Ducky.EffectContext", "System.Object"];
+    // TestStore (Ducky.Testing) counts only when the compilation declaring the action references it: helpers generated
+    // in an app project that doesn't are not checked against TestStore's members. Static members don't count: C# drops
+    // them for an instance receiver.
+    private static ImmutableArray<string> Receivers => ["Ducky.IStore", "Ducky.EffectContext", "Ducky.Testing.TestStore", "System.Object"];
 
     private static EquatableArray<string> ReservedNames(Compilation compilation) => new(
         Receivers
@@ -35,7 +38,7 @@ public sealed class DispatchExtensionsGenerator : IIncrementalGenerator
             .OfType<INamedTypeSymbol>()
             .SelectMany(t => t.AllInterfaces.Add(t))
             .SelectMany(t => t.GetMembers())
-            .Where(m => m.DeclaredAccessibility == Accessibility.Public && m.CanBeReferencedByName)
+            .Where(m => m.DeclaredAccessibility == Accessibility.Public && m.CanBeReferencedByName && !m.IsStatic)
             .Select(m => m.Name)
             .ToImmutableArray());
 
