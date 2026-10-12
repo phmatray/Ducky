@@ -70,6 +70,12 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
             writer.Line(model.IsSlice ? $"b.AddSlice<{model.Type}>();" : $"b.AddEffect<{model.Type}>();");
         }
 
+        // After every AddSlice (Prerender<T> on a slice not added is DUCKY310), only while the exact method resolves.
+        foreach (var model in registered.Where(m => m.Prerender && gates.Prerender))
+        {
+            writer.Line($"global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<{model.Type}>(b);");
+        }
+
         if (suppressed.Length > 0)
         {
             writer.Line($"#pragma warning restore {suppressed}");
@@ -80,8 +86,8 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
     }
 
     // DUCKY023 for each excluded type; DUCKY022 for [Persist]/[Prerender] on a non-slice, or on any slice (registered or
-    // not) while its gated method doesn't resolve. The Blazor emission arms ship with their APIs (M13-04, M13-04b): until
-    // then a resolved method emits nothing.
+    // not) while its gated method doesn't resolve. Emit writes Prerender<T> for a resolved [Prerender] (M13-04); the
+    // PersistAttributeDefaults<T> arm ships with its API (M13-04b): until then a resolved [Persist] emits nothing.
     private static void Report(SourceProductionContext context, ImmutableArray<RegistrationModel?> models, ImmutableArray<AttributeModel> attributes, RegistrationGates gates)
     {
         foreach (var model in models.OfType<RegistrationModel>().Distinct().Where(m => m.Excluded is not null))
