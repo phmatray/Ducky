@@ -17,3 +17,23 @@ Ducky.Generators.StructuralAnalyzer
 Ducky.Generators.StructuralAnalyzer.StructuralAnalyzer() -> void
 override Ducky.Generators.StructuralAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override Ducky.Generators.StructuralAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+Ducky.Generators.LifetimeAnalyzer
+Ducky.Generators.LifetimeAnalyzer.LifetimeAnalyzer() -> void
+override Ducky.Generators.LifetimeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Generators.LifetimeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+Ducky.Generators.JsonContextAnalyzer
+Ducky.Generators.JsonContextAnalyzer.JsonContextAnalyzer() -> void
+override Ducky.Generators.JsonContextAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Generators.JsonContextAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+Ducky.Generators.StoreInjectionAnalyzer
+Ducky.Generators.StoreInjectionAnalyzer.StoreInjectionAnalyzer() -> void
+override Ducky.Generators.StoreInjectionAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Generators.StoreInjectionAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+Ducky.Generators.BlockingAnalyzer
+Ducky.Generators.BlockingAnalyzer.BlockingAnalyzer() -> void
+override Ducky.Generators.BlockingAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Generators.BlockingAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+Ducky.Generators.RegistrationCallAnalyzer
+Ducky.Generators.RegistrationCallAnalyzer.RegistrationCallAnalyzer() -> void
+override Ducky.Generators.RegistrationCallAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Generators.RegistrationCallAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>

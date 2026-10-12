@@ -13,6 +13,9 @@
     <ProjectReference Include="../../src/Ducky/Ducky.csproj" />
     <!-- The real Ducky.Blazor.dll for the GEN-02 gates on its methods (GEN-06, SPEC §16.1). -->
     <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <!-- The real Ducky.Testing.dll for DUCKY010's TestStore arm, copied next to the tests as a file only: referencing it
+         would make this a Ducky.Testing test project (§17.8) though no test runs its code. -->
+    <ProjectReference Include="../../src/Ducky.Testing/Ducky.Testing.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +36,14 @@
     <Reference Include="$(PkgMicrosoft_Net_Compilers_Razor_Toolset)/source-generators/Microsoft.AspNetCore.Razor.Utilities.Shared.dll" />
     <Reference Include="$(PkgMicrosoft_Net_Compilers_Razor_Toolset)/source-generators/Microsoft.Extensions.ObjectPool.dll" />
   </ItemGroup>
+
+  <!-- DUCKY006/025: the System.Text.Json source generator the SDK runs on this project, as a plain reference, so the
+       verifier runs the real one (DUCKY006 reads its output). -->
+  <Target Name="ReferenceJsonSourceGenerator" AfterTargets="ResolveTargetingPackAssets">
+    <ItemGroup>
+      <Reference Include="@(Analyzer)" Condition="'%(Filename)' == 'System.Text.Json.SourceGeneration'" Private="true" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <Using Include="Shouldly" />

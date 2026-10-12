@@ -50,15 +50,17 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
     public const string FileLocal = "it is file-local, so the generated registration can't reference it";
     public const string NoConstructor = "a slice needs a public parameterless constructor that new() can call (one marked [SetsRequiredMembers] when the slice has required members)";
 
+    /// <summary>The <see cref="Classify"/> of a class with a base list, the generator's syntax step.</summary>
+    public static RegistrationModel? From(GeneratorSyntaxContext context, CancellationToken cancellationToken) =>
+        Classify((INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!, context.SemanticModel.Compilation);
+
     /// <summary>
-    /// Classifies a class with a base list: null unless it is a non-abstract, non-generic slice or effect that generated
+    /// Classifies <paramref name="type"/>: null unless it is a non-abstract, non-generic slice or effect that generated
     /// code may reference (accessible from the assembly, neither it nor a containing type error-obsolete), and an effect
-    /// without a public constructor is skipped (SPEC §16.1).
+    /// without a public constructor is skipped (SPEC §16.1). DUCKY016 counts the registered ones (no reason).
     /// </summary>
-    public static RegistrationModel? From(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+    public static RegistrationModel? Classify(INamedTypeSymbol type, Compilation compilation)
     {
-        var type = (INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!;
-        var compilation = context.SemanticModel.Compilation;
         var isSlice = Derives(type, compilation.GetTypeByMetadataName("Ducky.Slice"));
         var isEffect = Derives(type, compilation.GetTypeByMetadataName("Ducky.Effect"));
         var containing = Chain(type, t => t.ContainingType).ToList();
