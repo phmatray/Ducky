@@ -24,6 +24,16 @@ internal static class AnalyzerVerifier<TAnalyzer>
         return test.RunAsync(TestContext.Current.CancellationToken);
     }
 
+    // For a rule that reads another generator's output (DUCKY006, DUCKY016, DUCKY025): the real generator runs in the
+    // driver; what it emits is its own tests' business, so only the diagnostics are compared.
+    public static Task VerifyWithGeneratorAsync<TGenerator>(string source, params DiagnosticResult[] expected)
+    {
+        var test = Test<GeneratingTest<TGenerator>>(source);
+        test.TestBehaviors |= TestBehaviors.SkipGeneratedSourcesCheck;
+        test.ExpectedDiagnostics.AddRange(expected);
+        return test.RunAsync(TestContext.Current.CancellationToken);
+    }
+
     public static CSharpAnalyzerTest<TAnalyzer, DefaultVerifier> Test(string source) => Test<CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>>(source);
 
     // A derived test type, e.g. one that adds source generators (RazorAnalyzerTest).
@@ -37,5 +47,10 @@ internal static class AnalyzerVerifier<TAnalyzer>
         };
         test.TestState.AdditionalReferences.AddRange(_references);
         return test;
+    }
+
+    internal sealed class GeneratingTest<TGenerator> : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
+    {
+        protected override IEnumerable<Type> GetSourceGenerators() => [typeof(TGenerator)];
     }
 }
