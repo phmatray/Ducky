@@ -122,12 +122,15 @@ internal sealed partial class Build
             }
             violations.AddRange(ServedDuckyJsSelfCheck());
 
-            // Step 4 and the step-1 variants: each must fail with its diagnostic.
+            // Step 4 and the step-1 variants: each must fail with its diagnostic. SmokeSingleton sets Lifetime = Singleton
+            // (DUCKY004 reaches the Blazor-only consumer only through Ducky's buildTransitive targets and analyzers).
             (string Case, AbsolutePath Project, string Properties, string Code)[] variants =
             [
                 ("the Ducky.Blazor-only consumer plus the fake Ducky.Generator 1.0.292", SmokeDirectory / "BlazorOnly", "-p:SmokeLegacyGenerator=1.0.292", "DUCKY900"),
+                ("the Ducky.Blazor-only consumer's Singleton variant", SmokeDirectory / "BlazorOnly", "-p:SmokeSingleton=true -warnaserror", "DUCKY004"),
                 ("a consumer of the Ducky.Generator 2.0.0 tombstone", SmokeDirectory / "Tombstone", "", "DUCKY900"),
                 ("the Server consumer on the fake Ducky.Blazor 1.0.292", SmokeDirectory / "Server", "-p:SmokeBlazorVersion=1.0.292", "DUCKY902"),
+                ("the Server consumer's Singleton variant", SmokeDirectory / "Server", "-p:SmokeSingleton=true -warnaserror", "DUCKY004"),
             ];
             foreach (var (variant, project, properties, code) in variants)
             {

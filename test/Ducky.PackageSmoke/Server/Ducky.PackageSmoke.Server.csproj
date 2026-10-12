@@ -1,13 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <!-- Server consumer (SPEC §17.9 step 1): implicit usings plus `global using Ducky;`, and an IMiddleware, so no tombstone
-       type makes a name ambiguous. Its DUCKY902 variant sets -p:SmokeBlazorVersion=1.0.292 (the committed fake). -->
+       type makes a name ambiguous. It calls AddDuckyGenerated_PackageSmoke() (hence the assembly name) and the generated
+       Increment helper. Its DUCKY902 variant sets -p:SmokeBlazorVersion=1.0.292 (the committed fake); its DUCKY004
+       variant sets -p:SmokeSingleton=true. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>PackageSmoke</AssemblyName>
     <SmokeBlazorVersion Condition="'$(SmokeBlazorVersion)' == ''">$(DuckyVersion)</SmokeBlazorVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <Using Include="Ducky" />
+    <Compile Include="../Shared/Counter.cs" Link="Counter.cs" />
     <PackageReference Include="Ducky" Version="$(DuckyVersion)" />
     <PackageReference Include="Ducky.Blazor" Version="$(SmokeBlazorVersion)" />
   </ItemGroup>
