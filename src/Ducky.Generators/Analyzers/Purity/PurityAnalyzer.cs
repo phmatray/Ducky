@@ -10,8 +10,8 @@ using Microsoft.CodeAnalysis.Operations;
 namespace Ducky.Generators;
 
 /// <summary>
-/// DUCKY001–003 (SPEC §16.2): an <c>On&lt;T&gt;</c> reducer lambda and a <c>Selector.Define</c> projector lambda must
-/// be pure. Method groups and generated code are not analysed.
+/// DUCKY001–003 (SPEC §12, §16.2): an <c>On&lt;T&gt;</c> reducer lambda, a <c>SliceStore.Set</c>/<c>SetAsync</c> mutator
+/// lambda and a <c>Selector.Define</c> projector lambda must be pure. Method groups and generated code are not analysed.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class PurityAnalyzer : DiagnosticAnalyzer
@@ -19,6 +19,7 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
     private const string Parameter = "a parameter";
     private const string Captured = "a captured variable";
     private const string Field = "a field";
+    private const string Mutator = "mutator";
 
     // (type metadata name, member name or null for every member, rule). A type matches itself, a derived type and an
     // implementing type, so a FakeTimeProvider override or an IJSInProcessRuntime call is caught too.
@@ -77,10 +78,11 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             // An unresolved type is null and never matches, so a compilation without Ducky or JSInterop needs no branch.
             var compilation = start.Compilation;
             var slice = compilation.GetTypeByMetadataName("Ducky.Slice`1");
+            var sliceStore = compilation.GetTypeByMetadataName("Ducky.SliceStore`1");
             var selector = compilation.GetTypeByMetadataName("Ducky.Selector");
             var rules = _typeRules.Select(r => (Type: compilation.GetTypeByMetadataName(r.Type), r.Member, r.Rule)).ToImmutableArray();
             start.RegisterOperationAction(
-                c => AnalyzeInvocation(c, (IInvocationOperation)c.Operation, slice, selector, rules), OperationKind.Invocation);
+                c => AnalyzeInvocation(c, (IInvocationOperation)c.Operation, slice, sliceStore, selector, rules), OperationKind.Invocation);
         });
     }
 
@@ -90,14 +92,17 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         OperationAnalysisContext context,
         IInvocationOperation invocation,
         INamedTypeSymbol? slice,
+        INamedTypeSymbol? sliceStore,
         INamedTypeSymbol? selector,
         ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules)
     {
-        // On<T> and Define are the only members a consumer can invoke on Slice<TState> and Selector, and every overload
-        // takes the reducer or projector as its last parameter. Arguments are in source order, so a named argument can
-        // move it: it is found by parameter, not by position.
+        // On<T>, Set/SetAsync and Define are the only members a consumer can invoke on Slice<TState>,
+        // SliceStore<TState> and Selector. Every On<T> and Define overload takes the reducer or projector as its last
+        // parameter, Set and SetAsync take the mutator first (the CallerMemberName name follows). Arguments are in source
+        // order, so a named argument can move it: it is found by parameter, not by position.
         var method = invocation.TargetMethod;
-        var arm = Is(method.ContainingType.OriginalDefinition, slice) ? "reducer" : Is(method.ContainingType, selector) ? "projector" : null;
+        var type = method.ContainingType.OriginalDefinition;
+        var arm = Is(type, slice) ? "reducer" : Is(type, sliceStore) ? Mutator : Is(type, selector) ? "projector" : null;
         if (arm is null)
         {
             return;
@@ -105,11 +110,11 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
 
         // A loop, not FirstOrDefault: exactly one argument matches, so a First mutant would be equivalent. C# has no
         // __arglist here, so every argument has a parameter.
-        var last = method.Parameters.Length - 1;
+        var target = arm == Mutator ? 0 : method.Parameters.Length - 1;
         IAnonymousFunctionOperation? lambda = null;
         foreach (var argument in invocation.Arguments)
         {
-            if (argument.Parameter!.Ordinal == last)
+            if (argument.Parameter!.Ordinal == target)
             {
                 lambda = (argument.Value as IDelegateCreationOperation)?.Target as IAnonymousFunctionOperation;
             }

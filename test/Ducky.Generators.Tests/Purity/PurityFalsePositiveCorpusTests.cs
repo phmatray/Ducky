@@ -2,7 +2,7 @@ using Verifier = Ducky.Generators.Tests.Infrastructure.AnalyzerVerifier<Ducky.Ge
 
 namespace Ducky.Generators.Tests.Purity;
 
-// The false-positive corpus (SPEC §16.2): every pure reducer and projector shape of the existing snippets (SPEC.md and
+// The false-positive corpus (SPEC §16.2): every pure reducer, mutator and projector shape of the existing snippets (SPEC.md and
 // the Ducky.Tests, Ducky.Blazor and Ducky.Testing fixtures) produces zero DUCKY001–003 hits. Samples (§24 step 18) and
 // the docs snippets join it through their own warnings-as-errors builds, which run this analyzer.
 public sealed class PurityFalsePositiveCorpusTests
@@ -100,6 +100,21 @@ public sealed class PurityFalsePositiveCorpusTests
             protected override Dial Initial => new(0);
 
             public DialSlice() => On<SetDial>(static (_, action) => new(Math.Clamp(action.Value, 0, 10)));
+        }
+
+        public sealed class CartStore : SliceStore<Cart>
+        {
+            protected override Cart Initial => new([], 0, null, false);
+
+            public CartStore() => On<LoggedOut>(_ => Initial);
+
+            public int Count => State.Items.Count;
+
+            public void Add(Item i) => Set(s => s with { Items = s.Items.Add(i), Count = s.Count + 1 });
+
+            public void Remove(int id) => Set(s => s with { Items = s.Items.RemoveAll(x => x.Id == id) }, "Drop");
+
+            public Task<DispatchResult> ClearAsync() => SetAsync(_ => Initial);
         }
 
         public sealed class Loader : EffectGroup

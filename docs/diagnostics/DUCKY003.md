@@ -1,14 +1,15 @@
-# DUCKY003: Mutation in a reducer or projector
+# DUCKY003: Mutation in a reducer, mutator or projector
 
 **Package:** Ducky (analyzer `Ducky.Generators`). **Surface:** build warning on the write or the call (SPEC §16.2).
 
 ## What happened
 
-A reducer passed to `On<T>` or a projector passed to `Selector.Define` changes a value it doesn't own. The message
+A reducer passed to `On<T>`, a mutator passed to `SliceStore.Set`/`SetAsync` or a projector passed to
+`Selector.Define` changes a value it doesn't own. The message
 says which kind:
 
 - **a parameter**: an assignment, compound assignment, `++`/`--` or `??=` to a member, element or indexer reached from
-  the lambda's own parameters (the state and the action of a reducer, the inputs of a projector), as in
+  the lambda's own parameters (the state and the action of a reducer, the state of a mutator, the inputs of a projector), as in
   `s.Box.Value = 1`, `s.Items[0] = 1` or each element of a deconstruction (`(s.Box.Value, _) = (1, 2)`); or a known
   mutator of a mutable collection (`Add`, `AddRange`, `Insert`, `Remove`, `RemoveAll`, `Clear`, `Sort`, `Reverse`,
   `Enqueue`, `Push`, `TryAdd`, `AddOrUpdate`, `UnionWith`… on a type of `System.Collections`, `.Generic`,
@@ -25,7 +26,8 @@ including those of a nested lambda such as a recipe (`s.Produce(d => d.Items.Add
 initializers, `with` expressions, and immutable collections (`ImmutableList<T>.Add` returns a new list). The analyzer
 follows references, not data flow: an alias (`var items = s.Items; items.Add(x);`), a call result and a write through an `out` or `ref`
 argument (`int.TryParse(text, out _count)`) are not tracked.
-Only the lambda written directly as the `On<T>` reducer or the `Define` projector is analysed; method groups, stored
+Only the lambda written directly as the `On<T>` reducer, the `Set`/`SetAsync` mutator or the `Define` projector is
+analysed; method groups, stored
 delegates and generated code are not.
 
 ## How to fix it

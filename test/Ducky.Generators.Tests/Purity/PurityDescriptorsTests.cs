@@ -9,9 +9,9 @@ public sealed class PurityDescriptorsTests
 {
     public static TheoryData<string, string, string> Catalogue => new()
     {
-        { "DUCKY001", "Non-deterministic call in a reducer or projector", "'{0}' is non-deterministic in a {1}: pass the value in the action or the selector argument instead" },
-        { "DUCKY002", "I/O or blocking in a reducer or projector", "'{0}' does I/O or blocks in a {1}: move it to an effect" },
-        { "DUCKY003", "Mutation in a reducer or projector", "'{0}' mutates {1} in a {2}: return a new value instead" },
+        { "DUCKY001", "Non-deterministic call in a reducer, mutator or projector", "'{0}' is non-deterministic in a {1}: read it outside the lambda and pass it in" },
+        { "DUCKY002", "I/O or blocking in a reducer, mutator or projector", "'{0}' does I/O or blocks in a {1}: move it to an effect" },
+        { "DUCKY003", "Mutation in a reducer, mutator or projector", "'{0}' mutates {1} in a {2}: return a new value instead" },
     };
 
     [Theory]
