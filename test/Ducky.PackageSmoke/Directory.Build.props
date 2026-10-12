@@ -16,5 +16,7 @@
     <!-- Never the global packages folder: a cached real 1.0.292, or an older alpha at the same version, would be used
          instead of what Pack just built. The PackageSmoke target deletes this folder before restoring. -->
     <RestorePackagesPath>$(RepoRoot)artifacts/smoke-packages/</RestorePackagesPath>
+    <!-- The DUCKY004 variants of the Server and Ducky.Blazor-only consumers (-p:SmokeSingleton=true) set Lifetime = Singleton. -->
+    <DefineConstants Condition="'$(SmokeSingleton)' == 'true'">$(DefineConstants);SMOKE_SINGLETON</DefineConstants>
   </PropertyGroup>
 </Project>
