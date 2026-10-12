@@ -4,8 +4,9 @@ using VerifyXunit;
 namespace Ducky.Generators.Tests.Registration;
 
 // GEN-02 shape matrix (SPEC §16.1, §17.7, INV-25): every shape's output compiles without any diagnostic under
-// DocumentationMode.Diagnose, nullable enabled and warning level 9999, and its generated source and generator
-// diagnostics are snapshotted. The compilations reference Ducky.dll only (no Ducky.Blazor, no Ducky.Reactive).
+// DocumentationMode.Diagnose, nullable enabled and warning level 9999, the generator reports no diagnostic, and its
+// generated source is snapshotted. The core rows reference Ducky.dll only (no Ducky.Blazor, no Ducky.Reactive); the [Prerender]
+// rows add the real Ducky.Blazor.dll.
 public sealed class RegistrationShapeTests
 {
     private const string Undocumented = "#pragma warning disable CS1591 // justification: shape sources are undocumented; only generated code is checked\n";
@@ -158,6 +159,63 @@ public sealed class RegistrationShapeTests
 
     public static TheoryData<string> Shapes => [.. _shapes.Keys];
 
+    // [Prerender] rows, compiled against the real Ducky.Blazor (stage 11): one fully qualified Prerender<T>(b) call per
+    // registered [Prerender] slice, after every AddSlice, inside the [Obsolete]/[Experimental] suppressions.
+    private static readonly Dictionary<string, string> _prerenderShapes = new()
+    {
+        ["Prerender"] = """
+            namespace App;
+            public sealed record Cart(int Count);
+            public sealed record Todos(int Count);
+            public sealed record Load(int Id);
+            [Ducky.Prerender] public sealed class CartSlice : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Prerender] public sealed class TodosStore : Ducky.SliceStore<Todos> { protected override Todos Initial => new(0); }
+            public sealed class Plain : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            public partial class Split : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Prerender] public partial class Split { }
+            public class Host
+            {
+                [Ducky.Prerender] public sealed class Nested : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            }
+            [Ducky.Prerender]
+            public sealed class Configured : Ducky.Slice<Cart>
+            {
+                [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]
+                public Configured() => Name = "cart";
+                public required string Name { get; init; }
+                protected override Cart Initial => new(0);
+            }
+            [Ducky.Prerender, System.Obsolete("old")] public sealed class Old : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Prerender, System.Diagnostics.CodeAnalysis.Experimental("APP001")] public sealed class Trial : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Prerender, System.Obsolete("gone", true)] public sealed class Gone : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            public sealed class Ping : Ducky.Effect<Load>
+            {
+                public override System.Threading.Tasks.Task Handle(Load action, Ducky.EffectContext context, System.Threading.CancellationToken cancellationToken) => System.Threading.Tasks.Task.CompletedTask;
+            }
+            """,
+        ["PrerenderGlobal"] = """
+            public sealed record Cart(int Count);
+            [Ducky.Prerender] public sealed class GlobalSlice : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            """,
+    };
+
+    public static TheoryData<string> PrerenderShapes => [.. _prerenderShapes.Keys];
+
+    [Theory]
+    [MemberData(nameof(PrerenderShapes))]
+    public Task Generated_CompilesClean_PrerenderShape(string shape)
+    {
+        var input = DiagnosingHarness.WithBlazor(GeneratorHarness.Compile(Undocumented + _prerenderShapes[shape]));
+        input.ShouldCompileClean();
+
+        var driver = DiagnosingHarness.Run(new RegistrationGenerator(), input, out var output, out var diagnostics);
+
+        diagnostics.ShouldBeEmpty();
+        output.ShouldCompileClean();
+        var generated = driver.GetRunResult().Results.Single().GeneratedSources.ShouldHaveSingleItem();
+        return Verifier.Verify(generated.SourceText.ToString()).UseParameters(shape);
+    }
+
     [Theory]
     [MemberData(nameof(Shapes))]
     public Task Generated_CompilesClean_RegistrationShape(string shape)
@@ -165,8 +223,9 @@ public sealed class RegistrationShapeTests
         var input = GeneratorHarness.Compile(Undocumented + _shapes[shape]);
         input.ShouldCompileClean();
 
-        var driver = GeneratorHarness.Run(new RegistrationGenerator(), input, out var output);
+        var driver = DiagnosingHarness.Run(new RegistrationGenerator(), input, out var output, out var diagnostics);
 
+        diagnostics.ShouldBeEmpty();
         output.ShouldCompileClean();
         var generated = driver.GetRunResult().Results.Single().GeneratedSources.ShouldHaveSingleItem();
         generated.HintName.ShouldBe("DuckyRegistrations.g.cs");

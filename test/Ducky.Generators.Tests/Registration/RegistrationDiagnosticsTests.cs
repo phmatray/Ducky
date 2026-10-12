@@ -140,7 +140,8 @@ public sealed class RegistrationDiagnosticsTests
             g => g.ShouldNotContain("Blazor"));
     }
 
-    // Against the real Ducky.Blazor both gated methods resolve: no DUCKY022 (their emission ships with M13-04/M13-04b).
+    // Against the real Ducky.Blazor both gated methods resolve: no DUCKY022 (the Prerender<T> emission is pinned by the
+    // [Prerender] shape rows, the PersistAttributeDefaults<T> one ships with M13-04b).
     [Fact]
     public void Ducky022_RealBlazor_NotReported()
     {
@@ -168,13 +169,54 @@ public sealed class RegistrationDiagnosticsTests
         older.ShouldCompileClean();
         var input = GeneratorHarness.Compile(Prefix + Attributed).AddReferences(older.ToMetadataReference());
 
-        // Prerender<TSlice> has its exact shape there, PersistAttributeDefaults<TSlice> doesn't: only [Persist] is reported.
+        // Prerender<TSlice> has its exact shape there, PersistAttributeDefaults<TSlice> doesn't: only [Persist] is reported,
+        // and Prerender<T> is emitted against the fixture (the gate is the method symbol, not the real assembly).
         const string Persist = "'Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<TSlice>(DuckyBuilder, Action<PersistOptions>)' does not resolve (reference a Ducky.Blazor version that declares it)";
-        Diagnose(input, out _).Select(d => (d.Id, d.GetMessage(CultureInfo.InvariantCulture))).ShouldBe(
+        Diagnose(input, out var output).Select(d => (d.Id, d.GetMessage(CultureInfo.InvariantCulture))).ShouldBe(
         [
             ("DUCKY022", $"[Persist] on 'App.Persisted' is ignored: {Persist}"),
             ("DUCKY022", $"[Persist] on 'App.Both' is ignored: {Persist}"),
         ], ignoreOrder: true);
+        Generated(output).ShouldSatisfyAllConditions(
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<global::App.Prerendered>(b);"),
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<global::App.Both>(b);"),
+            g => g.ShouldNotContain("Prerender<global::App.Persisted>"));
+    }
+
+    // The Prerender<T> skew case (stage 11): an older-shape Ducky.Blazor whose Prerender methods all differ from the exact
+    // public Prerender<TSlice>(DuckyBuilder) shape (wrong parameters, arity or accessibility). [Prerender] gets DUCKY022,
+    // no Prerender<T> call is emitted (no CS0117/CS1501 in generated code), and the slices are still registered.
+    [Fact]
+    public void Ducky022_OlderShapePrerender_ReportedAndNotEmitted()
+    {
+        var older = GeneratorHarness.Compile("""
+            #pragma warning disable CS1591 // justification: undocumented fixture
+            namespace Ducky.Blazor;
+            public sealed class PersistOptions { }
+            public static class DuckyBlazorBuilderExtensions
+            {
+                public static Ducky.DuckyBuilder PersistAttributeDefaults<TSlice>(this Ducky.DuckyBuilder builder, System.Action<PersistOptions> configure) => builder;
+                public static Ducky.DuckyBuilder Prerender<TSlice>(this Ducky.DuckyBuilder builder, bool include) => builder;
+                public static Ducky.DuckyBuilder Prerender<TSlice, TState>(this Ducky.DuckyBuilder builder) => builder;
+                internal static Ducky.DuckyBuilder Prerender<TSlice>(this Ducky.DuckyBuilder builder) => builder;
+            }
+            """).WithAssemblyName("Ducky.Blazor");
+        older.ShouldCompileClean();
+        var input = GeneratorHarness.Compile(Prefix + Attributed).AddReferences(older.ToMetadataReference());
+
+        const string Prerender = "'Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<TSlice>(DuckyBuilder)' does not resolve (reference a Ducky.Blazor version that declares it)";
+        var diagnostics = Diagnose(input, out var output);
+
+        diagnostics.Select(d => (d.Id, d.GetMessage(CultureInfo.InvariantCulture))).ShouldBe(
+        [
+            ("DUCKY022", $"[Prerender] on 'App.Prerendered' is ignored: {Prerender}"),
+            ("DUCKY022", $"[Prerender] on 'App.Both' is ignored: {Prerender}"),
+        ], ignoreOrder: true);
+        ShouldBeAt(diagnostics.Single(d => d.GetMessage(CultureInfo.InvariantCulture).Contains("'App.Prerendered'", StringComparison.Ordinal)), input, "Prerendered");
+        Generated(output).ShouldSatisfyAllConditions(
+            g => g.ShouldNotContain("Prerender<"),
+            g => g.ShouldContain("b.AddSlice<global::App.Prerendered>();"),
+            g => g.ShouldContain("b.AddSlice<global::App.Both>();"));
     }
 
     private const string NotSlice = "it is not a slice";
@@ -188,6 +230,7 @@ public sealed class RegistrationDiagnosticsTests
     {
         var compiled = GeneratorHarness.Compile(Prefix + """
             [Ducky.Persist] public sealed class Effects : Ducky.EffectGroup { }
+            [Ducky.Prerender] public sealed class Loader : Ducky.EffectGroup { }
             [Ducky.Prerender] public sealed class Plain { }
             [Ducky.Persist, Ducky.Prerender] public abstract class Base : Ducky.Middleware { }
             """);
@@ -197,12 +240,16 @@ public sealed class RegistrationDiagnosticsTests
         diagnostics.Select(d => (d.Id, d.GetMessage(CultureInfo.InvariantCulture))).ShouldBe(
         [
             ("DUCKY022", $"[Persist] on 'App.Effects' is ignored: {NotSlice}"),
+            ("DUCKY022", $"[Prerender] on 'App.Loader' is ignored: {NotSlice}"),
             ("DUCKY022", $"[Prerender] on 'App.Plain' is ignored: {NotSlice}"),
             ("DUCKY022", $"[Persist] on 'App.Base' is ignored: {NotSlice}"),
             ("DUCKY022", $"[Prerender] on 'App.Base' is ignored: {NotSlice}"),
         ], ignoreOrder: true);
         ShouldBeAt(diagnostics.First(d => d.GetMessage(CultureInfo.InvariantCulture).Contains("'App.Plain'", StringComparison.Ordinal)), input, "Plain");
-        Generated(output).ShouldContain("b.AddEffect<global::App.Effects>();");
+        Generated(output).ShouldSatisfyAllConditions(
+            g => g.ShouldContain("b.AddEffect<global::App.Effects>();"),
+            g => g.ShouldContain("b.AddEffect<global::App.Loader>();"),
+            g => g.ShouldNotContain("Prerender<"));
     }
 
     // [Persist]/[Prerender] on a target AttributeUsage forbids (INV-25): CS0592 is the compiler's to report, the generator

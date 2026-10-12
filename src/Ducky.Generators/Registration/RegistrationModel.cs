@@ -42,10 +42,11 @@ internal sealed record RegistrationGates(string Assembly, bool Persist, bool Pre
 /// One slice or effect GEN-02 registers (<see cref="Excluded"/> null) or reports as DUCKY023 (the reason), symbol-free.
 /// <see cref="Suppressed"/> holds the DiagnosticIds of its [Obsolete] and [Experimental] attributes and those of its
 /// containing types, which the generated registration has to suppress besides CS0612/CS0618 (GEN-06).
+/// <see cref="Prerender"/> is true for a registered slice carrying [Prerender] (on any of its partial declarations).
 /// <see cref="Location"/> keeps its tree: it compares by tree reference and span, so the model stays equal while its file
 /// is unchanged, and a diagnostic lands in that exact tree (never re-found by path: trees may share one, INV-25).
 /// </summary>
-internal sealed record RegistrationModel(string Type, string Display, bool IsSlice, string? Excluded, Location Location, EquatableArray<string> Suppressed = default)
+internal sealed record RegistrationModel(string Type, string Display, bool IsSlice, string? Excluded, Location Location, EquatableArray<string> Suppressed = default, bool Prerender = false)
 {
     public const string FileLocal = "it is file-local, so the generated registration can't reference it";
     public const string NoConstructor = "a slice needs a public parameterless constructor that new() can call (one marked [SetsRequiredMembers] when the slice has required members)";
@@ -102,7 +103,8 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
                 SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete) ? a.NamedArguments.Where(n => n.Key == "DiagnosticId").Select(n => n.Value.Value) :
                 [])
             .OfType<string>().Where(id => id.Length > 0);
-        return new(name, display, isSlice, null, location, new([.. suppressed]));
+        return new(name, display, isSlice, null, location, new([.. suppressed]),
+            isSlice && Has(type, compilation.GetTypeByMetadataName("Ducky.PrerenderAttribute")));
     }
 
     /// <summary>Whether <paramref name="type"/> derives from <paramref name="baseType"/>.</summary>
