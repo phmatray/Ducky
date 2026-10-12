@@ -11,10 +11,18 @@ public sealed class DispatchDiagnosticsTests
 {
     private const string Prefix = "#pragma warning disable CS1591 // justification: undocumented test sources\n";
 
-    private static ImmutableArray<Diagnostic> Diagnose(string source, out Compilation input, out Compilation output)
+    // The real Ducky.Testing.dll, copied next to the tests (GEN-06): the TestStore arm of DUCKY021 checks its members.
+    private static readonly MetadataReference _testing = MetadataReference.CreateFromFile(Path.Combine(AppContext.BaseDirectory, "Ducky.Testing.dll"));
+
+    private static ImmutableArray<Diagnostic> Diagnose(string source, out Compilation input, out Compilation output, bool withTesting = false)
     {
         // A source without its own namespace declarations goes into namespace App.
         input = GeneratorHarness.Compile(Prefix + (source.StartsWith("namespace", StringComparison.Ordinal) ? source : "namespace App;\n" + source));
+        if (withTesting)
+        {
+            input = input.AddReferences(_testing);
+        }
+
         input.ShouldCompileClean();
         DiagnosingHarness.Run(new DispatchExtensionsGenerator(), input, out output, out var diagnostics);
         output.ShouldCompileClean();
@@ -102,9 +110,44 @@ public sealed class DispatchDiagnosticsTests
         diagnostic.Id.ShouldBe("DUCKY021");
         diagnostic.Severity.ShouldBe(DiagnosticSeverity.Warning);
         Message(diagnostic).ShouldBe(
-            $"The dispatch helpers of 'App.{typeName}' are skipped: '{methodName}' or '{methodName}Async' is a member of IDispatcher, IStore, EffectContext or object, which C# binds before an extension method; set MethodName");
+            $"The dispatch helpers of 'App.{typeName}' are skipped: '{methodName}' or '{methodName}Async' is a member of IDispatcher, IStore, EffectContext, TestStore or object, which C# binds before an extension method; set MethodName");
         ShouldBeAt(diagnostic, input, typeName);
         output.SyntaxTrees.Count().ShouldBe(input.SyntaxTrees.Count());
+    }
+
+    // Non-normative (M9-04c): with Ducky.Testing referenced, TestStore's accessible instance members are reserved too,
+    // so `record Settled` can't make testStore.Settled() skip the dispatch. Every row names a member only TestStore has;
+    // property names bind first as well.
+    [Theory]
+    [InlineData("[Ducky.DuckyAction] public sealed record Settled;", "Settled", "Settled")]
+    [InlineData("[Ducky.DuckyAction] public sealed record Seed(int X);", "Seed", "Seed")]
+    [InlineData("[Ducky.DuckyAction] public sealed record GetSlice;", "GetSlice", "GetSlice")]
+    [InlineData("[Ducky.DuckyAction] public sealed record Failures;", "Failures", "Failures")]
+    [InlineData("[Ducky.DuckyAction(MethodName = \"Processed\")] public sealed record Done;", "Done", "Processed")]
+    public void Ducky021_TestStoreMemberCollides_SkippedWithWarning(string source, string typeName, string methodName)
+    {
+        var diagnostic = Diagnose(source, out var input, out var output, withTesting: true).ShouldHaveSingleItem();
+
+        diagnostic.Id.ShouldBe("DUCKY021");
+        diagnostic.Severity.ShouldBe(DiagnosticSeverity.Warning);
+        Message(diagnostic).ShouldBe(
+            $"The dispatch helpers of 'App.{typeName}' are skipped: '{methodName}' or '{methodName}Async' is a member of IDispatcher, IStore, EffectContext, TestStore or object, which C# binds before an extension method; set MethodName");
+        ShouldBeAt(diagnostic, input, typeName);
+        output.SyntaxTrees.Count().ShouldBe(input.SyntaxTrees.Count());
+    }
+
+    // Non-normative (M9-04c): without Ducky.Testing there is no TestStore to collide with; even when it is referenced,
+    // its private BoundAsync can't hide a helper, nor can its static Create: C# drops static candidates for an instance
+    // receiver, so testStore.Create() binds to the extension.
+    [Theory]
+    [InlineData("[Ducky.DuckyAction] public sealed record Settled;", false)]
+    [InlineData("[Ducky.DuckyAction] public sealed record Bound;", true)]
+    [InlineData("[Ducky.DuckyAction] public sealed record Create;", true)]
+    public void Ducky021_TestStoreArm_OnlyAccessibleInstanceMembersOfAReferencedTestStore(string source, bool withTesting)
+    {
+        Diagnose(source, out var input, out var output, withTesting).ShouldBeEmpty();
+
+        output.SyntaxTrees.Count().ShouldBe(input.SyntaxTrees.Count() + 1);
     }
 
     // Importing both namespaces (as _Imports.razor or global usings do) makes every call CS0121.
