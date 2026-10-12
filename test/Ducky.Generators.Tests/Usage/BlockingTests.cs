@@ -4,9 +4,8 @@ using Verifier = Ducky.Generators.Tests.Infrastructure.AnalyzerVerifier<Ducky.Ge
 
 namespace Ducky.Generators.Tests.Usage;
 
-// DUCKY010 (SPEC §7, §16.2, ADR-0014): blocking on DispatchAsync, WhenIdleAsync or InitializeAsync of Ducky,
+// DUCKY010 (SPEC §7, §16.2, ADR-0014): blocking on DispatchAsync, SetAsync, WhenIdleAsync or InitializeAsync of Ducky,
 // Ducky.Blazor or Ducky.Testing with .Result, .Wait() or GetAwaiter().GetResult(), reported at the blocking expression.
-// The SetAsync arm ships with M9-01c.
 public sealed class BlockingTests
 {
     private static string Source(string body) => $$"""
@@ -89,6 +88,40 @@ public sealed class BlockingTests
             }
             """,
             Verifier.Diagnostic(UsageDiagnostics.Blocking).WithLocation(0).WithArguments("DispatchAsync", ".Result"));
+
+    // The SetAsync arm (§12, §24 step 8): SliceStore's protected SetAsync, called from a SliceStore method.
+    [Theory]
+    [InlineData("_ = {|#0:SetAsync(s => s).Result|};", ".Result")]
+    [InlineData("{|#0:SetAsync(s => s, \"Bump\").Wait()|};", ".Wait()")]
+    [InlineData("_ = {|#0:SetAsync(s => s).ConfigureAwait(false).GetAwaiter().GetResult()|};", "GetAwaiter().GetResult()")]
+    public Task Ducky010_BlockingOnSliceStoreSetAsync_Reported(string body, string how) =>
+        Verifier.VerifyAsync(
+            SliceStore(body),
+            Verifier.Diagnostic(UsageDiagnostics.Blocking).WithLocation(0).WithArguments("SetAsync", how));
+
+    [Theory]
+    [InlineData("_ = SetAsync(s => s);")]
+    [InlineData("Set(s => s);")]
+    [InlineData("_ = SetAsync(s => s).IsCompleted;")]
+    [InlineData("_ = new Other().DispatchAsync().Result;")]
+    public Task Ducky010_NotBlockingOnSliceStoreSetAsync_NotReported(string body) => Verifier.VerifyAsync(SliceStore(body));
+
+    private static string SliceStore(string body) => $$"""
+        using System.Threading.Tasks;
+        using Ducky;
+
+        public sealed record Bag(int Count);
+        public sealed class Other { public Task<int> DispatchAsync() => Task.FromResult(1); }
+        public sealed class BagStore : SliceStore<Bag>
+        {
+            protected override Bag Initial => new(0);
+
+            public void Run()
+            {
+                {{body}}
+            }
+        }
+        """;
 
     // Ducky.Testing's TestStore forwards to the store, so blocking on its tasks deadlocks the same way.
     [Theory]
