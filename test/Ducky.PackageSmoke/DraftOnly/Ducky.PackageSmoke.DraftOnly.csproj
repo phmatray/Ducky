@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Ducky.Draft-only consumer (SPEC §17.9 step 1, ADR-0002): Ducky.Draft is usable without Ducky. The generated draft of
+       a record with a nested draftable member compiles from the package with TreatWarningsAsErrors, nullable and
+       GenerateDocumentationFile (set here, not only inherited). Its DUCKY901 variant sets -p:SmokeMutty=2.0.0 (the
+       committed fake). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ducky.Draft" Version="$(DuckyVersion)" />
+    <PackageReference Include="Mutty" Version="$(SmokeMutty)" Condition="'$(SmokeMutty)' != ''" />
+  </ItemGroup>
+</Project>

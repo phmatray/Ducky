@@ -38,6 +38,11 @@ internal static class DraftDiagnostics
     private const string MutableCollectionMessage = "'{0}' is a plain member of the draft: its type '{1}' is a mutable collection, so structural sharing and immutability can't be guaranteed";
     private const string MutableCollectionHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY105.md";
 
+    private const string EscapeId = "DUCKY106";
+    private const string EscapeTitle = "Draft escapes its Produce recipe";
+    private const string EscapeMessage = "'{0}' escapes its Produce recipe: the draft is revoked when Produce returns, so any later use throws ObjectDisposedException";
+    private const string EscapeHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY106.md";
+
     private const string NoCompatibleDraftId = "DUCKY107";
     private const string NoCompatibleDraftTitle = "Member type is [Draftable] in metadata but has no compatible Draft";
     private const string NoCompatibleDraftMessage = "'{0}' gets no draft of '{1}': '{1}' is [Draftable] in another assembly but has no nested public Draft implementing IDraft<{1}> with a public Draft({1}) constructor; it is edited by assignment";
@@ -63,11 +68,14 @@ internal static class DraftDiagnostics
     public static readonly DiagnosticDescriptor MutableCollection = new(
         MutableCollectionId, MutableCollectionTitle, MutableCollectionMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: MutableCollectionHelp);
 
+    public static readonly DiagnosticDescriptor Escape = new(
+        EscapeId, EscapeTitle, EscapeMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: EscapeHelp);
+
     public static readonly DiagnosticDescriptor NoCompatibleDraft = new(
         NoCompatibleDraftId, NoCompatibleDraftTitle, NoCompatibleDraftMessage, Category, DiagnosticSeverity.Info, Enabled, helpLinkUri: NoCompatibleDraftHelp);
 
     public static readonly DiagnosticDescriptor ErrorObsolete = new(
         ErrorObsoleteId, ErrorObsoleteTitle, ErrorObsoleteMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: ErrorObsoleteHelp);
 
-    public static readonly ImmutableArray<DiagnosticDescriptor> All = [NotPartialRecord, ContainerNotPartial, Generic, NameClash, MutableCollection, NoCompatibleDraft, ErrorObsolete];
+    public static readonly ImmutableArray<DiagnosticDescriptor> All = [NotPartialRecord, ContainerNotPartial, Generic, NameClash, MutableCollection, Escape, NoCompatibleDraft, ErrorObsolete];
 }
