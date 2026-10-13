@@ -36,14 +36,42 @@ internal static class GeneratorHarness
     // reaches `output`: both fail here, or ShouldCompileClean would pass over a crashing shape (INV-25).
     public static GeneratorDriver Run(IIncrementalGenerator generator, Compilation compilation, out Compilation output)
     {
+        var driver = Run(generator, compilation, out output, out var diagnostics);
+        diagnostics.Where(d => d.Severity != DiagnosticSeverity.Hidden).Select(d => d.ToString()).ShouldBeEmpty();
+        return driver;
+    }
+
+    // For a shape the generator diagnoses: a generator exception (CS8785) still fails, and the caller asserts the
+    // reported diagnostics instead of requiring none.
+    public static GeneratorDriver Run(
+        IIncrementalGenerator generator, Compilation compilation, out Compilation output, out ImmutableArray<Diagnostic> diagnostics)
+    {
         var driver = CSharpGeneratorDriver.Create(
                 [generator.AsSourceGenerator()],
                 parseOptions: ParseOptions,
                 driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true))
-            .RunGeneratorsAndUpdateCompilation(compilation, out output, out var diagnostics, TestContext.Current.CancellationToken);
+            .RunGeneratorsAndUpdateCompilation(compilation, out output, out diagnostics, TestContext.Current.CancellationToken);
         driver.GetRunResult().Results.Select(r => r.Exception?.ToString()).OfType<string>().ShouldBeEmpty();
-        diagnostics.Where(d => d.Severity != DiagnosticSeverity.Hidden).Select(d => d.ToString()).ShouldBeEmpty();
         return driver;
+    }
+
+    // Emits a clean generated compilation into a collectible context and hands its assembly to `use`: generated code runs
+    // as compiled C#, with the generator under test (a cached image would hide Stryker's active mutant).
+    public static void Execute(Compilation output, Action<System.Reflection.Assembly> use)
+    {
+        output.ShouldCompileClean();
+        using var image = new MemoryStream();
+        output.Emit(image, cancellationToken: TestContext.Current.CancellationToken).Success.ShouldBeTrue();
+        image.Position = 0;
+        var context = new System.Runtime.Loader.AssemblyLoadContext("probe", isCollectible: true);
+        try
+        {
+            use(context.LoadFromStream(image));
+        }
+        finally
+        {
+            context.Unload();
+        }
     }
 
     // The zero-diagnostics helper: any diagnostic but a hidden one fails, warnings included (GEN-06).
@@ -64,18 +92,34 @@ internal static class GeneratorHarness
                 .Select(s => new Target("txt", s.SourceText.ToString(), s.HintName)));
     }
 
-    // Caching_{Step}_Cached: after an unrelated edit, every output of each named step is Cached or Unchanged. A model
-    // holding a symbol or a compilation compares unequal across compilations, so it fails here too.
-    public static void ShouldCacheSteps(IIncrementalGenerator generator, Compilation compilation, params string[] trackingNames)
+    // Caching_{Step}_Cached: after an unrelated edit, every output of each named step is Cached or Unchanged, and no
+    // source output runs again (an unnamed step fed by the compilation would). A model holding a symbol or a compilation
+    // compares unequal across compilations, so it fails here too. Diagnosed shapes are allowed: their path caches too.
+    public static void ShouldCacheSteps(IIncrementalGenerator generator, Compilation compilation, params string[] trackingNames) =>
+        ShouldCacheSteps(
+            generator,
+            compilation,
+            c => c.AddSyntaxTrees(CSharpSyntaxTree.ParseText("internal static class UnrelatedEdit { }", ParseOptions)),
+            trackingNames);
+
+    public static void ShouldCacheSteps(
+        IIncrementalGenerator generator, Compilation compilation, Func<Compilation, Compilation> edit, params string[] trackingNames)
     {
-        var driver = Run(generator, compilation, out _);
-        var edited = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText("internal static class UnrelatedEdit { }", ParseOptions));
-        var steps = driver.RunGenerators(edited, TestContext.Current.CancellationToken).GetRunResult().Results.Single().TrackedSteps;
+        var driver = Run(generator, compilation, out _, out _);
+        var result = driver.RunGenerators(edit(compilation), TestContext.Current.CancellationToken).GetRunResult().Results.Single();
         foreach (var name in trackingNames)
         {
-            steps.ShouldContainKey(name); // Roslyn records no key for a step that never produced an output.
-            var outputs = steps[name].SelectMany(s => s.Outputs).Select(o => o.Reason).ToList();
-            outputs.ShouldAllBe(r => r == IncrementalStepRunReason.Cached || r == IncrementalStepRunReason.Unchanged, name);
+            result.TrackedSteps.ShouldContainKey(name); // Roslyn records no key for a step that never produced an output.
+            ShouldBeCached(result.TrackedSteps[name], name);
+        }
+
+        foreach (var (kind, steps) in result.TrackedOutputSteps)
+        {
+            ShouldBeCached(steps, kind);
         }
     }
+
+    private static void ShouldBeCached(ImmutableArray<IncrementalGeneratorRunStep> steps, string name) =>
+        steps.SelectMany(s => s.Outputs).Select(o => o.Reason)
+            .ShouldAllBe(r => r == IncrementalStepRunReason.Cached || r == IncrementalStepRunReason.Unchanged, name);
 }
