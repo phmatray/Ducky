@@ -9,7 +9,7 @@ builder.Services.AddDucky(d =>
 #if SMOKE_SINGLETON
     d.Lifetime = ServiceLifetime.Singleton;
 #endif
-    d.AddDuckyGenerated_PackageSmoke();
+    d.UseJson(SmokeJson.Default).AddDuckyGenerated_PackageSmoke().Persist<CartSlice>(static o => o.Migrate(1, static node => node));
 });
 var app = builder.Build();
 app.UseMiddleware<SmokeMiddleware>();

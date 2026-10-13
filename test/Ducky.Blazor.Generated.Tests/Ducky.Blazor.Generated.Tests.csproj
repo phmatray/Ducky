@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The one Blazor test project that runs the generator (SPEC §18): its tests run on the calls GEN-02 emits from
+       [Persist]/[Prerender], never on hand-written ones. AddDuckyGenerated registers every slice and effect of this
+       assembly, so it holds only those tests and the fixtures they share. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

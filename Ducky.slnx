@@ -10,6 +10,7 @@
     <Project Path="src/Ducky.Testing/Ducky.Testing.csproj" />
   </Folder>
   <Folder Name="/test/">
+    <Project Path="test/Ducky.Blazor.Generated.Tests/Ducky.Blazor.Generated.Tests.csproj" />
     <Project Path="test/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj" />
     <Project Path="test/Ducky.Concurrency.Tests/Ducky.Concurrency.Tests.csproj" />
     <Project Path="test/Ducky.Docs.Tests/Ducky.Docs.Tests.csproj" />

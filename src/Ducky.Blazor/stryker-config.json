@@ -10,6 +10,7 @@
       "**/*.cs"
     ],
     "test-projects": [
+      "../../test/Ducky.Blazor.Generated.Tests/Ducky.Blazor.Generated.Tests.csproj",
       "../../test/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj",
       "../../test/Ducky.Concurrency.Tests/Ducky.Concurrency.Tests.csproj",
       "../../test/Ducky.Generators.Tests/Ducky.Generators.Tests.csproj"

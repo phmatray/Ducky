@@ -2,6 +2,7 @@
   "solution": {
     "path": "Ducky.slnx",
     "projects": [
+      "test/Ducky.Blazor.Generated.Tests/Ducky.Blazor.Generated.Tests.csproj",
       "test/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj",
       "test/Ducky.Docs.Tests/Ducky.Docs.Tests.csproj",
       "test/Ducky.Draft.Generators.Tests/Ducky.Draft.Generators.Tests.csproj",

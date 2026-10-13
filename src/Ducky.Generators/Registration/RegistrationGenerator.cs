@@ -70,7 +70,13 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
             writer.Line(model.IsSlice ? $"b.AddSlice<{model.Type}>();" : $"b.AddEffect<{model.Type}>();");
         }
 
-        // After every AddSlice (Prerender<T> on a slice not added is DUCKY310), only while the exact method resolves.
+        // After every AddSlice (Persist<T>/Prerender<T> on a slice not added is DUCKY310), only while the exact method
+        // resolves.
+        foreach (var model in registered.Where(m => m.Persist is not null && gates.Persist))
+        {
+            writer.Line($"global::Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<{model.Type}>(b, {model.Persist});");
+        }
+
         foreach (var model in registered.Where(m => m.Prerender && gates.Prerender))
         {
             writer.Line($"global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<{model.Type}>(b);");
@@ -86,8 +92,8 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
     }
 
     // DUCKY023 for each excluded type; DUCKY022 for [Persist]/[Prerender] on a non-slice, or on any slice (registered or
-    // not) while its gated method doesn't resolve. Emit writes Prerender<T> for a resolved [Prerender] (M13-04); the
-    // PersistAttributeDefaults<T> arm ships with its API (M13-04b): until then a resolved [Persist] emits nothing.
+    // not) while its gated method doesn't resolve. Emit writes PersistAttributeDefaults<T> for a resolved [Persist] and
+    // Prerender<T> for a resolved [Prerender].
     private static void Report(SourceProductionContext context, ImmutableArray<RegistrationModel?> models, ImmutableArray<AttributeModel> attributes, RegistrationGates gates)
     {
         foreach (var model in models.OfType<RegistrationModel>().Distinct().Where(m => m.Excluded is not null))
