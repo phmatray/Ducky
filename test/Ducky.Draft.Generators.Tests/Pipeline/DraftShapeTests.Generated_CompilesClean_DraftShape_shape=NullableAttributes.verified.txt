@@ -121,13 +121,27 @@ partial record class Contact
         global::App.Contact global::Ducky.Draft.IDraft<global::App.Contact>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Contact>)this).IsDirty ? __x_original with { Name = __m_Name!, Alias = __m_Alias, Count = __m_Count, Email = __m_Email!, Phone = __m_Phone, Nick = __m_Nick, City = __m_City } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<string?>.Default.Equals(__m_Name, __x_original.Name)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Alias, __x_original.Alias)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Count, __x_original.Count)
+                && global::System.Collections.Generic.EqualityComparer<string?>.Default.Equals(__m_Email, __x_original.Email)
+                && global::System.Collections.Generic.EqualityComparer<string?>.Default.Equals(__m_Phone, __x_original.Phone)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Nick, __x_original.Nick)
+                && global::System.Collections.Generic.EqualityComparer<string?>.Default.Equals(__m_City, __x_original.City))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Name = __m_Name!, Alias = __m_Alias, Count = __m_Count, Email = __m_Email!, Phone = __m_Phone, Nick = __m_Nick, City = __m_City };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Contact Build() => ((global::Ducky.Draft.IDraft<global::App.Contact>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

@@ -95,13 +95,25 @@ partial record class Cased
         global::App.Cased global::Ducky.Draft.IDraft<global::App.Cased>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Cased>)this).IsDirty ? __x_original with { Items = __m_Items, items = __m_items, value = __m_value, recipe = __m_recipe, draft = __m_draft } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Items, __x_original.Items)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_items, __x_original.items)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_value, __x_original.value)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_recipe, __x_original.recipe)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_draft, __x_original.draft))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Items = __m_Items, items = __m_items, value = __m_value, recipe = __m_recipe, draft = __m_draft };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Cased Build() => ((global::Ducky.Draft.IDraft<global::App.Cased>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {
@@ -146,14 +158,14 @@ partial record class Labels
     {
         private readonly global::App.Labels __x_original;
         private bool __x_revoked;
-        private string __m_Tags;
+        private global::Ducky.Draft.ListDraft<string>? __m_Tags;
+        private bool __s_Tags;
         private string __m_TagsSet;
 
         /// <summary>Creates a draft of <paramref name="original"/>.</summary>
         public Draft(global::App.Labels original)
         {
             __x_original = original;
-            __m_Tags = original.Tags;
             __m_TagsSet = original.TagsSet;
         }
 
@@ -161,11 +173,31 @@ partial record class Labels
         [return: global::System.Diagnostics.CodeAnalysis.NotNullIfNotNull("value")]
         public static implicit operator Draft?(global::App.Labels? value) => value is null ? null : new(value);
 
-        /// <summary>Gets or sets <c>Tags</c>.</summary>
-        public string Tags
+        /// <summary>Gets or sets <c>Tags</c>: a lazy draft of the original's value; assigning replaces it.</summary>
+        public global::Ducky.Draft.ListDraft<string> Tags
         {
-            get { __x_Guard(); return __m_Tags; }
-            set { __x_Guard(); __m_Tags = value; }
+            get
+            {
+                __x_Guard();
+                if (__m_Tags is null && !__s_Tags)
+                {
+                    __m_Tags = __x_original.Tags;
+                }
+
+                return __m_Tags!;
+            }
+
+            set
+            {
+                __x_Guard();
+                if (!global::System.Object.ReferenceEquals(__m_Tags, value))
+                {
+                    ((global::Ducky.Draft.IRevocable?)__m_Tags)?.Revoke();
+                }
+
+                __m_Tags = value;
+                __s_Tags = true;
+            }
         }
 
         /// <summary>Gets or sets <c>TagsSet</c>.</summary>
@@ -175,19 +207,30 @@ partial record class Labels
             set { __x_Guard(); __m_TagsSet = value; }
         }
 
-        bool global::Ducky.Draft.IDraft<global::App.Labels>.IsDirty => !global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Tags, __x_original.Tags)
+        bool global::Ducky.Draft.IDraft<global::App.Labels>.IsDirty => __s_Tags || __m_Tags?.IsDirty == true
             || !global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_TagsSet, __x_original.TagsSet);
 
         global::App.Labels global::Ducky.Draft.IDraft<global::App.Labels>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Labels>)this).IsDirty ? __x_original with { Tags = __m_Tags, TagsSet = __m_TagsSet } : __x_original;
+            var __b_Tags = __m_Tags is null ? (__s_Tags ? default! : __x_original.Tags) : __m_Tags.BuildList();
+            if (global::System.Object.ReferenceEquals(__b_Tags, __x_original.Tags)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_TagsSet, __x_original.TagsSet))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Tags = __b_Tags, TagsSet = __m_TagsSet };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Labels Build() => ((global::Ducky.Draft.IDraft<global::App.Labels>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+            ((global::Ducky.Draft.IRevocable?)__m_Tags)?.Revoke();
+        }
 
         private void __x_Guard()
         {
@@ -287,13 +330,24 @@ partial record class Session
         global::App.Session global::Ducky.Draft.IDraft<global::App.Session>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Session>)this).IsDirty ? __x_original with { Id = __m_Id, Revoked = __m_Revoked, O = __m_O, original = __m_original } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Id, __x_original.Id)
+                && global::System.Collections.Generic.EqualityComparer<bool>.Default.Equals(__m_Revoked, __x_original.Revoked)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_O, __x_original.O)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_original, __x_original.original))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Id = __m_Id, Revoked = __m_Revoked, O = __m_O, original = __m_original };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Session Build() => ((global::Ducky.Draft.IDraft<global::App.Session>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

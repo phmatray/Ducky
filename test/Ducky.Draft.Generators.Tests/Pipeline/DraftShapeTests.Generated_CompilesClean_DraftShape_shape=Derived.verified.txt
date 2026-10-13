@@ -91,13 +91,24 @@ partial record class Derived
         global::App.Derived global::Ducky.Draft.IDraft<global::App.Derived>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Derived>)this).IsDirty ? __x_original with { Flag = __m_Flag, Shadowed = __m_Shadowed, Id = __m_Id, Name = __m_Name } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<bool>.Default.Equals(__m_Flag, __x_original.Flag)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Shadowed, __x_original.Shadowed)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Id, __x_original.Id)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Name, __x_original.Name))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Flag = __m_Flag, Shadowed = __m_Shadowed, Id = __m_Id, Name = __m_Name };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Derived Build() => ((global::Ducky.Draft.IDraft<global::App.Derived>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

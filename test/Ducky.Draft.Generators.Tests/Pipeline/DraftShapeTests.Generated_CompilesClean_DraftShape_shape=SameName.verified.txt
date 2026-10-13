@@ -55,13 +55,21 @@ partial record class Todo
         global::A.Todo global::Ducky.Draft.IDraft<global::A.Todo>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::A.Todo>)this).IsDirty ? __x_original with { Id = __m_Id } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Id, __x_original.Id))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Id = __m_Id };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::A.Todo Build() => ((global::Ducky.Draft.IDraft<global::A.Todo>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {
@@ -131,13 +139,21 @@ partial record class Todo
         global::B.Todo global::Ducky.Draft.IDraft<global::B.Todo>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::B.Todo>)this).IsDirty ? __x_original with { Id = __m_Id } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Id, __x_original.Id))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Id = __m_Id };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::B.Todo Build() => ((global::Ducky.Draft.IDraft<global::B.Todo>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

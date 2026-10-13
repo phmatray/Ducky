@@ -33,6 +33,16 @@ internal static class DraftDiagnostics
     private const string NameClashMessage = "'{0}' gets no draft: it already declares a member named '{1}', which the generator emits";
     private const string NameClashHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY104.md";
 
+    private const string MutableCollectionId = "DUCKY105";
+    private const string MutableCollectionTitle = "[Draftable] record member of a mutable collection type";
+    private const string MutableCollectionMessage = "'{0}' is a plain member of the draft: its type '{1}' is a mutable collection, so structural sharing and immutability can't be guaranteed";
+    private const string MutableCollectionHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY105.md";
+
+    private const string NoCompatibleDraftId = "DUCKY107";
+    private const string NoCompatibleDraftTitle = "Member type is [Draftable] in metadata but has no compatible Draft";
+    private const string NoCompatibleDraftMessage = "'{0}' gets no draft of '{1}': '{1}' is [Draftable] in another assembly but has no nested public Draft implementing IDraft<{1}> with a public Draft({1}) constructor; it is edited by assignment";
+    private const string NoCompatibleDraftHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY107.md";
+
     private const string ErrorObsoleteId = "DUCKY108";
     private const string ErrorObsoleteTitle = "[Draftable] record is error-obsolete";
     private const string ErrorObsoleteMessage = "'{0}' gets no draft: it is marked [Obsolete(error: true)], so generated code can't reference it (CS0619)";
@@ -50,8 +60,14 @@ internal static class DraftDiagnostics
     public static readonly DiagnosticDescriptor NameClash = new(
         NameClashId, NameClashTitle, NameClashMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: NameClashHelp);
 
+    public static readonly DiagnosticDescriptor MutableCollection = new(
+        MutableCollectionId, MutableCollectionTitle, MutableCollectionMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: MutableCollectionHelp);
+
+    public static readonly DiagnosticDescriptor NoCompatibleDraft = new(
+        NoCompatibleDraftId, NoCompatibleDraftTitle, NoCompatibleDraftMessage, Category, DiagnosticSeverity.Info, Enabled, helpLinkUri: NoCompatibleDraftHelp);
+
     public static readonly DiagnosticDescriptor ErrorObsolete = new(
         ErrorObsoleteId, ErrorObsoleteTitle, ErrorObsoleteMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: ErrorObsoleteHelp);
 
-    public static readonly ImmutableArray<DiagnosticDescriptor> All = [NotPartialRecord, ContainerNotPartial, Generic, NameClash, ErrorObsolete];
+    public static readonly ImmutableArray<DiagnosticDescriptor> All = [NotPartialRecord, ContainerNotPartial, Generic, NameClash, MutableCollection, NoCompatibleDraft, ErrorObsolete];
 }

@@ -65,13 +65,22 @@ partial record class Named
         global::App.Named global::Ducky.Draft.IDraft<global::App.Named>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Named>)this).IsDirty ? __x_original with { nameof = __m_nameof, Title = __m_Title } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_nameof, __x_original.nameof)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Title, __x_original.Title))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { nameof = __m_nameof, Title = __m_Title };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Named Build() => ((global::Ducky.Draft.IDraft<global::App.Named>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {
@@ -141,13 +150,21 @@ partial record class Shadowing
         global::App.Shadowing global::Ducky.Draft.IDraft<global::App.Shadowing>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Shadowing>)this).IsDirty ? __x_original with { X = __m_X } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_X, __x_original.X))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { X = __m_X };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Shadowing Build() => ((global::Ducky.Draft.IDraft<global::App.Shadowing>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

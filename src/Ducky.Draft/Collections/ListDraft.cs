@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Ducky.Draft;
 
@@ -91,10 +92,10 @@ public sealed class ListDraft<T> : IList<T>, IReadOnlyList<T>, IRevocable
         }
     }
 
-    /// <summary>Creates a draft of <paramref name="list"/>.</summary>
+    /// <summary>Creates a draft of <paramref name="list"/>, or null for null (assigning null sets a nullable member to null).</summary>
     /// <param name="list">The source list.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="list"/> is null.</exception>
-    public static implicit operator ListDraft<T>(ImmutableList<T> list) => new(list ?? throw new ArgumentNullException(nameof(list)));
+    [return: NotNullIfNotNull(nameof(list))]
+    public static implicit operator ListDraft<T>?(ImmutableList<T>? list) => list is null ? null : new(list);
 
     /// <summary>Creates a draft of <paramref name="array"/>; a default array reads as empty.</summary>
     /// <param name="array">The source array.</param>

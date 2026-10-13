@@ -89,8 +89,8 @@ Ducky.Draft.SetDraft<T>.Remove(T item) -> bool
 Ducky.Draft.SetDraft<T>.SetEquals(System.Collections.Generic.IEnumerable<T>! other) -> bool
 Ducky.Draft.SetDraft<T>.SymmetricExceptWith(System.Collections.Generic.IEnumerable<T>! other) -> void
 Ducky.Draft.SetDraft<T>.UnionWith(System.Collections.Generic.IEnumerable<T>! other) -> void
-static Ducky.Draft.DictionaryDraft<TKey, TValue>.implicit operator Ducky.Draft.DictionaryDraft<TKey, TValue>!(System.Collections.Immutable.ImmutableDictionary<TKey, TValue>! source) -> Ducky.Draft.DictionaryDraft<TKey, TValue>!
+static Ducky.Draft.DictionaryDraft<TKey, TValue>.implicit operator Ducky.Draft.DictionaryDraft<TKey, TValue>?(System.Collections.Immutable.ImmutableDictionary<TKey, TValue>? source) -> Ducky.Draft.DictionaryDraft<TKey, TValue>?
 static Ducky.Draft.ListDraft<T>.implicit operator Ducky.Draft.ListDraft<T>!(System.Collections.Immutable.ImmutableArray<T> array) -> Ducky.Draft.ListDraft<T>!
-static Ducky.Draft.ListDraft<T>.implicit operator Ducky.Draft.ListDraft<T>!(System.Collections.Immutable.ImmutableList<T>! list) -> Ducky.Draft.ListDraft<T>!
-static Ducky.Draft.SetDraft<T>.implicit operator Ducky.Draft.SetDraft<T>!(System.Collections.Immutable.ImmutableHashSet<T>! source) -> Ducky.Draft.SetDraft<T>!
-static Ducky.Draft.SetDraft<T>.implicit operator Ducky.Draft.SetDraft<T>!(System.Collections.Immutable.ImmutableSortedSet<T>! source) -> Ducky.Draft.SetDraft<T>!
+static Ducky.Draft.ListDraft<T>.implicit operator Ducky.Draft.ListDraft<T>?(System.Collections.Immutable.ImmutableList<T>? list) -> Ducky.Draft.ListDraft<T>?
+static Ducky.Draft.SetDraft<T>.implicit operator Ducky.Draft.SetDraft<T>?(System.Collections.Immutable.ImmutableHashSet<T>? source) -> Ducky.Draft.SetDraft<T>?
+static Ducky.Draft.SetDraft<T>.implicit operator Ducky.Draft.SetDraft<T>?(System.Collections.Immutable.ImmutableSortedSet<T>? source) -> Ducky.Draft.SetDraft<T>?

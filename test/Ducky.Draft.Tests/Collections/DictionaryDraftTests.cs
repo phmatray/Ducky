@@ -120,8 +120,7 @@ public sealed class DictionaryDraftTests
             Should.Throw<ObjectDisposedException>(member).Message.ShouldContain("draft revoked");
         }
 
-        Should.Throw<ArgumentNullException>(() => _ = (DictionaryDraft<int, string>)(ImmutableDictionary<int, string>)null!)
-            .ParamName.ShouldBe("source");
+        ((DictionaryDraft<int, string>?)(ImmutableDictionary<int, string>?)null).ShouldBeNull();
     }
 
     // A random edit script over a dictionary (default or case-insensitive-style key comparer) against a Dictionary model:

@@ -70,11 +70,10 @@ public sealed class DictionaryDraft<TKey, TValue> : IDictionary<TKey, TValue>, I
         set => _current = Read.SetItem(key, value); // SetItem returns the same instance for an equal value
     }
 
-    /// <summary>Creates a draft of <paramref name="source"/>.</summary>
+    /// <summary>Creates a draft of <paramref name="source"/>, or null for null (assigning null sets a nullable member to null).</summary>
     /// <param name="source">The source dictionary.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
-    public static implicit operator DictionaryDraft<TKey, TValue>(ImmutableDictionary<TKey, TValue> source) =>
-        new(source ?? throw new ArgumentNullException(nameof(source)));
+    [return: NotNullIfNotNull(nameof(source))]
+    public static implicit operator DictionaryDraft<TKey, TValue>?(ImmutableDictionary<TKey, TValue>? source) => source is null ? null : new(source);
 
     /// <summary>Builds the dictionary: the source itself when clean.</summary>
     /// <returns>The built dictionary.</returns>

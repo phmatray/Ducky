@@ -55,13 +55,21 @@ partial record class Raw
         global::App.Raw global::Ducky.Draft.IDraft<global::App.Raw>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Raw>)this).IsDirty ? __x_original with { X = __m_X } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_X, __x_original.X))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { X = __m_X };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Raw Build() => ((global::Ducky.Draft.IDraft<global::App.Raw>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {
