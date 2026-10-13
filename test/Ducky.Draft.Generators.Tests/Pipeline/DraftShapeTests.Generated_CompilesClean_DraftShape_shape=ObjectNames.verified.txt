@@ -75,13 +75,23 @@ partial record class Mirror
         global::App.Mirror global::Ducky.Draft.IDraft<global::App.Mirror>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Mirror>)this).IsDirty ? __x_original with { GetType = __m_GetType, MemberwiseClone = __m_MemberwiseClone, ReferenceEquals = __m_ReferenceEquals } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_GetType, __x_original.GetType)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_MemberwiseClone, __x_original.MemberwiseClone)
+                && global::System.Collections.Generic.EqualityComparer<bool>.Default.Equals(__m_ReferenceEquals, __x_original.ReferenceEquals))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { GetType = __m_GetType, MemberwiseClone = __m_MemberwiseClone, ReferenceEquals = __m_ReferenceEquals };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Mirror Build() => ((global::Ducky.Draft.IDraft<global::App.Mirror>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

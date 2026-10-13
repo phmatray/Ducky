@@ -123,8 +123,8 @@ public sealed class SetDraftTests
             Should.Throw<ObjectDisposedException>(member).Message.ShouldContain("draft revoked");
         }
 
-        Should.Throw<ArgumentNullException>(() => _ = (SetDraft<int>)(ImmutableHashSet<int>)null!).ParamName.ShouldBe("source");
-        Should.Throw<ArgumentNullException>(() => _ = (SetDraft<int>)(ImmutableSortedSet<int>)null!).ParamName.ShouldBe("source");
+        ((SetDraft<int>?)(ImmutableHashSet<int>?)null).ShouldBeNull();
+        ((SetDraft<int>?)(ImmutableSortedSet<int>?)null).ShouldBeNull();
     }
 
     // A random edit script over a hash or sorted source (default or custom comparer) against a HashSet/SortedSet model with

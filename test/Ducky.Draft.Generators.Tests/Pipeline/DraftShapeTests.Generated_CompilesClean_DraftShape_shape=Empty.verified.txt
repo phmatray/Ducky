@@ -52,7 +52,10 @@ partial record class Empty
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Empty Build() => ((global::Ducky.Draft.IDraft<global::App.Empty>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {
@@ -132,13 +135,22 @@ partial record class Shape
         global::App.Shape global::Ducky.Draft.IDraft<global::App.Shape>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Shape>)this).IsDirty ? __x_original with { Sides = __m_Sides, Area = __m_Area } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Sides, __x_original.Sides)
+                && global::System.Collections.Generic.EqualityComparer<double>.Default.Equals(__m_Area, __x_original.Area))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Sides = __m_Sides, Area = __m_Area };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Shape Build() => ((global::Ducky.Draft.IDraft<global::App.Shape>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

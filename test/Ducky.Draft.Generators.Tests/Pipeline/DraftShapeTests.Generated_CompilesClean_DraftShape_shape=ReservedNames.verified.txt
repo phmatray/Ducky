@@ -55,13 +55,21 @@ partial record class R
         global::App.R global::Ducky.Draft.IDraft<global::App.R>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.R>)this).IsDirty ? __x_original with { X = __m_X } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_X, __x_original.X))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { X = __m_X };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.R Build() => ((global::Ducky.Draft.IDraft<global::App.R>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

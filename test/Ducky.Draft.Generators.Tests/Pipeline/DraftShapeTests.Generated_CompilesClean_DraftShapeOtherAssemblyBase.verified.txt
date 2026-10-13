@@ -81,13 +81,23 @@ partial record class Derived
         global::App.Derived global::Ducky.Draft.IDraft<global::App.Derived>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Derived>)this).IsDirty ? __x_original with { Name = __m_Name, Id = __m_Id, Level = __m_Level } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Name, __x_original.Name)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Id, __x_original.Id)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Level, __x_original.Level))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Name = __m_Name, Id = __m_Id, Level = __m_Level };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Derived Build() => ((global::Ducky.Draft.IDraft<global::App.Derived>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

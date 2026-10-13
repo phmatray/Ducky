@@ -12,6 +12,8 @@ public sealed class DraftDescriptorsTests
         { "DUCKY102", DiagnosticSeverity.Error, "Containing type of a [Draftable] record is not partial", "'{0}' gets no draft: its containing type '{1}' is not partial" },
         { "DUCKY103", DiagnosticSeverity.Error, "Generic [Draftable] record", "'{0}' gets no draft: it is generic or nested in a generic type, which Ducky.Draft 2.0 does not support" },
         { "DUCKY104", DiagnosticSeverity.Error, "[Draftable] record declares a generated member name", "'{0}' gets no draft: it already declares a member named '{1}', which the generator emits" },
+        { "DUCKY105", DiagnosticSeverity.Warning, "[Draftable] record member of a mutable collection type", "'{0}' is a plain member of the draft: its type '{1}' is a mutable collection, so structural sharing and immutability can't be guaranteed" },
+        { "DUCKY107", DiagnosticSeverity.Info, "Member type is [Draftable] in metadata but has no compatible Draft", "'{0}' gets no draft of '{1}': '{1}' is [Draftable] in another assembly but has no nested public Draft implementing IDraft<{1}> with a public Draft({1}) constructor; it is edited by assignment" },
         { "DUCKY108", DiagnosticSeverity.Warning, "[Draftable] record is error-obsolete", "'{0}' gets no draft: it is marked [Obsolete(error: true)], so generated code can't reference it (CS0619)" },
     };
 

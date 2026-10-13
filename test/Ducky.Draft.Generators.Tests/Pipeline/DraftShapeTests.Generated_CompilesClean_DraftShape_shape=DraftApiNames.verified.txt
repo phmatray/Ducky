@@ -75,10 +75,20 @@ partial record class Job
         global::App.Job global::Ducky.Draft.IDraft<global::App.Job>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Job>)this).IsDirty ? __x_original with { Build = __m_Build, IsDirty = __m_IsDirty, Revoke = __m_Revoke } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Build, __x_original.Build)
+                && global::System.Collections.Generic.EqualityComparer<bool>.Default.Equals(__m_IsDirty, __x_original.IsDirty)
+                && global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Revoke, __x_original.Revoke))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Build = __m_Build, IsDirty = __m_IsDirty, Revoke = __m_Revoke };
         }
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {
@@ -148,10 +158,18 @@ partial record class Task
         global::App.Task global::Ducky.Draft.IDraft<global::App.Task>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Task>)this).IsDirty ? __x_original with { Id = __m_Id } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Id, __x_original.Id))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Id = __m_Id };
         }
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

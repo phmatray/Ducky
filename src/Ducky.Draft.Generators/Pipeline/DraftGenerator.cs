@@ -14,11 +14,17 @@ public sealed class DraftGenerator : IIncrementalGenerator
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var records = context.SyntaxProvider
+        var analyses = context.SyntaxProvider
             .ForAttributeWithMetadataName("Ducky.Draft.DraftableAttribute", static (n, _) => n is TypeDeclarationSyntax, static (c, _) => DraftModel.Create(c))
-            .WithTrackingName("DraftRecords");
+            .WithTrackingName("DraftAnalyses");
+
+        // The member reports keep their location (a tree reference) out of the emitted model, so an edit that only moves a
+        // record re-reports its members without emitting it again.
+        var records = analyses.Select(static (a, _) => a.Model).WithTrackingName("DraftRecords");
+        var reports = analyses.Select(static (a, _) => a.Reports).WithTrackingName("DraftReports");
         var output = records.Collect().WithTrackingName("DraftOutput");
         context.RegisterSourceOutput(output, static (spc, models) => Emit(spc, models));
+        context.RegisterSourceOutput(reports, static (spc, items) => Report(spc, items));
     }
 
     private static void Emit(SourceProductionContext context, ImmutableArray<DraftModel> models)
@@ -40,6 +46,14 @@ public sealed class DraftGenerator : IIncrementalGenerator
             }
 
             context.AddSource(hintName + ".Draft.g.cs", Source(model));
+        }
+    }
+
+    private static void Report(SourceProductionContext context, EquatableArray<MemberDiagnostic> reports)
+    {
+        foreach (var report in reports.Items)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(report.Descriptor, report.Location, report.Member, report.Type));
         }
     }
 
@@ -74,13 +88,33 @@ public sealed class DraftGenerator : IIncrementalGenerator
         var newDraft = model.NewDraft ? "new " : "";
         var newCreateDraft = model.NewCreateDraft ? "new " : "";
         var writable = model.Members.Items.Where(m => m.Setter is not null).ToList();
-        var fields = writable.Select(m => $"\n    private {m.Type} __m_{m.Name};");
-        var copies = writable.Select(m => $"\n        __m_{m.Name} = original.{Escape(m)};");
-        var changes = writable.Select(m => $"!global::System.Collections.Generic.EqualityComparer<{m.Type}>.Default.Equals(__m_{m.Name}, __x_original.{Escape(m)})");
-        var assignments = writable.Select(m => $"{Escape(m)} = __m_{m.Name}{(m.NullForgiving ? "!" : "")}");
-        var build = writable.Count == 0
-            ? "return __x_original;"
-            : $"return (({draft})this).IsDirty ? __x_original with {{ {string.Join(", ", assignments)} }} : __x_original;";
+        var drafted = writable.Where(m => m.Draft is not null).ToList();
+        var fields = writable.Select(m => m.Draft is null
+            ? $"\n    private {m.Type} __m_{m.Name};"
+            : $"\n    private {m.Draft.Type}? __m_{m.Name};\n    private bool __s_{m.Name};");
+        var copies = writable.Where(m => m.Draft is null).Select(m => $"\n        __m_{m.Name} = original.{Escape(m)};");
+
+        // Tri-state (SPEC §13.3): untouched (null, false) reads the original, drafted (non-null) builds its draft, which
+        // returns its own source when clean, assigned (value or null, true) builds the assigned value.
+        var builds = drafted.Select(m =>
+            $"var __b_{m.Name} = __m_{m.Name} is null ? (__s_{m.Name} ? default! : __x_original.{Escape(m)}) : {m.Draft!.Build.Replace("{0}", $"__m_{m.Name}")};");
+        var changes = writable.Select(m => m.Draft is null
+            ? $"!global::System.Collections.Generic.EqualityComparer<{m.Type}>.Default.Equals(__m_{m.Name}, __x_original.{Escape(m)})"
+            : $"__s_{m.Name} || {m.Draft.Dirty.Replace("{0}", $"__m_{m.Name}")} == true");
+
+        // The no-op identity check per member kind: by value for a scalar or an ImmutableArray<T> (the same underlying
+        // array), by reference for a draft's result.
+        var unchanged = writable.Select(m =>
+            m.Draft is null ? $"global::System.Collections.Generic.EqualityComparer<{m.Type}>.Default.Equals(__m_{m.Name}, __x_original.{Escape(m)})"
+            : m.Draft.ByValue ? $"__b_{m.Name}.Equals(__x_original.{Escape(m)})"
+            : $"global::System.Object.ReferenceEquals(__b_{m.Name}, __x_original.{Escape(m)})");
+        var assignments = writable.Select(m => $"{Escape(m)} = {(m.Draft is null ? "__m_" : "__b_")}{m.Name}{(m.NullForgiving ? "!" : "")}");
+        var lines = builds
+            .Append($"if ({string.Join("\n            && ", unchanged)})")
+            .Append("{\n            return __x_original;\n        }\n")
+            .Append($"return __x_original with {{ {string.Join(", ", assignments)} }};");
+        var build = writable.Count == 0 ? "return __x_original;" : string.Join("\n        ", lines);
+        var revokes = drafted.Select(m => $"\n        ((global::Ducky.Draft.IRevocable?)__m_{m.Name})?.Revoke();");
         return $$"""
             /// <summary>Applies <paramref name="recipe"/> to a draft of this instance and returns the result (this instance when nothing changed).</summary>
             public {{type}} Produce(global::System.Action<Draft> recipe)
@@ -129,7 +163,10 @@ public sealed class DraftGenerator : IIncrementalGenerator
                 public {type} Build() => (({draft})this).Build();
             """)}}
 
-                void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+                void global::Ducky.Draft.IRevocable.Revoke()
+                {
+                    __x_revoked = true;{{string.Concat(revokes)}}
+                }
 
                 private void __x_Guard()
                 {
@@ -144,18 +181,25 @@ public sealed class DraftGenerator : IIncrementalGenerator
 
     private static string Property(MemberModel member)
     {
-        var header = $"{(member.DisallowNull ? "[global::System.Diagnostics.CodeAnalysis.DisallowNull] " : "")}{(member.IsPublic ? "public" : "internal")}{(member.IsNew ? " new" : "")} {member.Type} {Escape(member)}";
-        return member.Setter is null
-            ? $$"""
+        var name = Escape(member);
+        var type = member.Draft is null ? member.Type : member.Draft.Type + (member.Draft.Nullable ? "?" : "");
+        var header = $"{(member.DisallowNull ? "[global::System.Diagnostics.CodeAnalysis.DisallowNull] " : "")}{(member.IsPublic ? "public" : "internal")}{(member.IsNew ? " new" : "")} {type} {name}";
+        if (member.Setter is null)
+        {
+            return $$"""
 
 
                     /// <summary>Gets <c>{{member.Name}}</c> of the original (the draft can't set it).</summary>
                     {{header}}
                     {
-                        get { __x_Guard(); return __x_original.{{Escape(member)}}; }
+                        get { __x_Guard(); return __x_original.{{name}}; }
                     }
-                """
-            : $$"""
+                """;
+        }
+
+        if (member.Draft is null)
+        {
+            return $$"""
 
 
                     /// <summary>Gets or sets <c>{{member.Name}}</c>.</summary>
@@ -165,6 +209,43 @@ public sealed class DraftGenerator : IIncrementalGenerator
                         {{member.Setter}}set { __x_Guard(); __m_{{member.Name}} = value; }
                     }
                 """;
+        }
+
+        // A nullable member is drafted only from a non-null original (never `new(null…)`). A setter that replaces a draft
+        // revokes it unless it is the same instance (SPEC §13.3, INV-26), so a write through the stale draft throws.
+        var (guard, value, read) = member.Draft.Nullable
+            ? ($" && __x_original.{name} is {{ }} __x_value", "__x_value", $"__m_{member.Name}")
+            : ("", $"__x_original.{name}", $"__m_{member.Name}!");
+        return $$"""
+
+
+                /// <summary>Gets or sets <c>{{member.Name}}</c>: a lazy draft of the original's value{{(member.Draft.Nullable ? " (null while it is null and nothing was assigned)" : "")}}; assigning replaces it.</summary>
+                {{header}}
+                {
+                    get
+                    {
+                        __x_Guard();
+                        if (__m_{{member.Name}} is null && !__s_{{member.Name}}{{guard}})
+                        {
+                            __m_{{member.Name}} = {{member.Draft.Create.Replace("{0}", value)}};
+                        }
+
+                        return {{read}};
+                    }
+
+                    {{member.Setter}}set
+                    {
+                        __x_Guard();
+                        if (!global::System.Object.ReferenceEquals(__m_{{member.Name}}, value))
+                        {
+                            ((global::Ducky.Draft.IRevocable?)__m_{{member.Name}})?.Revoke();
+                        }
+
+                        __m_{{member.Name}} = value;
+                        __s_{{member.Name}} = true;
+                    }
+                }
+            """;
     }
 
     private static string Escape(MemberModel member) => IdentifierSanitizer.EscapeKeyword(member.Name);

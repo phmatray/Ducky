@@ -1333,7 +1333,7 @@ public sealed class ListDraft<T> : IList<T>, IReadOnlyList<T>, IRevocable       
     public void AddRange(IEnumerable<T> items); public int RemoveAll(Predicate<T> match); public void Sort(Comparison<T> comparison);
     public ImmutableList<T> BuildList();
     public ImmutableArray<T> BuildArray();                  // a default (uninitialized) source reads as empty and is returned as-is when clean
-    public static implicit operator ListDraft<T>(ImmutableList<T> list);
+    [return: NotNullIfNotNull(nameof(list))] public static implicit operator ListDraft<T>?(ImmutableList<T>? list);   // null in, null out
     public static implicit operator ListDraft<T>(ImmutableArray<T> array);
 }
 public sealed class ListDraft<T, TDraft> : IReadOnlyList<TDraft>, IRevocable       // elements are [Draftable] records
@@ -1352,7 +1352,7 @@ public sealed class ListDraft<T, TDraft> : IReadOnlyList<TDraft>, IRevocable    
 }
 public sealed class DictionaryDraft<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>, IRevocable where TKey : notnull
 { public bool IsDirty { get; } public ImmutableDictionary<TKey, TValue> Build();
-  public static implicit operator DictionaryDraft<TKey, TValue>(ImmutableDictionary<TKey, TValue> source); }
+  [return: NotNullIfNotNull(nameof(source))] public static implicit operator DictionaryDraft<TKey, TValue>?(ImmutableDictionary<TKey, TValue>? source); }
 public sealed class DictionaryDraft<TKey, TValue, TDraft> : IReadOnlyDictionary<TKey, TDraft>, IRevocable
     where TKey : notnull where TValue : class where TDraft : class, IDraft<TValue>
 { public DictionaryDraft(ImmutableDictionary<TKey, TValue> source, Func<TValue, TDraft> createDraft);   // null values: as ListDraft<T,TDraft>
@@ -1360,7 +1360,8 @@ public sealed class DictionaryDraft<TKey, TValue, TDraft> : IReadOnlyDictionary<
   public ImmutableDictionary<TKey, TValue> Build(); }
 public sealed class SetDraft<T> : ISet<T>, IReadOnlySet<T>, IRevocable
 { public bool IsDirty { get; } public ImmutableHashSet<T> BuildHashSet(); public ImmutableSortedSet<T> BuildSortedSet();
-  public static implicit operator SetDraft<T>(ImmutableHashSet<T> source); public static implicit operator SetDraft<T>(ImmutableSortedSet<T> source); }
+  [return: NotNullIfNotNull(nameof(source))] public static implicit operator SetDraft<T>?(ImmutableHashSet<T>? source);
+  [return: NotNullIfNotNull(nameof(source))] public static implicit operator SetDraft<T>?(ImmutableSortedSet<T>? source); }
 ```
 
 ### 13.3 Generated code (nested: no new top-level type, no `{R}Extensions` collisions)

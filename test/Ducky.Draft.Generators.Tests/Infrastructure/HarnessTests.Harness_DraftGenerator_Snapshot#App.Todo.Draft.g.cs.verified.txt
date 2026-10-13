@@ -54,13 +54,21 @@ partial record class Todo
         global::App.Todo global::Ducky.Draft.IDraft<global::App.Todo>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Todo>)this).IsDirty ? __x_original with { Title = __m_Title } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Title, __x_original.Title))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Title = __m_Title };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Todo Build() => ((global::Ducky.Draft.IDraft<global::App.Todo>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

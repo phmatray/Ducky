@@ -11,10 +11,12 @@ namespace Ducky.Draft.Generators;
 /// <summary>
 /// One <c>[Draftable]</c> type as the Draft generator emits it (SPEC §13.3), symbol-free so the pipeline caches (GEN-06).
 /// <see cref="Error"/> is the DUCKY101-104/108 descriptor (with <see cref="ErrorArgument"/>) and <see cref="Location"/> the
-/// record's identifier in its own tree (so a #pragma in the user's source applies), null on a valid model: a source
-/// location compares by tree and span, so it only changes with the record's own file. <see cref="NewDraft"/> and
+/// record's identifier in its own tree (so a #pragma in the user's source applies), null on a valid model, which holds no
+/// location or tree at all: an edit that only moves a valid record emits nothing again. The DUCKY105/107 reports on its
+/// members travel beside the model (<see cref="Create"/>), in their own pipeline step. <see cref="NewDraft"/> and
 /// <see cref="NewCreateDraft"/> are true when the generated member hides an accessible non-generic inherited one
-/// (<c>new</c>). The other members are filled in either way.
+/// (<c>new</c>), the generated one of a draftable base in this compilation included. The other members are filled in
+/// either way.
 /// </summary>
 internal sealed record DraftModel(
     string TypeName,
@@ -31,7 +33,7 @@ internal sealed record DraftModel(
     Location? Location)
 {
     // Generated code names user types fully qualified, with `?` on annotated reference types.
-    private static readonly SymbolDisplayFormat _format =
+    internal static readonly SymbolDisplayFormat Format =
         SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
     private static readonly SymbolDisplayFormat _namespaceFormat =
@@ -52,13 +54,16 @@ internal sealed record DraftModel(
 
     private static readonly ImmutableArray<string> _generatedNames = [DraftName, ProduceName, CreateDraftName];
 
-    public static DraftModel Create(GeneratorAttributeSyntaxContext context)
+    // The model, and the DUCKY105/107 reports on its members (none for an invalid model), which keep their source location.
+    public static (DraftModel Model, EquatableArray<MemberDiagnostic> Reports) Create(GeneratorAttributeSyntaxContext context)
     {
         var type = (INamedTypeSymbol)context.TargetSymbol;
         var compilation = context.SemanticModel.Compilation;
         var obsolete = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
         var (error, argument) = Validate(type, compilation, obsolete);
         var members = Mirrored(type, compilation, obsolete);
+        var mapping = new DraftMapping(compilation, obsolete);
+        var location = ((TypeDeclarationSyntax)context.TargetNode).Identifier.GetLocation();
 
         // An [Obsolete] DiagnosticId or an [Experimental] id replaces CS0618 for the members generated code reads.
         var diagnosticIds = members
@@ -73,23 +78,55 @@ internal sealed record DraftModel(
             .Select(m => m.Name)
             .ToImmutableHashSet();
 
-        return new DraftModel(
+        var models = new List<MemberModel>();
+        var reports = new List<MemberDiagnostic>();
+        foreach (var property in members)
+        {
+            // A member is reported once (§13.3): at its declaration when declared here, by the base declaring it when that
+            // base is drafted here (its own model reports it), else on the record's name, so a report never points into
+            // another file (or nowhere: a member inherited from another assembly).
+            var declaredHere = SymbolEqualityComparer.Default.Equals(property.ContainingType, type);
+            var reported = error is null && (declaredHere || !mapping.IsDraftedHere(property.ContainingType));
+            var at = declaredHere ? property.Locations[0] : location;
+            var (model, unmapped) = Member(property, type, compilation, objectMembers, obsolete, mapping);
+            models.Add(model);
+            if (!reported)
+            {
+                continue;
+            }
+
+            if (mapping.IsMutable(property.Type))
+            {
+                reports.Add(new MemberDiagnostic(DraftDiagnostics.MutableCollection, at, property.ToDisplayString(), property.Type.ToDisplayString()));
+            }
+
+            if (unmapped is not null)
+            {
+                reports.Add(new MemberDiagnostic(DraftDiagnostics.NoCompatibleDraft, at, property.ToDisplayString(), unmapped.ToDisplayString()));
+            }
+        }
+
+        var draftedBase = BaseTypes(type).Skip(1).Any(mapping.IsDraftedHere);
+
+        var draft = new DraftModel(
             type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
             type.ToDisplayString(),
             type.ContainingNamespace.IsGlobalNamespace ? null : type.ContainingNamespace.ToDisplayString(_namespaceFormat),
             new EquatableArray<string>(Nesting(type).Select(Declaration).Reverse().ToImmutableArray()),
-            new EquatableArray<MemberModel>(members.Select(p => Member(p, type, compilation, objectMembers, obsolete)).ToImmutableArray()),
+            new EquatableArray<MemberModel>(models.ToImmutableArray()),
             BaseTypes(type).Any(t => !t.GetMembers("Build").IsEmpty),
-            Inherited(type, DraftName, compilation).Any(m => m is INamedTypeSymbol { Arity: 0 } or IMethodSymbol { Arity: 0 }),
-            Inherited(type, CreateDraftName, compilation).Any(m => m is IMethodSymbol { Parameters.IsEmpty: true, Arity: 0 }),
+            draftedBase || Inherited(type, DraftName, compilation).Any(m => m is INamedTypeSymbol { Arity: 0 } or IMethodSymbol { Arity: 0 }),
+            draftedBase || Inherited(type, CreateDraftName, compilation).Any(m => m is IMethodSymbol { Parameters.IsEmpty: true, Arity: 0 }),
             new EquatableArray<string>(diagnosticIds),
             error,
             argument,
-            error is null ? null : ((TypeDeclarationSyntax)context.TargetNode).Identifier.GetLocation());
+            error is null ? null : location);
+        return (draft, new EquatableArray<MemberDiagnostic>(reports.ToImmutableArray()));
     }
 
-    // The shape predicate (SPEC §13.3): a draft is emitted exactly when this returns no descriptor.
-    private static (DiagnosticDescriptor? Error, string? Argument) Validate(INamedTypeSymbol type, Compilation compilation, INamedTypeSymbol? obsolete)
+    // The shape predicate (SPEC §13.3): a draft is emitted exactly when this returns no descriptor. DraftMapping shares it
+    // to decide whether a same-compilation member type maps to its Draft.
+    internal static (DiagnosticDescriptor? Error, string? Argument) Validate(INamedTypeSymbol type, Compilation compilation, INamedTypeSymbol? obsolete)
     {
         var notPartial = Nesting(type).Skip(1).FirstOrDefault(t => !IsPartial(t));
         var clash = _generatedNames.FirstOrDefault(n => n == type.Name || !type.GetMembers(n).IsEmpty || IsInheritedClash(type, n, compilation));
@@ -169,7 +206,8 @@ internal sealed record DraftModel(
         return members;
     }
 
-    private static MemberModel Member(IPropertySymbol property, INamedTypeSymbol type, Compilation compilation, ImmutableHashSet<string> objectMembers, INamedTypeSymbol? obsolete)
+    private static (MemberModel Model, INamedTypeSymbol? Unmapped) Member(
+        IPropertySymbol property, INamedTypeSymbol type, Compilation compilation, ImmutableHashSet<string> objectMembers, INamedTypeSymbol? obsolete, DraftMapping mapping)
     {
         // The minimum of the getter's and its type's accessibility (the getter, not the property: `public int X { internal get; }`
         // must not be readable through the draft); protected internal is internal in the sealed draft.
@@ -181,14 +219,19 @@ internal sealed record DraftModel(
         var maybeNull = !property.Type.IsValueType && HasAttribute(property, MaybeNullName);
         var disallowNull = HasAttribute(property, DisallowNullName);
         var memberType = Annotate(property.Type, compilation);
-        return new MemberModel(
+        var annotated = maybeNull ? memberType.WithNullableAnnotation(NullableAnnotation.Annotated) : memberType;
+
+        // A get-only member is never drafted: `with` keeps it.
+        var (draft, unmapped) = writable ? mapping.Map(property.Type, annotated) : (null, null);
+        return (new MemberModel(
             property.Name,
-            (maybeNull ? memberType.WithNullableAnnotation(NullableAnnotation.Annotated) : memberType).ToDisplayString(_format),
+            annotated.ToDisplayString(Format),
             isPublic,
             objectMembers.Contains(property.Name),
             !writable ? null : isPublic && property.SetMethod!.DeclaredAccessibility != Accessibility.Public ? "internal " : "",
             disallowNull,
-            maybeNull || disallowNull);
+            maybeNull || disallowNull,
+            draft), unmapped);
     }
 
     // Declared public, internal or protected internal, and reachable from the record (not internal to another assembly).
@@ -232,6 +275,11 @@ internal sealed record DraftModel(
             .OfType<string>()
             .Where(id => id.Length > 0);
 
+    // Whether a symbol generated code names carries an id the CS0618 pragma doesn't cover (DraftMapping rejects such a
+    // metadata Draft rather than disabling an id it doesn't own).
+    internal static bool HasDiagnosticId(ISymbol symbol, INamedTypeSymbol? obsolete) =>
+        DiagnosticIdsOf(symbol, obsolete).OfType<string>().Any(id => id.Length > 0);
+
     private static IEnumerable<object?> DiagnosticIdsOf(ISymbol symbol, INamedTypeSymbol? obsolete) =>
         symbol.GetAttributes().SelectMany(a =>
             SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete) ? a.NamedArguments.Where(n => n.Key == "DiagnosticId").Select(n => n.Value.Value)
@@ -258,7 +306,7 @@ internal sealed record DraftModel(
     };
 
     // CS0619 can't be suppressed, so generated code never names an [Obsolete(…, error: true)] symbol.
-    private static bool IsErrorObsolete(ISymbol symbol, INamedTypeSymbol? obsolete) =>
+    internal static bool IsErrorObsolete(ISymbol symbol, INamedTypeSymbol? obsolete) =>
         symbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete) && a.ConstructorArguments.Any(arg => arg.Value is true));
 
     // GEN-06: an oblivious reference type (user source under #nullable disable) counts as annotated at every position, so
@@ -335,6 +383,7 @@ internal sealed record DraftModel(
 /// One mirrored property: its verbatim name, its type as generated code writes it, whether the draft member is public
 /// (else internal), whether it hides an <c>object</c> member (<c>new</c>), and its setter's modifier (<c>""</c> or
 /// <c>"internal "</c>), null for a get-only member, whether the draft member carries
-/// <c>[DisallowNull]</c>, and whether Build passes its value back with <c>!</c> (a <c>[MaybeNull]</c> or <c>[DisallowNull]</c> property).
+/// <c>[DisallowNull]</c>, whether Build passes its value back with <c>!</c> (a <c>[MaybeNull]</c> or <c>[DisallowNull]</c> property),
+/// and its <see cref="DraftMember"/>, null for a plain member (copied, compared with the original by value).
 /// </summary>
-internal sealed record MemberModel(string Name, string Type, bool IsPublic, bool IsNew, string? Setter, bool DisallowNull, bool NullForgiving);
+internal sealed record MemberModel(string Name, string Type, bool IsPublic, bool IsNew, string? Setter, bool DisallowNull, bool NullForgiving, DraftMember? Draft);

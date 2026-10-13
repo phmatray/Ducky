@@ -48,15 +48,15 @@ public sealed class SetDraft<T> : ISet<T>, IReadOnlySet<T>, IRevocable
         }
     }
 
-    /// <summary>Creates a draft of <paramref name="source"/>.</summary>
+    /// <summary>Creates a draft of <paramref name="source"/>, or null for null (assigning null sets a nullable member to null).</summary>
     /// <param name="source">The source set.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
-    public static implicit operator SetDraft<T>(ImmutableHashSet<T> source) => new(source ?? throw new ArgumentNullException(nameof(source)));
+    [return: NotNullIfNotNull(nameof(source))]
+    public static implicit operator SetDraft<T>?(ImmutableHashSet<T>? source) => source is null ? null : new(source);
 
-    /// <summary>Creates a draft of <paramref name="source"/>.</summary>
+    /// <summary>Creates a draft of <paramref name="source"/>, or null for null (assigning null sets a nullable member to null).</summary>
     /// <param name="source">The source set.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
-    public static implicit operator SetDraft<T>(ImmutableSortedSet<T> source) => new(source ?? throw new ArgumentNullException(nameof(source)));
+    [return: NotNullIfNotNull(nameof(source))]
+    public static implicit operator SetDraft<T>?(ImmutableSortedSet<T>? source) => source is null ? null : new(source);
 
     /// <summary>Builds an <see cref="ImmutableHashSet{T}"/>: the source itself when clean and a hash set.</summary>
     /// <returns>The built set.</returns>

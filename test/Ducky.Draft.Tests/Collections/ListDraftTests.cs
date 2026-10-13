@@ -44,12 +44,13 @@ public sealed class ListDraftTests
         array.ShouldBe([1, 2, 3]);
     }
 
+    // Null-transparent, so assigning null to a nullable collection member sets it to null (SPEC §13.3).
     [Fact]
-    public void ListDraft_NullList_Throws()
+    public void ListDraft_NullList_ConvertsToNull()
     {
-        ImmutableList<int> none = null!;
+        ImmutableList<int>? none = null;
 
-        Should.Throw<ArgumentNullException>(() => _ = (ListDraft<int>)none).ParamName.ShouldBe("list");
+        ((ListDraft<int>?)none).ShouldBeNull();
     }
 
     // IList<T> contract: whatever the source kind and dirty state (an array source reads through the boxed array indexer).

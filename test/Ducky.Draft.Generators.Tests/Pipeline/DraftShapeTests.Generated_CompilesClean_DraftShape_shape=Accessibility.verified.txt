@@ -101,13 +101,25 @@ partial record class Account
         global::App.Account global::Ducky.Draft.IDraft<global::App.Account>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Account>)this).IsDirty ? __x_original with { Id = __m_Id, Key = __m_Key, Level = __m_Level, Visible = __m_Visible, Tier = __m_Tier } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Id, __x_original.Id)
+                && global::System.Collections.Generic.EqualityComparer<global::App.Secret?>.Default.Equals(__m_Key, __x_original.Key)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Level, __x_original.Level)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Visible, __x_original.Visible)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Tier, __x_original.Tier))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Id = __m_Id, Key = __m_Key, Level = __m_Level, Visible = __m_Visible, Tier = __m_Tier };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Account Build() => ((global::Ducky.Draft.IDraft<global::App.Account>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {
@@ -187,13 +199,22 @@ partial record class Hidden
         global::App.Hidden global::Ducky.Draft.IDraft<global::App.Hidden>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::App.Hidden>)this).IsDirty ? __x_original with { Value = __m_Value, X = __m_X } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<global::App.Secret>.Default.Equals(__m_Value, __x_original.Value)
+                && global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_X, __x_original.X))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { Value = __m_Value, X = __m_X };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::App.Hidden Build() => ((global::Ducky.Draft.IDraft<global::App.Hidden>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {
@@ -265,13 +286,21 @@ partial class Host
             global::App.Host.Inner global::Ducky.Draft.IDraft<global::App.Host.Inner>.Build()
             {
                 __x_Guard();
-                return ((global::Ducky.Draft.IDraft<global::App.Host.Inner>)this).IsDirty ? __x_original with { X = __m_X } : __x_original;
+                if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_X, __x_original.X))
+                {
+                    return __x_original;
+                }
+
+                return __x_original with { X = __m_X };
             }
 
             /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
             public global::App.Host.Inner Build() => ((global::Ducky.Draft.IDraft<global::App.Host.Inner>)this).Build();
 
-            void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+            void global::Ducky.Draft.IRevocable.Revoke()
+            {
+                __x_revoked = true;
+            }
 
             private void __x_Guard()
             {

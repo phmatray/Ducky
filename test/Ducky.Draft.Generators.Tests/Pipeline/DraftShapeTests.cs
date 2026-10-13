@@ -43,12 +43,12 @@ public sealed class DraftShapeTests
             [Ducky.Draft.Draftable] public sealed partial record Job(int Build, bool IsDirty, string Revoke);
             [Ducky.Draft.Draftable] public sealed partial record Task(int Id) { public void Build() { } }
             """,
-        // Private names a naive `__` + camelCase scheme would duplicate (CS0102). M10-05 must change `Tags` to
-        // ImmutableList<string>, so `__s_Tags` (its assigned flag) sits next to `__m_TagsSet`.
+        // Private names a naive `__` + camelCase scheme would duplicate (CS0102): the collection `Tags` has its assigned
+        // flag `__s_Tags` next to `__m_TagsSet`.
         ["PrivateNames"] = """
             namespace App;
             [Ducky.Draft.Draftable] public sealed partial record Session(string Id, bool Revoked, int O, string original);
-            [Ducky.Draft.Draftable] public sealed partial record Labels(string Tags, string TagsSet);
+            [Ducky.Draft.Draftable] public sealed partial record Labels(System.Collections.Immutable.ImmutableList<string> Tags, string TagsSet);
             [Ducky.Draft.Draftable] public sealed partial record Cased(int Items, int items, string value, string recipe, string draft);
             """,
         // Members named with a private prefix of generated code are left out of the draft (`with` keeps their value).
@@ -218,6 +218,82 @@ public sealed class DraftShapeTests
                 [AllowNull] public string Nick { get; init; } = "";
                 [NotNull] public string? City { get; init; } = "";
             }
+            """,
+        // Element kind x collection kind x nullability (SPEC §13.3 table, §17.7): element drafts only for a draftable,
+        // non-annotated element; a nullable-annotated element or value maps to the plain draft; other immutable collections,
+        // get-only members and nested collections stay plain.
+        ["Collections"] = """
+            using System.Collections.Immutable;
+            namespace App;
+            [Ducky.Draft.Draftable] public sealed partial record Todo(int Id, string Title);
+            public sealed record Plain(int X);
+            [Ducky.Draft.Draftable]
+            public sealed partial record Matrix(
+                ImmutableList<int> Ints, ImmutableList<string> Strings, ImmutableList<Todo> Todos, ImmutableList<Todo?> MaybeTodos, ImmutableList<Plain> Plains,
+                ImmutableArray<int> IntArray, ImmutableArray<Todo> TodoArray, ImmutableArray<Todo?> MaybeTodoArray,
+                ImmutableDictionary<string, int> Counts, ImmutableDictionary<string, Todo> ById, ImmutableDictionary<string, Todo?> MaybeById, ImmutableDictionary<int, string?> Labels,
+                ImmutableHashSet<string> Tags, ImmutableSortedSet<int> Ranks, ImmutableHashSet<Todo> TodoSet,
+                Todo Child, Todo? MaybeChild, Plain Other)
+            {
+                public ImmutableList<Todo>? MaybeList { get; init; }
+                public ImmutableArray<Todo>? MaybeArray { get; init; }
+                public ImmutableArray<int>? MaybeInts { get; init; }
+                public ImmutableDictionary<string, Todo>? MaybeDictionary { get; init; }
+                public ImmutableHashSet<string>? MaybeSet { get; init; }
+                public ImmutableSortedSet<int>? MaybeSorted { get; init; }
+                public ImmutableList<Todo> ReadOnly { get; } = [];
+                public ImmutableList<Todo> Restricted { get; internal set; } = [];
+                public ImmutableQueue<int> Queue { get; init; } = [];
+                public ImmutableSortedDictionary<string, int> Sorted { get; init; } = ImmutableSortedDictionary<string, int>.Empty;
+                public ImmutableList<ImmutableList<Todo>> Nested { get; init; } = [];
+                [System.Diagnostics.CodeAnalysis.MaybeNull] public Todo Flagged { get; init; } = new(0, "");
+                [System.Diagnostics.CodeAnalysis.DisallowNull] public ImmutableList<int>? Guarded { get; init; }
+            }
+            """,
+        // Oblivious members and elements (GEN-06): members are nullable drafts, elements keep element drafting.
+        ["NullableDisabledCollections"] = """
+            using System.Collections.Immutable;
+            namespace App;
+            [Ducky.Draft.Draftable] public sealed partial record Todo(int Id);
+            #nullable disable
+            [Ducky.Draft.Draftable]
+            public sealed partial record Old(
+                Todo Child, ImmutableList<Todo> Todos, ImmutableArray<Todo> Cards, ImmutableDictionary<string, Todo> ById,
+                ImmutableList<string> Names, ImmutableHashSet<string> Tags, ImmutableDictionary<string, string> Map);
+            """,
+        // A draftable base in this compilation gets Draft and CreateDraft, so the derived record's take `new`, and a
+        // partial record base without [Draftable] gets neither; a record can draft itself recursively.
+        ["DerivedMembers"] = """
+            using System.Collections.Immutable;
+            namespace App;
+            [Ducky.Draft.Draftable] public sealed partial record Todo(int Id);
+            [Ducky.Draft.Draftable] public partial record Base(ImmutableList<Todo> Items, Todo Child);
+            [Ducky.Draft.Draftable] public sealed partial record Derived(ImmutableList<Todo> Items, Todo Child, ImmutableArray<int> Extra) : Base(Items, Child);
+            public abstract partial record PlainBase { public ImmutableList<Todo> Inherited { get; init; } = []; }
+            [Ducky.Draft.Draftable] public sealed partial record Heir(int X) : PlainBase;
+            [Ducky.Draft.Draftable] public sealed partial record Node(int Value, Node? Next, ImmutableList<Node> Children);
+            """,
+        // Mutable collections are plain get/set members with DUCKY105; other mutable types are not reported.
+        ["MutableCollections"] = """
+            using System.Collections.Generic;
+            namespace App;
+            public abstract record Base(List<int> Inherited);
+            [Ducky.Draft.Draftable]
+            public sealed partial record Bag(List<int> Items, int[] Numbers, Dictionary<string, int> Map, List<int>? Maybe) : Base(Items)
+            {
+                public int[,] Grid { get; init; } = new int[0, 0];
+                public HashSet<int> Set { get; init; } = [];
+                public List<int> Fixed { get; } = [];
+            }
+            """,
+        // A member type that is a same-compilation [Draftable] record failing validation (non-partial) reports only
+        // DUCKY101: the parent maps it as a plain value and compiles (SPEC §13.3 shape-matrix row).
+        ["InvalidMemberType"] = """
+            using System.Collections.Immutable;
+            namespace App;
+            [Ducky.Draft.Draftable] public sealed record Broken(int Id);
+            [Ducky.Draft.Draftable]
+            public sealed partial record Parent(Broken Child, Broken? Maybe, ImmutableList<Broken> Items, ImmutableDictionary<string, Broken> ById);
             """,
     };
 

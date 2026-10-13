@@ -59,13 +59,21 @@ partial class Outer
                 global::App.Outer.Holder.Item global::Ducky.Draft.IDraft<global::App.Outer.Holder.Item>.Build()
                 {
                     __x_Guard();
-                    return ((global::Ducky.Draft.IDraft<global::App.Outer.Holder.Item>)this).IsDirty ? __x_original with { Y = __m_Y } : __x_original;
+                    if (global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(__m_Y, __x_original.Y))
+                    {
+                        return __x_original;
+                    }
+
+                    return __x_original with { Y = __m_Y };
                 }
 
                 /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
                 public global::App.Outer.Holder.Item Build() => ((global::Ducky.Draft.IDraft<global::App.Outer.Holder.Item>)this).Build();
 
-                void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+                void global::Ducky.Draft.IRevocable.Revoke()
+                {
+                    __x_revoked = true;
+                }
 
                 private void __x_Guard()
                 {
@@ -141,13 +149,21 @@ partial class Outer
                 global::App.Outer.IHost.Inner global::Ducky.Draft.IDraft<global::App.Outer.IHost.Inner>.Build()
                 {
                     __x_Guard();
-                    return ((global::Ducky.Draft.IDraft<global::App.Outer.IHost.Inner>)this).IsDirty ? __x_original with { Z = __m_Z } : __x_original;
+                    if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_Z, __x_original.Z))
+                    {
+                        return __x_original;
+                    }
+
+                    return __x_original with { Z = __m_Z };
                 }
 
                 /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
                 public global::App.Outer.IHost.Inner Build() => ((global::Ducky.Draft.IDraft<global::App.Outer.IHost.Inner>)this).Build();
 
-                void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+                void global::Ducky.Draft.IRevocable.Revoke()
+                {
+                    __x_revoked = true;
+                }
 
                 private void __x_Guard()
                 {
@@ -223,13 +239,21 @@ partial class Outer
                 global::App.Outer.Middle.Leaf global::Ducky.Draft.IDraft<global::App.Outer.Middle.Leaf>.Build()
                 {
                     __x_Guard();
-                    return ((global::Ducky.Draft.IDraft<global::App.Outer.Middle.Leaf>)this).IsDirty ? __x_original with { X = __m_X } : __x_original;
+                    if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_X, __x_original.X))
+                    {
+                        return __x_original;
+                    }
+
+                    return __x_original with { X = __m_X };
                 }
 
                 /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
                 public global::App.Outer.Middle.Leaf Build() => ((global::Ducky.Draft.IDraft<global::App.Outer.Middle.Leaf>)this).Build();
 
-                void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+                void global::Ducky.Draft.IRevocable.Revoke()
+                {
+                    __x_revoked = true;
+                }
 
                 private void __x_Guard()
                 {
@@ -305,13 +329,21 @@ partial class Outer
                 global::App.Outer.Pair.Inside global::Ducky.Draft.IDraft<global::App.Outer.Pair.Inside>.Build()
                 {
                     __x_Guard();
-                    return ((global::Ducky.Draft.IDraft<global::App.Outer.Pair.Inside>)this).IsDirty ? __x_original with { W = __m_W } : __x_original;
+                    if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_W, __x_original.W))
+                    {
+                        return __x_original;
+                    }
+
+                    return __x_original with { W = __m_W };
                 }
 
                 /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
                 public global::App.Outer.Pair.Inside Build() => ((global::Ducky.Draft.IDraft<global::App.Outer.Pair.Inside>)this).Build();
 
-                void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+                void global::Ducky.Draft.IRevocable.Revoke()
+                {
+                    __x_revoked = true;
+                }
 
                 private void __x_Guard()
                 {
@@ -382,13 +414,21 @@ partial record class Global
         global::Global global::Ducky.Draft.IDraft<global::Global>.Build()
         {
             __x_Guard();
-            return ((global::Ducky.Draft.IDraft<global::Global>)this).IsDirty ? __x_original with { G = __m_G } : __x_original;
+            if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(__m_G, __x_original.G))
+            {
+                return __x_original;
+            }
+
+            return __x_original with { G = __m_G };
         }
 
         /// <summary>Builds the result: the original instance when nothing changed, else a new instance.</summary>
         public global::Global Build() => ((global::Ducky.Draft.IDraft<global::Global>)this).Build();
 
-        void global::Ducky.Draft.IRevocable.Revoke() => __x_revoked = true;
+        void global::Ducky.Draft.IRevocable.Revoke()
+        {
+            __x_revoked = true;
+        }
 
         private void __x_Guard()
         {

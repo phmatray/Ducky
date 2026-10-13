@@ -31,7 +31,7 @@ public sealed class DictionaryDraft<TKey, TValue, TDraft> : IReadOnlyDictionary<
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="createDraft"/> is null.</exception>
     public DictionaryDraft(ImmutableDictionary<TKey, TValue> source, Func<TValue, TDraft> createDraft)
     {
-        _values = source; // the conversion throws for a null source
+        _values = source ?? throw new ArgumentNullException(nameof(source));
         _createDraft = createDraft ?? throw new ArgumentNullException(nameof(createDraft));
         _drafts = new(source.KeyComparer);
     }
