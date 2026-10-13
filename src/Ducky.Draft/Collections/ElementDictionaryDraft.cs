@@ -51,11 +51,20 @@ public sealed class DictionaryDraft<TKey, TValue, TDraft> : IReadOnlyDictionary<
     /// <inheritdoc />
     public TDraft this[TKey key] => Drafts.GetOrCreate(_drafts, _values.StoredKey(key), _values[key], _createDraft); // cached under the stored key
 
-    /// <summary>Sets the value of <paramref name="key"/>, revoking the draft of the value it replaces.</summary>
+    /// <summary>
+    /// Sets the value of <paramref name="key"/>, revoking the draft of the value it replaces. That draft is flushed first, as the
+    /// same edits written with <c>with</c> stored it first: a value the <c>ValueComparer</c> calls equal to the edited one is then
+    /// no change and keeps the edit (INV-26).
+    /// </summary>
     /// <param name="key">The key.</param>
     /// <param name="value">The value.</param>
     public void Set(TKey key, TValue value)
     {
+        if (_drafts.TryGetValue(key, out var draft))
+        {
+            Flush(_values.StoredKey(key), draft);
+        }
+
         _values[key] = value;
         Drafts.Revoke(_drafts, key);
     }
@@ -89,11 +98,7 @@ public sealed class DictionaryDraft<TKey, TValue, TDraft> : IReadOnlyDictionary<
     {
         foreach (var (key, draft) in _drafts) // cached under the stored key, so the flush never renames a key
         {
-            var built = draft.Build();
-            if (!ReferenceEquals(built, _values[key])) // by reference: an unchanged value is not a change, and an edit survives the ValueComparer
-            {
-                _values.Replace(key, built);
-            }
+            Flush(key, draft);
         }
 
         return _values.Build();
@@ -130,5 +135,16 @@ public sealed class DictionaryDraft<TKey, TValue, TDraft> : IReadOnlyDictionary<
     {
         Drafts.RevokeAll(_drafts);
         ((IRevocable)_values).Revoke();
+    }
+
+    // Writes the draft's result under the stored key, by reference: an unchanged value is not a change, and an edit survives
+    // the ValueComparer.
+    private void Flush(TKey key, TDraft draft)
+    {
+        var built = draft.Build();
+        if (!ReferenceEquals(built, _values[key]))
+        {
+            _values.Replace(key, built);
+        }
     }
 }

@@ -344,7 +344,7 @@ tests:
   - { name: Produce_NullableMemberNullOriginal_GetReturnsNull, projects: [Ducky.Draft.Generators.Tests], invariants: [INV-26], stage: 17 }
   - { name: Produce_ReplacedChildDraft_Throws, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
   - { name: Produce_RevertedScalar_ReturnsSameReference, projects: [Ducky.Draft.Generators.Tests], invariants: [INV-26], stage: 17 }
-  - { name: Produce_RevokedDraftAccess_Throws, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
+  - { name: Produce_RevokedDraftAccess_Throws, projects: [Ducky.Draft.Generators.Tests, Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
   - { name: Produce_UntouchedBranches_ReferenceEqual, projects: [Ducky.Draft.Tests], invariants: [INV-26], stage: 17 }
   - { name: Queue_AfterDispose_HandlerNeverInvoked, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
   - { name: Queue_DisposeFromRunWithQueuedSuccessor_CompletesWithoutTimeout, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
