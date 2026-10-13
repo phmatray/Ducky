@@ -99,9 +99,14 @@ internal sealed partial class Build
             violations.AddRange(ForbiddenPackages(graph, XElement.Load(SmokeSolution).Descendants("Project")
                 .Select(p => Path.GetFileNameWithoutExtension((string)p.Attribute("Path")!))).Concat(GraphSelfCheck()));
 
-            // Step 1: the consumers compile with TreatWarningsAsErrors.
+            // Step 1: the consumers compile with TreatWarningsAsErrors. That does not reach an MSBuild <Warning>, so
+            // -warnaserror:DUCKY901 (which promotes nothing else) guards the negative case: no consumer without Mutty,
+            // the Ducky.Draft-only one included, may get DUCKY901 from Ducky.Draft's buildTransitive targets. -nodeReuse:false:
+            // MSBuild worker nodes left alive by a previous local run's Mutty variant still report DUCKY901 for the restored
+            // DraftOnly consumer (seen on SDK 10.0.401; a fresh node, as on CI, does not).
             var exitCode = 0;
-            DotNet($"build {SmokeSolution} -c Release --no-restore -p:DuckyVersion={version}", exitHandler: p => exitCode = p.ExitCode);
+            DotNet($"build {SmokeSolution} -c Release --no-restore -p:DuckyVersion={version} -warnaserror:DUCKY901 -nodeReuse:false",
+                exitHandler: p => exitCode = p.ExitCode);
             if (exitCode != 0)
             {
                 violations.Add($"{SmokeSolution.Name} failed to build (exit code {exitCode})");
@@ -122,36 +127,77 @@ internal sealed partial class Build
             }
             violations.AddRange(ServedDuckyJsSelfCheck());
 
-            // Step 4 and the step-1 variants: each must fail with its diagnostic. SmokeSingleton sets Lifetime = Singleton
+            // Step 4 and the step-1 variants: each must fail with its diagnostic, or build and print it when it is a warning
+            // (DUCKY901: TreatWarningsAsErrors does not reach an MSBuild <Warning>; its absence without Mutty is guarded by
+            // the step-1 build above). SmokeSingleton sets Lifetime = Singleton
             // (DUCKY004 reaches the Blazor-only consumer only through Ducky's buildTransitive targets and analyzers).
-            (string Case, AbsolutePath Project, string Properties, string Code)[] variants =
+            (string Case, AbsolutePath Project, string Properties, string Expected)[] variants =
             [
-                ("the Ducky.Blazor-only consumer plus the fake Ducky.Generator 1.0.292", SmokeDirectory / "BlazorOnly", "-p:SmokeLegacyGenerator=1.0.292", "DUCKY900"),
-                ("the Ducky.Blazor-only consumer's Singleton variant", SmokeDirectory / "BlazorOnly", "-p:SmokeSingleton=true -warnaserror", "DUCKY004"),
-                ("a consumer of the Ducky.Generator 2.0.0 tombstone", SmokeDirectory / "Tombstone", "", "DUCKY900"),
-                ("the Server consumer on the fake Ducky.Blazor 1.0.292", SmokeDirectory / "Server", "-p:SmokeBlazorVersion=1.0.292", "DUCKY902"),
-                ("the Server consumer's Singleton variant", SmokeDirectory / "Server", "-p:SmokeSingleton=true -warnaserror", "DUCKY004"),
+                ("the Ducky.Blazor-only consumer plus the fake Ducky.Generator 1.0.292", SmokeDirectory / "BlazorOnly", "-p:SmokeLegacyGenerator=1.0.292", "error DUCKY900"),
+                ("the Ducky.Blazor-only consumer's Singleton variant", SmokeDirectory / "BlazorOnly", "-p:SmokeSingleton=true -warnaserror", "error DUCKY004"),
+                ("a consumer of the Ducky.Generator 2.0.0 tombstone", SmokeDirectory / "Tombstone", "", "error DUCKY900"),
+                ("the Server consumer on the fake Ducky.Blazor 1.0.292", SmokeDirectory / "Server", "-p:SmokeBlazorVersion=1.0.292", "error DUCKY902"),
+                ("the Server consumer's Singleton variant", SmokeDirectory / "Server", "-p:SmokeSingleton=true -warnaserror", "error DUCKY004"),
+                ("the Ducky.Draft-only consumer plus the fake Mutty 2.0.0", SmokeDirectory / "DraftOnly", "-p:SmokeMutty=2.0.0", "warning DUCKY901"),
             ];
-            foreach (var (variant, project, properties, code) in variants)
+            foreach (var (variant, project, properties, expected) in variants)
             {
                 var variantExit = 0;
                 var output = DotNet($"build {project} -c Release -p:DuckyVersion={version} {properties:nq}",
                         logOutput: false, exitHandler: p => variantExit = p.ExitCode)
                     .Select(o => o.Text)
                     .ToList();
-                if (variantExit == 0 || !output.Any(line => line.Contains($"error {code}", StringComparison.Ordinal)))
+                if (VariantViolation(variant, expected, variantExit, output) is { } violation)
                 {
                     // The error lines tell a failed restore (e.g. NU1101) from a missing diagnostic.
                     var errors = output.Where(line => line.Contains(": error ", StringComparison.Ordinal)).Distinct().ToList();
                     (errors.Count > 0 ? errors : output.TakeLast(20)).ToList().ForEach(line => Log.Warning("{Line}", line));
-                    violations.Add($"{variant} must fail with {code} (exit code {variantExit})");
+                    violations.Add(violation);
                 }
             }
+            violations.AddRange(VariantSelfCheck());
 
             violations.ForEach(v => Log.Error(v));
             Assert.True(violations.Count == 0, $"PackageSmoke: {violations.Count} violation(s)");
             Log.Information("PackageSmoke: Ducky {Version} packages passed the step-1 and step-5 checks", version);
         });
+
+    // A variant expecting an error line must fail the build with it; one expecting a warning line must build and print it.
+    private static string? VariantViolation(string variant, string expected, int exitCode, List<string> output)
+    {
+        var mustFail = expected.StartsWith("error ", StringComparison.Ordinal);
+        if (exitCode != 0 == mustFail && output.Any(line => line.Contains(expected, StringComparison.Ordinal)))
+        {
+            return null;
+        }
+
+        return mustFail
+            ? $"{variant} must fail with {expected["error ".Length..]} (exit code {exitCode})"
+            : $"{variant} must build with {expected} (exit code {exitCode})";
+    }
+
+    private static IEnumerable<string> VariantSelfCheck()
+    {
+        const string error = "x.csproj : error DUCKY900: Ducky.Generator is deprecated";
+        const string warning = "x.targets(4,5): warning DUCKY901: Mutty is replaced by Ducky.Draft";
+        (string Case, string Expected, int Exit, string Line, string? Violation)[] planted =
+        [
+            ("a failed build with the error", "error DUCKY900", 1, error, null),
+            ("a passing build with the error line", "error DUCKY900", 0, error, "v must fail with DUCKY900 (exit code 0)"),
+            ("a failed build without the error", "error DUCKY900", 1, "error NU1101: Unable to find package", "v must fail with DUCKY900 (exit code 1)"),
+            ("a passing build with the warning", "warning DUCKY901", 0, warning, null),
+            ("a passing build without the warning", "warning DUCKY901", 0, "Build succeeded.", "v must build with warning DUCKY901 (exit code 0)"),
+            ("a failed build promoting the warning", "warning DUCKY901", 1, "error DUCKY901: Mutty is replaced", "v must build with warning DUCKY901 (exit code 1)"),
+        ];
+        foreach (var (plantedCase, expected, exit, line, violation) in planted)
+        {
+            var actual = VariantViolation("v", expected, exit, ["Restore complete.", line]);
+            if (actual != violation)
+            {
+                yield return $"VariantSelfCheck: {plantedCase} must give '{violation}', got '{actual}'";
+            }
+        }
+    }
 
     // §17.9 step 5: a consuming app can serve the module only if its publish output holds it under
     // wwwroot/_content/Ducky.Blazor/ (a fingerprinted name is allowed; a compressed copy alone is not the module).

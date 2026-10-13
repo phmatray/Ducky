@@ -2,3 +2,6 @@ Ducky
 Copyright 2024-2026 Atypical Consulting SRL
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The Draft generator caching tests (test/Ducky.Draft.Generators.Tests/Pipeline/MuttyCachingTests.cs) are ported from
+Mutty (https://github.com/phmatray/Mutty), Copyright 2020-2024 Atypical Consulting SRL, Apache License, Version 2.0.

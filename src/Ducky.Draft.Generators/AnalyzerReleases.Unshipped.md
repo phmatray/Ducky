@@ -10,5 +10,6 @@ DUCKY102 | Ducky | Error | DraftDiagnostics
 DUCKY103 | Ducky | Error | DraftDiagnostics
 DUCKY104 | Ducky | Error | DraftDiagnostics
 DUCKY105 | Ducky | Warning | DraftDiagnostics
+DUCKY106 | Ducky | Warning | DraftDiagnostics
 DUCKY107 | Ducky | Info | DraftDiagnostics
 DUCKY108 | Ducky | Warning | DraftDiagnostics

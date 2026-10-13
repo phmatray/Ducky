@@ -549,6 +549,50 @@ now run four shard jobs over disjoint file partitions of every active project, e
 above; `MutationForSha` still finds one `nightly-mutation` run per SHA. `release-mutation` is not split yet. Local
 measurements are in the M0-15 record below.
 
+**Update (M10-07, step 17, 2026-10-13).** Re-measured on top of M10-06 (`80b7fbbc`) plus this story's work, for every
+project that holds real logic on `v2`: `Ducky` (stage 2), `Ducky.Generators` (stage 7: M13-04, M13-04b, M13-06),
+`Ducky.Testing` (9), `Ducky.Blazor` (10), `Ducky.Draft` and `Ducky.Draft.Generators` (17: the Draft runtime, the
+generator and the DUCKY106 analyzer). `Ducky.Reactive` is still its stage-1 skeleton (one operator, 15 lines): its
+logic lands with M11-01 to M11-05 (stage 16), and M16-02 measures it with the whole strict run on `ubuntu-latest`.
+Command: `./build.sh Mutation --project <name> --strict-stages`, same Apple M1 Max, Stryker's default concurrency 5.
+The machine was shared with the sibling worktrees' gates under far more load than any earlier record (load average 150
+to 530 for most of the window, 4 to 60 for about an hour near the end), and three runs were stopped from outside
+(SIGTERM, exit 143, or Stryker gone without a report) and run again. The six runs below ran at the same time, each in
+its own copy of the worktree, from 14:46 (`Ducky` from 14:55, after one such stop):
+
+| Project (test projects run per mutant) | Tests | Mutants created / tested | Score | Stryker time |
+|---|---|---|---|---|
+| `Ducky` (8) | 1374 | 1378 / 921 | 98.05 | 5 h 06 min |
+| `Ducky.Blazor` (4) | 912 | 1006 / 593 | 95.11 | 3 h 14 min |
+| `Ducky.Generators` (1) | 633 | 1059 / 858 | 100.00 (105 `Timeout`) | 2 h 18 min |
+| `Ducky.Draft.Generators` (1) | 224 | 637 / 567 | 100.00 (34 `Timeout`) | 1 h 32 min |
+| `Ducky.Draft` (2) | 265 | 218 / 144 | 100.00 | 28 min |
+| `Ducky.Testing` (2) | 62 | 107 / 71 | 100.00 | 14 min |
+| all six | | 4405 / 3154 | | 12 h 53 min |
+
+- **This load inflates every time.** The two Draft projects took 2 min 46 s and 4 min 57 s earlier the same day at load
+  20 to 66 (`Ducky.Draft.Generators` then had 541 tested mutants), against 28 min and 1 h 32 min here: 10 to 19 times
+  longer. `Ducky` took 56 min 28 s for 913 mutants at M0-15. The `Timeout` counts are that load too (a mutant whose tests
+  run close to Stryker's timeout times out, M0-15 record below).
+- **What the strict run needs on the runner.** Two readings, neither a measurement on `ubuntu-latest`:
+  - *Relative to `Ducky`.* Measured side by side, the six projects take 2.5 times `Ducky`'s time. `Ducky` took 1 h 18
+    min on a 2-vCPU runner in PR #262, so the six take about 200 min there. That is a floor, not an estimate: `Ducky`'s
+    mutants now run eight test projects, `Ducky.Generators.Tests` (633 tests) and `Ducky.Blazor.Tests` among them, which
+    had no real logic at PR #262 (stage 6). It also leaves out `Ducky.Reactive` and any growth up to the release.
+  - *Load removed.* Dividing the 12 h 53 min by the Draft projects' load factor (10 to 19) gives 41 to 77 min of this
+    machine without load, and the runner factor (1.4, up to 5) gives 57 to 386 min.
+
+  So the strict run can exceed 254 minutes (330 / 1.3), and one 330-minute job may no longer fit it with 30% headroom.
+- **Timeouts.** `release-mutation` (`.github/workflows/release.yml`) and the `nightly-mutation` and `mutation` shards
+  keep `timeout-minutes: 330` (§20.1), already at the cap: 30 minutes under GitHub's 360-minute job limit, so S-9's
+  first outcome leaves no room to raise them. The nightly and `mutation` already run four file shards (M0-15), each a quarter
+  to a half of the strict run, so their 330 holds. `release-mutation` runs the whole strict `Mutation` in one job when
+  no successful `nightly-mutation` run exists for the tagged SHA, and that fallback may not fit.
+- **Recommendation for M16-02** (stage 19, which owns the final S-9 decision): measure the strict run on
+  `ubuntu-latest`, `Ducky.Reactive` included; if it exceeds 254 minutes, split `release-mutation` (S-9's second
+  outcome: per-project jobs over `Mutation --project <name>`, §17.8, or file shards as the nightly's). This story
+  changes no workflow, target or spec section.
+
 ## M0-15: Stryker `--mutate` patterns for shards and baseline reruns
 
 **Question.** Owner-added story M0-15 shards the mutation runs and reruns individual mutants against a baseline. Two
