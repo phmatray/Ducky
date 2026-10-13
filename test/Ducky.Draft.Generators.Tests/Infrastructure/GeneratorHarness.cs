@@ -56,22 +56,33 @@ internal static class GeneratorHarness
     }
 
     // Emits a clean generated compilation into a collectible context and hands its assembly to `use`: generated code runs
-    // as compiled C#, with the generator under test (a cached image would hide Stryker's active mutant).
-    public static void Execute(Compilation output, Action<System.Reflection.Assembly> use)
+    // as compiled C#, with the generator under test (a cached image would hide Stryker's active mutant). The compilations it
+    // references (another assembly's draftable records) are loaded into the same context first, so its references bind to them.
+    public static void Execute(Compilation output, Action<System.Reflection.Assembly> use, params Compilation[] references)
     {
-        output.ShouldCompileClean();
-        using var image = new MemoryStream();
-        output.Emit(image, cancellationToken: TestContext.Current.CancellationToken).Success.ShouldBeTrue();
-        image.Position = 0;
         var context = new System.Runtime.Loader.AssemblyLoadContext("probe", isCollectible: true);
         try
         {
-            use(context.LoadFromStream(image));
+            foreach (var reference in references)
+            {
+                _ = Load(context, reference);
+            }
+
+            use(Load(context, output));
         }
         finally
         {
             context.Unload();
         }
+    }
+
+    private static System.Reflection.Assembly Load(System.Runtime.Loader.AssemblyLoadContext context, Compilation compilation)
+    {
+        compilation.ShouldCompileClean();
+        using var image = new MemoryStream();
+        compilation.Emit(image, cancellationToken: TestContext.Current.CancellationToken).Success.ShouldBeTrue();
+        image.Position = 0;
+        return context.LoadFromStream(image);
     }
 
     // The zero-diagnostics helper: any diagnostic but a hidden one fails, warnings included (GEN-06).

@@ -275,6 +275,27 @@ public sealed class DictionaryDraftTests
         built.ValueComparer.ShouldBeSameAs(byId);
     }
 
+    // INV-26: Set flushes the value's element draft before SetItem, as `with` would have stored the edit first: a value the
+    // ValueComparer calls equal to the edited one is then no change and keeps the edit, instead of dropping it with the draft.
+    [Fact]
+    public void DictionaryDraft_ElementDrafts_SetEqualUnderValueComparer_EditKept()
+    {
+        var byId = EqualityComparer<Todo>.Create((x, y) => x?.Id == y?.Id, x => x.Id);
+        var source = ImmutableDictionary.Create<string, Todo>(StringComparer.OrdinalIgnoreCase, byId).Add("a", _a).Add("b", _b);
+        var draft = new DictionaryDraft<string, Todo, TodoDraft>(source, x => new TodoDraft(x));
+        var a = draft["a"];
+        a.Title = "a2";
+        _ = draft["b"];
+
+        draft.Set("A", new Todo(1, "other"));
+        draft.Set("b", new Todo(2, "b2"));
+
+        Should.Throw<ObjectDisposedException>(() => a.Title = "lost");
+        var built = draft.Build();
+        built["a"].Title.ShouldBe("a2");
+        built["b"].Title.ShouldBe("b");
+    }
+
     // A removal or Clear inside a foreach fails fast, as List<T> does, instead of a KeyNotFoundException on a removed key;
     // edits through the visited drafts and Set are fine.
     [Fact]
