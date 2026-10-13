@@ -140,15 +140,25 @@ public sealed class RegistrationDiagnosticsTests
             g => g.ShouldNotContain("Blazor"));
     }
 
-    // Against the real Ducky.Blazor both gated methods resolve: no DUCKY022 (the Prerender<T> emission is pinned by the
-    // [Prerender] shape rows, the PersistAttributeDefaults<T> one ships with M13-04b).
+    // INV-25, stage 12: against the real Ducky.Blazor both gated methods resolve, so every gated call is emitted, no
+    // DUCKY022 is reported and the output compiles (a signature change to either method fails here, never silently turns
+    // into DUCKY022). [Persist] carries only the named arguments written, a bare one an empty delegate.
     [Fact]
-    public void Ducky022_RealBlazor_NotReported()
+    public void Registration_RealBlazor_EmitsPersistAndPrerender_NoDucky022()
     {
-        var input = DiagnosingHarness.WithBlazor(GeneratorHarness.Compile(Prefix + Attributed));
+        var input = DiagnosingHarness.WithBlazor(GeneratorHarness.Compile(Prefix + Attributed + """
+            [Ducky.Persist(Version = 2, SyncAcrossTabs = true)] public sealed class Versioned : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            """));
         input.GetTypeByMetadataName("Ducky.Blazor.DuckyBlazorBuilderExtensions").ShouldNotBeNull();
 
-        Diagnose(input, out _).ShouldBeEmpty();
+        Diagnose(input, out var output).ShouldBeEmpty();
+        Generated(output).ShouldSatisfyAllConditions(
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<global::App.Persisted>(b, o => { });"),
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<global::App.Both>(b, o => { });"),
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<global::App.Versioned>(b, o => { o.Version = 2; o.SyncAcrossTabs = true; });"),
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<global::App.Prerendered>(b);"),
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<global::App.Both>(b);"),
+            g => g.ShouldNotContain("PersistAttributeDefaults<global::App.Prerendered>"));
     }
 
     // A hand-written older-shape Ducky.Blazor (the skew fixture of SPEC §16.1): the extension type resolves, but neither
@@ -180,7 +190,8 @@ public sealed class RegistrationDiagnosticsTests
         Generated(output).ShouldSatisfyAllConditions(
             g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<global::App.Prerendered>(b);"),
             g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<global::App.Both>(b);"),
-            g => g.ShouldNotContain("Prerender<global::App.Persisted>"));
+            g => g.ShouldNotContain("Prerender<global::App.Persisted>"),
+            g => g.ShouldNotContain("PersistAttributeDefaults<"));
     }
 
     // The Prerender<T> skew case (stage 11): an older-shape Ducky.Blazor whose Prerender methods all differ from the exact
@@ -214,7 +225,9 @@ public sealed class RegistrationDiagnosticsTests
         ], ignoreOrder: true);
         ShouldBeAt(diagnostics.Single(d => d.GetMessage(CultureInfo.InvariantCulture).Contains("'App.Prerendered'", StringComparison.Ordinal)), input, "Prerendered");
         Generated(output).ShouldSatisfyAllConditions(
-            g => g.ShouldNotContain("Prerender<"),
+            g => g.ShouldNotContain(".Prerender<"),
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<global::App.Persisted>(b, o => { });"),
+            g => g.ShouldContain("global::Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<global::App.Both>(b, o => { });"),
             g => g.ShouldContain("b.AddSlice<global::App.Prerendered>();"),
             g => g.ShouldContain("b.AddSlice<global::App.Both>();"));
     }

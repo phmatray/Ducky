@@ -13,9 +13,9 @@ namespace Ducky.Generators;
 
 /// <summary>
 /// DUCKY005 and DUCKY011–015 (SPEC §16.2): handlers for non-concrete action types, an unchanged <c>with</c> copy of the
-/// state in an <c>On&lt;T&gt;</c> reducer lambda, a <c>[Persist]</c> slice on its derived key, a concurrency key without
-/// value equality, a duplicate <c>On&lt;T&gt;</c> in one constructor, and two slices sharing a state type. Generated code
-/// is not analysed.
+/// state in an <c>On&lt;T&gt;</c> reducer lambda, a <c>[Persist]</c> or <c>Persist&lt;T&gt;()</c> slice on its derived
+/// key, a concurrency key without value equality, a duplicate <c>On&lt;T&gt;</c> in one constructor, and two slices
+/// sharing a state type. Generated code is not analysed.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class StructuralAnalyzer : DiagnosticAnalyzer
@@ -43,11 +43,13 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
                 compilation.GetTypeByMetadataName("Ducky.Slice`1"),
                 compilation.GetTypeByMetadataName("Ducky.EffectGroup"),
                 compilation.GetTypeByMetadataName("Ducky.Effect`1"),
-                compilation.GetTypeByMetadataName("Ducky.PersistAttribute"));
+                compilation.GetTypeByMetadataName("Ducky.PersistAttribute"),
+                compilation.GetTypeByMetadataName("Ducky.Blazor.DuckyBlazorBuilderExtensions"));
             var slices = new ConcurrentBag<(INamedTypeSymbol Slice, ITypeSymbol State)>();
 
             start.RegisterOperationBlockStartAction(block => OnBlockStart(block, symbols));
             start.RegisterOperationAction(op => OnReturn(op, symbols), OperationKind.Return);
+            start.RegisterOperationAction(op => OnPersistCall(op, symbols), OperationKind.Invocation);
             start.RegisterSymbolAction(symbol => OnType(symbol, symbols, slices), SymbolKind.NamedType);
             start.RegisterCompilationEndAction(end => ReportSharedStates(end, slices));
         });
@@ -177,6 +179,19 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    // DUCKY012, Persist<T>() arm: a Ducky.Blazor Persist<TSlice> call on a slice that doesn't pin its Key, reported on the
+    // call. A type parameter has no Key of its own; an unresolved type argument (CS0246, an error type outside Slice<T>)
+    // is skipped. A resolved one outside Slice<T> is CS0311, and that call binds to an invalid operation.
+    private static void OnPersistCall(OperationAnalysisContext op, Symbols symbols)
+    {
+        var method = ((IInvocationOperation)op.Operation).TargetMethod;
+        if (method.Name == "Persist" && Is(method.ContainingType, symbols.BlazorExtensions) &&
+            method.TypeArguments[0] is INamedTypeSymbol slice && Closing(slice, symbols.Slice) is not null && !PinsKey(slice, symbols.Slice))
+        {
+            op.ReportDiagnostic(Diagnostic.Create(StructuralDiagnostics.DerivedPersistKey, op.Operation.Syntax.GetLocation(), slice.ToDisplayString()));
+        }
+    }
+
     // DUCKY015: every slice whose state type another slice also has, with the others in ordinal order.
     private static void ReportSharedStates(CompilationAnalysisContext context, ConcurrentBag<(INamedTypeSymbol Slice, ITypeSymbol State)> slices)
     {
@@ -265,5 +280,5 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private sealed record Symbols(INamedTypeSymbol? Slice, INamedTypeSymbol? EffectGroup, INamedTypeSymbol? Effect, INamedTypeSymbol? Persist);
+    private sealed record Symbols(INamedTypeSymbol? Slice, INamedTypeSymbol? EffectGroup, INamedTypeSymbol? Effect, INamedTypeSymbol? Persist, INamedTypeSymbol? BlazorExtensions);
 }

@@ -5,7 +5,7 @@ namespace Ducky.Generators.Tests.Registration;
 
 // GEN-02 shape matrix (SPEC §16.1, §17.7, INV-25): every shape's output compiles without any diagnostic under
 // DocumentationMode.Diagnose, nullable enabled and warning level 9999, the generator reports no diagnostic, and its
-// generated source is snapshotted. The core rows reference Ducky.dll only (no Ducky.Blazor, no Ducky.Reactive); the [Prerender]
+// generated source is snapshotted. The core rows reference Ducky.dll only (no Ducky.Blazor, no Ducky.Reactive); the [Persist]/[Prerender]
 // rows add the real Ducky.Blazor.dll.
 public sealed class RegistrationShapeTests
 {
@@ -159,10 +159,34 @@ public sealed class RegistrationShapeTests
 
     public static TheoryData<string> Shapes => [.. _shapes.Keys];
 
-    // [Prerender] rows, compiled against the real Ducky.Blazor (stage 11): one fully qualified Prerender<T>(b) call per
-    // registered [Prerender] slice, after every AddSlice, inside the [Obsolete]/[Experimental] suppressions.
-    private static readonly Dictionary<string, string> _prerenderShapes = new()
+    // [Persist]/[Prerender] rows, compiled against the real Ducky.Blazor (stages 11 and 12): after every AddSlice, one
+    // fully qualified PersistAttributeDefaults<T>(b, ...) call per registered [Persist] slice, carrying only the named
+    // arguments written, in written order (an empty delegate for a bare [Persist]), then one Prerender<T>(b) call per
+    // registered [Prerender] slice, all inside the [Obsolete]/[Experimental] suppressions.
+    private static readonly Dictionary<string, string> _blazorShapes = new()
     {
+        ["Persist"] = """
+            namespace App;
+            public sealed record Cart(int Count);
+            public static class Versions { public const int Current = 4; }
+            [Ducky.Persist] public sealed class Bare : Ducky.Slice<Cart> { public override string Key => "bare"; protected override Cart Initial => new(0); }
+            [Ducky.Persist(SyncAcrossTabs = true, Version = 2)] public sealed class Versioned : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.PersistAttribute(Version = 1, Storage = Ducky.PersistStorage.Local, SyncAcrossTabs = false)] public sealed class Explicit : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Persist(Storage = Ducky.PersistStorage.Server)] public sealed class Shared : Ducky.SliceStore<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Persist(Version = Versions.Current)] public sealed class Constant : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            public partial class Split : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Persist(Storage = Ducky.PersistStorage.Session)] public partial class Split { }
+            public class Host
+            {
+                [Ducky.Persist, Ducky.Prerender] public sealed class Nested : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            }
+            [Ducky.Persist] public abstract class Base : Ducky.Slice<Cart>;
+            public sealed class Derived : Base { protected override Cart Initial => new(0); }
+            public sealed class Plain : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Persist, System.Obsolete("old")] public sealed class Old : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Persist, System.Diagnostics.CodeAnalysis.Experimental("APP002")] public sealed class Trial : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            [Ducky.Persist, System.Obsolete("gone", true)] public sealed class Gone : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            """,
         ["Prerender"] = """
             namespace App;
             public sealed record Cart(int Count);
@@ -199,13 +223,13 @@ public sealed class RegistrationShapeTests
             """,
     };
 
-    public static TheoryData<string> PrerenderShapes => [.. _prerenderShapes.Keys];
+    public static TheoryData<string> BlazorShapes => [.. _blazorShapes.Keys];
 
     [Theory]
-    [MemberData(nameof(PrerenderShapes))]
-    public Task Generated_CompilesClean_PrerenderShape(string shape)
+    [MemberData(nameof(BlazorShapes))]
+    public Task Generated_CompilesClean_BlazorShape(string shape)
     {
-        var input = DiagnosingHarness.WithBlazor(GeneratorHarness.Compile(Undocumented + _prerenderShapes[shape]));
+        var input = DiagnosingHarness.WithBlazor(GeneratorHarness.Compile(Undocumented + _blazorShapes[shape]));
         input.ShouldCompileClean();
 
         var driver = DiagnosingHarness.Run(new RegistrationGenerator(), input, out var output, out var diagnostics);

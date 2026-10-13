@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Ducky.Blazor.Tests" Key="$(DuckyPublicKey)" />
+    <InternalsVisibleTo Include="Ducky.Blazor.Generated.Tests" Key="$(DuckyPublicKey)" />
     <InternalsVisibleTo Include="Ducky.Concurrency.Tests" Key="$(DuckyPublicKey)" />
   </ItemGroup>
 
