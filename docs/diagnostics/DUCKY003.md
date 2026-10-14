@@ -23,7 +23,12 @@ inputs, which it must not alter either.
 
 Not reported: rebinding the parameter itself (`s = s with { … }`), locals and parameters declared inside the lambda,
 including those of a nested lambda such as a recipe (`s.Produce(d => d.Items.Add(x))`), object and collection
-initializers, `with` expressions, and immutable collections (`ImmutableList<T>.Add` returns a new list). The analyzer
+initializers, `with` expressions, and immutable collections (`ImmutableList<T>.Add` returns a new list). A write whose
+receiver is a draft is not reported either, wherever the draft comes from (a captured `CreateDraft()` draft, a field):
+a type implementing `Ducky.Draft.IDraft<T>` (`draft.Count = 1`, `draft.Child.Value = 1`) or a Ducky.Draft collection draft
+(`ListDraft`, `DictionaryDraft`, `SetDraft`: `draft.Items[0] = 1`) edits the draft, never the state it was made from.
+A plain object or an array reached through a draft (`draft.Box.Value = 1`, `draft.Array[0] = 1`) is shared with that
+state and is still reported. The types are matched by metadata name, so the rule needs no reference to Ducky.Draft. The analyzer
 follows references, not data flow: an alias (`var items = s.Items; items.Add(x);`), a call result and a write through an `out` or `ref`
 argument (`int.TryParse(text, out _count)`) are not tracked.
 Only the lambda written directly as the `On<T>` reducer, the `Set`/`SetAsync` mutator or the `Define` projector is

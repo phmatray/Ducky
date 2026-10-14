@@ -16,6 +16,9 @@
     <!-- The real Ducky.Testing.dll for the TestStore arms of DUCKY010 and DUCKY021, copied next to the tests as a file
          only: referencing it would make this a Ducky.Testing test project (§17.8) though no test runs its code. -->
     <ProjectReference Include="../../src/Ducky.Testing/Ducky.Testing.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The real Ducky.Draft.dll for DUCKY003's Draft-receiver exemption, copied next to the tests as a file only, like
+         Ducky.Testing.dll: Ducky.Generators matches its types by metadata name and never references it. -->
+    <ProjectReference Include="../../src/Ducky.Draft/Ducky.Draft.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

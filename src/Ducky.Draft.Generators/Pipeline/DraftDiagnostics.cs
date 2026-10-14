@@ -53,6 +53,11 @@ internal static class DraftDiagnostics
     private const string ErrorObsoleteMessage = "'{0}' gets no draft: it is marked [Obsolete(error: true)], so generated code can't reference it (CS0619)";
     private const string ErrorObsoleteHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY108.md";
 
+    private const string DiscardId = "DUCKY109";
+    private const string DiscardTitle = "Result of a draft member's method discarded";
+    private const string DiscardMessage = "result discarded: assign it, {0} = {0}.{1}(...)";
+    private const string DiscardHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY109.md";
+
     public static readonly DiagnosticDescriptor NotPartialRecord = new(
         NotPartialRecordId, NotPartialRecordTitle, NotPartialRecordMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: NotPartialRecordHelp);
 
@@ -77,5 +82,8 @@ internal static class DraftDiagnostics
     public static readonly DiagnosticDescriptor ErrorObsolete = new(
         ErrorObsoleteId, ErrorObsoleteTitle, ErrorObsoleteMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: ErrorObsoleteHelp);
 
-    public static readonly ImmutableArray<DiagnosticDescriptor> All = [NotPartialRecord, ContainerNotPartial, Generic, NameClash, MutableCollection, Escape, NoCompatibleDraft, ErrorObsolete];
+    public static readonly DiagnosticDescriptor Discard = new(
+        DiscardId, DiscardTitle, DiscardMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: DiscardHelp);
+
+    public static readonly ImmutableArray<DiagnosticDescriptor> All = [NotPartialRecord, ContainerNotPartial, Generic, NameClash, MutableCollection, Escape, NoCompatibleDraft, ErrorObsolete, Discard];
 }

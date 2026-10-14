@@ -16,6 +16,7 @@ public sealed class DraftDescriptorsTests
         { "DUCKY106", DiagnosticSeverity.Warning, "Draft escapes its Produce recipe", "'{0}' escapes its Produce recipe: the draft is revoked when Produce returns, so any later use throws ObjectDisposedException" },
         { "DUCKY107", DiagnosticSeverity.Info, "Member type is [Draftable] in metadata but has no compatible Draft", "'{0}' gets no draft of '{1}': '{1}' is [Draftable] in another assembly but has no nested public Draft implementing IDraft<{1}> with a public Draft({1}) constructor; it is edited by assignment" },
         { "DUCKY108", DiagnosticSeverity.Warning, "[Draftable] record is error-obsolete", "'{0}' gets no draft: it is marked [Obsolete(error: true)], so generated code can't reference it (CS0619)" },
+        { "DUCKY109", DiagnosticSeverity.Warning, "Result of a draft member's method discarded", "result discarded: assign it, {0} = {0}.{1}(...)" },
     };
 
     [Theory]

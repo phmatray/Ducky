@@ -6,6 +6,7 @@ using Ducky.Generators.Analyzers.Purity;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using Drafts = (Microsoft.CodeAnalysis.INamedTypeSymbol? Draft, Microsoft.CodeAnalysis.INamedTypeSymbol? Revocable);
 
 namespace Ducky.Generators;
 
@@ -20,6 +21,7 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
     private const string Captured = "a captured variable";
     private const string Field = "a field";
     private const string Mutator = "mutator";
+    private const string DraftNamespace = "Ducky.Draft";
 
     // (type metadata name, member name or null for every member, rule). A type matches itself, a derived type and an
     // implementing type, so a FakeTimeProvider override or an IJSInProcessRuntime call is caught too.
@@ -81,8 +83,10 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             var sliceStore = compilation.GetTypeByMetadataName("Ducky.SliceStore`1");
             var selector = compilation.GetTypeByMetadataName("Ducky.Selector");
             var rules = _typeRules.Select(r => (Type: compilation.GetTypeByMetadataName(r.Type), r.Member, r.Rule)).ToImmutableArray();
+            // By metadata name: Ducky.Generators never references Ducky.Draft.
+            Drafts drafts = (compilation.GetTypeByMetadataName("Ducky.Draft.IDraft`1"), compilation.GetTypeByMetadataName("Ducky.Draft.IRevocable"));
             start.RegisterOperationAction(
-                c => AnalyzeInvocation(c, (IInvocationOperation)c.Operation, slice, sliceStore, selector, rules), OperationKind.Invocation);
+                c => AnalyzeInvocation(c, (IInvocationOperation)c.Operation, slice, sliceStore, selector, rules, drafts), OperationKind.Invocation);
         });
     }
 
@@ -94,7 +98,8 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? slice,
         INamedTypeSymbol? sliceStore,
         INamedTypeSymbol? selector,
-        ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules)
+        ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules,
+        Drafts drafts)
     {
         // On<T>, Set/SetAsync and Define are the only members a consumer can invoke on Slice<TState>,
         // SliceStore<TState> and Selector. Every On<T> and Define overload takes the reducer or projector as its last
@@ -150,10 +155,10 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
                     Check(context, objectCreation, objectCreation.Constructor!, rules, arm);
                     break;
                 case IAssignmentOperation assignment:
-                    CheckWrite(context, assignment, assignment.Target, lambda, arm);
+                    CheckWrite(context, assignment, assignment.Target, lambda, arm, drafts);
                     break;
                 case IIncrementOrDecrementOperation increment:
-                    CheckWrite(context, increment, increment.Target, lambda, arm);
+                    CheckWrite(context, increment, increment.Target, lambda, arm, drafts);
                     break;
             }
         }
@@ -198,9 +203,10 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    // DUCKY003 on a write. Rebinding the lambda's own parameter replaces no shared value, so only a member of it counts.
+    // DUCKY003 on a write. Rebinding the lambda's own parameter replaces no shared value, so only a member of it counts,
+    // and a member of a draft edits the draft, not the state it was made from.
     private static void CheckWrite(
-        OperationAnalysisContext context, IOperation write, IOperation target, IAnonymousFunctionOperation lambda, string arm)
+        OperationAnalysisContext context, IOperation write, IOperation target, IAnonymousFunctionOperation lambda, string arm, Drafts drafts)
     {
         switch (target)
         {
@@ -209,14 +215,14 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             case ITupleOperation tuple:
                 foreach (var element in tuple.Elements)
                 {
-                    CheckWrite(context, write, element, lambda, arm);
+                    CheckWrite(context, write, element, lambda, arm, drafts);
                 }
 
                 break;
             default:
                 var root = Root(target);
                 var owner = Owner(root, lambda);
-                if (owner is not null && (owner != Parameter || root != target))
+                if (owner is not null && (owner != Parameter || root != target) && !DraftReceiver(target, drafts))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(PurityDiagnostics.Mutation, write.Syntax.GetLocation(), target.Syntax.ToString(), owner, arm));
                 }
@@ -224,6 +230,16 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
                 break;
         }
     }
+
+    // A member or indexer of a type implementing Ducky.Draft.IDraft<T>, or of a Ducky.Draft collection draft (a
+    // Ducky.Draft type implementing Ducky.Draft.IRevocable: ListDraft, DictionaryDraft, SetDraft). A static member has no
+    // receiver. A known mutator needs no exemption: no collection draft is in a mutator namespace.
+    private static bool DraftReceiver(IOperation target, Drafts drafts) => target switch
+    {
+        IMemberReferenceOperation { Instance.Type: { } type } => Inherits(type, drafts.Draft)
+            || (Inherits(type, drafts.Revocable) && type.ContainingNamespace.ToDisplayString() == DraftNamespace),
+        _ => false,
+    };
 
     // The variable, `this` or static member a reference hangs off: s.Box.Value → s, ((Box)s.Box).Value → s, _count → this.
     // ponytail: no data flow, so an alias (var items = s.Items; items.Add(1)) and a call result are not followed.
