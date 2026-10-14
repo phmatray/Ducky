@@ -1,4 +1,8 @@
 #nullable enable
+Ducky.Draft.Generators.DraftDiscardAnalyzer
+Ducky.Draft.Generators.DraftDiscardAnalyzer.DraftDiscardAnalyzer() -> void
+override Ducky.Draft.Generators.DraftDiscardAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Ducky.Draft.Generators.DraftDiscardAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 Ducky.Draft.Generators.DraftEscapeAnalyzer
 Ducky.Draft.Generators.DraftEscapeAnalyzer.DraftEscapeAnalyzer() -> void
 override Ducky.Draft.Generators.DraftEscapeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
