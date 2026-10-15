@@ -10,6 +10,6 @@
     <Compile Include="../Shared/Counter.cs" Link="Counter.cs" />
     <PackageReference Include="Ducky" Version="$(DuckyVersion)" />
     <PackageReference Include="Ducky.Blazor" Version="$(DuckyVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.13" />
   </ItemGroup>
 </Project>
