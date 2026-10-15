@@ -14,11 +14,11 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
 
     <!-- Ducky's only runtime dependencies (SPEC §3). -->
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
 
     <!-- Ducky.Blazor's runtime dependencies (SPEC §3), added with the features that use them. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
 
     <!-- R3 1.3.x: plain version, pinned by the lock file, packed as R3 >= 1.3.x (SPEC §3). -->
     <PackageVersion Include="R3" Version="1.3.1" />
@@ -27,10 +27,10 @@
     <PackageVersion Include="CsCheck" Version="4.9.1" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.1" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.10.0" />
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
     <!-- Ducky.Blazor.Tests: the Interactive Server data protection the prerender seed's wire estimate covers (SPEC §11.4). -->
-    <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
     <!-- Generator snapshots (SPEC §16.1, GEN-06): Verify.SourceGenerators over the xUnit v3 adapter. 32.0.1 is the last
          MIT Verify: 33.x ships under an EULA whose SponsorCheck fails the build until a sponsorship or exemption is
@@ -39,7 +39,7 @@
     <PackageVersion Include="Verify.XunitV3" Version="32.0.1" />
     <!-- Analyzer verifier tests (SPEC §16.2). Its Workspaces dependency floats at 1.0.1: pinned here to the Roslyn floor above. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.4" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.9.0" />
     <!-- DUCKY009 tests (SPEC §16.2): the real Razor source generator in the driver, taken from the Razor toolset package
          (its source-generators folder, never its build targets). This build targets Roslyn 4.14, so it loads on the S-1
          floor; the SDK's own copy and the Microsoft.CodeAnalysis.Razor.Compiler package need a newer Roslyn or a
