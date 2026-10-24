@@ -1,3 +1,8 @@
 #nullable enable
 Ducky.Reactive.DuckyReactiveExtensions
 static Ducky.Reactive.DuckyReactiveExtensions.OfActionType<TAction>(this R3.Observable<object!>! actions) -> R3.Observable<TAction>!
+abstract Ducky.Reactive.ReactiveEffect.Handle(R3.Observable<object!>! actions, R3.Observable<Ducky.StateSnapshot!>! state) -> R3.Observable<object!>!
+Ducky.Reactive.ReactiveEffect
+Ducky.Reactive.ReactiveEffect.ReactiveEffect() -> void
+static Ducky.Reactive.DuckyReactiveExtensions.AddReactiveEffect<TEffect>(this Ducky.DuckyBuilder! builder) -> Ducky.DuckyBuilder!
+virtual Ducky.Reactive.ReactiveEffect.RetryDelay(int attempt) -> System.TimeSpan?
