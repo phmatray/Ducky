@@ -16,7 +16,7 @@
     <!-- PrivateAssets="none": the Ducky dependency keeps its generator and buildTransitive assets (R-PKG-5). -->
     <ProjectReference Include="../Ducky/Ducky.csproj" PrivateAssets="none" />
     <!-- VersionOverride, not a central PackageVersion: one would pin it transitively in every other project's lock file. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="10.0.14" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
   </ItemGroup>
 </Project>
