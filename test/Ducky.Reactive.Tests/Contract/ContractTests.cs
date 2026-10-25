@@ -4,9 +4,30 @@ using Microsoft.Extensions.Logging.Testing;
 
 namespace Ducky.Reactive.Tests.Contract;
 
-// SPEC §6.3 (SafeLogger: Ducky.Reactive's own copy), §5.1 and §14 (DUCKY309 for reactive effects); INV-03, INV-31.
+// SPEC §6.3 (SafeLogger: Ducky.Reactive's own copy), §6.4 (StoreInitialized's effects start after a reducer failure), §5.1
+// and §14 (DUCKY309 for reactive effects); INV-03, INV-13, INV-31.
 public sealed class ContractTests
 {
+    [Fact]
+    public async Task ReducerThrowsOnStoreInitialized_LoadEffectAndReactiveHostStillStart()
+    {
+        // StoreInitialized's reducer throws: it commits nothing and completes Failed, but its effects react to the action,
+        // not to the commit, so the load effect runs and ReactiveHost subscribes the pipelines (§6.4).
+        await using var host = new Host(d => d.AddSlice<CounterSlice>().AddSlice<FailureSlice>().AddSlice<ThrowOnInitSlice>()
+            .AddEffect<LoadOnInitEffect>().AddReactiveEffect<LateRecordingEffect>());
+
+        await host.StartAsync();
+
+        host.Store.State.Get<IReadOnlyList<ReducerFailed>>().ShouldHaveSingleItem().ActionType.ShouldBe(typeof(StoreInitialized).ToString());
+        host.Store.State.Get<Counter>().Loaded.ShouldBeTrue();
+        host.Probe.Seen.ShouldHaveSingleItem().ShouldBeOfType<StoreInitialized>();
+
+        // The pipeline is live: it sees the next action too.
+        (await host.Store.DispatchAsync(new Ping())).ShouldBe(DispatchResult.Reduced);
+        host.Probe.Seen.Count.ShouldBe(2);
+        host.Probe.Seen[1].ShouldBeOfType<Ping>();
+    }
+
     [Fact]
     public async Task SafeLogger_ProviderThrows_NeverEscapes()
     {
