@@ -46,7 +46,7 @@
          dependency that isn't on nuget.org. -->
     <PackageVersion Include="Microsoft.Net.Compilers.Razor.Toolset" Version="9.0.0-preview.25264.2" />
     <!-- Component tests (SPEC §17.2: bUnit 2.x, sets RendererInfo). -->
-    <PackageVersion Include="bunit" Version="2.11.3" />
+    <PackageVersion Include="bunit" Version="2.13.3" />
     <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
