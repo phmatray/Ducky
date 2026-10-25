@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ducky.Blazor;
@@ -149,10 +151,10 @@ internal sealed class BlazorRegistration(BlazorOptions options)
         static TimeSpan Bound(TimeSpan timeout) => timeout == Timeout.InfiniteTimeSpan ? TimeSpan.MaxValue : timeout;
     }
 
-    // DUCKY310-312 for one persisted slice: its own AddValidation rule, so a throwing configure delegate fails only this
-    // rule, after its DUCKY310, and the core reports that failure, named after the slice, with every other error and every
-    // other slice's failure (INV-31).
-    public static IEnumerable<DuckyError> ValidatePersist(DuckyBuilder builder, Type slice, PersistLayers layers)
+    // DUCKY310-312 and DUCKY314-317 for one persisted slice: its own AddValidation rule, so a throwing configure delegate
+    // fails only this rule, after its DUCKY310, and the core reports that failure, named after the slice, with every other
+    // error and every other slice's failure (INV-31).
+    public IEnumerable<DuckyError> ValidatePersist(DuckyBuilder builder, Type slice, PersistLayers layers)
     {
         if (!Added(builder, slice))
         {
@@ -189,8 +191,33 @@ internal sealed class BlazorRegistration(BlazorOptions options)
         {
             yield return BlazorErrors.SyncAcrossTabsWithoutLocal(slice, options.Storage);
         }
+
+        if (options.Storage != PersistStorage.Server)
+        {
+            yield break;
+        }
+
+        // §11.6: Server storage is inert in the browser, where a WASM client normally registers neither a cache nor an
+        // AuthenticationStateProvider. The prefix is shared configuration, checked on both sides.
+        if (!Options.IsBrowser && !Registered(builder, typeof(IDistributedCache)))
+        {
+            yield return BlazorErrors.NoDistributedCache(slice);
+        }
+
+        if (!Options.IsBrowser && Options.Scope is null && !Registered(builder, typeof(AuthenticationStateProvider)))
+        {
+            yield return BlazorErrors.NoAuthenticationStateProvider(slice);
+        }
+
+        if (Options.KeyPrefix == BlazorOptions.DefaultKeyPrefix)
+        {
+            yield return BlazorErrors.DefaultKeyPrefix(slice);
+        }
     }
 
     // A slice is added when AddDucky registered it for injection, which it does for every AddSlice<T>.
-    private static bool Added(DuckyBuilder builder, Type slice) => builder.Services.Any(descriptor => descriptor.ServiceType == slice);
+    private static bool Added(DuckyBuilder builder, Type slice) => Registered(builder, slice);
+
+    // Unkeyed only: Ducky resolves every service it checks without a key, so a keyed registration alone fails at run time.
+    private static bool Registered(DuckyBuilder builder, Type service) => builder.Services.Any(descriptor => descriptor.ServiceType == service && !descriptor.IsKeyedService);
 }

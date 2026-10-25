@@ -69,16 +69,17 @@ internal sealed partial class PersistenceMiddleware
     // reduced against; a key whose scope is null or not recorded yet can't be named and is skipped. No prefix clear.
     private void Clear(StateSnapshot state)
     {
-        var prefix = WritePrefix(state.Get<PersistenceState>().ScopeEpoch);
+        var epoch = state.Get<PersistenceState>().ScopeEpoch;
         foreach (var (key, writer) in _writers)
         {
-            if (prefix is null)
+            var storageKey = writer.StorageKey(epoch);
+            if (storageKey is not null)
             {
-                Log.ClearSkipped(_log, key);
+                writer.Remove(storageKey);
             }
             else
             {
-                writer.Remove($"{prefix}:{key}");
+                Log.ClearSkipped(_log, key);
             }
         }
     }
@@ -97,31 +98,45 @@ internal sealed partial class PersistenceMiddleware
         }
     }
 
-    // {prefix} for unscoped keys; with a Scope, {prefix}:{scope} for the scope recorded for the epoch, or null when that
-    // scope is null or not recorded yet: no I/O for a key that can't be named.
+    // §11.6: a Server-storage key is always scoped (Scope ?? DuckyScopes.NameIdentifier); a Local or Session key only when
+    // Scope is set explicitly, so the default never applies to browser keys.
+    private bool Scoped(PersistOptions options) => options.Storage == PersistStorage.Server || _registration.Options.Scope is not null;
+
+    // {prefix}:{sliceKey} for an unscoped key; {prefix}:{scope}:{sliceKey} for a scoped one under the scope recorded for the
+    // epoch, or null when that scope is null or not recorded yet: no I/O for a key that can't be named.
     // A write never meets a scope not recorded yet: ShouldSkip defers that key (case (b)).
-    internal string? WritePrefix(int epoch)
+    internal string? StorageKey(string sliceKey, PersistOptions options, int epoch)
     {
-        var options = _registration.Options;
-        if (options.Scope is null)
+        var prefix = _registration.Options.KeyPrefix;
+        if (!Scoped(options))
         {
-            return options.KeyPrefix;
+            return $"{prefix}:{sliceKey}";
         }
 
-        return Scopes.GetValueOrDefault(epoch) is { } scope ? $"{options.KeyPrefix}:{scope}" : null;
+        var scope = Scopes.GetValueOrDefault(epoch);
+        return scope is null ? null : $"{prefix}:{scope}:{sliceKey}";
     }
 
     // §11.5 "hydration skip": the one predicate of the skip and of its recheck. (a) a read in flight owns the key: Hydrating,
     // and the key in the key set of the snapshot's epoch; (b) a scoped key whose epoch scope is not recorded yet can't be
     // named. Lock-free: Scopes is published before the drain that releases (b).
-    // ponytail: every writer's key is in attempt 0's key set, so (a) is the Status alone and the predicate takes no key;
-    // per-epoch key sets (and the key argument) come with scope switches (§11.6).
-    private bool ShouldSkip(StateSnapshot snap)
+    // ponytail: every writer's key is in attempt 0's key set, so (a) is the Status alone; per-epoch key sets come with
+    // scope switches (§11.6).
+    private bool ShouldSkip(StateSnapshot snap, PersistOptions options)
     {
         var persistence = snap.Get<PersistenceState>();
         return persistence.Status == PersistenceStatus.Hydrating
-            || (_registration.Options.Scope is not null && !Scopes.ContainsKey(persistence.ScopeEpoch));
+            || (Scoped(options) && !Scopes.ContainsKey(persistence.ScopeEpoch));
     }
+
+    // Server storage writes the cache (§11.6); Local and Session go through ducky.js with the store's id (§11.7).
+    private ValueTask<bool> StoreAsync(PersistOptions options, string key, string envelope, CancellationToken token) => options.Storage == PersistStorage.Server
+        ? _cache.SetAsync(key, envelope, options.MaxAge, token)
+        : _browser.SetAsync(options.Storage, key, envelope, _id, token);
+
+    private ValueTask<bool> RemoveAsync(PersistOptions options, string key, CancellationToken token) => options.Storage == PersistStorage.Server
+        ? _cache.RemoveAsync(key, token)
+        : _browser.RemoveAsync(options.Storage, key, _id, token);
 
     // §11.5 "Flush on DisposeAsync", phase 5a: the deferred keys are released, every loop skips its debounce and backoff
     // and makes one attempt per dirty key, bounded by DisposeTimeout; then the loops stop, and each key still dirty (or
@@ -197,7 +212,8 @@ internal sealed partial class PersistenceMiddleware
         public PersistenceWriter(PersistenceMiddleware owner, Slice slice, PersistOptions options)
         {
             (_owner, _slice, _options) = (owner, slice, options);
-            _debounce = options.Debounce ?? (owner._registration.Options.IsBrowser ? TimeSpan.Zero : ServerBrowserStorageDebounce);
+            // §11.6: Server storage is written through (no debounce), like everything in the browser.
+            _debounce = options.Debounce ?? (owner._registration.Options.IsBrowser || options.Storage == PersistStorage.Server ? TimeSpan.Zero : ServerBrowserStorageDebounce);
             _hurry = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token);
             _loop = RunAsync(_stop.Token, _hurry.Token);
         }
@@ -216,6 +232,9 @@ internal sealed partial class PersistenceMiddleware
 
         /// <summary>Whether a removal has not succeeded yet: storage may still hold the cleared value.</summary>
         internal bool RemovalPending => !_removals.IsEmpty;
+
+        /// <summary>This key's full storage key under the scope recorded for <paramref name="epoch"/>, or null (§11.6).</summary>
+        public string? StorageKey(int epoch) => _owner.StorageKey(_slice.Key, _options, epoch);
 
         /// <summary>Whether the dispose flush has begun.</summary>
         internal bool Flushing => _hurry.IsCancellationRequested;
@@ -369,7 +388,7 @@ internal sealed partial class PersistenceMiddleware
         {
             while (_removals.TryPeek(out var removal))
             {
-                if (!await DeliverAsync(() => _owner._browser.RemoveAsync(_options.Storage, removal.Key, _owner._id, token)).ConfigureAwait(ConfigureAwaitOptions.None))
+                if (!await DeliverAsync(() => _owner.RemoveAsync(_options, removal.Key, token)).ConfigureAwait(ConfigureAwaitOptions.None))
                 {
                     return Outcome.Failed;
                 }
@@ -389,7 +408,7 @@ internal sealed partial class PersistenceMiddleware
             var signals = Interlocked.Read(ref _signals);
             var clears = Clears; // read before the snapshot: a clear reduced after it makes this deferral stale
             var snap = _owner.Store.State;
-            if (_owner.ShouldSkip(snap))
+            if (_owner.ShouldSkip(snap, _options))
             {
                 Defer(clears);
                 return Outcome.Deferred;
@@ -406,7 +425,8 @@ internal sealed partial class PersistenceMiddleware
 
         private async Task<Outcome> WriteAsync(StateSnapshot snap, CancellationToken token)
         {
-            if (_owner.WritePrefix(snap.Get<PersistenceState>().ScopeEpoch) is not { } prefix)
+            var key = StorageKey(snap.Get<PersistenceState>().ScopeEpoch);
+            if (key is null)
             {
                 return Outcome.Clean;
             }
@@ -420,7 +440,6 @@ internal sealed partial class PersistenceMiddleware
                 return Outcome.Clean;
             }
 
-            var key = $"{prefix}:{_slice.Key}";
             // Storage already holds this state: the key is clean, so a failure streak ends here as on a success.
             if (_owner.LastKnownPayload.TryGetValue(key, out var last) && last == payload)
             {
@@ -430,7 +449,7 @@ internal sealed partial class PersistenceMiddleware
 
             var started = _owner._time.GetTimestamp();
             var envelope = EnvelopeWriter.Write(payload, _options.Version, _owner._time.GetUtcNow());
-            if (!await DeliverAsync(() => _owner._browser.SetAsync(_options.Storage, key, envelope, _owner._id, token)).ConfigureAwait(ConfigureAwaitOptions.None))
+            if (!await DeliverAsync(() => _owner.StoreAsync(_options, key, envelope, token)).ConfigureAwait(ConfigureAwaitOptions.None))
             {
                 return Outcome.Failed;
             }
@@ -472,7 +491,7 @@ internal sealed partial class PersistenceMiddleware
             // Add-then-recheck: a release that ran between the snapshot read and the add found nothing to take. If the skip
             // no longer holds, take the key back; only a successful TryRemove signals, so a release that took it first is
             // the one signal.
-            if (!_owner.ShouldSkip(_owner.Store.State) && _owner.Deferred.TryRemove(_slice.Key, out var taken))
+            if (!_owner.ShouldSkip(_owner.Store.State, _options) && _owner.Deferred.TryRemove(_slice.Key, out var taken))
             {
                 Release(taken);
             }

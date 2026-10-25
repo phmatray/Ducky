@@ -144,3 +144,7 @@ Ducky.Blazor.BlazorOptions.InlinePayloadBytes.set -> void
 Ducky.Blazor.BlazorOptions.MaxPayloadBytes.get -> int
 Ducky.Blazor.BlazorOptions.MaxPayloadBytes.set -> void
 Ducky.Blazor.DuckyLayout<TState>
+Ducky.Blazor.BlazorOptions.ServerEntryOptions.get -> Microsoft.Extensions.Caching.Distributed.DistributedCacheEntryOptions?
+Ducky.Blazor.BlazorOptions.ServerEntryOptions.set -> void
+Ducky.Blazor.DuckyScopes
+static Ducky.Blazor.DuckyScopes.NameIdentifier.get -> System.Func<System.IServiceProvider!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<string?>>!

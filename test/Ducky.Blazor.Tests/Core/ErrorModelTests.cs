@@ -29,6 +29,12 @@ public sealed class ErrorModelTests
             ["no step from version 1."], ["Add Migrate(1, …) to"]),
         (nameof(BlazorErrors.SyncAcrossTabsWithoutLocal), BlazorErrors.SyncAcrossTabsWithoutLocal(typeof(View), PersistStorage.Session), "DUCKY312",
             [$"{ViewName} sets SyncAcrossTabs with PersistStorage.Session", "only with PersistStorage.Local"], ["Storage = PersistStorage.Local", $"Persist<{ViewName}>", "SyncAcrossTabs"]),
+        (nameof(BlazorErrors.NoDistributedCache), BlazorErrors.NoDistributedCache(typeof(View)), "DUCKY314",
+            [$"{ViewName} is persisted with PersistStorage.Server", "no IDistributedCache is registered"], ["IDistributedCache", $"Persist<{ViewName}>", "PersistStorage.Local"]),
+        (nameof(BlazorErrors.NoAuthenticationStateProvider), BlazorErrors.NoAuthenticationStateProvider(typeof(View)), "DUCKY315",
+            [$"{ViewName} is persisted with PersistStorage.Server", "DuckyScopes.NameIdentifier", "no AuthenticationStateProvider is registered"], ["AuthenticationStateProvider", "BlazorOptions.Scope"]),
+        (nameof(BlazorErrors.DefaultKeyPrefix), BlazorErrors.DefaultKeyPrefix(typeof(View)), "DUCKY317",
+            ["PersistStorage.Server requires BlazorOptions.KeyPrefix to be set to an app-unique value", $"{ViewName} is persisted with PersistStorage.Server", "\"ducky\""], ["BlazorOptions.KeyPrefix", "AddBlazor"]),
         (nameof(BlazorErrors.HydrationTimeoutNotBelowInitTimeout), BlazorErrors.HydrationTimeoutNotBelowInitTimeout(TimeSpan.FromSeconds(10.5), TimeSpan.FromSeconds(10)), "DUCKY316",
             ["BlazorOptions.HydrationTimeout (00:00:10.5000000)", "DuckyBuilder.InitTimeout (00:00:10)"], ["BlazorOptions.HydrationTimeout below DuckyBuilder.InitTimeout"]),
         (nameof(BlazorErrors.SeedWaitNotBelowHydrationTimeout), BlazorErrors.SeedWaitNotBelowHydrationTimeout(TimeSpan.FromSeconds(5.25), TimeSpan.FromSeconds(5)), "DUCKY316",
@@ -44,7 +50,7 @@ public sealed class ErrorModelTests
         try
         {
             var rows = Rows();
-            rows.Select(row => row.Code).Distinct().ShouldBe(["DUCKY352", "DUCKY310", "DUCKY311", "DUCKY312", "DUCKY316"]);
+            rows.Select(row => row.Code).Distinct().ShouldBe(["DUCKY352", "DUCKY310", "DUCKY311", "DUCKY312", "DUCKY314", "DUCKY315", "DUCKY317", "DUCKY316"]);
 
             // Every catalogue factory has a row, so a new factory can't skip the template.
             typeof(BlazorErrors).GetMethods(BindingFlags.Public | BindingFlags.Static)

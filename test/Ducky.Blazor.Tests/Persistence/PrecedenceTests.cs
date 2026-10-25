@@ -1,9 +1,12 @@
 using Bunit;
 using Ducky.Blazor.Tests.Core;
+using Ducky.Blazor.Tests.DistributedCache;
 using Ducky.Blazor.Tests.Fakes;
 using Ducky.Blazor.Tests.Interactivity;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Infrastructure;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -128,6 +131,38 @@ public sealed class PrecedenceTests : BunitContext
         Store.State.WasRestored<Counter>().ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    public async Task Precedence_ServerStorage_IndependentOfRegistrationOrder(bool persistFirst, bool yield)
+    {
+        // A Server-storage slice, also prerendered: whether Persist<T> comes before or after AddBlazor and Prerender<T>, and
+        // whether the cache completes synchronously (MemoryDistributedCache) or not (Redis, here a yielding wrapper), the
+        // seed applies first and the valid cache envelope wins, because persistence restores only after SeedSettled.
+        var cache = new TestCache(yield);
+        var seed = await PrerenderServerAsync(cache, persistFirst, count: 3);
+        cache.Store("app:alice:counter", Envelope(7, _time.GetUtcNow()));
+        Services.AddSingleton<TimeProvider>(_time);
+        Services.AddSingleton(_log);
+        AddServerDucky(this, cache, persistFirst, d => d.Use<HydrationRecorder>());
+        await RestoreAsync(seed);
+
+        var cut = Render<CounterView>();
+        await Store.InitializeAsync(Ct);
+
+        _log.Entries.ShouldBe([
+            "restore:counter Hydrated:0",
+            "restore:@ducky/persistence Hydrating:0",
+            "restore:counter Hydrating:0",
+            "completed:True:0:System Hydrated:0",
+            "initialized Hydrated:0",
+        ]);
+        Store.State.Get<Counter>().ShouldBe(new Counter(7));
+        cut.WaitForAssertion(() => cut.Markup.ShouldBe("7"));
+    }
+
     [Fact]
     public async Task Prerender_WasmAwaitedPreload_WarnsAndDoesNotInvertPrecedence()
     {
@@ -181,6 +216,51 @@ public sealed class PrecedenceTests : BunitContext
         var persisted = new FakeComponentStateStore();
         await side.Services.GetRequiredService<ComponentStatePersistenceManager>().PersistStateAsync(persisted, side.Renderer);
         return persisted;
+    }
+
+    // The prerender pass of a Server-storage slice: it reads the (empty) cache during init and writes its count through.
+    private async Task<FakeComponentStateStore> PrerenderServerAsync(TestCache cache, bool persistFirst, int count)
+    {
+        await using var side = new BunitContext();
+        side.Services.AddSingleton<TimeProvider>(_time);
+        AddServerDucky(side, cache, persistFirst);
+        side.Renderer.SetRendererInfo(_static);
+        side.Render<CounterView>();
+        var store = side.Services.GetRequiredService<IStore>();
+        await store.InitializeAsync(Ct);
+        for (var i = 0; i < count; i++)
+        {
+            store.Dispatch(new Increment());
+        }
+
+        var persisted = new FakeComponentStateStore();
+        await side.Services.GetRequiredService<ComponentStatePersistenceManager>().PersistStateAsync(persisted, side.Renderer);
+        return persisted;
+    }
+
+    // Alice's circuit (or prerender pass) with the counter prerendered and in Server storage, registered in either order.
+    private void AddServerDucky(BunitContext context, TestCache cache, bool persistFirst, Action<DuckyBuilder>? more = null)
+    {
+        context.Services.RemoveAll<IJSRuntime>();
+        context.Services.AddSingleton<IJSRuntime>(_js);
+        context.Services.AddSingleton(static sp => new ComponentStatePersistenceManager(NullLogger<ComponentStatePersistenceManager>.Instance, sp));
+        context.Services.AddSingleton(static sp => sp.GetRequiredService<ComponentStatePersistenceManager>().State);
+        context.Services.AddSingleton<IDistributedCache>(cache).AddSingleton<AuthenticationStateProvider>(new TestAuthenticationStateProvider("alice"));
+        context.Services.AddDucky(d =>
+        {
+            d.UseJson(HydrationJson.Default).AddSlice<CounterSlice>();
+            if (persistFirst)
+            {
+                d.Persist<CounterSlice>(static o => o.Storage = PersistStorage.Server).AddBlazor(static o => o.KeyPrefix = "app").Prerender<CounterSlice>();
+            }
+            else
+            {
+                d.Prerender<CounterSlice>().AddBlazor(static o => o.KeyPrefix = "app").Persist<CounterSlice>(static o => o.Storage = PersistStorage.Server);
+            }
+
+            more?.Invoke(d);
+        });
+        context.Renderer.SetRendererInfo(_server);
     }
 
     // The interactive side: a circuit, or the WASM host (browser) before RunAsync restored its persistent state.

@@ -37,6 +37,8 @@ public sealed class PauseSeedTests : BunitContext
     private bool _disconnected;
     private bool _readHangs;
     private string? _user;
+    private string _prefix = "ducky";
+    private bool _anonymous; // a Scope that resolves null
 
     public PauseSeedTests() => _js.Respond = (identifier, args) => identifier switch
     {
@@ -201,12 +203,23 @@ public sealed class PauseSeedTests : BunitContext
     public async Task PauseSeed_ServerStorageKey_NeverDirty()
     {
         // (non-normative) The pause override never applies to Server storage (§11.4): its key is versioned, never dirty.
+        (_user, _prefix) = ("alice", "app");
         var seed = await PauseAsync(increments: 1, disconnected: true, static o => o.Storage = PersistStorage.Server);
 
         var envelope = Seed(seed);
         envelope["slices"]!["counter"].ShouldNotBeNull();
         envelope["ver"]!["counter"]!.GetValue<int>().ShouldBe(1);
         envelope["dirty"].ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task PauseSeed_NullScope_KeyComparedWithInitialState()
+    {
+        // (non-normative) §11.4, §11.6: under a null scope (an anonymous user, with a Scope set) a browser key names no
+        // stored key, so the pause compares its value with the initial state: a change is dirty, the initial state is not.
+        _anonymous = true;
+        Seed(await PauseAsync(increments: 1, disconnected: true))["dirty"]!.AsArray().Select(static key => key!.GetValue<string>()).ShouldBe(["counter"]);
+        Seed(await PauseAsync(increments: 0, disconnected: true))["dirty"].ShouldBeNull();
     }
 
     [Fact]
@@ -315,15 +328,16 @@ public sealed class PauseSeedTests : BunitContext
     // No debounce: a change is written at once. Time never advances, so a failed write waits in its backoff until dispose.
     private void AddDucky(BunitContext context, Action<PersistOptions> persist, Action<DuckyBuilder>? more = null)
     {
-        var user = _user;
+        var (user, prefix, anonymous) = (_user, _prefix, _anonymous);
         context.Services.AddSingleton<TimeProvider>(_time);
+        context.Services.AddDistributedMemoryCache();
         context.Services.RemoveAll<IJSRuntime>();
         context.Services.AddSingleton<IJSRuntime>(_js);
         context.Services.AddSingleton(static sp => new ComponentStatePersistenceManager(NullLogger<ComponentStatePersistenceManager>.Instance, sp));
         context.Services.AddSingleton(static sp => sp.GetRequiredService<ComponentStatePersistenceManager>().State);
         context.Services.AddDucky(d =>
         {
-            d.UseJson(HydrationJson.Default).AddSlice<CounterSlice>().AddBlazor(o => o.Scope = user is null ? null : (_, _) => new(user)).Prerender<CounterSlice>().Persist<CounterSlice>(o =>
+            d.UseJson(HydrationJson.Default).AddSlice<CounterSlice>().AddBlazor(o => (o.Scope, o.KeyPrefix) = (anonymous ? static (_, _) => new((string?)null) : user is null ? null : (_, _) => new(user), prefix)).Prerender<CounterSlice>().Persist<CounterSlice>(o =>
             {
                 o.Debounce = TimeSpan.Zero;
                 persist(o);

@@ -14,6 +14,8 @@ namespace Ducky.Blazor;
 // M6-08 uses 2041, not assigned by SPEC either: §11.5 step 6 says only "discard and log" for a result whose claim is lost.
 // M6-12 takes 2040, not assigned by SPEC, for the Debug log of a clear that skips a key it can't name (§11.5 ClearPersistedState).
 // M6-13b takes 2015, not assigned by SPEC: §11.4 says only "dropped with a Debug log" for a version-skewed seed key.
+// M12-01 uses 2020 (§11.6: Server storage inert in the browser) and takes 2027, not assigned by SPEC, for the Info log of a
+// null scope (§11.6: "Info log once").
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -43,6 +45,9 @@ internal static partial class Log
     [LoggerMessage(EventId = 2015, Level = LogLevel.Debug, Message = "Slice '{Key}' was left out of the seed restore: the seed records another PersistOptions.Version for it, or none; storage, read through its migrations, or the initial state applies")]
     internal static partial void SeedKeyVersionSkewed(SafeLogger logger, string key);
 
+    [LoggerMessage(EventId = 2020, Level = LogLevel.Information, Message = "PersistStorage.Server is inert in the browser: slices {Keys} are not persisted here, and restore only from the prerender seed when they are also Prerender<T>")]
+    internal static partial void ServerStorageInert(SafeLogger logger, string[] keys);
+
     [LoggerMessage(EventId = 2021, Level = LogLevel.Warning, Message = "Slice '{Key}' was left out of the prerender seed: its include predicate threw, its state can't be serialized, or it would push the seed's estimated wire size past PrerenderSeedMaxWireBytes; the interactive side loads it again")]
     internal static partial void SeedSliceOmitted(SafeLogger logger, string key, Exception? exception);
 
@@ -60,6 +65,9 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2026, Level = LogLevel.Warning, Message = "Pulling the value of '{Key}' through storageGetStream failed; read as not found")]
     internal static partial void PullFailed(SafeLogger logger, Exception exception, string key);
+
+    [LoggerMessage(EventId = 2027, Level = LogLevel.Information, Message = "The storage scope resolved to null (an anonymous user): scoped slices are neither read nor written in this store, never under a shared key")]
+    internal static partial void NullScope(SafeLogger logger);
 
     [LoggerMessage(EventId = 2030, Level = LogLevel.Debug, Message = "The value of '{Key}' is not a 2.x envelope (1.x or foreign data); discarded")]
     internal static partial void NotAnEnvelope(SafeLogger logger, string key);

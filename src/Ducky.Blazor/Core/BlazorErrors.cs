@@ -30,6 +30,21 @@ internal static class BlazorErrors
         $"{Display(slice)} sets SyncAcrossTabs with PersistStorage.{storage}, but tabs are kept in sync only with PersistStorage.Local.",
         $"Set Storage = PersistStorage.Local in Persist<{Display(slice)}>, or turn SyncAcrossTabs off.");
 
+    public static DuckyError NoDistributedCache(Type slice) => Create(
+        "DUCKY314",
+        $"{Display(slice)} is persisted with PersistStorage.Server, but no IDistributedCache is registered.",
+        $"Register an IDistributedCache (AddStackExchangeRedisCache, AddDistributedSqlServerCache or AddDistributedMemoryCache), or set Storage = PersistStorage.Local in Persist<{Display(slice)}>.");
+
+    public static DuckyError NoAuthenticationStateProvider(Type slice) => Create(
+        "DUCKY315",
+        $"{Display(slice)} is persisted with PersistStorage.Server under the default scope DuckyScopes.NameIdentifier, but no AuthenticationStateProvider is registered.",
+        "Register authentication so an AuthenticationStateProvider is available, or set BlazorOptions.Scope in AddBlazor.");
+
+    public static DuckyError DefaultKeyPrefix(Type slice) => Create(
+        "DUCKY317",
+        $"PersistStorage.Server requires BlazorOptions.KeyPrefix to be set to an app-unique value, but {Display(slice)} is persisted with PersistStorage.Server while KeyPrefix is still the default \"{BlazorOptions.DefaultKeyPrefix}\", so apps and environments sharing the cache would mix their entries.",
+        "Set BlazorOptions.KeyPrefix in AddBlazor to a value unique to this app and environment.");
+
     public static DuckyError HydrationTimeoutNotBelowInitTimeout(TimeSpan hydrationTimeout, TimeSpan initTimeout) => Create(
         "DUCKY316",
         $"BlazorOptions.HydrationTimeout ({hydrationTimeout:c}) is not shorter than DuckyBuilder.InitTimeout ({initTimeout:c}), so init would abort before hydration times out.",

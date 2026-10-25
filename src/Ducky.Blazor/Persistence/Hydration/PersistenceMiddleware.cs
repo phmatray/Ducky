@@ -19,6 +19,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
     private readonly IServiceProvider _services;
     private readonly JsBridge _bridge;
     private readonly BrowserStorageProvider _browser;
+    private readonly DistributedCacheProvider _cache;
     private readonly TimeProvider _time;
     private readonly ILogger _logger;
     private readonly SafeTelemetry _telemetry;
@@ -39,6 +40,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
         // The store scope's runtime (none in a host without JS) until a component hands over its renderer's (§6.10).
         _bridge = persistence.Gate.CreateBridge(services.GetService<IJSRuntime>(), _logger);
         _browser = new(_bridge, registration.Options, _logger);
+        _cache = new(services, registration.Options);
         _time = services.GetRequiredService<TimeProvider>();
         _telemetry = new(_log, services.GetService<IMeterFactory>());
         persistence.Middleware = this;
@@ -59,21 +61,37 @@ internal sealed partial class PersistenceMiddleware : Middleware
     // The synchronous prefix decides, before any await, what is readable and opens attempt 0 (§11.5 steps 1-3).
     public override ValueTask InitializeAsync(CancellationToken cancellationToken)
     {
-        // Server storage never goes through ducky.js: the cache provider reads it (§11.6). With nothing else persisted,
-        // nothing happens and Status stays Hydrated.
-        var slices = Store.Slices
+        var persisted = Store.Slices
             .Select(slice => (Slice: slice, Options: _registration.Persist.GetValueOrDefault(slice.GetType())?.Options))
-            .Where(static persisted => persisted.Options is { Storage: not PersistStorage.Server })
+            .Where(static persisted => persisted.Options is not null)
             .Select(static persisted => new Persisted(persisted.Slice, persisted.Options!))
             .ToArray();
+
+        // §11.6: in the browser Server storage is inert (one Info log): such a slice counts as not persisted, so with nothing
+        // else persisted nothing happens and Status stays Hydrated (§11.5).
+        var inert = _registration.Options.IsBrowser ? persisted.Where(static p => p.Options.Storage == PersistStorage.Server).ToArray() : [];
+        if (inert.Length > 0)
+        {
+            string[] keys = [.. inert.Select(static p => p.Slice.Key)];
+            Log.ServerStorageInert(_log, keys);
+        }
+
+        var slices = persisted.Except(inert).ToArray();
         if (slices.Length == 0)
         {
             return default;
         }
 
-        // Browser storage is readable only in an interactive store (probing if nothing decided yet, §11.4). Otherwise
-        // (prerender, static SSR) nothing is readable: no attempt, so no terminal.
-        if (_persistence.Gate.Resolve(_registration.Options.IsBrowser, _bridge) != InteractivityMode.Interactive)
+        // Browser storage is readable only in an interactive store (probing if nothing decided yet, §11.4); Server storage
+        // outside the browser always (the NonInteractive rule, §11.6), so a store holding only Server storage never probes.
+        // Nothing readable (prerender or static SSR with browser-only slices): no attempt, so no terminal.
+        if (slices.Any(static p => p.Options.Storage != PersistStorage.Server)
+            && _persistence.Gate.Resolve(_registration.Options.IsBrowser, _bridge) != InteractivityMode.Interactive)
+        {
+            slices = [.. slices.Where(static p => p.Options.Storage == PersistStorage.Server)];
+        }
+
+        if (slices.Length == 0)
         {
             lock (_issue)
             {
@@ -135,17 +153,23 @@ internal sealed partial class PersistenceMiddleware : Middleware
         try
         {
             var reader = new EnvelopeReader(Store.Json, _logger);
-            var prefix = await KeyPrefixAsync(attempt, token).ConfigureAwait(ConfigureAwaitOptions.None);
+            await ResolveScopeAsync(slices, attempt, token).ConfigureAwait(ConfigureAwaitOptions.None);
 
             // A scope delegate that ignored its token can resolve after the attempt ended: recorded, but nothing is read.
             token.ThrowIfCancellationRequested();
 
-            // A null scope: no I/O for scoped keys, never a fallback to a shared key (§11.6).
-            foreach (var (slice, options) in prefix is null ? [] : slices)
+            foreach (var (slice, options) in slices)
             {
-                var key = $"{prefix}:{slice.Key}";
+                // A null scope: no I/O for scoped keys, never a fallback to a shared key (§11.6). A plain local, not a pattern
+                // variable: a mutant of the test then can't leave it unassigned (Stryker Safe Mode, §17.8).
+                var key = StorageKey(slice.Key, options, attempt.Epoch);
+                if (key is null)
+                {
+                    continue;
+                }
+
                 // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-                var text = await _browser.GetAsync(options.Storage, key, token).ConfigureAwait(false);
+                var text = await ReadAsync(options, key, token).ConfigureAwait(false);
 
                 // A slice that fails to read (malformed, newer, expired, a throwing constructor) keeps its state; the reader
                 // logs it naming the key, and the other slices still restore. The baseline is the local serialization of
@@ -217,18 +241,19 @@ internal sealed partial class PersistenceMiddleware : Middleware
         }
     }
 
-    // {prefix} for unscoped keys; with a Scope, {prefix}:{scope} for the scope resolved for epoch 0 and recorded, or null
-    // when it resolved null. In the browser the delegate gets the renderer's services, so it waits for the hand-off (§11.6);
-    // the attempt's token bounds that wait, the resolution and the reads by the same HydrationTimeout. A delegate that ignores
+    // When any readable key is scoped (§11.6), resolves the scope of epoch 0 (Scope ?? NameIdentifier) and records it,
+    // possibly null. In the browser the delegate gets the renderer's services, so it waits for the hand-off (§11.6); the
+    // attempt's token bounds that wait, the resolution and the reads by the same HydrationTimeout. A delegate that ignores
     // the token only delays its own recording: init ends with the deadline's terminal all the same.
-    private async Task<string?> KeyPrefixAsync(Attempt attempt, CancellationToken token)
+    private async Task ResolveScopeAsync(Persisted[] slices, Attempt attempt, CancellationToken token)
     {
         var options = _registration.Options;
-        if (options.Scope is not { } resolve)
+        if (!slices.Any(p => Scoped(p.Options)))
         {
-            return options.KeyPrefix;
+            return;
         }
 
+        var resolve = options.Scope ?? DuckyScopes.NameIdentifier;
         var services = _services;
         if (options.IsBrowser)
         {
@@ -239,6 +264,14 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         var scope = await resolve(services, token).ConfigureAwait(false);
+
+        // An empty or whitespace scope would name the shared key {prefix}::{sliceKey}: it is null, never a fallback (INV-17).
+        if (string.IsNullOrWhiteSpace(scope))
+        {
+            scope = null;
+            Log.NullScope(_log);
+        }
+
         lock (_issue)
         {
             Volatile.Write(ref _scopes, _scopes.SetItem(attempt.Epoch, scope));
@@ -254,9 +287,12 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 ReleaseDeferred();
             }
         }
-
-        return scope is null ? null : $"{options.KeyPrefix}:{scope}";
     }
+
+    // Server storage reads the cache; Local and Session go through ducky.js.
+    private ValueTask<string?> ReadAsync(PersistOptions options, string key, CancellationToken token) => options.Storage == PersistStorage.Server
+        ? _cache.GetAsync(key, token)
+        : _browser.GetAsync(options.Storage, key, token);
 
     // §11.5 step 7: the init-phase deadline and the init abort end the attempt current during init, once, under _issue,
     // whether or not they win the claim: an abort raised re-entrantly while the winner restores finds the winner's terminal

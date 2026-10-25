@@ -26,5 +26,7 @@
     <!-- PrivateAssets="none": the Ducky dependency keeps its generator and buildTransitive assets (R-PKG-5). -->
     <ProjectReference Include="../Ducky/Ducky.csproj" PrivateAssets="none" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
   </ItemGroup>
 </Project>
