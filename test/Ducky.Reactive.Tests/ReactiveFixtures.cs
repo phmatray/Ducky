@@ -167,6 +167,23 @@ public sealed class LateRecordingEffect(Probe probe) : ReactiveEffect
             .Where(static _ => false);
 }
 
+// A slice whose StoreInitialized reducer throws: StoreInitialized commits nothing (SPEC §6.4, INV-13).
+public sealed record InitTrap;
+
+public sealed class ThrowOnInitSlice : Slice<InitTrap>
+{
+    public ThrowOnInitSlice() => On<StoreInitialized>(static _ => throw new InvalidOperationException("init"));
+
+    protected override InitTrap Initial => new();
+}
+
+// A core load effect on StoreInitialized, next to ReactiveHost.
+public sealed class LoadOnInitEffect : Effect<StoreInitialized>
+{
+    public override Task Handle(StoreInitialized action, EffectContext context, CancellationToken cancellationToken) =>
+        context.DispatchAsync(new Loaded());
+}
+
 #pragma warning disable CS9113 // justification: the parameter exists only to be unresolvable (DUCKY309)
 public sealed class MissingDependencyEffect(Unregistered dependency) : ReactiveEffect
 #pragma warning restore CS9113
