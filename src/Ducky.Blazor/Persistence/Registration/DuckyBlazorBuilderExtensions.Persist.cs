@@ -50,12 +50,12 @@ public static partial class DuckyBlazorBuilderExtensions
 
     private static PersistLayers Persisted(DuckyBuilder builder, Type slice)
     {
-        var persist = Registration(builder).Persist;
-        if (!persist.TryGetValue(slice, out var layers))
+        var registration = Registration(builder);
+        if (!registration.Persist.TryGetValue(slice, out var layers))
         {
-            persist.Add(slice, layers = new());
+            registration.Persist.Add(slice, layers = new());
             builder.RequireJsonTypeInfo(StateType(slice), $"Persist<{slice.Name}>");
-            builder.AddValidation(_ => BlazorRegistration.ValidatePersist(builder, slice, layers));
+            builder.AddValidation(_ => registration.ValidatePersist(builder, slice, layers));
         }
 
         return layers;

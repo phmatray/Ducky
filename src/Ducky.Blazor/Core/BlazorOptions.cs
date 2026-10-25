@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Caching.Distributed;
+
 namespace Ducky.Blazor;
 
 /// <summary>
@@ -6,16 +8,23 @@ namespace Ducky.Blazor;
 /// </summary>
 public sealed class BlazorOptions
 {
-    /// <summary>The first segment of every storage key, <c>{prefix}:{scope?}:{sliceKey}</c>. Default <c>"ducky"</c>.</summary>
-    public string KeyPrefix { get; set; } = "ducky";
+    // The default KeyPrefix, which PersistStorage.Server rejects (DUCKY317).
+    internal const string DefaultKeyPrefix = "ducky";
+
+    /// <summary>
+    /// The first segment of every storage key, <c>{prefix}:{scope?}:{sliceKey}</c>. Default <c>"ducky"</c>. With
+    /// <see cref="PersistStorage.Server"/> it must be set to a value unique to the app and environment (DUCKY317): a shared
+    /// <c>IDistributedCache</c> would otherwise mix their entries.
+    /// </summary>
+    public string KeyPrefix { get; set; } = DefaultKeyPrefix;
 
     /// <summary>
     /// The user or tenant segment of the storage key, <c>{prefix}:{scope?}:{sliceKey}</c> (SPEC §11.6). Default
     /// <see langword="null"/>. Server-storage keys use <c>Scope ?? DuckyScopes.NameIdentifier</c>. Local and Session keys
     /// get a scope segment only when <see cref="Scope"/> is set explicitly: the default never applies to them, so an app that
-    /// never sets it keeps unscoped browser keys. A delegate that returns <see langword="null"/> means no reads and no writes
-    /// for the scoped keys, never a fallback to a shared key. A browser app with a <see cref="Scope"/> and no Ducky
-    /// components must render <c>&lt;DuckyInitializer&gt;</c>, or scoped hydration fails at
+    /// never sets it keeps unscoped browser keys. A delegate that returns <see langword="null"/>, or an empty or whitespace
+    /// scope, means no reads and no writes for the scoped keys, never a fallback to a shared key. A browser app with a
+    /// <see cref="Scope"/> and no Ducky components must render <c>&lt;DuckyInitializer&gt;</c>, or scoped hydration fails at
     /// <see cref="HydrationTimeout"/>.
     /// </summary>
     public Func<IServiceProvider, CancellationToken, ValueTask<string?>>? Scope { get; set; }
@@ -59,6 +68,14 @@ public sealed class BlazorOptions
     /// with a Warning, and the next write replaces it. Default 5 MiB (SPEC §11.5, D11).
     /// </summary>
     public int MaxPayloadBytes { get; set; } = 5 * 1024 * 1024;
+
+    /// <summary>
+    /// The cache entry options of every <see cref="PersistStorage.Server"/> write whose slice sets no
+    /// <see cref="PersistOptions.MaxAge"/> (SPEC §11.6); a <see cref="PersistOptions.MaxAge"/> sets
+    /// <see cref="DistributedCacheEntryOptions.AbsoluteExpirationRelativeToNow"/> instead. Default <see langword="null"/>:
+    /// the entry does not expire.
+    /// </summary>
+    public DistributedCacheEntryOptions? ServerEntryOptions { get; set; }
 
     // §11.5 "A skipped key stays dirty": the writers' interleaving hook, invoked with the key around the add to _deferred.
     // Null in production; set inside configure by Ducky.Blazor.Tests (ordered) and Ducky.Concurrency.Tests (jitter only).

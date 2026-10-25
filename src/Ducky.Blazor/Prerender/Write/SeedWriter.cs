@@ -51,7 +51,7 @@ internal static class SeedWriter
             {
                 // Only a browser-storage key can be dirty: the pause override never applies to Server storage (§11.4).
                 var options = registration.Persist.GetValueOrDefault(slice.GetType())?.Options;
-                slices.Add(new(slice.Key, json, options?.Version, options is { Storage: not PersistStorage.Server } && src == "pause" && IsDirty(store, persistence, snap, slice, json)));
+                slices.Add(new(slice.Key, json, options?.Version, options is { Storage: not PersistStorage.Server } && src == "pause" && IsDirty(store, persistence, snap, slice, options, json)));
                 var candidate = Envelope(src, slices);
                 if (WireEstimate(candidate.Length) <= registration.Options.PrerenderSeedMaxWireBytes)
                 {
@@ -84,11 +84,12 @@ internal static class SeedWriter
     // or receipt), an absent baseline comparing as the initial state's serialization (§11.7): the circuit holds a change
     // storage may not have. The key is named for snap's epoch; a scope not known for it names no stored key, so the value
     // compares with the initial state (M12-07 leaves such keys out of the seed).
-    private static bool IsDirty(IStore store, PersistenceMiddleware persistence, StateSnapshot snap, Slice slice, string json)
+    private static bool IsDirty(IStore store, PersistenceMiddleware persistence, StateSnapshot snap, Slice slice, PersistOptions options, string json)
     {
-        var key = $"{persistence.WritePrefix(snap.Get<PersistenceState>().ScopeEpoch)}:{slice.Key}";
         _ = store.Json.TrySerialize(store.InitialState.Get(slice.Key), slice.StateType, out var initial);
-        return json != persistence.LastKnownPayload.GetValueOrDefault(key, initial!);
+        var key = persistence.StorageKey(slice.Key, options, snap.Get<PersistenceState>().ScopeEpoch);
+        var baseline = key is null ? initial : persistence.LastKnownPayload.GetValueOrDefault(key, initial!);
+        return json != baseline;
     }
 
     // ponytail: rewritten whole for each candidate slice, O(slices²) bytes, bounded by the budget (20 KB by default).

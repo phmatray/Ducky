@@ -221,6 +221,9 @@ public sealed class PersistRegistrationTests
             BlazorErrors.MigrationGap(typeof(TallySlice), 4, [2, 3]),
             BlazorErrors.SyncAcrossTabsWithoutLocal(typeof(StatusSlice), PersistStorage.Session),
             BlazorErrors.SyncAcrossTabsWithoutLocal(typeof(ProductsSlice), PersistStorage.Server),
+            BlazorErrors.NoDistributedCache(typeof(ProductsSlice)),
+            BlazorErrors.NoAuthenticationStateProvider(typeof(ProductsSlice)),
+            BlazorErrors.DefaultKeyPrefix(typeof(ProductsSlice)),
         ]);
 
         // An infinite timeout is the longest, never the shortest: both DUCKY316 checks fire under a finite InitTimeout.
@@ -288,6 +291,7 @@ public sealed class PersistRegistrationTests
             {
                 o.HydrationTimeout = TimeSpan.FromSeconds(9);
                 o.Scope = _tenantScope;
+                o.KeyPrefix = "app";
             });
             d.AddBlazor(static o =>
             {
@@ -295,7 +299,7 @@ public sealed class PersistRegistrationTests
                 o.HydrationTimeout = TimeSpan.FromSeconds(1) - TimeSpan.FromTicks(1);
                 o.PrerenderSeedWaitTimeout = o.HydrationTimeout - TimeSpan.FromTicks(1);
             });
-        });
+        }, cache: true);
         await using var scope = provider.CreateAsyncScope();
 
         scope.ServiceProvider.GetRequiredService<IStore>().ShouldNotBeNull();
@@ -321,9 +325,18 @@ public sealed class PersistRegistrationTests
 
     private static JsonNode Same(JsonNode node) => node;
 
-    // A later UseJson replaces PersistJson, the last call wins.
-    private static ServiceProvider Build(Action<DuckyBuilder> configure) =>
-        new ServiceCollection().AddDucky(d => configure(d.UseJson(PersistJson.Default))).BuildServiceProvider(_validating);
+    // A later UseJson replaces PersistJson, the last call wins. A cache, so Server storage passes DUCKY314 unless a test
+    // asks for it.
+    private static ServiceProvider Build(Action<DuckyBuilder> configure, bool cache = false)
+    {
+        var services = new ServiceCollection();
+        if (cache)
+        {
+            services.AddDistributedMemoryCache();
+        }
+
+        return services.AddDucky(d => configure(d.UseJson(PersistJson.Default))).BuildServiceProvider(_validating);
+    }
 
     private static DuckyConfigurationException ResolveFails(Action<DuckyBuilder> configure)
     {

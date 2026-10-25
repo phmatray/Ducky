@@ -128,16 +128,28 @@ public sealed class HydrationTests : BunitContext
     }
 
     [Fact]
-    public async Task Hydration_ServerStorageOnly_NotReadThroughBrowserStorage()
+    public async Task Hydration_BrowserOnlyInertServerSlices_StatusHydrated()
     {
-        // (non-normative) Server storage never goes through ducky.js: a store whose persisted slices are all Server storage
-        // has nothing to read here, so it stays Hydrated with no interop (the cache provider comes with §11.6).
-        Browser(static d => d.Persist<CounterSlice>(static o => o.Storage = PersistStorage.Server));
+        // §11.5, §11.6: in the browser Server storage is inert, so a store whose persisted slices are all Server storage has
+        // nothing to hydrate. Status stays Hydrated (a loading UI waiting for Hydrated or Failed never hangs), with no
+        // interop, no scope to resolve and no writer; one Info log names the inert slices.
+        Browser(static d => d
+            .Persist<CounterSlice>(static o => o.Storage = PersistStorage.Server)
+            .Persist<TallySlice>(static o => o.Storage = PersistStorage.Server)
+            .AddBlazor(static o => o.KeyPrefix = "app"));
 
         await Store.InitializeAsync(Ct);
+        Store.Dispatch(new Increment());
+        await Store.WhenIdleAsync(Ct);
 
-        _log.Entries.ShouldBe(["initialized Hydrated:0"]);
+        _log.Entries.ShouldBe(["initialized Hydrated:0", "Ducky.Blazor.Tests.Core.Increment Hydrated:0"]);
+        Store.State.Get<PersistenceState>().ShouldBeSameAs(Store.InitialState.Get<PersistenceState>());
         _js.Calls.ShouldBeEmpty();
+        Middleware.Writers.ShouldBeEmpty();
+        Middleware.Scopes.ShouldBeEmpty();
+        var info = _logs.GetSnapshot().Where(static r => r.Id.Id == 2020).ShouldHaveSingleItem();
+        info.Level.ShouldBe(LogLevel.Information);
+        info.Message.ShouldContain("slices counter, tally are not persisted");
     }
 
     [Fact]
