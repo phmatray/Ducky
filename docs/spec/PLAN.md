@@ -1372,26 +1372,30 @@ ducky.js watch/relay/resync with pruning and repair, the .NET CrossTabSync with 
 
 - **Stage:** 14
 - **Depends on:** M6-01
-- **Unblocks:** M7-02b, M8-01
+- **Unblocks:** M7-02, M7-02b, M8-01
 - **Area:** `src/Ducky.Blazor/wwwroot/ducky.js, test/Ducky.E2E/harness`
 - **Invariants:** INV-18
-- **Scope:** watchStorage(id, ref, prefix, crossTab, pruneAfterMs) idempotent per id, unwatchStorage; window storage listener for crossTab ids (localStorage, prefix filter, UTF-8 size decides tooLarge); same-document relay from storageSet/storageRemove to other ids with the same prefix; a rejected invokeMethodAsync records the failed (source, area) pair per id and resyncs each pair once on the first success, with 1 s to 30 s backoff; an id is pruned after pruneAfterMs (a fixed 10 minutes passed by .NET) of continuous delivery failure, the untracked-object match kept as a fast path; storageSet/storageRemove return false for a pruned id.
+- **Scope:** watchStorage(id, ref, prefix, crossTab, pruneAfterMs, maxInlineBytes) idempotent per id (maxInlineBytes is InlinePayloadBytes; a five-argument call throws a TypeError and registers nothing), unwatchStorage; window storage listener for crossTab ids (localStorage, prefix filter, UTF-8 size decides tooLarge); same-document relay from storageSet/storageRemove to other ids with the same prefix; a rejected, or still unsettled after 1 s, invokeMethodAsync records the failed (source, area) pair per id and resyncs each pair once on the first success, with 1 s to 30 s backoff; an id is pruned after pruneAfterMs (a fixed 10 minutes passed by .NET) of continuous delivery failure, the untracked-object match kept as a fast path; storageSet/storageRemove return false for a pruned id.
 - **Acceptance tests:**
   - DuckyJs_Relay_SkipsWriterId (non-normative harness spec)
   - `DuckyJs_ResyncBackoff_CapsAt30s_ThenReReadsAll`
   - `DuckyJs_PrunedIdReRegisteredOnNextWrite`
   - DuckyJs_UntrackedObject_PrunesId (non-normative harness spec)
+  - `DuckyJs_UnsettledDelivery_CountsAsFailed`
+  - `DuckyJs_FailedClearEvent_ReReadsAfterReconnect`
+  - `DuckyJs_SlowDelivery_ReReadsOnce`
+  - `DuckyJs_Relay_BudgetIsUtf8BytesOfTheJsonEncoding`
   - `E2E` JS gate: 100% block coverage of ducky.js
 - **Done:** Common DoD including the JS coverage gate.
 
 #### M7-02 CrossTabSync (.NET) (M)
 
 - **Stage:** 14
-- **Depends on:** M6-10
+- **Depends on:** M6-10, M7-01
 - **Unblocks:** M7-02b, M7-03, M14-01
 - **Area:** `src/Ducky.Blazor/CrossTab`
 - **Invariants:** INV-18, INV-23
-- **Scope:** CrossTabSync is an internal component owned by PersistenceMiddleware (its restores need _issue). Store id Guid N; register once before the hydration read, unwatch on dispose; OnStorageChanged: accept exact current keys (tab: synced slices; doc: area-matching persisted slices), 50 ms per-key debounce, removal => initial state (CrossTab), else EnvelopeReader, drop if local re-serialization equals the baseline, else under _issue bump sequence, Restore(CrossTab), set baseline, signal writer; key null => re-read every accepted key; tooLarge => stream re-read. A value receipt for a key in the key set of an attempt without a terminal is restored with Origin.Hydration (WasRestored<T>() true).
+- **Scope:** CrossTabSync is an internal component owned by PersistenceMiddleware (its restores need _issue). Store id Guid N; register once before the hydration read with all six watchStorage arguments (id, ref, prefix, crossTab, CrossTabSync.DeliveryPruneAfter in ms, Options.InlinePayloadBytes: ducky.js rejects a five-argument call, M7-01), unwatch on dispose; OnStorageChanged: accept exact current keys (tab: synced slices; doc: area-matching persisted slices), 50 ms per-key debounce, removal => initial state (CrossTab), else EnvelopeReader, drop if local re-serialization equals the baseline, else under _issue bump sequence, Restore(CrossTab), set baseline, signal writer; key null => re-read every accepted key; tooLarge => stream re-read. A value receipt for a key in the key set of an attempt without a terminal is restored with Origin.Hydration (WasRestored<T>() true).
 - **Acceptance tests:**
   - `CrossTab_OriginNeverPersisted`
   - `CrossTab_EchoDropped`
@@ -1401,6 +1405,7 @@ ducky.js watch/relay/resync with pruning and repair, the .NET CrossTabSync with 
   - `CrossTab_NewerVersionEnvelope_Ignored`
   - `CrossTab_CtorThrowingPayload_Ignored`
   - `CrossTab_EventDuringHydration_NewestWins`
+  - `CrossTab_Watch_PassesFullArgumentList`
 - **Done:** Common DoD.
 
 #### M7-02b Cross-tab receipts, repair and scope events (M)
@@ -1410,7 +1415,7 @@ ducky.js watch/relay/resync with pruning and repair, the .NET CrossTabSync with 
 - **Unblocks:** M16-04
 - **Area:** `src/Ducky.Blazor/CrossTab/Receipts`
 - **Invariants:** INV-16, INV-17, INV-18
-- **Scope:** Absence is a payload for the echo guard: a removal or missing-value receipt (the re-read-all path included) bumps the key's sequence number under _issue first, so it orders against hydration, then restores the initial state; a null receipt sets the baseline to the local serialization of the initial state and signals, so a pending write dedupes away; a receipt for a key whose baseline is already absent restores nothing. A stream reference of Length <= 1 reads as a removal (S-5; the fake reference of CrossTab_TooLargeKeyRemovedBeforePull_ResetsSlice has Length 1). storageSet/storageRemove returning false re-issues watchStorage and runs the re-read-all path per registered area. Scoped keys are matched against the scope of the current epoch under _issue (none accepted between an epoch bump and the new scope's recording), re-checked when the restore is issued.
+- **Scope:** Absence is a payload for the echo guard: a removal or missing-value receipt (the re-read-all path included) bumps the key's sequence number under _issue first, so it orders against hydration, then restores the initial state; a null receipt sets the baseline to the local serialization of the initial state and signals, so a pending write dedupes away; a receipt for a key whose baseline is already absent restores nothing. A stream reference of Length <= 1 reads as a removal (S-5; the fake reference of CrossTab_TooLargeKeyRemovedBeforePull_ResetsSlice has Length 1). storageSet/storageRemove returning false re-issues watchStorage with the same six arguments (Options.InlinePayloadBytes included) and runs the re-read-all path per registered area. Scoped keys are matched against the scope of the current epoch under _issue (none accepted between an epoch bump and the new scope's recording), re-checked when the restore is issued.
 - **Acceptance tests:**
   - `CrossTab_RemovalReceipt_NoWriteBack`
   - `CrossTab_RemovalDuringHydration_RemovalWins`
