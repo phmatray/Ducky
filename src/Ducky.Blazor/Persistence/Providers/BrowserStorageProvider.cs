@@ -10,11 +10,23 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
     // What ducky.js's storageGet answers above InlinePayloadBytes (§11.9): not an envelope, never a stored value.
     internal const string TooLarge = "\u0000ducky:too-large";
 
+    // What a pull answers for a value that is stored but can't be read here: above MaxPayloadBytes, or a pull the runtime
+    // rejected (both logged). Hydration reads it as not found; cross-tab ignores it, since nothing was removed (§11.7).
+    internal const string Unreadable = "\u0000ducky:unreadable";
+
     private readonly SafeLogger _logger = new(logger);
 
     // The value, or null when nothing is stored. An interrupted call (a disconnect, an interop timeout or the token) throws:
     // a read that never happened is not "not found", so it fails the attempt rather than restore nothing (§11.5 step 7).
     public async ValueTask<string?> GetAsync(PersistStorage storage, string key, CancellationToken cancellationToken)
+    {
+        // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+        var value = await ReadAsync(storage, key, cancellationToken).ConfigureAwait(false);
+        return value == Unreadable ? null : value;
+    }
+
+    // GetAsync for cross-tab: Unreadable is kept apart from null, a key nothing is stored under (§11.7).
+    internal async ValueTask<string?> ReadAsync(PersistStorage storage, string key, CancellationToken cancellationToken)
     {
         var area = Area(storage);
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
@@ -26,7 +38,9 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
 
     // A value above InlinePayloadBytes crosses by stream (D11, spike S-5). The reference is disposed after it is read, on
     // every path, so its Uint8Array is never left pinned in the circuit's JS object table.
-    private async ValueTask<string?> PullAsync(string area, string key, CancellationToken cancellationToken)
+    // Null when the key was removed before the pull, Unreadable when it can't be read. Cross-tab pulls a value ducky.js
+    // found above the budget directly (§11.7).
+    internal async ValueTask<string?> PullAsync(string area, string key, CancellationToken cancellationToken)
     {
         bool delivered;
         IJSStreamReference? pulled;
@@ -40,7 +54,7 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
             // "A failed pull is caught per key and never fails the attempt" (§11.5 step 4): the runtime rejected the pull
             // (S-5 measured it rejecting an export's return), so this key reads as not found and the others still hydrate.
             Log.PullFailed(_logger, exception, key);
-            return null;
+            return Unreadable;
         }
 
         // An interrupted pull (a disconnect, an interop timeout or the token) is not a failed one: as for storageGet, a read
@@ -59,7 +73,7 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
             if (reference.Length > options.MaxPayloadBytes)
             {
                 Log.PayloadTooLarge(_logger, key, reference.Length, options.MaxPayloadBytes);
-                return null;
+                return Unreadable;
             }
 
             // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
@@ -115,5 +129,5 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
         return delivered;
     }
 
-    private static string Area(PersistStorage storage) => storage == PersistStorage.Local ? "local" : "session";
+    internal static string Area(PersistStorage storage) => storage == PersistStorage.Local ? "local" : "session";
 }

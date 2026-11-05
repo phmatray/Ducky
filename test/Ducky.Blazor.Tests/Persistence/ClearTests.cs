@@ -71,7 +71,7 @@ public sealed class ClearTests
         removals.Select(static removal => (removal.Area, removal.Key)).ShouldBe([("local", "ducky:alice:level"), ("session", "ducky:alice:dial")], ignoreOrder: true);
         removals.Select(static removal => removal.Id).Distinct().ShouldHaveSingleItem().Length.ShouldBe(32);
         h.Storage.Keys.ShouldBe(others, ignoreOrder: true);
-        h.Js.Calls.Select(static call => call.Identifier).Distinct().ShouldBe(["import", "storageGet", "storageRemove"], ignoreOrder: true);
+        h.Js.Calls.Select(static call => call.Identifier).Distinct().ShouldBe(["import", "watchStorage", "storageGet", "storageRemove"], ignoreOrder: true);
         h.Written.ShouldBeEmpty();
     }
 

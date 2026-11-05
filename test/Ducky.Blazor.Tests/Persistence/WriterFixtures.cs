@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
 using Ducky.Blazor.Tests.Core;
+using Ducky.Blazor.Tests.CrossTab;
 using Ducky.Blazor.Tests.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
@@ -346,4 +347,7 @@ internal sealed class WriterHarness : IAsyncDisposable
 [JsonSerializable(typeof(Level))]
 [JsonSerializable(typeof(Dial))]
 [JsonSerializable(typeof(Counter))]
+[JsonSerializable(typeof(Note))]
+[JsonSerializable(typeof(Picky))]
+[JsonSerializable(typeof(Unwritable))]
 internal sealed partial class WriterJson : JsonSerializerContext;

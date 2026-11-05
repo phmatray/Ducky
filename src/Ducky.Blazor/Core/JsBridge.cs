@@ -31,6 +31,13 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
     }
 
     /// <summary>
+    /// Runs each time an import that replaced a failed one succeeds: the <c>watchStorage</c> registration (§11.7), lost
+    /// with the failed import, is re-issued then (§11.5 Providers; idempotent per id). A field, set with
+    /// <see cref="Volatile.Write{T}(ref T, T)"/>: the bridge's members take only arguments that may cross into JS (INV-23).
+    /// </summary>
+    internal Action? Reimported;
+
+    /// <summary>
     /// The pending or successful import, started on first use and again after a faulted or cancelled one. A synchronous
     /// throw (no JS runtime, prerendering) reaches the caller and caches nothing: the interactivity probe reads it (§11.4).
     /// Once the bridge is disposed it throws <see cref="ObjectDisposedException"/> and imports nothing.
@@ -46,16 +53,19 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
             // default). Both need two different runtimes, which .NET 10 never hands over (S-7); retire the old task when one does.
             // A host without JS (a console or plain DI host) has no runtime: like UnsupportedJavaScriptRuntime, non-interactive.
             var current = runtime() ?? throw new InvalidOperationException("No IJSRuntime is registered: JS interop is unavailable in this host.");
-            // ponytail: a faulted or cancelled import is imported again; §11.5 also re-issues the watchStorage registration
-            // (§11.7) once that re-import succeeds. No registration exists before M7-02, which must re-register here and pin it
-            // with a variant of ServerBrowserStorage_ImportFailsOnDisconnect_ReimportedAfterReconnect (WriterRetryTests)
-            // asserting a watchStorage call after the successful re-import (M7-02's plan.json scope does not mention it).
+            // A faulted or cancelled import is imported again, and once that re-import succeeds the watchStorage registration
+            // it lost (§11.7) is re-issued (§11.5 Providers, through Reimported).
             if (_module is not { IsFaulted: false, IsCanceled: false } || !ReferenceEquals(current, _moduleRuntime))
             {
+                var reimport = _module is { IsCompletedSuccessfully: false };
 #pragma warning disable RS0030 // justification: JsBridge is the single interop wrapper (§10, INV-23)
                 _module = current.InvokeAsync<IJSObjectReference>("import", [ModulePath]).AsTask();
 #pragma warning restore RS0030
                 _moduleRuntime = current;
+                if (reimport)
+                {
+                    _ = ReimportedAsync(_module);
+                }
             }
 
             return _module;
@@ -143,6 +153,17 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
             // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
             await DisposeQuietlyAsync(pull.Result).ConfigureAwait(false);
 #pragma warning restore VSTHRD103
+        }
+    }
+
+    // Runs Reimported once the re-import succeeds. Inline when it completed synchronously: the callback's own call then finds
+    // this import in _module (the gate is reentrant), so the registration goes out before the call that re-imported.
+    private async Task ReimportedAsync(Task<IJSObjectReference> import)
+    {
+        await ((Task)import).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        if (import.IsCompletedSuccessfully)
+        {
+            Volatile.Read(ref Reimported)?.Invoke();
         }
     }
 }

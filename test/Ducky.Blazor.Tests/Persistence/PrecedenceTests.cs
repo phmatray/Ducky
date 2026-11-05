@@ -80,6 +80,37 @@ public sealed class PrecedenceTests : BunitContext
     }
 
     [Fact]
+    public async Task Precedence_CrossTabReceiptBeforeSeedSettled_RestoredAfterTheSeed()
+    {
+        // INV-15 holds for a cross-tab receipt too: persistence restores nothing before the seed settled. A same-document
+        // relay of the stored value arrives while WASM's seed still waits for the first registration; it is restored after
+        // the seed, so storage wins and the stale seed is never written back over it.
+        var seed = await PrerenderAsync(3);
+        _storage[("local", "ducky:counter")] = Envelope(9, _time.GetUtcNow());
+        var respond = _js.Respond;
+        _js.Respond = (identifier, args) => identifier == "storageSet" ? true : respond(identifier, args);
+        Configure(_wasm, browser: true);
+        var init = Store.InitializeAsync(Ct);
+        var sync = ((DotNetObjectReference<PersistenceMiddleware.CrossTabSync>)_js.Calls.Single(static call => call.Identifier == "watchStorage").Args[1]!).Value;
+
+        var received = sync.OnStorageChangedAsync("doc", "local", "ducky:counter", Envelope(9, _time.GetUtcNow()), tooLarge: false);
+        _time.Advance(TimeSpan.FromMilliseconds(50)); // the debounce, well within PrerenderSeedWaitTimeout
+        SeedSettled.ShouldBeFalse();
+
+        await RestoreAsync(seed);
+        Render<CounterView>();
+        await init;
+        await received.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        await Store.WhenIdleAsync(Ct);
+
+        Store.State.Get<Counter>().ShouldBe(new Counter(9));
+        Store.State.WasRestored<Counter>().ShouldBeTrue();
+        Store.Dispatch(new Increment());
+        await WriterHarness.Until(() => _js.Calls.Any(static call => call.Identifier == "storageSet"));
+        ((string)_js.Calls.First(static call => call.Identifier == "storageSet").Args[2]!).ShouldContain("""{"Value":10}""");
+    }
+
+    [Fact]
     public async Task Precedence_OlderStorageEnvelope_StillWins()
     {
         // The envelope was written a month before the prerender: there is no timestamp comparison (clocks skew), so a

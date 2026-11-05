@@ -126,6 +126,15 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
         SubscribeToUserChanges(slices);
 
+        // §11.7: the one storage registration of a store that persists a Local or Session slice, issued before the reads and
+        // ordered before them on the module task. Server storage is no browser storage: no notification names it.
+        Persisted[] browser = [.. slices.Where(static p => p.Options.Storage != PersistStorage.Server)];
+        if (browser.Length > 0)
+        {
+            _crossTab = new(this, browser);
+            _crossTab.Watch();
+        }
+
         // The init task is the init-phase terminal, not HydrateAsync (§11.5 "Before StoreInitialized"): a Scope delegate that
         // ignores its token keeps HydrateAsync running past the deadline, and its late scope is still recorded for epoch 0
         // (§11.6). HydrateAsync never faults: its try catches every failure, and its tail (restore, terminal) does not throw.
@@ -140,8 +149,18 @@ internal sealed partial class PersistenceMiddleware : Middleware
         await StopSwitchesAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         _hydration?.Dispose();
         _deadline?.Dispose();
+        if (_crossTab is not null)
+        {
+            await _crossTab.StopAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+        }
+
         await FlushAsync().ConfigureAwait(ConfigureAwaitOptions.None);
         _stopped.Dispose();
+        if (_crossTab is not null)
+        {
+            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+            await _crossTab.DisposeAsync().ConfigureAwait(false);
+        }
 
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         await _bridge.DisposeAsync().ConfigureAwait(false);
@@ -157,7 +176,8 @@ internal sealed partial class PersistenceMiddleware : Middleware
     private async Task HydrateAsync(Persisted[] slices, Attempt attempt, CancellationToken token)
     {
         Dictionary<string, object> values = [];
-        Dictionary<string, string?> baselines = [];
+        Dictionary<string, (string Key, string? Payload)> baselines = [];
+        var sequences = ImmutableDictionary<string, long>.Empty;
         try
         {
             var reader = new EnvelopeReader(Store.Json, _logger);
@@ -165,6 +185,10 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
             // A scope delegate that ignored its token can resolve after the attempt ended: recorded, but nothing is read.
             token.ThrowIfCancellationRequested();
+
+            // §11.5 step 6: a key whose cross-tab sequence number moved after this point holds a newer value than its read; one
+            // received before (an unscoped key is accepted during the scope wait) is older (CrossTab_ReceiptDuringScopeWait_LaterReadStands).
+            sequences = Volatile.Read(ref _sequences);
 
             foreach (var (slice, options) in slices)
             {
@@ -193,13 +217,13 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 // A slice that fails to read (malformed, newer, expired, a throwing constructor) keeps its state; the reader
                 // logs it naming the key, and the other slices still restore. The baseline is the local serialization of
                 // what was read (absent, or an unserializable state: none, so an older baseline of this key goes).
-                baselines[key] = null;
+                baselines[slice.Key] = (key, null);
                 if (text is not null && reader.TryRead(text, key, slice.StateType, options.Version, options.Migrations, options.MaxAge, _time.GetUtcNow(), out var state))
                 {
                     values[slice.Key] = state;
                     if (Store.Json.TrySerialize(state, slice.StateType, out var payload))
                     {
-                        baselines[key] = payload;
+                        baselines[slice.Key] = (key, payload);
                     }
                 }
             }
@@ -257,15 +281,25 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 values.Remove(key);
             }
 
+            // A cross-tab value received since the read began is newer (CrossTab_EventDuringHydration_NewestWins): its
+            // restore stays, and so does its baseline. It was a Hydration restore of this attempt, so it counts as restored.
+            // ponytail: every bump before the terminal is a value restore; count only those once removals bump (M7-02b).
+            string[] overtaken = [.. _sequences.Where(entry => attempt.Keys.Contains(entry.Key) && sequences.GetValueOrDefault(entry.Key) != entry.Value).Select(static entry => entry.Key)];
+            foreach (var key in overtaken)
+            {
+                values.Remove(key);
+                baselines.Remove(key);
+            }
+
             // Lost to the deadline, the init abort or a newer switch, which owns the terminal: the results are discarded.
-            if (!Claim(attempt, new HydrationCompleted(values.Count > 0) { ScopeEpoch = attempt.Epoch }))
+            if (!Claim(attempt, new HydrationCompleted(values.Count > 0 || overtaken.Length > 0) { ScopeEpoch = attempt.Epoch }))
             {
                 Log.HydrationResultDiscarded(_log, attempt.Epoch);
                 return;
             }
 
             attempt.Restored = true;
-            foreach (var (key, payload) in baselines)
+            foreach (var (key, payload) in baselines.Values)
             {
                 if (payload is null)
                 {
@@ -456,5 +490,5 @@ internal sealed partial class PersistenceMiddleware : Middleware
         public object? Pending { get; set; }
     }
 
-    private sealed record Persisted(Slice Slice, PersistOptions Options);
+    internal sealed record Persisted(Slice Slice, PersistOptions Options);
 }

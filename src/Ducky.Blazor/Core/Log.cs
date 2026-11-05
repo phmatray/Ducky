@@ -18,6 +18,8 @@ namespace Ducky.Blazor;
 // null scope (§11.6: "Info log once").
 // M12-03 takes 2042 and 2043, not assigned by SPEC: the Error log of a failed scope switch (§11.6: "Error log, and
 // HydrationFailed") and of an AuthenticationStateProvider that can't be resolved (§6.10: a hand-off callback never throws).
+// M7-02 takes 2050-2053, not assigned by SPEC: §11.7's Debug log of an ignored key, a notification that failed, a
+// watchStorage registration that failed, and an unwatchStorage at dispose that failed.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -94,4 +96,16 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2043, Level = LogLevel.Error, Message = "Resolving the AuthenticationStateProvider failed: this store does not follow user changes")]
     internal static partial void AuthSubscribeFailed(SafeLogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 2050, Level = LogLevel.Debug, Message = "Storage notification for '{Key}' ignored: not the current key of a slice this store syncs from that source")]
+    internal static partial void CrossTabKeyIgnored(SafeLogger logger, string key);
+
+    [LoggerMessage(EventId = 2051, Level = LogLevel.Warning, Message = "Storage notification for '{Key}' could not be read (a disconnect, an interop timeout or a failed pull); ignored")]
+    internal static partial void CrossTabNotificationFailed(SafeLogger logger, Exception exception, string key);
+
+    [LoggerMessage(EventId = 2052, Level = LogLevel.Warning, Message = "The storage registration (watchStorage) of store '{Id}' failed (rejected by ducky.js, or the module was gone); this store receives no cross-tab or same-document storage notifications")]
+    internal static partial void CrossTabWatchFailed(SafeLogger logger, Exception exception, string id);
+
+    [LoggerMessage(EventId = 2053, Level = LogLevel.Warning, Message = "Removing the storage registration (unwatchStorage) of store '{Id}' failed; ducky.js drops the id once its deliveries keep failing")]
+    internal static partial void CrossTabUnwatchFailed(SafeLogger logger, Exception exception, string id);
 }
