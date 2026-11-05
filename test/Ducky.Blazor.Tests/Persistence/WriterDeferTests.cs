@@ -172,7 +172,11 @@ public sealed class WriterDeferTests
         List<(string Key, DeferPoint Point)> points = []; // the hook runs on the writer's loop only, one call at a time
         await using var h = new WriterHarness(d => d.Persist<LevelSlice>().AddBlazor(o => o.AfterDeferHook = (key, point) =>
         {
-            points.Add((key, point));
+            if (point is DeferPoint.BeforeAdd or DeferPoint.AfterAdd)
+            {
+                points.Add((key, point));
+            }
+
             if (point == at && read.TrySetResult(null))
             {
                 // The writer's own pool thread blocks; the terminal is reduced by the thread that issues it.

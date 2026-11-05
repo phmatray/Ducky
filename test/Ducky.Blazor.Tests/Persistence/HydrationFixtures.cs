@@ -52,15 +52,25 @@ internal sealed class CrashOnHydrationTerminalSlice : Slice<Crashes>
 // One line per action the store processed, in processing order: what it was and the persistence state it left.
 internal sealed class HydrationLog
 {
-    private readonly Lock _gate = new();
+    private readonly object _gate = new(); // not a Lock: Entries waits on it
     private readonly List<string> _entries = [];
+    private bool _logging;
 
+    /// <summary>
+    /// What was logged, the action in progress included: an action is logged after its commit and its completion (§6.4 step 9),
+    /// so a reader that saw either would otherwise race the recorder. Bounded: a drain a test holds on purpose only delays it.
+    /// </summary>
     public IReadOnlyList<string> Entries
     {
         get
         {
             lock (_gate)
             {
+                if (_logging)
+                {
+                    Monitor.Wait(_gate, TimeSpan.FromSeconds(10));
+                }
+
                 return [.. _entries];
             }
         }
@@ -77,6 +87,28 @@ internal sealed class HydrationLog
 
     /// <summary>Runs on the processing thread right after each entry is added, inside the store's drain.</summary>
     public Action<string>? OnEntry { get; set; }
+
+    /// <summary>On the drainer, before the action can commit or complete.</summary>
+    public void Begin()
+    {
+        lock (_gate)
+        {
+            _logging = true;
+        }
+    }
+
+    /// <summary>On the drainer: logs the action <see cref="Begin"/> announced.</summary>
+    public void AddRecorded(string entry)
+    {
+        lock (_gate)
+        {
+            _entries.Add(entry);
+            _logging = false;
+            Monitor.PulseAll(_gate);
+        }
+
+        OnEntry?.Invoke(entry);
+    }
 
     public void Add(string entry)
     {
@@ -99,6 +131,8 @@ internal sealed class HydrationRecorder(HydrationLog log) : Middleware
         return default;
     }
 
+    public override void BeforeReduce(ActionContext context) => log.Begin();
+
     public override void AfterReduce(ActionContext context)
     {
         var what = context.Action switch
@@ -110,7 +144,7 @@ internal sealed class HydrationRecorder(HydrationLog log) : Middleware
             _ => context.ActionType,
         };
         var persistence = context.State.Get<PersistenceState>();
-        log.Add($"{what} {persistence.Status}:{persistence.ScopeEpoch}");
+        log.AddRecorded($"{what} {persistence.Status}:{persistence.ScopeEpoch}");
     }
 }
 
