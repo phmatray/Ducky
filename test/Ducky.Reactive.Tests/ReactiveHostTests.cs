@@ -114,15 +114,16 @@ public sealed class ReactiveHostTests
         record.Exception.ShouldBeOfType<InvalidOperationException>().Message.ShouldBe("unsubscribe");
     }
 
-    // Non-normative (§14, INV-27): a reactive effect whose Handle (or its Subscribe) throws is logged (Error 3003) and
-    // skipped; the pipelines before and after it still start and still see StoreInitialized.
+    // Non-normative (§14, INV-27): a reactive effect whose Handle (or its Subscribe) throws is a reactive failure: logged
+    // (Error 3003), published as EffectFailed(type, "reactive", ex) and retried after RetryDelay. The pipelines before and
+    // after it still start and still see StoreInitialized.
     [Fact]
     public async Task Reactive_HandleThrows_OtherPipelinesStillStartAndSeeStoreInitialized()
     {
         var seen = new List<object>();
         var fake = new FakeLogger<ReactiveHost>();
         await using var host = new Host(
-            d => d.AddSlice<CounterSlice>().AddReactiveEffect<RecordingEffect>().AddReactiveEffect<ThrowingHandleEffect>().AddReactiveEffect<LateRecordingEffect>(),
+            d => d.AddSlice<CounterSlice>().AddSlice<EffectFailureSlice>().AddReactiveEffect<RecordingEffect>().AddReactiveEffect<ThrowingHandleEffect>().AddReactiveEffect<LateRecordingEffect>(),
             s => s.AddSingleton(seen).AddSingleton<ILogger<ReactiveHost>>(fake));
         await host.StartAsync();
 
@@ -133,8 +134,16 @@ public sealed class ReactiveHostTests
         var record = fake.Collector.GetSnapshot().Where(static r => r.Id.Id != 3000).ShouldHaveSingleItem();
         record.Id.Id.ShouldBe(3003);
         record.Level.ShouldBe(LogLevel.Error);
-        record.Message.ShouldBe($"Starting reactive effect {typeof(ThrowingHandleEffect)} threw");
+        record.Message.ShouldBe($"Reactive effect {typeof(ThrowingHandleEffect)} failed");
         record.Exception.ShouldBeOfType<InvalidOperationException>().Message.ShouldBe("handle");
+        var failure = host.Store.State.Get<IReadOnlyList<EffectFailed>>().ShouldHaveSingleItem();
+        (failure.EffectType, failure.ActionType, failure.Exception.Message).ShouldBe((typeof(ThrowingHandleEffect).ToString(), "reactive", "handle"));
+
+        // Attempt 1 waits one second, then Handle runs (and throws) again.
+        host.Time.Advance(TimeSpan.FromSeconds(1));
+        await host.IdleAsync();
+        fake.Collector.GetSnapshot().Count(static r => r.Id.Id == 3003).ShouldBe(2);
+        host.Store.State.Get<IReadOnlyList<EffectFailed>>().Count.ShouldBe(2);
     }
 
     [Fact]

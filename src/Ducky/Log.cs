@@ -23,6 +23,9 @@ internal static partial class Log
     [LoggerMessage(EventId = 1004, Level = LogLevel.Warning, Message = "The store is a Singleton on a non-browser host: every user and circuit shares one store. Use ServiceLifetime.Scoped on the server")]
     internal static partial void SingletonOutsideBrowser(SafeLogger logger);
 
+    [LoggerMessage(EventId = 1005, Level = LogLevel.Error, Message = "{FailureType} raised while handling a failure action, logged and not dispatched")]
+    internal static partial void FailureActionNotDispatched(SafeLogger logger, Type failureType);
+
     [LoggerMessage(EventId = 1010, Level = LogLevel.Warning, Message = "prefer DisposeAsync; pending persistence writes may be lost")]
     internal static partial void SyncDispose(SafeLogger logger);
 

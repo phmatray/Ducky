@@ -11,4 +11,8 @@ internal sealed class ReactiveBridge
 
     // Null only until ReactiveHost writes the current snapshot, before any pipeline subscribes.
     public SynchronizedReactiveProperty<StateSnapshot> State { get; } = new(null!);
+
+    // Set by ReactiveMiddleware's constructor: the store creates its middleware before it materializes ReactiveHost, the
+    // only reader, which publishes reactive failures through it (DispatchSystem is protected).
+    public ReactiveMiddleware Middleware { get; set; } = null!;
 }

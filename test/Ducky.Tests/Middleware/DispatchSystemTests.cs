@@ -86,6 +86,45 @@ public sealed class DispatchSystemTests
         failures.Failures.ShouldHaveSingleItem().ActionType.ShouldBe(typeof(Boom).ToString());
     }
 
+    // Non-normative (INV-12, §6.5): a failure action sent synchronously under a failure action, or under a synchronous
+    // descendant of one, is logged (Error 1005) and never dispatched. A plain DispatchSystem under it still is, and so is a
+    // failure action sent from an asynchronous continuation, which starts a new chain.
+    [Fact]
+    public async Task DispatchSystem_FailureActionUnderFailureAction_LogsOnly()
+    {
+        var logger = new FakeLogger();
+        var system = new Recorder("system", []);
+        var store = new DuckyStore([new StepSlice()], logger, middleware: () => [system]);
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
+        ExecutionContext? continuation = null;
+        system.OnAfter = c =>
+        {
+            switch (c.Action)
+            {
+                case Ping:
+                    continuation = ExecutionContext.Capture();
+                    system.System(new Step("under the failure"), isFailure: true);
+                    system.System(new Bump());
+                    break;
+                case Bump:
+                    system.System(new Step("under a descendant"), isFailure: true);
+                    break;
+            }
+        };
+
+        system.System(new Ping(), isFailure: true);
+
+        system.Contexts.Select(c => c.Action).Where(a => a is not StoreInitialized).Distinct().ShouldBe<object>([new Ping(), new Bump()]);
+        var records = logger.Collector.GetSnapshot().Where(r => r.Id.Id == 1005).ToList();
+        records.Count.ShouldBe(2);
+        records.ShouldAllBe(r => r.Level == LogLevel.Error && r.Message == $"{typeof(Step)} raised while handling a failure action, logged and not dispatched");
+
+        ExecutionContext.Run(continuation!, _ => system.System(new Step("continuation"), isFailure: true), null);
+
+        system.Contexts.Where(c => c.Action is Step).Select(c => (c.Action, c.Depth)).Distinct().ShouldHaveSingleItem().ShouldBe((new Step("continuation"), 0));
+        logger.Collector.GetSnapshot().Count(r => r.Id.Id == 1005).ShouldBe(2);
+    }
+
     // Non-normative (§5.2): Origin.System bypasses the init buffer, so a DispatchSystem from a restore's AfterReduce is
     // reduced before the store is Ready, and it neither starts init nor needs it. A null action is rejected.
     [Fact]

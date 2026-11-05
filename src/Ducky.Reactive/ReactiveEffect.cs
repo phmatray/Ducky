@@ -10,6 +10,19 @@ namespace Ducky.Reactive;
 /// <remarks>
 /// Reactive work is excluded from quiescence: <see cref="IStore.WhenIdleAsync"/> never waits for a pipeline, even one
 /// with a request in flight, so test the observable outcome (advance a fake clock, then await a dispatch) instead.
+/// <para>
+/// Every failure (a throw from <see cref="Handle"/>, a non-terminal error, a completion with a failure) is logged and
+/// dispatched as an <see cref="EffectFailed"/> whose <see cref="EffectFailed.ActionType"/> is <c>"reactive"</c>, with
+/// <see cref="Origin.System"/>: never vetoed and never "unhandled". A non-terminal error leaves the pipeline running; a
+/// failure that ends it resubscribes after <see cref="RetryDelay"/>, unless the store is disposed first.
+/// </para>
+/// <para>
+/// A failure raised synchronously while the store handles a failure action (an <see cref="EffectFailed"/>, a
+/// <see cref="ReducerFailed"/>, anything a middleware sends with <c>DispatchSystem(action, isFailure: true)</c>, or a
+/// synchronous descendant of one) is logged only (INV-12). After a real asynchronous hop it starts a new chain and is
+/// published, so a pipeline that reacts asynchronously to <see cref="EffectFailed"/> and can fail must leave reactive
+/// failures out, <c>.Where(static f =&gt; f.ActionType != "reactive")</c>, or it sustains itself for as long as it fails.
+/// </para>
 /// </remarks>
 public abstract class ReactiveEffect
 {
@@ -35,7 +48,11 @@ public abstract class ReactiveEffect
     /// 16 then 30 seconds, and stops after the eighth attempt.
     /// </summary>
     /// <param name="attempt">The resubscribe attempt, from 1; it resets after a successful emission.</param>
-    /// <returns>The delay, or <see langword="null"/> to stop resubscribing.</returns>
+    /// <returns>
+    /// The delay, or <see langword="null"/> to stop resubscribing. A delay under one millisecond waits one, and a delay
+    /// above about 49.7 days (the <see cref="Task.Delay(TimeSpan, TimeProvider, CancellationToken)"/> maximum), or a throw,
+    /// is a failure like any other, and stops resubscribing.
+    /// </returns>
     protected internal virtual TimeSpan? RetryDelay(int attempt) =>
         attempt > 8 ? null : TimeSpan.FromSeconds(Math.Min(30, 1 << (attempt - 1)));
 }

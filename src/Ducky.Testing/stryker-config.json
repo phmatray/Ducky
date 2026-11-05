@@ -11,6 +11,7 @@
     ],
     "test-projects": [
       "../../test/Ducky.Concurrency.Tests/Ducky.Concurrency.Tests.csproj",
+      "../../test/Ducky.Reactive.Tests/Ducky.Reactive.Tests.csproj",
       "../../test/Ducky.Testing.Tests/Ducky.Testing.Tests.csproj"
     ],
     "additional-timeout": 5000,
