@@ -18,6 +18,7 @@ namespace Ducky.Blazor;
 // null scope (§11.6: "Info log once").
 // M12-03 takes 2042 and 2043, not assigned by SPEC: the Error log of a failed scope switch (§11.6: "Error log, and
 // HydrationFailed") and of an AuthenticationStateProvider that can't be resolved (§6.10: a hand-off callback never throws).
+// M12-03c takes 2045, not assigned by SPEC: §11.6's Debug log of a re-asserted scope (a circuit reconnect, absorbed).
 // M7-02 takes 2050-2053, not assigned by SPEC: §11.7's Debug log of an ignored key, a notification that failed, a
 // watchStorage registration that failed, and an unwatchStorage at dispose that failed.
 internal static partial class Log
@@ -96,6 +97,9 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2043, Level = LogLevel.Error, Message = "Resolving the AuthenticationStateProvider failed: this store does not follow user changes")]
     internal static partial void AuthSubscribeFailed(SafeLogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 2045, Level = LogLevel.Debug, Message = "The user change re-asserted the scope of epoch {Epoch} (a circuit reconnect): absorbed, with no reset and no read")]
+    internal static partial void ScopeReasserted(SafeLogger logger, int epoch);
 
     [LoggerMessage(EventId = 2050, Level = LogLevel.Debug, Message = "Storage notification for '{Key}' ignored: not the current key of a slice this store syncs from that source")]
     internal static partial void CrossTabKeyIgnored(SafeLogger logger, string key);

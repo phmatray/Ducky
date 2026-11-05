@@ -77,7 +77,7 @@ internal sealed partial class PersistenceMiddleware
     // here: it could be older than commits queued ahead of the reset. Then the attempt runs like any other (§11.5 steps 4-7).
     private async Task SwitchAsync()
     {
-        var attempt = BeginSwitch();
+        var attempt = BeginSwitch(CheckScope());
         if (attempt is null)
         {
             return;
@@ -90,13 +90,19 @@ internal sealed partial class PersistenceMiddleware
 
     // The synchronous part, or null once the switches are stopped: a notification already in flight when dispose unsubscribed,
     // or one a browser hand-off after dispose subscribed (its callback is never withdrawn), takes no epoch and never touches
-    // _stopped, which dispose disposes after the flush.
-    private Attempt? BeginSwitch()
+    // _stopped, which dispose disposes after the flush. Null too for a re-assertion (§11.6), decided under the same lock.
+    private Attempt? BeginSwitch(ScopeCheck check)
     {
         lock (_issue)
         {
             if (_switchesStopped)
             {
+                return null;
+            }
+
+            if (IsReassertion(check))
+            {
+                Log.ScopeReasserted(_log, Current!.Epoch);
                 return null;
             }
 

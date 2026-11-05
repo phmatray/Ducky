@@ -47,7 +47,10 @@ internal sealed partial class PersistenceMiddleware : Middleware
         persistence.Middleware = this;
     }
 
-    /// <summary>The current hydration attempt (§11.5), null when nothing is readable; replaced only by a scope switch.</summary>
+    /// <summary>
+    /// The current hydration attempt (§11.5), replaced only by a scope switch; null when nothing is readable, except in a
+    /// browser store whose persisted slices are all inert Server storage, where it is an attempt with nothing to read.
+    /// </summary>
     internal Attempt? Current { get; private set; }
 
     /// <summary>The scope recorded per epoch (§11.5): swapped under <c>_issue</c>, read lock-free by the writers.</summary>
@@ -78,8 +81,18 @@ internal sealed partial class PersistenceMiddleware : Middleware
         }
 
         var slices = persisted.Except(inert).ToArray();
+        _resets = [.. persisted.Where(p => Scoped(p.Options)).Select(static p => p.Slice.Key)];
         if (slices.Length == 0)
         {
+            // Nothing to hydrate, but with a resolvable provider the inert keys put a scope in use (§11.6): an attempt 0 with
+            // nothing to read and no terminal (Status stays Hydrated), which a user change supersedes like any other, so its
+            // reset restores them. No scope is ever recorded for it, so no notification is a re-assertion.
+            if (inert.Length > 0)
+            {
+                Current = new();
+                SubscribeToUserChanges(persisted);
+            }
+
             return default;
         }
 
@@ -106,7 +119,6 @@ internal sealed partial class PersistenceMiddleware : Middleware
         // token each end the attempt if it has not ended (step 7); the linked token only bounds the scope wait and the reads.
         var attempt = new Attempt { Keys = [.. slices.Select(static persisted => persisted.Slice.Key)] };
         _readable = slices;
-        _resets = [.. persisted.Where(p => Scoped(p.Options)).Select(static p => p.Slice.Key)];
         _writers = slices.ToDictionary(static persisted => persisted.Slice.Key, persisted => new PersistenceWriter(this, persisted.Slice, persisted.Options));
         _initToken = cancellationToken;
         _deadline = new(_registration.Options.HydrationTimeout, _time);
@@ -124,7 +136,8 @@ internal sealed partial class PersistenceMiddleware : Middleware
             _deadline.Token.UnsafeRegister(static self => ((PersistenceMiddleware)self!).EndInitPhase(), this);
         }
 
-        SubscribeToUserChanges(slices);
+        // Inert keys included: in the browser they put a scope in use when a provider is resolvable, never join a read (§11.6).
+        SubscribeToUserChanges(persisted);
 
         // §11.7: the one storage registration of a store that persists a Local or Session slice, issued before the reads and
         // ordered before them on the module task. Server storage is no browser storage: no notification names it.
@@ -344,8 +357,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         var scope = await resolve(services, token).ConfigureAwait(false);
 
-        // An empty or whitespace scope would name the shared key {prefix}::{sliceKey}: it is null, never a fallback (INV-17).
-        scope = string.IsNullOrWhiteSpace(scope) ? null : scope;
+        scope = Normalized(scope);
         lock (_issue)
         {
             if (attempt != Current)
