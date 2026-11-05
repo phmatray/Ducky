@@ -11,7 +11,7 @@ namespace Ducky.Blazor.Tests.DistributedCache.ScopeSwitch;
 
 // SPEC §11.6 "Scope switch", §11.5 "Final write under the old scope" and "Switch reads"; INV-14, INV-16, INV-17. A circuit
 // store over the real MemoryDistributedCache (gated per call) whose provider raises AuthenticationStateChanged.
-public sealed class ScopeSwitchTests : IDisposable
+public sealed partial class ScopeSwitchTests : IDisposable
 {
     private const int NullScopeEventId = 2027;
     private const int DiscardedEventId = 2041;

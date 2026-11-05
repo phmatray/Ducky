@@ -169,9 +169,13 @@ internal sealed class WatchedTime() : FakeTimeProvider(new DateTimeOffset(2026, 
     public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
     {
         var timer = base.CreateTimer(callback, state, dueTime, period);
+        DueTimes.Enqueue(dueTime);
         _timers.Writer.TryWrite(dueTime);
         return timer;
     }
+
+    /// <summary>The due time of every timer created, in creation order.</summary>
+    public ConcurrentQueue<TimeSpan> DueTimes { get; } = new();
 
     /// <summary>Waits until a timer of <paramref name="dueTime"/> has been created.</summary>
     public async Task TimerAsync(TimeSpan dueTime)

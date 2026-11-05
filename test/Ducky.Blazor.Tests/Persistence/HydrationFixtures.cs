@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 using Ducky.Blazor.Tests.Core;
@@ -76,6 +77,9 @@ internal sealed class HydrationLog
         }
     }
 
+    /// <summary>Every hydration terminal action the store processed, in processing order.</summary>
+    public ConcurrentQueue<object> Terminals { get; } = new();
+
     /// <summary>The store's init token, recorded by <see cref="HydrationRecorder"/>.</summary>
     public CancellationToken InitToken { get; set; }
 
@@ -143,6 +147,11 @@ internal sealed class HydrationRecorder(HydrationLog log) : Middleware
             _ when context.Origin == Origin.Hydration => $"restore:{string.Join(",", context.ChangedKeys)}",
             _ => context.ActionType,
         };
+        if (context.Action is HydrationCompleted or HydrationFailed)
+        {
+            log.Terminals.Enqueue(context.Action);
+        }
+
         var persistence = context.State.Get<PersistenceState>();
         log.AddRecorded($"{what} {persistence.Status}:{persistence.ScopeEpoch}");
     }

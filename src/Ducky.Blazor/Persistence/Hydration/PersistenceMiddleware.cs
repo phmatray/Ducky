@@ -408,9 +408,9 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
             var attempt = Current!;
             var failure = _initToken.IsCancellationRequested
-                ? new HydrationFailed(nameof(OperationCanceledException), "Store init was aborted before hydration ended.")
-                : new HydrationFailed(nameof(TimeoutException), $"Hydration did not end within HydrationTimeout ({_registration.Options.HydrationTimeout}).");
-            Claim(attempt, failure with { ScopeEpoch = attempt.Epoch });
+                ? new HydrationFailed(nameof(OperationCanceledException), "Store init was aborted before hydration ended.") { ScopeEpoch = attempt.Epoch }
+                : TimedOut(attempt.Epoch);
+            Claim(attempt, failure);
             IssueTerminal(attempt);
 
             // A switch attempt's token is not the deadline's: its reads stop here, and a hung one frees its key's loop (§11.5
@@ -479,6 +479,9 @@ internal sealed partial class PersistenceMiddleware : Middleware
         /// superseding switch or the end of the init phase cancels it. The initial attempt has none: its token is the init deadline's.
         /// </summary>
         public CancellationTokenSource? Cancellation { get; init; }
+
+        /// <summary>A switch attempt's own HydrationTimeout, armed iff the init phase had ended (§11.5 step 7); else none.</summary>
+        public ITimer? Deadline { get; set; }
 
         /// <summary>Completed on the drainer once a switch's reset committed and its final snapshots were handed over.</summary>
         public TaskCompletionSource ResetCommitted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
