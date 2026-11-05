@@ -11,7 +11,8 @@ public abstract partial class Middleware
     /// <param name="action">The action.</param>
     /// <param name="isFailure">
     /// <see langword="true"/> marks a failure action: a failure raised while handling it, or a synchronous descendant of
-    /// it, is logged and never dispatched.
+    /// it, is logged and never dispatched. That includes this action: sent synchronously under a failure action, or under
+    /// a synchronous descendant of one, it is logged and not dispatched.
     /// </param>
     /// <remarks>
     /// Use it from middleware init: awaiting <see cref="IDispatcher.DispatchAsync(object)"/> of a user action there waits until the init
@@ -22,7 +23,6 @@ public abstract partial class Middleware
     protected void DispatchSystem(object action, bool isFailure = false)
     {
         ArgumentNullException.ThrowIfNull(action);
-        var dispatcher = Attached.Dispatcher;
-        dispatcher.Enqueue(dispatcher.NewPending(action, Origin.System, null, isFailure));
+        Attached.Dispatcher.DispatchSystem(action, isFailure);
     }
 }

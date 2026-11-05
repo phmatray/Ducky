@@ -79,20 +79,9 @@ internal sealed class ReactiveHost : Effect<StoreInitialized>, IAsyncDisposable
         cancellationToken.Register(subscriptions.Dispose);
         foreach (var effect in _effects)
         {
-            // Each start is isolated too: a Handle (or its Subscribe) that throws must not skip the later pipelines, nor the
-            // StoreInitialized push below that the earlier ones wait for.
-            try
-            {
-                subscriptions.Add(new IsolatedSubscription(effect.Handle(_bridge.Actions, _bridge.State).Subscribe(context.Dispatch), effect.GetType(), _logger));
-                Log.EffectSubscribed(_logger, effect.GetType());
-            }
-#pragma warning disable CA1031 // justification: Handle is user code; its throw is logged and never stops the rest (INV-27)
-            catch (Exception ex)
-#pragma warning restore CA1031
-            {
-                // ponytail: logged only; M11-02 publishes it as DispatchSystem(EffectFailed(type, "reactive", ex), isFailure: true).
-                Log.EffectStartThrew(_logger, ex, effect.GetType());
-            }
+            // Each start is isolated (a throwing Handle is a reactive failure), so it never skips the later pipelines,
+            // nor the StoreInitialized push below that the earlier ones wait for.
+            new ReactivePipeline(effect, _bridge, context, subscriptions, _logger, cancellationToken).Subscribe();
         }
 
         // ReactiveMiddleware pushed StoreInitialized before any pipeline existed: push it once more, for them.

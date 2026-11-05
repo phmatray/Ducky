@@ -19,6 +19,20 @@ internal sealed partial class Dispatcher
         Enqueue(new Pending(failure, Origin.System, 0, correlationId, false, true, null, producer));
     }
 
+    // Middleware.DispatchSystem (§6.5): a failure action sent synchronously under a failure action is a failure raised while
+    // handling one, so it is logged, never dispatched. An asynchronous continuation has no InFailure: it starts a new chain.
+    internal void DispatchSystem(object action, bool isFailure)
+    {
+        var p = NewPending(action, Origin.System, null, isFailure);
+        if (isFailure && p.InFailure)
+        {
+            Log.FailureActionNotDispatched(logger, action.GetType());
+            return;
+        }
+
+        Enqueue(p);
+    }
+
     // Steps 4-6 run under the failed action's own scope, installed by step 2.
     private void RouteScopedFailure(object action, string? sliceKey, Exception ex)
     {
