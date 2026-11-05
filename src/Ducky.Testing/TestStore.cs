@@ -110,7 +110,9 @@ public sealed partial class TestStore : IStore
 
     /// <summary>
     /// Waits until the store is idle (<see cref="WhenIdleAsync"/>), within a real-time bound. Like
-    /// <see cref="WhenIdleAsync"/>, it does not wait for <see cref="Effect.LongRunning"/> effects.
+    /// <see cref="WhenIdleAsync"/>, it does not wait for <see cref="Effect.LongRunning"/> effects, nor for any Ducky.Reactive
+    /// pipeline, even one with a request in flight: test a reactive effect on its observable outcome (advance a fake clock,
+    /// then await a dispatch).
     /// </summary>
     /// <param name="timeout">The real-time bound; <see cref="WallClockTimeout"/> when null.</param>
     /// <returns>A task that completes once the store is idle.</returns>

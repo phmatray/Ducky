@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <!-- Prerender_ReactiveLoadInFlight_Documented (SPEC §17.6). -->
+    <ProjectReference Include="../../src/Ducky.Reactive/Ducky.Reactive.csproj" />
   </ItemGroup>
 
   <ItemGroup>

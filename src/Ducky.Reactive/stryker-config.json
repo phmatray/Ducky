@@ -10,6 +10,7 @@
       "**/*.cs"
     ],
     "test-projects": [
+      "../../test/Ducky.Blazor.Tests/Ducky.Blazor.Tests.csproj",
       "../../test/Ducky.Reactive.Tests/Ducky.Reactive.Tests.csproj"
     ],
     "additional-timeout": 5000,
