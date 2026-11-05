@@ -239,6 +239,9 @@ internal sealed class WriterHarness : IAsyncDisposable
     /// <summary>What storageSet answers once the write is recorded; by default true (the id is registered).</summary>
     public Func<StoredWrite, object?> OnSet { get; set; } = static _ => true;
 
+    /// <summary>The store's scope: the request scope of a server store, which a renderer takes as its services.</summary>
+    public IServiceProvider Services => _scope.ServiceProvider;
+
     public IStore Store => _scope.ServiceProvider.GetRequiredService<IStore>();
 
     public PersistenceMiddleware Middleware => _scope.ServiceProvider.GetRequiredService<PersistenceSlice>().Middleware.ShouldNotBeNull();

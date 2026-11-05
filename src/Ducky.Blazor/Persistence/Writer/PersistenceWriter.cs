@@ -141,6 +141,8 @@ internal sealed partial class PersistenceMiddleware
     // §11.5 "Flush on DisposeAsync", phase 5a: the deferred keys are released, every loop skips its debounce and backoff
     // and makes one attempt per dirty key, bounded by DisposeTimeout; each key still dirty (or still deferred) then is
     // counted ducky.persistence.lost, and the loops stop.
+    // ponytail: internal only, so a static SSR form post's write lands after its redirect response (§23); upgrade path (2.1):
+    // a public FlushPersistenceAsync over this flush, awaited before NavigateTo in the static SSR form recipe.
     private async Task FlushAsync()
     {
         // The drain has exited: nothing else takes deferred keys any more. Released only once the Hydrating restore was

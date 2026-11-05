@@ -17,6 +17,15 @@ public enum PersistStorage
     /// share each key with no compare-and-swap and no sync between them, so the last writer wins on whole slices; and a
     /// prerender store's writes, its flush at the end of the request included, can land after the circuit store already
     /// read or wrote the same key, overwriting newer state.
+    /// <para>
+    /// In a non-interactive store (static SSR, the prerender pass) the stored value reaches the rendered HTML only when a
+    /// lifecycle method awaits <see cref="IStore.InitializeAsync"/>, as <c>DuckyInitializer</c> does in <c>OnInitializedAsync</c>;
+    /// a component that only calls <c>Select</c> renders the initial state, and on a static SSR page that HTML is the only
+    /// output. The prerender seed carries the value in any case. The flush of a static SSR form post runs after the redirect
+    /// response was sent, so the browser's immediate GET can render the value from before the post (Post/Redirect/Get).
+    /// A cache that completes <c>GetAsync</c> synchronously, such as <c>MemoryDistributedCache</c>, restores before the render
+    /// and hides this; don't rely on it, because an asynchronous cache such as Redis renders the initial state.
+    /// </para>
     /// </remarks>
     Server,
 }
