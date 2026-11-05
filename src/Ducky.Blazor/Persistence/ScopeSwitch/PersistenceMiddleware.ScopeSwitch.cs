@@ -83,6 +83,7 @@ internal sealed partial class PersistenceMiddleware
             return;
         }
 
+        using var deadline = attempt.Deadline;
         Persisted[] slices = [.. _readable.Where(p => attempt.Keys.Contains(p.Slice.Key))];
         await HydrateAsync(slices, attempt, attempt.Cancellation!.Token).ConfigureAwait(ConfigureAwaitOptions.None);
     }
@@ -105,6 +106,7 @@ internal sealed partial class PersistenceMiddleware
             attempt.Epoch = ++_scopeVersion;
             attempt.Keys = superseded.Restored ? scoped : scoped.Union(superseded.Keys);
             Current = attempt;
+            attempt.Deadline = ArmSwitchDeadline(attempt);
             RecordAttempt(attempt);
 
             // CancelAsync: requested at once, while a callback a Scope delegate registered runs away from this lock and can't
