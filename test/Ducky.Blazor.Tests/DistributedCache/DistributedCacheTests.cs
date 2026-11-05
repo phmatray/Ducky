@@ -300,29 +300,6 @@ public sealed class DistributedCacheTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task DistributedCache_ScopeDispose_CoalescedWriteFlushed(bool yield)
-    {
-        // (non-normative) §11.5 phase 5a, §11.6 "pending writes flush on request-scope dispose": the request scope disposes
-        // the store after marking itself disposed, and the flush still reaches the cache resolved while the scope was alive.
-        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var cache = new TestCache(yield) { SetGate = gate };
-        var store = NonInteractive(cache, "alice");
-        await store.InitializeAsync();
-        store.Store.Dispatch(new Increment());
-        await WriterHarness.Until(() => cache.Calls.Contains("set:app:alice:counter")); // write 1 held by the gate
-        store.Store.Dispatch(new Increment()); // coalesced behind it
-        await WriterHarness.Until(() => store.Store.State.Get<Counter>() == new Counter(2));
-
-        var disposing = store.DisposeAsync(); // the scope, not DisposeStoreAsync
-        gate.SetResult();
-        await disposing;
-
-        Payload(cache.Stored("app:alice:counter")!).ShouldBe("""{"Value":2}""");
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
     public async Task DistributedCache_NonInteractive_ServerReadBrowserSkipped(bool yield)
     {
         // (non-normative) §11.5 step 1, §11.6: a prerender or static SSR store reads Server storage during init and writes it

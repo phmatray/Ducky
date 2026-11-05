@@ -298,6 +298,9 @@ internal sealed class WriterHarness : IAsyncDisposable
     /// <summary>Disposes the store itself (the scope's later dispose is a no-op for it).</summary>
     public Task DisposeStoreAsync() => Store.DisposeAsync().AsTask();
 
+    /// <summary>Disposes the store's scope alone, as the end of a request or a circuit does: the root provider stays alive.</summary>
+    public ValueTask DisposeScopeAsync() => _scope.DisposeAsync();
+
     public async ValueTask DisposeAsync()
     {
         await _scope.DisposeAsync();
