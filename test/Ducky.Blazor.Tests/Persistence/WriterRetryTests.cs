@@ -99,9 +99,10 @@ public sealed class WriterRetryTests
     [Fact]
     public async Task ServerBrowserStorage_ImportFailsOnDisconnect_ReimportedAfterReconnect()
     {
-        // The ducky.js import, pending at the probe, fails on a disconnect during circuit init, so the read fails. The
-        // failed import is never cached: the first write imports afresh (still disconnected: not delivered, retried) and
-        // the retry after the reconnect imports once more and writes.
+        // The ducky.js import, pending at the probe, fails on a disconnect during circuit init, so the storage registration
+        // and the read fail. The failed import is never cached: the first write imports afresh (still disconnected: not
+        // delivered, retried) and the retry after the reconnect imports once more, re-issues the lost registration (§11.5
+        // Providers, §11.7) and writes.
         await using var h = new WriterHarness(static d => d.Persist<LevelSlice>(), browser: false);
         var probe = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var respond = h.Js.Respond;
@@ -127,7 +128,8 @@ public sealed class WriterRetryTests
         h.Time.Advance(TimeSpan.FromSeconds(1));
         (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":1}""");
         imports.ShouldBe(3);
-        h.Js.Calls.Select(static call => call.Identifier).ShouldBe(["import", "import", "import", "storageSet"]);
+        h.Js.Calls.Select(static call => call.Identifier).ShouldBe(["import", "import", "import", "watchStorage", "storageSet"]);
+        h.Js.Calls[3].Args[0].ShouldBe(h.Js.Calls[4].Args[3]); // under the store id its writes use
         await h.IterationsAsync("level", 1);
         h.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":1}""");
     }

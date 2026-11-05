@@ -17,12 +17,24 @@ internal sealed class FakeJsStreamReference(byte[] content) : IJSStreamReference
     /// <summary>Thrown by <see cref="DisposeAsync"/>, if set, once disposal is recorded (a circuit dropped meanwhile).</summary>
     public Exception? OnDispose { get; init; }
 
+    /// <summary>
+    /// If set, opening waits for it and the stream then ignores the caller's token: a read already under way when its
+    /// token is cancelled still completes.
+    /// </summary>
+    public Task? Opening { get; init; }
+
     public ValueTask<Stream> OpenReadStreamAsync(long maxAllowedSize = 512000, CancellationToken cancellationToken = default)
     {
         Opened = true;
         return content.Length > maxAllowedSize
             ? ValueTask.FromException<Stream>(new ArgumentOutOfRangeException(nameof(maxAllowedSize)))
-            : new(new MemoryStream(content, writable: false));
+            : Opening is null ? new(new MemoryStream(content, writable: false)) : new(OpenLateAsync(Opening));
+    }
+
+    private async Task<Stream> OpenLateAsync(Task opening)
+    {
+        await opening;
+        return new UncancellableStream(content);
     }
 
     public ValueTask DisposeAsync()
@@ -30,4 +42,9 @@ internal sealed class FakeJsStreamReference(byte[] content) : IJSStreamReference
         Disposed = true;
         return OnDispose is null ? default : ValueTask.FromException(OnDispose);
     }
+}
+
+internal sealed class UncancellableStream(byte[] content) : MemoryStream(content, writable: false)
+{
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => base.ReadAsync(buffer, CancellationToken.None);
 }

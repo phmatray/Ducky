@@ -659,6 +659,7 @@ public sealed class HydrationTests : BunitContext
         _log.Entries.ShouldContain("completed:True:0:System Hydrated:0");
         _pulled.ShouldHaveSingleItem().Disposed.ShouldBeTrue();
         _pulled[0].Opened.ShouldBe(over == 0);
+        _logs.GetSnapshot().ShouldNotContain(static r => r.Id.Id == 2030); // the Unreadable sentinel reads as not found, never as a malformed envelope
         var warnings = _logs.GetSnapshot().Where(static r => r.Level >= LogLevel.Warning).ToList();
         if (over == 0)
         {
@@ -694,6 +695,7 @@ public sealed class HydrationTests : BunitContext
         (warning.Id.Id, warning.Level).ShouldBe((2026, LogLevel.Warning));
         warning.Message.ShouldContain("'ducky:counter'");
         warning.Exception.ShouldBeSameAs(failure);
+        _logs.GetSnapshot().ShouldNotContain(static r => r.Id.Id == 2030); // the Unreadable sentinel reads as not found, never as a malformed envelope
     }
 
     [Theory]

@@ -214,9 +214,9 @@ public sealed class WriterTests
         await h.InitializeAsync();
 
         (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":2}""");
-        // The write follows the read. It may be logged before the recorder logs the terminal: persistence's AfterReduce
-        // signals it first.
-        h.Js.Calls.Select(static call => call.Identifier).ShouldBe(["import", "storageGet", "storageSet"]);
+        // The write follows the read (and the read the store's storage registration, §11.7). It may be logged before the
+        // recorder logs the terminal: persistence's AfterReduce signals it first.
+        h.Js.Calls.Select(static call => call.Identifier).ShouldBe(["import", "watchStorage", "storageGet", "storageSet"]);
         h.Log.Entries.Where(static entry => entry is not "initialized Hydrated:0" and not """write:ducky:level:{"Value":2}""").ShouldBe([
             "Ducky.Blazor.Tests.Persistence.SetLevel Hydrated:0",
             "Ducky.Blazor.Tests.Core.Increment Hydrated:0",
