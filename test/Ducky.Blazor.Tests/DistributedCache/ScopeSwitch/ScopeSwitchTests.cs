@@ -691,9 +691,10 @@ public sealed partial class ScopeSwitchTests : IDisposable
     {
         // (non-normative) §11.5: switch reads run only once the snapshot queue is empty. The init-phase deadline ended the attempt whose read
         // (of a provider that ignores its token) stays in flight, a change follows, and a same-user switch queues a final
-        // snapshot and its read behind it: that read sees the final write, so the change is not rolled back.
+        // snapshot and its read behind it (its scope resolves asynchronously: no re-assertion, §11.6): that read sees the final
+        // write, so the change is not rolled back.
         _cache.Store(Alice, Envelope(3));
-        await using var h = Circuit();
+        await using var h = Circuit(ScopeFromField);
         _cache.Hold($"get:{Alice}");
         var read = _cache.HoldIgnoringToken($"get:{Alice}");
         var init = h.InitializeAsync();
@@ -705,8 +706,11 @@ public sealed partial class ScopeSwitchTests : IDisposable
         await WriterHarness.Until(() => Persistence(h) is { ScopeEpoch: 1, Status: PersistenceStatus.Failed });
         h.Store.Dispatch(new Increment());
         await h.Store.WhenIdleAsync(Ct);
+        var again = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _scope = again.Task;
 
         _auth.Change("alice");
+        again.SetResult("alice");
         await WriterHarness.Until(() => Persistence(h).ScopeEpoch == 2 && h.Middleware.Writers["counter"].ReadPending);
         read.SetResult();
         await WriterHarness.Until(() => Persistence(h).Status == PersistenceStatus.Hydrated);
@@ -1050,9 +1054,9 @@ public sealed partial class ScopeSwitchTests : IDisposable
         // (non-normative) Dispose phase 5a: the attempt's token ends its read and it issues nothing.
         await using var h = Circuit();
         await h.InitializeAsync();
-        _cache.Hold($"get:{Alice}");
-        _auth.Change("alice");
-        await WriterHarness.Until(() => _cache.Attempts.Count(static c => c == $"get:{Alice}") == 2);
+        _cache.Hold($"get:{Bob}");
+        _auth.Change("bob");
+        await WriterHarness.Until(() => _cache.Attempts.Contains($"get:{Bob}"));
 
         await h.DisposeStoreAsync();
 

@@ -125,6 +125,7 @@ public sealed class HydrationTests : BunitContext
         Store.State.Get<PersistenceState>().ShouldBeSameAs(Store.InitialState.Get<PersistenceState>());
         Store.State.WasRestored<PersistenceState>().ShouldBeFalse();
         _js.Calls.ShouldBeEmpty();
+        Middleware.Current.ShouldBeNull();
     }
 
     [Fact]
