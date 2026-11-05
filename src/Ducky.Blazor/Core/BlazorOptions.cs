@@ -82,6 +82,10 @@ public sealed class BlazorOptions
     // Null in production; set inside configure by Ducky.Blazor.Tests (ordered) and Ducky.Concurrency.Tests (jitter only).
     internal Action<string, DeferPoint>? AfterDeferHook { get; set; }
 
+    // §11.4: the pause seed's interleaving hook, invoked once the idle wait ended and before the one snapshot is taken.
+    // Null in production; set inside configure by Ducky.Blazor.Tests.
+    internal Action? AfterSeedIdleHook { get; set; }
+
     // §5.1: read once, here, and read back by every browser-dependent branch when it runs. Settable so the package's
     // tests can set it inside configure.
 #pragma warning disable RS0030 // justification: the single IsBrowser read of this package (§5.1)

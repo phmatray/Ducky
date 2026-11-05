@@ -101,7 +101,7 @@ internal sealed partial class PersistenceMiddleware
 
     // §11.6: a Server-storage key is always scoped (Scope ?? DuckyScopes.NameIdentifier); a Local or Session key only when
     // Scope is set explicitly, so the default never applies to browser keys.
-    private bool Scoped(PersistOptions options) => options.Storage == PersistStorage.Server || _registration.Options.Scope is not null;
+    internal bool Scoped(PersistOptions options) => options.Storage == PersistStorage.Server || _registration.Options.Scope is not null;
 
     // {prefix}:{sliceKey} for an unscoped key; {prefix}:{scope}:{sliceKey} for a scoped one under the scope recorded for the
     // epoch, or null when that scope is null or not recorded yet: no I/O for a key that can't be named.

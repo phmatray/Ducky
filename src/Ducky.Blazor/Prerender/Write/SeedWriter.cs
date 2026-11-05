@@ -1,9 +1,11 @@
 using System.Buffers;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace Ducky.Blazor;
 
-// SPEC §11.4 OnPersisting, once the store is idle: the seed {"v":1,"src":…,"dirty":[…]?,"ver":{…}?,"slices":{key: state}}
+// SPEC §11.4 OnPersisting, once the store is idle: the seed {"v":1,"src":…,"scope":…?,"dirty":[…]?,"ver":{…}?,"slices":{…}}
 // of the Prerender<T> slices, everything from one snapshot, in slice registration order, within PrerenderSeedMaxWireBytes
 // by the wire estimate.
 internal static class SeedWriter
@@ -15,18 +17,36 @@ internal static class SeedWriter
     /// The seed of <paramref name="registration"/>'s Prerender&lt;T&gt; slices of <paramref name="store"/>, every value read
     /// from one snapshot. A slice whose include predicate is false is left out (Debug 2011); one whose predicate throws,
     /// whose state can't be serialized, or whose inclusion would push the estimate past the budget, with Warning 2021.
-    /// Each persisted key carried records its version; a pause seed lists the carried browser-storage keys that are dirty against
-    /// <paramref name="persistence"/>'s baselines.
+    /// Each persisted key carried records its version. A pause seed leaves out, with Debug 2016, every key of an attempt still
+    /// Hydrating in the snapshot (its scoped slices hold the reset initial state) and every scoped key when the snapshot's
+    /// epoch has no known non-null scope; it records the SHA-256 hex of that scope, and lists the carried browser-storage
+    /// keys that are dirty against <paramref name="persistence"/>'s baselines.
     /// </summary>
     public static byte[] Write(IStore store, BlazorRegistration registration, string src, PersistenceMiddleware persistence, SafeLogger logger)
     {
         var snap = store.State;
+        var status = snap.Get<PersistenceState>();
+        var pause = src == "pause";
+        var (running, scope) = persistence.Recorded(status.ScopeEpoch);
+        if (status.Status != PersistenceStatus.Hydrating)
+        {
+            running = [];
+        }
+
+        var hash = pause ? ScopeHash(scope) : null;
         List<Carried> slices = [];
-        var seed = Envelope(src, slices);
+        var seed = Envelope(src, hash, slices);
         foreach (var slice in store.Slices)
         {
             if (!registration.Prerender.TryGetValue(slice.GetType(), out var include))
             {
+                continue;
+            }
+
+            var options = registration.Persist.GetValueOrDefault(slice.GetType())?.Options;
+            if (pause && options is not null && (running.Contains(slice.Key) || (persistence.Scoped(options) && hash is null)))
+            {
+                Log.SeedKeyLeftOut(logger, slice.Key);
                 continue;
             }
 
@@ -50,9 +70,8 @@ internal static class SeedWriter
             if (failure is null && store.Json.TrySerialize(state, slice.StateType, out var json))
             {
                 // Only a browser-storage key can be dirty: the pause override never applies to Server storage (§11.4).
-                var options = registration.Persist.GetValueOrDefault(slice.GetType())?.Options;
-                slices.Add(new(slice.Key, json, options?.Version, options is { Storage: not PersistStorage.Server } && src == "pause" && IsDirty(store, persistence, snap, slice, options, json)));
-                var candidate = Envelope(src, slices);
+                slices.Add(new(slice.Key, json, options?.Version, options is { Storage: not PersistStorage.Server } && pause && IsDirty(store, persistence, snap, slice, options, json)));
+                var candidate = Envelope(src, hash, slices);
                 if (WireEstimate(candidate.Length) <= registration.Options.PrerenderSeedMaxWireBytes)
                 {
                     seed = candidate;
@@ -80,20 +99,24 @@ internal static class SeedWriter
 
     private static long Thirds(long bytes) => (bytes + 2) / 3;
 
+    /// <summary>
+    /// The lowercase SHA-256 hex of a scope's UTF-8 bytes, what a pause seed records, never the raw user id (§11.4); null for
+    /// a null scope.
+    /// </summary>
+    public static string? ScopeHash(string? scope) => scope is null ? null : Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(scope)));
+
     // §11.4 pause: dirty iff the local serialization in snap differs from LastKnownPayload (the last successful write, read
     // or receipt), an absent baseline comparing as the initial state's serialization (§11.7): the circuit holds a change
-    // storage may not have. The key is named for snap's epoch; a scope not known for it names no stored key, so the value
-    // compares with the initial state (M12-07 leaves such keys out of the seed).
+    // storage may not have. The key is named for snap's epoch, whose scope is known for every carried key.
     private static bool IsDirty(IStore store, PersistenceMiddleware persistence, StateSnapshot snap, Slice slice, PersistOptions options, string json)
     {
         _ = store.Json.TrySerialize(store.InitialState.Get(slice.Key), slice.StateType, out var initial);
-        var key = persistence.StorageKey(slice.Key, options, snap.Get<PersistenceState>().ScopeEpoch);
-        var baseline = key is null ? initial : persistence.LastKnownPayload.GetValueOrDefault(key, initial!);
-        return json != baseline;
+        var key = persistence.StorageKey(slice.Key, options, snap.Get<PersistenceState>().ScopeEpoch)!;
+        return json != persistence.LastKnownPayload.GetValueOrDefault(key, initial!);
     }
 
     // ponytail: rewritten whole for each candidate slice, O(slices²) bytes, bounded by the budget (20 KB by default).
-    private static byte[] Envelope(string src, List<Carried> slices)
+    private static byte[] Envelope(string src, string? scope, List<Carried> slices)
     {
         var buffer = new ArrayBufferWriter<byte>();
         using (var writer = new Utf8JsonWriter(buffer))
@@ -101,6 +124,11 @@ internal static class SeedWriter
             writer.WriteStartObject();
             writer.WriteNumber("v", 1);
             writer.WriteString("src", src);
+            if (scope is not null)
+            {
+                writer.WriteString("scope", scope);
+            }
+
             if (slices.Any(static slice => slice.Dirty))
             {
                 writer.WriteStartArray("dirty");

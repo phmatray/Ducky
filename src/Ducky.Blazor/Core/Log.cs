@@ -50,6 +50,12 @@ internal static partial class Log
     [LoggerMessage(EventId = 2015, Level = LogLevel.Debug, Message = "Slice '{Key}' was left out of the seed restore: the seed records another PersistOptions.Version for it, or none; storage, read through its migrations, or the initial state applies")]
     internal static partial void SeedKeyVersionSkewed(SafeLogger logger, string key);
 
+    [LoggerMessage(EventId = 2016, Level = LogLevel.Debug, Message = "Slice '{Key}' was left out of the pause seed: its hydration attempt is still running, or its scope is not known or is null")]
+    internal static partial void SeedKeyLeftOut(SafeLogger logger, string key);
+
+    [LoggerMessage(EventId = 2017, Level = LogLevel.Debug, Message = "The pause seed's scoped slices {Keys} were dropped: the store's first hydration attempt was superseded, or its scope does not hash to the one they were captured under; storage or the initial state applies")]
+    internal static partial void ScopedSeedDropped(SafeLogger logger, string[] keys);
+
     [LoggerMessage(EventId = 2020, Level = LogLevel.Information, Message = "PersistStorage.Server is inert in the browser: slices {Keys} are not persisted here, and restore only from the prerender seed when they are also Prerender<T>")]
     internal static partial void ServerStorageInert(SafeLogger logger, string[] keys);
 

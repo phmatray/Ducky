@@ -188,12 +188,15 @@ internal sealed class PrerenderHandoff : Middleware
     // unscoped browser-storage keys a pause seed lists as dirty and restores are handed to persistence before SeedSettled
     // completes: their storage restore is skipped and their writers rewrite storage after the terminal (§11.5 step 6). A
     // dirty value that does not deserialize is no value the seed restored: left out (its Warning logged here), so storage
-    // applies and is never overwritten with the initial state. Scoped keys (every key once Scope is set) keep prerender
-    // precedence until the scope-hash hand-off (M12-07): a circuit resumed under another user never writes the seed's
-    // value under that user's key.
+    // applies and is never overwritten with the initial state. A pause seed's scoped keys are never restored here: they are
+    // handed over with the recorded scope hash, and step 6 applies them only under that scope, so a circuit resumed under
+    // another user never renders or writes them. Only a pause seed's browser-storage key can be dirty: Server storage wins.
     private void Restore(SeedEnvelope seed, Dictionary<string, object> slices)
     {
+        var pause = seed.Src == "pause";
         List<string> dirty = [];
+        Dictionary<string, object> scoped = [];
+        HashSet<string> scopedDirty = [];
         foreach (var slice in Store.Slices.Where(slice => slices.ContainsKey(slice.Key)))
         {
             // Not a pattern variable: a mutant that removes the continue must still compile, or Stryker's safe mode turns
@@ -204,12 +207,26 @@ internal sealed class PrerenderHandoff : Middleware
                 continue;
             }
 
+            var listedDirty = pause && options.Storage is not PersistStorage.Server && seed.Dirty.Contains(slice.Key);
             if (!(seed.Ver.TryGetValue(slice.Key, out var version) && version == options.Version))
             {
                 slices.Remove(slice.Key);
                 Log.SeedKeyVersionSkewed(_logger, slice.Key);
             }
-            else if (_registration.Options.Scope is null && options.Storage is not PersistStorage.Server && seed.Dirty.Contains(slice.Key))
+            else if (pause && _persistence.Middleware!.Scoped(options))
+            {
+                var json = (JsonElement)slices[slice.Key];
+                slices.Remove(slice.Key);
+                if (Store.Json.TryDeserialize(json, slice.StateType, out var state, slice.Key) && state is not null)
+                {
+                    scoped[slice.Key] = state;
+                    if (listedDirty)
+                    {
+                        scopedDirty.Add(slice.Key);
+                    }
+                }
+            }
+            else if (listedDirty)
             {
                 if (!Store.Json.TryDeserialize((JsonElement)slices[slice.Key], slice.StateType, out var state, slice.Key))
                 {
@@ -224,6 +241,7 @@ internal sealed class PrerenderHandoff : Middleware
         }
 
         _persistence.SeedDirty = dirty;
+        _persistence.SeedScoped = scoped.Count > 0 ? new(seed.Scope, scoped, scopedDirty) : null;
         Store.Restore(slices, Origin.Hydration);
     }
 
@@ -271,6 +289,8 @@ internal sealed class PrerenderHandoff : Middleware
                     return null;
                 }
             }
+
+            _registration.Options.AfterSeedIdleHook?.Invoke();
 
             // PersistentComponentState comes with Blazor's services, IJSRuntime included.
             string src;
