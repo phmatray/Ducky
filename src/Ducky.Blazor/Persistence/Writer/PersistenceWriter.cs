@@ -27,6 +27,7 @@ internal sealed partial class PersistenceMiddleware
     // once the synchronous prefix has run (nothing is written before the first read: earlier changes are only deferred).
     public override void AfterReduce(ActionContext context)
     {
+        HandOverFinalSnapshots(context);
         if (context.State.Get<PersistenceState>().Status == PersistenceStatus.Hydrating)
         {
             _signalling = true;
@@ -119,13 +120,12 @@ internal sealed partial class PersistenceMiddleware
 
     // §11.5 "hydration skip": the one predicate of the skip and of its recheck. (a) a read in flight owns the key: Hydrating,
     // and the key in the key set of the snapshot's epoch; (b) a scoped key whose epoch scope is not recorded yet can't be
-    // named. Lock-free: Scopes is published before the drain that releases (b).
-    // ponytail: every writer's key is in attempt 0's key set, so (a) is the Status alone; per-epoch key sets come with
-    // scope switches (§11.6).
-    private bool ShouldSkip(StateSnapshot snap, PersistOptions options)
+    // named. Lock-free: Scopes is published before the drain that releases (b), and an epoch's key set before its Hydrating
+    // restore is enqueued. An epoch no switch made (the public IStore.Restore can name one) has no key set: only (b) applies.
+    private bool ShouldSkip(StateSnapshot snap, string key, PersistOptions options)
     {
         var persistence = snap.Get<PersistenceState>();
-        return persistence.Status == PersistenceStatus.Hydrating
+        return (persistence.Status == PersistenceStatus.Hydrating && Volatile.Read(ref _attempts).GetValueOrDefault(persistence.ScopeEpoch)?.Keys.Contains(key) == true)
             || (Scoped(options) && !Scopes.ContainsKey(persistence.ScopeEpoch));
     }
 
@@ -208,7 +208,9 @@ internal sealed partial class PersistenceMiddleware
         internal const string SerializationFailed = nameof(SerializationFailed);
 
         private readonly ConcurrentQueue<Removal> _removals = new(); // the pending removal commands, oldest first
-        private readonly Lock _gate = new(); // orders a release against a removal's stamp
+        private readonly ConcurrentQueue<FinalSnapshot> _finals = new(); // the old scopes' last states, oldest first (§11.5)
+        private readonly ConcurrentQueue<SwitchRead> _reads = new(); // the switch attempts' read commands (§11.5)
+        private readonly Lock _gate = new(); // orders a release against a removal's stamp, and the queues' heads against their posting
         private long _clears; // removal commands posted so far
         private TaskCompletionSource? _woken; // completed by the first command posted since the current attempt began
 
@@ -241,6 +243,12 @@ internal sealed partial class PersistenceMiddleware
         /// <summary>Whether a removal has not succeeded yet: storage may still hold the cleared value.</summary>
         internal bool RemovalPending => !_removals.IsEmpty;
 
+        /// <summary>Whether a switch read waits for this loop.</summary>
+        internal bool ReadPending => !_reads.IsEmpty;
+
+        /// <summary>Whether the calling thread holds the gate the queues' heads are read and posted under.</summary>
+        internal bool GateHeld => _gate.IsHeldByCurrentThread;
+
         /// <summary>This key's full storage key under the scope recorded for <paramref name="epoch"/>, or null (§11.6).</summary>
         public string? StorageKey(int epoch) => _owner.StorageKey(_slice.Key, _options, epoch);
 
@@ -265,6 +273,41 @@ internal sealed partial class PersistenceMiddleware
                 _removals.Enqueue(new(key, Interlocked.Read(ref _signals)));
             }
 
+            Wake();
+        }
+
+        // §11.5 "Final write under the old scope", on the drainer at the reset: a scoped key's old-epoch snapshot. Its stamp is
+        // a signal of its own, so the key stays dirty until the snapshot is done, and it covers every signal before it.
+        public void EnqueueFinal(StateSnapshot snapshot)
+        {
+            if (_owner.Scoped(_options))
+            {
+                lock (_gate)
+                {
+                    _finals.Enqueue(new(snapshot, Interlocked.Increment(ref _signals)));
+                    _owner._registration.Options.AfterDeferHook?.Invoke(_slice.Key, DeferPoint.PostingFinal);
+                }
+
+                Wake();
+            }
+        }
+
+        // §11.5 "Switch reads": served by the loop after this key's final snapshots and in-flight write, so it sees them.
+        // Supersession cancels its token. ponytail: a provider that ignores its token holds this key's loop, as a hung write
+        // does; abandon the read with WaitAsync if one ever must be survived.
+        public Task<string?> ReadAsync(string key, CancellationToken token)
+        {
+            var read = new SwitchRead(key, token);
+            _reads.Enqueue(read);
+            Wake();
+#pragma warning disable VSTHRD003 // justification: the command's own RunContinuationsAsynchronously TCS, which the loop completes
+            return read.Result.Task.WaitAsync(token);
+#pragma warning restore VSTHRD003
+        }
+
+        // A command is posted: it ends a backoff sleep, and the loop serves it.
+        private void Wake()
+        {
             Volatile.Read(ref _woken)?.TrySetResult();
             _signal.Writer.TryWrite(true);
         }
@@ -308,6 +351,7 @@ internal sealed partial class PersistenceMiddleware
             {
                 while (await WaitAsync(hurry).ConfigureAwait(ConfigureAwaitOptions.None))
                 {
+                    // §11.5 loop order: every command, a switch read included, waits out the debounce; only a backoff ends early.
                     await PauseAsync(_debounce, hurry).ConfigureAwait(ConfigureAwaitOptions.None);
                     var backoff = FirstBackoff;
                     // Definitely assigned up front: a mutant that removes the attempt's assignment must still compile, or
@@ -390,24 +434,96 @@ internal sealed partial class PersistenceMiddleware
             return first == slept;
         }
 
-        // From the top: the pending removals in order, each discarding the signals raised before its clear and resetting the
-        // baseline to absent, then the key if still dirty, so a change signalled before a clear never brings the key back.
+        // From the top after each command. Removals and final snapshots run in stamp order: a removal discards the signals raised
+        // before its clear and resets the baseline to absent; one posted before a reset has a stamp below its snapshot's, one
+        // posted after has one at or above it, so a clear never runs ahead of an older snapshot and _clean stays exact (INV-16).
+        // Then one switch read, once both queues are empty (§11.5: a newer reset's snapshot goes ahead of it), and the key if
+        // still dirty, so a change signalled before a clear never brings the key back.
         private async Task<Outcome> AttemptAsync(CancellationToken token)
         {
-            while (_removals.TryPeek(out var removal))
+            while (true)
             {
-                if (!await DeliverAsync(() => _owner.RemoveAsync(_options, removal.Key, token)).ConfigureAwait(ConfigureAwaitOptions.None))
+                // Both heads under the gate the commands are posted under: a removal is posted ahead of a newer reset's snapshot,
+                // so seeing the snapshot means seeing the removal. Assigned up front, not TryPeek's out variables: no mutant can
+                // leave them unassigned (Stryker Safe Mode, §17.8).
+                Removal? removal = null;
+                FinalSnapshot? final = null;
+                lock (_gate)
                 {
-                    return Outcome.Failed;
+                    removal = _removals.FirstOrDefault();
+                    _owner._registration.Options.AfterDeferHook?.Invoke(_slice.Key, DeferPoint.BetweenPeeks);
+                    final = _finals.FirstOrDefault();
                 }
 
-                _removals.TryDequeue(out _);
-                _owner.LastKnownPayload.TryRemove(removal.Key, out _);
-                Interlocked.Exchange(ref _clean, removal.Stamp);
-                _failing = false;
+                _owner._registration.Options.AfterDeferHook?.Invoke(_slice.Key, DeferPoint.Peeked);
+                if (final is not null && (removal is null || final.Stamp <= removal.Stamp))
+                {
+                    if (await WriteFinalAsync(final, token).ConfigureAwait(ConfigureAwaitOptions.None) == Outcome.Failed)
+                    {
+                        return Outcome.Failed;
+                    }
+
+                    _finals.TryDequeue(out _);
+                    Interlocked.Exchange(ref _clean, final.Stamp);
+
+                    // A skip that read the reset's own state before this snapshot arrived deferred a change this snapshot just
+                    // covered: released, it would write the initial state under the new key.
+                    if (Interlocked.Read(ref _signals) == final.Stamp)
+                    {
+                        _owner.Deferred.TryRemove(_slice.Key, out _);
+                    }
+                }
+                else if (removal is not null)
+                {
+                    if (!await DeliverAsync(() => _owner.RemoveAsync(_options, removal.Key, token)).ConfigureAwait(ConfigureAwaitOptions.None))
+                    {
+                        return Outcome.Failed;
+                    }
+
+                    _removals.TryDequeue(out _);
+                    _owner.LastKnownPayload.TryRemove(removal.Key, out _);
+                    Interlocked.Exchange(ref _clean, removal.Stamp);
+                    _failing = false;
+                }
+                else if (_reads.TryDequeue(out var read))
+                {
+                    await ServeAsync(read).ConfigureAwait(ConfigureAwaitOptions.None);
+                }
+                else
+                {
+                    return Dirty ? await WriteAsync(token).ConfigureAwait(ConfigureAwaitOptions.None) : Outcome.Clean;
+                }
+            }
+        }
+
+        // The snapshot's own epoch names the key, and the skip applies to it without deferral: the old scope is over. Nothing
+        // to write when every signal before it is already covered: the state is stored, or a clear discarded it, and writing
+        // it would bring the cleared key back (INV-16).
+        private async Task<Outcome> WriteFinalAsync(FinalSnapshot final, CancellationToken token) =>
+            Interlocked.Read(ref _clean) == final.Stamp - 1 || _owner.ShouldSkip(final.Snapshot, _slice.Key, _options)
+                ? Outcome.Clean
+                : await WriteAsync(final.Snapshot, token).ConfigureAwait(ConfigureAwaitOptions.None);
+
+        // A failed read fails its attempt (§11.5 step 7), not this loop.
+        private async Task ServeAsync(SwitchRead read)
+        {
+            // Its attempt was superseded while it queued, and its awaiter is gone: no I/O under that user's key.
+            if (read.Token.IsCancellationRequested)
+            {
+                return;
             }
 
-            return Dirty ? await WriteAsync(token).ConfigureAwait(ConfigureAwaitOptions.None) : Outcome.Clean;
+            try
+            {
+                // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+                read.Result.TrySetResult(await _owner.ReadAsync(_options, read.Key, read.Token).ConfigureAwait(false));
+            }
+#pragma warning disable CA1031 // justification: any provider failure belongs to the attempt that asked (§11.5 step 7)
+            catch (Exception exception)
+#pragma warning restore CA1031
+            {
+                read.Result.TrySetException(exception);
+            }
         }
 
         // One snapshot gives both the value and the key, so the last write is the final committed state (INV-07, INV-16).
@@ -415,8 +531,17 @@ internal sealed partial class PersistenceMiddleware
         {
             var signals = Interlocked.Read(ref _signals);
             var clears = Clears; // read before the snapshot: a clear reduced after it makes this deferral stale
+            _owner._registration.Options.AfterDeferHook?.Invoke(_slice.Key, DeferPoint.BeforeSnapshot);
             var snap = _owner.Store.State;
-            if (_owner.ShouldSkip(snap, _options))
+
+            // A reset committed since the signals were read: its final snapshot covers them and goes first. This snapshot can
+            // be of a later epoch whose scope names no key, and must not mark them written (INV-16).
+            if (!_finals.IsEmpty)
+            {
+                return await AttemptAsync(token).ConfigureAwait(ConfigureAwaitOptions.None);
+            }
+
+            if (_owner.ShouldSkip(snap, _slice.Key, _options))
             {
                 Defer(clears);
                 return Outcome.Deferred;
@@ -499,7 +624,7 @@ internal sealed partial class PersistenceMiddleware
             // Add-then-recheck: a release that ran between the snapshot read and the add found nothing to take. If the skip
             // no longer holds, take the key back; only a successful TryRemove signals, so a release that took it first is
             // the one signal.
-            if (!_owner.ShouldSkip(_owner.Store.State, _options) && _owner.Deferred.TryRemove(_slice.Key, out var taken))
+            if (!_owner.ShouldSkip(_owner.Store.State, _slice.Key, _options) && _owner.Deferred.TryRemove(_slice.Key, out var taken))
             {
                 Release(taken);
             }
@@ -519,5 +644,14 @@ internal sealed partial class PersistenceMiddleware
 
         // A removal command: the exact storage key, and the signals raised before the clear.
         private sealed record Removal(string Key, long Stamp);
+
+        // A final snapshot: the old epoch's last state, and the signal that handed it over.
+        private sealed record FinalSnapshot(StateSnapshot Snapshot, long Stamp);
+
+        // A read command: the exact storage key, the attempt's token and its result.
+        private sealed record SwitchRead(string Key, CancellationToken Token)
+        {
+            public TaskCompletionSource<string?> Result { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
     }
 }

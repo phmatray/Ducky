@@ -77,7 +77,8 @@ public sealed class BlazorOptions
     /// </summary>
     public DistributedCacheEntryOptions? ServerEntryOptions { get; set; }
 
-    // §11.5 "A skipped key stays dirty": the writers' interleaving hook, invoked with the key around the add to _deferred.
+    // §11.5: the writers' interleaving hook, invoked on a writer's loop with its key at each DeferPoint (around the add to
+    // _deferred, after an attempt's queue reads, before a write's snapshot).
     // Null in production; set inside configure by Ducky.Blazor.Tests (ordered) and Ducky.Concurrency.Tests (jitter only).
     internal Action<string, DeferPoint>? AfterDeferHook { get; set; }
 

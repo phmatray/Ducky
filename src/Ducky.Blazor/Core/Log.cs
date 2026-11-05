@@ -16,6 +16,8 @@ namespace Ducky.Blazor;
 // M6-13b takes 2015, not assigned by SPEC: §11.4 says only "dropped with a Debug log" for a version-skewed seed key.
 // M12-01 uses 2020 (§11.6: Server storage inert in the browser) and takes 2027, not assigned by SPEC, for the Info log of a
 // null scope (§11.6: "Info log once").
+// M12-03 takes 2042 and 2043, not assigned by SPEC: the Error log of a failed scope switch (§11.6: "Error log, and
+// HydrationFailed") and of an AuthenticationStateProvider that can't be resolved (§6.10: a hand-off callback never throws).
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -84,6 +86,12 @@ internal static partial class Log
     [LoggerMessage(EventId = 2040, Level = LogLevel.Debug, Message = "ClearPersistedState skipped slice '{Key}': the scope of the clear's epoch is null or not resolved yet, so no key names it")]
     internal static partial void ClearSkipped(SafeLogger logger, string key);
 
-    [LoggerMessage(EventId = 2041, Level = LogLevel.Debug, Message = "The read result of hydration attempt {Epoch} was discarded: the HydrationTimeout deadline or an init abort already ended the attempt")]
+    [LoggerMessage(EventId = 2041, Level = LogLevel.Debug, Message = "The read result of hydration attempt {Epoch} was discarded: the HydrationTimeout deadline, an init abort or a newer scope switch already ended the attempt")]
     internal static partial void HydrationResultDiscarded(SafeLogger logger, int epoch);
+
+    [LoggerMessage(EventId = 2042, Level = LogLevel.Error, Message = "The scope switch of epoch {Epoch} failed; its attempt ends in HydrationFailed")]
+    internal static partial void ScopeSwitchFailed(SafeLogger logger, Exception exception, int epoch);
+
+    [LoggerMessage(EventId = 2043, Level = LogLevel.Error, Message = "Resolving the AuthenticationStateProvider failed: this store does not follow user changes")]
+    internal static partial void AuthSubscribeFailed(SafeLogger logger, Exception exception);
 }

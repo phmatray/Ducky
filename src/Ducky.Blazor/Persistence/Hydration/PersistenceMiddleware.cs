@@ -30,6 +30,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
     private CancellationToken _initToken;
     private CancellationTokenSource? _deadline;
     private CancellationTokenSource? _hydration;
+    private bool _nullScopeLogged; // under _issue: the null-scope Info log is once per store (§11.6)
 
     public PersistenceMiddleware(BlazorRegistration registration, PersistenceSlice persistence, IServiceProvider services)
     {
@@ -103,7 +104,9 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
         // Attempt 0: epoch 0 (no scope switch yet), its key set every readable key. The init-phase deadline and the init
         // token each end the attempt if it has not ended (step 7); the linked token only bounds the scope wait and the reads.
-        var attempt = new Attempt(0, [.. slices.Select(static persisted => persisted.Slice.Key)]);
+        var attempt = new Attempt { Keys = [.. slices.Select(static persisted => persisted.Slice.Key)] };
+        _readable = slices;
+        _resets = [.. persisted.Where(p => Scoped(p.Options)).Select(static p => p.Slice.Key)];
         _writers = slices.ToDictionary(static persisted => persisted.Slice.Key, persisted => new PersistenceWriter(this, persisted.Slice, persisted.Options));
         _initToken = cancellationToken;
         _deadline = new(_registration.Options.HydrationTimeout, _time);
@@ -111,6 +114,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
         lock (_issue)
         {
             (Current, _initPhase) = (attempt, true);
+            RecordAttempt(attempt);
             Store.Restore(Status(new(PersistenceStatus.Hydrating) { ScopeEpoch = attempt.Epoch }), Origin.Hydration);
 
             // §6.7: registered here, in the synchronous prefix, after the Hydrating restore it must follow. On the init token
@@ -119,6 +123,8 @@ internal sealed partial class PersistenceMiddleware : Middleware
             cancellationToken.UnsafeRegister(static self => ((PersistenceMiddleware)self!).EndInitPhase(), this);
             _deadline.Token.UnsafeRegister(static self => ((PersistenceMiddleware)self!).EndInitPhase(), this);
         }
+
+        SubscribeToUserChanges(slices);
 
         // The init task is the init-phase terminal, not HydrateAsync (§11.5 "Before StoreInitialized"): a Scope delegate that
         // ignores its token keeps HydrateAsync running past the deadline, and its late scope is still recorded for epoch 0
@@ -130,10 +136,12 @@ internal sealed partial class PersistenceMiddleware : Middleware
     public override async ValueTask DisposeAsync()
     {
         // Phase 5a, after init ended (§6.11): a HydrateAsync still awaiting a late scope delegate holds an already-cancelled
-        // token. The flush (§11.5) runs before the module is disposed.
+        // token. A switch attempt's scope wait and reads end here too. The flush (§11.5) runs before the module is disposed.
+        await StopSwitchesAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         _hydration?.Dispose();
         _deadline?.Dispose();
         await FlushAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+        _stopped.Dispose();
 
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         await _bridge.DisposeAsync().ConfigureAwait(false);
@@ -141,15 +149,15 @@ internal sealed partial class PersistenceMiddleware : Middleware
         await base.DisposeAsync().ConfigureAwait(false);
     }
 
-    // §11.5 steps 4-7: resolve the scope, read every key of the attempt (nothing was written before it), wait for the seed
-    // restore so it stays first in the queue (ADR-0011), then claim the terminal, set the baselines, one restore of what
-    // was read and the one terminal. A failure claims a HydrationFailed instead; once the attempt's token is cancelled, the
+    // §11.5 steps 4-7: resolve the scope, read every key of the attempt (attempt 0 directly, nothing was written before it;
+    // a switch through each key's writer loop), wait for the seed restore so it stays first in the queue (ADR-0011), then
+    // claim the terminal, set the baselines, one restore of what was read and the one terminal. A failure claims a HydrationFailed instead; once the attempt's token is cancelled, the
     // deadline or the init abort ends the attempt (whichever of its callback and this catch comes first). The task never
     // completes before the attempt's terminal is queued.
     private async Task HydrateAsync(Persisted[] slices, Attempt attempt, CancellationToken token)
     {
         Dictionary<string, object> values = [];
-        Dictionary<string, string> baselines = [];
+        Dictionary<string, string?> baselines = [];
         try
         {
             var reader = new EnvelopeReader(Store.Json, _logger);
@@ -160,6 +168,17 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
             foreach (var (slice, options) in slices)
             {
+                // §11.6 "no longer current, stop": no more I/O for results that would be discarded. A superseded switch attempt's
+                // token says so too; the initial attempt's is the init deadline's, so it asks here.
+                lock (_issue)
+                {
+                    if (attempt != Current)
+                    {
+                        Log.HydrationResultDiscarded(_log, attempt.Epoch);
+                        return;
+                    }
+                }
+
                 // A null scope: no I/O for scoped keys, never a fallback to a shared key (§11.6). A plain local, not a pattern
                 // variable: a mutant of the test then can't leave it unassigned (Stryker Safe Mode, §17.8).
                 var key = StorageKey(slice.Key, options, attempt.Epoch);
@@ -169,11 +188,12 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 }
 
                 // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-                var text = await ReadAsync(options, key, token).ConfigureAwait(false);
+                var text = await ReadForAttemptAsync(attempt, slice, options, key, token).ConfigureAwait(false);
 
                 // A slice that fails to read (malformed, newer, expired, a throwing constructor) keeps its state; the reader
                 // logs it naming the key, and the other slices still restore. The baseline is the local serialization of
-                // what was read (an unserializable state gets none).
+                // what was read (absent, or an unserializable state: none, so an older baseline of this key goes).
+                baselines[key] = null;
                 if (text is not null && reader.TryRead(text, key, slice.StateType, options.Version, options.Migrations, options.MaxAge, _time.GetUtcNow(), out var state))
                 {
                     values[slice.Key] = state;
@@ -192,25 +212,42 @@ internal sealed partial class PersistenceMiddleware : Middleware
         catch (Exception exception)
 #pragma warning restore CA1031
         {
-            // A cancelled token is the deadline or the init abort. Its callback may not have run yet (callbacks run in
-            // reverse registration order, so a read's continuation can come first), and this task's completion can let
-            // StoreInitialized through: end the attempt here, before returning.
+            // The initial attempt's cancelled token is the deadline or the init abort. Its callback may not have run yet
+            // (callbacks run in reverse registration order, so a read's continuation can come first), and this task's
+            // completion can let StoreInitialized through: end the attempt here, before returning. A switch attempt's is its
+            // supersession, dispose, or EndInitPhase having ended it already: nothing left to end.
             if (token.IsCancellationRequested)
             {
-                EndInitPhase();
+                if (attempt.Epoch == 0)
+                {
+                    EndInitPhase();
+                }
+                else
+                {
+                    Log.HydrationResultDiscarded(_log, attempt.Epoch);
+                }
+
                 return;
             }
 
             lock (_issue)
             {
-                Claim(attempt, new HydrationFailed(exception.GetType().Name, exception.Message) { ScopeEpoch = attempt.Epoch });
+                // Only a failure that reaches the store is reported as one (INV-14).
+                if (!Claim(attempt, new HydrationFailed(exception.GetType().Name, exception.Message) { ScopeEpoch = attempt.Epoch }))
+                {
+                    Log.HydrationResultDiscarded(_log, attempt.Epoch);
+                }
+                else if (attempt.Epoch > 0)
+                {
+                    Log.ScopeSwitchFailed(_log, exception, attempt.Epoch);
+                }
+
                 IssueTerminal(attempt);
             }
 
             return;
         }
 
-        // ponytail: attempt 0 is always current until scope switches (§11.6) arrive with their supersession check.
         lock (_issue)
         {
             // §11.4: a pause seed's dirty key keeps the seed's value over storage, so it is no key restored from storage. Its
@@ -220,16 +257,24 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 values.Remove(key);
             }
 
-            // Lost to the deadline or the init abort: their HydrationFailed is the terminal, the results are discarded.
+            // Lost to the deadline, the init abort or a newer switch, which owns the terminal: the results are discarded.
             if (!Claim(attempt, new HydrationCompleted(values.Count > 0) { ScopeEpoch = attempt.Epoch }))
             {
                 Log.HydrationResultDiscarded(_log, attempt.Epoch);
                 return;
             }
 
+            attempt.Restored = true;
             foreach (var (key, payload) in baselines)
             {
-                LastKnownPayload[key] = payload;
+                if (payload is null)
+                {
+                    LastKnownPayload.TryRemove(key, out _);
+                }
+                else
+                {
+                    LastKnownPayload[key] = payload;
+                }
             }
 
             if (values.Count > 0)
@@ -241,8 +286,8 @@ internal sealed partial class PersistenceMiddleware : Middleware
         }
     }
 
-    // When any readable key is scoped (§11.6), resolves the scope of epoch 0 (Scope ?? NameIdentifier) and records it,
-    // possibly null. In the browser the delegate gets the renderer's services, so it waits for the hand-off (§11.6); the
+    // When any key of the attempt is scoped (§11.6), resolves its epoch's scope (Scope ?? NameIdentifier) and records it,
+    // possibly null, unless a newer switch took over meanwhile. In the browser the delegate gets the renderer's services, so it waits for the hand-off (§11.6); the
     // attempt's token bounds that wait, the resolution and the reads by the same HydrationTimeout. A delegate that ignores
     // the token only delays its own recording: init ends with the deadline's terminal all the same.
     private async Task ResolveScopeAsync(Persisted[] slices, Attempt attempt, CancellationToken token)
@@ -266,14 +311,20 @@ internal sealed partial class PersistenceMiddleware : Middleware
         var scope = await resolve(services, token).ConfigureAwait(false);
 
         // An empty or whitespace scope would name the shared key {prefix}::{sliceKey}: it is null, never a fallback (INV-17).
-        if (string.IsNullOrWhiteSpace(scope))
-        {
-            scope = null;
-            Log.NullScope(_log);
-        }
-
+        scope = string.IsNullOrWhiteSpace(scope) ? null : scope;
         lock (_issue)
         {
+            if (attempt != Current)
+            {
+                return;
+            }
+
+            if (scope is null && !_nullScopeLogged)
+            {
+                _nullScopeLogged = true;
+                Log.NullScope(_log);
+            }
+
             Volatile.Write(ref _scopes, _scopes.SetItem(attempt.Epoch, scope));
 
             // The release of case (b) (§11.5 "A skipped key stays dirty"), published map first. Only once the attempt's
@@ -287,6 +338,21 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 ReleaseDeferred();
             }
         }
+    }
+
+    // §11.5 "Switch reads": a switch attempt reads through the key's writer loop, after its final snapshot and in-flight write.
+    private async ValueTask<string?> ReadForAttemptAsync(Attempt attempt, Slice slice, PersistOptions options, string key, CancellationToken token)
+    {
+        if (attempt.Epoch == 0)
+        {
+            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+            return await ReadAsync(options, key, token).ConfigureAwait(false);
+        }
+
+#pragma warning disable VSTHRD003 // justification: the attempt's own RunContinuationsAsynchronously TCS; dispose ends the wait through the token
+        await attempt.ResetCommitted.Task.WaitAsync(token).ConfigureAwait(ConfigureAwaitOptions.None);
+#pragma warning restore VSTHRD003
+        return await _writers[slice.Key].ReadAsync(key, token).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     // Server storage reads the cache; Local and Session go through ducky.js.
@@ -312,13 +378,17 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 : new HydrationFailed(nameof(TimeoutException), $"Hydration did not end within HydrationTimeout ({_registration.Options.HydrationTimeout}).");
             Claim(attempt, failure with { ScopeEpoch = attempt.Epoch });
             IssueTerminal(attempt);
+
+            // A switch attempt's token is not the deadline's: its reads stop here, and a hung one frees its key's loop (§11.5
+            // "A failure leaves persistence running"). CancelAsync, as a supersession does: no callback runs under this lock.
+            _ = attempt.Cancellation?.CancelAsync();
         }
     }
 
-    // Under _issue: the first claim (0 -> 1) decides the attempt's terminal.
-    private static bool Claim(Attempt attempt, object terminal)
+    // Under _issue: the first claim (0 -> 1) of the current attempt decides its terminal; a superseded attempt issues nothing.
+    private bool Claim(Attempt attempt, object terminal)
     {
-        if (attempt.Terminal != 0)
+        if (attempt != Current || attempt.Terminal != 0)
         {
             return false;
         }
@@ -329,9 +399,10 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
     // Under _issue: issues the claimed terminal once (1 -> 2), which ends the init phase and disarms its timer (§11.5 step 7).
     // Disarmed, not disposed: this can run inside that timer's own callback, and the linked _hydration still holds its token.
+    // A switch raised from a subscriber of the winner's own restore supersedes it between its claim and this call.
     private void IssueTerminal(Attempt attempt)
     {
-        if (attempt.Terminal != 1)
+        if (attempt != Current || attempt.Terminal != 1)
         {
             return;
         }
@@ -358,13 +429,25 @@ internal sealed partial class PersistenceMiddleware : Middleware
     private Dictionary<string, object> Status(PersistenceState state) => new() { [_persistence.Key] = state };
 
     /// <summary>One hydration attempt (§11.5): its epoch, its key set and its terminal claim, all read under <c>_issue</c>.</summary>
-    internal sealed class Attempt(int epoch, ImmutableHashSet<string> keys)
+    internal sealed class Attempt
     {
         /// <summary>The scope epoch the attempt reads for, and the epoch of its terminal.</summary>
-        public int Epoch => epoch;
+        public int Epoch { get; set; }
 
         /// <summary>The slice keys it reads, which the writers' hydration skip leaves alone while it is Hydrating.</summary>
-        public ImmutableHashSet<string> Keys => keys;
+        public ImmutableHashSet<string> Keys { get; set; } = [];
+
+        /// <summary>Whether it claimed its results: until then a superseding switch carries its unscoped keys (§11.6).</summary>
+        public bool Restored { get; set; }
+
+        /// <summary>
+        /// A switch attempt's token source, linked to the store's, which ends it with the store: so never disposed on its own. Its
+        /// superseding switch or the end of the init phase cancels it. The initial attempt has none: its token is the init deadline's.
+        /// </summary>
+        public CancellationTokenSource? Cancellation { get; init; }
+
+        /// <summary>Completed on the drainer once a switch's reset committed and its final snapshots were handed over.</summary>
+        public TaskCompletionSource ResetCommitted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>0 open, 1 claimed, 2 issued.</summary>
         public int Terminal { get; set; }

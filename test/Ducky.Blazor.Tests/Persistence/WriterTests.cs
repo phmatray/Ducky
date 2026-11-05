@@ -247,6 +247,19 @@ public sealed class WriterTests
         h.Written.Count.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(-5)]
+    [InlineData(-1)] // Timeout.InfiniteTimeSpan
+    public async Task Write_NonPositiveDebounce_WrittenWithoutWaiting(int debounceMs)
+    {
+        // (non-normative) PersistOptions.Debounce is not validated: a negative value means no wait, not a dead or endless loop.
+        await using var h = new WriterHarness(d => d.Persist<LevelSlice>(o => o.Debounce = TimeSpan.FromMilliseconds(debounceMs)));
+        await h.InitializeAsync();
+
+        h.Store.Dispatch(new SetLevel(1));
+        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":1}""");
+    }
+
     [Fact]
     public async Task Write_ServerBrowserStorage_Default250msDebounce()
     {
