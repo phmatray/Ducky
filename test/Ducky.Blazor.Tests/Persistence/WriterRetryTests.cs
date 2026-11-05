@@ -342,8 +342,8 @@ public sealed class WriterRetryTests
     public async Task Dispose_WriteHeldPastDisposeTimeout_CountedLostAndLoopEnds()
     {
         // (non-normative) A write held by a dead circuit and a change in its debounce: the flush ends the debounce at once
-        // (that attempt is held too) and waits for both, bounded by DisposeTimeout; then the loops' own tokens are
-        // cancelled, so DisposeAsync never waits on the held calls, and both keys are counted lost.
+        // (that attempt is held too) and waits for both, bounded by DisposeTimeout; then both keys are counted lost and the
+        // loops' own tokens are cancelled, which ends the held calls and the loops.
         await using var h = new WriterHarness(static d => d.Persist<LevelSlice>().Persist<DialSlice>(static o => o.Debounce = TimeSpan.FromSeconds(1)));
         using var lost = new MetricCollector<long>(h.Meters, "Ducky", "ducky.persistence.lost");
         h.OnSet = _ => new TaskCompletionSource<object?>().Task;
@@ -364,6 +364,10 @@ public sealed class WriterRetryTests
         await disposal.WaitAsync(_bound, TestContext.Current.CancellationToken);
         await WriterHarness.Until(() => lost.GetMeasurementSnapshot().Sum(static measurement => measurement.Value) == 2);
         h.Written.Count.ShouldBe(2);
+
+        // The module's disposal follows the stopped loops: with the clock still, only the loops' end can release it, never
+        // the bound over them.
+        await WriterHarness.Until(() => h.Js.Disposed == 1);
     }
 
     [Fact]

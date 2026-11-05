@@ -10,8 +10,9 @@ namespace Ducky.Blazor.Tests.DistributedCache;
 
 // The real MemoryDistributedCache, as-is (§17.2), with every async call recorded. With `yield`, GetAsync first awaits
 // Task.Yield(), as Redis effectively does: MemoryDistributedCache completes synchronously and would hide the difference
-// (§11.6, the NonInteractive rule). Ducky only ever calls the async members.
-internal sealed class TestCache(bool yield) : IDistributedCache
+// (§11.6, the NonInteractive rule). Ducky only ever calls the async members. Once disposed (registered with a factory,
+// so the container disposes it with the scope), every write throws ObjectDisposedException, as a disposed real cache does.
+internal sealed class TestCache(bool yield) : IDistributedCache, IDisposable
 {
     private readonly MemoryDistributedCache _inner = new(Options.Create(new MemoryDistributedCacheOptions()));
 
@@ -27,6 +28,14 @@ internal sealed class TestCache(bool yield) : IDistributedCache
     /// <summary>Stores <paramref name="value"/> past the recording, as another app instance would.</summary>
     public void Store(string key, string value) => _inner.Set(key, Encoding.UTF8.GetBytes(value), new());
 
+    /// <summary>Consulted by every write once it is recorded and let through: an exception it returns fails that write.</summary>
+    public Func<Exception?>? SetFault { get; set; }
+
+    /// <summary>Whether the container disposed this cache.</summary>
+    public bool Disposed { get; private set; }
+
+    public void Dispose() => Disposed = true;
+
     public async Task<byte[]?> GetAsync(string key, CancellationToken token = default)
     {
         Calls.Enqueue($"get:{key}");
@@ -38,15 +47,25 @@ internal sealed class TestCache(bool yield) : IDistributedCache
         return await _inner.GetAsync(key, token);
     }
 
+    /// <summary>The token of the last write; set before the write is recorded.</summary>
+    public CancellationToken LastSetToken { get; private set; }
+
     /// <summary>When set, every write waits for it after being recorded.</summary>
     public TaskCompletionSource? SetGate { get; init; }
 
     public async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
     {
+        LastSetToken = token;
         Calls.Enqueue($"set:{key}");
         if (SetGate is { } gate)
         {
             await gate.Task;
+        }
+
+        ObjectDisposedException.ThrowIf(Disposed, this);
+        if (SetFault?.Invoke() is { } fault)
+        {
+            throw fault;
         }
 
         Entries[key] = options;

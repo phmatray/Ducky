@@ -139,8 +139,8 @@ internal sealed partial class PersistenceMiddleware
         : _browser.RemoveAsync(options.Storage, key, _id, token);
 
     // §11.5 "Flush on DisposeAsync", phase 5a: the deferred keys are released, every loop skips its debounce and backoff
-    // and makes one attempt per dirty key, bounded by DisposeTimeout; then the loops stop, and each key still dirty (or
-    // still deferred) is counted ducky.persistence.lost.
+    // and makes one attempt per dirty key, bounded by DisposeTimeout; each key still dirty (or still deferred) then is
+    // counted ducky.persistence.lost, and the loops stop.
     private async Task FlushAsync()
     {
         // The drain has exited: nothing else takes deferred keys any more. Released only once the Hydrating restore was
@@ -155,15 +155,21 @@ internal sealed partial class PersistenceMiddleware
         var writers = _writers.ToArray();
         var flushed = Task.WhenAll(writers.Select(static writer => writer.Value.FlushAsync()));
         await flushed.WaitAsync(DisposeTimeout, _time).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+
+        // Counted at the flush's one bound, the one the store waits with (§6.11 5a, INV-16): a call still in flight keeps its
+        // key dirty, and is counted lost even if it succeeds later.
         foreach (var (key, writer) in writers)
         {
-            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-            await writer.DisposeAsync().ConfigureAwait(false);
             if (writer.Dirty || writer.RemovalPending || Deferred.ContainsKey(key))
             {
                 _telemetry.Add(_telemetry.Lost);
             }
         }
+
+        // Bounded too: a provider call that ignores its token holds its loop past the stop, and holds the disposals after this
+        // flush only up to this bound.
+        var stopped = Task.WhenAll(writers.Select(static writer => writer.Value.DisposeAsync().AsTask()));
+        await stopped.WaitAsync(DisposeTimeout, _time).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
     }
 
     // §11.5: a failed write is retried after 1 s, doubling up to 30 s.
@@ -287,7 +293,7 @@ internal sealed partial class PersistenceMiddleware
         public async ValueTask DisposeAsync()
         {
             await _stop.CancelAsync().ConfigureAwait(ConfigureAwaitOptions.None);
-#pragma warning disable VSTHRD003 // justification: the loop this writer started; it never faults and ends once its token is cancelled
+#pragma warning disable VSTHRD003 // justification: the loop this writer started; it never faults and ends once its token is cancelled, or when a provider call ignoring it returns (FlushAsync bounds this wait)
             await _loop.ConfigureAwait(ConfigureAwaitOptions.None);
 #pragma warning restore VSTHRD003
             _hurry.Dispose();

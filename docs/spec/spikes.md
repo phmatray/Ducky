@@ -593,6 +593,29 @@ its own copy of the worktree, from 14:46 (`Ducky` from 14:55, after one such sto
   outcome: per-project jobs over `Mutation --project <name>`, §17.8, or file shards as the nightly's). This story
   changes no workflow, target or spec section.
 
+**Update (M12-02, step 13, 2026-10-25).** The stage-13 re-measurement (§24 step 13), on top of M12-01 (`c0108526`)
+plus this story's work, which changes test files of `Ducky.Blazor.Tests`: `MutationPr --base-ref HEAD` therefore gave
+`Ducky` and `Ducky.Blazor` full runs (every project whose `test-projects` list holds `Ducky.Blazor.Tests`), and those
+are the measurement. Same Apple M1 Max, Stryker's default concurrency 5, the machine shared with sibling worktrees'
+gates (load average 140 to 330 throughout), the two runs one after the other from 10:32:
+
+| Project (test projects run per mutant) | Tests | Mutants created / tested | Score | Stryker time |
+|---|---|---|---|---|
+| `Ducky` (8) | 1437 | 1378 / 929 | 99.68 | 3 h 02 min |
+| `Ducky.Blazor` (4) | 955 | 1096 / 727 | 100.00 (203 `Timeout`) | 2 h 38 min |
+
+- **Growth since step 17's record.** `Ducky.Blazor` gained the persistence writer, the server cache provider and
+  their tests (593 → 727 tested mutants, 912 → 955 tests) and took less time under a comparable load (3 h 14 min
+  then); `Ducky` is flat (921 → 929 mutants, 5 h 06 min then under the heavier load of that record). The 203
+  `Timeout` mutants are the load (M0-15 record): a mutant whose tests run near Stryker's timeout times out.
+- **Timeouts unchanged.** The two projects together take 5 h 40 min here; with the M10-07 load reading (a factor of
+  10 to 19 over an unloaded run) that is 18 to 34 minutes unloaded, and 25 to 170 minutes with the runner factor
+  (1.4 to 5), inside 254 minutes (330 / 1.3) per shard. `nightly-mutation` (four file shards) and `release-mutation`
+  (`.github/workflows/release.yml`) keep `timeout-minutes: 330`, and the PR `mutation` shards set no timeout (GitHub's
+  360-minute default): 330 is already the cap (30 minutes under that limit), so no measurement can raise it, and nothing
+  measured here calls for lowering it. M16-02's recommendation above (measure the strict run on `ubuntu-latest`, split
+  `release-mutation` if it passes 254 minutes) stands.
+
 ## M0-15: Stryker `--mutate` patterns for shards and baseline reruns
 
 **Question.** Owner-added story M0-15 shards the mutation runs and reruns individual mutants against a baseline. Two
