@@ -45,7 +45,7 @@ public sealed class DuckyJsStorageTests
                 const ducky = await import('/ducky.js');
                 const results = [];
                 for (const [area, own, other] of [['local', localStorage, sessionStorage], ['session', sessionStorage, localStorage]]) {
-                    ducky.watchStorage('store-a', null, 'app', false, 600000);
+                    ducky.watchStorage('store-a', { invokeMethodAsync: () => Promise.resolve() }, 'app', false, 600000, 16384);
                     results.push(
                         `${area} set registered: ${ducky.storageSet(area, 'app:k', '{"v":1}', 'store-a')}`,
                         `${area} get: ${ducky.storageGet(area, 'app:k', 1000)}`,

@@ -122,6 +122,7 @@ tests:
   - { name: CrossTab_TooLargeKeyRemovedBeforePull_ResetsSlice, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_TooLarge_ReReadViaStream, projects: [Ducky.Blazor.Tests], stage: 14 }
   - { name: CrossTab_TwoPages_ChangeInAAppearsInB, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_Watch_PassesFullArgumentList, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: Descriptors_MatchCatalogue, projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], stage: 17 }
   - { name: DevToolsPayload_NonEmpty, projects: [Ducky.AotSmoke], invariants: [INV-23], stage: 15 }
   - { name: DevTools_DuringTimeTravel_UserActionVetoed, projects: [Ducky.Blazor.Tests], invariants: [INV-28], stage: 15 }
@@ -200,9 +201,13 @@ tests:
   - { name: DuckyInitializerFirstToucher_SeedWrittenOnPrerenderAndAppliedBeforeFirstInteractiveRender, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
   - { name: DuckyInitializer_ShowsLoadingUntilReady, projects: [Ducky.Blazor.Tests], stage: 10 }
   - { name: DuckyJs_DevToolsLargeMessage_PullBranch, projects: [Ducky.E2E], stage: 15 }
+  - { name: DuckyJs_FailedClearEvent_ReReadsAfterReconnect, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
   - { name: DuckyJs_PrunedIdReRegisteredOnNextWrite, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
   - { name: DuckyJs_PullExports_ReturnOneByteWhenGone, projects: [Ducky.E2E], invariants: [INV-23], stage: 12 }
+  - { name: DuckyJs_Relay_BudgetIsUtf8BytesOfTheJsonEncoding, projects: [Ducky.E2E], invariants: [INV-23], stage: 14 }
   - { name: DuckyJs_ResyncBackoff_CapsAt30s_ThenReReadsAll, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
+  - { name: DuckyJs_SlowDelivery_ReReadsOnce, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
+  - { name: DuckyJs_UnsettledDelivery_CountsAsFailed, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
   - { name: DuckySelect_OnlyFragmentRerenders, projects: [Ducky.Blazor.Tests], stage: 10 }
   - { name: DuckySelect_SelectorParameterChange_Reevaluates, projects: [Ducky.Blazor.Tests], stage: 10 }
   - { name: DuplicateHandler_ThrowsAtConstruction, projects: [Ducky.Tests], stage: 2 }
