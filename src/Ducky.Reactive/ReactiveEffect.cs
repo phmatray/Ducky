@@ -11,6 +11,11 @@ namespace Ducky.Reactive;
 /// Reactive work is excluded from quiescence: <see cref="IStore.WhenIdleAsync"/> never waits for a pipeline, even one
 /// with a request in flight, so test the observable outcome (advance a fake clock, then await a dispatch) instead.
 /// <para>
+/// Never load a Ducky.Blazor <c>Prerender&lt;T&gt;</c> slice from a reactive effect: the prerender seed does not wait for
+/// the pipeline, so it captures the slice's loading state and the interactive side takes it as loaded. Use an
+/// <see cref="Effect{TAction}"/>.
+/// </para>
+/// <para>
 /// Every failure (a throw from <see cref="Handle"/>, a non-terminal error, a completion with a failure) is logged and
 /// dispatched as an <see cref="EffectFailed"/> whose <see cref="EffectFailed.ActionType"/> is <c>"reactive"</c>, with
 /// <see cref="Origin.System"/>: never vetoed and never "unhandled". A non-terminal error leaves the pipeline running; a

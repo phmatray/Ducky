@@ -37,9 +37,10 @@ public static partial class DuckyBlazorBuilderExtensions
     /// </para>
     /// <para>
     /// The seed is taken from a quiescent store, and quiescence excludes <see cref="Effect.LongRunning"/> effects and all
-    /// Ducky.Reactive work: load the slice with an <see cref="Effect{TAction}"/>. A load that can fail during prerender (a
-    /// server-side <c>HttpClient</c> calling a relative URL) would seed its error state, which the interactive side would
-    /// never retry: register such a slice with <see cref="Prerender{TSlice, TState}"/> and an <c>include</c> that
+    /// Ducky.Reactive work: load the slice with an <see cref="Effect{TAction}"/>, never a reactive effect, whose load in
+    /// flight is not waited for: the seed would capture the loading state, and the interactive side would take it as
+    /// loaded. A load that can fail during prerender (a server-side <c>HttpClient</c> calling a relative URL) would seed
+    /// its error state, which the interactive side would never retry: register such a slice with <see cref="Prerender{TSlice, TState}"/> and an <c>include</c> that
     /// excludes error and incomplete states.
     /// </para>
     /// <para>
