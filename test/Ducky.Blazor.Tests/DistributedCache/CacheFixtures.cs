@@ -36,12 +36,20 @@ internal sealed class TestCache(bool yield) : IDistributedCache, IDisposable
 
     public void Dispose() => Disposed = true;
 
+    /// <summary>When set, every read waits for it after being recorded.</summary>
+    public TaskCompletionSource? GetGate { get; init; }
+
     public async Task<byte[]?> GetAsync(string key, CancellationToken token = default)
     {
         Calls.Enqueue($"get:{key}");
         if (yield)
         {
             await Task.Yield();
+        }
+
+        if (GetGate is { } gate)
+        {
+            await gate.Task;
         }
 
         return await _inner.GetAsync(key, token);
