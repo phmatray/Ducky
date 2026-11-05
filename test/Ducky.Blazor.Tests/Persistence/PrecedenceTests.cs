@@ -174,6 +174,9 @@ public sealed class PrecedenceTests : BunitContext
         // seed applies first and the valid cache envelope wins, because persistence restores only after SeedSettled.
         var cache = new TestCache(yield);
         var seed = await PrerenderServerAsync(cache, persistFirst, count: 3);
+
+        // Only a pause seed records the scope hash: a prerender seed's scoped keys keep prerender precedence (§11.4).
+        System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Deserialize<byte[]>(seed.State[PrerenderHandoff.SeedKey]))!.AsObject().ContainsKey("scope").ShouldBeFalse();
         cache.Store("app:alice:counter", Envelope(7, _time.GetUtcNow()));
         Services.AddSingleton<TimeProvider>(_time);
         Services.AddSingleton(_log);

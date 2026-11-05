@@ -19,6 +19,16 @@ internal sealed partial class PersistenceMiddleware
     // like the epoch-to-scope map: a queued snapshot of any older epoch can still ask.
     private void RecordAttempt(Attempt attempt) => Volatile.Write(ref _attempts, _attempts.SetItem(attempt.Epoch, attempt));
 
+    // §11.4 pause: the key set and the scope recorded for an epoch, read together under _issue (an empty set when no attempt
+    // has that epoch, a null scope when none is known).
+    internal (ImmutableHashSet<string> Keys, string? Scope) Recorded(int epoch)
+    {
+        lock (_issue)
+        {
+            return (_attempts.GetValueOrDefault(epoch)?.Keys ?? [], _scopes.GetValueOrDefault(epoch));
+        }
+    }
+
     // Before the epoch-0 resolution starts, so a change racing it becomes a switch that supersedes attempt 0: in the
     // synchronous prefix on the server, inside the hand-off callback in the browser (the renderer's provider, §11.6).
     private void SubscribeToUserChanges(Persisted[] slices)

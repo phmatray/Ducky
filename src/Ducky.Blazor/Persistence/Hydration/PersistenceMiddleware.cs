@@ -304,6 +304,8 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 baselines.Remove(key);
             }
 
+            var seeded = TakeScopedSeed(attempt, values, overtaken);
+
             // Lost to the deadline, the init abort or a newer switch, which owns the terminal: the results are discarded.
             if (!Claim(attempt, new HydrationCompleted(values.Count > 0 || overtaken.Length > 0) { ScopeEpoch = attempt.Epoch }))
             {
@@ -312,6 +314,11 @@ internal sealed partial class PersistenceMiddleware : Middleware
             }
 
             attempt.Restored = true;
+            foreach (var key in seeded)
+            {
+                Deferred.TryAdd(key, 0);
+            }
+
             foreach (var (key, payload) in baselines.Values)
             {
                 if (payload is null)
@@ -331,6 +338,40 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
             IssueTerminal(attempt);
         }
+    }
+
+    // §11.5 step 6, under _issue: the scoped keys a pause seed handed over. Only attempt 0, still current, under a scope
+    // that hashes to the seed's, takes them: a dirty browser key's seed value in place of the stored one, any other only
+    // when storage held no valid envelope for it; a key a cross-tab value overtook keeps that newer value. Otherwise they
+    // stay for IssueTerminal, whichever attempt issues it, to drop (Debug 2017). Returns the dirty keys applied, deferred
+    // once the claim is won (current, so it is), so their writers rewrite storage after the terminal (baseline from the read).
+    private List<string> TakeScopedSeed(Attempt attempt, Dictionary<string, object> values, string[] overtaken)
+    {
+        List<string> seeded = [];
+        var seed = _persistence.SeedScoped;
+
+        // A seed that recorded no scope matches none, a null one included.
+        if (seed is null || attempt.Epoch != 0 || attempt != Current || seed.Scope is null || SeedWriter.ScopeHash(Scopes.GetValueOrDefault(0)) != seed.Scope)
+        {
+            return seeded;
+        }
+
+        _persistence.SeedScoped = null;
+
+        foreach (var (key, value) in seed.Values.Where(entry => !overtaken.Contains(entry.Key)))
+        {
+            if (seed.Dirty.Contains(key))
+            {
+                values[key] = value;
+                seeded.Add(key);
+            }
+            else
+            {
+                values.TryAdd(key, value);
+            }
+        }
+
+        return seeded;
     }
 
     // When any key of the attempt is scoped (§11.6), resolves its epoch's scope (Scope ?? NameIdentifier) and records it,
@@ -467,6 +508,16 @@ internal sealed partial class PersistenceMiddleware : Middleware
         }
 
         _persistence.SeedDirty = [];
+
+        // §11.4: scoped keys step 6 did not take (another scope, a superseded or failed attempt 0) are dropped, once.
+        var scoped = _persistence.SeedScoped;
+        if (scoped is not null)
+        {
+            _persistence.SeedScoped = null;
+            string[] keys = [.. scoped.Values.Keys];
+            Log.ScopedSeedDropped(_log, keys);
+        }
+
         attempt.Terminal = 2;
         DispatchSystem(attempt.Pending!, isFailure: attempt.Pending is HydrationFailed);
         _initDone.TrySetResult();

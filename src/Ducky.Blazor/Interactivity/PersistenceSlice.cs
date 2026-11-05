@@ -32,6 +32,13 @@ internal sealed class PersistenceSlice : Slice<PersistenceState>
     /// </summary>
     public IReadOnlyList<string> SeedDirty { get; set; } = [];
 
+    /// <summary>
+    /// A pause seed's scoped keys (§11.4), set before <see cref="SeedSettled"/> completes and never restored by the handoff:
+    /// §11.5 step 6 of the first attempt to get there takes them, and applies them only as attempt 0 under the scope whose
+    /// hash the seed recorded. Null when the seed carried none.
+    /// </summary>
+    public ScopedSeed? SeedScoped { get; set; }
+
     // Always Hydrated: a slice built with new() can't know whether anything is persisted.
     protected override PersistenceState Initial => new(PersistenceStatus.Hydrated);
 
@@ -40,4 +47,7 @@ internal sealed class PersistenceSlice : Slice<PersistenceState>
     /// pause seed reads (§11.4).
     /// </summary>
     public PersistenceMiddleware? Middleware { get; set; }
+
+    /// <summary>The scoped keys of a pause seed: the recorded scope hash, their deserialized values and the dirty browser keys.</summary>
+    internal sealed record ScopedSeed(string? Scope, IReadOnlyDictionary<string, object> Values, IReadOnlySet<string> Dirty);
 }
