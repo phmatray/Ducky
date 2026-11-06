@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.JSInterop;
 
 namespace Ducky.Blazor;
@@ -17,6 +18,8 @@ internal readonly struct JsArg
 
     public static implicit operator JsArg(bool value) => new(value);
 
-    internal static JsArg Ref<T>(DotNetObjectReference<T> value)
+    // DotNetObjectReference<TValue> keeps TValue's public methods ([JSInvokable]); without the matching annotation ILLink
+    // reports IL2091 here in a trimmed publish (the trim analyzer does not, WasmTrimmedSmoke's publish does, INV-24).
+    internal static JsArg Ref<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] T>(DotNetObjectReference<T> value)
         where T : class => new(value);
 }

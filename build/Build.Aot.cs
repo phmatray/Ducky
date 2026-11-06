@@ -1,12 +1,13 @@
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Fallout.Common;
 using Fallout.Common.IO;
 using Fallout.Common.Tooling;
 using Serilog;
 using static Fallout.Common.Tools.DotNet.DotNetTasks;
 
-// SPEC §10, §19 (AotSmoke) and INV-24: the NativeAOT console smoke. Staged (§24): the trimmed AOT-WASM step joins at
-// stage 18 (M14-06).
+// SPEC §10, §19 (AotSmoke) and INV-24: the NativeAOT console smoke, then (stage 18 of §24, M14-06) the trimmed AOT-WASM
+// smoke of Ducky.Samples.Wasm.
 internal sealed partial class Build
 {
     private AbsolutePath AotSolution => RootDirectory / "Ducky.Aot.slnx";
@@ -18,6 +19,12 @@ internal sealed partial class Build
     private static readonly string[] AllowedIl3050Members = ["PersistAsJson", "TryTakeFromJson"];
     private static readonly Regex IlWarning = new(@"\b(?:warning|error) IL\d+:");
     private static readonly Regex AllowedIl3050 = new($@"\bwarning IL3050: {Regex.Escape(AllowedIl3050Type)}\.({string.Join('|', AllowedIl3050Members)})<TValue>\(");
+
+    // The trimmed AOT-WASM smoke (stage 18, M14-06): the framework's IL2104 for these two assemblies is the publish's allowance.
+    private const string WasmSample = "Ducky.Samples.Wasm";
+    private static readonly string[] AllowedIl2104Assemblies = ["Microsoft.AspNetCore.Components", "Microsoft.JSInterop"];
+    private static readonly Regex AllowedIl2104 = new($@"\bwarning IL2104: Assembly '({string.Join('|', AllowedIl2104Assemblies.Select(Regex.Escape))})' produced trim warnings\.");
+    private AbsolutePath WasmTrimmedPublish => Artifacts / "wasm-trimmed";
 
     // Linux only (§10): Ducky.AotSmoke is restored unlocked (its csproj) outside the locked Ducky.slnx, published for
     // linux-x64 and run; SpecTraceGate never runs the binary, so its manifest check lives here.
@@ -55,6 +62,28 @@ internal sealed partial class Build
             var violations = AotSmokeViolations(smoke.Output.Select(o => o.Text).ToList(), smoke.ExitCode, manifest).ToList();
             violations.ForEach(v => Log.Error(v));
             Assert.True(violations.Count == 0, $"AotSmoke: {violations.Count} violation(s)");
+
+            // Stage 18: the trimmed AOT-WASM smoke (§10, spike S-3). The sample's intermediates go first: an up-to-date ILLink
+            // prints no warning, so the IL2104 positive control would read nothing.
+            WasmTrimmedPublish.CreateOrCleanDirectory();
+            (RootDirectory / "samples" / WasmSample / "obj" / "Release" / "net10.0").DeleteDirectory();
+            var wasmOutput = DotNet($"publish {RootDirectory / "samples" / WasmSample / $"{WasmSample}.csproj"} -c Release -p:RunAOTCompilation=true -p:TrimMode=full -p:RestoreLockedMode=false -p:SuppressTrimAnalysisWarnings=false -p:ILLinkTreatWarningsAsErrors=false -o {WasmTrimmedPublish}")
+                .Select(o => o.Text);
+            FailOnViolations("AotSmoke", [.. WasmIlWarningViolations(wasmOutput)]);
+
+            // DUCKY_REQUIRE_TRIMMED_PUBLISH makes a publish that landed elsewhere fail WasmTrimmedSmoke instead of skipping it,
+            // and the TRX must hold exactly that one test, passed (INV-24).
+            ProcessTasks.StartProcess("pwsh", $"{E2EProject.Parent / "bin" / "Release" / "net10.0" / "playwright.ps1"} install --with-deps chromium")
+                .AssertZeroExitCode();
+            var environment = new Dictionary<string, string>(EnvironmentInfo.Variables)
+            {
+                ["DUCKY_BROWSER"] = "chromium",
+                ["DUCKY_REQUIRE_TRIMMED_PUBLISH"] = "1",
+                ["DUCKY_TRIMMED_PUBLISH_DIR"] = WasmTrimmedPublish / "wwwroot",
+            };
+            DotNet($"test --project {E2EProject} -c Release --no-build --filter-method \"*.WasmTrimmedSmoke\" --report-trx --results-directory {AotPublish}",
+                environmentVariables: environment);
+            FailOnViolations("AotSmoke", [.. WasmSmokeTrxViolations(AotPublish.GlobFiles("*.trx").Select(f => f.ReadAllText()))]);
         });
 
     // The binary must exit 0 and print only PASS lines, and its PASS names must equal the active Ducky.AotSmoke entries.
@@ -196,6 +225,62 @@ internal sealed partial class Build
                 yield return $"AotSmokeSelfCheck: {plantedCase} must report '{expected}', got [{string.Join("; ", violations)}]";
             }
         }
+
+        // The trimmed Ducky.Samples.Wasm publish (M14-06): ILLink's line format (macOS arm64, 10.0.14).
+        static string Il2104(string assembly) =>
+            $"/nuget/{assembly.ToLowerInvariant()}/10.0.14/lib/net10.0/{assembly}.dll : warning IL2104: Assembly '{assembly}' produced trim warnings. For more information see https://aka.ms/il2104 [/repo/samples/Ducky.Samples.Wasm/Ducky.Samples.Wasm.csproj]";
+        var components = Il2104("Microsoft.AspNetCore.Components");
+        var jsInterop = Il2104("Microsoft.JSInterop");
+        foreach (var violation in WasmIlWarningViolations(["Optimizing assemblies for size", components, jsInterop, components, jsInterop]))
+        {
+            yield return $"AotSmokeSelfCheck: the framework's two allowed IL2104 must pass, got: {violation}";
+        }
+        (string Case, List<string> Output, string Expected)[] plantedWasm =
+        [
+            ("a publish without -p:SuppressTrimAnalysisWarnings=false (no IL line at all)", ["Optimizing assemblies for size"],
+                "Ducky.Samples.Wasm: the publish reported no IL2104 for Microsoft.AspNetCore.Components"),
+            ("a publish without the Microsoft.JSInterop IL2104", [components],
+                "Ducky.Samples.Wasm: the publish reported no IL2104 for Microsoft.JSInterop"),
+            ("an unsuppressed RequiresUnreferencedCode call in the sample",
+                [components, jsInterop, "/repo/samples/Ducky.Samples.Wasm/Program.cs(9,1): Trim analysis warning IL2026: Program.<Main>$(String[]): Using member 'X' which has 'RequiresUnreferencedCodeAttribute' [/repo/samples/Ducky.Samples.Wasm/Ducky.Samples.Wasm.csproj]"],
+                "Ducky.Samples.Wasm: the publish reported an IL warning outside the allowance: /repo/samples/Ducky.Samples.Wasm/Program.cs(9,1): Trim analysis warning IL2026"),
+            ("an IL2091 from Ducky.Blazor",
+                [components, jsInterop, "/repo/src/Ducky.Blazor/Core/JsArg.cs(21,28): Trim analysis warning IL2091: Ducky.Blazor.JsArg.Ref<T>(DotNetObjectReference<T>): 'TValue' generic argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicMethods'"],
+                "outside the allowance: /repo/src/Ducky.Blazor/Core/JsArg.cs(21,28): Trim analysis warning IL2091"),
+            ("an IL2104 for another assembly", [components, jsInterop, Il2104("Microsoft.AspNetCore.Components.Web")],
+                "outside the allowance: /nuget/microsoft.aspnetcore.components.web/10.0.14/lib/net10.0/Microsoft.AspNetCore.Components.Web.dll : warning IL2104"),
+        ];
+        foreach (var (plantedCase, output, expected) in plantedWasm)
+        {
+            var violations = WasmIlWarningViolations(output).ToList();
+            if (!violations.Any(v => v.Contains(expected, StringComparison.Ordinal)))
+            {
+                yield return $"AotSmokeSelfCheck: {plantedCase} must report '{expected}', got [{string.Join("; ", violations)}]";
+            }
+        }
+        // The TRX of the filtered run (MTP's format): a skip, a failure, no result or two results all fail.
+        static string Trx(params string[] outcomes) =>
+            $"""<?xml version="1.0" encoding="utf-8"?><TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><Results>{string.Concat(outcomes.Select(o => $"""<UnitTestResult testName="Ducky.E2E.Aot.WasmTrimmedSmokeTests.WasmTrimmedSmoke" outcome="{o}" />"""))}</Results></TestRun>""";
+        foreach (var violation in WasmSmokeTrxViolations([Trx("Passed")]))
+        {
+            yield return $"AotSmokeSelfCheck: one passed WasmTrimmedSmoke must pass, got: {violation}";
+        }
+        (string Case, List<string> Trx, string Expected)[] plantedTrx =
+        [
+            ("a skipped WasmTrimmedSmoke", [Trx("NotExecuted")], "Ducky.E2E.Aot.WasmTrimmedSmokeTests.WasmTrimmedSmoke is NotExecuted, not Passed"),
+            ("a failed WasmTrimmedSmoke", [Trx("Failed")], "WasmTrimmedSmoke is Failed, not Passed"),
+            ("a TRX without results", [Trx()], "the TRX reports 0 test result(s), not exactly one"),
+            ("no TRX at all", [], "the TRX reports 0 test result(s), not exactly one"),
+            ("two passed results", [Trx("Passed"), Trx("Passed")], "the TRX reports 2 test result(s), not exactly one"),
+        ];
+        foreach (var (plantedCase, trx, expected) in plantedTrx)
+        {
+            var violations = WasmSmokeTrxViolations(trx).ToList();
+            if (!violations.Any(v => v.Contains(expected, StringComparison.Ordinal)))
+            {
+                yield return $"AotSmokeSelfCheck: {plantedCase} must report '{expected}', got [{string.Join("; ", violations)}]";
+            }
+        }
     }
 
     // A NativeAOT publish holds the native binary and no managed assembly: a *.dll means PublishAot is not in effect, and
@@ -213,19 +298,9 @@ internal sealed partial class Build
     // Components member, a collapsed IL3053, a Roslyn analyzer) fails, and both allowed lines must be present: the positive
     // control that the warnings were visible and the parse reads them, as for §10's IL2104 allowlist.
     // SPEC §10 (Smoke gates) and §19 state this allowance.
-    private static IEnumerable<string> AotIlWarningViolations(IEnumerable<string> publishOutput)
-    {
-        var lines = publishOutput.Where(line => IlWarning.IsMatch(line)).ToList();
-        foreach (var line in lines.Where(line => !AllowedIl3050.IsMatch(line)).Distinct(StringComparer.Ordinal))
-        {
-            yield return $"{AotSmokeProject}: the publish reported an IL warning outside the allowance: {line} (INV-24)";
-        }
-        var seen = lines.Select(line => AllowedIl3050.Match(line)).Where(m => m.Success).Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
-        foreach (var member in AllowedIl3050Members.Where(member => !seen.Contains(member)))
-        {
-            yield return $"{AotSmokeProject}: the publish reported no IL3050 for {AllowedIl3050Type}.{member}: the output parse missed it, or the framework fixed it (update the allowance)";
-        }
-    }
+    private static IEnumerable<string> AotIlWarningViolations(IEnumerable<string> publishOutput) =>
+        IlAllowlistViolations(publishOutput, AotSmokeProject, AllowedIl3050, AllowedIl3050Members,
+            member => $"IL3050 for {AllowedIl3050Type}.{member}: the output parse missed it, or the framework fixed it (update the allowance)");
 
     // The binary's arguments (P1): an entry of a later stage may land before activeStage reaches it. Its assertion still
     // runs and a FAIL still fails, but the binary prints no PASS for a name passed here, so the PASS set stays the active
@@ -236,4 +311,40 @@ internal sealed partial class Build
             .Where(t => t.Stage > manifest.ActiveStage && t.Projects.Contains(AotSmokeProject))
             .Select(t => t.Name)
             .Order(StringComparer.Ordinal);
+
+    // The trimmed Ducky.Samples.Wasm publish (§10, spike S-3): any IL warning fails except the framework's IL2104 for
+    // Microsoft.AspNetCore.Components and Microsoft.JSInterop, and both must be present: with SuppressTrimAnalysisWarnings
+    // dropped (the Blazor WebAssembly SDK's default hides every trim warning) the output holds no IL line at all.
+    private static IEnumerable<string> WasmIlWarningViolations(IEnumerable<string> publishOutput) =>
+        IlAllowlistViolations(publishOutput, WasmSample, AllowedIl2104, AllowedIl2104Assemblies,
+            assembly => $"IL2104 for {assembly}: trim warnings were hidden (SuppressTrimAnalysisWarnings), the output parse missed it, or the framework fixed it (update the allowlist)");
+
+    // Every IL warning line fails unless allowed matches it, and each required name must be group 1 of an allowed line.
+    private static IEnumerable<string> IlAllowlistViolations(IEnumerable<string> publishOutput, string project, Regex allowed, string[] required, Func<string, string> missing)
+    {
+        var lines = publishOutput.Where(line => IlWarning.IsMatch(line)).ToList();
+        foreach (var line in lines.Where(line => !allowed.IsMatch(line)).Distinct(StringComparer.Ordinal))
+        {
+            yield return $"{project}: the publish reported an IL warning outside the allowance: {line} (INV-24)";
+        }
+        var seen = lines.Select(line => allowed.Match(line)).Where(m => m.Success).Select(m => m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
+        foreach (var name in required.Where(name => !seen.Contains(name)))
+        {
+            yield return $"{project}: the publish reported no {missing(name)}";
+        }
+    }
+
+    // INV-24: in the aot job the trimmed smoke can't skip: the TRX holds exactly one result, and it passed.
+    private static IEnumerable<string> WasmSmokeTrxViolations(IEnumerable<string> trxFiles)
+    {
+        var results = trxFiles.SelectMany(trx => XDocument.Parse(trx).Descendants().Where(e => e.Name.LocalName == "UnitTestResult")).ToList();
+        if (results.Count != 1)
+        {
+            yield return $"WasmTrimmedSmoke: the TRX reports {results.Count} test result(s), not exactly one (INV-24)";
+        }
+        foreach (var result in results.Where(r => (string?)r.Attribute("outcome") != "Passed"))
+        {
+            yield return $"WasmTrimmedSmoke: {(string?)result.Attribute("testName")} is {(string?)result.Attribute("outcome")}, not Passed: the trimmed smoke must run and pass (INV-24)";
+        }
+    }
 }
