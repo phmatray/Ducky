@@ -1,0 +1,16 @@
+{
+  "build": {
+    "content": [
+      {
+        "files": ["**/*.md", "**/toc.yml"],
+        "exclude": ["spec/**", "adr/**", "migration/samples/**"]
+      }
+    ],
+    "output": "../artifacts/docs",
+    "template": ["default", "modern"],
+    "globalMetadata": {
+      "_appTitle": "Ducky",
+      "_enableSearch": true
+    }
+  }
+}

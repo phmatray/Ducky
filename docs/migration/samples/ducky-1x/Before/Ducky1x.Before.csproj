@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Ducky 1.x, the published version the guide migrates from (SPEC §22.1). -->
+  <ItemGroup>
+    <PackageReference Include="Ducky" Version="1.0.292" />
+  </ItemGroup>
+</Project>
