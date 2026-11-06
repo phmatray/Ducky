@@ -1,4 +1,5 @@
 using System.Net;
+using Ducky.E2E.Persistence;
 using Microsoft.Playwright;
 
 namespace Ducky.E2E.Samples;
@@ -40,7 +41,8 @@ public sealed class ServerSampleTests
 
     // Interactive Auto: the first visit (a fresh browser context, no cached WebAssembly resources) runs on a circuit; the
     // counter reduces, persists to localStorage and re-renders. Interactivity waits cover the circuit start, store init
-    // and hydration on a freshly started host, on a 2-vCPU runner.
+    // and hydration on a freshly started host, on a 2-vCPU runner. The runtime download is held, or a circuit slower than
+    // the loopback download would leave the page to WebAssembly (ServerPages.HoldWebAssemblyAsync).
     [Fact]
     public async Task ServerSample_Counter_InteractiveAndPersistedLocally()
     {
@@ -48,6 +50,7 @@ public sealed class ServerSampleTests
         await using var harness = await Harness.StartAsync();
         var page = await harness.NewPageAsync();
         var errors = CollectErrors(page);
+        await ServerPages.HoldWebAssemblyAsync(page);
         await page.GotoAsync(new Uri(host.BaseUrl, "/").ToString());
         // The button is rendered disabled until the component is interactive.
         var increment = page.GetByTestId("increment");

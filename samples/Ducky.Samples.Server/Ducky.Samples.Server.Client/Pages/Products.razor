@@ -17,9 +17,18 @@ else
 {
     <p>Loading...</p>
 }
+@* The renderer that saw the store idle: "Static" in the prerendered HTML, then "Server" or "WebAssembly" once the
+   interactive store's load effect, if any, has finished (the no-double-load specs read the server's load count then). *@
+<p>Idle on <span data-testid="idle">@_idle</span>.</p>
 
 @code {
-    // Until the load effect ran, wait for it, so the prerendered HTML lists the products. After the seed restored the
-    // slice there is nothing to wait for and no second load.
-    protected override Task OnInitializedAsync() => State.Items is null ? Store.WhenIdleAsync() : Task.CompletedTask;
+    private string? _idle;
+
+    // Wait for the load effect, so the prerendered HTML lists the products. After the seed restored the slice the effect
+    // skips the load, so the interactive wait ends without a second one.
+    protected override async Task OnInitializedAsync()
+    {
+        await Store.WhenIdleAsync();
+        _idle = RendererInfo.Name;
+    }
 }

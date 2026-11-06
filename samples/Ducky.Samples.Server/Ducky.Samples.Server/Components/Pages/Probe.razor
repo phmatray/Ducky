@@ -1,0 +1,26 @@
+@page "/probe"
+@layout Layout.PlainLayout
+@rendermode InteractiveServer
+@inject IStore Store
+
+@* A plain component reads the store first, so its InteractivityGate is Unknown when persistence asks and probes the
+   JS runtime (SPEC §11.4). Prerender must find it non-interactive (the browser-storage slices are not read, Status stays
+   Hydrated); the circuit must find it interactive (the Local counter comes back from localStorage). *@
+<PageTitle>Probe</PageTitle>
+<h1>Gate probe</h1>
+<p>Status: <span data-testid="status">@_status</span></p>
+<p>Count: <span data-testid="count">@_count</span></p>
+<p>Rendered by <span data-testid="renderer">@RendererInfo.Name</span>.</p>
+
+@code {
+    private PersistenceStatus? _status;
+    private int _count;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _ = Store.State;
+        await Store.InitializeAsync();
+        _status = Store.State.Get<PersistenceState>().Status;
+        _count = Store.State.Get<CounterState>().Value;
+    }
+}

@@ -5,6 +5,9 @@
 <PageTitle>Large</PageTitle>
 <h1>Large and non-ASCII slice</h1>
 <p>Kind: <span data-testid="kind">@State.Kind</span>, characters: <span data-testid="length">@State.Text.Length</span></p>
+@* True once the prerender or pause seed, or storage, restored the slice in this store. *@
+<p>Restored: <span data-testid="restored">@(Store.State.WasRestored<LargeState>())</span></p>
+<button data-testid="fill-1k" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new LargeFilled(Ascii, 1024))">1 KB</button>
 <button data-testid="fill-100k" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new LargeFilled(Ascii, 100 * 1024))">100 KB</button>
 <button data-testid="fill-2m" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new LargeFilled(Ascii, 2 * 1024 * 1024))">2 MB</button>
 <button data-testid="fill-cjk" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new LargeFilled(Cjk, 12 * 1024))">12 Ki CJK</button>
