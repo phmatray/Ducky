@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Ducky 1.x, the published version the guide migrates from (SPEC §22.1). -->
+  <!-- Ducky 1.x as published on nuget.org, the version the guide migrates from (SPEC §22.1): the app the guide starts from. -->
   <ItemGroup>
     <PackageReference Include="Ducky" Version="1.0.292" />
+    <PackageReference Include="Ducky.Blazor" Version="1.0.292" />
+    <PackageReference Include="Ducky.Generator" Version="1.0.292" />
   </ItemGroup>
 </Project>

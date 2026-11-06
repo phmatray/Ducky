@@ -405,8 +405,8 @@ internal sealed partial class Build
     private AbsolutePath MigrationSolution => RootDirectory / "Ducky.Migration.slnx";
 
     // SPEC §17.1, §19. The checks run first (fast), then the migration samples build (Ducky.Migration.slnx: a plain, unlocked
-    // restore, its Directory.Build.props sets RestoreLockedMode=false) and docfx renders the site to artifacts/docs, with
-    // warnings as errors so an include of a missing file fails. M15-04 and M15-05 add the diagnostics-page and 1.x type checks.
+    // restore, its Directory.Build.props sets RestoreLockedMode=false), their tests run, and docfx renders the site to
+    // artifacts/docs, with warnings as errors so an include of a missing file fails. M15-04 adds the diagnostics-page check.
     private Target Docs => _ => _
         .DependsOn(Compile)
         .Executes(() =>
@@ -417,8 +417,15 @@ internal sealed partial class Build
                 .. DocsFenceViolations(docs),
                 .. DocsRegionViolations(docs, path => RootDirectory / path is var file && file.FileExists() ? file.ReadAllText() : null),
                 .. DocsSelfCheck(),
+                .. OneXApiViolations(
+                    (RootDirectory / OneXApiList).ReadAllText(),
+                    docs.Where(d => d.Path == OneXGuide).Select(d => d.Text).SingleOrDefault(),
+                    (RootDirectory / "src").GlobFiles("*/Migration/Tombstones.cs").Select(f => f.ReadAllText())),
+                .. OneXApiSelfCheck(),
             ]);
             DotNet($"build {MigrationSolution} -c Release -nodeReuse:false");
+            // The After samples' test modules (the guides' behaviour-change tests); MTP skips the projects that are none.
+            DotNet($"test --solution {MigrationSolution} -c Release --no-build");
             (Artifacts / "docs").CreateOrCleanDirectory();
             DotNet($"docfx build {RootDirectory / "docs" / "docfx.json"} --warningsAsErrors");
         });
@@ -565,6 +572,82 @@ internal sealed partial class Build
             if (violations.Count != 1 || !violations[0].Contains(expected, StringComparison.Ordinal))
             {
                 yield return $"DocsSelfCheck: the include in {path} must report '{expected}' once, got [{string.Join("; ", violations)}]";
+            }
+        }
+    }
+
+    private const string OneXApiList = "docs/migration/ducky-1x-api.txt";
+
+    private const string OneXGuide = "docs/migration/ducky-1x.md";
+
+    // SPEC §22.1: every type of docs/migration/ducky-1x-api.txt (the Ducky and Ducky.Blazor 1.0.292 public types) has a
+    // tombstone (a member-less interface of that namespace, name and arity in src/*/Migration/Tombstones.cs) or a mapping
+    // row in the guide: a table row whose first cell names it in backticks, by its full name or a dotted suffix of it
+    // (`IDispatcher`, `RouterRequestAction.ActionPayload`, `Ducky.Blazor.DependencyInjections`).
+    private static IEnumerable<string> OneXApiViolations(string apiList, string? guide, IEnumerable<string> tombstoneSources)
+    {
+        var listed = apiList.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0 && !l.StartsWith('#')).ToList();
+        if (listed.Count == 0)
+        {
+            yield return $"{OneXApiList} lists no type";
+        }
+        HashSet<string> tombstones = [.. from source in tombstoneSources
+            let ns = Regex.Match(source, @"^namespace\s+([\w.]+)\s*;", RegexOptions.Multiline).Groups[1].Value
+            from Match m in Regex.Matches(source, @"^public\s+interface\s+(\w+\s*(?:<[^>]*>)?)\s*;", RegexOptions.Multiline)
+            select OneXTypeKey($"{ns}.{m.Groups[1].Value}")];
+        List<string> rows = [.. from line in (guide ?? "").Split('\n')
+            let cells = line.Trim().Split('|')
+            where cells is ["", _, _, ..]
+            from Match token in Regex.Matches(cells[1], "`([^`]+)`")
+            select OneXTypeKey(token.Groups[1].Value)];
+        foreach (var type in listed)
+        {
+            var key = OneXTypeKey(type);
+            if (!tombstones.Contains(key) && !rows.Any(r => key == r || key.EndsWith("." + r, StringComparison.Ordinal)))
+            {
+                yield return $"{OneXApiList}: 1.x type '{type}' has neither a tombstone nor a mapping row in {OneXGuide}";
+            }
+        }
+    }
+
+    // `Fsa<TPayload, TMeta>` -> Fsa`2: type parameter names never matter, the arity does.
+    private static string OneXTypeKey(string type) =>
+        Regex.Replace(type, @"\s*<([^<>]*)>", m => $"`{m.Groups[1].Value.Count(',') + 1}").Replace(" ", "", StringComparison.Ordinal);
+
+    // The acceptance check of M15-05 ("removing the mapping row of a listed 1.x type fails Docs"), planted on miniatures.
+    private static IEnumerable<string> OneXApiSelfCheck()
+    {
+        const string tombstones = "namespace Ducky;\n\n[Obsolete(\"x\", error: true, DiagnosticId = \"DUCKYM001\")]\npublic interface IState;\n\npublic interface Fsa<TPayload, TMeta>;\n";
+        const string blazorTombstones = "namespace Ducky.Blazor;\n\npublic interface DuckyLayout<TState>;\n";
+        const string api = "# Ducky 1.0.292.0\nDucky.IState\nDucky.Fsa<TPayload, TMeta>\nDucky.IDispatcher\nDucky.DependencyInjections\n" +
+            "# Ducky.Blazor 1.0.292.0\nDucky.Blazor.DuckyLayout<TState>\nDucky.Blazor.Router.Actions.RouterRequestAction.ActionPayload\n";
+        const string guide = "# Ducky 1.x\n\n| 1.x | 2.0 |\n|---|---|\n| `IDispatcher` | `IStore` |\n" +
+            "| `Ducky.DependencyInjections` (`AddDuckyCore`) | `AddDucky(d => …)` |\n| `RouterRequestAction.ActionPayload` | none |\n";
+        string[] sources = [tombstones, blazorTombstones];
+        foreach (var violation in OneXApiViolations(api, guide, sources))
+        {
+            yield return $"OneXApiSelfCheck: the unplanted list must pass, got: {violation}";
+        }
+        (string Name, string Api, string? Guide, string[] Sources, string Expected)[] planted =
+        [
+            ("row removed", api, guide.Replace("| `IDispatcher` | `IStore` |\n", "", StringComparison.Ordinal), sources, "'Ducky.IDispatcher'"),
+            ("no guide", "Ducky.IDispatcher\n", null, sources, "'Ducky.IDispatcher'"),
+            ("name only in the second cell", "Ducky.Dispatcher\n", "| x | `Dispatcher` |\n", sources, "'Ducky.Dispatcher'"),
+            ("not a table row", "Ducky.Dispatcher\n", "`Dispatcher` is gone\n", sources, "'Ducky.Dispatcher'"),
+            ("a suffix that is not a dotted segment", "Ducky.IDispatcher\n", "| `Dispatcher` | x |\n", sources, "'Ducky.IDispatcher'"),
+            ("a row for another namespace", "Ducky.Blazor.DependencyInjections\n", "| `Ducky.DependencyInjections` | x |\n", sources, "'Ducky.Blazor.DependencyInjections'"),
+            ("another arity in the row", "Ducky.Fsa<TPayload>\n", "| `Fsa<TPayload, TMeta>` | x |\n", sources, "'Ducky.Fsa<TPayload>'"),
+            ("another arity in the tombstones", "Ducky.Fsa<TPayload>\n", guide, sources, "'Ducky.Fsa<TPayload>'"),
+            ("a tombstone of another namespace", "Ducky.DuckyLayout<TState>\n", guide, sources, "'Ducky.DuckyLayout<TState>'"),
+            ("no tombstone sources", "Ducky.IState\n", guide, [], "'Ducky.IState'"),
+            ("an empty list", "# Ducky 1.0.292.0\n\n", guide, sources, "lists no type"),
+        ];
+        foreach (var (name, plantedApi, plantedGuide, plantedSources, expected) in planted)
+        {
+            var violations = OneXApiViolations(plantedApi, plantedGuide, plantedSources).ToList();
+            if (violations.Count != 1 || !violations[0].Contains(expected, StringComparison.Ordinal))
+            {
+                yield return $"OneXApiSelfCheck: {name} must report {expected} once, got [{string.Join("; ", violations)}]";
             }
         }
     }

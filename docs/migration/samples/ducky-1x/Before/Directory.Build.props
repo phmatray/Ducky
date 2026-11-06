@@ -1,0 +1,11 @@
+<Project>
+  <!-- The Before app references Ducky 1.0.292 from nuget.org with an explicit version, which central package management
+       would reject (NU1008). -->
+  <Import Project="../../Directory.Build.props" />
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <!-- The root Directory.Packages.props would switch CPM back on (and add its global MinVer reference). -->
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
+  </PropertyGroup>
+</Project>

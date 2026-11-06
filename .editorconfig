@@ -65,3 +65,7 @@ dotnet_diagnostic.CA2007.severity = warning
 # test/: normative test names are Method_Condition_Result (SPEC §17).
 [test/**.cs]
 dotnet_diagnostic.CA1707.severity = none
+
+# docs/migration/samples/: the After samples' tests use the test/ naming (SPEC §22).
+[docs/migration/samples/**.cs]
+dotnet_diagnostic.CA1707.severity = none

@@ -20,3 +20,7 @@
       href: guides/blazor/static-ssr.md
 - name: Threading contract
   href: threading.md
+- name: Migration
+  items:
+    - name: From Ducky 1.x
+      href: migration/ducky-1x.md
