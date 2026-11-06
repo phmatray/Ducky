@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 
 namespace Ducky.Blazor;
@@ -9,6 +10,11 @@ namespace Ducky.Blazor;
 /// </summary>
 public abstract class DuckyComponent : ComponentBase, IHandleAfterRender, IDisposable
 {
+    // Blazor sets the [Inject] properties below by reflection, and its trimming annotation on the component type keeps
+    // that type's non-public properties only, never a base class's: without this dependency (kept with every derived
+    // component, which runs this initializer) a trimmed WebAssembly publish drops their private setters and injection
+    // throws (SPEC §11.2, InjectionReflectionTests).
+    [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicProperties, typeof(DuckyComponent))]
     private readonly ComponentSelections _selections = new();
 
     /// <summary>Gets the store.</summary>

@@ -1,0 +1,8 @@
+@page "/auto"
+@* No render mode of its own: a static SSR page hosting one circuit store and one WebAssembly store in the same document
+   (SPEC §11.3 Interactive Auto, §11.7 same-document relay, §17.6). *@
+
+<PageTitle>Auto</PageTitle>
+<h1>A circuit store and a WebAssembly store in one document</h1>
+<StorePanel Name="server" @rendermode="InteractiveServer" />
+<StorePanel Name="wasm" @rendermode="InteractiveWebAssembly" />

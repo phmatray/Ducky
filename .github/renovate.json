@@ -12,6 +12,22 @@
     },
     {
       "customType": "regex",
+      "description": "Directory.Build.targets pins the implicit Microsoft.AspNetCore.App.Internal.Assets of the Web and BlazorWebAssembly SDKs (KnownAspNetCorePack AspNetCorePackVersion), so the sample lock files do not depend on the SDK patch. After a bump, regenerate every packages.lock.json (dotnet restore --force-evaluate).",
+      "managerFilePatterns": ["/^Directory\\.Build\\.targets$/"],
+      "matchStrings": ["<KnownAspNetCorePack [^>]*AspNetCorePackVersion=\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "Microsoft.AspNetCore.App.Internal.Assets",
+      "datasourceTemplate": "nuget"
+    },
+    {
+      "customType": "regex",
+      "description": "Directory.Build.targets pins the implicit Microsoft.NET.Sdk.WebAssembly.Pack of the BlazorWebAssembly SDK (KnownWebAssemblySdkPack WebAssemblySdkPackVersion), so the sample lock files do not depend on the SDK patch. After a bump, regenerate every packages.lock.json (dotnet restore --force-evaluate).",
+      "managerFilePatterns": ["/^Directory\\.Build\\.targets$/"],
+      "matchStrings": ["<KnownWebAssemblySdkPack [^>]*WebAssemblySdkPackVersion=\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "Microsoft.NET.Sdk.WebAssembly.Pack",
+      "datasourceTemplate": "nuget"
+    },
+    {
+      "customType": "regex",
       "description": "The e2e workflow installs the Playwright OS dependencies with the npm CLI of the Microsoft.Playwright pin (build/Build.CI.cs reads Directory.Packages.props), so the generated e2e.yml moves in the same PR and VerifyWorkflows stays green.",
       "managerFilePatterns": ["/^\\.github/workflows/e2e\\.yml$/"],
       "matchStrings": ["npx --yes playwright@(?<currentValue>[^ ]+) "],
@@ -63,8 +79,8 @@
       "enabled": false
     },
     {
-      "description": "The ILLink pack stays on the 10.0 line of the net10.0 target (Directory.Build.targets).",
-      "matchPackageNames": ["Microsoft.NET.ILLink.Tasks"],
+      "description": "The implicit SDK packs stay on the 10.0 line of the net10.0 target (Directory.Build.targets).",
+      "matchPackageNames": ["Microsoft.NET.ILLink.Tasks", "Microsoft.AspNetCore.App.Internal.Assets", "Microsoft.NET.Sdk.WebAssembly.Pack"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     }

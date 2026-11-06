@@ -44,12 +44,13 @@ internal sealed partial class Build
             RunE2E(samples, "webkit");
         });
 
-    // Each sample of Ducky.slnx, published for PublishedHost (test/Ducky.E2E) to start from $DUCKY_SAMPLES_DIR/<name>/.
+    // Each sample of Ducky.slnx, published for PublishedHost (test/Ducky.E2E) to start from $DUCKY_SAMPLES_DIR/<name>/. An
+    // Interactive Auto .Client project is published inside its server app, never on its own.
     private AbsolutePath PublishSamples()
     {
         var samples = E2EArtifacts / "samples";
         samples.CreateOrCleanDirectory();
-        foreach (var sample in Solution.AllProjects.Where(p => (RootDirectory / "samples").Contains(p.Path)))
+        foreach (var sample in Solution.AllProjects.Where(p => (RootDirectory / "samples").Contains(p.Path) && !p.Name.EndsWith(".Client", StringComparison.Ordinal)))
         {
             DotNet($"publish {sample.Path} -c Release --no-restore -o {samples / sample.Name}");
         }

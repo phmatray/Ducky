@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <!-- The WebAssembly half of the Interactive Auto sample (SPEC §18): slices, effects and the shared registration that both
+       the circuit and the WASM store start from. Not coverage-gated; warnings and analyzers apply (PLAN P9). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+    <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+</Project>

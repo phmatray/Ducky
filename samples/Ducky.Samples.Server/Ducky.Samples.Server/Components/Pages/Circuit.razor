@@ -1,0 +1,31 @@
+@page "/circuit"
+@rendermode InteractiveServer
+@inherits DuckyComponent<NotesState>
+
+<PageTitle>Circuit</PageTitle>
+<h1>Server storage on a circuit</h1>
+<p>User: <span data-testid="user">@(_user ?? "anonymous")</span></p>
+<p>Notes: <span data-testid="notes">@State.Items.Count</span></p>
+<button data-testid="add-note" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new NoteAdded(DateTimeOffset.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture)))">Add note</button>
+@* Plain buttons handled by sample.js, so they work while the circuit is disconnected. *@
+<p>
+    <button type="button" data-testid="drop" data-circuit="drop">Drop connection</button>
+    <button type="button" data-testid="reconnect" data-circuit="reconnect">Reconnect</button>
+    <button type="button" data-testid="pause" data-circuit="pause">Pause circuit</button>
+    <button type="button" data-testid="resume" data-circuit="resume">Resume circuit</button>
+</p>
+
+@code {
+    private string? _user;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is not null)
+        {
+            _user = (await AuthenticationState).User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        }
+    }
+}

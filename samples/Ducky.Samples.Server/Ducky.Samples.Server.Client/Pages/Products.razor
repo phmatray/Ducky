@@ -1,0 +1,25 @@
+@page "/products"
+@rendermode InteractiveAuto
+@inherits DuckyComponent<ProductsState>
+
+<PageTitle>Products</PageTitle>
+<h1>Products</h1>
+@if (State.Items is { } items)
+{
+    <ul data-testid="products">
+        @foreach (var item in items)
+        {
+            <li>@item</li>
+        }
+    </ul>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    // Until the load effect ran, wait for it, so the prerendered HTML lists the products. After the seed restored the
+    // slice there is nothing to wait for and no second load.
+    protected override Task OnInitializedAsync() => State.Items is null ? Store.WhenIdleAsync() : Task.CompletedTask;
+}
