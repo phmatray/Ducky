@@ -1,0 +1,21 @@
+@page "/wasm-user"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inherits DuckyComponent<CounterState>
+@inject ClientSignIn SignIn
+@* A user change inside WebAssembly (SPEC §11.6, spike S-7): on this document only, Program.cs registers ClientSignIn and a
+   NameIdentifier browser Scope, so every browser key is {prefix}:{user}:{key}. Open it with a full page load. *@
+
+<PageTitle>WASM user</PageTitle>
+<h1>Browser keys scoped by a client-side user</h1>
+<p>User: <span data-testid="user">@SignIn.User</span></p>
+<p>Persistence: <span data-testid="status">@_status.Value</span></p>
+<p>Count: <span data-testid="count">@State.Value</span></p>
+<button data-testid="increment" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new Increment())">Increment</button>
+<button data-testid="sign-in-alice" @onclick='() => SignIn.SignIn("alice")'>Sign in as alice</button>
+<button data-testid="sign-in-bob" @onclick='() => SignIn.SignIn("bob")'>Sign in as bob</button>
+
+@code {
+    private Selection<PersistenceStatus> _status = null!;
+
+    protected override void OnInitialized() => _status = Select<PersistenceState, PersistenceStatus>(p => p.Status);
+}

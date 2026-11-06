@@ -1,4 +1,7 @@
 @inherits DuckyComponent<CounterState>
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Caching.Distributed
+@inject IServiceProvider Services
 @* One store's view of the browser-persisted slices. /auto renders it twice in one document, once on a circuit and once in
    WebAssembly, so the same-document relay (SPEC §11.7, INV-18) has a circuit store and a WASM store to converge. *@
 
@@ -7,6 +10,10 @@
     <p>Count: <span data-testid="count-@Name">@State.Value</span></p>
     <p>Draft: <span data-testid="draft-value-@Name">@_draft.Value</span></p>
     <p>Dark theme: <span data-testid="dark-@Name">@_dark.Value</span></p>
+    @* The Server-storage notes are inert on the WASM side, which registers neither service (SPEC §11.6). *@
+    <p>Notes: <span data-testid="notes-@Name">@_notes.Value</span></p>
+    <p>Persistence: <span data-testid="status-@Name">@_status.Value</span></p>
+    <p>Services: <span data-testid="services-@Name">cache: @(Services.GetService<IDistributedCache>() is not null), auth: @(Services.GetService<AuthenticationStateProvider>() is not null)</span></p>
     <p>
         <button data-testid="increment-@Name" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new Increment())">Increment</button>
         <input data-testid="draft-@Name" value="@_draft.Value" disabled="@(!RendererInfo.IsInteractive)"
@@ -19,6 +26,8 @@
 @code {
     private Selection<string> _draft = null!;
     private Selection<bool> _dark = null!;
+    private Selection<int> _notes = null!;
+    private Selection<PersistenceStatus> _status = null!;
 
     /// <summary>Gets or sets the store's name ("server" or "wasm"), the suffix of every data-testid.</summary>
     [Parameter, EditorRequired]
@@ -28,5 +37,7 @@
     {
         _draft = Select<DraftState, string>(d => d.Text);
         _dark = Select<PreferencesState, bool>(p => p.Dark);
+        _notes = Select<NotesState, int>(n => n.Items.Count);
+        _status = Select<PersistenceState, PersistenceStatus>(p => p.Status);
     }
 }
