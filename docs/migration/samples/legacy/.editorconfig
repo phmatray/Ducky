@@ -1,0 +1,2 @@
+# The vendored legacy libraries keep their own style: the repository .editorconfig does not apply here.
+root = true

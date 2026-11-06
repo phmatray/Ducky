@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The app the Bustand guide starts from (SPEC §22.2), on the vendored Bustand of docs/migration/samples/legacy. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../../legacy/Bustand/Bustand.csproj" />
+  </ItemGroup>
+</Project>

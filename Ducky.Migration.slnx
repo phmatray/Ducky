@@ -1,6 +1,7 @@
 <Solution>
   <!-- The migration guides' compiled before/after samples (SPEC §17.1, §22): outside Ducky.slnx, built by the Docs target
-       with an unlocked restore. "Before" references the legacy package from nuget.org; "After" references src/. -->
+       with an unlocked restore. "Before" references Ducky 1.x from nuget.org, or a
+       vendored copy under docs/migration/samples/legacy/ for the libraries never published; "After" references src/. -->
   <!-- The src projects an After sample references, so the solution's Release configuration reaches them and reuses
        Compile's output (a ProjectReference outside the solution would build in its default Debug configuration). -->
   <Folder Name="/src/">
@@ -20,5 +21,28 @@
     <Project Path="docs/migration/samples/mutty/Before/MuttySample.Before.csproj" />
     <Project Path="docs/migration/samples/mutty/After/MuttySample.After.csproj" />
     <Project Path="docs/migration/samples/mutty/After.Tests/MuttySample.After.Tests.csproj" />
+  </Folder>
+  <!-- The Bustand, TheBlazorState and BlazorMVU "before" apps build against verbatim copies of those libraries in
+       docs/migration/samples/legacy/: none of them was published to nuget.org. -->
+  <Folder Name="/legacy/">
+    <Project Path="docs/migration/samples/legacy/Bustand/Bustand.csproj" />
+    <Project Path="docs/migration/samples/legacy/TheBlazorState/TheBlazorState.csproj" />
+    <Project Path="docs/migration/samples/legacy/TheBlazorState.Generators/TheBlazorState.Generators.csproj" />
+    <Project Path="docs/migration/samples/legacy/BlazorMVU.Core/BlazorMVU.Core.csproj" />
+  </Folder>
+  <Folder Name="/bustand/">
+    <Project Path="docs/migration/samples/bustand/Before/Bustand.Before.csproj" />
+    <Project Path="docs/migration/samples/bustand/After/Bustand.After.csproj" />
+    <Project Path="docs/migration/samples/bustand/After.Tests/Bustand.After.Tests.csproj" />
+  </Folder>
+  <Folder Name="/theblazorstate/">
+    <Project Path="docs/migration/samples/theblazorstate/Before/TheBlazorState.Before.csproj" />
+    <Project Path="docs/migration/samples/theblazorstate/After/TheBlazorState.After.csproj" />
+    <Project Path="docs/migration/samples/theblazorstate/After.Tests/TheBlazorState.After.Tests.csproj" />
+  </Folder>
+  <Folder Name="/blazormvu/">
+    <Project Path="docs/migration/samples/blazormvu/Before/BlazorMvu.Before.csproj" />
+    <Project Path="docs/migration/samples/blazormvu/After/BlazorMvu.After.csproj" />
+    <Project Path="docs/migration/samples/blazormvu/After.Tests/BlazorMvu.After.Tests.csproj" />
   </Folder>
 </Solution>

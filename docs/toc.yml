@@ -30,3 +30,9 @@
       href: migration/duckynext.md
     - name: From the blazor-state monorepo
       href: migration/blazor-state.md
+    - name: From Bustand
+      href: migration/bustand.md
+    - name: From TheBlazorState
+      href: migration/theblazorstate.md
+    - name: From BlazorMVU
+      href: migration/blazormvu.md

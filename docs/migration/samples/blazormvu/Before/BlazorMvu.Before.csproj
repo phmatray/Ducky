@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The app the BlazorMVU guide starts from (SPEC §22.4), on the vendored BlazorMVU.Core. -->
+  <ItemGroup>
+    <ProjectReference Include="../../legacy/BlazorMVU.Core/BlazorMVU.Core.csproj" />
+  </ItemGroup>
+</Project>
