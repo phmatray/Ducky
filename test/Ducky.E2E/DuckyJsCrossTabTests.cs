@@ -270,7 +270,8 @@ public sealed class DuckyJsCrossTabTests
     }
 
     // A circuit that stayed disconnected past the cap and then reconnected: its writes answer false until .NET re-issues
-    // watchStorage, which registers the id afresh (§11.7).
+    // watchStorage, which registers the id afresh, and so does devtoolsSend, the prune having dropped the id's DevTools
+    // connection too (§11.7).
     [Fact]
     public async Task DuckyJs_PrunedIdReRegisteredOnNextWrite()
     {
@@ -282,11 +283,17 @@ public sealed class DuckyJsCrossTabTests
                 window.a = makeRef('a');
                 a.mode = 'down';
                 ducky.watchStorage('a', a, 'app', false, 2000, 1000);
+                window.__REDUX_DEVTOOLS_EXTENSION__ = {
+                    connect: () => ({ subscribe() {}, unsubscribe: () => calls.push('unsubscribe'), send: () => calls.push('send') }),
+                };
+                ducky.devtoolsConnect('a', makeRef('d'), '{"maxInlineBytes":1000}', 600000);
                 ducky.storageSet('local', 'app:k', '{"v":1}', 'w');
             }
             """);
         await page.Clock.RunForAsync(3_000);
-        (await Take(page)).Length.ShouldBe(3);
+        var pruned = await Take(page);
+        pruned.Length.ShouldBe(4);
+        pruned[^1].ShouldBe("unsubscribe");
 
         var repaired = await page.EvaluateAsync<string[]>("""
             () => {
@@ -297,6 +304,7 @@ public sealed class DuckyJsCrossTabTests
                 step('stored anyway', localStorage.getItem('app:k'));
                 step('remove while pruned', ducky.storageRemove('session', 'app:k', 'a'));
                 step('relay to the pruned id', ducky.storageSet('local', 'app:k', '{"v":3}', 'w'));
+                step('devtools send while pruned', ducky.devtoolsSend('a', '{}', '{}'));
                 ducky.watchStorage('a', makeRef('a2'), 'app', false, 2000, 1000);
                 step('set after re-registration', ducky.storageSet('local', 'app:k', '{"v":4}', 'a'));
                 step('relay after re-registration', ducky.storageSet('local', 'app:k', '{"v":5}', 'w'));
@@ -309,6 +317,7 @@ public sealed class DuckyJsCrossTabTests
             """stored anyway -> {"v":2}""",
             "remove while pruned -> false",
             "relay to the pruned id -> false",
+            "devtools send while pruned -> false",
             "set after re-registration -> true",
             "relay after re-registration -> false",
             """a2@3000: OnStorageChanged doc local app:k {"v":5} false""",

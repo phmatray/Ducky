@@ -8,6 +8,9 @@ const encoder = new TextEncoder();
 // Registrations per store id, shared by every store of the document (§11.7).
 const registrations = new Map();
 
+// Redux DevTools connections per store id (§11.8).
+const connections = new Map();
+
 // Delivery-failure backoff (§11.7): 1 s doubling to 30 s. The prune cap comes from .NET (pruneAfterMs). A delivery still
 // unsettled after the first step counts as failed: Blazor Server never settles one sent while the circuit is disconnected.
 const firstRetryMs = 1000;
@@ -169,11 +172,11 @@ function fail(id, registration, seq, source, area, reread, error) {
         owed.rereading = 0;
     }
     if (untracked.test(String(error))) {
-        unwatchStorage(id);
+        prune(id);
     } else if (owed) {
         registration.failingSince ??= Date.now();
         if (Date.now() - registration.failingSince > registration.pruneAfterMs) {
-            unwatchStorage(id);
+            prune(id);
         } else if (registration.timer === null) {
             registration.timer = setTimeout(() => {
                 registration.timer = null;
@@ -181,5 +184,106 @@ function fail(id, registration, seq, source, area, reread, error) {
             }, registration.retryMs);
             registration.retryMs = Math.min(registration.retryMs * 2, maxRetryMs);
         }
+    }
+}
+
+// The module's own prune drops the whole id: its storage registration and its DevTools connection (§11.7).
+function prune(id) {
+    unwatchStorage(id);
+    devtoolsDisconnect(id);
+}
+
+// Redux DevTools (§11.8). false without the extension. devtoolsConnect has no budget argument, so the inline budget
+// (BlazorOptions.InlinePayloadBytes) rides in configJson as maxInlineBytes, checked as watchStorage checks it, and is
+// removed before the options reach the extension.
+export function devtoolsConnect(id, ref, configJson, pruneAfterMs) {
+    const { maxInlineBytes, ...options } = JSON.parse(configJson);
+    if (!Number.isInteger(maxInlineBytes) || maxInlineBytes < 0) {
+        throw new TypeError('devtoolsConnect: maxInlineBytes');
+    }
+    const extension = globalThis.__REDUX_DEVTOOLS_EXTENSION__;
+    if (!extension) {
+        return false;
+    }
+    // ponytail: one connect per id (a store connects once); a second connect of a live id leaks the first's subscription.
+    const connection = { extension: extension.connect(options), ref, pruneAfterMs, maxInlineBytes, seq: 0, kept: new Map(), failingSince: null };
+    connection.extension.subscribe(message => forward(id, connection, message));
+    connections.set(id, connection);
+    return true;
+}
+
+export function devtoolsInit(id, stateJson) {
+    connections.get(id)?.extension.init(JSON.parse(stateJson));
+}
+
+// false for an unknown id (never connected, disconnected or pruned): .NET then goes inert (§11.7).
+export function devtoolsSend(id, actionJson, stateJson) {
+    const connection = connections.get(id);
+    connection?.extension.send(JSON.parse(actionJson), JSON.parse(stateJson));
+    return connection !== undefined;
+}
+
+export function devtoolsDisconnect(id) {
+    connections.get(id)?.extension.unsubscribe();
+    connections.delete(id);
+}
+
+// The pull export of an inbound message above the budget: the kept text, once. Never null nor an empty array (spike
+// S-5): one NUL byte when it was already taken or pruned.
+export function devtoolsTakeMessage(id, seq) {
+    const kept = connections.get(id)?.kept ?? new Map();
+    const text = kept.get(seq);
+    kept.delete(seq);
+    return text ? encoder.encode(text) : new Uint8Array(1);
+}
+
+// A jump crosses inline as {type, payload: {type, actionId|index}}, without the extension's state, whatever the budget:
+// .NET holds typed history (INV-28), so a jump is always small. Any other message above the budget is kept under its seq
+// for devtoolsTakeMessage.
+const jump = /^JUMP_TO_(STATE|ACTION)$/;
+
+function forward(id, connection, message) {
+    const p = message.payload;
+    const isJump = jump.test(p?.type);
+    const text = JSON.stringify(isJump ? { type: message.type, payload: { type: p.type, actionId: p.actionId, index: p.index } } : message);
+    const seq = ++connection.seq;
+    const large = !isJump && utf8Length(text) > connection.maxInlineBytes;
+    if (large) {
+        connection.kept.set(seq, text);
+    }
+    const hung = setTimeout(() => devtoolsFailed(id, connection, 'unsettled'), firstRetryMs);
+    connection.ref.invokeMethodAsync('OnMessage', large ? null : text, seq, large).then(
+        () => {
+            clearTimeout(hung);
+            connection.failingSince = null;
+        },
+        error => {
+            clearTimeout(hung);
+            connection.kept.delete(seq);
+            devtoolsFailed(id, connection, error);
+        });
+}
+
+// Lost messages are not replayed (dev-only); failures only count towards the cap (§11.7). With no retry to fail again,
+// the first failure since the last success starts one timer: the connection is dropped if no success came pruneAfterMs
+// later, so a dead circuit whose extension stays quiet loses it too. Only the connection: the id's storage registration
+// has its own cap, and its deliveries may be succeeding. The untracked-object error still prunes the whole id. A
+// settlement for a connection that is no longer the id's is ignored.
+// ponytail: a connection that failed once and then sees no inbound message for pruneAfterMs is dropped even if its
+// circuit came back (DevTools then goes inert); upgrade path: let devtoolsSend count as a success.
+function devtoolsFailed(id, connection, error) {
+    if (connections.get(id) !== connection) {
+        return;
+    }
+    if (untracked.test(String(error))) {
+        prune(id);
+    } else if (connection.failingSince === null) {
+        const since = Date.now();
+        connection.failingSince = since;
+        setTimeout(() => {
+            if (connections.get(id) === connection && connection.failingSince === since) {
+                devtoolsDisconnect(id);
+            }
+        }, connection.pruneAfterMs + 1);
     }
 }
