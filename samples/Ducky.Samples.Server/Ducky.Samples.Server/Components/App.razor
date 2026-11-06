@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <base href="/" />
+    <ImportMap />
+    <HeadOutlet />
+</head>
+<body>
+    <Routes />
+    @* An app-defined reconnect element: Blazor only toggles its components-reconnect-* classes, so no overlay blocks the
+       circuit controls of /circuit while the connection is down or the circuit is paused. *@
+    <div id="components-reconnect-modal" data-testid="reconnect-state"></div>
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["sample.js"]"></script>
+</body>
+</html>

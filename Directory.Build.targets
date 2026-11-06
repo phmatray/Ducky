@@ -37,6 +37,14 @@
     <KnownILLinkPack Update="@(KnownILLinkPack)" ILLinkPackVersion="10.0.12" />
   </ItemGroup>
 
+  <!-- The same hazard for the Web and BlazorWebAssembly SDKs (samples/): they add implicit Microsoft.AspNetCore.App.Internal.Assets
+       and Microsoft.NET.Sdk.WebAssembly.Pack references at the running SDK's bundled patch, which the lock files record.
+       Renovate bumps both values (.github/renovate.json); regenerate the lock files with them. -->
+  <ItemGroup>
+    <KnownAspNetCorePack Update="@(KnownAspNetCorePack)" AspNetCorePackVersion="10.0.14" />
+    <KnownWebAssemblySdkPack Update="@(KnownWebAssemblySdkPack)" WebAssemblySdkPackVersion="10.0.14" />
+  </ItemGroup>
+
   <!-- In-repo generator consumers: generator assets never flow through a ProjectReference (R-PKG-5, §18). -->
   <ItemGroup Condition="'$(DuckyUseGenerators)' == 'true'">
     <ProjectReference Include="$(RepoRoot)src/Ducky.Generators/Ducky.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />

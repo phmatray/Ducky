@@ -1,0 +1,9 @@
+@page "/"
+@rendermode InteractiveAuto
+@inherits DuckyComponent<CounterState>
+
+<PageTitle>Counter</PageTitle>
+<h1>Counter</h1>
+<p>Count: <span data-testid="count">@State.Value</span></p>
+<button data-testid="increment" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new Increment())">Increment</button>
+<p>Rendered by <span data-testid="renderer">@RendererInfo.Name</span>.</p>

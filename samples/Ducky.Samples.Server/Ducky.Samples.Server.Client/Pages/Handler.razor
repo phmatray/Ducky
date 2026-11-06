@@ -1,0 +1,17 @@
+@page "/handler"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inherits DuckyComponent<ApiCallsState>
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Handler</PageTitle>
+<h1>DelegatingHandler dispatch</h1>
+<p>Requests seen by the handler: <span data-testid="api-calls">@State.Count</span></p>
+<button data-testid="ping" @onclick="PingAsync">Ping</button>
+
+@code {
+    private async Task PingAsync()
+    {
+        using var client = HttpClientFactory.CreateClient("api");
+        await client.GetStringAsync(new Uri("api/ping", UriKind.Relative));
+    }
+}

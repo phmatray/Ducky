@@ -1,0 +1,18 @@
+@page "/session"
+@rendermode InteractiveAuto
+@inherits DuckyComponent<DraftState>
+
+<PageTitle>Session</PageTitle>
+<h1>Session and unsynced Local slices</h1>
+<p>
+    <input data-testid="draft" value="@State.Text" disabled="@(!RendererInfo.IsInteractive)"
+           @onchange="e => Dispatch(new DraftChanged(e.Value as string ?? string.Empty))" />
+</p>
+<p>Dark theme: <span data-testid="dark">@_dark.Value</span></p>
+<button data-testid="toggle-theme" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new ThemeToggled())">Toggle theme</button>
+
+@code {
+    private Selection<bool> _dark = null!;
+
+    protected override void OnInitialized() => _dark = Select<PreferencesState, bool>(p => p.Dark);
+}

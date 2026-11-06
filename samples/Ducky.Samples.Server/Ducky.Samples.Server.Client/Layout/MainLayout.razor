@@ -1,0 +1,18 @@
+@inherits LayoutComponentBase
+@* Static SSR layout; each page picks its own render mode. DuckyInitializer awaits the request store's InitializeAsync, so
+   prerendered HTML shows hydrated values, Server storage included (SPEC §11.6). *@
+<nav>
+    <a href="">Counter</a> |
+    <a href="session">Session</a> |
+    <a href="products">Products</a> |
+    <a href="circuit">Circuit</a> |
+    <a href="large">Large</a> |
+    <a href="large/cjk?chars=12288">CJK</a> |
+    <a href="handler">Handler</a> |
+    <a href="auto">Auto</a> |
+    <a href="login?user=alice&amp;returnUrl=/circuit" data-enhance-nav="false">Sign in as alice</a> |
+    <a href="logout" data-enhance-nav="false">Sign out</a>
+</nav>
+<main>
+    <DuckyInitializer>@Body</DuckyInitializer>
+</main>

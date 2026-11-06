@@ -1,0 +1,32 @@
+@inherits DuckyComponent<CounterState>
+@* One store's view of the browser-persisted slices. /auto renders it twice in one document, once on a circuit and once in
+   WebAssembly, so the same-document relay (SPEC §11.7, INV-18) has a circuit store and a WASM store to converge. *@
+
+<section data-testid="panel-@Name">
+    <h2>@Name store, rendered by <span data-testid="renderer-@Name">@RendererInfo.Name</span></h2>
+    <p>Count: <span data-testid="count-@Name">@State.Value</span></p>
+    <p>Draft: <span data-testid="draft-value-@Name">@_draft.Value</span></p>
+    <p>Dark theme: <span data-testid="dark-@Name">@_dark.Value</span></p>
+    <p>
+        <button data-testid="increment-@Name" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new Increment())">Increment</button>
+        <input data-testid="draft-@Name" value="@_draft.Value" disabled="@(!RendererInfo.IsInteractive)"
+               @onchange="e => Dispatch(new DraftChanged(e.Value as string ?? string.Empty))" />
+        <button data-testid="toggle-theme-@Name" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new ThemeToggled())">Toggle theme</button>
+        <button data-testid="clear-@Name" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new ClearPersistedState())">Clear persisted state</button>
+    </p>
+</section>
+
+@code {
+    private Selection<string> _draft = null!;
+    private Selection<bool> _dark = null!;
+
+    /// <summary>Gets or sets the store's name ("server" or "wasm"), the suffix of every data-testid.</summary>
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        _draft = Select<DraftState, string>(d => d.Text);
+        _dark = Select<PreferencesState, bool>(p => p.Dark);
+    }
+}

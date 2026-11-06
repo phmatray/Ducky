@@ -1,0 +1,32 @@
+@page "/large/{Kind?}"
+@rendermode InteractiveServer
+@inherits DuckyComponent<LargeState>
+
+<PageTitle>Large</PageTitle>
+<h1>Large and non-ASCII slice</h1>
+<p>Kind: <span data-testid="kind">@State.Kind</span>, characters: <span data-testid="length">@State.Text.Length</span></p>
+<button data-testid="fill-100k" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new LargeFilled(Ascii, 100 * 1024))">100 KB</button>
+<button data-testid="fill-2m" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new LargeFilled(Ascii, 2 * 1024 * 1024))">2 MB</button>
+<button data-testid="fill-cjk" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new LargeFilled(Cjk, 12 * 1024))">12 Ki CJK</button>
+
+@code {
+    private const string Ascii = "ascii";
+    private const string Cjk = "cjk";
+
+    /// <summary>ascii (the default), cjk or quote.</summary>
+    [Parameter]
+    public string? Kind { get; set; }
+
+    /// <summary>When given, the slice is filled during prerender, so the seed carries it (or drops it over budget).</summary>
+    [SupplyParameterFromQuery]
+    public int? Chars { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var kind = Kind ?? Ascii;
+        if (Chars is int chars && (State.Kind != kind || State.Text.Length != chars))
+        {
+            await DispatchAsync(new LargeFilled(kind, chars));
+        }
+    }
+}

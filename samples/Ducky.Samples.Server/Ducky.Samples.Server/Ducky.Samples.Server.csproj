@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- The Interactive Auto web app (SPEC §17.6, §18): the E2E target publishes it and PublishedHost starts it (§17.2). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Ducky.Samples.Server.Client/Ducky.Samples.Server.Client.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+  </ItemGroup>
+</Project>
