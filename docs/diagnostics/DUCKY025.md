@@ -14,6 +14,10 @@ setting, not a serializer option, and `Combine` loses nothing of it. An app grow
 its persisted JSON from camelCase to PascalCase, and existing stored data would deserialize "successfully" with every
 renamed property at its default.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY025)]
+
 ## How to fix it
 
 Pass options built from the context whose settings you want, with the combined resolver: `UseJson(new

@@ -13,6 +13,10 @@ either, so the handler could never run and the filter would never let an action 
 reported, since it may be closed with a concrete type. An effect deriving from an already reported base is not reported
 again. At run time the same mistake in `On<T>` is DUCKY307.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY005)]
+
 ## How to fix it
 
 Register one handler per concrete action type: `On<ItemAdded>` and `On<ItemRemoved>` rather than `On<IItemAction>`,

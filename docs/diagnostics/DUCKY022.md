@@ -22,6 +22,10 @@ reactive effect, for one of these reasons:
 
 A registered slice is still registered by `AddDuckyGenerated_{Asm}`.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY022)]
+
 ## How to fix it
 
 Put the attribute on a slice only. Otherwise reference Ducky.Blazor or Ducky.Reactive in a version that matches your

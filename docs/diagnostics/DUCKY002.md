@@ -20,6 +20,10 @@ Only the lambda written directly as the `On<T>` reducer, the `Set`/`SetAsync` mu
 analysed, nested lambdas inside
 it included. A method group, a delegate stored in a variable, effects and generated code are not analysed.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY002)]
+
 ## How to fix it
 
 Move the work to an effect: `Effect<T>` or `EffectGroup.On<T>` handlers are async, get a cancellation token and

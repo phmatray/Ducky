@@ -10,6 +10,10 @@ is stored under the key derived from its type name (ADR-0031: `CartSlice` gives 
 it into another class, changes that key, and the data users already stored under the old key is silently orphaned.
 Hiding `Key` with `new` does not change the key the store uses.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY012)]
+
 ## How to fix it
 
 Pin the key by overriding it in the slice, as in `public override string Key => "cart";`, keeping the derived value

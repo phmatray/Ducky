@@ -14,6 +14,10 @@ thread, where such a wait can never complete.
 Only a call written in place is seen: storing the task in a variable and waiting on it later is not reported, and
 blocks just the same.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY010)]
+
 ## How to fix it
 
 `await` the task. To fire an action without waiting, call `Dispatch` (or `Set` instead of `SetAsync`); to wait for the

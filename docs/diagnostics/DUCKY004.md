@@ -15,6 +15,10 @@ MSBuild properties, which `buildTransitive/Ducky.targets` makes visible to it. O
 lifetime computed at run time, such as `OperatingSystem.IsBrowser() ? ServiceLifetime.Singleton : ServiceLifetime.Scoped`,
 is not.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY004)]
+
 ## How to fix it
 
 Remove the assignment. The default is `Singleton` in the browser and `Scoped` elsewhere, read after `configure` returns,

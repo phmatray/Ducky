@@ -23,6 +23,10 @@ collection draft, edited in place), and a call outside a `Produce` recipe (a `Cr
 The analyzer looks at the member itself: a local copy (`var q = d.Pending; q.Enqueue(job);`), an extension method and a
 conditional access (`d.Pending?.Enqueue(job);`) are not followed.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Draft.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY109)]
+
 ## How to fix it
 
 Assign the result back to the member: `d.Pending = d.Pending.Enqueue(job);`. For a member edited often, consider a type

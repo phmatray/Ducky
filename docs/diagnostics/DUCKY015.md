@@ -9,6 +9,10 @@ Two or more non-abstract slices declared in this compilation hold the same state
 (`State.Get<TState>()`, ADR-0009), so each state type maps to exactly one slice; registering both fails at run time with
 DUCKY305. A slice deriving from another non-abstract slice shares its state type too.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY015)]
+
 ## How to fix it
 
 Give each slice its own state type, for example `record CartState(...)` and `record WishlistState(...)` instead of one

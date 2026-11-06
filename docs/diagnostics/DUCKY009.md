@@ -22,6 +22,10 @@ Limit: handlers are matched to `Select` calls within one component type (its par
 inherited from a base component and named only in a derived component's markup is not reported; the call still throws
 DUCKY352 at run time.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY009)]
+
 ## How to fix it
 
 Call `Select` in `OnInitialized` (or `OnInitializedAsync`) and keep the returned `Selection<T>` in a field; read its

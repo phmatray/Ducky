@@ -22,6 +22,10 @@ taken when:
 Members named `Build`, `IsDirty`, `Revoke` or anything else are fine: the draft implements `IDraft<T>` explicitly, and it
 omits its convenience `Build()` when the record has a member named `Build`.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Draft.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY104)]
+
 ## How to fix it
 
 Rename the record, its member or the base type's member.

@@ -13,6 +13,10 @@ and `Exhaust` never drops anything.
 A value whose static type is `object` or an interface has an unknown runtime type and is not reported; neither is a
 value returned by a lambda or local function inside the override.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY013)]
+
 ## How to fix it
 
 Return a value with value equality: a value type such as `a.Id` or the tuple `(a.TenantId, a.Id)`, a `string`, a record

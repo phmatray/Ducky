@@ -406,7 +406,7 @@ internal sealed partial class Build
 
     // SPEC §17.1, §19. The checks run first (fast), then the migration samples build (Ducky.Migration.slnx: a plain, unlocked
     // restore, its Directory.Build.props sets RestoreLockedMode=false), their tests run, and docfx renders the site to
-    // artifacts/docs, with warnings as errors so an include of a missing file fails. M15-04 adds the diagnostics-page check.
+    // artifacts/docs, with warnings as errors so an include of a missing file fails.
     private Target Docs => _ => _
         .DependsOn(Compile)
         .Executes(() =>
@@ -422,6 +422,8 @@ internal sealed partial class Build
                     docs.Where(d => d.Path == OneXGuide).Select(d => d.Text).SingleOrDefault(),
                     (RootDirectory / "src").GlobFiles("*/Migration/Tombstones.cs").Select(f => f.ReadAllText())),
                 .. OneXApiSelfCheck(),
+                .. DiagnosticPageViolations(docs),
+                .. DiagnosticPageSelfCheck(),
             ]);
             DotNet($"build {MigrationSolution} -c Release -nodeReuse:false");
             // The After samples' test modules (the guides' behaviour-change tests); MTP skips the projects that are none.
@@ -572,6 +574,96 @@ internal sealed partial class Build
             if (violations.Count != 1 || !violations[0].Contains(expected, StringComparison.Ordinal))
             {
                 yield return $"DocsSelfCheck: the include in {path} must report '{expected}' once, got [{string.Join("; ", violations)}]";
+            }
+        }
+    }
+
+    // SPEC §8.2, §16.2: every ID of the two catalogue tables has docs/diagnostics/{ID}.md. An ID is the first cell of a
+    // table row (a retired ~~ID~~ and a reserved one included: their pages say so). A range row (DUCKY300–353,
+    // DUCKYM001–M008) stands for the rows inside it when the tables have any, otherwise for every ID it spans.
+    private static readonly string[] CatalogueSections = ["8.2", "16.2"];
+
+    private static readonly Regex CatalogueId = new(@"^(DUCKYM?)(\d{3})(?:–M?(\d{3}))?$");
+
+    private static IEnumerable<string> DiagnosticPageViolations(IReadOnlyCollection<(string Path, string Text)> docs)
+    {
+        var spec = "\n" + docs.Where(d => d.Path == "docs/spec/SPEC.md").Select(d => d.Text).SingleOrDefault();
+        var firstCells = (from section in CatalogueSections
+            let start = spec.IndexOf($"\n### {section} ", StringComparison.Ordinal)
+            where start >= 0
+            let end = spec.IndexOf("\n### ", start + 1, StringComparison.Ordinal)
+            from line in spec[start..(end < 0 ? spec.Length : end)].Split('\n')
+            let row = line.Trim().Split('|')
+            where row is ["", _, _, ..]
+            let cell = row[1].Trim().Trim('~')
+            where cell.StartsWith("DUCKY", StringComparison.Ordinal)
+            select cell).ToList();
+        // A row the regex cannot read (DUCKYM001-M008 with a hyphen, DUCKY026 (2.1)) would drop its pages from the check.
+        foreach (var cell in firstCells.Where(c => !CatalogueId.IsMatch(c)))
+        {
+            yield return $"docs/spec/SPEC.md: §8.2/§16.2 row \"{cell}\" is not an ID or an en-dash range";
+        }
+        var cells = (from cell in firstCells
+            let m = CatalogueId.Match(cell)
+            where m.Success
+            select (Prefix: m.Groups[1].Value, From: int.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture),
+                To: m.Groups[3].Success ? int.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture) : (int?)null)).ToList();
+        var single = cells.Where(c => c.To is null).ToList();
+        var ids = single.Select(c => $"{c.Prefix}{c.From:D3}")
+            .Concat(from range in cells
+                where range.To is { } to && !single.Any(c => c.Prefix == range.Prefix && c.From >= range.From && c.From <= to)
+                from n in Enumerable.Range(range.From, range.To!.Value - range.From + 1)
+                select $"{range.Prefix}{n:D3}")
+            .Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            yield return "docs/spec/SPEC.md: §8.2 and §16.2 list no diagnostic ID";
+        }
+        var pages = docs.Select(d => d.Path).ToHashSet(StringComparer.Ordinal);
+        foreach (var id in ids.Where(id => !pages.Contains($"docs/diagnostics/{id}.md")))
+        {
+            yield return $"docs/diagnostics/{id}.md: missing; every ID of SPEC §8.2 and §16.2 has a page";
+        }
+    }
+
+    // The acceptance check of M15-04 ("deleting docs/diagnostics/DUCKY025.md fails Docs"), planted on a miniature catalogue.
+    private static IEnumerable<string> DiagnosticPageSelfCheck()
+    {
+        const string spec = "# Spec\n\n### 8.2 Configuration and runtime codes\n\n| Code | When |\n|---|---|\n| DUCKY300 | twice |\n" +
+            "| ~~DUCKY313~~ | retired |\n| DUCKY353 | threw |\n\n### 8.3 Message template\n\n| DUCKY899 | not a catalogue table |\n\n" +
+            "### 16.2 Diagnostic catalogue\n\n| ID | Severity |\n|---|---|\n| DUCKY007 | – reserved |\n| DUCKY025 | Warning |\n" +
+            "| DUCKY300–353 | Error |\n| DUCKY900 | Error |\n| DUCKYM001–M003 | Error |\n\nDUCKY898 in prose.\n\n### 16.3 Fixture\n";
+        string[] ids = ["DUCKY300", "DUCKY313", "DUCKY353", "DUCKY007", "DUCKY025", "DUCKY900", "DUCKYM001", "DUCKYM002", "DUCKYM003"];
+        List<(string Path, string Text)> docs = [("docs/spec/SPEC.md", spec), .. ids.Select(id => ($"docs/diagnostics/{id}.md", "# x\n"))];
+        foreach (var violation in DiagnosticPageViolations(docs))
+        {
+            yield return $"DiagnosticPageSelfCheck: the unplanted catalogue must pass, got: {violation}";
+        }
+        foreach (var id in ids)
+        {
+            var violations = DiagnosticPageViolations([.. docs.Where(d => d.Path != $"docs/diagnostics/{id}.md")]).ToList();
+            if (violations.Count != 1 || !violations[0].StartsWith($"docs/diagnostics/{id}.md: missing", StringComparison.Ordinal))
+            {
+                yield return $"DiagnosticPageSelfCheck: deleting docs/diagnostics/{id}.md must report it once, got [{string.Join("; ", violations)}]";
+            }
+        }
+        (string Name, string Spec, string Expected)[] planted =
+        [
+            ("no spec", "", "list no diagnostic ID"),
+            ("no catalogue section", "### 8.3 Message template\n\n| DUCKY300 | x |\n", "list no diagnostic ID"),
+            ("a range without rows", "### 16.2 Diagnostic catalogue\n\n| DUCKY300–301 | Error |\n", "docs/diagnostics/DUCKY300.md: missing"),
+            ("the last section", "### 16.2 Diagnostic catalogue\n\n| DUCKY108 | Warning |\n", "docs/diagnostics/DUCKY108.md: missing"),
+            ("a hyphen range", "### 16.2 Diagnostic catalogue\n\n| DUCKY025 | Warning |\n| DUCKYM001-M003 | Error |\n",
+                "docs/spec/SPEC.md: §8.2/§16.2 row \"DUCKYM001-M003\" is not an ID or an en-dash range"),
+            ("a qualified retired cell", "### 8.2 Configuration and runtime codes\n\n| ~~DUCKY026 (2.1)~~ | x |\n",
+                "docs/spec/SPEC.md: §8.2/§16.2 row \"DUCKY026 (2.1)\" is not an ID or an en-dash range"),
+        ];
+        foreach (var (name, plantedSpec, expected) in planted)
+        {
+            var violations = DiagnosticPageViolations([("docs/spec/SPEC.md", plantedSpec)]).ToList();
+            if (!violations.Any(v => v.Contains(expected, StringComparison.Ordinal)))
+            {
+                yield return $"DiagnosticPageSelfCheck: {name} must report '{expected}', got [{string.Join("; ", violations)}]";
             }
         }
     }

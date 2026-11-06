@@ -15,6 +15,10 @@ The generator compares only the actions of the compilation it runs on: it does n
 their generated helpers (a metadata walk on every compilation would defeat incremental caching), so a clash with an
 action of a referenced library surfaces as CS0121 at the call site only.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY024)]
+
 ## How to fix it
 
 Set `MethodName` on one of the two actions, for example `[DuckyAction(MethodName = "IncrementCounter")]`, or call the

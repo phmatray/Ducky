@@ -11,6 +11,10 @@ of the slice on every such action, although the state is equal.
 Only the lambda written directly as the `On<T>` reducer is analysed, nested lambdas inside it included; a method group
 or a delegate stored in a variable is not.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY011)]
+
 ## How to fix it
 
 Return the state parameter itself when nothing changes, as in `On<Refresh>((s, a) => s)`, and use `with` only to change

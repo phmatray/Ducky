@@ -10,6 +10,10 @@ constructors included. The store creates its effects and middleware on its first
 constructor that uses the store re-enters materialization and throws `InvalidOperationException`, and an effect that
 dispatches through an injected store bypasses the supersession and disposal rules of its run.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY008)]
+
 ## How to fix it
 
 In an effect, dispatch through the `EffectContext` the handler receives (`ctx.Dispatch`, `ctx.DispatchAsync`), and read

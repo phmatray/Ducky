@@ -11,6 +11,10 @@ errors.
 
 Members marked `[Obsolete(error: true)]` are different: they are left out of the draft and `with` keeps their values.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Draft.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY108)]
+
 ## How to fix it
 
 Remove `[Draftable]` from the retired record, or make the obsoletion a warning (`[Obsolete("...")]`), which the generated
