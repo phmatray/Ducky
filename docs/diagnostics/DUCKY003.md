@@ -35,6 +35,10 @@ Only the lambda written directly as the `On<T>` reducer, the `Set`/`SetAsync` mu
 analysed; method groups, stored
 delegates and generated code are not.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY003)]
+
 ## How to fix it
 
 Return a new state: `s with { Count = s.Count + 1 }`, `s with { Items = s.Items.Add(item) }` with an immutable

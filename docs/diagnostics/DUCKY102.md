@@ -8,6 +8,10 @@ The `[Draftable]` record is nested, and the generated part must repeat every con
 in the message is not `partial`, so the generated declaration would be a second, conflicting type. Nothing is emitted for
 the record.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Draft.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY102)]
+
 ## How to fix it
 
 Add `partial` to every containing type (`public static partial class Features { [Draftable] public partial record ... }`),

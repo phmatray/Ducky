@@ -25,6 +25,10 @@ putting a draft in it (`var h = new Holder { Draft = d }; _holder = h;`), passin
 (`list.Add(d)`), deconstructing it into a field, binding it with a pattern (`d.Child is var c`) or
 subscribing a lambda that reads it to an event is not reported.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Draft.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY106)]
+
 ## How to fix it
 
 Make every edit inside the recipe, and keep only its result: `var next = state.Produce(d => d.Child.Value = 2);`. For

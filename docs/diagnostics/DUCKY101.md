@@ -16,6 +16,10 @@ works for a `partial record class` that is not file-local. It emits nothing for 
 
 A parent record with a member of this type still gets its draft; that member is a plain get/set.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Draft.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY101)]
+
 ## How to fix it
 
 Declare the type as `[Draftable] public partial record MyState(...)`. For a record struct, make it a `record class`, or

@@ -11,6 +11,10 @@ mutates the collection the original record still holds, which breaks immutabilit
 (INV-26). A member is reported once: an inherited one by the `[Draftable]` base of this compilation that declares it, and
 otherwise (a base that gets no draft, or a base in another assembly) on the deriving record's name.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Draft.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY105)]
+
 ## How to fix it
 
 Use the immutable counterpart, which the draft maps to a copy-on-write collection draft: `ImmutableList<T>` or

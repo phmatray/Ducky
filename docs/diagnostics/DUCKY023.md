@@ -15,6 +15,10 @@ reference. This one is left out, because generated code referencing it would not
 Effects need no parameterless constructor: they are created through `ActivatorUtilities`, and their constructor
 dependencies are checked when the store is first resolved (DUCKY309).
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY023)]
+
 ## How to fix it
 
 For a slice without a usable constructor, the only fix is a public parameterless constructor (marked

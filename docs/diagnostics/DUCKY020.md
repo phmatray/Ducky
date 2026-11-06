@@ -22,6 +22,10 @@ to compile, so it emits nothing for it and reports why:
   `[DuckyAction]` type whose joined name coincides (a nested record's class name joins its containing types with `_`:
   `A.B_C` and `A_B.C` both give `A_B_CDispatchExtensions`; both are reported).
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY020)]
+
 ## How to fix it
 
 Make the type a non-generic, accessible (`public` or `internal`) record with at least one accessible constructor that

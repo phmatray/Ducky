@@ -19,6 +19,10 @@ Only the lambda written directly as the `On<T>` reducer, the `Set`/`SetAsync` mu
 analysed, nested lambdas inside
 it included. A method group, a delegate stored in a variable, effects and generated code are not analysed.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY001)]
+
 ## How to fix it
 
 Read the value where side effects belong and carry it in the action: an effect (`ctx.Time.GetUtcNow()`) or the

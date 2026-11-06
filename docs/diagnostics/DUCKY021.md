@@ -16,6 +16,10 @@ app project that doesn't reference it are not checked against `TestStore`'s memb
 there still gets its helpers, and `testStore.Settled()` in the test project waits; call `testStore.Dispatch(new
 Settled())` or set `MethodName`.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY021)]
+
 ## How to fix it
 
 Set a non-colliding name on the attribute, for example `[DuckyAction(MethodName = "DisposeItem")]`, or rename the

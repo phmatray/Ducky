@@ -18,6 +18,10 @@ union over the contexts. Any other argument (a `JsonSerializerOptions`, a resolv
 that also takes such a resolver or an array variable) is not checked, and a type that names a type parameter (the
 `List<T>` state of a generic `ListSlice<T>`, a generic action) is skipped: `typeof` cannot name it in a context.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY006)]
+
 ## How to fix it
 
 Add `[JsonSerializable(typeof(T))]` for each reported type to the context (or to one of the combined contexts). The

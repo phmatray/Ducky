@@ -15,6 +15,10 @@ is `[Obsolete(error: true)]` or carries an `[Obsolete]` `DiagnosticId` or an `[E
 A member is reported once: an inherited one by the `[Draftable]` base of this compilation that declares it, and otherwise
 (a base that gets no draft, or a base in another assembly) on the deriving record's name.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Draft.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY107)]
+
 ## How to fix it
 
 Build the other assembly with the same Ducky.Draft package, analyzers included, so that its `[Draftable] partial record C`

@@ -16,6 +16,10 @@ Each assembly gets its own generated method, and generator assets never flow thr
 project that declares actions, slices or `[Draftable]` records needs its own direct `Ducky` (or `Ducky.Draft`)
 `PackageReference`, or it gets no generated code at all.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY016)]
+
 ## How to fix it
 
 Call the generated method in the `AddDucky` callback: `services.AddDucky(b => b.AddDuckyGenerated_MyApp())`. For a

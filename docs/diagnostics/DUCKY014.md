@@ -9,6 +9,10 @@ slice count as the same registration, and so do tuple types that differ only in 
 erased at run time). Each action type has exactly one handler per slice or effect group (ADR-0008),
 so the second call throws when the constructor runs: DUCKY308 at run time.
 
+For example, this code is reported:
+
+[!code-csharp[](../../test/Ducky.Generators.Tests/Docs/DiagnosticExamplesTests.cs#DUCKY014)]
+
 ## How to fix it
 
 Keep one `On<T>` per action type and merge the two handlers into it, calling shared private methods when the logic is
