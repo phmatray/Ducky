@@ -200,7 +200,9 @@ tests:
   - { name: DuckyComponentOfT_ConditionalStateAccessAfterFirstRender_Works, projects: [Ducky.Blazor.Tests], stage: 10 }
   - { name: DuckyInitializerFirstToucher_SeedWrittenOnPrerenderAndAppliedBeforeFirstInteractiveRender, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 11 }
   - { name: DuckyInitializer_ShowsLoadingUntilReady, projects: [Ducky.Blazor.Tests], stage: 10 }
-  - { name: DuckyJs_DevToolsLargeMessage_PullBranch, projects: [Ducky.E2E], stage: 15 }
+  - { name: DuckyJs_DevToolsLargeMessage_PullBranch, projects: [Ducky.E2E], invariants: [INV-23], stage: 15 }
+  - { name: DuckyJs_DevtoolsConnect_BudgetNotANonNegativeInteger_Throws, projects: [Ducky.E2E], invariants: [INV-23], stage: 15 }
+  - { name: DuckyJs_DevtoolsHeldDelivery_PrunesAtCapWithoutFurtherMessages, projects: [Ducky.E2E], stage: 15 }
   - { name: DuckyJs_FailedClearEvent_ReReadsAfterReconnect, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
   - { name: DuckyJs_PrunedIdReRegisteredOnNextWrite, projects: [Ducky.E2E], invariants: [INV-18], stage: 14 }
   - { name: DuckyJs_PullExports_ReturnOneByteWhenGone, projects: [Ducky.E2E], invariants: [INV-23], stage: 12 }

@@ -79,8 +79,8 @@ public sealed class DuckyJsStorageTests
         }).ToArray());
     }
 
-    // storageGetStream (devtoolsTakeMessage joins in M8-01): never null nor an empty array, which Blazor's stream
-    // reference rejects (spike S-5), but one NUL byte when nothing is kept under the key any more.
+    // storageGetStream and devtoolsTakeMessage: never null nor an empty array, which Blazor's stream reference rejects
+    // (spike S-5), but one NUL byte when nothing is kept under the key, or the (id, seq), any more.
     [Fact]
     public async Task DuckyJs_PullExports_ReturnOneByteWhenGone()
     {
@@ -91,20 +91,34 @@ public sealed class DuckyJsStorageTests
         var pulls = await page.EvaluateAsync<int[][]>($$"""
             async () => {
                 const ducky = await import('/ducky.js');
-                const pull = (area, key) => {
-                    const bytes = ducky.storageGetStream(area, key);
-                    if (!(bytes instanceof Uint8Array)) throw new Error(`not a Uint8Array: ${bytes}`);
-                    return Array.from(bytes);
+                const bytes = pulled => {
+                    if (!(pulled instanceof Uint8Array)) throw new Error(`not a Uint8Array: ${pulled}`);
+                    return Array.from(pulled);
                 };
+                const pull = (area, key) => bytes(ducky.storageGetStream(area, key));
                 localStorage.setItem('app:k', '{{Envelope}}');
                 const kept = pull('local', 'app:k');
                 localStorage.removeItem('app:k');
                 localStorage.setItem('app:empty', '');
-                return [kept, pull('local', 'app:k'), pull('session', 'app:never'), pull('local', 'app:empty')];
+                const storage = [kept, pull('local', 'app:k'), pull('session', 'app:never'), pull('local', 'app:empty')];
+
+                // A budget of 0 keeps every inbound DevTools message for the pull.
+                const listeners = [];
+                window.__REDUX_DEVTOOLS_EXTENSION__ = { connect: () => ({ subscribe: l => listeners.push(l), unsubscribe() {} }) };
+                ducky.devtoolsConnect('a', { invokeMethodAsync: () => Promise.resolve() }, '{"maxInlineBytes":0}', 600000);
+                listeners[0]({ type: 'S', payload: '語' });
+                listeners[0]({ type: 'T' });
+                const message = bytes(ducky.devtoolsTakeMessage('a', 1));
+                const taken = bytes(ducky.devtoolsTakeMessage('a', 1));
+                const neverSent = bytes(ducky.devtoolsTakeMessage('a', 3));
+                const unknownId = bytes(ducky.devtoolsTakeMessage('b', 2));
+                ducky.devtoolsDisconnect('a');
+                return [...storage, message, taken, neverSent, unknownId, bytes(ducky.devtoolsTakeMessage('a', 2))];
             }
             """);
 
-        pulls.ShouldBe([[.. Encoding.UTF8.GetBytes(Envelope).Select(b => (int)b)], [0], [0], [0]]);
+        int[] Utf8(string text) => [.. Encoding.UTF8.GetBytes(text).Select(b => (int)b)];
+        pulls.ShouldBe([Utf8(Envelope), [0], [0], [0], Utf8("""{"type":"S","payload":"語"}"""), [0], [0], [0], [0]]);
     }
 
     private static async Task<IPage> OpenAsync(Harness harness)
