@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The After app's tests and the guide's behaviour-change tests (SPEC §22.1): an xUnit v3 module on MTP like test/,
+       run by the Docs target. No generators: the fixtures are not the app's, so its JSON context need not cover them. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../After/Ducky1x.After.csproj" />
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Testing/Ducky.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="bunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

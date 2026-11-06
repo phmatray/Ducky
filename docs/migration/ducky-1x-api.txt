@@ -1,0 +1,64 @@
+# The public types of Ducky 1.0.292 and Ducky.Blazor 1.0.292 as published on nuget.org (SPEC §22.1): every type and
+# public nested type of lib/net10.0/Ducky.dll and lib/net10.0/Ducky.Blazor.dll, read from their metadata, with type
+# parameters in their declared names. The Docs target fails when one has neither a tombstone (src/*/Migration/Tombstones.cs)
+# nor a mapping row in docs/migration/ducky-1x.md. Lines starting with # are comments.
+# Ducky 1.0.292
+Ducky.ActionMeta
+Ducky.AsyncEffect<TAction>
+Ducky.ConsoleFallbackLogger<T>
+Ducky.CustomOperators
+Ducky.DependencyInjections
+Ducky.Dispatcher
+Ducky.DuckyException
+Ducky.DuckyOptions
+Ducky.DuckyStore
+Ducky.DuckyStoreFactory
+Ducky.DuckyVersioning
+Ducky.EnumerableExtensions
+Ducky.Fsa
+Ducky.Fsa<TPayload, TMeta>
+Ducky.Fsa<TPayload>
+Ducky.FsaError
+Ducky.FsaError<TMeta>
+Ducky.FsaMeta<TMeta>
+Ducky.IAsyncEffect
+Ducky.IDispatcher
+Ducky.IEntity<TKey>
+Ducky.IFsaMeta<TMeta>
+Ducky.IFsaPayload<TPayload>
+Ducky.IKeyedAction
+Ducky.INormalizedStateCollectionMethods<TKey, TEntity, TState>
+Ducky.IReactiveEffect
+Ducky.IRootState
+Ducky.IRootStateSerializer
+Ducky.ISlice
+Ducky.ISlice<TState>
+Ducky.IState
+Ducky.LoggerProvider
+Ducky.MemoizedSelector
+Ducky.MergeStrategy
+Ducky.NormalizedState<TKey, TEntity, TState>
+Ducky.ObservableExtensions
+Ducky.ObservableSlices
+Ducky.ReactiveEffect
+Ducky.ReactiveSelectorExtensions
+Ducky.RootState
+Ducky.RootStateSerializer
+Ducky.SliceReducers<TState>
+Ducky.StateActionPair<TState, TAction>
+Ducky.StateChange<TState>
+Ducky.StateLoggerObserver<TState>
+Ducky.StoreInitialized
+Ducky.ValueCollection<T>
+# Ducky.Blazor 1.0.292
+Ducky.Blazor.DependencyInjections
+Ducky.Blazor.DuckyComponent<TState>
+Ducky.Blazor.DuckyLayout<TState>
+Ducky.Blazor.Router.Actions.RouterCancelAction
+Ducky.Blazor.Router.Actions.RouterErrorAction
+Ducky.Blazor.Router.Actions.RouterNavigatedAction
+Ducky.Blazor.Router.Actions.RouterNavigationAction
+Ducky.Blazor.Router.Actions.RouterRequestAction
+Ducky.Blazor.Router.Actions.RouterRequestAction.ActionPayload
+Ducky.Blazor.Router.RouterReducers
+Ducky.Blazor.Router.RouterStoreState

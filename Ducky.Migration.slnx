@@ -6,9 +6,12 @@
   <Folder Name="/src/">
     <Project Path="src/Ducky/Ducky.csproj" />
     <Project Path="src/Ducky.Generators/Ducky.Generators.csproj" />
+    <Project Path="src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <Project Path="src/Ducky.Testing/Ducky.Testing.csproj" />
   </Folder>
   <Folder Name="/ducky-1x/">
     <Project Path="docs/migration/samples/ducky-1x/Before/Ducky1x.Before.csproj" />
     <Project Path="docs/migration/samples/ducky-1x/After/Ducky1x.After.csproj" />
+    <Project Path="docs/migration/samples/ducky-1x/After.Tests/Ducky1x.After.Tests.csproj" />
   </Folder>
 </Solution>
