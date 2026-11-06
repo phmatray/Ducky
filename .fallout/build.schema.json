@@ -25,6 +25,8 @@
       "type": "string",
       "enum": [
         "AotSmoke",
+        "Audit",
+        "Benchmarks",
         "Changelog",
         "Ci",
         "Clean",
