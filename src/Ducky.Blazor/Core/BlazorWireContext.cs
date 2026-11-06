@@ -9,6 +9,7 @@ namespace Ducky.Blazor;
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, Converters = [typeof(JsonStringEnumConverter<PersistenceStatus>)])]
 [JsonSerializable(typeof(SeedEnvelope))]
 [JsonSerializable(typeof(DevToolsConfig))]
+[JsonSerializable(typeof(DevToolsMessage))]
 [JsonSerializable(typeof(ReducerFailure))]
 [JsonSerializable(typeof(EffectFailure))]
 [JsonSerializable(typeof(StoreInitialized))]

@@ -12,7 +12,7 @@ namespace Ducky.Blazor;
 // SPEC §11.8 (DT-01, DT-02), outbound: registered by UseDevTools after AddBlazor's middleware. Init connects the store's
 // id (§11.7) to the extension through ducky.js; AfterReduce, on the drainer, sends each processed action with the state
 // it produced as two pre-serialized strings (INV-23), both sanitized (INV-28).
-internal sealed class DevToolsMiddleware : Middleware
+internal sealed partial class DevToolsMiddleware : Middleware
 {
     private readonly BlazorOptions _blazor;
     private readonly DevToolsOptions _options;
@@ -57,12 +57,15 @@ internal sealed class DevToolsMiddleware : Middleware
         if (connected == 2)
         {
             var init = StateJson(context.PreviousState); // a throwing sanitizer leaves @@INIT pending
+            Record(0, context.PreviousState);
             Volatile.Write(ref _connected, 1);
             _ = InitAsync(init);
             connected = Volatile.Read(ref _connected); // 0 when @@INIT already failed
         }
 
-        if (connected == 0 || _options.Filter?.Invoke(context) == false)
+        // A DevTools restore (a jump, a reset, an import) is never sent: the extension already shows it, and a send would
+        // move its index off the history's (§11.8).
+        if (connected == 0 || context.Origin == Origin.DevTools || _options.Filter?.Invoke(context) == false)
         {
             return;
         }
@@ -71,6 +74,7 @@ internal sealed class DevToolsMiddleware : Middleware
         var action = ActionJson(context, frames);
         var state = StateJson(context.State);
         Sends++;
+        Record(Sends, context.State);
 
         // Issued on the drainer, so sends reach ducky.js in reduce order; observed, never awaited.
         _ = SendAsync(action, state);

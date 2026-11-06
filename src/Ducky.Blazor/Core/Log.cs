@@ -24,6 +24,8 @@ namespace Ducky.Blazor;
 // M8-02 takes 2060-2064, not assigned by SPEC: §11.8's Warnings of a connect that timed out or failed, an absent extension
 // and a failed send, §11.7's Debug log of an unknown (pruned) id (all four leave DevTools inert), and a Warning for a
 // devtoolsDisconnect at dispose that failed.
+// M8-03 takes 2065 and 2066, not assigned by SPEC: §11.8's Debug logs of an ignored inbound message and of a jump to an
+// index the history no longer holds.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -142,4 +144,10 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2064, Level = LogLevel.Warning, Message = "Disconnecting store '{Id}' from Redux DevTools (devtoolsDisconnect) failed; ducky.js drops the id once its deliveries keep failing")]
     internal static partial void DevToolsDisconnectFailed(SafeLogger logger, Exception exception, string id);
+
+    [LoggerMessage(EventId = 2065, Level = LogLevel.Debug, Message = "Redux DevTools message {Seq} ignored (type '{Type}', too large: {TooLarge})")]
+    internal static partial void DevToolsMessageIgnored(SafeLogger logger, long seq, string? type, bool tooLarge);
+
+    [LoggerMessage(EventId = 2066, Level = LogLevel.Debug, Message = "Redux DevTools jump to index {Index} ignored: the history no longer holds it (MaxAge)")]
+    internal static partial void DevToolsIndexEvicted(SafeLogger logger, long index);
 }
