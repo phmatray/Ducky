@@ -73,13 +73,15 @@ public sealed class FakesTests
     public async Task FakeJsRuntime_HonoursCancellation_NullIsDefault()
     {
         // As the real runtime: a call with a cancelled token fails as TaskCanceledException and never crosses; a pending call
-        // fails so when its token is cancelled; a null result is the default of a value type.
+        // fails so when its token is cancelled; a null result is the default of a value type (storageSet and storageRemove: true).
         var js = new FakeJsRuntime();
         TaskCompletionSource<object?> pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
         js.Respond = (identifier, _) => identifier == "pending" ? pending.Task : null;
         using var cts = new CancellationTokenSource();
 
         (await js.InvokeAsync<bool>("flag", [])).ShouldBeFalse();
+        (await js.InvokeAsync<bool>("storageSet", [])).ShouldBeTrue(); // ducky.js's answer for a registered id
+        (await js.InvokeAsync<bool>("storageRemove", [])).ShouldBeTrue();
         var call = js.InvokeAsync<bool>("pending", cts.Token, []).AsTask();
         await cts.CancelAsync();
         await Should.ThrowAsync<TaskCanceledException>(call);
@@ -91,7 +93,10 @@ public sealed class FakesTests
         await Should.ThrowAsync<TaskCanceledException>(timed);
         await Should.ThrowAsync<TaskCanceledException>(js.InvokeAsync<bool>("flag", []).AsTask());
         (await js.InvokeAsync<bool>("flag", CancellationToken.None, [])).ShouldBeFalse();
-        js.Calls.Select(c => c.Identifier).ShouldBe(["flag", "pending", "pending", "flag"]);
+        js.Respond = static (_, _) => Task.FromResult<object?>(null);
+        (await js.InvokeAsync<bool>("storageSet", CancellationToken.None, [])).ShouldBeTrue();
+        (await js.InvokeAsync<bool>("other", CancellationToken.None, [])).ShouldBeFalse();
+        js.Calls.Select(c => c.Identifier).ShouldBe(["flag", "storageSet", "storageRemove", "pending", "pending", "flag", "storageSet", "other"]);
     }
 
     // Only to drive ComponentStatePersistenceManager.PersistStateAsync, which takes a renderer for its dispatcher.

@@ -6,7 +6,8 @@ namespace Ducky.Blazor.Tests.Fakes;
 /// The tests' JS runtime (SPEC §17.2: hand-written fakes at I/O boundaries only). It is also the module its "import"
 /// call returns, so <see cref="Calls"/> records every interop call, the import included, with every argument. As the real
 /// runtime, a call honours its token (a cancelled one never crosses), only a call made without a token is subject to the
-/// interop timeout (<see cref="DefaultTimeout"/>), and a null result is the default of a value type.
+/// interop timeout (<see cref="DefaultTimeout"/>), and a null result is the default of a value type, except for storageSet and
+/// storageRemove, which answer true as ducky.js does for a registered id.
 /// Calls and disposals may come from several threads at once.
 /// </summary>
 internal sealed class FakeJsRuntime : IJSRuntime, IJSObjectReference
@@ -63,8 +64,8 @@ internal sealed class FakeJsRuntime : IJSRuntime, IJSObjectReference
 
         return Respond(identifier, args ?? []) switch
         {
-            Task<object?> completion => new(Cast<TValue>(completion.WaitAsync(cancellationToken))),
-            var value => new(As<TValue>(value)),
+            Task<object?> completion => new(Cast<TValue>(identifier, completion.WaitAsync(cancellationToken))),
+            var value => new(As<TValue>(identifier, value)),
         };
     }
 
@@ -80,9 +81,12 @@ internal sealed class FakeJsRuntime : IJSRuntime, IJSObjectReference
         throw exception;
     }
 
-    private static async Task<TValue> Cast<TValue>(Task<object?> completion) => As<TValue>(await completion);
+    private static async Task<TValue> Cast<TValue>(string identifier, Task<object?> completion) => As<TValue>(identifier, await completion);
 
-    private static TValue As<TValue>(object? value) => value is null ? default! : (TValue)value;
+    // ducky.js answers storageSet and storageRemove true for a registered id (§11.7): a fake that leaves them unanswered
+    // stands for that, not for a pruned id, which a test answers false explicitly.
+    private static TValue As<TValue>(string identifier, object? value) =>
+        (value ?? (identifier is "storageSet" or "storageRemove" ? true : null)) is { } answer ? (TValue)answer : default!;
 }
 
 internal sealed record JsCall(string Identifier, object?[] Args);

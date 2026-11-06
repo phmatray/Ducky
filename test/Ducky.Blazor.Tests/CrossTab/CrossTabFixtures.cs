@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
+using Ducky.Blazor.Tests.Core;
 using Ducky.Blazor.Tests.Persistence;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,9 @@ internal sealed class RestoreLog
 
     /// <summary>The StateRestored of every HydrationCompleted the store processed.</summary>
     public ConcurrentQueue<bool> Completed { get; } = new();
+
+    /// <summary>Invoked on the drainer with each entry's keys, once persistence's AfterReduce has run on it.</summary>
+    public Action<string>? OnEntry { get; set; }
 }
 
 internal sealed class RestoreTap(RestoreLog log) : Middleware
@@ -52,6 +56,52 @@ internal sealed class RestoreTap(RestoreLog log) : Middleware
         if (context.Origin is Origin.CrossTab or Origin.Hydration && keys.Count > 0)
         {
             log.Entries.Enqueue((context.Origin, string.Join(",", keys)));
+            log.OnEntry?.Invoke(string.Join(",", keys));
+        }
+    }
+}
+
+// Once armed, fails the next CrossTab restore: its BeforeReduce throws, so the restore commits nothing (§6.4).
+internal sealed class CrossTabFailure
+{
+    public bool Armed { get; set; }
+}
+
+internal sealed class FailCrossTab(CrossTabFailure failure) : Middleware
+{
+    public override void BeforeReduce(ActionContext context)
+    {
+        if (context.Origin == Origin.CrossTab && failure.Armed)
+        {
+            failure.Armed = false;
+            throw new InvalidOperationException("restore refused");
+        }
+    }
+}
+
+internal sealed record Gauge(double Value);
+
+// Only its initial state can't be serialized (a NaN double, §10).
+internal sealed class GaugeSlice : Slice<Gauge>
+{
+    public GaugeSlice() => On<SetLevel>(static (_, action) => new(action.Value));
+
+    protected override Gauge Initial => new(double.NaN);
+}
+
+// Runs its plan on the drainer, after an Increment was reduced: what it issues to the store queues behind this drain.
+internal sealed class DrainerPlan
+{
+    public Action Run { get; set; } = static () => { };
+}
+
+internal sealed class RunOnDrainer(DrainerPlan plan) : Middleware
+{
+    public override void AfterReduce(ActionContext context)
+    {
+        if (context.Action is Increment)
+        {
+            plan.Run();
         }
     }
 }

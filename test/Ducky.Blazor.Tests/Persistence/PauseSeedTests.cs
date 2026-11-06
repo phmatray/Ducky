@@ -427,6 +427,57 @@ public sealed class PauseSeedTests : BunitContext
     }
 
     [Fact]
+    public async Task PauseSeed_CrossTabRemovalDuringHydration_DirtyScopedSeedKept()
+    {
+        // (non-normative, §11.5 step 6, §11.7) Another tab removes Alice's key while the resumed store's read is in flight. The
+        // removal moves the key's sequence number, so the read is dropped, but with no baseline yet it restores nothing: it
+        // discards no unwritten change, so the seed's dirty 4 is still applied and rewritten.
+        _user = "alice";
+        var seed = AliceSeed("""{"Value":4}""", dirty: true);
+        var read = _readGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Configure(static o => o.SyncAcrossTabs = true);
+        await ResumeAsync(seed);
+        await WriterHarness.Until(() => _js.Calls.Any(static call => call.Identifier == "storageGet"));
+
+        var sync = (DotNetObjectReference<PersistenceMiddleware.CrossTabSync>)_js.Calls.Single(static call => call.Identifier == "watchStorage").Args[1]!;
+        var handled = sync.Value.OnStorageChangedAsync("tab", "local", "ducky:alice:counter", null, tooLarge: false);
+        _time.Advance(TimeSpan.FromMilliseconds(50));
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        read.SetResult(Envelope(3, version: 1));
+        await Store.InitializeAsync(Ct);
+
+        Payload(await NextWriteAsync()).ShouldBe("""{"Value":4}""");
+        Store.State.Get<Counter>().ShouldBe(new Counter(4));
+    }
+
+    [Fact]
+    public async Task PauseSeed_CrossTabRemovalDuringHydration_CleanScopedSeedNotRestored()
+    {
+        // (non-normative, §11.5 step 6, §11.7, INV-18) The clean twin: a clean seed value is the stored one from before the
+        // removal, so the removal wins: the read is dropped, and the seed does not bring back what the other tab removed.
+        _user = "alice";
+        var seed = AliceSeed("""{"Value":4}""", dirty: false);
+        var read = _readGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Configure(static o => o.SyncAcrossTabs = true);
+        await ResumeAsync(seed);
+        await WriterHarness.Until(() => _js.Calls.Any(static call => call.Identifier == "storageGet"));
+
+        var sync = (DotNetObjectReference<PersistenceMiddleware.CrossTabSync>)_js.Calls.Single(static call => call.Identifier == "watchStorage").Args[1]!;
+        var handled = sync.Value.OnStorageChangedAsync("tab", "local", "ducky:alice:counter", null, tooLarge: false);
+        _time.Advance(TimeSpan.FromMilliseconds(50));
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        read.SetResult(Envelope(4, version: 1));
+        await Store.InitializeAsync(Ct);
+        await Store.WhenIdleAsync(Ct);
+
+        Store.State.Get<Counter>().ShouldBe(new Counter(0));
+        Store.State.WasRestored<Counter>().ShouldBeFalse();
+        await Store.DisposeAsync();
+        _writes.Reader.TryRead(out _).ShouldBeFalse();
+        _storage.ContainsKey(("local", "ducky:alice:counter")).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Circuit_PauseDuringScopeSwitch_StorageNotOverwrittenWithInitialState()
     {
         // Bob's circuit read his 9, then Alice signed in (3) and made it 4. While .NET pauses the circuit, Bob signs in again:

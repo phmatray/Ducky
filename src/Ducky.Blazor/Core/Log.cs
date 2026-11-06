@@ -118,4 +118,10 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2053, Level = LogLevel.Warning, Message = "Removing the storage registration (unwatchStorage) of store '{Id}' failed; ducky.js drops the id once its deliveries keep failing")]
     internal static partial void CrossTabUnwatchFailed(SafeLogger logger, Exception exception, string id);
+
+    [LoggerMessage(EventId = 2054, Level = LogLevel.Debug, Message = "Storage removal of '{Key}' restores nothing: its baseline already reads as absent, so a local change may still be waiting for its first write")]
+    internal static partial void CrossTabRemovalKept(SafeLogger logger, string key);
+
+    [LoggerMessage(EventId = 2055, Level = LogLevel.Debug, Message = "ducky.js no longer knows store '{Id}' (its registration was pruned): watchStorage is issued again and every registered area is re-read")]
+    internal static partial void CrossTabReRegistered(SafeLogger logger, string id);
 }

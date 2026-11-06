@@ -112,22 +112,14 @@ internal sealed class BrowserStorageProvider(JsBridge bridge, BlazorOptions opti
         }
     }
 
-    // Whether the write was delivered: false for a disconnect or an interop timeout (Debug only); any other failure throws.
-    // ponytail: storageSet's "id not registered" answer is ignored until cross-tab (§11.7) re-registers a pruned id.
-    public async ValueTask<bool> SetAsync(PersistStorage storage, string key, string value, string id, CancellationToken cancellationToken)
-    {
-        // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-        var (delivered, _) = await bridge.TryInvokeAsync<bool>("storageSet", cancellationToken, Area(storage), key, value, id).ConfigureAwait(false);
-        return delivered;
-    }
+    // Whether the write was delivered (false for a disconnect or an interop timeout, Debug only; any other failure throws),
+    // and ducky.js's answer: false when it no longer knows the id (§11.7), which the caller repairs.
+    public ValueTask<(bool Delivered, bool Registered)> SetAsync(PersistStorage storage, string key, string value, string id, CancellationToken cancellationToken) =>
+        bridge.TryInvokeAsync<bool>("storageSet", cancellationToken, Area(storage), key, value, id);
 
-    // Removes the one exact key (§11.5 ClearPersistedState); whether it was delivered, as for SetAsync.
-    public async ValueTask<bool> RemoveAsync(PersistStorage storage, string key, string id, CancellationToken cancellationToken)
-    {
-        // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-        var (delivered, _) = await bridge.TryInvokeAsync<bool>("storageRemove", cancellationToken, Area(storage), key, id).ConfigureAwait(false);
-        return delivered;
-    }
+    // Removes the one exact key (§11.5 ClearPersistedState); answers as SetAsync does.
+    public ValueTask<(bool Delivered, bool Registered)> RemoveAsync(PersistStorage storage, string key, string id, CancellationToken cancellationToken) =>
+        bridge.TryInvokeAsync<bool>("storageRemove", cancellationToken, Area(storage), key, id);
 
     internal static string Area(PersistStorage storage) => storage == PersistStorage.Local ? "local" : "session";
 }

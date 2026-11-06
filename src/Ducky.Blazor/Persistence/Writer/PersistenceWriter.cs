@@ -25,6 +25,7 @@ internal sealed partial class PersistenceMiddleware
 
     // Runs on the drainer. A terminal releases the deferred keys; a change of any origin but a restore signals its writer,
     // once the synchronous prefix has run (nothing is written before the first read: earlier changes are only deferred).
+    // A receipt's CrossTab restore signals its key once reduced (§11.7); no other restore signals anything (INV-16).
     public override void AfterReduce(ActionContext context)
     {
         HandOverFinalSnapshots(context);
@@ -35,6 +36,11 @@ internal sealed partial class PersistenceMiddleware
         else if (context.PreviousState.Get<PersistenceState>().Status == PersistenceStatus.Hydrating)
         {
             ReleaseDeferred();
+        }
+
+        if (context.Origin == Origin.CrossTab)
+        {
+            SignalReceived(context);
         }
 
         if (context.Origin is Origin.Hydration or Origin.CrossTab or Origin.DevTools)
@@ -130,13 +136,20 @@ internal sealed partial class PersistenceMiddleware
     }
 
     // Server storage writes the cache (§11.6); Local and Session go through ducky.js with the store's id (§11.7).
-    private ValueTask<bool> StoreAsync(PersistOptions options, string key, string envelope, CancellationToken token) => options.Storage == PersistStorage.Server
-        ? _cache.SetAsync(key, envelope, options.MaxAge, token)
-        : _browser.SetAsync(options.Storage, key, envelope, _id, token);
+    private ValueTask<(bool Delivered, bool Registered)> StoreAsync(PersistOptions options, string key, string envelope, CancellationToken token) =>
+        options.Storage == PersistStorage.Server
+            ? RegisteredAsync(_cache.SetAsync(key, envelope, options.MaxAge, token))
+            : _browser.SetAsync(options.Storage, key, envelope, _id, token);
 
-    private ValueTask<bool> RemoveAsync(PersistOptions options, string key, CancellationToken token) => options.Storage == PersistStorage.Server
-        ? _cache.RemoveAsync(key, token)
-        : _browser.RemoveAsync(options.Storage, key, _id, token);
+    private ValueTask<(bool Delivered, bool Registered)> RemoveAsync(PersistOptions options, string key, CancellationToken token) =>
+        options.Storage == PersistStorage.Server
+            ? RegisteredAsync(_cache.RemoveAsync(key, token))
+            : _browser.RemoveAsync(options.Storage, key, _id, token);
+
+    // The cache knows no store id: its calls never ask for a repair.
+    private static async ValueTask<(bool Delivered, bool Registered)> RegisteredAsync(ValueTask<bool> call) =>
+        // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+        (await call.ConfigureAwait(false), true);
 
     // §11.5 "Flush on DisposeAsync", phase 5a: the deferred keys are released, every loop skips its debounce and backoff
     // and makes one attempt per dirty key, bounded by DisposeTimeout; each key still dirty (or still deferred) then is
@@ -179,8 +192,8 @@ internal sealed partial class PersistenceMiddleware
 
     private static TimeSpan MaxBackoff => TimeSpan.FromSeconds(30);
 
-    // How one attempt ended: the key is clean, or it stays dirty until a terminal signals it (the hydration skip), or until
-    // a retry (a provider failure).
+    // How one attempt ended: the key is clean, or it stays dirty until a signal (a terminal after the hydration skip, the
+    // commit of a receipt its write would have raced), or until a retry (a provider failure).
     private enum Outcome
     {
         Clean,
@@ -230,6 +243,9 @@ internal sealed partial class PersistenceMiddleware
 
         /// <summary>Whether a signal is waiting for the next iteration.</summary>
         internal bool Signalled => _signal.Reader.Count > 0;
+
+        /// <summary>The signals raised so far.</summary>
+        internal long Signals => Interlocked.Read(ref _signals);
 
         /// <summary>The iterations ended so far.</summary>
         internal int Iterations => Volatile.Read(ref _iterations);
@@ -475,13 +491,15 @@ internal sealed partial class PersistenceMiddleware
                 }
                 else if (removal is not null)
                 {
-                    if (!await DeliverAsync(() => _owner.RemoveAsync(_options, removal.Key, token)).ConfigureAwait(ConfigureAwaitOptions.None))
+                    var (delivered, registered) = await DeliverAsync(() => _owner.RemoveAsync(_options, removal.Key, token)).ConfigureAwait(ConfigureAwaitOptions.None);
+                    if (!delivered)
                     {
                         return Outcome.Failed;
                     }
 
                     _removals.TryDequeue(out _);
                     _owner.LastKnownPayload.TryRemove(removal.Key, out _);
+                    Repair(registered);
                     Interlocked.Exchange(ref _clean, removal.Stamp);
                     _failing = false;
                 }
@@ -533,6 +551,7 @@ internal sealed partial class PersistenceMiddleware
             var clears = Clears; // read before the snapshot: a clear reduced after it makes this deferral stale
             _owner._registration.Options.AfterDeferHook?.Invoke(_slice.Key, DeferPoint.BeforeSnapshot);
             var snap = _owner.Store.State;
+            _owner._registration.Options.AfterDeferHook?.Invoke(_slice.Key, DeferPoint.AfterSnapshot);
 
             // A reset committed since the signals were read: its final snapshot covers them and goes first. This snapshot can
             // be of a later epoch whose scope names no key, and must not mark them written (INV-16).
@@ -547,7 +566,7 @@ internal sealed partial class PersistenceMiddleware
                 return Outcome.Deferred;
             }
 
-            var outcome = await WriteAsync(snap, token).ConfigureAwait(ConfigureAwaitOptions.None);
+            var outcome = await WriteAsync(snap, token, live: true).ConfigureAwait(ConfigureAwaitOptions.None);
             if (outcome == Outcome.Clean)
             {
                 Interlocked.Exchange(ref _clean, signals);
@@ -556,7 +575,8 @@ internal sealed partial class PersistenceMiddleware
             return outcome;
         }
 
-        private async Task<Outcome> WriteAsync(StateSnapshot snap, CancellationToken token)
+        // A live snapshot is the current state's; a final snapshot is an old scope's on purpose.
+        private async Task<Outcome> WriteAsync(StateSnapshot snap, CancellationToken token, bool live = false)
         {
             var key = StorageKey(snap.Get<PersistenceState>().ScopeEpoch);
             if (key is null)
@@ -580,9 +600,26 @@ internal sealed partial class PersistenceMiddleware
                 return Outcome.Clean;
             }
 
+            // §11.7, INV-16: a receipt sets the baseline before its restore commits, so the snapshot and the baseline just read
+            // may lie on either side of that commit. While the receipt is recorded, its restore signals this key once reduced
+            // (committed or failed), and the key then reads both again; once it is not, a slot that is no longer the
+            // snapshot's means a commit since the snapshot, and the key goes again at once. Recorded first: the record goes
+            // only once its restore reduced (or the drain exited for good, at dispose), so one of the two holds.
+            if (live && _owner._received.ContainsKey(_slice.Key))
+            {
+                return Outcome.Deferred;
+            }
+
+            if (live && !ReferenceEquals(_owner.Store.State.Get(_slice.Key), snap.Get(_slice.Key)))
+            {
+                Signal();
+                return Outcome.Deferred;
+            }
+
             var started = _owner._time.GetTimestamp();
             var envelope = EnvelopeWriter.Write(payload, _options.Version, _owner._time.GetUtcNow());
-            if (!await DeliverAsync(() => _owner.StoreAsync(_options, key, envelope, token)).ConfigureAwait(ConfigureAwaitOptions.None))
+            var (delivered, registered) = await DeliverAsync(() => _owner.StoreAsync(_options, key, envelope, token)).ConfigureAwait(ConfigureAwaitOptions.None);
+            if (!delivered)
             {
                 return Outcome.Failed;
             }
@@ -592,12 +629,13 @@ internal sealed partial class PersistenceMiddleware
             _owner._telemetry.Add(_owner._telemetry.Saves);
             _owner.LastKnownPayload[key] = payload;
             _failing = false;
+            Repair(registered);
             return Outcome.Clean;
         }
 
-        // One provider call (a write or a removal): false when it failed, which keeps the baseline (§11.5). A disconnect or an
+        // One provider call (a write or a removal): not delivered when it failed, which keeps the baseline (§11.5). A disconnect or an
         // interop timeout is not delivered (Debug only, no PersistenceFailed); any other failure starts a streak.
-        private async Task<bool> DeliverAsync(Func<ValueTask<bool>> call)
+        private async Task<(bool Delivered, bool Registered)> DeliverAsync(Func<ValueTask<(bool Delivered, bool Registered)>> call)
         {
             try
             {
@@ -609,7 +647,18 @@ internal sealed partial class PersistenceMiddleware
 #pragma warning restore CA1031
             {
                 Fail(exception.GetType().Name, exception.Message);
-                return false;
+                return default; // not delivered: the call fails before any repair
+            }
+        }
+
+        // A delivered call answered false: ducky.js made it but no longer knows this id (§11.7), so the registration is
+        // repaired. Only once the baseline records the call: the re-read then reads this store's own write as an echo and
+        // its own removal as already absent. A store with a browser writer always has its CrossTabSync.
+        private void Repair(bool registered)
+        {
+            if (!registered)
+            {
+                _owner._crossTab!.Repair();
             }
         }
 

@@ -20,4 +20,7 @@ internal enum DeferPoint
 
     /// <summary>In a write, after the signals and clears are read, before the snapshot.</summary>
     BeforeSnapshot,
+
+    /// <summary>In a write, after the snapshot, before it is compared with the baseline.</summary>
+    AfterSnapshot,
 }
