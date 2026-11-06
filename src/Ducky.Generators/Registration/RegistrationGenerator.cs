@@ -65,9 +65,15 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
             writer.Line($"#pragma warning disable {suppressed} // justification: generated code references user [Obsolete]/[Experimental] members (GEN-06)");
         }
 
-        foreach (var model in registered)
+        foreach (var model in registered.Where(m => !m.Reactive))
         {
             writer.Line(model.IsSlice ? $"b.AddSlice<{model.Type}>();" : $"b.AddEffect<{model.Type}>();");
+        }
+
+        // A reactive effect is neither an AddEffect<T> nor in DI: Ducky.Reactive's own call, only while it resolves.
+        foreach (var model in registered.Where(m => m.Reactive && gates.Reactive))
+        {
+            writer.Line($"global::Ducky.Reactive.DuckyReactiveExtensions.AddReactiveEffect<{model.Type}>(b);");
         }
 
         // After every AddSlice (Persist<T>/Prerender<T> on a slice not added is DUCKY310), only while the exact method
@@ -92,13 +98,21 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
     }
 
     // DUCKY023 for each excluded type; DUCKY022 for [Persist]/[Prerender] on a non-slice, or on any slice (registered or
-    // not) while its gated method doesn't resolve. Emit writes PersistAttributeDefaults<T> for a resolved [Persist] and
-    // Prerender<T> for a resolved [Prerender].
+    // not) while its gated method doesn't resolve, and for any reactive effect while AddReactiveEffect<T> doesn't. Emit
+    // writes PersistAttributeDefaults<T> for a resolved [Persist], Prerender<T> for a resolved [Prerender] and
+    // AddReactiveEffect<T> for a reactive effect when it resolves.
     private static void Report(SourceProductionContext context, ImmutableArray<RegistrationModel?> models, ImmutableArray<AttributeModel> attributes, RegistrationGates gates)
     {
-        foreach (var model in models.OfType<RegistrationModel>().Distinct().Where(m => m.Excluded is not null))
+        var distinct = models.OfType<RegistrationModel>().Distinct().ToList();
+        foreach (var model in distinct.Where(m => m.Excluded is not null))
         {
             context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.Excluded, model.Location, model.Display, model.Excluded));
+        }
+
+        foreach (var model in distinct.Where(m => m.Reactive && !gates.Reactive))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.Unresolved, model.Location, "ReactiveEffect", model.Display,
+                $"'{RegistrationGates.ReactiveMethod}' does not resolve (reference a Ducky.Reactive version that declares it)"));
         }
 
         foreach (var attribute in attributes)
@@ -109,7 +123,7 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
                 : $"'{(persist ? RegistrationGates.PersistMethod : RegistrationGates.PrerenderMethod)}' does not resolve (reference a Ducky.Blazor version that declares it)";
             if (reason is not null)
             {
-                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.Unresolved, attribute.Location, attribute.Attribute, attribute.Display, reason));
+                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.Unresolved, attribute.Location, $"[{attribute.Attribute}]", attribute.Display, reason));
             }
         }
     }

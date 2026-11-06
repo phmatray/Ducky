@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Ducky.Reactive-only consumer (SPEC §17.9 step 1, stage 16): Ducky and its generator arrive transitively, and the
+       generated AddDuckyGenerated_Ducky_PackageSmoke_ReactiveOnly() holds the AddReactiveEffect<T> call for its reactive
+       effect, compiled from the packages with TreatWarningsAsErrors (a DUCKY022 for a skewed method fails it). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ducky.Reactive" Version="$(DuckyVersion)" />
+  </ItemGroup>
+</Project>

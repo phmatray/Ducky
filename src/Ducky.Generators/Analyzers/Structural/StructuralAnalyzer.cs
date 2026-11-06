@@ -12,10 +12,10 @@ using Microsoft.CodeAnalysis.Operations;
 namespace Ducky.Generators;
 
 /// <summary>
-/// DUCKY005 and DUCKY011–015 (SPEC §16.2): handlers for non-concrete action types, an unchanged <c>with</c> copy of the
-/// state in an <c>On&lt;T&gt;</c> reducer lambda, a <c>[Persist]</c> or <c>Persist&lt;T&gt;()</c> slice on its derived
-/// key, a concurrency key without value equality, a duplicate <c>On&lt;T&gt;</c> in one constructor, and two slices
-/// sharing a state type. Generated code is not analysed.
+/// DUCKY005 and DUCKY011–015 (SPEC §16.2): handlers and <c>OfActionType&lt;T&gt;</c> filters for non-concrete action
+/// types, an unchanged <c>with</c> copy of the state in an <c>On&lt;T&gt;</c> reducer lambda, a <c>[Persist]</c> or
+/// <c>Persist&lt;T&gt;()</c> slice on its derived key, a concurrency key without value equality, a duplicate
+/// <c>On&lt;T&gt;</c> in one constructor, and two slices sharing a state type. Generated code is not analysed.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class StructuralAnalyzer : DiagnosticAnalyzer
@@ -44,12 +44,14 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
                 compilation.GetTypeByMetadataName("Ducky.EffectGroup"),
                 compilation.GetTypeByMetadataName("Ducky.Effect`1"),
                 compilation.GetTypeByMetadataName("Ducky.PersistAttribute"),
-                compilation.GetTypeByMetadataName("Ducky.Blazor.DuckyBlazorBuilderExtensions"));
+                compilation.GetTypeByMetadataName("Ducky.Blazor.DuckyBlazorBuilderExtensions"),
+                compilation.GetTypeByMetadataName("Ducky.Reactive.DuckyReactiveExtensions"));
             var slices = new ConcurrentBag<(INamedTypeSymbol Slice, ITypeSymbol State)>();
 
             start.RegisterOperationBlockStartAction(block => OnBlockStart(block, symbols));
             start.RegisterOperationAction(op => OnReturn(op, symbols), OperationKind.Return);
             start.RegisterOperationAction(op => OnPersistCall(op, symbols), OperationKind.Invocation);
+            start.RegisterOperationAction(op => OnOfActionType(op, symbols), OperationKind.Invocation);
             start.RegisterSymbolAction(symbol => OnType(symbol, symbols, slices), SymbolKind.NamedType);
             start.RegisterCompilationEndAction(end => ReportSharedStates(end, slices));
         });
@@ -192,6 +194,19 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    // DUCKY005 OfActionType<T> arm (stage 16): Ducky.Reactive's filter matches the exact runtime type, reported on the
+    // called method like the On<T> arms, whether called as an extension or as a static method.
+    private static void OnOfActionType(OperationAnalysisContext op, Symbols symbols)
+    {
+        var invocation = (IInvocationOperation)op.Operation;
+        var method = invocation.TargetMethod;
+        if (method.Name == "OfActionType" && Is(method.ContainingType, symbols.ReactiveExtensions) && IsNonConcrete(method.TypeArguments[0]))
+        {
+            var location = ((InvocationExpressionSyntax)invocation.Syntax).Expression.GetLocation();
+            op.ReportDiagnostic(Diagnostic.Create(StructuralDiagnostics.NonConcreteHandler, location, method.TypeArguments[0].ToDisplayString()));
+        }
+    }
+
     // DUCKY015: every slice whose state type another slice also has, with the others in ordinal order.
     private static void ReportSharedStates(CompilationAnalysisContext context, ConcurrentBag<(INamedTypeSymbol Slice, ITypeSymbol State)> slices)
     {
@@ -280,5 +295,5 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private sealed record Symbols(INamedTypeSymbol? Slice, INamedTypeSymbol? EffectGroup, INamedTypeSymbol? Effect, INamedTypeSymbol? Persist, INamedTypeSymbol? BlazorExtensions);
+    private sealed record Symbols(INamedTypeSymbol? Slice, INamedTypeSymbol? EffectGroup, INamedTypeSymbol? Effect, INamedTypeSymbol? Persist, INamedTypeSymbol? BlazorExtensions, INamedTypeSymbol? ReactiveExtensions);
 }

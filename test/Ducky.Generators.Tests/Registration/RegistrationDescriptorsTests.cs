@@ -9,7 +9,7 @@ public sealed class RegistrationDescriptorsTests
 {
     public static TheoryData<string, DiagnosticSeverity, string, string> Catalogue => new()
     {
-        { "DUCKY022", DiagnosticSeverity.Warning, "Registration call not emitted", "[{0}] on '{1}' is ignored: {2}" },
+        { "DUCKY022", DiagnosticSeverity.Warning, "Registration call not emitted", "{0} on '{1}' is ignored: {2}" },
         { "DUCKY023", DiagnosticSeverity.Warning, "Type excluded from generated registration", "'{0}' is not registered by AddDuckyGenerated: {1}" },
     };
 

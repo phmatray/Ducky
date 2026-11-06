@@ -1,5 +1,8 @@
 using Ducky.Generators.Analyzers.Usage;
 using Ducky.Generators.Registration;
+using Ducky.Generators.Tests.Infrastructure;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
 using Verifier = Ducky.Generators.Tests.Infrastructure.AnalyzerVerifier<Ducky.Generators.RegistrationCallAnalyzer>;
 
 namespace Ducky.Generators.Tests.Usage;
@@ -40,8 +43,17 @@ public sealed class RegistrationCallTests
         }
         """;
 
+    // Stage 16: a reactive effect is registered by the generated method too (AddReactiveEffect<T>).
+    private const string Reactive = """
+        public sealed class Echo : Ducky.Reactive.ReactiveEffect
+        {
+            public override R3.Observable<object> Handle(R3.Observable<object> actions, R3.Observable<StateSnapshot> state) => actions;
+        }
+        """;
+
     public static TheoryData<string, string> Reported => new()
     {
+        { Reactive, "{|#0:services.AddDucky(b => { })|}" },
         { Slice, "{|#0:services.AddDucky(b => { })|}" },
         { Effect, "{|#0:services.AddDucky(b => b.AddEffect<PingEffect>())|}" },
         { Slice + Effect, "{|#0:services.AddDucky(b => b.AddSlice<CountSlice>())|}" },
@@ -66,6 +78,7 @@ public sealed class RegistrationCallTests
         // The generated registration is called, as an extension or as a static method.
         { Slice + Effect, "services.AddDucky(b => b.AddDuckyGenerated_TestProject())" },
         { Slice, "services.AddDucky(b => TestProject_DuckyRegistrations.AddDuckyGenerated_TestProject(b))" },
+        { Reactive, "services.AddDucky(b => b.AddDuckyGenerated_TestProject())" },
 
         // No slice or effect to register: none, an abstract one, or only middleware, which is never generated.
         { "", "services.AddDucky(b => { })" },
@@ -87,6 +100,29 @@ public sealed class RegistrationCallTests
     [MemberData(nameof(NotReported))]
     public Task Ducky016_CalledOrNothingToRegister_NotReported(string types, string configure) =>
         Verifier.VerifyWithGeneratorAsync<RegistrationGenerator>(Source(types, configure));
+
+    // A skewed or older Ducky.Reactive (the hand-written skew fixture of SPEC §16.1): ReactiveEffect resolves but
+    // AddReactiveEffect<TEffect>(DuckyBuilder) doesn't, so the generated method registers nothing for the reactive effect
+    // (DUCKY022 instead) and there is nothing to call it for.
+    [Fact]
+    public Task Ducky016_OlderShapeReactiveOnly_NotReported()
+    {
+        var older = GeneratorHarness.Compile("""
+            #pragma warning disable CS1591 // justification: undocumented fixture
+            namespace Ducky.Reactive;
+            public abstract class ReactiveEffect { }
+            """).WithAssemblyName("Ducky.Reactive");
+        older.ShouldCompileClean();
+        var test = Verifier.Test<Verifier.GeneratingTest<RegistrationGenerator>>(
+            Source("public sealed class {|#0:Echo|} : Ducky.Reactive.ReactiveEffect { }", "services.AddDucky(b => { })"));
+        test.TestBehaviors |= TestBehaviors.SkipGeneratedSourcesCheck;
+        test.TestState.AdditionalReferences.RemoveAll(r =>
+            Path.GetFileNameWithoutExtension(((PortableExecutableReference)r).FilePath) is "Ducky.Reactive" or "R3");
+        test.TestState.AdditionalReferences.Add(older.ToMetadataReference());
+        test.ExpectedDiagnostics.Add(Verifier.Diagnostic(RegistrationDiagnostics.Unresolved).WithLocation(0).WithArguments(
+            "ReactiveEffect", "Echo", $"'{RegistrationGates.ReactiveMethod}' does not resolve (reference a Ducky.Reactive version that declares it)"));
+        return test.RunAsync(TestContext.Current.CancellationToken);
+    }
 
     // A file-local slice isn't registered either: the generator reports it as DUCKY023 instead.
     [Fact]

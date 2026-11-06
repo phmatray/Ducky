@@ -19,12 +19,17 @@
     <!-- The real Ducky.Draft.dll for DUCKY003's Draft-receiver exemption, copied next to the tests as a file only, like
          Ducky.Testing.dll: Ducky.Generators matches its types by metadata name and never references it. -->
     <ProjectReference Include="../../src/Ducky.Draft/Ducky.Draft.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The real Ducky.Reactive.dll for GEN-02's AddReactiveEffect<T> gate and DUCKY005's OfActionType<T> arm (GEN-06), a
+         file only like Ducky.Testing.dll, so this is no Ducky.Reactive test project (§17.8); R3 is the one assembly it
+         adds to the test compilations. -->
+    <ProjectReference Include="../../src/Ducky.Reactive/Ducky.Reactive.csproj" ReferenceOutputAssembly="false" OutputItemType="Content" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="CsCheck" />
+    <PackageReference Include="R3" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
