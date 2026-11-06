@@ -93,8 +93,8 @@ public sealed class CrossTabReceiptTests
         (long Level, long Dial, Level State) during = default;
         plan.Run = () =>
         {
-            var removal = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", null, tooLarge: false);
-            var value = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:dial", x.Envelope(new Dial(5)), tooLarge: false);
+            var removal = x.Notify("tab", "local", "ducky:level", null, tooLarge: false);
+            var value = x.Notify("tab", "local", "ducky:dial", x.Envelope(new Dial(5)), tooLarge: false);
             x.H.Time.Advance(CrossTabHarness.Debounce);
             removal.IsCompleted.ShouldBeTrue();
             value.IsCompleted.ShouldBeTrue();
@@ -158,7 +158,7 @@ public sealed class CrossTabReceiptTests
         plan.Run = () =>
         {
             x.H.Store.Restore(new Dictionary<string, object> { ["level"] = new Level(7) }, Origin.CrossTab);
-            var receipt = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
+            var receipt = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
             x.H.Time.Advance(CrossTabHarness.Debounce);
             receipt.IsCompleted.ShouldBeTrue();
         };
@@ -189,9 +189,9 @@ public sealed class CrossTabReceiptTests
         x.Restores.OnEntry = _ => commits.Enqueue((x.H.Store.State.Get<Level>(), level.Signals));
         plan.Run = () =>
         {
-            var older = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
+            var older = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
             x.H.Time.Advance(CrossTabHarness.Debounce);
-            var newer = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", x.Envelope(new Level(6)), tooLarge: false);
+            var newer = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(6)), tooLarge: false);
             x.H.Time.Advance(CrossTabHarness.Debounce);
             (older.IsCompleted, newer.IsCompleted).ShouldBe((true, true));
         };
@@ -226,7 +226,7 @@ public sealed class CrossTabReceiptTests
         Task? disposal = null;
         plan.Run = () =>
         {
-            var receipt = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
+            var receipt = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
             x.H.Time.Advance(CrossTabHarness.Debounce);
             receipt.IsCompleted.ShouldBeTrue();
             disposal = x.H.DisposeStoreAsync();
@@ -260,7 +260,7 @@ public sealed class CrossTabReceiptTests
         Task? disposal = null;
         plan.Run = () =>
         {
-            var receipt = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
+            var receipt = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
             x.H.Time.Advance(CrossTabHarness.Debounce);
             receipt.IsCompleted.ShouldBeTrue();
             disposal = x.H.DisposeStoreAsync();
@@ -310,7 +310,7 @@ public sealed class CrossTabReceiptTests
         (bool Handled, bool Deferred) during = default;
         plan.Run = () =>
         {
-            var receipt = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
+            var receipt = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(5)), tooLarge: false);
             x.H.Time.Advance(CrossTabHarness.Debounce);
             var iterations = writer.Iterations;
             held.Resume.SetResult();
@@ -389,7 +389,7 @@ public sealed class CrossTabReceiptTests
         (bool Handled, bool Ended, Level State) during = default;
         plan.Run = () =>
         {
-            var removal = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", null, tooLarge: false);
+            var removal = x.Notify("tab", "local", "ducky:level", null, tooLarge: false);
             x.H.Time.Advance(CrossTabHarness.Debounce);
             var iterations = writer.Iterations;
             held.Resume.SetResult();
@@ -437,7 +437,7 @@ public sealed class CrossTabReceiptTests
         // nothing, since no baseline could be set for that initial state (the serializer logs it).
         await using var x = new CrossTabHarness(static d => d.AddSlice<GaugeSlice>().Persist<GaugeSlice>(static o => o.SyncAcrossTabs = true));
         var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        x.H.OnGet = _ => read.Task;
+        x.HoldNextRead(read);
         var init = x.H.InitializeAsync();
         await WriterHarness.Until(() => x.H.Js.Calls.Any(static call => call.Identifier == "storageGet"));
 
@@ -467,7 +467,7 @@ public sealed class CrossTabReceiptTests
             .Persist<LevelSlice>(static o => o.SyncAcrossTabs = true)
             .AddEffect<LoadUnlessRestored>());
         var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        x.H.OnGet = _ => read.Task;
+        x.HoldNextRead(read);
         var init = x.H.InitializeAsync();
         await WriterHarness.Until(() => x.H.Js.Calls.Any(static call => call.Identifier == "storageGet"));
 
@@ -726,7 +726,7 @@ public sealed class CrossTabReceiptTests
             browser: false,
             services: s => s.AddSingleton<AuthenticationStateProvider>(auth));
         await x.H.InitializeAsync();
-        var pending = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:alice:level", x.Envelope(new Level(5)), tooLarge: false);
+        var pending = x.Notify("tab", "local", "ducky:alice:level", x.Envelope(new Level(5)), tooLarge: false);
 
         var bobResolved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         auth.Gate = bobResolved.Task;
@@ -744,11 +744,13 @@ public sealed class CrossTabReceiptTests
         x.H.Store.State.Get<Level>().ShouldBe(new(0));
         x.EventIds(LogLevel.Debug).Count(static id => id == 2050).ShouldBe(3);
 
-        // Once bob is recorded, another tab still signed in as alice keeps writing her key: ignored; bob's key is accepted.
+        // Once bob is recorded, his switch read restores what storage holds (the 7 another tab wrote meanwhile); another tab
+        // still signed in as alice keeps writing her key: ignored; bob's key is accepted.
         bobResolved.SetResult();
         await WriterHarness.Until(() => x.H.Store.State.Get<PersistenceState>() is { ScopeEpoch: 1, Status: PersistenceStatus.Hydrated });
+        x.H.Store.State.Get<Level>().ShouldBe(new(7));
         await x.ReceiveAsync("tab", "local", "ducky:alice:level", x.Envelope(new Level(8)));
-        x.H.Store.State.Get<Level>().ShouldBe(new(0));
+        x.H.Store.State.Get<Level>().ShouldBe(new(7));
         x.EventIds(LogLevel.Debug).Count(static id => id == 2050).ShouldBe(4);
         await x.ReceiveAsync("tab", "local", "ducky:bob:level", x.Envelope(new Level(9)));
         x.H.Store.State.Get<Level>().ShouldBe(new(9));

@@ -23,6 +23,12 @@ internal sealed partial class PersistenceMiddleware
     /// </summary>
     internal ConcurrentDictionary<string, long> Deferred { get; } = new();
 
+    /// <summary>
+    /// The payload each writer is storing, per full storage key, from before its provider call until the call returned
+    /// (§11.7): its setItem may run before the baseline records it, so a receipt that reads it then reads an echo.
+    /// </summary>
+    internal ConcurrentDictionary<string, string> InFlight { get; } = new();
+
     // Runs on the drainer. A terminal releases the deferred keys; a change of any origin but a restore signals its writer,
     // once the synchronous prefix has run (nothing is written before the first read: earlier changes are only deferred).
     // A receipt's CrossTab restore signals its key once reduced (§11.7); no other restore signals anything (INV-16).
@@ -618,16 +624,25 @@ internal sealed partial class PersistenceMiddleware
 
             var started = _owner._time.GetTimestamp();
             var envelope = EnvelopeWriter.Write(payload, _options.Version, _owner._time.GetUtcNow());
+
+            // In flight until the baseline records it (set first, so a receipt that misses the one sees the other) or the
+            // call failed (§11.7).
+            _owner.InFlight[key] = payload;
             var (delivered, registered) = await DeliverAsync(() => _owner.StoreAsync(_options, key, envelope, token)).ConfigureAwait(ConfigureAwaitOptions.None);
+            if (delivered)
+            {
+                // Telemetry first: a throwing listener never skips the baseline (SafeTelemetry, INV-03).
+                _owner._telemetry.Record(_owner._telemetry.SaveDuration, _owner._time.GetElapsedTime(started).TotalMilliseconds);
+                _owner._telemetry.Add(_owner._telemetry.Saves);
+                _owner.LastKnownPayload[key] = payload;
+            }
+
+            _owner.InFlight.TryRemove(key, out _);
             if (!delivered)
             {
                 return Outcome.Failed;
             }
 
-            // Telemetry first: a throwing listener never skips the baseline (SafeTelemetry, INV-03).
-            _owner._telemetry.Record(_owner._telemetry.SaveDuration, _owner._time.GetElapsedTime(started).TotalMilliseconds);
-            _owner._telemetry.Add(_owner._telemetry.Saves);
-            _owner.LastKnownPayload[key] = payload;
             _failing = false;
             Repair(registered);
             return Outcome.Clean;

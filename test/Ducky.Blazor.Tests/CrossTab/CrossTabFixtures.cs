@@ -138,10 +138,39 @@ internal sealed class CrossTabHarness : IAsyncDisposable
 
     public string Envelope(object state, int version = 1) => EnvelopeWriter.Write(WriterHarness.Payload(state), version, H.Time.GetUtcNow());
 
+    /// <summary>
+    /// Hands one notification to the store as ducky.js does, once storage holds what it names: a value or a removal of a
+    /// key is stored first (the store re-reads the key when its debounce ends, §11.7), a too-large or keyless one not.
+    /// </summary>
+    public Task Notify(string source, string area, string? key, string? value, bool tooLarge = false)
+    {
+        if (key is not null && !tooLarge)
+        {
+            if (value is null)
+            {
+                H.Storage.TryRemove((area, key), out _);
+            }
+            else
+            {
+                H.Storage[(area, key)] = value;
+            }
+        }
+
+        return Sync.OnStorageChangedAsync(source, area, key, value, tooLarge);
+    }
+
+    /// <summary>Holds the next storage read (the hydration read) on <paramref name="read"/>; later reads answer as before.</summary>
+    public void HoldNextRead(TaskCompletionSource<object?> read)
+    {
+        var answer = H.OnGet;
+        var held = 0;
+        H.OnGet = args => Interlocked.Exchange(ref held, 1) == 0 ? read.Task : answer(args);
+    }
+
     /// <summary>Delivers one notification, lets its 50 ms debounce elapse and waits until it was handled (a restore drains inline).</summary>
     public async Task ReceiveAsync(string source, string area, string? key, string? value, bool tooLarge = false)
     {
-        var handled = Sync.OnStorageChangedAsync(source, area, key, value, tooLarge);
+        var handled = Notify(source, area, key, value, tooLarge);
         H.Time.Advance(Debounce);
         await handled.WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken);
     }

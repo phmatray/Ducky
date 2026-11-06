@@ -414,6 +414,8 @@ public sealed class PauseSeedTests : BunitContext
         await WriterHarness.Until(() => _js.Calls.Any(static call => call.Identifier == "storageGet"));
 
         var sync = (DotNetObjectReference<PersistenceMiddleware.CrossTabSync>)_js.Calls.Single(static call => call.Identifier == "watchStorage").Args[1]!;
+        _readGate = null; // the read under way stays held; the receipt's own read (§11.7) answers what storage now holds
+        _storage[("local", "ducky:alice:counter")] = Envelope(7, version: 1);
         var handled = sync.Value.OnStorageChangedAsync("tab", "local", "ducky:alice:counter", Envelope(7, version: 1), tooLarge: false);
         _time.Advance(TimeSpan.FromMilliseconds(50));
         await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
@@ -440,6 +442,7 @@ public sealed class PauseSeedTests : BunitContext
         await WriterHarness.Until(() => _js.Calls.Any(static call => call.Identifier == "storageGet"));
 
         var sync = (DotNetObjectReference<PersistenceMiddleware.CrossTabSync>)_js.Calls.Single(static call => call.Identifier == "watchStorage").Args[1]!;
+        _readGate = null; // the read under way stays held; the receipt's own read (§11.7) finds the key removed
         var handled = sync.Value.OnStorageChangedAsync("tab", "local", "ducky:alice:counter", null, tooLarge: false);
         _time.Advance(TimeSpan.FromMilliseconds(50));
         await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
@@ -463,6 +466,7 @@ public sealed class PauseSeedTests : BunitContext
         await WriterHarness.Until(() => _js.Calls.Any(static call => call.Identifier == "storageGet"));
 
         var sync = (DotNetObjectReference<PersistenceMiddleware.CrossTabSync>)_js.Calls.Single(static call => call.Identifier == "watchStorage").Args[1]!;
+        _readGate = null; // the read under way stays held; the receipt's own read (§11.7) finds the key removed
         var handled = sync.Value.OnStorageChangedAsync("tab", "local", "ducky:alice:counter", null, tooLarge: false);
         _time.Advance(TimeSpan.FromMilliseconds(50));
         await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
