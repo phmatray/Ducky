@@ -527,7 +527,7 @@ public sealed class WitnessEffect(Probe probe) : ReactiveEffect
 }
 
 // Registered before ReactiveMiddleware: on a Ping it fires the due timers from inside AfterReduce, after the commit and
-// before the bridge's State.Value write (SPEC §14), recording the store's state at that moment.
+// before the bridge's State.OnNext write (SPEC §14), recording the store's state at that moment.
 public sealed class AdvanceOnPingMiddleware(TimeProvider time, Probe probe) : Middleware
 {
     public override void AfterReduce(ActionContext context)

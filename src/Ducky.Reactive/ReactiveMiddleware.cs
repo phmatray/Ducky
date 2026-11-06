@@ -24,7 +24,7 @@ internal sealed class ReactiveMiddleware : Middleware
     {
         if (!ReferenceEquals(context.State, context.PreviousState))
         {
-            _bridge.State.Value = context.State;
+            _bridge.State.OnNext(context.State);
         }
 
         _bridge.Actions.OnNext(context.Action);

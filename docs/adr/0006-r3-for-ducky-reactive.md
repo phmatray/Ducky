@@ -10,7 +10,7 @@ The published 1.0.292 used R3, the unreleased dev branch switched to System.Reac
 
 ## Decision
 
-Use R3 1.3.x, pinned exactly in `Directory.Packages.props` (a plain version, never a bracketed range) and the lock file, and packed as the minimum dependency `R3 >= 1.3.x`, so a consumer that also references a newer R3 gets no NU1107/NU1608 (review round 6; PackageSmoke asserts that no dependency uses a bracketed exact range). Only `OfActionType` is added. Errors use R3's non-terminal `OnErrorResume`; failure completion resubscribes with backoff on `TimeProvider`. The bridge's state is R3's `SynchronizedReactiveProperty<T>`, because subscriptions change on timer, pool and disposing threads while the drainer writes values (review round 5).
+Use R3 1.3.x, pinned exactly in `Directory.Packages.props` (a plain version, never a bracketed range) and the lock file, and packed as the minimum dependency `R3 >= 1.3.x`, so a consumer that also references a newer R3 gets no NU1107/NU1608 (review round 6; PackageSmoke asserts that no dependency uses a bracketed exact range). Only `OfActionType` is added. Errors use R3's non-terminal `OnErrorResume`; failure completion resubscribes with backoff on `TimeProvider`. The bridge's state is R3's `BehaviorSubject<T>`, which locks `OnNext` and `Subscribe`, because subscriptions change on timer, pool and disposing threads while the drainer writes values (review round 5); not `SynchronizedReactiveProperty<T>`, because `ReactiveProperty<T>`'s `[JsonConverter]` keeps R3's `ReactivePropertyJsonConverterFactory` in a trimmed app and its IL3050/IL2055/IL2072 fail the AotSmoke gate, a failure no R3 release up to 1.3.1 fixes (M11-04).
 
 ## Consequences
 

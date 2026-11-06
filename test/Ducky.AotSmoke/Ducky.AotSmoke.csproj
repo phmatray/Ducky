@@ -12,12 +12,19 @@
     <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
     <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
     <RestoreLockedMode>false</RestoreLockedMode>
+    <!-- Both generators (SPEC §18, in-repo generator consumers): the Draft generator emits Produce for the [Draftable]
+         records (M11-04). -->
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+    <DuckyUseDraftGenerator>true</DuckyUseDraftGenerator>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/Ducky/Ducky.csproj" />
     <!-- Server persistence and DevTools (M12-05), through public API only. -->
     <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <!-- Produce over a generated draftable record and a reactive effect emission (M11-04). -->
+    <ProjectReference Include="../../src/Ducky.Draft/Ducky.Draft.csproj" />
+    <ProjectReference Include="../../src/Ducky.Reactive/Ducky.Reactive.csproj" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <!-- The container AddDucky registers into. VersionOverride, not a PackageVersion: with transitive pinning a central
          entry would move every locked test project's transitive 10.0.12 to CentralTransitive (NU1004). Same version. -->

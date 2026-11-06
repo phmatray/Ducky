@@ -10,7 +10,7 @@ internal sealed record Tally(int Value);
 
 internal sealed record Bump;
 
-// Bumped like Bump, but parks the drainer between its commit and the bridge's State.Value write (ParkMiddleware).
+// Bumped like Bump, but parks the drainer between its commit and the bridge's State.OnNext write (ParkMiddleware).
 internal sealed record Park;
 
 internal sealed class TallySlice : Slice<Tally>
