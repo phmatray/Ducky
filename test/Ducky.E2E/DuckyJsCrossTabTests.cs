@@ -4,9 +4,10 @@ namespace Ducky.E2E;
 
 // The registration, relay and delivery-failure handling of ducky.js (SPEC §11.7, §11.9, INV-18) on the static harness
 // page. The clock is paused, so every module timer fires only when a spec runs it (§17.2). Each fake DotNetObjectReference
-// logs "<ref>@<ms since t0>: <OnStorageChanged arguments>" into window.calls and answers as its mode says: "ok" resolves,
-// "down" rejects with a connection error, "gone" with the untracked-object error (WebAssembly's, or Server's with
-// DetailedErrors), "hold" keeps the promise in pending, "slow" resolves after ref.latency ms.
+// logs "<ref>@<ms since t0>: <OnStorageChanged arguments>" into window.calls (the trailing registration id goes to
+// window.ids as "<ref>><id>") and answers as its mode says: "ok" resolves, "down" rejects with a connection error, "gone"
+// with the untracked-object error (WebAssembly's, or Server's with DetailedErrors), "hold" keeps the promise in pending,
+// "slow" resolves after ref.latency ms.
 public sealed class DuckyJsCrossTabTests
 {
     // 1 s doubling to the 30 s cap (§11.7), from the first failure at 0.
@@ -19,12 +20,14 @@ public sealed class DuckyJsCrossTabTests
         async () => {
             window.ducky = await import('/ducky.js');
             window.calls = [];
+            window.ids = [];
             window.t0 = Date.now();
             window.makeRef = name => {
                 const ref = {
                     mode: 'ok',
                     pending: [],
                     invokeMethodAsync(method, ...args) {
+                        if (method === 'OnStorageChanged') ids.push(`${name}>${args.pop()}`);
                         calls.push(`${name}@${Date.now() - t0}: ${method} ${args.map(String).join(' ')}`);
                         if (ref.mode === 'hold') return new Promise((resolve, reject) => ref.pending.push({ resolve, reject }));
                         if (ref.mode === 'slow') return new Promise(resolve => setTimeout(resolve, ref.latency));
@@ -66,7 +69,7 @@ public sealed class DuckyJsCrossTabTests
                 step('a storage event for ids registered without crossTab', true);
                 ducky.unwatchStorage('b');
                 step('set after b unwatched', ducky.storageSet('local', 'app:k', '{}', 'a'));
-                return out;
+                return [...out, ...ids];
             }
             """);
 
@@ -87,6 +90,8 @@ public sealed class DuckyJsCrossTabTests
             "set by c -> true",
             "a storage event for ids registered without crossTab -> true",
             "set after b unwatched -> true",
+            // Each delivery names the id it was registered under, so a store reached through another id rejects it (INV-18).
+            "b>b", "a>a", "a>a", "a>a", "b>b", "a>a", "b>b",
         ]);
     }
 

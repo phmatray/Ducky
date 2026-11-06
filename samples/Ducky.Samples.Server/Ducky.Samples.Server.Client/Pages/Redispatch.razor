@@ -1,0 +1,26 @@
+@page "/redispatch"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inherits DuckyComponent<CounterState>
+@* A subscriber that re-dispatches on every change of the synced counter, a cross-tab receipt included (SPEC §11.7):
+   CounterResynced sets an equal but new state, which persistence must dedupe instead of writing it back to the other tab. *@
+
+<PageTitle>Redispatch</PageTitle>
+<h1>A subscriber that re-dispatches</h1>
+<p>Count: <span data-testid="count">@State.Value</span></p>
+<button data-testid="increment" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => Dispatch(new Increment())">Increment</button>
+
+@code {
+    private Selection<int>? _resync;
+
+    protected override void OnInitialized() =>
+        _resync = Store.Select<CounterState, int>(counter => counter.Value, value => Store.Dispatch(new CounterResynced(value)));
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _resync?.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+}

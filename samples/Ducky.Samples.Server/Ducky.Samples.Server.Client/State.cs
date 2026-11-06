@@ -11,12 +11,20 @@ public sealed record CounterState(int Value);
 [ActionType("counter/increment")]
 public sealed record Increment;
 
+/// <summary>Sets the counter to a value it already holds: what the /redispatch subscriber dispatches on every change.</summary>
+[ActionType("counter/resynced")]
+public sealed record CounterResynced(int Value);
+
 /// <summary>The cross-tab counter.</summary>
 [Persist(SyncAcrossTabs = true)]
 public sealed class CounterSlice : Slice<CounterState>
 {
     /// <summary>Registers the reducers.</summary>
-    public CounterSlice() => On<Increment>(state => state with { Value = state.Value + 1 });
+    public CounterSlice()
+    {
+        On<Increment>(state => state with { Value = state.Value + 1 });
+        On<CounterResynced>((_, action) => new CounterState(action.Value));
+    }
 
     /// <inheritdoc />
     public override string Key => "counter";
@@ -148,6 +156,7 @@ public sealed class ApiCallsSlice : Slice<ApiCallsState>
 [JsonSerializable(typeof(ApiCallsState))]
 [JsonSerializable(typeof(ProductsState))]
 [JsonSerializable(typeof(Increment))]
+[JsonSerializable(typeof(CounterResynced))]
 [JsonSerializable(typeof(DraftChanged))]
 [JsonSerializable(typeof(ThemeToggled))]
 [JsonSerializable(typeof(NoteAdded))]

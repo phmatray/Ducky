@@ -15,12 +15,14 @@ public sealed class DuckyJsDevToolsTests
         async () => {
             window.ducky = await import('/ducky.js');
             window.calls = [];
+            window.ids = [];
             window.t0 = Date.now();
             window.makeRef = name => {
                 const ref = {
                     mode: 'ok',
                     pending: [],
                     invokeMethodAsync(method, ...args) {
+                        if (method === 'OnStorageChanged') ids.push(`${name}>${args.pop()}`);
                         calls.push(`${name}@${Date.now() - t0}: ${method} ${args.map(String).join(' ')}`);
                         if (ref.mode === 'hold') return new Promise((resolve, reject) => ref.pending.push({ resolve, reject }));
                         if (ref.mode === 'down') return Promise.reject(new Error('Cannot send data if the connection is not in the \'Connected\' State.'));
