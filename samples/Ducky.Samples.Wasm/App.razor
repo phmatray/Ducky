@@ -1,0 +1,18 @@
+@* The generated OpenComponent<Router> trips the trim analysis on the framework's own DAM-annotated Router.NotFoundPage
+   (IL2111 at build, IL2110 from ILLink once the component is kept; spike S-3, SPEC §10). *@
+@attribute [UnconditionalSuppressMessage("Trimming", "IL2111", Justification = "The framework's: Router.NotFoundPage is DAM-annotated and unset here.")]
+@attribute [UnconditionalSuppressMessage("Trimming", "IL2110", Justification = "The framework's: Router.NotFoundPage is DAM-annotated and unset here.")]
+
+<DuckyInitializer>
+    <Loading>
+        <p>Loading…</p>
+    </Loading>
+    <ChildContent>
+        <Router AppAssembly="typeof(App).Assembly">
+            <Found Context="route">
+                <RouteView RouteData="route" DefaultLayout="typeof(MainLayout)" />
+                <FocusOnNavigate RouteData="route" Selector="h1" />
+            </Found>
+        </Router>
+    </ChildContent>
+</DuckyInitializer>

@@ -1,0 +1,67 @@
+@page "/"
+@inherits DuckyComponent
+@inject FilterStore Filter
+
+<h1>Todos</h1>
+
+<form @onsubmit="Add">
+    <input data-testid="new-todo" @bind="_title" placeholder="What needs doing?" aria-label="New todo" />
+    <button type="submit" data-testid="add">Add</button>
+</form>
+
+<nav aria-label="Filter">
+    @foreach (var view in Enum.GetValues<TodoView>())
+    {
+        <button data-testid="filter-@view.ToString().ToLowerInvariant()" aria-pressed="@(_view.Value == view)" @onclick="() => Filter.Show(view)">@view</button>
+    }
+</nav>
+
+<ul data-testid="todos">
+    @foreach (var todo in _visible.Value)
+    {
+        <li data-testid="todo" data-id="@todo.Id">
+            <label>
+                <input type="checkbox" checked="@todo.Done" @onchange="() => Store.TodoToggled(todo.Id)" />
+                <span class="@(todo.Done ? "done" : null)">@todo.Title</span>
+            </label>
+            <button aria-label="Remove @todo.Title" @onclick="() => Store.TodoRemoved(todo.Id)">×</button>
+        </li>
+    }
+</ul>
+
+<p data-testid="remaining">@_remaining.Value left</p>
+
+<p>
+    <button data-testid="load-suggestions" disabled="@_suggestions.Value.Loading" @onclick="() => Store.LoadSuggestions()">Load suggestions</button>
+    <button data-testid="clear-persisted" @onclick="() => Dispatch(new ClearPersistedState())">Clear persisted state</button>
+</p>
+
+@if (_suggestions.Value.Error is { } error)
+{
+    <p role="alert" data-testid="suggestions-error">@error</p>
+}
+
+@code {
+    private string _title = "";
+    private Selection<ImmutableList<Todo>> _visible = null!;
+    private Selection<int> _remaining = null!;
+    private Selection<TodoView> _view = null!;
+    private Selection<Suggestions> _suggestions = null!;
+
+    protected override void OnInitialized()
+    {
+        _visible = Select(TodoSelectors.Visible.Create());
+        _remaining = Select(TodoSelectors.Remaining.Create());
+        _view = Select<TodoFilter, TodoView>(static filter => filter.View);
+        _suggestions = Select<Suggestions, Suggestions>(static suggestions => suggestions);
+    }
+
+    private void Add()
+    {
+        if (!string.IsNullOrWhiteSpace(_title))
+        {
+            Store.TodoAdded(_title.Trim());
+            _title = "";
+        }
+    }
+}

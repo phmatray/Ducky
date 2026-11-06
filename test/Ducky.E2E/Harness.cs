@@ -36,22 +36,26 @@ internal sealed class Harness : IAsyncDisposable
 
     public Uri BaseUrl { get; }
 
-    public static async Task<Harness> StartAsync()
+    // Serves harness/ unless given another root, such as a published sample's wwwroot.
+    public static async Task<Harness> StartAsync(string? root = null)
     {
-        var host = await StartStaticHostAsync(Path.Combine(AppContext.BaseDirectory, "harness"));
+        var host = await StartStaticHostAsync(root ?? Path.Combine(AppContext.BaseDirectory, "harness"));
         var playwright = await Playwright.CreateAsync();
         var browser = await playwright[BrowserName].LaunchAsync();
         return new Harness(playwright, browser, host);
     }
 
-    // Also serves the trimmed WASM publish (SPEC §17.2) once WasmTrimmedSmoke lands.
+    // Also serves a published WASM sample's wwwroot (SPEC §17.2): "/" is its index.html, so the router sees its "/" route,
+    // and unknown types are served too, so the runtime gets its ICU data (_framework/icudt*.dat).
     public static async Task<WebApplication> StartStaticHostAsync(string root)
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         var app = builder.Build();
-        app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(root) });
+        var files = new PhysicalFileProvider(root);
+        app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = files });
+        app.UseStaticFiles(new StaticFileOptions { FileProvider = files, ServeUnknownFileTypes = true });
         await app.StartAsync();
         return app;
     }
