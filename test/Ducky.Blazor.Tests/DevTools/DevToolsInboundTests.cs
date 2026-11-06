@@ -1,4 +1,7 @@
+using System.Globalization;
+using System.Text;
 using Ducky.Blazor.Tests.Core;
+using Ducky.Blazor.Tests.Fakes;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
@@ -52,7 +55,7 @@ public sealed class DevToolsInboundTests
         x.Middleware.Sends.ShouldBe(3);
 
         // Off the latest: Local and Effect actions are vetoed, late effect results included; the state stays the jumped one.
-        Message(x, Jump("JUMP_TO_ACTION", 2));
+        await Message(x, Jump("JUMP_TO_ACTION", 2));
         (await x.Store.DispatchAsync(new Increment()).WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Vetoed);
         gate.SetResult();
         (await late.Task.WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Vetoed);
@@ -223,7 +226,7 @@ public sealed class DevToolsInboundTests
         await Dispatch(x, new Increment());
         var state = x.Store.State;
 
-        x.Middleware.OnMessage(json, 7, tooLarge: json is null);
+        await x.Middleware.OnMessageAsync(json, 7, tooLarge: json is null);
         await x.Store.WhenIdleAsync(Ct);
 
         x.Store.State.ShouldBeSameAs(state);
@@ -345,11 +348,14 @@ public sealed class DevToolsInboundTests
         ];
         for (var seq = 0; seq < messages.Length; seq++)
         {
-            x.Middleware.OnMessage(messages[seq], seq, false);
+            await x.Middleware.OnMessageAsync(messages[seq], seq, false);
             await x.Store.WhenIdleAsync(Ct);
         }
 
-        x.Middleware.OnMessage(null, 3, tooLarge: true); // a large one, never pulled while inert
+        // A large one is taken, so ducky.js no longer keeps it, but never read while inert.
+        var reference = new FakeJsStreamReference(Encoding.UTF8.GetBytes(messages[2]));
+        x.OnTake = _ => reference;
+        await x.Middleware.OnMessageAsync(null, 3, tooLarge: true);
         await x.Store.WhenIdleAsync(Ct);
 
         x.Store.State.ShouldBeSameAs(state);
@@ -361,7 +367,175 @@ public sealed class DevToolsInboundTests
             (LogLevel.Debug, "Redux DevTools message 3 ignored (type '(null)', too large: True)"),
         ]);
         x.EventIds(LogLevel.Debug).ShouldNotContain(2066);
+        x.Js.Calls.Where(static call => call.Identifier == "devtoolsTakeMessage").ShouldHaveSingleItem().Args.ShouldBe([x.StoreId, 3L]);
+        reference.Opened.ShouldBeFalse();
+        reference.Disposed.ShouldBeTrue();
         (await x.Store.DispatchAsync(new Increment()).WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Reduced);
+    }
+
+    [Fact]
+    public async Task DevTools_JumpMessage_StateStrippedInline()
+    {
+        // INV-23, §11.8: ducky.js forwards a jump as {type, payload: {type, actionId, index}}, without the extension's state,
+        // and inline whatever the budget. With a 2-byte budget and a state far above it, the jump still arrives inline and
+        // restores the typed entry; nothing is pulled.
+        await using var x = new DevToolsHarness(static d => d.UseDevTools(), blazor: static o => o.InlinePayloadBytes = 2);
+        await x.InitializeAsync();
+        await Dispatch(x, new SetLabel(new string('x', 64 * 1024))); // 2
+        var label = x.Store.State.Get<Label>();
+        await Dispatch(x, new SetLabel("latest")); // 3
+        ((string)x.Connect[2]!).ShouldContain("\"maxInlineBytes\":2");
+
+        await Send(x, """{"type":"DISPATCH","payload":{"type":"JUMP_TO_ACTION","actionId":2,"index":2}}""");
+
+        x.Store.State.Get<Label>().ShouldBeSameAs(label);
+        x.Identifiers.ShouldNotContain("devtoolsTakeMessage");
+        x.EventIds(LogLevel.Debug).ShouldNotContain(2065);
+    }
+
+    // INV-23, §11.8: a message above InlinePayloadBytes arrives as (null, seq, tooLarge) and is pulled once through
+    // devtoolsTakeMessage(id, seq) by stream, read with maxAllowedSize MaxPayloadBytes and always disposed. One at
+    // MaxPayloadBytes is read; Length 1 (already taken or pruned) is ignored with a Debug log; one byte above MaxPayloadBytes
+    // is ignored with Warning 2023, decided from Length before the stream is opened; a rejected or interrupted pull, and a
+    // disposal on a dropped circuit, never throw.
+    [Theory]
+    [InlineData("read")]
+    [InlineData("taken")]
+    [InlineData("over")]
+    [InlineData("rejected")]
+    [InlineData("interrupted")]
+    [InlineData("dispose-disconnected")]
+    [InlineData("dispose-cancelled")]
+    public async Task DevTools_LargeImport_ReadViaStream(string pull)
+    {
+        const int MaxPayloadBytes = 64 * 1024;
+        const string Import = """{"type":"DISPATCH","payload":{"type":"IMPORT_STATE","nextLiftedState":{"computedStates":[{"state":{"counter":{"Value":5},"label":{"Text":"imported"}}}]}}}""";
+        await using var x = new DevToolsHarness(static d => d.UseDevTools(), blazor: static o => o.MaxPayloadBytes = MaxPayloadBytes);
+        await x.InitializeAsync();
+        await Dispatch(x, new Increment());
+        await Send(x, Jump("JUMP_TO_ACTION", 1)); // time travel, which the import releases
+        var state = x.Store.State;
+        var reference = new FakeJsStreamReference(pull == "taken" ? new byte[1] : Encoding.UTF8.GetBytes(Import.PadRight(MaxPayloadBytes + (pull == "over" ? 1 : 0))))
+        {
+            OnDispose = pull switch
+            {
+                "dispose-disconnected" => new JSDisconnectedException("circuit gone"),
+                "dispose-cancelled" => new TaskCanceledException("interop timed out"),
+                _ => null,
+            },
+        };
+        x.OnTake = pull switch
+        {
+            "rejected" => static _ => Task.FromException<object?>(new JSException("rejected")),
+            "interrupted" => static _ => Task.FromException<object?>(new JSDisconnectedException("circuit gone")),
+            _ => _ => reference,
+        };
+        x.Logs.Clear();
+
+        await x.Middleware.OnMessageAsync(null, 5, tooLarge: true);
+        await x.Store.WhenIdleAsync(Ct);
+
+        x.Js.Calls.Where(static call => call.Identifier == "devtoolsTakeMessage").ShouldHaveSingleItem().Args.ShouldBe([x.StoreId, 5L]);
+        x.Logs.GetSnapshot().Where(static r => r.Level >= LogLevel.Warning).Select(static r => (r.Id.Id, r.Message)).ShouldBe(pull == "over"
+            ? [(2023, $"Redux DevTools message 5 is {(MaxPayloadBytes + 1).ToString(CultureInfo.InvariantCulture)} bytes, above MaxPayloadBytes ({MaxPayloadBytes.ToString(CultureInfo.InvariantCulture)}); ignored")]
+            : []);
+        reference.Opened.ShouldBe(pull is "read" or "dispose-disconnected" or "dispose-cancelled");
+        reference.Disposed.ShouldBe(pull is not ("rejected" or "interrupted"));
+        x.Middleware.Sends.ShouldBe(2); // an import's restore is never sent
+        if (pull is "read" or "dispose-disconnected" or "dispose-cancelled")
+        {
+            x.Store.State.Get<Counter>().Value.ShouldBe(5);
+            x.Store.State.Get<Label>().Text.ShouldBe("imported");
+            x.EventIds(LogLevel.Debug).ShouldNotContain(2065);
+            x.EventIds(LogLevel.Debug).Contains(2000).ShouldBe(pull != "read"); // a disposal the circuit interrupted, logged
+            (await x.Store.DispatchAsync(new Increment()).WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Reduced);
+        }
+        else
+        {
+            x.Store.State.ShouldBeSameAs(state);
+            x.Logs.GetSnapshot().Where(static r => r.Id.Id == 2065).Select(static r => (r.Level, r.Message)).ShouldBe(
+                [(LogLevel.Debug, "Redux DevTools message 5 ignored (type '(null)', too large: True)")]);
+            (await x.Store.DispatchAsync(new Increment()).WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Vetoed); // still time travelling
+        }
+    }
+
+    // §11.8: ducky.js forwards each message without waiting for the last one to settle, and a large one is handled only once
+    // its pull returns. Messages are handled in seq order all the same: a jump that arrives while an import is still being
+    // pulled is applied after it, so the state and the veto are the jump's. A pull that faults (no JS exception) faults its
+    // own delivery only; the next message is still handled.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DevTools_InlineJumpDuringLargeImportPull_HandledInSeqOrder(bool faulted)
+    {
+        const string Import = """{"type":"DISPATCH","payload":{"type":"IMPORT_STATE","nextLiftedState":{"computedStates":[{"state":{"counter":{"Value":5}}}]}}}""";
+        await using var x = new DevToolsHarness(static d => d.UseDevTools());
+        await x.InitializeAsync(); // 0 @@INIT, 1 StoreInitialized
+        var first = x.Store.State.Get<Counter>();
+        await Dispatch(x, new Increment()); // 2
+        var take = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.OnTake = _ => take.Task;
+
+        var import = x.Middleware.OnMessageAsync(null, 1, tooLarge: true);
+        var jump = x.Middleware.OnMessageAsync(Jump("JUMP_TO_ACTION", 1), 2, false);
+        jump.IsCompleted.ShouldBeFalse(); // behind the import
+        if (faulted)
+        {
+            take.SetException(new InvalidOperationException("faulted"));
+        }
+        else
+        {
+            take.SetResult(new FakeJsStreamReference(Encoding.UTF8.GetBytes(Import)));
+        }
+
+        await jump.WaitAsync(_bound, Ct);
+        (await Record.ExceptionAsync(() => import.WaitAsync(_bound, Ct)))?.Message.ShouldBe(faulted ? "faulted" : null);
+        import.IsFaulted.ShouldBe(faulted);
+        await x.Store.WhenIdleAsync(Ct);
+
+        x.Store.State.Get<Counter>().ShouldBeSameAs(first);
+        (await x.Store.DispatchAsync(new Increment()).WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Vetoed);
+    }
+
+    [Fact]
+    public async Task DevTools_JumpConcurrentWithSend_RestoresMatchingEntry_Deterministic()
+    {
+        // INV-28, §11.8: the fake runtime delivers each jump re-entrantly from inside devtoolsSend, on the drainer, mid-send.
+        // The entry being sent is already published, and a jump reads one published array: a jump to the entry before
+        // restores it, and a jump to the entry in flight finds it as the latest, so time travel releases.
+        await using var x = new DevToolsHarness(static d => d.UseDevTools());
+        Dictionary<long, string> jumps = [];
+        var sends = 0L;
+        x.OnSend = _ =>
+        {
+            if (jumps.Remove(++sends, out var jump))
+            {
+                Settled(x.Middleware.OnMessageAsync(jump, sends, false));
+            }
+
+            return true;
+        };
+        await x.InitializeAsync(); // 0 @@INIT, 1 StoreInitialized
+        await Dispatch(x, new Increment()); // 2
+        await Dispatch(x, new Increment()); // 3
+        var third = x.Store.State.Get<Counter>();
+
+        jumps[4] = Jump("JUMP_TO_ACTION", 3);
+        await Dispatch(x, new Increment()); // 4, the jump to 3 delivered inside its send
+        x.Store.State.Get<Counter>().ShouldBeSameAs(third);
+        (await x.Store.DispatchAsync(new Increment()).WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Vetoed);
+
+        jumps[5] = """{"type":"DISPATCH","payload":{"type":"JUMP_TO_STATE","index":5}}""";
+        x.Store.Restore(new Dictionary<string, object> { ["label"] = new Label("restored") }, Origin.Hydration); // 5
+        await x.Store.WhenIdleAsync(Ct);
+        x.Store.State.Get<Counter>().ShouldBeSameAs(third);
+        x.Store.State.Get<Label>().Text.ShouldBe("restored");
+        (await x.Store.DispatchAsync(new Increment()).WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Reduced);
+        x.Store.State.Get<Counter>().Value.ShouldBe(3);
+        x.Middleware.Sends.ShouldBe(6);
+        jumps.ShouldBeEmpty();
+
+        static void Settled(Task delivered) => delivered.IsCompletedSuccessfully.ShouldBeTrue(); // an inline message settles at once
     }
 
     private static async Task Dispatch(DevToolsHarness x, object action)
@@ -373,11 +547,11 @@ public sealed class DevToolsInboundTests
     private static string Jump(string type, long actionId) =>
         $$$"""{"type":"DISPATCH","payload":{"type":"{{{type}}}","actionId":{{{actionId}}}}}""";
 
-    private static void Message(DevToolsHarness x, string json) => x.Middleware.OnMessage(json, 1, false);
+    private static Task Message(DevToolsHarness x, string json) => x.Middleware.OnMessageAsync(json, 1, false);
 
     private static async Task Send(DevToolsHarness x, string json)
     {
-        Message(x, json);
+        await Message(x, json);
         await x.Store.WhenIdleAsync(Ct);
     }
 }
