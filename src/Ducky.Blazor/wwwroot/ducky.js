@@ -98,6 +98,8 @@ function relay(area, key, value, writer) {
 // unsettled after firstRetryMs fails; its late success still recovers. Each delivery has a seq, so a successful re-read
 // settles only the failures of deliveries sent before it. A late rejection of a delivery already counted as failed adds
 // no failure (its pair may have been settled meanwhile) but still prunes on the untracked-object error.
+// Each delivery names its id: a resumed circuit's stale registration can hold the DotNetObject id of the new circuit's
+// store, which then rejects it, so the stale id still fails and is pruned at its cap (INV-18).
 // Returns the delivery's seq.
 function notify(id, registration, source, area, key, value, reread = false) {
     const large = value !== null && utf8Length(value) > registration.maxInlineBytes;
@@ -110,7 +112,7 @@ function notify(id, registration, source, area, key, value, reread = false) {
             fail(id, registration, seq, source, area, reread, 'unsettled');
         }
     }, firstRetryMs);
-    registration.ref.invokeMethodAsync('OnStorageChanged', source, area, key, large ? null : value, large).then(
+    registration.ref.invokeMethodAsync('OnStorageChanged', source, area, key, large ? null : value, large, id).then(
         () => {
             clearTimeout(hung);
             if (current()) {

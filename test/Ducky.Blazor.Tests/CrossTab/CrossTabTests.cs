@@ -551,4 +551,26 @@ public sealed class CrossTabTests
         await mixed.ReceiveAsync("doc", "local", "app:alice:level", mixed.Envelope(new Level(2)));
         mixed.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
     }
+
+    [Fact]
+    public async Task CrossTab_NotificationForOtherRegistrationId_Rejected()
+    {
+        // §11.7, INV-18: a resumed circuit's stale registration can hold the DotNetObject id the new circuit gave this store's
+        // reference, so its deliveries land here. Each names the registration id ducky.js holds it under: one that is not
+        // this store's id is rejected and reads nothing, so the module prunes that registration at its cap; this store's
+        // own notifications are still handled.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        var reads = x.H.Js.Calls.Count;
+
+        var stale = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(4)), id: "0123456789abcdef0123456789abcdef");
+        x.H.Time.Advance(CrossTabHarness.Debounce);
+
+        (await Should.ThrowAsync<InvalidOperationException>(stale.WaitAsync(TimeSpan.FromSeconds(10), Ct))).Message.ShouldContain("0123456789abcdef0123456789abcdef");
+        x.H.Js.Calls.Count.ShouldBe(reads);
+        x.Restores.Entries.ShouldBeEmpty();
+        await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)));
+        x.H.Store.State.Get<Level>().ShouldBe(new(5));
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+    }
 }

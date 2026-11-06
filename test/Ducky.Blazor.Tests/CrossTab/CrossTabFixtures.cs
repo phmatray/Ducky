@@ -140,9 +140,10 @@ internal sealed class CrossTabHarness : IAsyncDisposable
 
     /// <summary>
     /// Hands one notification to the store as ducky.js does, once storage holds what it names: a value or a removal of a
-    /// key is stored first (the store re-reads the key when its debounce ends, §11.7), a too-large or keyless one not.
+    /// key is stored first (the store re-reads the key when its debounce ends, §11.7), a too-large or keyless one not. It
+    /// names the registration id the store watched with, unless <paramref name="id"/> names another.
     /// </summary>
-    public Task Notify(string source, string area, string? key, string? value, bool tooLarge = false)
+    public Task Notify(string source, string area, string? key, string? value, bool tooLarge = false, string? id = null)
     {
         if (key is not null && !tooLarge)
         {
@@ -156,7 +157,7 @@ internal sealed class CrossTabHarness : IAsyncDisposable
             }
         }
 
-        return Sync.OnStorageChangedAsync(source, area, key, value, tooLarge);
+        return Sync.OnStorageChangedAsync(source, area, key, value, tooLarge, id ?? (string)Watches[0][0]!);
     }
 
     /// <summary>Holds the next storage read (the hydration read) on <paramref name="read"/>; later reads answer as before.</summary>

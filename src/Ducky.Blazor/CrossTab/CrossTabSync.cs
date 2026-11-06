@@ -50,8 +50,8 @@ internal sealed partial class PersistenceMiddleware
 
     /// <summary>
     /// The store's ducky.js storage registration (§11.7): one <c>watchStorage</c> per store, under the store id, before the
-    /// first read, removed on dispose; <see cref="OnStorageChangedAsync"/> receives other tabs' storage events and other
-    /// stores' writes in this document.
+    /// first read, removed on dispose; <see cref="OnStorageChangedAsync(string, string, string, string, bool, string)"/>
+    /// receives other tabs' storage events and other stores' writes in this document.
     /// </summary>
     internal sealed class CrossTabSync : IAsyncDisposable
     {
@@ -113,13 +113,24 @@ internal sealed partial class PersistenceMiddleware
         }
 
         /// <summary>
+        /// ducky.js delivers each notification of registration <paramref name="id"/> here (§11.7). A resumed circuit's old
+        /// registration can hold the DotNetObject id the new circuit gave this store's reference, so its deliveries land on
+        /// this store: one that names another id is rejected, so the module prunes that registration at its cap (INV-18)
+        /// instead of delivering every event twice for good.
+        /// </summary>
+        [JSInvokable("OnStorageChanged")]
+        public Task OnStorageChangedAsync(string source, string area, string? key, string? value, bool tooLarge, string id) =>
+            id == _owner._id
+                ? OnStorageChangedAsync(source, area, key, value, tooLarge)
+                : Task.FromException(new InvalidOperationException($"A notification of registration '{id}' reached store '{_owner._id}'."));
+
+        /// <summary>
         /// One storage notification (§11.7): <paramref name="source"/> "tab" (another tab's storage event, localStorage only)
         /// or "doc" (another store of this document wrote); a null <paramref name="key"/> re-reads every accepted key. A
         /// named key is re-read too once its debounce ends, by stream when <paramref name="tooLarge"/>: the forwarded
         /// <paramref name="value"/> may be stale by then (this store's own write, or a newer one, may have landed since), so
         /// it is never applied. Never throws: a notification it can't use is ignored with a log.
         /// </summary>
-        [JSInvokable("OnStorageChanged")]
         public Task OnStorageChangedAsync(string source, string area, string? key, string? value, bool tooLarge)
         {
             var accepted = Accepted(source, area);

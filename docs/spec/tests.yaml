@@ -111,6 +111,7 @@ tests:
   - { name: CrossTab_ListenerRegisteredOnceAcrossReinit, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
   - { name: CrossTab_NewerVersionEnvelope_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_NonAsciiValueUnderCharLimitOverByteLimit_UsesStream, projects: [Ducky.Blazor.Tests, Ducky.E2E], invariants: [INV-23], stage: 18 }
+  - { name: CrossTab_NotificationForOtherRegistrationId_Rejected, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 18 }
   - { name: CrossTab_OldScopeEventDuringSwitch_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 14 }
   - { name: CrossTab_OriginNeverPersisted, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_OtherScopeKey_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
