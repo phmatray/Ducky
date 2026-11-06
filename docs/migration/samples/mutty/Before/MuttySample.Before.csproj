@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Mutty 2.0.0, its last release on nuget.org (SPEC §3, §13.4): the app the guide starts from. -->
+  <ItemGroup>
+    <PackageReference Include="Mutty" Version="2.0.0" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

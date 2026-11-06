@@ -24,3 +24,9 @@
   items:
     - name: From Ducky 1.x
       href: migration/ducky-1x.md
+    - name: From Mutty
+      href: migration/mutty.md
+    - name: From DuckyNext
+      href: migration/duckynext.md
+    - name: From the blazor-state monorepo
+      href: migration/blazor-state.md
