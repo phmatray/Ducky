@@ -1,9 +1,11 @@
 using System.Collections.Concurrent;
 using Ducky.Blazor.Tests.Core;
+using Ducky.Blazor.Tests.DistributedCache;
 using Ducky.Blazor.Tests.DistributedCache.ScopeSwitch;
 using Ducky.Blazor.Tests.Fakes;
 using Ducky.Blazor.Tests.Persistence;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Logging;
@@ -590,6 +592,278 @@ public sealed class CrossTabReceiptTests
         x.H.Written.Select(static write => write.Payload).ShouldBe(["""{"Value":3}""", """{"Value":0}"""]);
     }
 
+    [Fact]
+    public async Task CrossTab_ReceiptReadsOwnUnacknowledgedRemoval_KeyStaysRemoved()
+    {
+        // ClearPersistedState's removeItem ran, its result not back in .NET yet, so the baseline still holds {3} when a
+        // receipt of the key re-reads it and finds it absent. That absence is this store's own removal in flight, an echo:
+        // taking the removal branch would reset the clearing store (which keeps its in-memory state, §11.5), and its writer
+        // would then write the cleared key again.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var removed = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnRemove = _ => removed.Task;
+        x.H.Store.Dispatch(new ClearPersistedState());
+        try
+        {
+            (await x.H.NextRemovalAsync()).Key.ShouldBe("ducky:level");
+            x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":3}""");
+
+            await x.ReceiveAsync("tab", "local", "ducky:level", null);
+            x.Restores.Entries.ShouldBeEmpty();
+            x.H.Store.State.Get<Level>().ShouldBe(new(3));
+            x.EventIds(LogLevel.Debug).ShouldNotContain(2054);
+        }
+        finally
+        {
+            // Answered even after a failed assertion: the dispose would wait on the held removal.
+            removed.TrySetResult(true);
+        }
+
+        await x.H.IterationsAsync("level", 2);
+        await x.H.Store.WhenIdleAsync(Ct);
+        x.H.Written.ShouldHaveSingleItem();
+        x.H.Storage.ContainsKey(("local", "ducky:level")).ShouldBeFalse();
+        x.H.Middleware.LastKnownPayload.ContainsKey("ducky:level").ShouldBeFalse();
+        x.H.Store.State.Get<Level>().ShouldBe(new(3));
+
+        // Acknowledged, the removal is no longer in flight: another tab's later {5}, then its removal, both apply.
+        await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)));
+        x.H.Store.State.Get<Level>().ShouldBe(new(5));
+        await x.ReceiveAsync("tab", "local", "ducky:level", null);
+        x.H.Store.State.Get<Level>().ShouldBe(new(0));
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level"), (Origin.CrossTab, "level")]);
+    }
+
+    [Fact]
+    public async Task CrossTab_ValueReceiptDuringOwnRemoval_Restored_NotWrittenBack()
+    {
+        // Only an absence is this store's own removal in flight: a value read meanwhile was written by another store after
+        // that removeItem ran, and is restored. The removal's result then keeps the baseline the receipt set (it went over
+        // {3}), so the receipt's signal finds state and baseline equal and writes nothing back (INV-18, no echo).
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var removed = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnRemove = _ => removed.Task;
+        x.H.Store.Dispatch(new ClearPersistedState());
+        try
+        {
+            (await x.H.NextRemovalAsync()).Key.ShouldBe("ducky:level");
+            await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)));
+            x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+            x.H.Store.State.Get<Level>().ShouldBe(new(5));
+        }
+        finally
+        {
+            removed.TrySetResult(true);
+        }
+
+        await x.H.IterationsAsync("level", 2);
+        await WriterHarness.Until(() => !x.H.Middleware.Writers["level"].Dirty && !x.H.Middleware.Writers["level"].Signalled);
+        await x.H.Store.WhenIdleAsync(Ct);
+        x.H.Written.Select(static write => write.Payload).ShouldBe(["""{"Value":3}"""]);
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":5}""");
+        x.H.Middleware.InFlight.ContainsKey("ducky:level").ShouldBeFalse();
+        x.H.Store.State.Get<Level>().ShouldBe(new(5));
+    }
+
+    [Fact]
+    public async Task CrossTab_ReceiptReadOvertakenByOwnRemoval_Dropped()
+    {
+        // (non-normative, §11.7) A removal starts like a write: a receipt whose storageGet ran before this store's own
+        // removeItem, answered once that removal was acknowledged, read a value storage no longer holds. Restoring it would
+        // set a baseline for an absent key: it reads the key again, finds it absent, and the clearing store keeps its state,
+        // with an absent baseline.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+
+        // Another tab writes {5}; this store's receipt reads it, and the result is held.
+        var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var asked = false;
+        var answer = x.H.OnGet;
+        x.H.OnGet = _ =>
+        {
+            x.H.OnGet = answer;
+            asked = true;
+            return read.Task;
+        };
+        var other = x.Envelope(new Level(5));
+        var handled = x.Notify("tab", "local", "ducky:level", other);
+        x.H.Time.Advance(CrossTabHarness.Debounce);
+        try
+        {
+            await WriterHarness.Until(() => asked);
+            x.H.Store.Dispatch(new ClearPersistedState());
+            (await x.H.NextRemovalAsync()).Key.ShouldBe("ducky:level");
+            await x.H.IterationsAsync("level", 2);
+            x.H.Middleware.LastKnownPayload.ContainsKey("ducky:level").ShouldBeFalse();
+        }
+        finally
+        {
+            read.TrySetResult(other);
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        x.Restores.Entries.ShouldBeEmpty();
+        x.H.Store.State.Get<Level>().ShouldBe(new(3));
+        x.H.Middleware.LastKnownPayload.ContainsKey("ducky:level").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CrossTab_RemovalFailed_NotInFlight_RemovalReceiptResets()
+    {
+        // (non-normative, §11.7) A removal that failed is no longer in flight: until its retry the baseline still names the
+        // stored {3}, and a receipt that finds the key absent (another store removed it) resets the slice like any removal.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var removals = 0;
+        x.H.OnRemove = _ => ++removals == 1 ? Task.FromException<object?>(new JSDisconnectedException("circuit gone")) : true;
+        x.H.Store.Dispatch(new ClearPersistedState());
+        (await x.H.NextRemovalAsync()).Key.ShouldBe("ducky:level");
+        await x.H.Time.TimerAsync(TimeSpan.FromSeconds(1));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":3}""");
+
+        await x.ReceiveAsync("tab", "local", "ducky:level", null);
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+        x.H.Store.State.Get<Level>().ShouldBe(new(0));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":0}""");
+    }
+
+    [Fact]
+    public async Task CrossTab_ReceiptReadOvertakenByFailedOwnWrite_ReadAgain()
+    {
+        // §11.7: a write of this store sent after a receipt's read overtakes it, and the value read is not
+        // applied; but a write that failed (a quota error) never landed: the key is read again, and the other tab's {5},
+        // which storage still holds, is restored. Dropped, it would leave this store on {7} for good: no later notification
+        // comes, and the retries keep failing.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+
+        var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var asked = false;
+        var answer = x.H.OnGet;
+        x.H.OnGet = _ =>
+        {
+            x.H.OnGet = answer;
+            asked = true;
+            return read.Task;
+        };
+        var other = x.Envelope(new Level(5));
+        var handled = x.Notify("tab", "local", "ducky:level", other);
+        x.H.Time.Advance(CrossTabHarness.Debounce);
+        try
+        {
+            await WriterHarness.Until(() => asked);
+            x.H.OnSet = static _ => Task.FromException<object?>(new JSException("QuotaExceededError"));
+            x.H.Store.Dispatch(new SetLevel(7));
+            (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":7}""");
+            await x.H.NextFailureAsync();
+            await WriterHarness.Until(() => !x.H.Middleware.InFlight.ContainsKey("ducky:level"));
+        }
+        finally
+        {
+            read.TrySetResult(other);
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Reads(x).ShouldBe(2);
+        x.EventIds(LogLevel.Debug).ShouldNotContain(2056);
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+        x.H.Store.State.Get<Level>().ShouldBe(new(5));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":5}""");
+    }
+
+    [Fact]
+    public async Task CrossTab_ReceiptDuringOwnWrite_ValueOfBaseline_Restored()
+    {
+        // §11.7, INV-18: this store's {4} is in flight (its setItem ran, its result not back) when another
+        // tab writes {3} again, the value this store's baseline still names. Ambiguous until the write resolves, the receipt
+        // waits for it, then reads again: delivered, the write moved the baseline to {4}, so the re-read {3} is a newer
+        // value, not an echo, and is restored. Dropped as an echo, this store would stay on {4} while storage holds {3}.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var writer = x.H.Middleware.Writers["level"];
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        Task handled;
+        try
+        {
+            handled = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(3)));
+            x.H.Time.Advance(CrossTabHarness.Debounce);
+            await WriterHarness.Until(() => Reads(x) == 1);
+            handled.IsCompleted.ShouldBeFalse();
+            x.Restores.Entries.ShouldBeEmpty();
+        }
+        finally
+        {
+            ack.TrySetResult(true);
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Reads(x).ShouldBe(2);
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+        await WriterHarness.Until(() => !x.H.Middleware.InFlight.ContainsKey("ducky:level") && !writer.Dirty);
+        x.H.Store.State.Get<Level>().ShouldBe(new(3));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":3}""");
+        x.H.Written.Select(static write => write.Payload).ShouldBe(["""{"Value":3}""", """{"Value":4}"""]);
+    }
+
+    [Fact]
+    public async Task CrossTab_ReceiptDuringOwnWrite_ChangedBackBeforeItsResult_WrittenAgain()
+    {
+        // §11.5, §11.7, INV-18: this store's {4} is in flight when another tab's {5} lands after it, and is restored;
+        // then the state goes back to {4} before the write's result arrives. That success must not set the baseline to {4}
+        // over the receipt's {5} (what storage holds): the writer would dedupe the {4}, and this store would stay on {4}
+        // while storage and the other tab hold {5}. It is written again.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var writer = x.H.Middleware.Writers["level"];
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        try
+        {
+            await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)));
+            x.H.Store.State.Get<Level>().ShouldBe(new(5));
+            x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":5}""");
+            x.H.Store.Dispatch(new SetLevel(4));
+            await x.H.Store.WhenIdleAsync(Ct);
+        }
+        finally
+        {
+            x.H.OnSet = static _ => true;
+            ack.TrySetResult(true);
+        }
+
+        await WriterHarness.Until(() => !x.H.Middleware.InFlight.ContainsKey("ducky:level") && !writer.Dirty);
+        x.H.Written.Select(static write => write.Payload).ShouldBe(["""{"Value":3}""", """{"Value":4}""", """{"Value":4}"""]);
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":4}""");
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(0)]
@@ -764,4 +1038,310 @@ public sealed class CrossTabReceiptTests
 
         public TaskCompletionSource Resume { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
+
+    [Fact]
+    public async Task CrossTab_RemovalReceiptDuringOwnFirstWrite_Applied_TabsConverge()
+    {
+        // §11.7, INV-18: this store's first {4} is in flight (its setItem ran, its result not back, no baseline yet) when
+        // another tab removes the key. Ambiguous until the write resolves, the receipt waits for it, then reads again:
+        // delivered, the write set the baseline to {4}, so the removal landed after it, no local change is still waiting for
+        // its first write, and the removal resets the slice. Kept as an echo, this store would stay on {4} while storage is empty.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        var writer = x.H.Middleware.Writers["level"];
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        Task handled;
+        try
+        {
+            x.H.Middleware.LastKnownPayload.ContainsKey("ducky:level").ShouldBeFalse();
+            handled = x.Notify("tab", "local", "ducky:level", null);
+            x.H.Time.Advance(CrossTabHarness.Debounce);
+            await WriterHarness.Until(() => Reads(x) == 1);
+            handled.IsCompleted.ShouldBeFalse();
+            x.Restores.Entries.ShouldBeEmpty();
+        }
+        finally
+        {
+            ack.TrySetResult(true);
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Reads(x).ShouldBe(2);
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+
+        await WriterHarness.Until(() => !x.H.Middleware.InFlight.ContainsKey("ducky:level") && !writer.Dirty && !writer.Signalled);
+        await x.H.Store.WhenIdleAsync(Ct);
+        x.H.Store.State.Get<Level>().ShouldBe(new(0));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":0}""");
+        x.H.Written.ShouldHaveSingleItem();
+        x.H.Storage.ContainsKey(("local", "ducky:level")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CrossTab_RemovalReceiptDuringOwnWriteOverRemovedBaseline_Applied_TabsConverge()
+    {
+        // §11.7, INV-18: as above, with the baseline an earlier removal receipt set (the key was absent) when {4} is sent.
+        // Once the write delivered, that baseline is {4}: the re-read removal landed after it, and resets the slice.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        var writer = x.H.Middleware.Writers["level"];
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        await x.ReceiveAsync("tab", "local", "ducky:level", null);
+        x.H.Store.State.Get<Level>().ShouldBe(new(0));
+        await WriterHarness.Until(() => !writer.Dirty && !writer.Signalled);
+        await x.H.Store.WhenIdleAsync(Ct);
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":0}""");
+
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        Task handled;
+        try
+        {
+            handled = x.Notify("tab", "local", "ducky:level", null);
+            x.H.Time.Advance(CrossTabHarness.Debounce);
+            await WriterHarness.Until(() => Reads(x) == 2);
+            handled.IsCompleted.ShouldBeFalse();
+            x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+        }
+        finally
+        {
+            ack.TrySetResult(true);
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Reads(x).ShouldBe(2 + 1);
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level"), (Origin.CrossTab, "level")]);
+
+        await WriterHarness.Until(() => !x.H.Middleware.InFlight.ContainsKey("ducky:level") && !writer.Dirty && !writer.Signalled);
+        await x.H.Store.WhenIdleAsync(Ct);
+        x.H.Store.State.Get<Level>().ShouldBe(new(0));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":0}""");
+        x.H.Written.Select(static write => write.Payload).ShouldBe(["""{"Value":3}""", """{"Value":4}"""]);
+        x.H.Storage.ContainsKey(("local", "ducky:level")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CrossTab_ReceiptOfBaselineDuringOwnWrite_WriteFails_LocalChangeKept()
+    {
+        // §11.7, INV-16, INV-18: this store's {4} is in flight over the baseline {3} when a receipt reads {3}. That read is
+        // ambiguous while the call is unresolved: another store's newer {3} if {4} landed, storage's old {3} if it never does
+        // (an interop timeout on a dropped circuit). The receipt waits for the call, then reads again: the write failed, so
+        // the re-read is an echo of the baseline, the local change is kept, and the writer's retry writes it.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        Task handled;
+        try
+        {
+            handled = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(3)));
+            x.H.Time.Advance(CrossTabHarness.Debounce);
+            await WriterHarness.Until(() => Reads(x) == 1);
+            handled.IsCompleted.ShouldBeFalse();
+            x.Restores.Entries.ShouldBeEmpty();
+            x.H.OnSet = static _ => true;
+        }
+        finally
+        {
+            ack.TrySetException(new TaskCanceledException("interop timeout"));
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Reads(x).ShouldBe(2);
+        x.EventIds(LogLevel.Debug).Count(static id => id == 2056).ShouldBe(1);
+        x.EventIds(LogLevel.Debug).ShouldNotContain(2054); // a value echo is dropped before the removal's checks
+        x.Restores.Entries.ShouldBeEmpty();
+        x.H.Store.State.Get<Level>().ShouldBe(new(4));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":3}""");
+        await x.H.Time.TimerAsync(TimeSpan.FromSeconds(1));
+        x.H.Time.Advance(TimeSpan.FromSeconds(1));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        await WriterHarness.Until(() => x.H.Middleware.LastKnownPayload["ducky:level"] == """{"Value":4}""");
+    }
+
+    [Fact]
+    public async Task CrossTab_ResyncDuringOwnFirstWrite_WriteFails_LocalChangeKept()
+    {
+        // §11.7, INV-16, INV-18: this store's first {4} is in flight (no baseline) when a resync reads the key absent. While
+        // the call is unresolved the absence is ambiguous: another store's removal if {4} landed, the untouched key if it
+        // never does. The receipt waits for the call, then reads again: the write failed, so the absence is kept as an echo
+        // (no local change waiting for its first write is discarded), and the writer's retry writes {4}.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        Task handled;
+        try
+        {
+            handled = x.Notify("tab", "local", null, null);
+            x.H.Time.Advance(CrossTabHarness.Debounce);
+            await WriterHarness.Until(() => Reads(x) == 1);
+            handled.IsCompleted.ShouldBeFalse();
+            x.Restores.Entries.ShouldBeEmpty();
+            x.H.OnSet = static _ => true;
+        }
+        finally
+        {
+            ack.TrySetException(new TaskCanceledException("interop timeout"));
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Reads(x).ShouldBe(2);
+        x.EventIds(LogLevel.Debug).Count(static id => id == 2056).ShouldBe(1);
+        x.Restores.Entries.ShouldBeEmpty();
+        x.H.Store.State.Get<Level>().ShouldBe(new(4));
+        x.H.Middleware.LastKnownPayload.ContainsKey("ducky:level").ShouldBeFalse();
+        await x.H.Time.TimerAsync(TimeSpan.FromSeconds(1));
+        x.H.Time.Advance(TimeSpan.FromSeconds(1));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        await WriterHarness.Until(() => x.H.Middleware.LastKnownPayload.GetValueOrDefault("ducky:level") == """{"Value":4}""");
+    }
+
+    [Fact]
+    public async Task CrossTab_WaitingReceiptSuperseded_EndsWithoutReading()
+    {
+        // §11.7: a receipt waiting for this store's {4} to resolve is superseded by a newer notification of the key, which
+        // reads the other tab's {5} (no echo: neither the write in flight nor the baseline) and restores it. Once {4}
+        // resolves, the older receipt ends without reading again, and {4}'s success keeps the baseline the receipt set.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var writer = x.H.Middleware.Writers["level"];
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        Task waiting;
+        try
+        {
+            waiting = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(3)));
+            x.H.Time.Advance(CrossTabHarness.Debounce);
+            await WriterHarness.Until(() => x.EventIds(LogLevel.Debug).Contains(2056));
+            await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)));
+            Reads(x).ShouldBe(2);
+            x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+            x.H.Store.State.Get<Level>().ShouldBe(new(5));
+            waiting.IsCompleted.ShouldBeFalse();
+        }
+        finally
+        {
+            ack.TrySetResult(true);
+        }
+
+        await waiting.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        await WriterHarness.Until(() => x.H.Middleware.Resolved["ducky:level"].Task.IsCompleted && !writer.Dirty && !writer.Signalled);
+        await x.H.Store.WhenIdleAsync(Ct);
+        Reads(x).ShouldBe(2);
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+        x.H.Store.State.Get<Level>().ShouldBe(new(5));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":5}""");
+        x.H.Written.Select(static write => write.Payload).ShouldBe(["""{"Value":3}""", """{"Value":4}"""]);
+    }
+
+    [Fact]
+    public async Task CrossTab_WaitingReceipt_EndsOnDispose()
+    {
+        // (non-normative, §11.7) A receipt waiting for this store's {4} to resolve ends when the store is disposed, before
+        // that write's result arrives (the dispose stops cross-tab receipts before its flush): it neither reads nor restores.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        Task disposed;
+        try
+        {
+            var waiting = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(3)));
+            x.H.Time.Advance(CrossTabHarness.Debounce);
+            await WriterHarness.Until(() => x.EventIds(LogLevel.Debug).Contains(2056));
+            disposed = x.H.DisposeStoreAsync();
+            await waiting.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+            ack.Task.IsCompleted.ShouldBeFalse();
+            Reads(x).ShouldBe(1);
+            x.Restores.Entries.ShouldBeEmpty();
+        }
+        finally
+        {
+            ack.TrySetResult(true);
+        }
+
+        await disposed.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+    }
+
+    [Fact]
+    public async Task CrossTab_ServerWriteBlockingSynchronously_ReceiptOfBrowserKeyProceeds()
+    {
+        // (non-normative, §11.7) A Server key gets no receipt, so its provider call is not ordered with receipts' reads: a
+        // cache write that blocks in its synchronous part (sync-over-async user code) never holds up a receipt of a synced
+        // browser key, which runs under _issue. The cache waits (at most 30 s) for that receipt to restore {2}.
+        using var receipted = new ManualResetEventSlim();
+        using var entered = new ManualResetEventSlim();
+        var released = false;
+        var cache = new TestCache(yield: false)
+        {
+            SetFault = () =>
+            {
+                entered.Set();
+                released = receipted.Wait(TimeSpan.FromSeconds(30));
+                return null;
+            },
+        };
+        await using var x = new CrossTabHarness(
+            d => d
+                .AddBlazor(static o => (o.KeyPrefix, o.Scope) = ("app", static (_, _) => ValueTask.FromResult<string?>("alice")))
+                .Persist<LevelSlice>(static o => o.SyncAcrossTabs = true).Persist<DialSlice>(static o => o.Storage = PersistStorage.Server),
+            browser: false,
+            services: s => s.AddSingleton<IDistributedCache>(cache));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetDial(1));
+        await WriterHarness.Until(() => entered.IsSet);
+
+        await x.ReceiveAsync("tab", "local", "app:alice:level", x.Envelope(new Level(2)));
+        x.H.Store.State.Get<Level>().ShouldBe(new(2));
+        receipted.Set();
+        await WriterHarness.Until(() => cache.Stored("app:alice:dial") is not null);
+        released.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task CrossTab_BrowserWrite_SentBeforeItIsCounted()
+    {
+        // (non-normative, §11.7) A browser call is sent under _sends before it is counted, so a receipt that reads the count
+        // with its read never counts a call sent after that read. The storageSet runs while the count is still 0.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        long? counted = null;
+        x.H.OnSet = _ =>
+        {
+            counted = x.H.Middleware.Started.GetValueOrDefault("ducky:level");
+            return true;
+        };
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        counted.ShouldBe(0);
+        await WriterHarness.Until(() => x.H.Middleware.Started.GetValueOrDefault("ducky:level") == 1);
+    }
+
+    // The storageGet calls this store made for the level key (its hydration read excluded: it ran before the test's writes).
+    private static int Reads(CrossTabHarness x) => x.H.Js.Calls.Count(static call => call.Identifier == "storageGet" && (string?)call.Args[1] == "ducky:level") - 1;
 }

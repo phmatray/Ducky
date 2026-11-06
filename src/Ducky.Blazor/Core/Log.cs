@@ -132,6 +132,9 @@ internal static partial class Log
     [LoggerMessage(EventId = 2055, Level = LogLevel.Debug, Message = "ducky.js no longer knows store '{Id}' (its registration was pruned): watchStorage is issued again and every registered area is re-read")]
     internal static partial void CrossTabReRegistered(SafeLogger logger, string id);
 
+    [LoggerMessage(EventId = 2056, Level = LogLevel.Debug, Message = "Storage notification for '{Key}' read what this store's own write or removal in flight may still change; read again once that call resolved")]
+    internal static partial void CrossTabReceiptWaits(SafeLogger logger, string key);
+
     [LoggerMessage(EventId = 2060, Level = LogLevel.Warning, Message = "Redux DevTools did not connect within HydrationTimeout ({Timeout}), or the connect was interrupted or rejected; DevTools is inert for this store")]
     internal static partial void DevToolsConnectFailed(SafeLogger logger, Exception? exception, TimeSpan timeout);
 

@@ -114,17 +114,28 @@ tests:
   - { name: CrossTab_OldScopeEventDuringSwitch_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 14 }
   - { name: CrossTab_OriginNeverPersisted, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_OtherScopeKey_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptDuringOwnWrite_ChangedBackBeforeItsResult_WrittenAgain, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptDuringOwnWrite_ValueOfBaseline_Restored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptOfBaselineDuringOwnWrite_WriteFails_LocalChangeKept, projects: [Ducky.Blazor.Tests], invariants: [INV-16, INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptReadOvertakenByFailedOwnWrite_ReadAgain, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptReadOvertakenByOwnWrite_Dropped_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptReadsOwnUnacknowledgedRemoval_KeyStaysRemoved, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_ReceiptReadsOwnUnacknowledgedWrite_PendingChangeWins, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_RemoteChangeDuringLocalPendingWrite_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_RemovalDuringHydration_RemovalWins, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_RemovalReceiptDuringOwnFirstWrite_Applied_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_RemovalReceiptDuringOwnWriteOverRemovedBaseline_Applied_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_RemovalReceipt_NoWriteBack, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_ResyncAfterDisconnect_UnwrittenLocalChangeOnOtherKey_Kept, projects: [Ducky.Blazor.Tests], invariants: [INV-16, INV-18], stage: 14 }
+  - { name: CrossTab_ResyncDuringOwnFirstWrite_WriteFails_LocalChangeKept, projects: [Ducky.Blazor.Tests], invariants: [INV-16, INV-18], stage: 14 }
   - { name: CrossTab_StorageSetReportsUnknownId_ReWatchesAndReReads, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_SubscriberThatRedispatches_ConvergesWithinNWrites, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
   - { name: CrossTab_TooLargeKeyRemovedBeforePull_RealRuntime_ResetsSlice, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
   - { name: CrossTab_TooLargeKeyRemovedBeforePull_ResetsSlice, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_TooLarge_ReReadViaStream, projects: [Ducky.Blazor.Tests], stage: 14 }
   - { name: CrossTab_TwoPages_ChangeInAAppearsInB, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_ValueReceiptDuringOwnRemoval_Restored_NotWrittenBack, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_WaitingReceiptSuperseded_EndsWithoutReading, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_Watch_PassesFullArgumentList, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: Descriptors_MatchCatalogue, projects: [Ducky.Draft.Generators.Tests, Ducky.Generators.Tests], stage: 17 }
   - { name: DevToolsPayload_NonEmpty, projects: [Ducky.AotSmoke], invariants: [INV-23], stage: 15 }
