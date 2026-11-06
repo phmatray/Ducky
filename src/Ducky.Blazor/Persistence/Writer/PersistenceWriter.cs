@@ -24,10 +24,85 @@ internal sealed partial class PersistenceMiddleware
     internal ConcurrentDictionary<string, long> Deferred { get; } = new();
 
     /// <summary>
-    /// The payload each writer is storing, per full storage key, from before its provider call until the call returned
-    /// (§11.7): its setItem may run before the baseline records it, so a receipt that reads it then reads an echo.
+    /// The payload each writer is storing, per full storage key, from before its provider call until the call returned, or
+    /// until a receipt restored a value written after it (§11.7): its setItem may run before the baseline records it, so a
+    /// receipt that reads it then reads an echo. A removal holds <see cref="RemovalInFlight"/> the same way, so a receipt
+    /// that reads its absence drops it.
     /// </summary>
     internal ConcurrentDictionary<string, string> InFlight { get; } = new();
+
+    /// <summary>
+    /// Per full storage key, the provider calls (writes and removals) its writer has sent (§11.7), counted under
+    /// <see cref="_sends"/> with the send, as a receipt reads the count with the send of its read: the count a receipt reads
+    /// names exactly the calls ducky.js runs before that read, which runs calls in issue order.
+    /// </summary>
+    internal ConcurrentDictionary<string, long> Started { get; } = new();
+
+    // §11.7: held while a writer sends a provider call and counts it, while a receipt reads the count and sends its read,
+    // and while a receipt compares the count and sets the baseline (inside _issue, never around a restore). Writers never
+    // take _issue, so a drain run under it never waits on them.
+    private readonly Lock _sends = new();
+
+    /// <summary>What <see cref="InFlight"/> holds for a removal: its own instance, equal to no serialization.</summary>
+    internal static readonly string RemovalInFlight = new('\0', 1);
+
+    /// <summary>
+    /// Per full storage key, completed once the writer has handled the result of the call it last sent (§11.7): the baseline
+    /// records a delivered call, and the call is no longer in flight. A receipt whose read is ambiguous while that call is
+    /// unresolved waits for it, then reads again. Set with <see cref="InFlight"/> under <see cref="_sends"/>, so a receipt
+    /// that sees a call in flight there finds its signal.
+    /// </summary>
+    internal ConcurrentDictionary<string, TaskCompletionSource> Resolved { get; } = new();
+
+    // §11.7: the call is resolved (delivered and acknowledged, or failed): no longer in flight, and a receipt waiting on it reads again.
+    private void Resolve(string key)
+    {
+        InFlight.TryRemove(key, out _);
+        Resolved[key].SetResult();
+    }
+
+    // §11.7: marks what the call stores (or the removal marker) in flight, sends it and counts it, under _sends, with the
+    // baseline it is sent over. JsBridge sends the call synchronously once the module is imported, which it is before any write.
+    // A Server call (ordered false) is sent outside _sends: no receipt reads its key, and the cache's synchronous part (user
+    // code) must never hold up a receipt that waits for _sends under _issue.
+    private (string? Baseline, Task<(bool Delivered, bool Registered)> Call) Send(string key, string inFlight, bool ordered, Func<ValueTask<(bool Delivered, bool Registered)>> call)
+    {
+        (string? Baseline, Task<(bool Delivered, bool Registered)>? Call) sent = default;
+        lock (_sends)
+        {
+            InFlight[key] = inFlight;
+            Resolved[key] = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            sent = (LastKnownPayload.GetValueOrDefault(key), ordered ? call().AsTask() : null);
+            // Stryker disable once Arithmetic : any step moves the count; receipts compare it only for a change (§11.7)
+            Started.AddOrUpdate(key, 1, static (_, started) => started + 1);
+        }
+
+        return (sent.Baseline, sent.Call ?? call().AsTask());
+    }
+
+    // §11.7: a delivered write records its payload as the baseline (a removal, null, resets it to absent), unless a receipt
+    // replaced the baseline it was sent over: that receipt's read was sent after this call, so what it read landed after it
+    // and is what storage holds. Compared by reference: a receipt that set an equal value is a newer write of another store
+    // all the same.
+    private void Acknowledge(string key, string? baseline, string? payload)
+    {
+        lock (_sends)
+        {
+            if (!ReferenceEquals(LastKnownPayload.GetValueOrDefault(key), baseline))
+            {
+                return;
+            }
+
+            if (payload is null)
+            {
+                LastKnownPayload.TryRemove(key, out _);
+            }
+            else
+            {
+                LastKnownPayload[key] = payload;
+            }
+        }
+    }
 
     // Runs on the drainer. A terminal releases the deferred keys; a change of any origin but a restore signals its writer,
     // once the synchronous prefix has run (nothing is written before the first read: earlier changes are only deferred).
@@ -497,14 +572,17 @@ internal sealed partial class PersistenceMiddleware
                 }
                 else if (removal is not null)
                 {
-                    var (delivered, registered) = await DeliverAsync(() => _owner.RemoveAsync(_options, removal.Key, token)).ConfigureAwait(ConfigureAwaitOptions.None);
+                    // In flight like a write (§11.7): its removeItem may run before its result resets the baseline below.
+                    var (delivered, registered, baseline) = await DeliverAsync(removal.Key, RemovalInFlight, () => _owner.RemoveAsync(_options, removal.Key, token)).ConfigureAwait(ConfigureAwaitOptions.None);
                     if (!delivered)
                     {
+                        _owner.Resolve(removal.Key);
                         return Outcome.Failed;
                     }
 
                     _removals.TryDequeue(out _);
-                    _owner.LastKnownPayload.TryRemove(removal.Key, out _);
+                    _owner.Acknowledge(removal.Key, baseline, null);
+                    _owner.Resolve(removal.Key);
                     Repair(registered);
                     Interlocked.Exchange(ref _clean, removal.Stamp);
                     _failing = false;
@@ -625,19 +703,18 @@ internal sealed partial class PersistenceMiddleware
             var started = _owner._time.GetTimestamp();
             var envelope = EnvelopeWriter.Write(payload, _options.Version, _owner._time.GetUtcNow());
 
-            // In flight until the baseline records it (set first, so a receipt that misses the one sees the other) or the
-            // call failed (§11.7).
-            _owner.InFlight[key] = payload;
-            var (delivered, registered) = await DeliverAsync(() => _owner.StoreAsync(_options, key, envelope, token)).ConfigureAwait(ConfigureAwaitOptions.None);
+            // In flight until the baseline records it (set first, so a receipt that misses the one sees the other), the call
+            // failed, or a receipt read a newer value (§11.7).
+            var (delivered, registered, baseline) = await DeliverAsync(key, payload, () => _owner.StoreAsync(_options, key, envelope, token)).ConfigureAwait(ConfigureAwaitOptions.None);
             if (delivered)
             {
                 // Telemetry first: a throwing listener never skips the baseline (SafeTelemetry, INV-03).
                 _owner._telemetry.Record(_owner._telemetry.SaveDuration, _owner._time.GetElapsedTime(started).TotalMilliseconds);
                 _owner._telemetry.Add(_owner._telemetry.Saves);
-                _owner.LastKnownPayload[key] = payload;
+                _owner.Acknowledge(key, baseline, payload);
             }
 
-            _owner.InFlight.TryRemove(key, out _);
+            _owner.Resolve(key);
             if (!delivered)
             {
                 return Outcome.Failed;
@@ -650,12 +727,15 @@ internal sealed partial class PersistenceMiddleware
 
         // One provider call (a write or a removal): not delivered when it failed, which keeps the baseline (§11.5). A disconnect or an
         // interop timeout is not delivered (Debug only, no PersistenceFailed); any other failure starts a streak.
-        private async Task<(bool Delivered, bool Registered)> DeliverAsync(Func<ValueTask<(bool Delivered, bool Registered)>> call)
+        // Also returns the baseline the call was sent over (§11.7).
+        private async Task<(bool Delivered, bool Registered, string? Baseline)> DeliverAsync(string key, string inFlight, Func<ValueTask<(bool Delivered, bool Registered)>> call)
         {
             try
             {
+                var (baseline, sent) = _owner.Send(key, inFlight, _options.Storage != PersistStorage.Server, call);
                 // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-                return await call().ConfigureAwait(false);
+                var (delivered, registered) = await sent.ConfigureAwait(false);
+                return (delivered, registered, baseline);
             }
 #pragma warning disable CA1031 // justification: any provider failure is reported as PersistenceFailed and keeps the baseline (§11.5)
             catch (Exception exception)

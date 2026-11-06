@@ -219,8 +219,28 @@ internal sealed partial class PersistenceMiddleware
 #pragma warning restore VSTHRD003
                 if (_latest[key] == notification)
                 {
+                    // A read a call of this store overtook is read again at once: sent after that call, it finds what the call
+                    // left. A read ambiguous while a call is unresolved is read again once it resolved. Each round follows a
+                    // call of this store sent or resolved, so the loop ends when its writer is idle.
+                    var (started, value) = Issue(key, read, token);
                     // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
-                    Apply(slice, key, notification, await read(token).ConfigureAwait(false));
+                    while (Apply(slice, key, notification, started, await value.ConfigureAwait(false)) is { } resolved)
+                    {
+                        if (!resolved.IsCompleted)
+                        {
+                            Log.CrossTabReceiptWaits(_owner._log, key);
+                            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+                            await resolved.WaitAsync(token).ConfigureAwait(false);
+                        }
+
+                        // A newer notification of the key superseded this one meanwhile: it reads the key itself.
+                        if (_latest[key] != notification)
+                        {
+                            break;
+                        }
+
+                        (started, value) = Issue(key, read, token);
+                    }
                 }
             }
 #pragma warning disable CA1031 // justification: the stop ended the wait or the read (an interrupted read throws no OperationCanceledException)
@@ -237,67 +257,74 @@ internal sealed partial class PersistenceMiddleware
             }
         }
 
+        // §11.7: the read is sent under _sends with the count of the calls this store's writers sent, which they send and
+        // count under it too: the count names exactly the calls ducky.js runs before this read.
+        private (long Started, Task<string?> Value) Issue(string key, Func<CancellationToken, ValueTask<string?>> read, CancellationToken token)
+        {
+            lock (_owner._sends)
+            {
+                return (_owner.Started.GetValueOrDefault(key), read(token).AsTask());
+            }
+        }
+
         // Absence is a payload (§11.7): a removal is the initial state, whose local serialization an absent key reads as. A
         // value stored but unreadable here (above MaxPayloadBytes, a rejected pull: the provider logged it) is no removal, and
         // is ignored. A value goes through the hydration EnvelopeReader (a newer version, an expired or unreadable envelope, a
         // throwing constructor: ignored, the reader logs it) and is dropped when its local re-serialization equals the
-        // key's write in flight (its setItem may have run before its result sets the baseline) or the baseline (an echo;
-        // read in that order, as the writer sets the baseline before it clears the write in flight); a value this store can't serialize back is ignored (no baseline could guard it). Then, under
-        // _issue: drop a notification no longer current or whose key the current epoch no longer names (a scope switch since
-        // its receipt), bump the sequence number (a removal too, whatever its serialization, so it orders against a hydration
-        // read), and restore, unless a removal finds the baseline already absent (or still the one a removal
-        // receipt set) or an initial state it can't serialize (the serializer logs it); set
+        // key's write in flight (its setItem ran before the read, and may have run before its result sets the baseline). A
+        // value this store can't serialize back is ignored (no baseline could guard it). Then, under _issue: drop a
+        // notification no longer current or whose key the current epoch no longer names (a scope switch since its
+        // receipt); under _sends, read again at once when this store sent a call of the key after the read (a completed
+        // task); when what was read is what the baseline names (a value equal to it, a removal over an absent baseline or
+        // the one a removal receipt set), wait for a call of the key still in flight and read again (its task: delivered or
+        // failed decides it), or with none in flight drop it as an echo (a value) or keep the slice (a removal, logged);
+        // else bump the sequence number (a removal too, whatever its serialization, so it orders against a hydration
+        // read), and restore, unless a removal finds an initial state it can't serialize (the serializer logs it); set
         // the baseline and signal the writer, which dedupes a pending write of the same state away.
         // While the key's hydration read is open, a value is a Hydration restore: it does come from storage, and step 6 drops
         // that read. A removal stays a CrossTab restore: the slice stays unrestored.
-        private void Apply(Persisted slice, string key, long notification, string? text)
+#pragma warning disable VSTHRD200 // justification: synchronous; returns what the receipt waits for before it reads again, or null when it is done
+        private Task? Apply(Persisted slice, string key, long notification, long started, string? text)
+#pragma warning restore VSTHRD200
         {
             var (sliceKey, type, options) = (slice.Slice.Key, slice.Slice.StateType, slice.Options);
             if (text == BrowserStorageProvider.Unreadable)
             {
-                return;
+                return null;
             }
 
-            // A removal's serialization decides only its restore: its sequence bump does not depend on it (§11.7).
+            // A removal's serialization decides only its restore: its sequence bump does not depend on it (§11.7). An absence
+            // read while this store's own removal is in flight is that removal, an echo: its result has yet to reset the baseline.
             var removal = text is null;
+            if (removal && ReferenceEquals(_owner.InFlight.GetValueOrDefault(key), RemovalInFlight))
+            {
+                return null;
+            }
+
             var state = removal ? _owner.Store.InitialState.Get(sliceKey) : null;
             string? payload = null;
             var serialized = removal
                 ? _owner.Store.Json.TrySerialize(state!, type, out payload)
                 : _reader.TryRead(text!, key, type, options.Version, options.Migrations, options.MaxAge, _owner._time.GetUtcNow(), out state)
                     && _owner.Store.Json.TrySerialize(state, type, out payload);
-            if (!removal && (!serialized || _owner.InFlight.GetValueOrDefault(key) == payload || _owner.LastKnownPayload.GetValueOrDefault(key) == payload))
+            if (!removal && (!serialized || _owner.InFlight.GetValueOrDefault(key) == payload))
             {
-                return;
+                return null;
             }
 
             lock (_owner._issue)
             {
                 var attempt = _owner.Current!;
+
                 if (_latest[key] != notification || _stop.IsCancellationRequested)
                 {
-                    return;
+                    return null;
                 }
 
                 if (_owner.StorageKey(sliceKey, options, attempt.Epoch) != key)
                 {
                     Log.CrossTabKeyIgnored(_owner._log, key);
-                    return;
-                }
-
-                // Stryker disable once Arithmetic : any step moves the number; step 6 compares it only for a change
-                Volatile.Write(ref _owner._sequences, _owner._sequences.SetItem(sliceKey, _owner._sequences.GetValueOrDefault(sliceKey) + 1));
-                if (removal && !serialized)
-                {
-                    return;
-                }
-
-                // An absent baseline, or the one a removal receipt set (the key is still absent): the removal is an echo,
-                // and discards no local change still waiting for its first write.
-                if (removal && (!_owner.LastKnownPayload.TryGetValue(key, out var last) || ReferenceEquals(last, _removed.GetValueOrDefault(key))))
-                {
-                    Log.CrossTabRemovalKept(_owner._log, key);
-                    return;
+                    return null;
                 }
 
                 // The key's read is open: the current attempt reads it and has claimed no terminal (§11.6 per-attempt key sets).
@@ -305,26 +332,81 @@ internal sealed partial class PersistenceMiddleware
                 // That restore is recorded before the baseline is set: a writer that read the new baseline sees the record
                 // until the commit, and the committed slot after it (PersistenceWriter.WriteAsync).
                 var hydration = !removal && attempt.Terminal == 0 && attempt.Keys.Contains(sliceKey);
-                if (hydration)
+
+                // Under _sends from the comparison to the baseline, so no call is sent in between: a write sent after it went
+                // over the baseline this receipt set, and its success replaces it (PersistenceWriter.Acknowledge).
+                lock (_owner._sends)
                 {
-                    attempt.Received = attempt.Received.Add(sliceKey);
-                    _owner.Signal(sliceKey);
-                }
-                else
-                {
-                    var receipt = new Receipt(sliceKey, state!);
-                    _owner._received[sliceKey] = receipt;
-                    _owner._restoring.Enqueue(receipt);
+                    // A write or removal this store sent after the read lands after the value read, which is stale: read
+                    // again. A call sent after the comparison is a write in flight during the receipt, rewritten once its
+                    // restore reduced.
+                    if (_owner.Started.GetValueOrDefault(key) != started)
+                    {
+                        return Task.CompletedTask;
+                    }
+
+                    // What the baseline names: a value equal to it, or a removal over an absent baseline (or the one a
+                    // removal receipt set: the key is still absent). With no call in flight, an echo. With one in flight (sent
+                    // before the read, as the count did not move) it is ambiguous until the call resolves: if it was
+                    // delivered, what was read landed after it, a newer change of another store; if it failed (a quota error,
+                    // an interop timeout on a dropped circuit), storage still holds the baseline. The receipt waits for the
+                    // call, then reads again over the baseline its result left.
+                    var echo = removal
+                        ? !_owner.LastKnownPayload.TryGetValue(key, out var last) || ReferenceEquals(last, _removed.GetValueOrDefault(key))
+                        : _owner.LastKnownPayload.GetValueOrDefault(key) == payload;
+                    if (echo && _owner.InFlight.ContainsKey(key))
+                    {
+#pragma warning disable VSTHRD003 // justification: the store's own RunContinuationsAsynchronously TCS, which the writer completes once it handled the call's result
+                        return _owner.Resolved[key].Task;
+#pragma warning restore VSTHRD003
+                    }
+
+                    if (echo && !removal)
+                    {
+                        return null;
+                    }
+
+                    // Stryker disable once Arithmetic : any step moves the number; step 6 compares it only for a change
+                    Volatile.Write(ref _owner._sequences, _owner._sequences.SetItem(sliceKey, _owner._sequences.GetValueOrDefault(sliceKey) + 1));
+                    if (removal && !serialized)
+                    {
+                        return null;
+                    }
+
+                    // The removal is an echo, and discards no local change still waiting for its first write.
+                    if (echo)
+                    {
+                        Log.CrossTabRemovalKept(_owner._log, key);
+                        return null;
+                    }
+
+                    if (hydration)
+                    {
+                        attempt.Received = attempt.Received.Add(sliceKey);
+                        _owner.Signal(sliceKey);
+                    }
+                    else
+                    {
+                        var receipt = new Receipt(sliceKey, state!);
+                        _owner._received[sliceKey] = receipt;
+                        _owner._restoring.Enqueue(receipt);
+                    }
+
+                    if (removal)
+                    {
+                        _removed[key] = payload!;
+                    }
+
+                    // A write still in flight was sent before the read (the count did not move): what was read landed after
+                    // it, so storage no longer holds that write, and a later read of its payload is another store's write.
+                    _owner.LastKnownPayload[key] = payload!;
+                    _owner.InFlight.TryRemove(key, out _);
                 }
 
-                if (removal)
-                {
-                    _removed[key] = payload!;
-                }
-
-                _owner.LastKnownPayload[key] = payload!;
                 _owner.Store.Restore(new Dictionary<string, object> { [sliceKey] = state! }, hydration ? Origin.Hydration : Origin.CrossTab);
             }
+
+            return null;
         }
 
         // §11.7: storageSet or storageRemove answered false, so ducky.js pruned this id (its deliveries failed past
