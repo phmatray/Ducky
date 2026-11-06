@@ -68,6 +68,9 @@ internal sealed partial class Build
             ["DUCKY_SAMPLES_DIR"] = samples,
         };
         environment.Remove("DUCKY_JS_COVERAGE_DIR");
+        // Only AotSmoke sets these: a plain E2E run skips WasmTrimmedSmoke (§10) even when a developer exported them.
+        environment.Remove("DUCKY_REQUIRE_TRIMMED_PUBLISH");
+        environment.Remove("DUCKY_TRIMMED_PUBLISH_DIR");
         if (coverage is not null)
         {
             environment["DUCKY_JS_COVERAGE_DIR"] = coverage;
