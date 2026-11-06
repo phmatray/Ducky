@@ -130,6 +130,9 @@ internal sealed class BlazorRegistration(BlazorOptions options)
     /// <summary>The persisted slice types in first-call order, each with its configure delegates and composed options.</summary>
     public OrderedDictionary<Type, PersistLayers> Persist { get; } = [];
 
+    /// <summary>The composed DevTools options once <c>UseDevTools</c> registered the middleware; null before.</summary>
+    public DevToolsOptions? DevTools { get; set; }
+
     // DUCKY310 per Prerender<T> slice, then DUCKY316. Each persisted slice has its own rule, ValidatePersist.
     public IEnumerable<DuckyError> Validate(DuckyBuilder builder)
     {

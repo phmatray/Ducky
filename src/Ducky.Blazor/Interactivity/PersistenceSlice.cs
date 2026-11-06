@@ -18,6 +18,9 @@ internal sealed class PersistenceSlice : Slice<PersistenceState>
 
     public InteractivityGate Gate { get; } = new();
 
+    /// <summary>The store's one id for every JS registration (§11.7): storage writes, watchStorage and devtoolsConnect.</summary>
+    public string Id { get; } = Guid.NewGuid().ToString("N");
+
     /// <summary>
     /// Completed once the prerender seed restore has been enqueued or skipped (§11.4): at the handoff's construction
     /// without Prerender&lt;T&gt; slices, in its synchronous init prefix outside the browser, and in the browser once the first
