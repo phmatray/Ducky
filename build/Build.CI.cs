@@ -9,8 +9,8 @@ using Serilog;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
-// SPEC §20.1: the workflows generated from these attributes (VerifyWorkflows keeps .github/workflows in sync). nightly-audit
-// joins with Audit and Benchmarks (M16-01). mutation.yml and nightly-mutation.yml are hand-written shard matrices (M0-15),
+// SPEC §20.1: the workflows generated from these attributes (VerifyWorkflows keeps .github/workflows in sync); nightly-audit
+// runs Audit and Benchmarks (Build.Audit.cs, M16-01). mutation.yml and nightly-mutation.yml are hand-written shard matrices (M0-15),
 // checked by MutationWorkflowViolations. The Docs target is in Build.Gates.cs.
 [DuckyGitHubActions("ci", GitHubActionsImage.UbuntuLatest, FetchDepth = 0,
     OnPullRequestBranches = ["v2", "main"], OnPushBranches = ["v2", "main"],
@@ -36,6 +36,10 @@ using YamlDotNet.RepresentationModel;
     EnableGitHubToken = true, WritePermissions = [GitHubActionsPermissions.Issues],
     ReadPermissions = [GitHubActionsPermissions.Contents, GitHubActionsPermissions.Actions],
     InvokedTargets = [nameof(PropertyLong)])]
+[DuckyGitHubActions("nightly-audit", GitHubActionsImage.UbuntuLatest, OnCronSchedule = "0 4 * * *", TimeoutMinutes = 90,
+    EnableGitHubToken = true, WritePermissions = [GitHubActionsPermissions.Issues],
+    ReadPermissions = [GitHubActionsPermissions.Contents, GitHubActionsPermissions.Actions],
+    InvokedTargets = [nameof(Audit), nameof(Benchmarks)])]
 internal sealed partial class Build
 {
     // Fallout writes this header line into every file it generates; hand-written workflows (pr-title.yml) lack it.

@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Ducky.Benchmarks/Ducky.Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Ducky/Ducky.csproj" />
     <Project Path="src/Ducky.Blazor/Ducky.Blazor.csproj" />

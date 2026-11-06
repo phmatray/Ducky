@@ -55,6 +55,15 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
 
+    <!-- Audit (SPEC §17.1): transitive pins of patched versions. 10.0.12 and 9.0.6 have high advisories (GHSA-846f-f764-76mx,
+         GHSA-7hqp-7c5m-4vq6, GHSA-c399-9853-6jmj, GHSA-r955-8q5j-3h83), reached through Microsoft.AspNetCore.DataProtection
+         (Ducky.Blazor.Tests), the analyzer testing stack (the generator tests) and Fallout (build/); no src/ project uses them. -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.14" />
+
+    <!-- benchmarks/Ducky.Benchmarks (SPEC §17.1): the informational nightly Benchmarks target. -->
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+
     <!-- Fallout build (SPEC §19, ADR-0035): exact pin. -->
     <PackageVersion Include="Fallout.Common" Version="[10.4.0]" />
     <PackageVersion Include="Fallout.Components" Version="[10.4.0]" />
