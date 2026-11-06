@@ -14,7 +14,7 @@ public sealed class ReactiveHostTests
     public async Task Reactive_StateObservable_FirstValueIsCurrentSnapshot()
     {
         // No persistence, no seed: nothing changes state before StoreInitialized, and ReactiveMiddleware writes the property
-        // only on a change, so only the host's write gives it a value; without it the pipeline would replay null.
+        // only on a change, so the bridge alone could replay null; the pipeline's first value is the live snapshot.
         await using var host = new Host(d => d.AddSlice<CounterSlice>().AddReactiveEffect<FirstStateEffect>());
 
         await host.StartAsync();

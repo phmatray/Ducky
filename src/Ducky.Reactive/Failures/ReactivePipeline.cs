@@ -21,24 +21,44 @@ internal sealed class ReactivePipeline(
     // slot is recorded before any user code runs, so a resubscribe always finds it: it starts only after this one failed,
     // perhaps on another thread while this call is still on the stack. The previous slot leaves the composite then, since
     // an emission resets _attempt and a pipeline that emits and fails retries forever.
+    // A slot already disposed means the lifetime callback disposed the composite first: a retry that passed the re-check
+    // just before the store was disposed returns without calling Handle. One past the check holds the bridge's gate until
+    // its subscription is made, and phase 5b takes the gate before it disposes the effects, so Handle never runs on a
+    // disposed effect (§14, INV-27); the subscription lands in a disposed slot, which disposes it at once.
     public void Subscribe()
     {
         var slot = new SingleAssignmentDisposable();
         subscriptions.Add(slot);
         subscriptions.Remove(_current);
         _current = slot;
-        try
+        lock (bridge.Gate)
         {
-            slot.Disposable = new IsolatedSubscription(effect.Handle(bridge.Actions, bridge.State).Subscribe(OnNext, Publish, OnCompleted), effect.GetType(), logger);
-            Log.EffectSubscribed(logger, effect.GetType());
-        }
+            if (slot.IsDisposed)
+            {
+                return;
+            }
+
+            try
+            {
+                slot.Disposable = new IsolatedSubscription(effect.Handle(bridge.Actions, State).Subscribe(OnNext, Publish, OnCompleted), effect.GetType(), logger);
+                Log.EffectSubscribed(logger, effect.GetType());
+            }
 #pragma warning disable CA1031 // justification: Handle is user code; its throw is a reactive failure like any other (INV-27)
-        catch (Exception ex)
+            catch (Exception ex)
 #pragma warning restore CA1031
-        {
-            Fail(ex);
+            {
+                Fail(ex);
+            }
         }
     }
+
+    // What a pipeline reads as state. Each subscription's first value is the store's live snapshot, read while the property
+    // replays under its lock, so no write can slip between the read and the subscription: a subscription made between a
+    // commit and the bridge's write (a resubscribe or an inner subscription from a timer thread, or from a user AfterReduce
+    // that runs before ReactiveMiddleware) starts at the committed snapshot, never the bridge's previous one, and the
+    // write that follows is the same instance, so it is not delivered twice (§14, INV-27).
+    private Observable<StateSnapshot> State =>
+        bridge.State.Select((replayed, index) => index == 0 ? context.State : replayed).DistinctUntilChanged(ReferenceEqualityComparer.Instance);
 
     private void OnNext(object action)
     {
