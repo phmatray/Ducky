@@ -1,15 +1,23 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Ducky;
+using Ducky.Blazor;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 
 // SPEC §10: one PASS <name>/FAIL <name> line per named assertion, exit code 1 on any FAIL. Every name is a manifest name
 // mapped to Ducky.AotSmoke (the AotSmoke target compares the PASS set with the active entries): area stories extend the
-// existing assertions rather than print new names (PLAN P8).
+// existing assertions rather than print new names (PLAN P8). The arguments are the manifest names whose stage is not yet
+// active (P1): their assertions run, and a FAIL still prints and fails, but a PASS stays silent until the bump.
 var failed = false;
+var inactive = args.ToHashSet(StringComparer.Ordinal);
 
 // AotSmoke (INV-24): the core after ILC. Dispatch/reduce, the four effect policies (an Effect<T> and an EffectGroup, both
-// activated by DI), IStore.Select and its typed overload, and SelectorDef with and without an argument (M3-05).
+// activated by DI), IStore.Select and its typed overload, and SelectorDef with and without an argument (M3-05), SliceStore and
+// EntityState (M9-06), and a PersistStorage.Server round-trip (M12-05).
 await CheckAsync("AotSmoke", async () =>
 {
     if (new ActionTypeAttribute("smoke/started").Name != "smoke/started")
@@ -55,25 +63,83 @@ await CheckAsync("AotSmoke", async () =>
     // MergeEffect dispatches MergeDone per run: two more reductions.
     return reduced && running && journal.Runs(Concurrency.Exhaust) is [_] && journal.Runs(Concurrency.Queue) is [_, _]
         && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3]
-        && await SliceStoreAndEntityStateAsync();
+        && await SliceStoreAndEntityStateAsync() && await ServerPersistenceRoundTripAsync();
 });
 
-// [ActionType] read at run time, after ILC, as ActionContext.ActionType (M4-07, §5.8).
+// [ActionType] read at run time, after ILC, as ActionContext.ActionType (M4-07, §5.8) and as the DevTools FSA type (M12-05).
 await CheckAsync("ActionType_AttributeName_SurvivesAot", async () =>
 {
+    var js = new FakeDevToolsJs();
     await using var provider = new ServiceCollection()
         .AddSingleton<SeenTypes>()
-        .AddDucky(d => d.AddSlice<CounterSlice>().Use<TypeRecorder>())
+        .AddSingleton<IJSRuntime>(js)
+        .AddDucky(d => d.AddSlice<CounterSlice>().Use<TypeRecorder>().UseJson(SmokeJson.Default).AddBlazor().UseDevTools())
         .BuildServiceProvider();
     await using var scope = provider.CreateAsyncScope();
     var store = scope.ServiceProvider.GetRequiredService<IStore>();
+    await store.InitializeAsync();
 
     await store.DispatchAsync(new TodoAdded("milk"));
+    await store.WhenIdleAsync();
 
-    return provider.GetRequiredService<SeenTypes>().Names is [.., "todos/added"];
+    return provider.GetRequiredService<SeenTypes>().Names is [.., "todos/added"]
+        && js.Sends.Any(static sent => sent.Action["type"]?.GetValue<string>() == "todos/added");
+});
+
+// DevTools (INV-23, M12-05): UseDevTools over a fake ducky.js whose import succeeds, so the gate is Interactive, and an
+// extension that is present. After ILC, with Trace on, the todos/added FSA carries its payload and a stack (possibly of
+// <unknown> frames), and the state its slices.
+await CheckAsync("DevToolsPayload_NonEmpty", async () =>
+{
+    var js = new FakeDevToolsJs();
+    await using var provider = new ServiceCollection()
+        .AddSingleton<IJSRuntime>(js)
+        .AddDucky(d => d.AddSlice<CounterSlice>().UseJson(SmokeJson.Default).AddBlazor().UseDevTools(static o => o.Trace = true))
+        .BuildServiceProvider();
+    await using var scope = provider.CreateAsyncScope();
+    var store = scope.ServiceProvider.GetRequiredService<IStore>();
+    await store.InitializeAsync();
+
+    await store.DispatchAsync(new TodoAdded("milk"));
+    await store.WhenIdleAsync();
+
+    var counterKey = new CounterSlice().Key;
+    return js.Sends.SingleOrDefault(static sent => sent.Action["type"]?.GetValue<string>() == "todos/added") is { } todo
+        && todo.Action["payload"]?["Text"]?.GetValue<string>() == "milk"
+        && todo.Action["stack"]?.GetValue<string>() is { Length: > 0 }
+        && todo.State[counterKey]?["Count"]?.GetValue<int>() == 0;
 });
 
 return failed ? 1 : 0;
+
+// PersistStorage.Server over MemoryDistributedCache, keyed {KeyPrefix}:{Scope}:{sliceKey}: the first store writes the
+// slice through and flushes on dispose; a second store of the same app reads it back during init (a Hydration restore).
+static async Task<bool> ServerPersistenceRoundTripAsync()
+{
+    await using var provider = new ServiceCollection()
+        .AddDistributedMemoryCache()
+        .AddDucky(d => d.AddSlice<CounterSlice>().UseJson(SmokeJson.Default)
+            .Persist<CounterSlice>(static o => o.Storage = PersistStorage.Server)
+            .AddBlazor(static o =>
+            {
+                o.KeyPrefix = "smoke";
+                o.Scope = static (_, _) => new("smoke");
+            }))
+        .BuildServiceProvider();
+    await using (var writer = provider.CreateAsyncScope())
+    {
+        var store = writer.ServiceProvider.GetRequiredService<IStore>();
+        await store.InitializeAsync();
+        await store.DispatchAsync(new Increment());
+    }
+
+    var stored = await provider.GetRequiredService<IDistributedCache>().GetStringAsync($"smoke:smoke:{new CounterSlice().Key}");
+    await using var reader = provider.CreateAsyncScope();
+    var restored = reader.ServiceProvider.GetRequiredService<IStore>();
+    await restored.InitializeAsync();
+
+    return stored is not null && restored.State.Get<Counter>().Count == 1 && restored.State.WasRestored<Counter>();
+}
 
 // The injected SliceStore is the store-owned slice: Set and SetAsync reduce EntityState operations through the store, and
 // its state round-trips through the UseJson context into a second store's Hydration restore.
@@ -128,7 +194,10 @@ async Task CheckAsync(string name, Func<Task<bool>> assertion)
         Console.Error.WriteLine(exception);
         passed = false;
     }
-    Console.WriteLine($"{(passed ? "PASS" : "FAIL")} {name}");
+    if (!passed || !inactive.Contains(name))
+    {
+        Console.WriteLine($"{(passed ? "PASS" : "FAIL")} {name}");
+    }
     failed |= !passed;
 }
 
@@ -227,4 +296,55 @@ internal sealed class TodoStore : SliceStore<EntityState<int, Todo>>
 }
 
 [JsonSerializable(typeof(EntityState<int, Todo>))]
+[JsonSerializable(typeof(Counter))]
+[JsonSerializable(typeof(TodoAdded))]
 internal sealed partial class SmokeJson : JsonSerializerContext;
+
+// ducky.js and the Redux DevTools extension: the import returns this module, devtoolsConnect finds the extension, and each
+// devtoolsSend (id, action FSA, state) is recorded parsed and answered as known; any other call returns its default.
+internal sealed class FakeDevToolsJs : IJSRuntime, IJSObjectReference
+{
+    // JSInterop's annotation on every InvokeAsync result type: what System.Text.Json keeps under trimming.
+    private const DynamicallyAccessedMemberTypes JsonSerialized =
+        DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties;
+
+    private readonly Lock _gate = new();
+    private readonly List<(JsonObject Action, JsonObject State)> _sends = [];
+
+    public List<(JsonObject Action, JsonObject State)> Sends
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return [.. _sends];
+            }
+        }
+    }
+
+    public ValueTask<TValue> InvokeAsync<[DynamicallyAccessedMembers(JsonSerialized)] TValue>(string identifier, object?[]? args) =>
+        InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+
+    public ValueTask<TValue> InvokeAsync<[DynamicallyAccessedMembers(JsonSerialized)] TValue>(string identifier, CancellationToken cancellationToken, object?[]? args)
+    {
+        object? answer = identifier switch
+        {
+            "import" => this,
+            "devtoolsConnect" => true,
+            "devtoolsSend" => Record((string)args![1]!, (string)args[2]!),
+            _ => null,
+        };
+        return new(answer is TValue value ? value : default!);
+    }
+
+    public ValueTask DisposeAsync() => default;
+
+    private bool Record(string action, string state)
+    {
+        lock (_gate)
+        {
+            _sends.Add((JsonNode.Parse(action)!.AsObject(), JsonNode.Parse(state)!.AsObject()));
+        }
+        return true;
+    }
+}
