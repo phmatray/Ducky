@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ducky todos</title>
+    <base href="/" />
+    <link rel="stylesheet" href="css/app.css" />
+</head>
+
+<body>
+    <div id="app">Loading…</div>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        // .NET 10 fixes a standalone app's environment at build time (Development for `dotnet build`/`dotnet run`,
+        // Production for `dotnet publish`) and no longer reads the Blazor-Environment header. Program.cs enables DevTools
+        // in Development only, so a publish served statically (the trimmed smoke, the DevTools E2E specs) opts in with
+        // `?devtools`; without it the build-time environment stands. The URL must carry it on every (re)load.
+        Blazor.start(new URLSearchParams(location.search).has('devtools') ? { environment: 'Development' } : {});
+    </script>
+</body>
+
+</html>

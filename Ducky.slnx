@@ -5,6 +5,7 @@
   <Folder Name="/samples/">
     <Project Path="samples/Ducky.Samples.Server/Ducky.Samples.Server.Client/Ducky.Samples.Server.Client.csproj" />
     <Project Path="samples/Ducky.Samples.Server/Ducky.Samples.Server/Ducky.Samples.Server.csproj" />
+    <Project Path="samples/Ducky.Samples.Wasm/Ducky.Samples.Wasm.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Ducky/Ducky.csproj" />

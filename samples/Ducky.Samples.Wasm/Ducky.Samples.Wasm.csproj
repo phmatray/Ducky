@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <!-- Standalone WebAssembly sample (SPEC §10, §18, §24 step 18): the pages the E2E specs and the trimmed smoke drive.
+       Workload-free: never RunAOTCompilation here (NETSDK1147, ENG-04); only the AotSmoke target publishes it AOT.
+       Not coverage-gated, but built with warnings as errors, so its reducers, mutators and projectors are part of the
+       DUCKY001-003 false-positive corpus (PLAN P9). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Under TrimMode=full the trimmer would remove the routed pages and the root component (blank page, spike S-3). -->
+    <TrimmerRootAssembly Include="$(AssemblyName)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

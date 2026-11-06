@@ -1,0 +1,13 @@
+@inherits DuckyLayout
+@* A DuckyLayout, so the trimmed publish proves its inherited [Inject] setters are kept too (SPEC §11.2 Trimming). *@
+
+<header>
+    <strong>Ducky todos</strong> · <span data-testid="layout-remaining">@_remaining.Value open</span>
+</header>
+<main>@Body</main>
+
+@code {
+    private Selection<int> _remaining = null!;
+
+    protected override void OnInitialized() => _remaining = Select(TodoSelectors.Remaining.Create());
+}

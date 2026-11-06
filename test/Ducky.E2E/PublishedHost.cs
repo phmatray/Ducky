@@ -22,10 +22,13 @@ internal sealed partial class PublishedHost : IAsyncDisposable
 
     public Uri BaseUrl { get; }
 
+    // The publish directory of a sample, under $DUCKY_SAMPLES_DIR.
+    public static string SampleDirectory(string sample) => Path.Combine(
+        Environment.GetEnvironmentVariable("DUCKY_SAMPLES_DIR") ?? throw new InvalidOperationException("DUCKY_SAMPLES_DIR is not set: run the E2E target"),
+        sample);
+
     public static Task<PublishedHost> StartSampleAsync(string sample, string healthPath = "/") =>
-        StartAsync(Path.Combine(
-            Environment.GetEnvironmentVariable("DUCKY_SAMPLES_DIR") ?? throw new InvalidOperationException("DUCKY_SAMPLES_DIR is not set: run the E2E target"),
-            sample, $"{sample}.dll"), healthPath);
+        StartAsync(Path.Combine(SampleDirectory(sample), $"{sample}.dll"), healthPath);
 
     public static async Task<PublishedHost> StartAsync(string dll, string healthPath = "/")
     {

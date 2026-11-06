@@ -68,6 +68,8 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.14" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.14" />
+    <!-- samples/Ducky.Samples.Wasm (SPEC §18): the dev server for `dotnet run` of the standalone sample. -->
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.14" />
 
     <!-- benchmarks/Ducky.Benchmarks (SPEC §17.1): the informational nightly Benchmarks target. -->
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />

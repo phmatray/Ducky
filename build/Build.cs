@@ -28,7 +28,7 @@ internal sealed partial class Build : FalloutBuild, IHasSolution, IConfigureGitH
         .Before(Restore)
         .Executes(() =>
         {
-            foreach (var directory in RootDirectory.GlobDirectories("src/**/bin", "src/**/obj", "test/**/bin", "test/**/obj"))
+            foreach (var directory in RootDirectory.GlobDirectories("src/**/bin", "src/**/obj", "test/**/bin", "test/**/obj", "samples/**/bin", "samples/**/obj"))
             {
                 directory.DeleteDirectory();
             }
