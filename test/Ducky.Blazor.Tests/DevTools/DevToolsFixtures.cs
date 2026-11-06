@@ -68,6 +68,16 @@ internal sealed class ExplodingEffect : Effect<Blast>
         throw new ArgumentException("effect boom");
 }
 
+// A late effect result (§11.8): on SetLabel, waits for the gate, then reports what its Increment dispatch came to.
+internal sealed class LateIncrement(TaskCompletionSource gate, TaskCompletionSource<DispatchResult> result) : Effect<SetLabel>
+{
+    public override async Task Handle(SetLabel action, EffectContext context, CancellationToken cancellationToken)
+    {
+        await gate.Task.WaitAsync(cancellationToken).ConfigureAwait(false); // a disposal ends the wait
+        result.SetResult(await context.DispatchAsync(new Increment()).ConfigureAwait(false));
+    }
+}
+
 // Holds the store's init open until the test answers "hold" (DevToolsHarness.OnHold): restores reduced meanwhile reach
 // AfterReduce before StoreInitialized, as persistence's storage restore does (§6 "Hooks versus init").
 internal sealed class HoldInit(IJSRuntime js) : Middleware
