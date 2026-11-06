@@ -68,8 +68,11 @@ internal sealed class ReactiveHost : Effect<StoreInitialized>, IAsyncDisposable
 
         _started = true;
 
-        // On the drainer, before any pipeline subscribes: ReactiveMiddleware writes the property only when a snapshot
-        // changed, so in a store where nothing changed state yet it still holds null, and it must never replay null.
+        // On the drainer, before any pipeline subscribes (§14): ReactiveMiddleware writes the property only when a snapshot
+        // changed, so in a store where nothing changed state yet it would still hold null. ReactivePipeline's state starts
+        // every subscription at the live snapshot, so no pipeline reads this value; the write keeps the property itself
+        // current, as §14 states it.
+        // Stryker disable once Statement : equivalent, every pipeline subscription replaces the replayed value by the live snapshot (ReactivePipeline.State)
         _bridge.State.Value = context.State;
 
         // Disposed by the store's lifetime cancellation (§6.11 step 2); an item added after that is disposed at once. Each
@@ -90,9 +93,15 @@ internal sealed class ReactiveHost : Effect<StoreInitialized>, IAsyncDisposable
     }
 
     // Like the core's store-owned instances (§6.11 5b): reverse construction order, each disposal isolated, so one
-    // throwing effect never leaves the others undisposed (INV-29).
+    // throwing effect never leaves the others undisposed (INV-29). The lifetime callback (§6.11 step 2) already disposed the
+    // composite, so a pipeline Subscribe that takes the gate after this one finds its slot disposed, and one holding it
+    // finishes its Handle first: Handle never runs on a disposed effect (§14, INV-27).
     public async ValueTask DisposeAsync()
     {
+        lock (_bridge.Gate)
+        {
+        }
+
         for (var i = _effects.Length - 1; i >= 0; i--)
         {
             await DisposeOneAsync(_effects[i]).ConfigureAwait(ConfigureAwaitOptions.None);

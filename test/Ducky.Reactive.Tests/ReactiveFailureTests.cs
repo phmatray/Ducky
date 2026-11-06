@@ -365,10 +365,13 @@ public sealed class ReactiveFailureTests
         host.Store.State.Get<IReadOnlyList<EffectFailed>>().Count.ShouldBe(3);
     }
 
-    // Non-normative: covers the one cancellation catch now (CoverageGate). M11-02b's Reactive_ResubscribePendingAtDispose_NeverResubscribes
-    // (§14) covers it with the dispose race: fold this test into it there, or delete it, so the two never coexist.
+    // §14, INV-27: a resubscribe pending when the store is disposed never resubscribes. Disposed during the delay, both
+    // cancellations land in the one catch. The race between a retry that passed the re-check and the lifetime callback
+    // that disposes the composite is driven through the seam: the composite is disposed, the token not yet cancelled, so
+    // the retry finds its slot disposed at once and never calls Handle again (the Handle count stays 1). A retry already
+    // past that check when the store is disposed is ReactiveInterleavingTests.Reactive_RetryRacingDispose_….
     [Fact]
-    public async Task Reactive_DisposedDuringRetryDelay_NeverResubscribes()
+    public async Task Reactive_ResubscribePendingAtDispose_NeverResubscribes()
     {
         var host = FlakyHost();
         await host.StartAsync();
@@ -378,6 +381,62 @@ public sealed class ReactiveFailureTests
         host.Time.Advance(TimeSpan.FromDays(1));
 
         host.Probe.Subscriptions.ShouldBe(1);
+
+        var seam = new PipelineSeam();
+        await using var raced = new Host(
+            d => d.AddSlice<CounterSlice>().AddEffect<PipelineSeamEffect>().AddReactiveEffect<CompletingEffect>(),
+            s => s.AddSingleton(seam));
+        await raced.StartAsync();
+        using var subscriptions = new CompositeDisposable();
+        var probe = new Probe();
+        new ReactivePipeline(new FlakyEffect(probe), seam.Bridge, seam.Context, subscriptions, new(NullLogger.Instance), TestContext.Current.CancellationToken).Subscribe();
+        await DispatchIdleAsync(raced, new Boom());
+
+        subscriptions.Dispose();
+        raced.Time.Advance(TimeSpan.FromDays(1));
+
+        probe.Subscriptions.ShouldBe(1);
+    }
+
+    // §14: StoreInitialized is pushed once, by the host, for the first subscriptions; a failure resubscribe never replays
+    // it, so a reactive load never runs twice.
+    [Fact]
+    public async Task Reactive_OfActionTypeStoreInitialized_FiresOnceNotOnResubscribe()
+    {
+        await using var host = new Host(d => d.AddSlice<CounterSlice>().AddReactiveEffect<InitThenFlakyEffect>());
+        await host.StartAsync();
+        host.Probe.Seen.ShouldBe([new StoreInitialized()]);
+
+        await DispatchIdleAsync(host, new Boom());
+        host.Time.Advance(TimeSpan.FromSeconds(1));
+        await host.IdleAsync();
+
+        host.Probe.Subscriptions.ShouldBe(2);
+        host.Probe.Seen.ShouldBe([new StoreInitialized()]);
+    }
+
+    // §14, INV-27: the resubscribe lands between the Ping's commit and the bridge's State.Value write (a user AfterReduce
+    // registered before ReactiveMiddleware advances the fake clock). The new pipeline's first value is the committed
+    // snapshot, not the bridge's previous one, and the write that follows is not delivered twice. The witness, subscribed
+    // throughout, while the failed pipeline left the subject during its OnNext and the new one joined, lost nothing.
+    [Fact]
+    public async Task Reactive_ResubscribeConcurrentWithDrain_FirstValueCurrent_NoLostSubscriber_Deterministic()
+    {
+        await using var host = new Host(d => d.AddSlice<CounterSlice>().Use<AdvanceOnPingMiddleware>().AddReactiveEffect<StateRunsFlakyEffect>().AddReactiveEffect<WitnessEffect>());
+        await host.StartAsync();
+        var initial = host.Store.State;
+        await DispatchIdleAsync(host, new Boom());
+
+        await DispatchIdleAsync(host, new Ping());
+
+        host.Probe.Subscriptions.ShouldBe(2);
+        var committed = host.Probe.AtAdvance.ShouldNotBeNull();
+        committed.ShouldBeSameAs(host.Store.State);
+        committed.Get<Counter>().Pings.ShouldBe(1);
+        host.Probe.StateRuns[0].ShouldBe([initial]);
+        host.Probe.StateRuns[1].ShouldHaveSingleItem().ShouldBeSameAs(committed);
+        host.Probe.Seen.ShouldBe([initial, new StoreInitialized(), new Boom(), host.Probe.Seen[3], committed, new Ping()]);
+        host.Probe.Seen[3].ShouldBeOfType<EffectFailed>().EffectType.ShouldBe(typeof(StateRunsFlakyEffect).ToString());
     }
 
     [Fact]

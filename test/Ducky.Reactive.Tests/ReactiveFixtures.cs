@@ -103,6 +103,10 @@ public sealed class Probe
     public int GroupsOpened { get; set; }
 
     public int GroupsReleased { get; set; }
+
+    public List<List<StateSnapshot>> StateRuns { get; } = [];
+
+    public StateSnapshot? AtAdvance { get; set; }
 }
 
 public sealed class ScopedService;
@@ -486,5 +490,52 @@ internal sealed class Host : IAsyncDisposable
     {
         await _scope.DisposeAsync();
         await _provider.DisposeAsync();
+    }
+}
+
+// Records every StoreInitialized it sees; Boom completes it with a failure, so it resubscribes after a second (SPEC §14).
+public sealed class InitThenFlakyEffect(Probe probe) : ReactiveEffect
+{
+    public override Observable<object> Handle(Observable<object> actions, Observable<StateSnapshot> state)
+    {
+        probe.Subscriptions++;
+        return Observable.Merge(
+            actions.OfActionType<StoreInitialized>().Do(probe.Seen.Add).Where(static _ => false).Select(static object (a) => a),
+            actions.OfActionType<Boom>().Select(static object (_) => throw new InvalidOperationException("boom")).OnErrorResumeAsFailure());
+    }
+}
+
+// Each subscription records every state value it sees in its own list; Boom completes it with a failure.
+public sealed class StateRunsFlakyEffect(Probe probe) : ReactiveEffect
+{
+    public override Observable<object> Handle(Observable<object> actions, Observable<StateSnapshot> state)
+    {
+        probe.Subscriptions++;
+        List<StateSnapshot> run = [];
+        probe.StateRuns.Add(run);
+        return Observable.Merge(
+            state.Do(run.Add).Where(static _ => false).Select(static object (s) => s),
+            actions.OfActionType<Boom>().Select(static object (_) => throw new InvalidOperationException("boom")).OnErrorResumeAsFailure());
+    }
+}
+
+// A long-lived subscriber of both streams, in the order it receives them: it must never be lost to a resubscribe.
+public sealed class WitnessEffect(Probe probe) : ReactiveEffect
+{
+    public override Observable<object> Handle(Observable<object> actions, Observable<StateSnapshot> state) =>
+        Observable.Merge(actions, state.Select(static object (s) => s)).Do(probe.Seen.Add).Where(static _ => false);
+}
+
+// Registered before ReactiveMiddleware: on a Ping it fires the due timers from inside AfterReduce, after the commit and
+// before the bridge's State.Value write (SPEC §14), recording the store's state at that moment.
+public sealed class AdvanceOnPingMiddleware(TimeProvider time, Probe probe) : Middleware
+{
+    public override void AfterReduce(ActionContext context)
+    {
+        if (context.Action is Ping)
+        {
+            probe.AtAdvance = context.State;
+            ((FakeTimeProvider)time).Advance(TimeSpan.FromSeconds(1));
+        }
     }
 }
