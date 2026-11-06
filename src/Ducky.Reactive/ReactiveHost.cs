@@ -68,12 +68,12 @@ internal sealed class ReactiveHost : Effect<StoreInitialized>, IAsyncDisposable
 
         _started = true;
 
-        // On the drainer, before any pipeline subscribes (§14): ReactiveMiddleware writes the property only when a snapshot
+        // On the drainer, before any pipeline subscribes (§14): ReactiveMiddleware writes the bridge only when a snapshot
         // changed, so in a store where nothing changed state yet it would still hold null. ReactivePipeline's state starts
-        // every subscription at the live snapshot, so no pipeline reads this value; the write keeps the property itself
-        // current, as §14 states it.
+        // every subscription at the live snapshot, so no pipeline reads this value; the write keeps the bridge's subject
+        // itself current, as §14 states it.
         // Stryker disable once Statement : equivalent, every pipeline subscription replaces the replayed value by the live snapshot (ReactivePipeline.State)
-        _bridge.State.Value = context.State;
+        _bridge.State.OnNext(context.State);
 
         // Disposed by the store's lifetime cancellation (§6.11 step 2); an item added after that is disposed at once. Each
         // subscription is isolated: R3's CompositeDisposable stops at the first throwing teardown (user code), which would

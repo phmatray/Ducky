@@ -52,11 +52,11 @@ internal sealed class ReactivePipeline(
         }
     }
 
-    // What a pipeline reads as state. Each subscription's first value is the store's live snapshot, read while the property
-    // replays under its lock, so no write can slip between the read and the subscription: a subscription made between a
-    // commit and the bridge's write (a resubscribe or an inner subscription from a timer thread, or from a user AfterReduce
-    // that runs before ReactiveMiddleware) starts at the committed snapshot, never the bridge's previous one, and the
-    // write that follows is the same instance, so it is not delivered twice (§14, INV-27).
+    // What a pipeline reads as state. Each subscription's first value is the store's live snapshot, read while the bridge's
+    // subject replays under its lock, so no write can slip between the read and the subscription: a subscription made
+    // between a commit and the bridge's write (a resubscribe or an inner subscription from a timer thread, or from a user
+    // AfterReduce that runs before ReactiveMiddleware) starts at the committed snapshot, never the bridge's previous one,
+    // and the write that follows is the same instance, so it is not delivered twice (§14, INV-27).
     private Observable<StateSnapshot> State =>
         bridge.State.Select((replayed, index) => index == 0 ? context.State : replayed).DistinctUntilChanged(ReferenceEqualityComparer.Instance);
 

@@ -415,7 +415,7 @@ public sealed class ReactiveFailureTests
         host.Probe.Seen.ShouldBe([new StoreInitialized()]);
     }
 
-    // §14, INV-27: the resubscribe lands between the Ping's commit and the bridge's State.Value write (a user AfterReduce
+    // §14, INV-27: the resubscribe lands between the Ping's commit and the bridge's State.OnNext write (a user AfterReduce
     // registered before ReactiveMiddleware advances the fake clock). The new pipeline's first value is the committed
     // snapshot, not the bridge's previous one, and the write that follows is not delivered twice. The witness, subscribed
     // throughout, while the failed pipeline left the subject during its OnNext and the new one joined, lost nothing.

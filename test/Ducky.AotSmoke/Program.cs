@@ -1,12 +1,17 @@
+#pragma warning disable DUCKY016 // justification: each assertion registers only the slices and effects it exercises (SPEC §18, as in Ducky.Blazor.Generated.Tests): AddDuckyGenerated_Ducky_AotSmoke() would add every smoke effect to every store
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Ducky;
 using Ducky.Blazor;
+using Ducky.Draft;
+using Ducky.Reactive;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
+using R3;
 
 // SPEC §10: one PASS <name>/FAIL <name> line per named assertion, exit code 1 on any FAIL. Every name is a manifest name
 // mapped to Ducky.AotSmoke (the AotSmoke target compares the PASS set with the active entries): area stories extend the
@@ -17,7 +22,8 @@ var inactive = args.ToHashSet(StringComparer.Ordinal);
 
 // AotSmoke (INV-24): the core after ILC. Dispatch/reduce, the four effect policies (an Effect<T> and an EffectGroup, both
 // activated by DI), IStore.Select and its typed overload, and SelectorDef with and without an argument (M3-05), SliceStore and
-// EntityState (M9-06), and a PersistStorage.Server round-trip (M12-05).
+// EntityState (M9-06), a PersistStorage.Server round-trip (M12-05), and Produce over a generated draftable record and a
+// reactive effect emission (M11-04).
 await CheckAsync("AotSmoke", async () =>
 {
     if (new ActionTypeAttribute("smoke/started").Name != "smoke/started")
@@ -63,7 +69,8 @@ await CheckAsync("AotSmoke", async () =>
     // MergeEffect dispatches MergeDone per run: two more reductions.
     return reduced && running && journal.Runs(Concurrency.Exhaust) is [_] && journal.Runs(Concurrency.Queue) is [_, _]
         && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3]
-        && await SliceStoreAndEntityStateAsync() && await ServerPersistenceRoundTripAsync();
+        && await SliceStoreAndEntityStateAsync() && await ServerPersistenceRoundTripAsync()
+        && DraftProduce() && await ReactiveEmissionAsync();
 });
 
 // [ActionType] read at run time, after ILC, as ActionContext.ActionType (M4-07, §5.8) and as the DevTools FSA type (M12-05).
@@ -182,6 +189,40 @@ static async Task<bool> SliceStoreAndEntityStateAsync()
         && restored.Find(1)?.Text == "milk";
 }
 
+// The generated Produce edits a nested draft copy-on-write: the edited path is new, an untouched item is shared, the original
+// is unchanged, and a recipe that writes back equal values returns the original instance.
+static bool DraftProduce()
+{
+    var basket = new Basket("ada", [new Item("milk", 1), new Item("eggs", 6)]);
+    var edited = basket.Produce(static d =>
+    {
+        d.Owner = "bob";
+        d.Items[0].Quantity = 2;
+    });
+    return edited is { Owner: "bob", Items: [{ Name: "milk", Quantity: 2 }, { Name: "eggs", Quantity: 6 }] }
+        && ReferenceEquals(edited.Items[1], basket.Items[1])
+        && basket is { Owner: "ada", Items: [{ Quantity: 1 }, _] }
+        && ReferenceEquals(basket.Produce(static d => d.Items[0].Quantity = 1), basket);
+}
+
+// A ReactiveEffect registered with AddReactiveEffect<T> answers each Ask with the latest state; the store reduces the emitted
+// Answered through Produce into a draftable slice.
+static async Task<bool> ReactiveEmissionAsync()
+{
+    await using var provider = new ServiceCollection()
+        .AddDucky(d => d.AddSlice<CounterSlice>().AddSlice<BasketSlice>().AddReactiveEffect<AnswerEffect>())
+        .BuildServiceProvider();
+    await using var scope = provider.CreateAsyncScope();
+    var store = scope.ServiceProvider.GetRequiredService<IStore>();
+    await store.InitializeAsync();
+
+    await store.DispatchAsync(new Increment());
+    await store.DispatchAsync(new Ask("tea"));
+    await store.WhenIdleAsync();
+
+    return store.State.Get<Basket>() is { Owner: "smoke", Items: [{ Name: "tea", Quantity: 1 }] };
+}
+
 async Task CheckAsync(string name, Func<Task<bool>> assertion)
 {
     bool passed;
@@ -295,8 +336,34 @@ internal sealed class TodoStore : SliceStore<EntityState<int, Todo>>
     public Task<DispatchResult> ToggleAsync(int id) => SetAsync(s => s.Update(id, t => t with { Done = !t.Done }));
 }
 
+[Draftable]
+internal sealed partial record Basket(string Owner, ImmutableList<Item> Items);
+
+[Draftable]
+internal sealed partial record Item(string Name, int Quantity);
+
+internal sealed record Ask(string Text);
+
+internal sealed record Answered(string Text, int Count);
+
+internal sealed class BasketSlice : Slice<Basket>
+{
+    public BasketSlice() => On<Answered>(static (b, a) => b.Produce(d => d.Items.Add(new Item(a.Text, a.Count))));
+
+    protected override Basket Initial => new("smoke", []);
+}
+
+internal sealed class AnswerEffect : ReactiveEffect
+{
+    public override Observable<object> Handle(Observable<object> actions, Observable<StateSnapshot> state) =>
+        actions.OfActionType<Ask>().WithLatestFrom(state, static object (ask, s) => new Answered(ask.Text, s.Get<Counter>().Count));
+}
+
 [JsonSerializable(typeof(EntityState<int, Todo>))]
 [JsonSerializable(typeof(Counter))]
+// DUCKY006 (an error in the smoke under warnings-as-errors): every slice state type declared in this project must be
+// covered by the context passed to UseJson, and BasketSlice's state is Basket, though no store that uses SmokeJson registers it.
+[JsonSerializable(typeof(Basket))]
 [JsonSerializable(typeof(TodoAdded))]
 internal sealed partial class SmokeJson : JsonSerializerContext;
 
