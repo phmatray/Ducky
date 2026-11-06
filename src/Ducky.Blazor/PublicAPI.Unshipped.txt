@@ -148,3 +148,20 @@ Ducky.Blazor.BlazorOptions.ServerEntryOptions.get -> Microsoft.Extensions.Cachin
 Ducky.Blazor.BlazorOptions.ServerEntryOptions.set -> void
 Ducky.Blazor.DuckyScopes
 static Ducky.Blazor.DuckyScopes.NameIdentifier.get -> System.Func<System.IServiceProvider!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<string?>>!
+Ducky.Blazor.DevToolsOptions
+Ducky.Blazor.DevToolsOptions.ActionSanitizer.get -> System.Func<string!, System.Text.Json.Nodes.JsonNode?, System.Text.Json.Nodes.JsonNode?>?
+Ducky.Blazor.DevToolsOptions.ActionSanitizer.set -> void
+Ducky.Blazor.DevToolsOptions.DevToolsOptions() -> void
+Ducky.Blazor.DevToolsOptions.Filter.get -> System.Func<Ducky.ActionContext!, bool>?
+Ducky.Blazor.DevToolsOptions.Filter.set -> void
+Ducky.Blazor.DevToolsOptions.MaxAge.get -> int
+Ducky.Blazor.DevToolsOptions.MaxAge.set -> void
+Ducky.Blazor.DevToolsOptions.Name.get -> string!
+Ducky.Blazor.DevToolsOptions.Name.set -> void
+Ducky.Blazor.DevToolsOptions.StateSanitizer.get -> System.Func<string!, System.Text.Json.Nodes.JsonNode?, System.Text.Json.Nodes.JsonNode?>?
+Ducky.Blazor.DevToolsOptions.StateSanitizer.set -> void
+Ducky.Blazor.DevToolsOptions.Trace.get -> bool
+Ducky.Blazor.DevToolsOptions.Trace.set -> void
+Ducky.Blazor.DevToolsOptions.TraceLimit.get -> int
+Ducky.Blazor.DevToolsOptions.TraceLimit.set -> void
+static Ducky.Blazor.DuckyBlazorBuilderExtensions.UseDevTools(this Ducky.DuckyBuilder! builder, System.Action<Ducky.Blazor.DevToolsOptions!>? configure = null) -> Ducky.DuckyBuilder!

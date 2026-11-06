@@ -21,6 +21,9 @@ namespace Ducky.Blazor;
 // M12-03c takes 2045, not assigned by SPEC: §11.6's Debug log of a re-asserted scope (a circuit reconnect, absorbed).
 // M7-02 takes 2050-2053, not assigned by SPEC: §11.7's Debug log of an ignored key, a notification that failed, a
 // watchStorage registration that failed, and an unwatchStorage at dispose that failed.
+// M8-02 takes 2060-2064, not assigned by SPEC: §11.8's Warnings of a connect that timed out or failed, an absent extension
+// and a failed send, §11.7's Debug log of an unknown (pruned) id (all four leave DevTools inert), and a Warning for a
+// devtoolsDisconnect at dispose that failed.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
@@ -124,4 +127,19 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 2055, Level = LogLevel.Debug, Message = "ducky.js no longer knows store '{Id}' (its registration was pruned): watchStorage is issued again and every registered area is re-read")]
     internal static partial void CrossTabReRegistered(SafeLogger logger, string id);
+
+    [LoggerMessage(EventId = 2060, Level = LogLevel.Warning, Message = "Redux DevTools did not connect within HydrationTimeout ({Timeout}), or the connect was interrupted or rejected; DevTools is inert for this store")]
+    internal static partial void DevToolsConnectFailed(SafeLogger logger, Exception? exception, TimeSpan timeout);
+
+    [LoggerMessage(EventId = 2061, Level = LogLevel.Warning, Message = "The Redux DevTools extension is not installed in this browser; DevTools is inert for this store")]
+    internal static partial void DevToolsExtensionAbsent(SafeLogger logger);
+
+    [LoggerMessage(EventId = 2062, Level = LogLevel.Debug, Message = "ducky.js no longer knows the DevTools connection of store '{Id}' (pruned); DevTools is inert for this store")]
+    internal static partial void DevToolsUnknownId(SafeLogger logger, string id);
+
+    [LoggerMessage(EventId = 2063, Level = LogLevel.Warning, Message = "Sending @@INIT or an action to Redux DevTools failed or was interrupted; DevTools is inert for this store, since its history could no longer match the extension's")]
+    internal static partial void DevToolsSendFailed(SafeLogger logger, Exception? exception);
+
+    [LoggerMessage(EventId = 2064, Level = LogLevel.Warning, Message = "Disconnecting store '{Id}' from Redux DevTools (devtoolsDisconnect) failed; ducky.js drops the id once its deliveries keep failing")]
+    internal static partial void DevToolsDisconnectFailed(SafeLogger logger, Exception exception, string id);
 }

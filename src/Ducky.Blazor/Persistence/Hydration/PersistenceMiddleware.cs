@@ -34,7 +34,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
     public PersistenceMiddleware(BlazorRegistration registration, PersistenceSlice persistence, IServiceProvider services)
     {
-        (_registration, _persistence, _services) = (registration, persistence, services);
+        (_registration, _persistence, _services, _id) = (registration, persistence, services, persistence.Id);
         _logger = (ILogger?)services.GetService<ILogger<PersistenceMiddleware>>() ?? NullLogger.Instance;
         _log = new(_logger);
 

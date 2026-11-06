@@ -9,8 +9,8 @@ internal sealed partial class PersistenceMiddleware
     // §11.1: browser storage written from the server waits this long by default; in the browser nothing waits.
     private static TimeSpan ServerBrowserStorageDebounce => TimeSpan.FromMilliseconds(250);
 
-    // §11.7: the store's one id for every JS registration, its writes included.
-    private readonly string _id = Guid.NewGuid().ToString("N");
+    // §11.7: the store's one id for every JS registration, its writes included, held by the store-owned PersistenceSlice.
+    private readonly string _id;
     private Dictionary<string, PersistenceWriter> _writers = [];
     private bool _signalling; // drainer only: set once AfterReduce has seen the Hydrating restore of the synchronous prefix
 
