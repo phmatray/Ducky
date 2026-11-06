@@ -16,8 +16,23 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Ducky/Ducky.csproj" />
+    <!-- Server persistence and DevTools (M12-05), through public API only. -->
+    <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <!-- The container AddDucky registers into. VersionOverride, not a PackageVersion: with transitive pinning a central
          entry would move every locked test project's transitive 10.0.12 to CentralTransitive (NU1004). Same version. -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="10.0.12" />
+  </ItemGroup>
+
+  <!-- .NET 10's Microsoft.AspNetCore.Components has IL3050 in its own PersistentComponentState.PersistAsJson/TryTakeFromJson
+       bodies (reached through the prerender seed, SPEC §10's audited IL2026 suppression; the public methods carry no
+       [RequiresDynamicCode]). SPEC §10 (Smoke gates) and §19 state this allowance. Measured on 10.0.12: after ILC the two members work only with reflection-based STJ on
+       (Blazor WebAssembly's SDK default) and throw InvalidOperationException under this console's NativeAOT default. ILC would collapse them into one IL3053 for the whole assembly, so Components stays
+       uncollapsed and ILC (not csc) reports IL3050 as a warning: the AotSmoke target allows exactly those two lines and fails
+       on any other IL warning (build/Build.Aot.cs, AotIlWarningViolations). Every other IL warning stays an error; Ducky's
+       assemblies and this one are uncollapsed by the SDK (project references). -->
+  <ItemGroup>
+    <IlcArg Include="--nosinglewarnassembly:Microsoft.AspNetCore.Components" />
+    <IlcArg Include="--nowarnaserr:IL3050" />
   </ItemGroup>
 </Project>
