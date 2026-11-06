@@ -13,6 +13,41 @@ internal sealed partial class PersistenceMiddleware
     private ImmutableDictionary<string, long> _sequences = ImmutableDictionary<string, long>.Empty;
     private CrossTabSync? _crossTab;
 
+    // The state each receipt restored with Origin.CrossTab, per slice key, until that restore reduces, committed or not. It can queue
+    // behind another thread's drain, so its writer is signalled from AfterReduce, never when it is issued: a writer signalled
+    // earlier would read the state from before the restore, find it unlike the new baseline, and write it back over the
+    // value just received. Each receipt is its own object: a record is removed only by its own receipt.
+    private readonly ConcurrentDictionary<string, Receipt> _received = new();
+
+    // The receipts whose CrossTab restore was issued and has not reduced yet, in issue order (enqueued under _issue).
+    private readonly ConcurrentQueue<Receipt> _restoring = new();
+
+    // On the drainer, for a CrossTab restore (§11.7): restores reduce in issue order, so this is the oldest pending receipt's
+    // when it committed that receipt's state, or when it committed nothing (a BeforeReduce threw, §6.4; a removal of a slice
+    // already holding its initial state). Either way that receipt goes, and its key is signalled unless a newer receipt
+    // recorded it since: a restore that commits nothing never holds the key's writes. A public restore with Origin.CrossTab
+    // that commits its own state is not a receipt's.
+    // ponytail: a public CrossTab restore that commits nothing is taken for the oldest receipt's, whose writer is then
+    // signalled before its restore commits (the pre-M7-02b race); tag the receipts' actions if that ever matters.
+    private void SignalReceived(ActionContext context)
+    {
+        if (_restoring.TryPeek(out var oldest)
+            && (ReferenceEquals(context.State, context.PreviousState) || ReferenceEquals(context.State.Get(oldest.Key), oldest.State))
+            && _restoring.TryDequeue(out _)
+            && _received.TryRemove(new(oldest.Key, oldest)))
+        {
+            Signal(oldest.Key);
+        }
+    }
+
+    // One receipt's CrossTab restore. A class, so compared by reference: a newer receipt of an equal state is another record.
+    private sealed class Receipt(string key, object state)
+    {
+        public string Key => key;
+
+        public object State => state;
+    }
+
     /// <summary>
     /// The store's ducky.js storage registration (§11.7): one <c>watchStorage</c> per store, under the store id, before the
     /// first read, removed on dispose; <see cref="OnStorageChangedAsync"/> receives other tabs' storage events and other
@@ -26,6 +61,11 @@ internal sealed partial class PersistenceMiddleware
         private readonly DotNetObjectReference<CrossTabSync> _reference;
         private readonly CancellationTokenSource _stop = new();
         private readonly ConcurrentDictionary<string, long> _latest = new(); // per storage key, its newest notification
+
+        // Per storage key, the baseline instance its last removal receipt set. Only that instance reads as "absent" (§11.7):
+        // any write, read or value receipt stores a fresh serialization, so a stored value that merely serializes like the
+        // initial state is no absence, and a removal still resets it (INV-18).
+        private readonly ConcurrentDictionary<string, string> _removed = new();
         private long _notifications;
 
         public CrossTabSync(PersistenceMiddleware owner, Persisted[] slices)
@@ -105,6 +145,25 @@ internal sealed partial class PersistenceMiddleware
         {
             Volatile.Write(ref _owner._bridge.Reimported, null);
             await _stop.CancelAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+
+            // The drain has exited (INV-29): a restore still queued completed Disposed and never reduces, so no receipt's
+            // record may defer the flush (the queue is never read again). A write that deferred to such a restore waits for
+            // the signal its commit would have raised: each dirty writer whose record goes is signalled, once the records are
+            // gone (a writer woken earlier would find its record and defer again), so the flush still takes it. A clean
+            // writer is not: a signal would make it dirty, and the flush would write the state from before the receipt back
+            // over the value just received. Under _issue: an Apply past its stop check has recorded its receipt by now.
+            lock (_owner._issue)
+            {
+                var keys = _owner._received.Keys;
+                _owner._received.Clear();
+                foreach (var key in keys)
+                {
+                    if (_owner._writers.GetValueOrDefault(key) is { Dirty: true } writer)
+                    {
+                        writer.Signal();
+                    }
+                }
+            }
         }
 
         // After the flush, whose writes still name this id (§11.7: storageSet answers false for an unknown id). A rejected
@@ -127,24 +186,19 @@ internal sealed partial class PersistenceMiddleware
         }
 
         // The exact current storage keys a notification may name: "tab" reaches synced slices, "doc" every browser-persisted
-        // slice; both in the notification's area, under the scope recorded for the current epoch, read under _issue (a scoped
-        // key names nothing while that scope is null or not recorded yet).
-        private (Persisted Slice, string Key)[] Accepted(string source, string area)
-        {
-            var epoch = CurrentEpoch();
-            return [.. _slices
-                .Where(persisted => BrowserStorageProvider.Area(persisted.Options.Storage) == area && (source != "tab" || persisted.Options.SyncAcrossTabs))
-                .Select(persisted => (Slice: persisted, Key: _owner.StorageKey(persisted.Slice.Key, persisted.Options, epoch)))
-                .Where(static entry => entry.Key is not null)
-                .Select(static entry => (entry.Slice, entry.Key!))];
-        }
-
+        // slice; both in the notification's area, under the scope recorded for the current epoch, all read under _issue (a
+        // scoped key names nothing while that scope is null or not recorded yet: a switch bumps the epoch under this lock).
         // Returned from inside the lock: no mutant of an assignment can leave the epoch unassigned (Stryker Safe Mode, §17.8).
-        private int CurrentEpoch()
+        private (Persisted Slice, string Key)[] Accepted(string source, string area)
         {
             lock (_owner._issue)
             {
-                return _owner.Current!.Epoch;
+                var epoch = _owner.Current!.Epoch;
+                return [.. _slices
+                    .Where(persisted => BrowserStorageProvider.Area(persisted.Options.Storage) == area && (source != "tab" || persisted.Options.SyncAcrossTabs))
+                    .Select(persisted => (Slice: persisted, Key: _owner.StorageKey(persisted.Slice.Key, persisted.Options, epoch)))
+                    .Where(static entry => entry.Key is not null)
+                    .Select(static entry => (entry.Slice, entry.Key!))];
             }
         }
 
@@ -182,54 +236,112 @@ internal sealed partial class PersistenceMiddleware
             }
         }
 
-        // A removal restores the initial state; a value stored but unreadable here (above MaxPayloadBytes, a rejected pull:
-        // the provider logged it) is no removal, and is ignored. A value goes through the hydration EnvelopeReader (a newer version, an expired
-        // or unreadable envelope, a throwing constructor: ignored, the reader logs it; so is a state this store can't
-        // serialize back) and is dropped when its local re-serialization equals the baseline (an echo). Otherwise, under
-        // _issue: bump the sequence number, restore, set the baseline, signal the writer, which dedupes a pending write of
-        // the same state away. While the key's hydration read is open, the value is a Hydration restore: it does come from
-        // storage, and step 6 drops that read.
+        // Absence is a payload (§11.7): a removal is the initial state, whose local serialization an absent key reads as. A
+        // value stored but unreadable here (above MaxPayloadBytes, a rejected pull: the provider logged it) is no removal, and
+        // is ignored. A value goes through the hydration EnvelopeReader (a newer version, an expired or unreadable envelope, a
+        // throwing constructor: ignored, the reader logs it) and is dropped when its local re-serialization equals the
+        // baseline (an echo); a value this store can't serialize back is ignored (no baseline could guard it). Then, under
+        // _issue: drop a notification no longer current or whose key the current epoch no longer names (a scope switch since
+        // its receipt), bump the sequence number (a removal too, whatever its serialization, so it orders against a hydration
+        // read), and restore, unless a removal finds the baseline already absent (or still the one a removal
+        // receipt set) or an initial state it can't serialize (the serializer logs it); set
+        // the baseline and signal the writer, which dedupes a pending write of the same state away.
+        // While the key's hydration read is open, a value is a Hydration restore: it does come from storage, and step 6 drops
+        // that read. A removal stays a CrossTab restore: the slice stays unrestored.
         private void Apply(Persisted slice, string key, long notification, string? text)
         {
-            var (type, options) = (slice.Slice.StateType, slice.Options);
-            object? state = null;
-            string? payload = null;
+            var (sliceKey, type, options) = (slice.Slice.Key, slice.Slice.StateType, slice.Options);
             if (text == BrowserStorageProvider.Unreadable)
             {
                 return;
             }
 
-            if (text is not null
-                && !(_reader.TryRead(text, key, type, options.Version, options.Migrations, options.MaxAge, _owner._time.GetUtcNow(), out state)
-                    && _owner.Store.Json.TrySerialize(state, type, out payload)))
-            {
-                return;
-            }
-
-            if (payload is not null && _owner.LastKnownPayload.TryGetValue(key, out var last) && last == payload)
+            // A removal's serialization decides only its restore: its sequence bump does not depend on it (§11.7).
+            var removal = text is null;
+            var state = removal ? _owner.Store.InitialState.Get(sliceKey) : null;
+            string? payload = null;
+            var serialized = removal
+                ? _owner.Store.Json.TrySerialize(state!, type, out payload)
+                : _reader.TryRead(text!, key, type, options.Version, options.Migrations, options.MaxAge, _owner._time.GetUtcNow(), out state)
+                    && _owner.Store.Json.TrySerialize(state, type, out payload);
+            if (!removal && (!serialized || _owner.LastKnownPayload.GetValueOrDefault(key) == payload))
             {
                 return;
             }
 
             lock (_owner._issue)
             {
+                var attempt = _owner.Current!;
                 if (_latest[key] != notification || _stop.IsCancellationRequested)
                 {
                     return;
                 }
 
-                if (payload is null)
+                if (_owner.StorageKey(sliceKey, options, attempt.Epoch) != key)
                 {
-                    _owner.Store.Restore(new Dictionary<string, object> { [slice.Slice.Key] = _owner.Store.InitialState.Get(slice.Slice.Key) }, Origin.CrossTab);
+                    Log.CrossTabKeyIgnored(_owner._log, key);
+                    return;
+                }
+
+                // Stryker disable once Arithmetic : any step moves the number; step 6 compares it only for a change
+                Volatile.Write(ref _owner._sequences, _owner._sequences.SetItem(sliceKey, _owner._sequences.GetValueOrDefault(sliceKey) + 1));
+                if (removal && !serialized)
+                {
+                    return;
+                }
+
+                // An absent baseline, or the one a removal receipt set (the key is still absent): the removal is an echo,
+                // and discards no local change still waiting for its first write.
+                if (removal && (!_owner.LastKnownPayload.TryGetValue(key, out var last) || ReferenceEquals(last, _removed.GetValueOrDefault(key))))
+                {
+                    Log.CrossTabRemovalKept(_owner._log, key);
                     return;
                 }
 
                 // The key's read is open: the current attempt reads it and has claimed no terminal (§11.6 per-attempt key sets).
-                // Stryker disable once Arithmetic : any step moves the number; step 6 compares it only for a change
-                Volatile.Write(ref _owner._sequences, _owner._sequences.SetItem(slice.Slice.Key, _owner._sequences.GetValueOrDefault(slice.Slice.Key) + 1));
-                _owner.Store.Restore(new Dictionary<string, object> { [slice.Slice.Key] = state! }, _owner.Current!.Terminal == 0 && _owner.Current.Keys.Contains(slice.Slice.Key) ? Origin.Hydration : Origin.CrossTab);
-                _owner.LastKnownPayload[key] = payload;
-                _owner.Signal(slice.Slice.Key);
+                // Its writer defers while that read is open, so it is signalled at once; a CrossTab restore's once committed.
+                // That restore is recorded before the baseline is set: a writer that read the new baseline sees the record
+                // until the commit, and the committed slot after it (PersistenceWriter.WriteAsync).
+                var hydration = !removal && attempt.Terminal == 0 && attempt.Keys.Contains(sliceKey);
+                if (hydration)
+                {
+                    attempt.Received = attempt.Received.Add(sliceKey);
+                    _owner.Signal(sliceKey);
+                }
+                else
+                {
+                    var receipt = new Receipt(sliceKey, state!);
+                    _owner._received[sliceKey] = receipt;
+                    _owner._restoring.Enqueue(receipt);
+                }
+
+                if (removal)
+                {
+                    _removed[key] = payload!;
+                }
+
+                _owner.LastKnownPayload[key] = payload!;
+                _owner.Store.Restore(new Dictionary<string, object> { [sliceKey] = state! }, hydration ? Origin.Hydration : Origin.CrossTab);
+            }
+        }
+
+        // §11.7: storageSet or storageRemove answered false, so ducky.js pruned this id (its deliveries failed past
+        // DeliveryPruneAfter) and the circuit came back: register again with the same six arguments (idempotent), then re-read
+        // every key of each registered area, standing in for the notifications lost meanwhile. "doc" accepts every
+        // browser-persisted key of the area, so a lost relay of an unsynced key is re-read too. Nothing once disposal began:
+        // the flush's own writes name an id about to be removed.
+        public void Repair()
+        {
+            if (_stop.IsCancellationRequested)
+            {
+                return;
+            }
+
+            Log.CrossTabReRegistered(_owner._log, _owner._id);
+            Watch();
+            foreach (var area in _slices.Select(static persisted => BrowserStorageProvider.Area(persisted.Options.Storage)).Distinct())
+            {
+                _ = OnStorageChangedAsync("doc", area, null, null, tooLarge: false);
             }
         }
     }

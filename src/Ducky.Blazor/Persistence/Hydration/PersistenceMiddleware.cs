@@ -294,9 +294,9 @@ internal sealed partial class PersistenceMiddleware : Middleware
                 values.Remove(key);
             }
 
-            // A cross-tab value received since the read began is newer (CrossTab_EventDuringHydration_NewestWins): its
-            // restore stays, and so does its baseline. It was a Hydration restore of this attempt, so it counts as restored.
-            // ponytail: every bump before the terminal is a value restore; count only those once removals bump (M7-02b).
+            // A cross-tab value or removal received since the read began is newer (CrossTab_EventDuringHydration_NewestWins,
+            // CrossTab_RemovalDuringHydration_RemovalWins): its outcome stays, and so does its baseline. A value was a
+            // Hydration restore of this attempt, so it counts as restored; a removal restored nothing from storage.
             string[] overtaken = [.. _sequences.Where(entry => attempt.Keys.Contains(entry.Key) && sequences.GetValueOrDefault(entry.Key) != entry.Value).Select(static entry => entry.Key)];
             foreach (var key in overtaken)
             {
@@ -307,7 +307,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
             var seeded = TakeScopedSeed(attempt, values, overtaken);
 
             // Lost to the deadline, the init abort or a newer switch, which owns the terminal: the results are discarded.
-            if (!Claim(attempt, new HydrationCompleted(values.Count > 0 || overtaken.Length > 0) { ScopeEpoch = attempt.Epoch }))
+            if (!Claim(attempt, new HydrationCompleted(values.Count > 0 || overtaken.Any(attempt.Received.Contains)) { ScopeEpoch = attempt.Epoch }))
             {
                 Log.HydrationResultDiscarded(_log, attempt.Epoch);
                 return;
@@ -342,8 +342,9 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
     // §11.5 step 6, under _issue: the scoped keys a pause seed handed over. Only attempt 0, still current, under a scope
     // that hashes to the seed's, takes them: a dirty browser key's seed value in place of the stored one, any other only
-    // when storage held no valid envelope for it; a key a cross-tab value overtook keeps that newer value. Otherwise they
-    // stay for IssueTerminal, whichever attempt issues it, to drop (Debug 2017). Returns the dirty keys applied, deferred
+    // when storage held no valid envelope for it; an overtaken key keeps the newer value or removal, except a dirty key a
+    // removal overtook, which keeps its seed value. Otherwise they stay for IssueTerminal, whichever attempt issues it, to
+    // drop (Debug 2017). Returns the dirty keys applied, deferred
     // once the claim is won (current, so it is), so their writers rewrite storage after the terminal (baseline from the read).
     private List<string> TakeScopedSeed(Attempt attempt, Dictionary<string, object> values, string[] overtaken)
     {
@@ -358,7 +359,9 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
         _persistence.SeedScoped = null;
 
-        foreach (var (key, value) in seed.Values.Where(entry => !overtaken.Contains(entry.Key)))
+        // An overtaken key keeps the newer outcome, except a dirty one a removal overtook: that removal restored nothing, so it
+        // discards no unwritten change (§11.7). A clean seed value is the stored one from before the removal (INV-18).
+        foreach (var (key, value) in seed.Values.Where(entry => !overtaken.Contains(entry.Key) || (seed.Dirty.Contains(entry.Key) && !attempt.Received.Contains(entry.Key))))
         {
             if (seed.Dirty.Contains(key))
             {
@@ -536,6 +539,9 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
         /// <summary>Whether it claimed its results: until then a superseding switch carries its unscoped keys (§11.6).</summary>
         public bool Restored { get; set; }
+
+        /// <summary>The slice keys a cross-tab value restored as a Hydration restore of this attempt, while its read was open.</summary>
+        public ImmutableHashSet<string> Received { get; set; } = [];
 
         /// <summary>
         /// A switch attempt's token source, linked to the store's, which ends it with the store: so never disposed on its own. Its

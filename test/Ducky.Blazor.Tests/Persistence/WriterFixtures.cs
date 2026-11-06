@@ -354,4 +354,5 @@ internal sealed class WriterHarness : IAsyncDisposable
 [JsonSerializable(typeof(Note))]
 [JsonSerializable(typeof(Picky))]
 [JsonSerializable(typeof(Unwritable))]
+[JsonSerializable(typeof(CrossTab.Gauge))]
 internal sealed partial class WriterJson : JsonSerializerContext;
