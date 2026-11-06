@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Ducky/Ducky.csproj" />
+    <ProjectReference Include="../../src/Ducky.Testing/Ducky.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

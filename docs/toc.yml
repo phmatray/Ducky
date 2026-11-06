@@ -2,5 +2,21 @@
   href: index.md
 - name: Guides
   items:
+    - name: Getting started
+      href: guides/core/getting-started.md
+    - name: Slices and keys
+      href: guides/core/slices-and-keys.md
+    - name: Effects and concurrency policies
+      href: guides/core/effects.md
+    - name: Selectors
+      href: guides/core/selectors.md
+    - name: SliceStore
+      href: guides/core/slice-store.md
+    - name: EntityState
+      href: guides/core/entity-state.md
+    - name: Testing with Ducky.Testing
+      href: guides/core/testing.md
     - name: Static SSR with Server storage
       href: guides/blazor/static-ssr.md
+- name: Threading contract
+  href: threading.md
