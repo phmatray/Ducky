@@ -70,10 +70,15 @@ public sealed class RegistrationCallAnalyzer : DiagnosticAnalyzer
     }
 
     // A slice or effect of this compilation that the generated method registers, by the generator's own rule: a private
-    // nested, generic, `file` or constructor-less one isn't, so it doesn't count.
-    private static bool DefinesRegistrations(Compilation compilation, CancellationToken cancellationToken) =>
-        compilation.GetSymbolsWithName(_ => true, SymbolFilter.Type, cancellationToken).OfType<INamedTypeSymbol>()
-            .Any(t => RegistrationModel.Classify(t, compilation) is { Excluded: null });
+    // nested, generic, `file` or constructor-less one isn't, so it doesn't count, nor is a reactive effect while
+    // AddReactiveEffect<TEffect>(DuckyBuilder) doesn't resolve (DUCKY022 instead).
+    private static bool DefinesRegistrations(Compilation compilation, CancellationToken cancellationToken)
+    {
+        var reactive = RegistrationGates.From(compilation).Reactive;
+        return compilation.GetSymbolsWithName(_ => true, SymbolFilter.Type, cancellationToken).OfType<INamedTypeSymbol>()
+            .Select(t => RegistrationModel.Classify(t, compilation)).OfType<RegistrationModel>()
+            .Any(m => m.Excluded is null && (!m.Reactive || reactive));
+    }
 
     // Set once any action sees the generated call; read when the compilation ends.
     private sealed class Flag

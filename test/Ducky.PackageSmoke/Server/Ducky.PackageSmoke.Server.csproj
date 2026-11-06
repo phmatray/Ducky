@@ -2,11 +2,13 @@
   <!-- Server consumer (SPEC §17.9 step 1): implicit usings plus `global using Ducky;`, and an IMiddleware, so no tombstone
        type makes a name ambiguous. It calls AddDuckyGenerated_PackageSmoke() (hence the assembly name) and the generated
        Increment helper, and declares [Persist(Version = 2, SyncAcrossTabs = true)] and [Prerender] slices (Persisted.cs),
-       whose generated PersistAttributeDefaults<T> and Prerender<T> calls compile without DUCKY022. Its DUCKY902 variant
+       whose generated PersistAttributeDefaults<T> and Prerender<T> calls compile without DUCKY022 (the PackageSmoke target
+       checks the emitted DuckyRegistrations.g.cs holds them, GeneratedCalls). Its DUCKY902 variant
        sets -p:SmokeBlazorVersion=1.0.292 (the committed fake); its DUCKY004 variant sets -p:SmokeSingleton=true. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>PackageSmoke</AssemblyName>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <SmokeBlazorVersion Condition="'$(SmokeBlazorVersion)' == ''">$(DuckyVersion)</SmokeBlazorVersion>
   </PropertyGroup>
 

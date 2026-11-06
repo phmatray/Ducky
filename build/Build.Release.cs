@@ -105,12 +105,22 @@ internal sealed partial class Build
             // MSBuild worker nodes left alive by a previous local run's Mutty variant still report DUCKY901 for the restored
             // DraftOnly consumer (seen on SDK 10.0.401; a fresh node, as on CI, does not).
             var exitCode = 0;
+            GeneratedCalls.ForEach(c => (SmokeDirectory / c.Consumer / "obj" / "Release").DeleteDirectory());
             DotNet($"build {SmokeSolution} -c Release --no-restore -p:DuckyVersion={version} -warnaserror:DUCKY901 -nodeReuse:false",
                 exitHandler: p => exitCode = p.ExitCode);
             if (exitCode != 0)
             {
                 violations.Add($"{SmokeSolution.Name} failed to build (exit code {exitCode})");
             }
+
+            // Step 1, before the variants rebuild the Server consumer: a consumer compiling clean doesn't prove the packaged
+            // generator emitted its calls (a classification lost only in the package graph leaves the method empty).
+            foreach (var (consumer, calls) in exitCode == 0 ? GeneratedCalls : [])
+            {
+                violations.AddRange(GeneratedCallViolations(consumer, calls,
+                    (SmokeDirectory / consumer / "obj" / "Release").GlobFiles("**/DuckyRegistrations.g.cs").Select(f => f.ReadAllText()).ToList()));
+            }
+            violations.AddRange(GeneratedCallSelfCheck());
 
             // Step 5, before the variants re-restore the Server consumer on the fake Ducky.Blazor. A failed step-1 build is
             // already a violation, so publishing the same consumers would only throw away the ones collected so far.
@@ -195,6 +205,51 @@ internal sealed partial class Build
             if (actual != violation)
             {
                 yield return $"VariantSelfCheck: {plantedCase} must give '{violation}', got '{actual}'";
+            }
+        }
+    }
+
+    // §17.9 step 1: the exact lines each consumer's emitted DuckyRegistrations.g.cs (EmitCompilerGeneratedFiles) must hold.
+    private static readonly List<(string Consumer, string[] Calls)> GeneratedCalls =
+    [
+        ("ReactiveOnly", ["global::Ducky.Reactive.DuckyReactiveExtensions.AddReactiveEffect<global::Ducky.PackageSmoke.ReactiveOnly.Search>(b);"]),
+        ("Server",
+        [
+            "global::Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<global::PackageSmoke.CartSlice>(b, o => { o.Version = 2; o.SyncAcrossTabs = true; });",
+            "global::Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<global::PackageSmoke.TodosSlice>(b);",
+        ]),
+    ];
+
+    private static IEnumerable<string> GeneratedCallViolations(string consumer, string[] calls, List<string> generated)
+    {
+        if (generated.Count == 0)
+        {
+            yield return $"the {consumer} consumer emitted no DuckyRegistrations.g.cs";
+            yield break;
+        }
+
+        foreach (var call in calls.Where(c => !generated.Any(g => g.Split('\n').Any(line => line.Trim() == c))))
+        {
+            yield return $"the {consumer} consumer's generated registration lacks `{call}`";
+        }
+    }
+
+    private static IEnumerable<string> GeneratedCallSelfCheck()
+    {
+        const string call = "b.AddSlice<global::A.S>();";
+        (string Case, List<string> Generated, string? Expected)[] planted =
+        [
+            ("the call on its own line", ["namespace X;\n        b.AddSlice<global::A.S>();\r\n}"], null),
+            ("no generated file", [], "the C consumer emitted no DuckyRegistrations.g.cs"),
+            ("a file without the call", ["namespace X;\n}"], "the C consumer's generated registration lacks `b.AddSlice<global::A.S>();`"),
+            ("the call only inside a longer line", ["// b.AddSlice<global::A.S>();\n"], "the C consumer's generated registration lacks `b.AddSlice<global::A.S>();`"),
+        ];
+        foreach (var (plantedCase, generated, expected) in planted)
+        {
+            var actual = string.Join("; ", GeneratedCallViolations("C", [call], generated));
+            if (actual != (expected ?? ""))
+            {
+                yield return $"GeneratedCallSelfCheck: {plantedCase} must give '{expected}', got '{actual}'";
             }
         }
     }

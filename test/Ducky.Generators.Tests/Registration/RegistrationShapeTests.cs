@@ -6,7 +6,7 @@ namespace Ducky.Generators.Tests.Registration;
 // GEN-02 shape matrix (SPEC §16.1, §17.7, INV-25): every shape's output compiles without any diagnostic under
 // DocumentationMode.Diagnose, nullable enabled and warning level 9999, the generator reports no diagnostic, and its
 // generated source is snapshotted. The core rows reference Ducky.dll only (no Ducky.Blazor, no Ducky.Reactive); the [Persist]/[Prerender]
-// rows add the real Ducky.Blazor.dll.
+// rows add the real Ducky.Blazor.dll, the ReactiveEffect rows the real Ducky.Reactive.dll.
 public sealed class RegistrationShapeTests
 {
     private const string Undocumented = "#pragma warning disable CS1591 // justification: shape sources are undocumented; only generated code is checked\n";
@@ -224,6 +224,71 @@ public sealed class RegistrationShapeTests
     };
 
     public static TheoryData<string> BlazorShapes => [.. _blazorShapes.Keys];
+
+    // ReactiveEffect rows, compiled against the real Ducky.Reactive (stage 16): after every AddSlice/AddEffect, one fully
+    // qualified AddReactiveEffect<T>(b) call per registered reactive effect, whatever its public constructor injects
+    // (DUCKY309 checks it at run time), inside the [Obsolete]/[Experimental] suppressions.
+    private const string Handle = "public override R3.Observable<object> Handle(R3.Observable<object> actions, R3.Observable<Ducky.StateSnapshot> state) => actions;";
+
+    private static readonly Dictionary<string, string> _reactiveShapes = new()
+    {
+        ["Reactive"] = $$"""
+            namespace App;
+            public sealed record Cart(int Count);
+            public sealed record Load(int Id);
+            public interface ISearchApi { }
+            public sealed class CartSlice : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            public sealed class Ping : Ducky.Effect<Load>
+            {
+                public override System.Threading.Tasks.Task Handle(Load action, Ducky.EffectContext context, System.Threading.CancellationToken cancellationToken) => System.Threading.Tasks.Task.CompletedTask;
+            }
+            public sealed class Search : Ducky.Reactive.ReactiveEffect { {{Handle}} }
+            public sealed class Lookup(ISearchApi api) : Ducky.Reactive.ReactiveEffect { public ISearchApi Api => api; {{Handle}} }
+            public sealed class Choice : Ducky.Reactive.ReactiveEffect
+            {
+                private Choice() { }
+                public Choice(int unused) { }
+                {{Handle}}
+            }
+            public sealed class Hidden : Ducky.Reactive.ReactiveEffect { internal Hidden() { } {{Handle}} }
+            public abstract class SearchBase : Ducky.Reactive.ReactiveEffect { }
+            public class Derived : SearchBase { {{Handle}} }
+            public sealed class Box<T> : Ducky.Reactive.ReactiveEffect { {{Handle}} }
+            public class Host
+            {
+                public sealed class Nested : Ducky.Reactive.ReactiveEffect { {{Handle}} }
+                private sealed class Private : Ducky.Reactive.ReactiveEffect { {{Handle}} }
+            }
+            [System.Obsolete("old")] public sealed class Old : Ducky.Reactive.ReactiveEffect { {{Handle}} }
+            [System.Diagnostics.CodeAnalysis.Experimental("APP001")] public sealed class Trial : Ducky.Reactive.ReactiveEffect { {{Handle}} }
+            [System.Obsolete("gone", true)] public sealed class Gone : Ducky.Reactive.ReactiveEffect { {{Handle}} }
+            """,
+        ["ReactiveHttpClient"] = $$"""
+            namespace App;
+            public sealed class Fetch(System.Net.Http.HttpClient http) : Ducky.Reactive.ReactiveEffect
+            {
+                public System.Net.Http.HttpClient Http => http;
+                {{Handle}}
+            }
+            """,
+    };
+
+    public static TheoryData<string> ReactiveShapes => [.. _reactiveShapes.Keys];
+
+    [Theory]
+    [MemberData(nameof(ReactiveShapes))]
+    public Task Generated_CompilesClean_ReactiveShape(string shape)
+    {
+        var input = DiagnosingHarness.WithReactive(GeneratorHarness.Compile(Undocumented + _reactiveShapes[shape]));
+        input.ShouldCompileClean();
+
+        var driver = DiagnosingHarness.Run(new RegistrationGenerator(), input, out var output, out var diagnostics);
+
+        diagnostics.ShouldBeEmpty();
+        output.ShouldCompileClean();
+        var generated = driver.GetRunResult().Results.Single().GeneratedSources.ShouldHaveSingleItem();
+        return Verifier.Verify(generated.SourceText.ToString()).UseParameters(shape);
+    }
 
     [Theory]
     [MemberData(nameof(BlazorShapes))]

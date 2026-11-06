@@ -15,7 +15,7 @@ internal static class RegistrationDiagnostics
 
     private const string UnresolvedId = "DUCKY022";
     private const string UnresolvedTitle = "Registration call not emitted";
-    private const string UnresolvedMessage = "[{0}] on '{1}' is ignored: {2}";
+    private const string UnresolvedMessage = "{0} on '{1}' is ignored: {2}";
     private const string UnresolvedHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY022.md";
 
     private const string ExcludedId = "DUCKY023";

@@ -232,6 +232,90 @@ public sealed class RegistrationDiagnosticsTests
             g => g.ShouldContain("b.AddSlice<global::App.Both>();"));
     }
 
+    private const string Reactive = """
+        public sealed class Search : Ducky.Reactive.ReactiveEffect
+        {
+            public override R3.Observable<object> Handle(R3.Observable<object> actions, R3.Observable<Ducky.StateSnapshot> state) => actions;
+        }
+        public sealed class Fetch(System.Net.Http.HttpClient http) : Ducky.Reactive.ReactiveEffect
+        {
+            public System.Net.Http.HttpClient Http => http;
+            public override R3.Observable<object> Handle(R3.Observable<object> actions, R3.Observable<Ducky.StateSnapshot> state) => actions;
+        }
+        public sealed class Cart2 : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+        """;
+
+    // INV-25, stage 16: against the real Ducky.Reactive the gated AddReactiveEffect<T> resolves, so every reactive effect
+    // (any public constructor: DUCKY309 checks its dependencies at run time) gets one fully qualified call, no DUCKY022
+    // is reported and the output compiles (a signature change to the method fails here, never silently turns into
+    // DUCKY022). It is neither an AddEffect<T> nor an AddSlice<T>.
+    [Fact]
+    public void Registration_RealReactive_EmitsAddReactiveEffect_NoDucky022()
+    {
+        var input = DiagnosingHarness.WithReactive(GeneratorHarness.Compile(Prefix + Reactive));
+        input.GetTypeByMetadataName("Ducky.Reactive.DuckyReactiveExtensions").ShouldNotBeNull();
+
+        Diagnose(input, out var output).ShouldBeEmpty();
+        Generated(output).ShouldSatisfyAllConditions(
+            g => g.ShouldContain("global::Ducky.Reactive.DuckyReactiveExtensions.AddReactiveEffect<global::App.Search>(b);"),
+            g => g.ShouldContain("global::Ducky.Reactive.DuckyReactiveExtensions.AddReactiveEffect<global::App.Fetch>(b);"),
+            g => g.ShouldContain("b.AddSlice<global::App.Cart2>();"),
+            g => g.ShouldNotContain("AddEffect<global::App.Search>"),
+            g => g.ShouldNotContain("AddSlice<global::App.Search>"),
+            g => g.ShouldNotContain("AddReactiveEffect<global::App.Cart2>"));
+    }
+
+    private const string ReactiveUnresolved = "'Ducky.Reactive.DuckyReactiveExtensions.AddReactiveEffect<TEffect>(DuckyBuilder)' does not resolve (reference a Ducky.Reactive version that declares it)";
+
+    // Hand-written older-shape Ducky.Reactive packages (the skew fixture of SPEC §16.1): ReactiveEffect resolves, but the
+    // extension type is missing or none of its AddReactiveEffect methods has the exact public AddReactiveEffect<TEffect>(
+    // DuckyBuilder) shape (wrong parameters, arity or accessibility). Each reactive effect, registered or not (DUCKY023),
+    // gets DUCKY022 on its name, nothing is emitted for it (no CS0117 in generated code), and the slice is still registered.
+    [Theory]
+    [InlineData("")]
+    [InlineData("""
+        public static class DuckyReactiveExtensions
+        {
+            public static Ducky.DuckyBuilder AddReactiveEffect<TEffect>(this Ducky.DuckyBuilder builder, bool once) => builder;
+            public static Ducky.DuckyBuilder AddReactiveEffect<TEffect, TState>(this Ducky.DuckyBuilder builder) => builder;
+            internal static Ducky.DuckyBuilder AddReactiveEffect<TEffect>(this Ducky.DuckyBuilder builder) => builder;
+            public static Ducky.DuckyBuilder AddEffect<TEffect>(this Ducky.DuckyBuilder builder) => builder;
+        }
+        """)]
+    public void Ducky022_OlderShapeReactive_ReportedAndNotEmitted(string extensions)
+    {
+        var older = GeneratorHarness.Compile($$"""
+            #pragma warning disable CS1591 // justification: undocumented fixture
+            namespace Ducky.Reactive;
+            public abstract class ReactiveEffect { }
+            {{extensions}}
+            """).WithAssemblyName("Ducky.Reactive");
+        older.ShouldCompileClean();
+        var input = GeneratorHarness.Compile(Prefix + """
+            public sealed class Search : Ducky.Reactive.ReactiveEffect { }
+            public sealed class Fetch(System.Net.Http.HttpClient http) : Ducky.Reactive.ReactiveEffect { public System.Net.Http.HttpClient Http => http; }
+            file sealed class Local : Ducky.Reactive.ReactiveEffect { }
+            public abstract class Base : Ducky.Reactive.ReactiveEffect { }
+            public sealed class S : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
+            """).AddReferences(older.ToMetadataReference());
+
+        var local = input.GetSymbolsWithName("Local", SymbolFilter.Type, TestContext.Current.CancellationToken).Single().ToDisplayString();
+        var diagnostics = Diagnose(input, out var output);
+
+        diagnostics.Select(d => (d.Id, d.Severity, d.GetMessage(CultureInfo.InvariantCulture))).ShouldBe(
+        [
+            ("DUCKY022", DiagnosticSeverity.Warning, $"ReactiveEffect on 'App.Search' is ignored: {ReactiveUnresolved}"),
+            ("DUCKY022", DiagnosticSeverity.Warning, $"ReactiveEffect on 'App.Fetch' is ignored: {ReactiveUnresolved}"),
+            ("DUCKY022", DiagnosticSeverity.Warning, $"ReactiveEffect on '{local}' is ignored: {ReactiveUnresolved}"),
+            ("DUCKY023", DiagnosticSeverity.Warning, $"'{local}' is not registered by AddDuckyGenerated: {FileLocal}"),
+        ], ignoreOrder: true);
+        ShouldBeAt(diagnostics.Single(d => d.GetMessage(CultureInfo.InvariantCulture).Contains("'App.Search'", StringComparison.Ordinal)), input, "Search");
+        Generated(output).ShouldSatisfyAllConditions(
+            g => g.ShouldNotContain("Reactive"),
+            g => g.ShouldNotContain("Search"),
+            g => g.ShouldContain("b.AddSlice<global::App.S>();"));
+    }
+
     private const string NotSlice = "it is not a slice";
 
     // [Persist]/[Prerender] on a non-slice type (SPEC §16.2): reported whether or not Ducky.Blazor is referenced, and an

@@ -23,20 +23,24 @@ internal sealed record AttributeModel(string Attribute, string Display, bool IsS
 }
 
 /// <summary>The compilation-wide inputs of GEN-02: the sanitized assembly name and which gated methods resolve.</summary>
-internal sealed record RegistrationGates(string Assembly, bool Persist, bool Prerender)
+internal sealed record RegistrationGates(string Assembly, bool Persist, bool Prerender, bool Reactive)
 {
     public const string PersistMethod = "Ducky.Blazor.DuckyBlazorBuilderExtensions.PersistAttributeDefaults<TSlice>(DuckyBuilder, Action<PersistOptions>)";
     public const string PrerenderMethod = "Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<TSlice>(DuckyBuilder)";
+    public const string ReactiveMethod = "Ducky.Reactive.DuckyReactiveExtensions.AddReactiveEffect<TEffect>(DuckyBuilder)";
+
+    private const string Blazor = "Ducky.Blazor.DuckyBlazorBuilderExtensions";
 
     public static RegistrationGates From(Compilation compilation) => new(
         AssemblyNameSanitizer.Sanitize(compilation.AssemblyName),
-        Resolves(compilation, "Public PersistAttributeDefaults`1(Ducky.DuckyBuilder, System.Action<Ducky.Blazor.PersistOptions>)"),
-        Resolves(compilation, "Public Prerender`1(Ducky.DuckyBuilder)"));
+        Resolves(compilation, Blazor, "Public PersistAttributeDefaults`1(Ducky.DuckyBuilder, System.Action<Ducky.Blazor.PersistOptions>)"),
+        Resolves(compilation, Blazor, "Public Prerender`1(Ducky.DuckyBuilder)"),
+        Resolves(compilation, "Ducky.Reactive.DuckyReactiveExtensions", "Public AddReactiveEffect`1(Ducky.DuckyBuilder)"));
 
     // Gated on the exact method symbol (accessibility, name, arity, parameter types), never on the extension type: no
-    // reference, or a skewed or older Ducky.Blazor without the method, is DUCKY022 instead of CS0117 in generated code.
-    private static bool Resolves(Compilation compilation, string signature) =>
-        compilation.GetTypeByMetadataName("Ducky.Blazor.DuckyBlazorBuilderExtensions")?.GetMembers().OfType<IMethodSymbol>()
+    // reference, or a skewed or older package without the method, is DUCKY022 instead of CS0117 in generated code.
+    private static bool Resolves(Compilation compilation, string type, string signature) =>
+        compilation.GetTypeByMetadataName(type)?.GetMembers().OfType<IMethodSymbol>()
             .Any(m => $"{m.DeclaredAccessibility} {m.Name}`{m.Arity}({string.Join(", ", m.Parameters.Select(p => p.Type.ToDisplayString()))})" == signature) == true;
 }
 
@@ -46,10 +50,11 @@ internal sealed record RegistrationGates(string Assembly, bool Persist, bool Pre
 /// containing types, which the generated registration has to suppress besides CS0612/CS0618 (GEN-06).
 /// <see cref="Prerender"/> is true for a registered slice carrying [Prerender] (on any of its partial declarations), and
 /// <see cref="Persist"/> holds the PersistAttributeDefaults&lt;T&gt; delegate of one carrying [Persist] (null without it).
+/// <see cref="Reactive"/> is true for a <c>ReactiveEffect</c>, registered through AddReactiveEffect&lt;T&gt; (stage 16).
 /// <see cref="Location"/> keeps its tree: it compares by tree reference and span, so the model stays equal while its file
 /// is unchanged, and a diagnostic lands in that exact tree (never re-found by path: trees may share one, INV-25).
 /// </summary>
-internal sealed record RegistrationModel(string Type, string Display, bool IsSlice, string? Excluded, Location Location, EquatableArray<string> Suppressed = default, bool Prerender = false, string? Persist = null)
+internal sealed record RegistrationModel(string Type, string Display, bool IsSlice, string? Excluded, Location Location, EquatableArray<string> Suppressed = default, bool Prerender = false, string? Persist = null, bool Reactive = false)
 {
     public const string FileLocal = "it is file-local, so the generated registration can't reference it";
     public const string NoConstructor = "a slice needs a public parameterless constructor that new() can call (one marked [SetsRequiredMembers] when the slice has required members)";
@@ -59,17 +64,19 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
         Classify((INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!, context.SemanticModel.Compilation);
 
     /// <summary>
-    /// Classifies <paramref name="type"/>: null unless it is a non-abstract, non-generic slice or effect that generated
-    /// code may reference (accessible from the assembly, neither it nor a containing type error-obsolete), and an effect
-    /// without a public constructor is skipped (SPEC §16.1). DUCKY016 counts the registered ones (no reason).
+    /// Classifies <paramref name="type"/>: null unless it is a non-abstract, non-generic slice, effect or reactive effect
+    /// (a <c>Ducky.Reactive.ReactiveEffect</c>, when that type resolves) that generated code may reference (accessible from
+    /// the assembly, neither it nor a containing type error-obsolete), and an effect or reactive effect without a public
+    /// constructor is skipped (SPEC §16.1). DUCKY016 counts the registered ones (no reason).
     /// </summary>
     public static RegistrationModel? Classify(INamedTypeSymbol type, Compilation compilation)
     {
         var isSlice = Derives(type, compilation.GetTypeByMetadataName("Ducky.Slice"));
         var isEffect = Derives(type, compilation.GetTypeByMetadataName("Ducky.Effect"));
+        var isReactive = Derives(type, compilation.GetTypeByMetadataName("Ducky.Reactive.ReactiveEffect"));
         var containing = Chain(type, t => t.ContainingType).ToList();
         var obsolete = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
-        if (!(isSlice || isEffect) || type.IsAbstract || type.IsGenericType ||
+        if (!(isSlice || isEffect || isReactive) || type.IsAbstract || type.IsGenericType ||
             containing.Any(t => t.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete) && a.ConstructorArguments.Any(c => true.Equals(c.Value)))))
         {
             return null;
@@ -82,7 +89,7 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
         // Accessibility doesn't model `file`, so the outermost type's IsFileLocal is checked first.
         if (containing[containing.Count - 1].IsFileLocal)
         {
-            return new(name, display, isSlice, FileLocal, location);
+            return new(name, display, isSlice, FileLocal, location, Reactive: isReactive);
         }
 
         var constructors = type.InstanceConstructors.Where(c => c.DeclaredAccessibility == Accessibility.Public).ToList();
@@ -110,7 +117,7 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
         var persist = isSlice ? type.GetAttributes().FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, persistAttribute)) : null;
         return new(name, display, isSlice, null, location, new([.. suppressed]),
             isSlice && Has(type, compilation.GetTypeByMetadataName("Ducky.PrerenderAttribute")),
-            persist is null ? null : PersistDefaults(persist));
+            persist is null ? null : PersistDefaults(persist), isReactive);
     }
 
     // Only the named arguments written in [Persist(...)], in written order, never a default (SPEC §16.1): `o => { }` for a

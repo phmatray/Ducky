@@ -30,4 +30,9 @@ internal static class DiagnosingHarness
             .Where(p => names.Contains(Path.GetFileNameWithoutExtension(p)) && !present.Contains(p))
             .Select(p => MetadataReference.CreateFromFile(p)));
     }
+
+    // The real Ducky.Reactive.dll, copied next to the tests as a file, and R3 (GEN-06: no stubs).
+    public static Compilation WithReactive(Compilation compilation) => compilation.AddReferences(
+        MetadataReference.CreateFromFile(Path.Combine(AppContext.BaseDirectory, "Ducky.Reactive.dll")),
+        MetadataReference.CreateFromFile(typeof(R3.Observable).Assembly.Location));
 }

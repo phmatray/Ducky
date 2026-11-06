@@ -5,6 +5,7 @@
     <Project Path="test/Ducky.PackageSmoke/BlazorOnly/Ducky.PackageSmoke.BlazorOnly.csproj" />
     <Project Path="test/Ducky.PackageSmoke/DraftOnly/Ducky.PackageSmoke.DraftOnly.csproj" />
     <Project Path="test/Ducky.PackageSmoke/Graph/Ducky.PackageSmoke.Graph.csproj" />
+    <Project Path="test/Ducky.PackageSmoke/ReactiveOnly/Ducky.PackageSmoke.ReactiveOnly.csproj" />
     <Project Path="test/Ducky.PackageSmoke/Server/Ducky.PackageSmoke.Server.csproj" />
     <Project Path="test/Ducky.PackageSmoke/Wasm/Ducky.PackageSmoke.Wasm.csproj" />
   </Folder>

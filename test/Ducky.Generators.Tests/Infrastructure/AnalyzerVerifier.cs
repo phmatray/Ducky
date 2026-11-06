@@ -7,13 +7,14 @@ using Microsoft.CodeAnalysis.Testing;
 namespace Ducky.Generators.Tests.Infrastructure;
 
 // Microsoft.CodeAnalysis.CSharp.Analyzer.Testing verifier (SPEC §16.2) over the harness references: the running
-// framework, the real Ducky.dll and the real Ducky.Blazor.dll with what it references (GEN-06: no stubs). The empty
+// framework, the real Ducky.dll, the real Ducky.Blazor.dll with what it references and the real Ducky.Reactive.dll with
+// R3 (GEN-06: no stubs). The empty
 // ReferenceAssemblies stops the verifier from downloading a reference pack from NuGet at test time.
 internal static class AnalyzerVerifier<TAnalyzer>
     where TAnalyzer : DiagnosticAnalyzer, new()
 {
     private static readonly ImmutableArray<MetadataReference> _references =
-        [.. DiagnosingHarness.WithBlazor(GeneratorHarness.Compile()).References];
+        [.. DiagnosingHarness.WithReactive(DiagnosingHarness.WithBlazor(GeneratorHarness.Compile())).References];
 
     public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor) => new(descriptor);
 
