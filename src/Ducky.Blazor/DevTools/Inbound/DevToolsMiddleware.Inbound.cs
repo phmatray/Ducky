@@ -4,14 +4,17 @@ using Microsoft.JSInterop;
 namespace Ducky.Blazor;
 
 // SPEC §11.8 history and inbound (INV-28). The history is an immutable array of (devToolsIndex, snapshot), capped at
-// MaxAge, that only the drainer replaces (Volatile.Write); OnMessage, on the circuit's sync context, reads it once, so a
-// jump racing a send restores the very entry its index names. The time-travel flag OnMessage sets is volatile, since the
-// drainer reads it in MayDispatch.
+// MaxAge, that only the drainer replaces (Volatile.Write); each message reads it once, so a jump racing a send restores
+// the very entry its index names. ducky.js forwards a message without waiting for the last one to settle, and a large one
+// is handled only after its pull, on a pool thread: OnMessage chains each message onto the last (_inbound), so they are
+// handled one at a time, in seq order. The time-travel flag Handle sets is volatile, since the drainer reads it in
+// MayDispatch.
 internal sealed partial class DevToolsMiddleware
 {
     private const string LibraryPrefix = "@ducky/";
     private HistoryEntry[] _history = []; // never written after it is published
     private volatile bool _timeTravel;
+    private Task _inbound = Task.CompletedTask; // only OnMessage, whose invocations arrive one at a time (§11.9)
 
     // Library origins are never offered to MayDispatch (§6.4): only Local and Effect, both vetoed off the latest entry. An
     // inert DevTools can deliver no jump back to the latest, so the veto ends with the connection.
@@ -21,10 +24,27 @@ internal sealed partial class DevToolsMiddleware
     /// One inbound Redux DevTools message, forwarded by ducky.js (§11.9). A jump arrives stripped of the extension's state;
     /// a message above the inline budget arrives as <paramref name="tooLarge"/> without <paramref name="json"/>.
     /// </summary>
-    [JSInvokable]
-    public void OnMessage(string? json, long seq, bool tooLarge)
+    [JSInvokable("OnMessage")] // the name ducky.js invokes (§11.9)
+    public Task OnMessageAsync(string? json, long seq, bool tooLarge) => _inbound = ReceiveAsync(_inbound, json, seq, tooLarge);
+
+    // After the last message, whether it faulted or not (its own delivery reports that). An inline message behind a settled
+    // one is handled synchronously. A large one is always taken, so ducky.js never keeps it past its delivery.
+    private async Task ReceiveAsync(Task previous, string? json, long seq, bool tooLarge)
     {
-        var command = Parse(json);
+#pragma warning disable VSTHRD003 // justification: the last ReceiveAsync of this middleware, which never resumes on a captured context
+        await previous.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+#pragma warning restore VSTHRD003
+        if (tooLarge)
+        {
+            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+            json = await PullAsync(seq).ConfigureAwait(false);
+        }
+
+        Handle(Parse(json), seq, tooLarge);
+    }
+
+    private void Handle(DevToolsCommand? command, long seq, bool tooLarge)
+    {
         // Inert (a connect .NET gave up on, a failed send): ducky.js may still forward messages, but the history may no
         // longer match the extension's index, so none touches the state. Connected with @@INIT pending (2) still handles them.
         if (Volatile.Read(ref _connected) == 0)
@@ -52,7 +72,7 @@ internal sealed partial class DevToolsMiddleware
                 _timeTravel = false;
                 Store.Restore(state.Where(static entry => !IsLibrary(entry.Key)).ToDictionary(static entry => entry.Key, static entry => (object)entry.Value), Origin.DevTools);
                 break;
-            default: // COMMIT, ROLLBACK, SWEEP, TOGGLE_ACTION, any other message, and (until pulled) a large one
+            default: // COMMIT, ROLLBACK, SWEEP, TOGGLE_ACTION, any other message, and a large one that could not be pulled
                 Log.DevToolsMessageIgnored(_log, seq, command?.Type, tooLarge);
                 break;
         }

@@ -118,6 +118,7 @@ internal sealed class DevToolsHarness : IAsyncDisposable
             "devtoolsInit" => OnInit(args),
             "devtoolsSend" => OnSend(args),
             "devtoolsDisconnect" => OnDisconnect(args),
+            "devtoolsTakeMessage" => OnTake(args),
             "hold" => OnHold(),
             _ => null,
         };
@@ -156,6 +157,9 @@ internal sealed class DevToolsHarness : IAsyncDisposable
     public Func<object?[], object?> OnDisconnect { get; set; } = static _ => null;
 
     public Func<object?> OnHold { get; set; } = static () => null;
+
+    /// <summary>devtoolsTakeMessage (§11.9): by default the message was already taken, one NUL byte.</summary>
+    public Func<object?[], object?> OnTake { get; set; } = static _ => new FakeJsStreamReference(new byte[1]);
 
     public IStore Store => _scope.ServiceProvider.GetRequiredService<IStore>();
 

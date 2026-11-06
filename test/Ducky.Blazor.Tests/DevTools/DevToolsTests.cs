@@ -227,10 +227,10 @@ public sealed class DevToolsTests
     }
 
     [Fact]
-    public async Task DevTools_PolymorphicState_SentViaDeclaredType()
+    public async Task DevTools_PolymorphicState_SerializedAndImportedViaDeclaredType()
     {
-        // The outbound half of DevTools_PolymorphicState_SerializedAndImportedViaDeclaredType (M8-03b adds IMPORT_STATE):
-        // the state goes through its declared abstract type, so the discriminator travels; the runtime type would drop it.
+        // §11.8 step 3: the state goes through its declared abstract type, so the discriminator travels (the runtime type
+        // would drop it), and IMPORT_STATE deserializes it with that declared type again, so the derived type comes back.
         await using var x = new DevToolsHarness(static d => d.AddSlice<BirdSlice>().UseDevTools());
         await x.InitializeAsync();
         x.Store.Dispatch(new Hatch("Ducky"));
@@ -240,6 +240,16 @@ public sealed class DevToolsTests
         x.SentTypes.ShouldBe(["Ducky.StoreInitialized", Prefix + "Hatch"]);
         x.Sends.Select(static sent => sent.State["bird"]!.ToJsonString()).ShouldBe(
             ["""{"$type":"goose","Honks":3}""", """{"$type":"duckling","Name":"Ducky"}"""]);
+
+        // The extension hands back what it was sent: the @@INIT state, its goose under the declared type's discriminator.
+        var init = x.Inits[0].State;
+        init.Remove("@ducky/persistence");
+        await x.Middleware.OnMessageAsync(
+            """{"type":"DISPATCH","payload":{"type":"IMPORT_STATE","nextLiftedState":{"computedStates":[{"state":""" + init.ToJsonString() + "}]}}}", 1, false);
+        await x.Store.WhenIdleAsync(Ct);
+
+        x.Store.State.Get<Bird>().ShouldBeOfType<Goose>().Honks.ShouldBe(3);
+        x.Logs.GetSnapshot().ShouldNotContain(static r => r.Level >= LogLevel.Warning);
     }
 
     [Fact]

@@ -26,6 +26,8 @@ namespace Ducky.Blazor;
 // devtoolsDisconnect at dispose that failed.
 // M8-03 takes 2065 and 2066, not assigned by SPEC: §11.8's Debug logs of an ignored inbound message and of a jump to an
 // index the history no longer holds.
+// M8-03b uses 2023 (§11.8: an inbound DevTools message above MaxPayloadBytes), declared in DevToolsMiddleware.Pull.cs
+// (SYSLIB1006 forbids a second 2023 here); an unpullable large message reuses 2065.
 internal static partial class Log
 {
     [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "JS interop call '{Identifier}' interrupted: circuit disconnected or interop timed out")]
