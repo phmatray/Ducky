@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Before app migrated to Ducky.Draft (src/), SPEC §13.4; After.Tests runs its tests. -->
+  <PropertyGroup>
+    <DuckyUseDraftGenerator>true</DuckyUseDraftGenerator>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Draft/Ducky.Draft.csproj" />
+  </ItemGroup>
+</Project>
