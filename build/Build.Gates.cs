@@ -393,4 +393,179 @@ internal sealed partial class Build
                    ]),
         ];
     }
+
+    // A C# fence (```csharp, ```cs, ~~~c#, any case) at any indent, also inside list items and blockquotes (CommonMark
+    // containers). It would also flag an indented code block that shows a literal C# fence; no user doc needs one.
+    private static readonly Regex CSharpFence = new(@"^[ \t>]*(?:(?:[-*+]|\d+[.)])[ \t]+)*(`{3,}|~{3,})[ \t]*(csharp|cs|c#)(?![\w#+-])",
+        RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+    // The copied design record, not user docs (§17.1).
+    private static readonly string[] FenceExemptDocs = ["docs/spec/", "docs/adr/"];
+
+    private AbsolutePath MigrationSolution => RootDirectory / "Ducky.Migration.slnx";
+
+    // SPEC §17.1, §19. The checks run first (fast), then the migration samples build (Ducky.Migration.slnx: a plain, unlocked
+    // restore, its Directory.Build.props sets RestoreLockedMode=false) and docfx renders the site to artifacts/docs, with
+    // warnings as errors so an include of a missing file fails. M15-04 and M15-05 add the diagnostics-page and 1.x type checks.
+    private Target Docs => _ => _
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            var docs = (RootDirectory / "docs").GlobFiles("**/*.md")
+                .Select(f => (Path: RootDirectory.GetUnixRelativePathTo(f).ToString(), Text: f.ReadAllText())).ToList();
+            FailOnViolations("Docs", [
+                .. DocsFenceViolations(docs),
+                .. DocsRegionViolations(docs, path => RootDirectory / path is var file && file.FileExists() ? file.ReadAllText() : null),
+                .. DocsSelfCheck(),
+            ]);
+            DotNet($"build {MigrationSolution} -c Release -nodeReuse:false");
+            (Artifacts / "docs").CreateOrCleanDirectory();
+            DotNet($"docfx build {RootDirectory / "docs" / "docfx.json"} --warningsAsErrors");
+        });
+
+    // Every snippet is a #region of a compiled, tested file (§17.1).
+    private static IEnumerable<string> DocsFenceViolations(IEnumerable<(string Path, string Text)> docs) =>
+        docs.Where(d => !FenceExemptDocs.Any(e => d.Path.StartsWith(e, StringComparison.Ordinal)))
+            .SelectMany(d => CSharpFence.Matches(d.Text).Select(m =>
+                $"{d.Path}:{d.Text.AsSpan(0, m.Index).Count('\n') + 1}: fenced C# block; include a #region of a compiled, tested file instead"));
+
+    // docfx includes code with [!code-<lang>[title](path#region)] (any case, the language optional) and renders an unknown
+    // region as nothing, so each include is checked here: a #region (never a whole file, a line range or ?name=) of an
+    // existing file under a compiled, tested root. C# regions (no language: C#) are looked up; other languages mark regions
+    // differently and docfx resolves them itself. The :::code form is rejected outright: one include syntax, all checked.
+    private static readonly Regex CodeInclude = new(@"\[!code(?:-([\w-]+))?\[[^\]]*\]\(\s*([^)#?\s]+)([#?][^)\s]*)?[^)]*\)\]", RegexOptions.IgnoreCase);
+
+    private static readonly Regex TripleColonCode = new(@":::\s*code\b", RegexOptions.IgnoreCase);
+
+    private static readonly string[] SnippetRoots = ["test/", "docs/migration/samples/"];
+
+    private static IEnumerable<string> DocsRegionViolations(IEnumerable<(string Path, string Text)> docs, Func<string, string?> read) =>
+        from d in docs
+        where !FenceExemptDocs.Any(e => d.Path.StartsWith(e, StringComparison.Ordinal))
+        from m in CodeInclude.Matches(d.Text).Concat(TripleColonCode.Matches(d.Text))
+        let triple = m.Value[0] == ':'
+        let at = $"{d.Path}:{d.Text.AsSpan(0, m.Index).Count('\n') + 1}"
+        let link = m.Groups[2].Value
+        let region = m.Groups[3].Value
+        let target = ResolveDocLink(d.Path, link)
+        let text = triple || target is null || !SnippetRoots.Any(r => target.StartsWith(r, StringComparison.Ordinal)) || !region.StartsWith('#') ? null : read(target)
+        let violation =
+            triple ? $"{at}: :::code include; use [!code-csharp[](path#region)], which this gate checks"
+            : !region.StartsWith('#') || region.Length == 1 ? $"{at}: code include '{link}{region}' names no #region; include a #region of a compiled, tested file"
+            : target is null ? $"{at}: code include '{link}' leaves the repository"
+            : !SnippetRoots.Any(r => target.StartsWith(r, StringComparison.Ordinal)) ? $"{at}: code include '{target}' is not under {string.Join(" or ", SnippetRoots)} (a compiled, tested file)"
+            : text is null ? $"{at}: code include '{target}' does not exist"
+            : m.Groups[1].Value.ToLowerInvariant() is "" or "csharp" or "cs" && !Regex.IsMatch(text, $@"^[ \t]*#region[ \t]+{Regex.Escape(region[1..])}[ \t]*\r?$", RegexOptions.Multiline)
+                ? $"{at}: code include '{target}' has no '#region {region[1..]}'"
+            : null
+        where violation is not null
+        select violation;
+
+    // The repository-relative path of a link in a doc, or null when it climbs above the root.
+    private static string? ResolveDocLink(string doc, string link)
+    {
+        var parts = doc.Split('/')[..^1].ToList();
+        foreach (var part in link.Split('/'))
+        {
+            if (part == "..")
+            {
+                if (parts.Count == 0)
+                {
+                    return null;
+                }
+                parts.RemoveAt(parts.Count - 1);
+            }
+            else if (part is not ("." or ""))
+            {
+                parts.Add(part);
+            }
+        }
+        return string.Join('/', parts);
+    }
+
+    // The acceptance checks of M0-11 and M15-01, planted on miniature docs.
+    private static IEnumerable<string> DocsSelfCheck()
+    {
+        const string fenced = "# Guide\n\n```csharp\nvar store = new Store();\n```\n";
+        (string Path, string Text)[] unplanted =
+        [
+            ("docs/spec/SPEC.md", fenced),
+            ("docs/adr/0001-record.md", fenced),
+            ("docs/guides/selectors.md", "```json\n{}\n```\n\n[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs#select)]\n"),
+        ];
+        (string Path, string Text, string Expected)[] planted =
+        [
+            ("docs/guides/getting-started.md", fenced, "docs/guides/getting-started.md:3: fenced C# block"),
+            ("docs/guides/indented.md", "text\n\n   ```CSharp\n", "docs/guides/indented.md:3: fenced C# block"),
+            ("docs/guides/short.md", "~~~cs\n~~~\n", "docs/guides/short.md:1: fenced C# block"),
+            ("docs/guides/sharp.md", "```c# title=x\n```\n", "docs/guides/sharp.md:1: fenced C# block"),
+            ("docs/specification/x.md", fenced, "docs/specification/x.md:3: fenced C# block"),
+            ("docs/guides/list.md", "1. Install:\n\n    ```csharp\n    ```\n", "docs/guides/list.md:3: fenced C# block"),
+            ("docs/guides/nested.md", "- a\n  - b\n\n      ```cs\n      ```\n", "docs/guides/nested.md:4: fenced C# block"),
+            ("docs/guides/marker.md", "1. ```csharp\n   ```\n", "docs/guides/marker.md:1: fenced C# block"),
+            ("docs/guides/quote.md", "> ```csharp\n> ```\n", "docs/guides/quote.md:1: fenced C# block"),
+            ("docs/guides/tab.md", "- a\n\n\t```csharp\n\t```\n", "docs/guides/tab.md:3: fenced C# block"),
+        ];
+        foreach (var violation in DocsFenceViolations(unplanted))
+        {
+            yield return $"DocsSelfCheck: the unplanted docs must pass, got: {violation}";
+        }
+        foreach (var (path, text, expected) in planted)
+        {
+            var violations = DocsFenceViolations([(path, text)]).ToList();
+            if (!violations.Any(v => v.Contains(expected, StringComparison.Ordinal)))
+            {
+                yield return $"DocsSelfCheck: a fenced block in {path} must report '{expected}', got [{string.Join("; ", violations)}]";
+            }
+        }
+        Dictionary<string, string> files = new()
+        {
+            ["test/Ducky.Docs.Tests/Guide.cs"] = "class Guide\n{\n    #region select\n    int x;\n    #endregion\n}\n",
+            ["src/Ducky/Store.cs"] = "#region store\n#endregion\n",
+            ["test/Ducky.Docs.Tests/Crlf.cs"] = "#region crlf\r\n#endregion\r\n",
+            ["docs/migration/samples/ducky-1x/Before/A.cs"] = "#region before\n#endregion\n",
+        };
+        string? Read(string path) => files.GetValueOrDefault(path);
+        const string include = "[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs#select)]";
+        (string Path, string Text)[] includes =
+        [
+            ("docs/guides/selectors.md", $"# Selectors\n\n{include}\n"),
+            ("docs/guides/razor.md", "[!code-razor[](../../test/Ducky.Docs.Tests/Guide.cs#other)]\n"),
+            ("docs/spec/SPEC.md", "[!code-csharp[](../../src/Nope.cs)]\n:::code source=\"../../src/Nope.cs\":::\n"),
+            ("docs/guides/crlf.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Crlf.cs#crlf)]\n"),
+            ("docs/migration/ducky-1x.md", "[!code-csharp[](samples/ducky-1x/Before/A.cs#before)]\n"),
+            ("docs/guides/upper-ok.md", "[!CODE-CSharp[](../../test/Ducky.Docs.Tests/Guide.cs#select)]\n[!code[](../../test/Ducky.Docs.Tests/Guide.cs#select)]\n"),
+        ];
+        (string Path, string Text, string Expected)[] plantedIncludes =
+        [
+            ("docs/guides/whole.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs)]\n", "docs/guides/whole.md:1: code include '../../test/Ducky.Docs.Tests/Guide.cs' names no #region"),
+            ("docs/guides/empty.md", "x\n[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs#)]\n", "docs/guides/empty.md:2: code include '../../test/Ducky.Docs.Tests/Guide.cs#' names no #region"),
+            ("docs/guides/query.md", "[!code-cs[](../../test/Ducky.Docs.Tests/Guide.cs?name=select)]\n", "names no #region"),
+            ("docs/guides/region.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs#selector)]\n", "docs/guides/region.md:1: code include 'test/Ducky.Docs.Tests/Guide.cs' has no '#region selector'"),
+            ("docs/guides/cs.md", "[!code-cs[title](../../test/Ducky.Docs.Tests/Guide.cs#nope \"t\")]\n", "has no '#region nope'"),
+            ("docs/guides/missing.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Gone.cs#select)]\n", "code include 'test/Ducky.Docs.Tests/Gone.cs' does not exist"),
+            ("docs/guides/src.md", "[!code-csharp[](../../src/Ducky/Store.cs#store)]\n", "code include 'src/Ducky/Store.cs' is not under test/ or docs/migration/samples/"),
+            ("docs/guides/up.md", "[!code-csharp[](../../../outside.cs#a)]\n", "code include '../../../outside.cs' leaves the repository"),
+            ("docs/guides/prefix.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs#sel)]\n", "has no '#region sel'"),
+            ("docs/guides/nolang.md", "[!code[](../../test/Ducky.Docs.Tests/Guide.cs)]\n", "docs/guides/nolang.md:1: code include '../../test/Ducky.Docs.Tests/Guide.cs' names no #region"),
+            ("docs/guides/upper.md", "[!CODE-csharp[](../../test/Ducky.Docs.Tests/Guide.cs)]\n", "docs/guides/upper.md:1: code include '../../test/Ducky.Docs.Tests/Guide.cs' names no #region"),
+            ("docs/guides/nolang-region.md", "[!code[](../../test/Ducky.Docs.Tests/Guide.cs#nope)]\n", "has no '#region nope'"),
+            ("docs/guides/upper-lang.md", "[!code-CSharp[](../../test/Ducky.Docs.Tests/Guide.cs#nope)]\n", "has no '#region nope'"),
+            ("docs/guides/triple.md", "x\n:::code language=\"csharp\" source=\"../../src/Ducky/Store.cs\":::\n", "docs/guides/triple.md:2: :::code include"),
+            ("docs/guides/triple-region.md", "::: CODE source=\"../../test/Ducky.Docs.Tests/Guide.cs\" id=\"select\":::\n", "docs/guides/triple-region.md:1: :::code include"),
+            ("docs/guides/dot.md", "[!code-csharp[](./../../test/./Ducky.Docs.Tests/Guide.cs#selectx)]\n", "'test/Ducky.Docs.Tests/Guide.cs' has no '#region selectx'"),
+        ];
+        foreach (var violation in DocsRegionViolations(includes, Read))
+        {
+            yield return $"DocsSelfCheck: the unplanted includes must pass, got: {violation}";
+        }
+        foreach (var (path, text, expected) in plantedIncludes)
+        {
+            var violations = DocsRegionViolations([(path, text)], Read).ToList();
+            if (violations.Count != 1 || !violations[0].Contains(expected, StringComparison.Ordinal))
+            {
+                yield return $"DocsSelfCheck: the include in {path} must report '{expected}' once, got [{string.Join("; ", violations)}]";
+            }
+        }
+    }
 }

@@ -1,0 +1,14 @@
+<Solution>
+  <!-- The migration guides' compiled before/after samples (SPEC §17.1, §22): outside Ducky.slnx, built by the Docs target
+       with an unlocked restore. "Before" references the legacy package from nuget.org; "After" references src/. -->
+  <!-- The src projects an After sample references, so the solution's Release configuration reaches them and reuses
+       Compile's output (a ProjectReference outside the solution would build in its default Debug configuration). -->
+  <Folder Name="/src/">
+    <Project Path="src/Ducky/Ducky.csproj" />
+    <Project Path="src/Ducky.Generators/Ducky.Generators.csproj" />
+  </Folder>
+  <Folder Name="/ducky-1x/">
+    <Project Path="docs/migration/samples/ducky-1x/Before/Ducky1x.Before.csproj" />
+    <Project Path="docs/migration/samples/ducky-1x/After/Ducky1x.After.csproj" />
+  </Folder>
+</Solution>

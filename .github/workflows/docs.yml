@@ -1,0 +1,60 @@
+# Hand-written (SPEC §20.1): VerifyWorkflows checks only its job name, unique across workflows (§20.2).
+# On a release, the Docs target renders the site to artifacts/docs and the WASM sample is published under sample/; both
+# go to GitHub Pages. release.yml creates the GitHub release with GITHUB_TOKEN, and an event raised by that token starts
+# no workflow, so a successful release run also triggers this one; workflow_dispatch redeploys by hand.
+name: docs
+
+on:
+  release:
+    types: [published]
+  workflow_run:
+    workflows: [release]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    name: docs
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+      - name: 'Setup: .NET SDK'
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: 'Install: wasm-tools'
+        run: dotnet workload install wasm-tools
+      - name: 'Run: Docs'
+        run: ./build.sh Docs
+      - name: 'Publish: WASM sample'
+        run: |
+          dotnet publish samples/Ducky.Samples.Wasm/Ducky.Samples.Wasm.csproj -c Release -o artifacts/sample
+          cp -r artifacts/sample/wwwroot artifacts/docs/sample
+          # The site is served from /<repository>/, the sample from /<repository>/sample/.
+          sed -i 's|<base href="/" */>|<base href="/${{ github.event.repository.name }}/sample/" />|' artifacts/docs/sample/index.html
+          grep -q '<base href="/${{ github.event.repository.name }}/sample/"' artifacts/docs/sample/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: artifacts/docs
+      - id: deploy
+        uses: actions/deploy-pages@v4

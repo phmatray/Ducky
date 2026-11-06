@@ -1,0 +1,16 @@
+<Project>
+  <!-- Migration samples (SPEC §17.1): Ducky.Migration.slnx, outside Ducky.slnx. A "before" project references a legacy
+       package from nuget.org with an explicit version, which the root's CPM would reject (NU1008); there is no lock file,
+       so a locked restore would fail; audit stays off, the legacy packages are referenced on purpose. As PackageSmoke. -->
+  <Import Project="../../../Directory.Build.props" />
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <!-- The root Directory.Packages.props would switch CPM back on (and add its global MinVer reference). -->
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <RestoreLockedMode>false</RestoreLockedMode>
+    <NuGetAudit>false</NuGetAudit>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>

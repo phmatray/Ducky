@@ -1,0 +1,6 @@
+- name: Home
+  href: index.md
+- name: Guides
+  items:
+    - name: Static SSR with Server storage
+      href: guides/blazor/static-ssr.md
