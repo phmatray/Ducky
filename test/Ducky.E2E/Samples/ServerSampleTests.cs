@@ -127,13 +127,13 @@ public sealed class ServerSampleTests
         errors.ShouldBeEmpty();
     }
 
-    private static async Task SignInAsync(IPage page, PublishedHost host, string user)
+    internal static async Task SignInAsync(IPage page, PublishedHost host, string user)
     {
         await page.GotoAsync(new Uri(host.BaseUrl, $"/login?user={user}&returnUrl=/circuit").ToString());
         await Assertions.Expect(page.GetByTestId("user")).ToHaveTextAsync(user);
     }
 
-    private static List<string> CollectErrors(IPage page)
+    internal static List<string> CollectErrors(IPage page)
     {
         var errors = new List<string>();
         page.Console += (_, message) =>
