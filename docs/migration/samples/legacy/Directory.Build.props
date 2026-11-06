@@ -1,0 +1,24 @@
+<Project>
+  <!-- Verbatim copies of the legacy libraries the Bustand, TheBlazorState and BlazorMVU guides migrate from (SPEC §22.2 to
+       §22.4), none of them published to nuget.org: Atypical-Consulting/blazor-state (MIT) at b5c07bd5, from
+       libs/bustand/src/Bustand, libs/the-blazor-state/TheBlazorState{,.Generators} and libs/mvu/src/BlazorMVU.Core (bin,
+       obj, READMEs and .DotSettings left out). Each library keeps its upstream MIT notice: LICENSE here (the monorepo's,
+       which covers Bustand), and the LICENSE in BlazorMVU.Core, TheBlazorState and TheBlazorState.Generators. Third-party
+       code: this file does not import the repository's props (nor its analyzers, CPM, lock files or signing), the sibling
+       Directory.Build.targets and .editorconfig stop the repository's too, and the settings below are those of Bustand's own
+       Directory.Build.props, without its LangVersion 13 (TheBlazorState uses C# 14 extension blocks). Only the "before"
+       sample apps reference these projects. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS0419;CS1574</NoWarn>
+    <IsPackable>false</IsPackable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,7 @@
+@namespace Bustand.Components
+@typeparam TStore where TStore : class, IStore
+@typeparam TState where TState : class
+
+<CascadingValue Value="@Store" IsFixed="true">
+    @ChildContent
+</CascadingValue>

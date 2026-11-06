@@ -1,0 +1,3 @@
+<Project>
+  <!-- Stops the repository's Directory.Build.targets (Ducky's analyzers and ban lists) for the vendored legacy libraries. -->
+</Project>

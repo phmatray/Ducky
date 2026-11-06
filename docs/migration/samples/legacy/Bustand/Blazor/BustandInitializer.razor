@@ -1,0 +1,29 @@
+@using Bustand.Persistence
+@inject IBrowserStorage BrowserStorage
+
+@code {
+    /// <summary>
+    /// Indicates whether the initializer has triggered storage availability.
+    /// </summary>
+    private bool _initialized;
+
+    /// <summary>
+    /// Called after the component renders. On first render (when JS interop becomes available),
+    /// marks browser storage as available and triggers state restoration for any persistent stores.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            _initialized = true;
+
+            // Mark storage as available now that JS interop is ready
+            BrowserStorage.SetAvailable();
+
+            // Log for debugging
+            System.Diagnostics.Debug.WriteLine("[Bustand] Storage marked as available after first render");
+
+            await Task.CompletedTask;
+        }
+    }
+}

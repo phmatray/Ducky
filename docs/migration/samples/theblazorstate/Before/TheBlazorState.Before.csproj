@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The app the TheBlazorState guide starts from (SPEC §22.3), on the vendored TheBlazorState and its generators. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../../legacy/TheBlazorState/TheBlazorState.csproj" />
+    <ProjectReference Include="../../legacy/TheBlazorState.Generators/TheBlazorState.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>
