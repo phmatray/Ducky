@@ -28,7 +28,7 @@ public sealed class CrossTabTests
 
         // Two values inside one debounce: only the newest is restored, as a CrossTab restore that writes nothing. Its
         // baseline is the local serialization, and the writer it signalled dedupes against it.
-        var first = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", x.Envelope(new Level(4)), tooLarge: false);
+        var first = x.Notify("tab", "local", "ducky:level", x.Envelope(new Level(4)), tooLarge: false);
         await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)));
         await first;
         x.H.Store.State.Get<Level>().ShouldBe(new(5));
@@ -79,7 +79,7 @@ public sealed class CrossTabTests
 
         // A too-large notification superseded within its debounce is never pulled: only the key's newest notification is
         // read (an extra pull would find the queue empty and fail with Warning 2051).
-        var superseded = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", null, tooLarge: true);
+        var superseded = x.Notify("tab", "local", "ducky:level", null, tooLarge: true);
         await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(6)));
         await superseded;
         x.H.Store.State.Get<Level>().ShouldBe(new(6));
@@ -94,12 +94,12 @@ public sealed class CrossTabTests
         x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level"), (Origin.CrossTab, "level")]);
         big.Disposed.ShouldBeTrue();
         x.H.Js.Calls.Where(static call => call.Identifier == "storageGetStream").ShouldHaveSingleItem().Args.ShouldBe(["local", "ducky:level"]);
-        x.H.Js.Calls.Count(static call => call.Identifier == "storageGet").ShouldBe(1); // the hydration read only
+        x.H.Js.Calls.Count(static call => call.Identifier == "storageGet").ShouldBe(2); // the hydration read and the value's re-read
 
         // A newer notification that lands while the pull is in flight wins: the late pull is dropped.
         var held = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         pulls.Enqueue(held.Task);
-        var pulling = x.Sync.OnStorageChangedAsync("tab", "local", "ducky:level", null, tooLarge: true);
+        var pulling = x.Notify("tab", "local", "ducky:level", null, tooLarge: true);
         x.H.Time.Advance(CrossTabHarness.Debounce);
         await WriterHarness.Until(() => pulls.Count == 0);
         await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(9)));
@@ -269,7 +269,7 @@ public sealed class CrossTabTests
             .Persist<LevelSlice>(static o => o.SyncAcrossTabs = true)
             .AddEffect<LoadUnlessRestored>());
         var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        x.H.OnGet = _ => read.Task;
+        x.HoldNextRead(read);
         var init = x.H.InitializeAsync();
         await WriterHarness.Until(() => x.H.Js.Calls.Any(static call => call.Identifier == "storageGet"));
 
@@ -447,7 +447,7 @@ public sealed class CrossTabTests
 
         await x.ReceiveAsync("tab", "local", "app:level", x.Envelope(new Level(2)));
         x.H.Store.State.Get<Level>().ShouldBe(new(2));
-        x.H.Js.Calls.ShouldNotContain(static call => call.Identifier == "storageGet");
+        x.H.Js.Calls.Count(static call => call.Identifier == "storageGet").ShouldBe(1); // the receipt's own read, §11.7
         x.H.Storage[("local", "app:level")] = x.Envelope(new Level(3));
 
         auth.User.SetResult("alice");

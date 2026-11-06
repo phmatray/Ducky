@@ -100,7 +100,9 @@ tests:
   - { name: CrossTab_CircuitResumed_OldListenerRemoved, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
   - { name: CrossTab_ClearFromOtherScript_ResetsSyncedSlices, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
   - { name: CrossTab_ClearPersistedStateInOtherTab_ResetsSlice, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
+  - { name: CrossTab_CrossingWrites_ReceiptReadsCurrentValue_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_CtorThrowingPayload_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_DebounceEndsAfterOwnWrite_ReceiptReadsCurrentValue_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_EchoDropped, projects: [Ducky.Blazor.Tests], stage: 14 }
   - { name: CrossTab_EventDuringCircuitDisconnect_ConvergesAfterReconnect, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
   - { name: CrossTab_EventDuringHydration_NewestWins, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
@@ -112,6 +114,7 @@ tests:
   - { name: CrossTab_OldScopeEventDuringSwitch_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 14 }
   - { name: CrossTab_OriginNeverPersisted, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_OtherScopeKey_Ignored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptReadsOwnUnacknowledgedWrite_PendingChangeWins, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_RemoteChangeDuringLocalPendingWrite_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_RemovalDuringHydration_RemovalWins, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_RemovalReceipt_NoWriteBack, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }

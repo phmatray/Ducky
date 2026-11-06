@@ -114,9 +114,10 @@ internal sealed partial class PersistenceMiddleware
 
         /// <summary>
         /// One storage notification (§11.7): <paramref name="source"/> "tab" (another tab's storage event, localStorage only)
-        /// or "doc" (another store of this document wrote); a null <paramref name="key"/> re-reads every accepted key; a null
-        /// <paramref name="value"/> is a removal unless <paramref name="tooLarge"/>, which pulls the value by stream. Never
-        /// throws: a notification it can't use is ignored with a log.
+        /// or "doc" (another store of this document wrote); a null <paramref name="key"/> re-reads every accepted key. A
+        /// named key is re-read too once its debounce ends, by stream when <paramref name="tooLarge"/>: the forwarded
+        /// <paramref name="value"/> may be stale by then (this store's own write, or a newer one, may have landed since), so
+        /// it is never applied. Never throws: a notification it can't use is ignored with a log.
         /// </summary>
         [JSInvokable("OnStorageChanged")]
         public Task OnStorageChangedAsync(string source, string area, string? key, string? value, bool tooLarge)
@@ -136,7 +137,7 @@ internal sealed partial class PersistenceMiddleware
                 return Task.CompletedTask;
             }
 
-            return ReceiveAsync(slice, key, tooLarge ? token => _owner._browser.PullAsync(area, key, token) : _ => new(value));
+            return ReceiveAsync(slice, key, tooLarge ? token => _owner._browser.PullAsync(area, key, token) : token => _owner._browser.ReadAsync(slice.Options.Storage, key, token));
         }
 
         // Before the flush: no notification is restored once disposal began, and a re-import during the flush re-registers
@@ -240,7 +241,8 @@ internal sealed partial class PersistenceMiddleware
         // value stored but unreadable here (above MaxPayloadBytes, a rejected pull: the provider logged it) is no removal, and
         // is ignored. A value goes through the hydration EnvelopeReader (a newer version, an expired or unreadable envelope, a
         // throwing constructor: ignored, the reader logs it) and is dropped when its local re-serialization equals the
-        // baseline (an echo); a value this store can't serialize back is ignored (no baseline could guard it). Then, under
+        // key's write in flight (its setItem may have run before its result sets the baseline) or the baseline (an echo;
+        // read in that order, as the writer sets the baseline before it clears the write in flight); a value this store can't serialize back is ignored (no baseline could guard it). Then, under
         // _issue: drop a notification no longer current or whose key the current epoch no longer names (a scope switch since
         // its receipt), bump the sequence number (a removal too, whatever its serialization, so it orders against a hydration
         // read), and restore, unless a removal finds the baseline already absent (or still the one a removal
@@ -264,7 +266,7 @@ internal sealed partial class PersistenceMiddleware
                 ? _owner.Store.Json.TrySerialize(state!, type, out payload)
                 : _reader.TryRead(text!, key, type, options.Version, options.Migrations, options.MaxAge, _owner._time.GetUtcNow(), out state)
                     && _owner.Store.Json.TrySerialize(state, type, out payload);
-            if (!removal && (!serialized || _owner.LastKnownPayload.GetValueOrDefault(key) == payload))
+            if (!removal && (!serialized || _owner.InFlight.GetValueOrDefault(key) == payload || _owner.LastKnownPayload.GetValueOrDefault(key) == payload))
             {
                 return;
             }
