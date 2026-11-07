@@ -9,6 +9,15 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Ducky/Ducky.csproj" />
     <ProjectReference Include="../../src/Ducky.Testing/Ducky.Testing.csproj" />
+    <!-- The Blazor, Reactive and Draft guides (M15-03). -->
+    <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <ProjectReference Include="../../src/Ducky.Reactive/Ducky.Reactive.csproj" />
+    <ProjectReference Include="../../src/Ducky.Draft/Ducky.Draft.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Blazor guides' Program.cs snippets: WebApplication, IsDevelopment() and AddDistributedMemoryCache. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>

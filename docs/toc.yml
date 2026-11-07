@@ -16,8 +16,22 @@
       href: guides/core/entity-state.md
     - name: Testing with Ducky.Testing
       href: guides/core/testing.md
+    - name: Blazor render modes and the load rule
+      href: guides/blazor/render-modes.md
+    - name: Persistence
+      href: guides/blazor/persistence.md
+    - name: Prerender
+      href: guides/blazor/prerender.md
     - name: Static SSR with Server storage
       href: guides/blazor/static-ssr.md
+    - name: Cross-tab sync
+      href: guides/blazor/cross-tab.md
+    - name: Redux DevTools
+      href: guides/blazor/devtools.md
+    - name: Reactive effects
+      href: guides/reactive/recipes.md
+    - name: Ducky.Draft
+      href: guides/draft/produce.md
 - name: Threading contract
   href: threading.md
 - name: Migration

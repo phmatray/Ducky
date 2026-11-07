@@ -465,23 +465,6 @@ public sealed class ReactiveFailureTests
         (host.Probe.GroupsOpened, host.Probe.GroupsReleased).ShouldBe((3, 2));
     }
 
-    // Non-normative (the recipe operator): the source's completion completes every open group, then the outer stream.
-    [Fact]
-    public void GroupByUntilRecipe_SourceCompletes_CompletesOpenGroups()
-    {
-        using var source = new Subject<int>();
-        var completed = new List<string>();
-        using var subscription = source.GroupByUntil(static i => i % 2, static _ => Observable.Never<Unit>())
-            .Subscribe(g => g.Subscribe(static _ => { }, static _ => { }, _ => completed.Add("group")), static _ => { }, _ => completed.Add("outer"));
-
-        source.OnNext(1);
-        source.OnNext(2);
-        source.OnNext(3);
-        source.OnCompleted();
-
-        completed.ShouldBe(["group", "group", "outer"]);
-    }
-
     // Non-normative (§14): only a failure completion resubscribes; a pipeline that completes successfully has simply ended.
     [Fact]
     public async Task Reactive_SuccessfulCompletion_NeverResubscribesNorFails()

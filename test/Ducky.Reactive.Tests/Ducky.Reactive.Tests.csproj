@@ -25,6 +25,8 @@
   <ItemGroup>
     <Compile Include="../Shared/Property.cs" Link="Shared/Property.cs" />
     <Compile Include="../Shared/StaticFieldAudit.cs" Link="Shared/StaticFieldAudit.cs" />
+    <!-- The reactive recipes guide's GroupByUntil (M15-03): Reactive_GroupByUntilRecipe_ReleasesGroups proves the published operator. -->
+    <Compile Include="../Ducky.Docs.Tests/Reactive/GroupByUntilOperator.cs" Link="Docs/GroupByUntilOperator.cs" />
     <None Include="../../build/property-seeds.txt" Link="property-seeds.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
