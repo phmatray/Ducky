@@ -27,4 +27,9 @@
     <Using Include="Shouldly" />
     <Using Include="Xunit" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- The reactive recipes guide's GroupByUntil (M15-03): real threads are banned in Ducky.Docs.Tests. -->
+    <Compile Include="../Ducky.Docs.Tests/Reactive/GroupByUntilOperator.cs" Link="Docs/GroupByUntilOperator.cs" />
+  </ItemGroup>
 </Project>

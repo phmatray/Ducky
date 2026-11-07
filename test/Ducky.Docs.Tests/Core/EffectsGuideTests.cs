@@ -246,7 +246,9 @@ public sealed class EffectsGuideTests
         store.Failures.ShouldBeEmpty();
     }
 
-    private sealed record TickCount(int Value);
+    // Public, not private: DUCKY006 asks the project's JSON context (Blazor/PersistenceGuideTests.cs) to list every slice
+    // state type, and a context can't name a private one.
+    public sealed record TickCount(int Value);
 
     private sealed class TickCountSlice : Slice<TickCount>
     {

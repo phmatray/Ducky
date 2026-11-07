@@ -1,3 +1,4 @@
+using Ducky.Docs.Tests.Reactive;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
 using R3;
@@ -268,74 +269,9 @@ public sealed class FlakyEffect(Probe probe) : ReactiveEffect
     }
 }
 
-// R3 1.3 ships no GroupBy or GroupByUntil, so the keyed-switch recipe (SPEC §14) carries this operator: a key's group
-// completes, and is released, when its duration observable emits; the key's next item opens a new group; the source's
-// completion (or failure) completes every open group. One gate serializes the source (the drainer) and the durations
-// (timer threads), observer calls included, so a group never completes while an item is pushed into it. As in Rx.NET,
-// the duration is subscribed before the group's first item (a Debounce duration must see it), so a duration that emits
-// on subscribe closes the group before that item, which is then dropped.
-public static class GroupByUntilRecipe
-{
-    public static Observable<Observable<T>> GroupByUntil<T, TKey>(this Observable<T> source, Func<T, TKey> keySelector, Func<Observable<T>, Observable<Unit>> durationSelector)
-        where TKey : notnull =>
-        Observable.Create<Observable<T>>(observer =>
-        {
-            var gate = new object();
-            var groups = new Dictionary<TKey, (Subject<T> Items, SingleAssignmentDisposable Duration)>();
-            var subscription = source.Subscribe(item =>
-            {
-                lock (gate)
-                {
-                    var key = keySelector(item);
-                    if (!groups.TryGetValue(key, out var group))
-                    {
-                        group = (new Subject<T>(), new SingleAssignmentDisposable());
-                        groups.Add(key, group);
-                        observer.OnNext(group.Items);
-                        group.Duration.Disposable = durationSelector(group.Items).Take(1).Subscribe(_ =>
-                        {
-                            lock (gate)
-                            {
-                                groups.Remove(key);
-                                group.Items.OnCompleted();
-                            }
-                        });
-                    }
-
-                    group.Items.OnNext(item);
-                }
-            }, observer.OnErrorResume, result =>
-            {
-                lock (gate)
-                {
-                    foreach (var group in groups.Values)
-                    {
-                        group.Duration.Dispose();
-                        group.Items.OnCompleted(result);
-                    }
-
-                    groups.Clear();
-                    observer.OnCompleted(result);
-                }
-            });
-            return Disposable.Create(() =>
-            {
-                subscription.Dispose();
-                lock (gate)
-                {
-                    foreach (var group in groups.Values)
-                    {
-                        group.Duration.Dispose();
-                    }
-
-                    groups.Clear();
-                }
-            });
-        });
-}
-
-// The keyed switch: per item id, a newer LoadItem cancels the load in flight; each id's group is released after ten
-// idle seconds, so the pipeline holds no state for ids it no longer sees.
+// The keyed switch, on the GroupByUntil the reactive recipes guide publishes (linked from Ducky.Docs.Tests): per item id,
+// a newer LoadItem cancels the load in flight; each id's group is released after ten idle seconds, so the pipeline holds
+// no state for ids it no longer sees.
 public sealed class KeyedLoadEffect(TimeProvider time, Probe probe) : ReactiveEffect
 {
     public override Observable<object> Handle(Observable<object> actions, Observable<StateSnapshot> state) =>
