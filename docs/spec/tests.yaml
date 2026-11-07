@@ -119,6 +119,8 @@ tests:
   - { name: CrossTab_ReceiptDuringOwnWrite_ValueOfBaseline_Restored, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_ReceiptOfBaselineDuringOwnWrite_WriteFails_LocalChangeKept, projects: [Ducky.Blazor.Tests], invariants: [INV-16, INV-18], stage: 14 }
   - { name: CrossTab_ReceiptReadOvertakenByFailedOwnWrite_ReadAgain, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptReadOvertakenByFailedOwnWriteOfSameValue_ReadAgain, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
+  - { name: CrossTab_ReceiptReadEqualToFailingOwnWriteInFlight_WaitsAndReadsAgain, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_ReceiptReadOvertakenByOwnWrite_Dropped_TabsConverge, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_ReceiptReadsOwnUnacknowledgedRemoval_KeyStaysRemoved, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }
   - { name: CrossTab_ReceiptReadsOwnUnacknowledgedWrite_PendingChangeWins, projects: [Ducky.Blazor.Tests], invariants: [INV-18], stage: 14 }

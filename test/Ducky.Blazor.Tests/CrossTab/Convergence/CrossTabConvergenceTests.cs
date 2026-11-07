@@ -188,8 +188,9 @@ public sealed class CrossTabConvergenceTests
         (await a.CompleteAsync()).ShouldBeTrue();
 
         // B's setItem({b}) ran but its result has not reached .NET: B's baseline still lags when B changes to {d} and A's
-        // receipt reads B's own {b}. It is B's write in flight, an echo: restoring it would overwrite {d}, which the writer
-        // would then dedupe against the {b} baseline its completion sets.
+        // receipt reads B's own {b}. It equals B's write in flight: the receipt waits for that write and reads again, and
+        // never restores it. Restored, {b} would overwrite {d}, which the writer would then dedupe against the {b} baseline
+        // its completion sets.
         b.Land().ShouldBeTrue();
         b.Change(0b1000);
         await tabs.SettleAsync();

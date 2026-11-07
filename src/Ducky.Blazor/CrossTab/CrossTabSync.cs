@@ -281,14 +281,16 @@ internal sealed partial class PersistenceMiddleware
         // Absence is a payload (§11.7): a removal is the initial state, whose local serialization an absent key reads as. A
         // value stored but unreadable here (above MaxPayloadBytes, a rejected pull: the provider logged it) is no removal, and
         // is ignored. A value goes through the hydration EnvelopeReader (a newer version, an expired or unreadable envelope, a
-        // throwing constructor: ignored, the reader logs it) and is dropped when its local re-serialization equals the
-        // key's write in flight (its setItem ran before the read, and may have run before its result sets the baseline). A
-        // value this store can't serialize back is ignored (no baseline could guard it). Then, under _issue: drop a
-        // notification no longer current or whose key the current epoch no longer names (a scope switch since its
-        // receipt); under _sends, read again at once when this store sent a call of the key after the read (a completed
-        // task); when what was read is what the baseline names (a value equal to it, a removal over an absent baseline or
-        // the one a removal receipt set), wait for a call of the key still in flight and read again (its task: delivered or
-        // failed decides it), or with none in flight drop it as an echo (a value) or keep the slice (a removal, logged);
+        // throwing constructor: ignored, the reader logs it). A value this store can't serialize back is ignored (no
+        // baseline could guard it). An absence read while this store's own removal is in flight is dropped at once, before
+        // the count: read before or after that removal, the key is absent once it ran, as this store asked. Then, under
+        // _issue: drop a notification no longer current or whose key the current epoch no longer names (a scope switch
+        // since its receipt); under _sends, read again at once when this store sent a call of the key after the read (a
+        // completed task); when what was read is what the baseline or the key's write in flight names (a value whose local
+        // re-serialization equals either, a removal over an absent baseline or the one a removal receipt set), wait for a
+        // call of the key still in flight and read again (its task: delivered or failed decides it; a value equal to a
+        // failed write is another store's, which the next read restores), or with none in flight drop it as an echo (a
+        // value) or keep the slice (a removal, logged);
         // else bump the sequence number (a removal too, whatever its serialization, so it orders against a hydration
         // read), and restore, unless a removal finds an initial state it can't serialize (the serializer logs it); set
         // the baseline and signal the writer, which dedupes a pending write of the same state away.
@@ -318,7 +320,7 @@ internal sealed partial class PersistenceMiddleware
                 ? _owner.Store.Json.TrySerialize(state!, type, out payload)
                 : _reader.TryRead(text!, key, type, options.Version, options.Migrations, options.MaxAge, _owner._time.GetUtcNow(), out state)
                     && _owner.Store.Json.TrySerialize(state, type, out payload);
-            if (!removal && (!serialized || _owner.InFlight.GetValueOrDefault(key) == payload))
+            if (!serialized && !removal)
             {
                 return null;
             }
@@ -360,12 +362,16 @@ internal sealed partial class PersistenceMiddleware
                     // removal receipt set: the key is still absent). With no call in flight, an echo. With one in flight (sent
                     // before the read, as the count did not move) it is ambiguous until the call resolves: if it was
                     // delivered, what was read landed after it, a newer change of another store; if it failed (a quota error,
-                    // an interop timeout on a dropped circuit), storage still holds the baseline. The receipt waits for the
-                    // call, then reads again over the baseline its result left.
+                    // an interop timeout on a dropped circuit), storage still holds the baseline. A value equal to the write
+                    // in flight is as ambiguous: that write's own setItem, or an equal value of another store, which a failed
+                    // write never replaced. The receipt waits for the call, then reads again over the baseline its result left.
+                    // The call in flight is read once: the writer resolves a failed call outside _sends, and a receipt that
+                    // matched it must still wait (on a signal then completed) rather than find nothing in flight.
+                    var inFlight = _owner.InFlight.GetValueOrDefault(key);
                     var echo = removal
                         ? !_owner.LastKnownPayload.TryGetValue(key, out var last) || ReferenceEquals(last, _removed.GetValueOrDefault(key))
-                        : _owner.LastKnownPayload.GetValueOrDefault(key) == payload;
-                    if (echo && _owner.InFlight.ContainsKey(key))
+                        : _owner.LastKnownPayload.GetValueOrDefault(key) == payload || inFlight == payload;
+                    if (echo && inFlight is not null)
                     {
 #pragma warning disable VSTHRD003 // justification: the store's own RunContinuationsAsynchronously TCS, which the writer completes once it handled the call's result
                         return _owner.Resolved[key].Task;
