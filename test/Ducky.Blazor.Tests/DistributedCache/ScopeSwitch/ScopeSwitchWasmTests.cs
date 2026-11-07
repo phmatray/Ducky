@@ -54,7 +54,7 @@ public sealed partial class ScopeSwitchWasmTests : BunitContext
         await Persistence.WriterHarness.Until(() => Payloads("ducky:bob:counter").Contains(7));
 
         Payloads("ducky:alice:counter").ShouldBe([5]);
-        _writes.Select(static w => w.Key).ShouldBe(["ducky:alice:counter", "ducky:bob:counter"]);
+        Writes().Select(static w => w.Key).ShouldBe(["ducky:alice:counter", "ducky:bob:counter"]);
         StorageReads().ShouldBe(["ducky:alice:counter", "ducky:bob:counter"]);
     }
 
@@ -122,7 +122,11 @@ public sealed partial class ScopeSwitchWasmTests : BunitContext
             case "import":
                 return _js;
             case "storageGet":
-                return _storage.GetValueOrDefault((string)args[1]!);
+                lock (_writes)
+                {
+                    return _storage.GetValueOrDefault((string)args[1]!);
+                }
+
             case "storageSet":
                 lock (_writes)
                 {
@@ -136,11 +140,15 @@ public sealed partial class ScopeSwitchWasmTests : BunitContext
         }
     }
 
-    private List<int> Payloads(string key)
+    // The writers' loops call Respond on pool threads: _writes and _storage are only touched under the lock.
+    private List<(string Key, string Value)> Writes()
     {
         lock (_writes)
         {
-            return [.. _writes.Where(w => w.Key == key).Select(static w => System.Text.Json.JsonDocument.Parse(w.Value).RootElement.GetProperty("s").GetProperty("Value").GetInt32())];
+            return [.. _writes];
         }
     }
+
+    private List<int> Payloads(string key) =>
+        [.. Writes().Where(w => w.Key == key).Select(static w => System.Text.Json.JsonDocument.Parse(w.Value).RootElement.GetProperty("s").GetProperty("Value").GetInt32())];
 }

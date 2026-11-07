@@ -23,4 +23,10 @@ internal enum DeferPoint
 
     /// <summary>In a write, after the snapshot, before it is compared with the baseline.</summary>
     AfterSnapshot,
+
+    /// <summary>In a live write, after the baseline and receipt checks, before its snapshot's slot is compared with the current state.</summary>
+    BeforeSlotCheck,
+
+    /// <summary>In a live write whose slot is no longer the current state's, before the key is signalled again.</summary>
+    BeforeResignal,
 }

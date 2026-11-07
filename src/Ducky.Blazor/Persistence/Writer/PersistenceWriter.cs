@@ -694,10 +694,32 @@ internal sealed partial class PersistenceMiddleware
                 return Outcome.Deferred;
             }
 
-            if (live && !ReferenceEquals(_owner.Store.State.Get(_slice.Key), snap.Get(_slice.Key)))
+            if (live)
             {
-                Signal();
-                return Outcome.Deferred;
+                var hook = _owner._registration.Options.AfterDeferHook;
+                hook?.Invoke(_slice.Key, DeferPoint.BeforeSlotCheck);
+                if (!ReferenceEquals(_owner.Store.State.Get(_slice.Key), snap.Get(_slice.Key)))
+                {
+                    hook?.Invoke(_slice.Key, DeferPoint.BeforeResignal);
+
+                    // A scoped key is not signalled again once its epoch moved: a scope-switch reset committed, whose final
+                    // snapshot, stamped above every signal before it, carries this change to the old key. A signal stamped
+                    // after that snapshot would leave the key dirty in the new epoch, where the reset (a Hydration restore,
+                    // INV-16) triggers no write: the hydration skip defers it and the terminal releases it, writing the
+                    // reset's initial state under the new user's key. The epoch is read under the gate EnqueueFinal stamps
+                    // under, after the reset's commit: either it is the snapshot's and the signal goes ahead of the final
+                    // one, or it moved and the final one covers the change. A reset hands no final snapshot to an unscoped
+                    // key, so that key is always signalled (a DevTools jump in the same window is still written, §11.5).
+                    lock (_gate)
+                    {
+                        if (!_owner.Scoped(_options) || _owner.Store.State.Get<PersistenceState>().ScopeEpoch == snap.Get<PersistenceState>().ScopeEpoch)
+                        {
+                            Signal();
+                        }
+                    }
+
+                    return Outcome.Deferred;
+                }
             }
 
             var started = _owner._time.GetTimestamp();
