@@ -50,7 +50,7 @@ public sealed partial class ScopeSwitchWasmTests
         await WriterHarness.Until(() => cut.Markup == "0");
         store.State.Get<Tally>().ShouldBe(new Tally(7));
         StorageReads().ShouldBe(["app:tally"]);
-        _writes.ShouldBeEmpty();
+        Writes().ShouldBeEmpty();
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public sealed partial class ScopeSwitchWasmTests
         await WriterHarness.Until(() => store.State.Get<PersistenceState>() is { ScopeEpoch: 1, Status: PersistenceStatus.Hydrated });
         await WriterHarness.Until(() => cut.Markup == "0");
         _js.Calls.ShouldNotContain(static c => c.Identifier == "storageGet");
-        _writes.ShouldBeEmpty();
+        Writes().ShouldBeEmpty();
     }
 
     // Alice's prerender pass on the Interactive Auto server side, where the slice is real Server storage: a static render whose

@@ -286,6 +286,140 @@ public sealed partial class ScopeSwitchTests : IDisposable
     }
 
     [Fact]
+    public async Task ScopeSwitch_ResetCommittedDuringLiveWrite_NothingWrittenUnderNewKey_Deterministic()
+    {
+        // INV-16: the reset commits, and hands its final snapshot over, while a live write of the old scope is between its
+        // snapshot and the check of its slot. The final snapshot carries the change to the old key; the reset is a Hydration
+        // restore and triggers no write. Re-signalled for it, the writer would write the initial state under the new key once
+        // the switch read found nothing (as it would over the new user's data after a failed read).
+        var switched = 0;
+        using var posted = new ManualResetEventSlim();
+        await using var h = Circuit(d => d.AddBlazor(o => o.AfterDeferHook = (_, point) =>
+        {
+            if (point == DeferPoint.PostingFinal)
+            {
+                posted.Set();
+            }
+            else if (point == DeferPoint.BeforeSlotCheck && Interlocked.Exchange(ref switched, 1) == 0)
+            {
+                _auth.Change("bob");
+                posted.Wait(TimeSpan.FromSeconds(10), Ct).ShouldBeTrue();
+            }
+        }));
+        await h.InitializeAsync();
+
+        h.Store.Dispatch(new Increment());
+        await WriterHarness.Until(() => Persistence(h) is { ScopeEpoch: 1, Status: PersistenceStatus.Hydrated });
+        await WriterHarness.Until(() => !h.Middleware.Writers["counter"].Dirty);
+
+        Payload(_cache.Stored(Alice)!).ShouldBe("""{"Value":1}""");
+        _cache.Stored(Bob).ShouldBeNull();
+        h.Store.State.Get<Counter>().ShouldBe(new Counter(0));
+        _cache.Attempts.ShouldBe([$"get:{Alice}", $"set:{Alice}", $"get:{Bob}"]);
+    }
+
+    [Fact]
+    public async Task ScopeSwitch_ResetCommittedBeforeResignal_NothingWrittenUnderNewKey_Deterministic()
+    {
+        // FLAKE-01, the load-sensitive ScopeSwitch_ChangeCommittedJustBeforeSwitch_WrittenUnderOldKey: a live write of the old
+        // scope finds its slot changed by a commit of its own epoch, and the reset commits, handing its final snapshot over,
+        // before the key is signalled again. That snapshot covers the change; a signal stamped after it would leave the key
+        // dirty in the new epoch, deferred by the hydration skip and released by the terminal: the reset's initial state
+        // written under the new user's key (INV-16).
+        IStore? store = null;
+        var stage = 0;
+        using var posted = new ManualResetEventSlim();
+        await using var h = Circuit(d => d.AddBlazor(o => o.AfterDeferHook = (_, point) =>
+        {
+            if (point == DeferPoint.PostingFinal)
+            {
+                posted.Set();
+            }
+            else if (point == DeferPoint.BeforeSlotCheck && Interlocked.CompareExchange(ref stage, 1, 0) == 0)
+            {
+#pragma warning disable VSTHRD002 // justification: the hook is synchronous by contract; bounded wait on the drainer's progress
+                store!.DispatchAsync(new Increment()).Wait(TimeSpan.FromSeconds(10), Ct).ShouldBeTrue();
+#pragma warning restore VSTHRD002
+            }
+            else if (point == DeferPoint.BeforeResignal && Interlocked.CompareExchange(ref stage, 2, 1) == 1)
+            {
+                _auth.Change("bob");
+                posted.Wait(TimeSpan.FromSeconds(10), Ct).ShouldBeTrue();
+            }
+        }));
+        store = h.Store;
+        await h.InitializeAsync();
+
+        h.Store.Dispatch(new Increment());
+        await WriterHarness.Until(() => Persistence(h) is { ScopeEpoch: 1, Status: PersistenceStatus.Hydrated });
+        await WriterHarness.Until(() => !h.Middleware.Writers["counter"].Dirty);
+
+        stage.ShouldBe(2);
+        Payload(_cache.Stored(Alice)!).ShouldBe("""{"Value":2}""");
+        _cache.Stored(Bob).ShouldBeNull();
+        h.Store.State.Get<Counter>().ShouldBe(new Counter(0));
+        _cache.Attempts.ShouldBe([$"get:{Alice}", $"set:{Alice}", $"get:{Bob}"]);
+    }
+
+    [Fact]
+    public async Task ScopeSwitch_DevToolsJumpAndResetDuringUnscopedLiveWrite_JumpedToStateWritten_Deterministic()
+    {
+        // §11.5: a write already pending persists the jumped-to state. A reset hands no final snapshot to an unscoped key, so
+        // one committed in the same window never stands in for the key's re-signal.
+        IStore? store = null;
+        var jumped = 0;
+        await using var h = Circuit(d => d.Persist<DialSlice>(static o => o.Debounce = TimeSpan.Zero).AddBlazor(o => o.AfterDeferHook = (key, point) =>
+        {
+            if (key == "dial" && point == DeferPoint.BeforeSlotCheck && Interlocked.Exchange(ref jumped, 1) == 0)
+            {
+                store!.Restore(new Dictionary<string, object> { ["dial"] = new Dial(5) }, Origin.DevTools);
+                _auth.Change("bob");
+#pragma warning disable VSTHRD002 // justification: the hook is synchronous by contract; bounded wait on the drainer's progress
+                WriterHarness.Until(() => store.State.Get<Dial>() == new Dial(5) && store.State.Get<PersistenceState>().ScopeEpoch == 1).Wait(TimeSpan.FromSeconds(10), Ct).ShouldBeTrue();
+#pragma warning restore VSTHRD002
+            }
+        }));
+        store = h.Store;
+        await h.InitializeAsync();
+
+        h.Store.Dispatch(new SetDial(9));
+        await WriterHarness.Until(() => Persistence(h) is { ScopeEpoch: 1, Status: PersistenceStatus.Hydrated });
+        await WriterHarness.Until(() => !h.Middleware.Writers["dial"].Dirty);
+
+        jumped.ShouldBe(1);
+        h.Written.Where(static w => w.Key == "app:dial").Select(static w => w.Payload).ShouldBe(["""{"Value":5}"""]);
+        h.Store.State.Get<Dial>().ShouldBe(new Dial(5));
+    }
+
+    [Fact]
+    public async Task ScopeSwitch_DevToolsJumpDuringScopedLiveWrite_SameEpoch_JumpedToStateWritten_Deterministic()
+    {
+        // §11.5: with no reset in the window, a scoped key whose slot a DevTools jump (which signals nothing) changed during
+        // its live write is signalled again, and the jumped-to state is written under its own key.
+        IStore? store = null;
+        var jumped = 0;
+        await using var h = Circuit(d => d.AddBlazor(o => o.AfterDeferHook = (_, point) =>
+        {
+            if (point == DeferPoint.BeforeSlotCheck && Interlocked.Exchange(ref jumped, 1) == 0)
+            {
+                store!.Restore(new Dictionary<string, object> { ["counter"] = new Counter(5) }, Origin.DevTools);
+#pragma warning disable VSTHRD002 // justification: the hook is synchronous by contract; bounded wait on the drainer's progress
+                WriterHarness.Until(() => store.State.Get<Counter>() == new Counter(5)).Wait(TimeSpan.FromSeconds(10), Ct).ShouldBeTrue();
+#pragma warning restore VSTHRD002
+            }
+        }));
+        store = h.Store;
+        await h.InitializeAsync();
+
+        h.Store.Dispatch(new Increment());
+        await WriterHarness.Until(() => _cache.Stored(Alice) is { } stored && Payload(stored) == """{"Value":5}""");
+        await WriterHarness.Until(() => !h.Middleware.Writers["counter"].Dirty);
+
+        jumped.ShouldBe(1);
+        _cache.Attempts.ShouldBe([$"get:{Alice}", $"set:{Alice}"]);
+    }
+
+    [Fact]
     public async Task ScopeSwitch_SameScopeReasserted_FinalWriteNotRolledBack()
     {
         // The same user re-notified, the scope resolving asynchronously, so it stays on the switch path, with the final write

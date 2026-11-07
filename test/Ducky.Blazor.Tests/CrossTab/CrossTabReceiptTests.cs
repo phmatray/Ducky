@@ -1139,12 +1139,14 @@ public sealed class CrossTabReceiptTests
             return respond(identifier, args);
         };
 
+        // Awaited on seen, not on Watches: the fake records a call before Respond runs, so seen could still be one short.
         x.H.Store.Dispatch(new SetLevel(1));
-        await WriterHarness.Until(() => x.Watches.Count == 2);
+        await WriterHarness.Until(() => seen.Count == 1);
         x.H.Store.Dispatch(new ClearPersistedState());
-        await WriterHarness.Until(() => x.Watches.Count == 3);
+        await WriterHarness.Until(() => seen.Count == 2);
 
         seen.ShouldBe(["""{"Value":1}""", null]);
+        x.Watches.Count.ShouldBe(3);
     }
 
     [Fact]
