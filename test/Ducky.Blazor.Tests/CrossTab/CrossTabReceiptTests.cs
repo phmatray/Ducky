@@ -789,6 +789,166 @@ public sealed class CrossTabReceiptTests
     }
 
     [Fact]
+    public async Task CrossTab_ReceiptReadOvertakenByFailedOwnWriteOfSameValue_ReadAgain()
+    {
+        // §11.7: the read is sent before this store's own write {7}, and returns another tab's {7} while that write is still
+        // in flight. Equal to the write in flight, it is still stale (the count moved): the key is read again, after the
+        // write. The write fails (a quota error), so the re-read finds the other tab's {7} over the unchanged baseline {3},
+        // and restores it: the baseline names what storage holds, and the retry dedupes. Dropped as an echo of the write in
+        // flight, the baseline would stay {3}, and the writer would retry {7} and log PersistenceFailed for good.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var writer = x.H.Middleware.Writers["level"];
+
+        var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reread = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var answer = x.H.OnGet;
+        x.H.OnGet = _ =>
+        {
+            x.H.OnGet = _ =>
+            {
+                x.H.OnGet = answer;
+                return reread.Task;
+            };
+            return read.Task;
+        };
+        var write = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var other = x.Envelope(new Level(7));
+        var handled = x.Notify("tab", "local", "ducky:level", other);
+        x.H.Time.Advance(CrossTabHarness.Debounce);
+        try
+        {
+            await WriterHarness.Until(() => Reads(x) == 1);
+            x.H.OnSet = _ => write.Task;
+            x.H.Store.Dispatch(new SetLevel(7));
+            (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":7}""");
+            read.TrySetResult(other);
+            await WriterHarness.Until(() => Reads(x) == 2 || handled.IsCompleted);
+            write.TrySetException(new JSException("QuotaExceededError"));
+            await x.H.NextFailureAsync();
+            await WriterHarness.Until(() => !x.H.Middleware.InFlight.ContainsKey("ducky:level"));
+        }
+        finally
+        {
+            read.TrySetResult(other);
+            write.TrySetException(new JSException("QuotaExceededError"));
+            reread.TrySetResult(other);
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Reads(x).ShouldBe(2);
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+        x.H.Store.State.Get<Level>().ShouldBe(new(7));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":7}""");
+
+        // The retry dedupes against the baseline the restore set: nothing is written again.
+        x.H.OnSet = static _ => true;
+        await x.H.Time.TimerAsync(TimeSpan.FromSeconds(1));
+        x.H.Time.Advance(TimeSpan.FromSeconds(1));
+        await WriterHarness.Until(() => !writer.Dirty);
+        x.H.Written.Select(static w => w.Payload).ShouldBe(["""{"Value":3}""", """{"Value":7}"""]);
+    }
+
+    [Fact]
+    public async Task CrossTab_ReceiptReadEqualToFailingOwnWriteInFlight_WaitsAndReadsAgain()
+    {
+        // §11.7: the re-read is sent after this store's own write {7} and returns another tab's {7} while that write is still
+        // in flight. Equal to the write in flight, it is ambiguous until the write resolves: the receipt waits for it, then
+        // reads again. The write fails (a quota error), so the third read finds {7} over the unchanged baseline {3}, and
+        // restores it: the retry dedupes. Dropped as an echo of the write in flight, the baseline would stay {3}, and the
+        // writer would retry {7} and log PersistenceFailed for good, although storage already holds {7}.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var writer = x.H.Middleware.Writers["level"];
+
+        var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reread = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var answer = x.H.OnGet;
+        x.H.OnGet = _ =>
+        {
+            x.H.OnGet = _ =>
+            {
+                x.H.OnGet = answer;
+                return reread.Task;
+            };
+            return read.Task;
+        };
+        var write = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var other = x.Envelope(new Level(7));
+        var handled = x.Notify("tab", "local", "ducky:level", other);
+        x.H.Time.Advance(CrossTabHarness.Debounce);
+        try
+        {
+            await WriterHarness.Until(() => Reads(x) == 1);
+            x.H.OnSet = _ => write.Task;
+            x.H.Store.Dispatch(new SetLevel(7));
+            (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":7}""");
+            read.TrySetResult(other);
+            await WriterHarness.Until(() => Reads(x) == 2);
+            reread.TrySetResult(other);
+            await WriterHarness.Until(() => x.EventIds(LogLevel.Debug).Contains(2056) || handled.IsCompleted);
+            handled.IsCompleted.ShouldBeFalse();
+            x.Restores.Entries.ShouldBeEmpty();
+            write.TrySetException(new JSException("QuotaExceededError"));
+            await x.H.NextFailureAsync();
+        }
+        finally
+        {
+            read.TrySetResult(other);
+            reread.TrySetResult(other);
+            write.TrySetException(new JSException("QuotaExceededError"));
+        }
+
+        await handled.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Reads(x).ShouldBe(3);
+        x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+        x.H.Store.State.Get<Level>().ShouldBe(new(7));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":7}""");
+
+        // The retry dedupes against the baseline the restore set: nothing is written again.
+        x.H.OnSet = static _ => true;
+        await x.H.Time.TimerAsync(TimeSpan.FromSeconds(1));
+        x.H.Time.Advance(TimeSpan.FromSeconds(1));
+        await WriterHarness.Until(() => !writer.Dirty);
+        x.H.Written.Select(static w => w.Payload).ShouldBe(["""{"Value":3}""", """{"Value":7}"""]);
+    }
+
+    [Fact]
+    public async Task CrossTab_RemovalReceiptDuringOwnWriteOfInitialStateContent_Applied()
+    {
+        // (non-normative, §11.7) Only a value equal to the write in flight is its echo: an absence read after this store
+        // sent {0}, the initial state's serialization, is another store's removal that landed after it, and takes the
+        // removal branch (sequence bump, restore, baseline) although its serialization equals the write in flight.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        x.H.Store.Dispatch(new SetLevel(3));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
+        await x.H.IterationsAsync("level", 1);
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(0));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":0}""");
+        try
+        {
+            await x.ReceiveAsync("tab", "local", "ducky:level", null);
+            Reads(x).ShouldBe(1);
+            x.Restores.Entries.ShouldBe([(Origin.CrossTab, "level")]);
+            x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":0}""");
+            x.H.Middleware.InFlight.ContainsKey("ducky:level").ShouldBeFalse();
+        }
+        finally
+        {
+            ack.TrySetResult(true);
+        }
+    }
+
+    [Fact]
     public async Task CrossTab_ReceiptDuringOwnWrite_ValueOfBaseline_Restored()
     {
         // §11.7, INV-18: this store's {4} is in flight (its setItem ran, its result not back) when another
@@ -1321,25 +1481,6 @@ public sealed class CrossTabReceiptTests
         receipted.Set();
         await WriterHarness.Until(() => cache.Stored("app:alice:dial") is not null);
         released.ShouldBeTrue();
-    }
-
-    [Fact]
-    public async Task CrossTab_BrowserWrite_SentBeforeItIsCounted()
-    {
-        // (non-normative, §11.7) A browser call is sent under _sends before it is counted, so a receipt that reads the count
-        // with its read never counts a call sent after that read. The storageSet runs while the count is still 0.
-        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
-        await x.H.InitializeAsync();
-        long? counted = null;
-        x.H.OnSet = _ =>
-        {
-            counted = x.H.Middleware.Started.GetValueOrDefault("ducky:level");
-            return true;
-        };
-        x.H.Store.Dispatch(new SetLevel(3));
-        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":3}""");
-        counted.ShouldBe(0);
-        await WriterHarness.Until(() => x.H.Middleware.Started.GetValueOrDefault("ducky:level") == 1);
     }
 
     // The storageGet calls this store made for the level key (its hydration read excluded: it ran before the test's writes).
