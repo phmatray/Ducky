@@ -283,7 +283,9 @@ public sealed class ReactiveFailureTests
         host.Store.State.Get<Counter>().Pings.ShouldBe(5);
     }
 
-    // Non-normative (§14): a Handle that throws leaves no subscription behind either, however many attempts it takes.
+    // Non-normative (§14): a Handle that throws leaves no subscription behind either, however many attempts it takes. The
+    // attempts are bounded: a resubscribe made on the failure's own stack then recurses a few times and fails the count,
+    // instead of overflowing the stack and crashing the test host.
     [Fact]
     public async Task Reactive_HandleThrowsOnEveryAttempt_RetainsOneSubscription()
     {
@@ -294,7 +296,7 @@ public sealed class ReactiveFailureTests
         await host.StartAsync();
         using var subscriptions = new CompositeDisposable();
         var probe = new Probe();
-        var effect = new RetryingEffect(probe, static _ => TimeSpan.Zero);
+        var effect = new RetryingEffect(probe, static attempt => attempt < 5 ? TimeSpan.Zero : null);
 
         new ReactivePipeline(effect, seam.Bridge, seam.Context, subscriptions, new(NullLogger.Instance), TestContext.Current.CancellationToken).Subscribe();
         for (var attempt = 2; attempt <= 5; attempt++)
@@ -303,6 +305,9 @@ public sealed class ReactiveFailureTests
             probe.Subscriptions.ShouldBe(attempt);
             subscriptions.Count.ShouldBe(1);
         }
+
+        host.Time.Advance(TimeSpan.FromDays(1));
+        probe.Subscriptions.ShouldBe(5);
     }
 
     // Non-normative (INV-27): a RetryDelay that throws is user code like Handle: logged (Error 3003) and published, it stops
@@ -324,12 +329,13 @@ public sealed class ReactiveFailureTests
     }
 
     // Non-normative (INV-27): a delay Task.Delay rejects (above about 49.7 days) stops resubscribing like null, logged and
-    // published.
+    // published. Only the first attempt asks for it: a resubscribe that skipped the delay then stops at attempt 2 and fails
+    // the assertions, instead of recursing until the stack overflows and crashes the test host.
     [Fact]
     public async Task Reactive_RetryDelayOutOfRange_LoggedAndStops()
     {
         var logger = new FakeLogger<ReactiveHost>();
-        await using var host = RetryingHost(static _ => TimeSpan.FromDays(60), logger);
+        await using var host = RetryingHost(static attempt => attempt == 1 ? TimeSpan.FromDays(60) : null, logger);
         await host.StartAsync();
         host.Time.Advance(TimeSpan.FromDays(100));
 
@@ -480,5 +486,35 @@ public sealed class ReactiveFailureTests
         host.Probe.Subscriptions.ShouldBe(1);
         host.Store.State.Get<IReadOnlyList<EffectFailed>>().ShouldBeEmpty();
         Records(logger).ShouldBeEmpty();
+    }
+
+    // Non-normative (§14, INV-27): only a subscription's first value is read from the store; every later one is the
+    // bridge's write, as written, each instance once. On a store the two coincide (the single drainer writes the
+    // snapshot it just committed), so the seam writes an older snapshot, which only the bridge's value can deliver: a
+    // pipeline that re-read the live state for every value would see [live] alone.
+    [Fact]
+    public async Task Reactive_StateAfterFirstValue_IsTheBridgeWrite()
+    {
+        var seam = new PipelineSeam();
+        await using var host = new Host(
+            d => d.AddSlice<CounterSlice>().AddEffect<PipelineSeamEffect>().AddReactiveEffect<CompletingEffect>(),
+            s => s.AddSingleton(seam));
+        await host.StartAsync();
+        var initial = host.Store.State;
+        await DispatchIdleAsync(host, new Ping());
+        var live = host.Store.State;
+        using var subscriptions = new CompositeDisposable();
+        var probe = new Probe();
+        new ReactivePipeline(new StateRunsFlakyEffect(probe), seam.Bridge, seam.Context, subscriptions, new(NullLogger.Instance), TestContext.Current.CancellationToken).Subscribe();
+
+        seam.Bridge.State.OnNext(initial);
+        seam.Bridge.State.OnNext(initial);
+        seam.Bridge.State.OnNext(live);
+
+        var run = probe.StateRuns.ShouldHaveSingleItem();
+        run.Count.ShouldBe(3);
+        run[0].ShouldBeSameAs(live);
+        run[1].ShouldBeSameAs(initial);
+        run[2].ShouldBeSameAs(live);
     }
 }
