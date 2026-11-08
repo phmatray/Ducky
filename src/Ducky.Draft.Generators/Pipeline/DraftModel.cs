@@ -311,15 +311,12 @@ internal sealed record DraftModel(
 
     // GEN-06: an oblivious reference type (user source under #nullable disable) counts as annotated at every position, so
     // the draft member of `string Name` is `string?` in the #nullable enable file, except as the argument of a type
-    // parameter that can't be nullable (Dictionary<string, object> keeps `string`, no CS8714). A type with no oblivious
-    // position is returned as is, and a tuple is rebuilt as a tuple (Construct would drop its element names).
+    // parameter that can't be nullable (Dictionary<string, object> keeps `string`, no CS8714). Every position is rebuilt
+    // with its own annotation, so a type with no oblivious position comes back equal (no short-cut: it was unobservable).
+    // A tuple is rebuilt as a tuple (Construct would drop its element names); a one-element ValueTuple<T> has no names
+    // and goes through Construct (CreateTupleTypeSymbol takes two or more elements).
     private static ITypeSymbol Annotate(ITypeSymbol type, Compilation compilation, bool nullable = true)
     {
-        if (!HasOblivious(type))
-        {
-            return type;
-        }
-
         var rebuilt = type switch
         {
             IArrayTypeSymbol => AnnotateArray((IArrayTypeSymbol)type, compilation),
@@ -332,11 +329,6 @@ internal sealed record DraftModel(
             : nullable ? NullableAnnotation.Annotated
             : NullableAnnotation.NotAnnotated);
     }
-
-    private static bool HasOblivious(ITypeSymbol type) =>
-        (type.IsReferenceType && type.NullableAnnotation == NullableAnnotation.None)
-        || (type is IArrayTypeSymbol && HasOblivious(((IArrayTypeSymbol)type).ElementType))
-        || (type is INamedTypeSymbol && ((INamedTypeSymbol)type).TypeArguments.Any(HasOblivious));
 
     private static ITypeSymbol AnnotateTuple(INamedTypeSymbol tuple, Compilation compilation)
     {

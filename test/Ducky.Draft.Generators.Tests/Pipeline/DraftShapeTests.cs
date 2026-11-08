@@ -163,6 +163,21 @@ public sealed class DraftShapeTests
                 System.ValueTuple<string> One,
                 Child Missing = null);
             """,
+        // GEN-06: types with no oblivious position (nullable-enabled source) come back exactly as declared: a long named
+        // tuple, a generic nested in a generic, a type nested in a generic, a one-element ValueTuple, nullable structs.
+        ["NullableEnabled"] = """
+            using System.Collections.Generic;
+            using System.Collections.Immutable;
+            namespace App;
+            public sealed class Child { }
+            public sealed class Outer<T> { public sealed class Inner<U> { } public sealed class Leaf { } }
+            [Ducky.Draft.Draftable]
+            public sealed partial record Modern(
+                (int A, string B, int C, int D, int E, int F, int G, string? H, Child I) Long,
+                Outer<string?>.Inner<Child> Nested, Outer<Child>.Leaf? Leaf, System.ValueTuple<string?> One,
+                KeyValuePair<int, string?>? MaybePair, nint Native, (int, Child? Named)? MaybeTuple,
+                ImmutableList<(string? K, int V)> Pairs, ImmutableDictionary<string, Child?> Map);
+            """,
         // Hint-name row: same-named records in two namespaces.
         ["SameName"] = """
             namespace A { [Ducky.Draft.Draftable] public sealed partial record Todo(int Id); }
