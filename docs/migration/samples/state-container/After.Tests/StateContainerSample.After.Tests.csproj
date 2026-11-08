@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The state container After app's tests and the guide's behaviour-change tests (SPEC §22.9): an xUnit v3 module on MTP like
+       test/, run by the Docs target. The Ducky analyzers run, so the guide's snippets of these tests join the DUCKY001–003
+       false-positive corpus (SPEC §16.2); DUCKY006 is off: the fixtures are not the app's, so its JSON context need not
+       cover them. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+    <NoWarn>$(NoWarn);DUCKY006</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../After/StateContainerSample.After.csproj" />
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Testing/Ducky.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="bunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

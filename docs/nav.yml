@@ -37,7 +37,16 @@ sections:
           - threading.md
   - tab: Migrate
     groups:
-      - pages:
+      - title: Compare
+        pages:
+          - compare.md
+      - title: From the market leaders
+        pages:
+          - migration/fluxor.md
+          - migration/timewarp-state.md
+          - migration/state-container.md
+      - title: From Ducky 1.x
+        pages:
           - migration/ducky-1x.md
   - tab: Diagnostics
     groups:

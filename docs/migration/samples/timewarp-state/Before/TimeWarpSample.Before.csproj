@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- TimeWarp.State 11.0.3 as published on nuget.org, the latest stable release and the version the guide migrates from
+       (SPEC §22.8): the app the guide starts from, user code written from TimeWarp.State's own samples. -->
+  <ItemGroup>
+    <PackageReference Include="TimeWarp.State" Version="11.0.3" />
+  </ItemGroup>
+</Project>
