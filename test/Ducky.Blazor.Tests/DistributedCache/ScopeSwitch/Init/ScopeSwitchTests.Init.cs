@@ -71,6 +71,29 @@ public sealed partial class ScopeSwitchTests
     }
 
     [Fact]
+    public async Task ScopeSwitch_DuringInit_InitAborted_FailedForCurrentEpoch()
+    {
+        // Init aborted (an init-buffer overflow) while a switch made during init reads: the init-token callback ends the
+        // attempt current then, epoch 1, with an aborted HydrationFailed before StoreInitialized (§11.5 step 7, §6.7).
+        await using var h = Circuit(static d => d.InitBufferCapacity = 1);
+        _cache.HoldUntilCancelled($"get:{Alice}");
+        _cache.HoldUntilCancelled($"get:{Bob}");
+        var init = h.InitializeAsync();
+        await WriterHarness.Until(() => _cache.Attempts.Contains($"get:{Alice}"));
+        _auth.Change("bob");
+        await WriterHarness.Until(() => _cache.Attempts.Contains($"get:{Bob}"));
+
+        h.Store.Dispatch(new Increment());
+        h.Store.Dispatch(new Increment());
+        await init.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        await WriterHarness.Until(() => h.Log.Entries.Any(static e => e.StartsWith("initialized ", StringComparison.Ordinal)));
+
+        h.Log.Entries.Where(static e => e.StartsWith("failed:", StringComparison.Ordinal) || e.StartsWith("initialized ", StringComparison.Ordinal))
+            .ShouldBe(["failed:OperationCanceledException:1:System Failed:1", "initialized Failed:1"]);
+        h.Log.Terminals.ShouldHaveSingleItem().ShouldBe(new HydrationFailed(nameof(OperationCanceledException), "Store init was aborted before hydration ended.") { ScopeEpoch = 1 });
+    }
+
+    [Fact]
     public async Task ScopeSwitch_DuringInitialHydration_UnscopedKeysStillRestored()
     {
         // A switch while attempt 0 reads carries the unscoped key attempt 0 had not restored: the switch reads it again, so

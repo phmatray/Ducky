@@ -288,24 +288,76 @@ public sealed class PauseSeedTests : BunitContext
     }
 
     [Theory]
-    [InlineData("null", 0)]
-    [InlineData("""{"Value":"four"}""", 1)]
-    public async Task PauseSeed_UnusableScopedEntry_NotHandedOver(string value, int undeserializable)
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PauseSeed_UnusableScopedEntry_NotHandedOver(bool stored)
     {
-        // (non-normative) A scoped value the store can't restore (null, or a state type changed without a Version bump) is no
-        // value to hand over: under the matching scope with nothing stored the initial state stays, and nothing is written.
+        // (non-normative) A scoped value the store can't restore (a state type changed without a Version bump) is no value
+        // to hand over: under the matching scope the stored value applies, or with nothing stored the initial state
+        // stays, and nothing is written.
         _user = "alice";
-        var seed = AliceSeed(value, dirty: true);
+        if (stored)
+        {
+            _storage[("local", "ducky:alice:counter")] = Envelope(3, version: 1);
+        }
+
+        var seed = AliceSeed("""{"Value":"four"}""", dirty: true);
         Configure();
         await ResumeAsync(seed);
         await Store.InitializeAsync(Ct);
         await Store.WhenIdleAsync(Ct);
 
-        Store.State.Get<Counter>().ShouldBe(new Counter(0));
-        Store.State.WasRestored<Counter>().ShouldBeFalse();
-        _logs.GetSnapshot().Count(static r => r.Id.Id == 1071).ShouldBe(undeserializable);
+        Store.State.Get<Counter>().ShouldBe(new Counter(stored ? 3 : 0));
+        Store.State.WasRestored<Counter>().ShouldBe(stored);
+        _logs.GetSnapshot().Where(static r => r.Id.Id == 1071).ShouldHaveSingleItem();
         await Store.DisposeAsync();
         _writes.Reader.TryRead(out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task PauseSeed_NullScopedEntry_UnreadableSeed_CircuitStillPausesAgain()
+    {
+        // A forged pause seed whose scoped value is JSON null is an unreadable seed (Warning 2010), like a null ver or dirty:
+        // never a NullReferenceException out of the handoff's init, which skipped its persisting registration, so the
+        // resumed circuit could never pause again.
+        _user = "alice";
+        _storage[("local", "ducky:alice:counter")] = Envelope(3, version: 1);
+        Configure();
+        await ResumeAsync(AliceSeed("null", dirty: true));
+        await Store.InitializeAsync(Ct);
+        await Store.WhenIdleAsync(Ct);
+
+        Store.State.Get<Counter>().ShouldBe(new Counter(3));
+        _logs.GetSnapshot().Where(static r => r.Id.Id == 2010).ShouldHaveSingleItem();
+        var paused = new FakeComponentStateStore();
+        await Services.GetRequiredService<ComponentStatePersistenceManager>().PersistStateAsync(paused, Renderer);
+        Seed(paused)["slices"]!["counter"]!.ToJsonString().ShouldBe("""{"Value":3}""");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task PauseSeed_SeedValueDeserializingToNull_NotRestored(bool scoped)
+    {
+        // (non-normative) A dirty seed value that deserializes to null (a custom converter's answer) is no value the seed
+        // restored, scoped or not: the stored value applies, and nothing overwrites it.
+        _user = scoped ? "alice" : null;
+        var key = scoped ? "ducky:alice:counter" : Key;
+        _storage[("local", key)] = Envelope(3, version: 1);
+        Services.AddSingleton(_log);
+        AddDucky(this, static _ => { }, static d => d.Use<HydrationRecorder>().UseJson(new JsonSerializerOptions(HydrationJson.Default.Options)
+        {
+            TypeInfoResolver = HydrationJson.Default,
+            Converters = { new NullForNegativeCounter() },
+        }));
+        await ResumeAsync(scoped
+            ? AliceSeed("""{"Value":-1}""", dirty: true)
+            : Forged("""{"v":1,"src":"pause","dirty":["counter"],"ver":{"counter":1},"slices":{"counter":{"Value":-1}}}"""));
+        await Store.InitializeAsync(Ct);
+        await Store.WhenIdleAsync(Ct);
+
+        Store.State.Get<Counter>().ShouldBe(new Counter(3));
+        await AssertNothingWrittenAsync(key, Envelope(3, version: 1));
     }
 
     [Fact]
@@ -547,6 +599,20 @@ public sealed class PauseSeedTests : BunitContext
     }
 
     [Fact]
+    public async Task PauseSeed_HydratingAtUnrecordedEpoch_UnscopedKeyCarried()
+    {
+        // (non-normative) §11.4: a snapshot Hydrating at an epoch no attempt recorded (IStore.Restore is public) has no key
+        // of a running attempt to leave out, so an unscoped key is still carried.
+        var envelope = Seed(await PauseAsync(increments: 1, disconnected: true, before: static store =>
+        {
+            store.Restore(new Dictionary<string, object> { ["@ducky/persistence"] = new PersistenceState(PersistenceStatus.Hydrating) { ScopeEpoch = 7 } }, Origin.CrossTab);
+            return store.WhenIdleAsync(Ct);
+        }));
+        envelope["slices"]!["counter"]!.ToJsonString().ShouldBe("""{"Value":1}""");
+        _pauseLogs.GetSnapshot().ShouldNotContain(static r => r.Id.Id == 2016);
+    }
+
+    [Fact]
     public async Task PauseSeed_HydrationTimesOut_DirtyKeyStillRewritten()
     {
         // (non-normative) The read hangs past HydrationTimeout: the attempt ends in HydrationFailed, and the seed's dirty 4,
@@ -740,5 +806,23 @@ public sealed class PauseSeedTests : BunitContext
             more?.Invoke(d);
         });
         context.Renderer.SetRendererInfo(_server);
+    }
+}
+
+// Reads a negative Value as null, as a custom converter may: a deserialization that succeeds with no state.
+internal sealed class NullForNegativeCounter : System.Text.Json.Serialization.JsonConverter<Counter>
+{
+    public override Counter? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        using var document = JsonDocument.ParseValue(ref reader);
+        var value = document.RootElement.GetProperty("Value").GetInt32();
+        return value < 0 ? null : new Counter(value);
+    }
+
+    public override void Write(Utf8JsonWriter writer, Counter value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        writer.WriteNumber("Value", value.Value);
+        writer.WriteEndObject();
     }
 }

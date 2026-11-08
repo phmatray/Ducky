@@ -97,6 +97,32 @@ public sealed class WriterRetryTests
     }
 
     [Fact]
+    public async Task ServerBrowserStorage_ReimportStillPending_RegistrationReissuedOnceItSucceeds()
+    {
+        // (non-normative) §11.5 Providers, §11.7: the import failed at the probe; the first write's re-import is still pending
+        // when it starts, and the lost storage registration goes out once that re-import succeeds.
+        await using var h = new WriterHarness(static d => d.Persist<LevelSlice>(), browser: false);
+        var probe = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reimport = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var respond = h.Js.Respond;
+        var imports = 0;
+        h.Js.Respond = (identifier, args) => identifier != "import" ? respond(identifier, args) : ++imports == 1 ? probe.Task : reimport.Task;
+        var init = h.InitializeAsync();
+        probe.SetException(new JSDisconnectedException("circuit gone"));
+        await init;
+
+        h.Store.Dispatch(new SetLevel(1));
+        await h.Time.TimerAsync(_serverDebounce);
+        h.Time.Advance(_serverDebounce);
+        await WriterHarness.Until(() => imports == 2);
+        reimport.SetResult(h.Js);
+
+        (await h.NextWriteAsync()).Payload.ShouldBe("""{"Value":1}""");
+        await WriterHarness.Until(() => h.Js.Calls.Any(static call => call.Identifier == "watchStorage"));
+        imports.ShouldBe(2);
+    }
+
+    [Fact]
     public async Task ServerBrowserStorage_ImportFailsOnDisconnect_ReimportedAfterReconnect()
     {
         // The ducky.js import, pending at the probe, fails on a disconnect during circuit init, so the storage registration

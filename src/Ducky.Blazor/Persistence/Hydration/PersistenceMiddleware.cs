@@ -160,7 +160,9 @@ internal sealed partial class PersistenceMiddleware : Middleware
         // Phase 5a, after init ended (§6.11): a HydrateAsync still awaiting a late scope delegate holds an already-cancelled
         // token. A switch attempt's scope wait and reads end here too. The flush (§11.5) runs before the module is disposed.
         await StopSwitchesAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        // Stryker disable once Statement : equivalent, store dispose step 2 cancelled the init token this links, so disposing only frees registrations
         _hydration?.Dispose();
+        // Stryker disable once Statement : equivalent, the terminal that ended init disarmed this timer (or it fired), so disposing frees no pending callback
         _deadline?.Dispose();
         if (_crossTab is not null)
         {
@@ -177,7 +179,7 @@ internal sealed partial class PersistenceMiddleware : Middleware
 
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         await _bridge.DisposeAsync().ConfigureAwait(false);
-        // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+        // Stryker disable once Boolean,Statement : equivalent, Middleware.DisposeAsync is a no-op (=> default) that CA2215 asks to call; no SynchronizationContext is captured in tests
         await base.DisposeAsync().ConfigureAwait(false);
     }
 
@@ -249,17 +251,14 @@ internal sealed partial class PersistenceMiddleware : Middleware
         catch (Exception exception)
 #pragma warning restore CA1031
         {
-            // The initial attempt's cancelled token is the deadline or the init abort. Its callback may not have run yet
-            // (callbacks run in reverse registration order, so a read's continuation can come first), and this task's
-            // completion can let StoreInitialized through: end the attempt here, before returning. A switch attempt's is its
-            // supersession, dispose, or EndInitPhase having ended it already: nothing left to end.
+            // The initial attempt's cancelled token is the deadline or the init abort, whose EndInitPhase callbacks were
+            // registered after this token's link, so the thread that cancelled it ran one of them to its end first (callbacks
+            // run in reverse registration order), or, when the token was cancelled before those callbacks were registered,
+            // their registration ran EndInitPhase synchronously before HydrateAsync started: the init phase is over. A switch
+            // attempt's is its supersession, dispose, or EndInitPhase having ended it already. Either way nothing is left to end.
             if (token.IsCancellationRequested)
             {
-                if (attempt.Epoch == 0)
-                {
-                    EndInitPhase();
-                }
-                else
+                if (attempt.Epoch != 0)
                 {
                     Log.HydrationResultDiscarded(_log, attempt.Epoch);
                 }

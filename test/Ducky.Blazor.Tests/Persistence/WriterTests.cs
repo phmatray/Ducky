@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using CsCheck;
 using Ducky.Blazor.Tests.Core;
 using Ducky.TestSupport;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.JSInterop;
 
 namespace Ducky.Blazor.Tests.Persistence;
@@ -158,6 +159,47 @@ public sealed class WriterTests
         await h.IterationsAsync("dial", 1);
         h.Middleware.LastKnownPayload.ShouldBe(new Dictionary<string, string> { ["app:level"] = """{"Value":1.5}""", ["app:dial"] = """{"Value":2}""" }, ignoreOrder: true);
         h.Middleware.Writers.Keys.ShouldBe(["level", "dial"], ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task Write_Success_CountsSaveAndItsDurationInMilliseconds()
+    {
+        // (non-normative) §9: a successful write adds one ducky.persistence.saves and one ducky.persistence.save.duration
+        // measurement, a histogram in ms.
+        await using var h = new WriterHarness(static d => d.Persist<LevelSlice>());
+        using var saves = new MetricCollector<long>(h.Meters, "Ducky", "ducky.persistence.saves");
+        using var duration = new MetricCollector<double>(h.Meters, "Ducky", "ducky.persistence.save.duration");
+        await h.InitializeAsync();
+
+        h.Store.Dispatch(new SetLevel(1));
+        await h.NextWriteAsync();
+        await h.IterationsAsync("level", 1);
+
+        saves.GetMeasurementSnapshot().ShouldHaveSingleItem().Value.ShouldBe(1);
+        duration.Instrument.ShouldNotBeNull().Unit.ShouldBe("ms");
+        duration.GetMeasurementSnapshot().ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task Write_CountedOnlyOnceSent()
+    {
+        // (non-normative) §11.7: the writer sends each call and counts it under _sends, the lock a receipt reads the count
+        // under as it sends its read, so the count names only calls already sent: while the call runs it is not counted yet.
+        await using var h = new WriterHarness(static d => d.Persist<LevelSlice>());
+        long? countAtSend = null;
+        h.OnSet = _ =>
+        {
+            countAtSend = h.Middleware.Started.GetValueOrDefault("ducky:level");
+            return true;
+        };
+        await h.InitializeAsync();
+
+        h.Store.Dispatch(new SetLevel(1));
+        await h.NextWriteAsync();
+        await h.IterationsAsync("level", 1);
+
+        countAtSend.ShouldBe(0);
+        h.Middleware.Started["ducky:level"].ShouldBe(1);
     }
 
     [Fact]
@@ -444,9 +486,16 @@ public sealed class WriterTests
             }
         }
 
-        h.Middleware.Writers["level"].Signalled.ShouldBe(local[0], Describe(script));
-        h.Middleware.Writers["dial"].Signalled.ShouldBe(local[1], Describe(script));
-        held.SetResult(true);
+        try
+        {
+            h.Middleware.Writers["level"].Signalled.ShouldBe(local[0], Describe(script));
+            h.Middleware.Writers["dial"].Signalled.ShouldBe(local[1], Describe(script));
+        }
+        finally
+        {
+            // Answered even after a failed assertion: the dispose would wait on the held writes, and the clock never moves.
+            held.TrySetResult(true);
+        }
     }
 
     private sealed record Run(int MaxInFlight, Dictionary<string, string> Stored, Dictionary<string, string> Expected);

@@ -139,6 +139,8 @@ public sealed class DevToolsInboundTests
         x.Store.State.Get<Label>().Text.ShouldBe("");
         await Send(x, """{"type":"DISPATCH","payload":{"type":"JUMP_TO_STATE","actionId":2,"index":0}}""");
         x.Store.State.Get<Counter>().ShouldBeSameAs(first.Item1);
+        await Send(x, """{"type":"DISPATCH","payload":{"type":"JUMP_TO_ACTION","index":0}}""");
+        x.Store.State.Get<Counter>().Value.ShouldBe(0);
     }
 
     [Theory]
@@ -447,7 +449,9 @@ public sealed class DevToolsInboundTests
             x.Store.State.Get<Counter>().Value.ShouldBe(5);
             x.Store.State.Get<Label>().Text.ShouldBe("imported");
             x.EventIds(LogLevel.Debug).ShouldNotContain(2065);
-            x.EventIds(LogLevel.Debug).Contains(2000).ShouldBe(pull != "read"); // a disposal the circuit interrupted, logged
+            x.Logs.GetSnapshot().Where(static r => r.Id.Id == 2000).Select(static r => r.Message).ShouldBe(pull == "read"
+                ? []
+                : ["JS interop call 'dispose' interrupted: circuit disconnected or interop timed out"]); // a disposal the circuit interrupted, logged
             (await x.Store.DispatchAsync(new Increment()).WaitAsync(_bound, Ct)).ShouldBe(DispatchResult.Reduced);
         }
         else

@@ -69,7 +69,8 @@ internal sealed class EnvelopeReader(DuckyJson json, ILogger logger)
                 return false;
             }
 
-            if (found < version)
+            // Older: a newer one returned above, and an equal one is read as is.
+            if (found != version)
             {
                 using var migrated = Migrate(payload, found, version, migrations, options, key, stateType);
                 return migrated is not null && TryDeserialize(migrated.RootElement, key, stateType, out state);

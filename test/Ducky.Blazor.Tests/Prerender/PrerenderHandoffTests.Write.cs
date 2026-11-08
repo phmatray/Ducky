@@ -149,6 +149,18 @@ public sealed partial class PrerenderHandoffTests
     }
 
     [Fact]
+    public async Task PrerenderSeed_PersistedBesideUnpersistedSlice_VerNamesThePersistedOne()
+    {
+        // (non-normative) §11.4: the seed's ver carries the PersistOptions.Version of each persisted slice it holds, as soon
+        // as one is persisted; a slice that is only prerendered has no version and no entry.
+        var seed = await PrerenderAsync(static d => d.Prerender<CounterSlice>().Persist<CounterSlice>().Prerender<ProductsSlice>(), static store => Increment(store, 1));
+
+        var envelope = JsonDocument.Parse(SeedBytes(seed)).RootElement;
+        envelope.GetProperty("slices").EnumerateObject().Select(static p => p.Name).ShouldBe([new CounterSlice().Key, new ProductsSlice().Key], ignoreOrder: true);
+        envelope.GetProperty("ver").EnumerateObject().Select(static p => (p.Name, p.Value.GetInt32())).ShouldBe([(new CounterSlice().Key, 1)]);
+    }
+
+    [Fact]
     public async Task PrerenderSeed_SliceAtTheBudget_Included()
     {
         // (non-normative) A slice whose seed's estimate equals PrerenderSeedMaxWireBytes is kept; one byte less leaves it out.

@@ -343,6 +343,48 @@ public sealed class ServerFlushTests
         gate.SetResult();
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Dispose_CallReturningAfterTheStop_NoAttemptFollows(bool fails)
+    {
+        // (non-normative) §11.5: a call that outlasts the flush's bound and returns only once the loops' own tokens were
+        // cancelled ends its loop, whatever its result: no backoff and no attempt follow it, not even for a change made
+        // while it was held. The loop's end then releases the module's disposal, before the bound over the stopped loops.
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cache = new TestCache(yield: false) { SetGate = gate };
+        await using var h = new WriterHarness(
+            static d => d.Persist<CounterSlice>(static o => o.Storage = PersistStorage.Server).Persist<LevelSlice>(static o => o.Debounce = TimeSpan.Zero).AddBlazor(static o => o.KeyPrefix = "app"),
+            browser: false,
+            services: s => s.AddSingleton<IDistributedCache>(cache).AddSingleton<AuthenticationStateProvider>(new TestAuthenticationStateProvider("alice")));
+        await h.InitializeAsync();
+        h.Store.Dispatch(new SetLevel(1));
+        await h.NextWriteAsync(); // imports ducky.js
+        await h.IterationsAsync("level", 1);
+        h.Store.Dispatch(new Increment());
+        await WriterHarness.Until(() => cache.Calls.Contains("set:app:alice:counter"));
+        h.Store.Dispatch(new Increment()); // signalled while the write is held
+        await WriterHarness.Until(() => h.Middleware.Writers["counter"].Signals == 2);
+
+        var disposal = h.DisposeStoreAsync();
+        await h.Time.TimerAsync(TimeSpan.FromSeconds(2)); // the flush's bound
+        await h.Time.TimerAsync(TimeSpan.FromSeconds(2)); // the store's bound over this middleware's DisposeAsync
+        h.Time.Advance(TimeSpan.FromSeconds(2));
+        await disposal.WaitAsync(_bound, Ct);
+        await WriterHarness.Until(() => cache.LastSetToken.IsCancellationRequested);
+        var disposedAtReturn = -1;
+        cache.SetFault = () =>
+        {
+            disposedAtReturn = h.Js.Disposed;
+            return fails ? new InvalidOperationException("cache down") : null;
+        };
+        gate.SetResult();
+
+        await WriterHarness.Until(() => h.Js.Disposed == 1);
+        disposedAtReturn.ShouldBe(0);
+        cache.Calls.Count(static call => call == "set:app:alice:counter").ShouldBe(1);
+    }
+
     [Fact]
     public async Task Dispose_WriteHeldThroughFlush_TokenCancelledOnlyAtTheBound()
     {

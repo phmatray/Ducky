@@ -61,17 +61,20 @@ internal sealed class RestoreTap(RestoreLog log) : Middleware
     }
 }
 
-// Once armed, fails the next CrossTab restore: its BeforeReduce throws, so the restore commits nothing (§6.4).
+// Once armed, fails the next restore of Origin (CrossTab by default): its BeforeReduce throws, so the restore commits
+// nothing (§6.4).
 internal sealed class CrossTabFailure
 {
     public bool Armed { get; set; }
+
+    public Origin Origin { get; set; } = Origin.CrossTab;
 }
 
 internal sealed class FailCrossTab(CrossTabFailure failure) : Middleware
 {
     public override void BeforeReduce(ActionContext context)
     {
-        if (context.Origin == Origin.CrossTab && failure.Armed)
+        if (context.Origin == failure.Origin && failure.Armed)
         {
             failure.Armed = false;
             throw new InvalidOperationException("restore refused");

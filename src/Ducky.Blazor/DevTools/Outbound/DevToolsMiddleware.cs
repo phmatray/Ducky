@@ -102,7 +102,7 @@ internal sealed partial class DevToolsMiddleware : Middleware
         _reference.Dispose();
         // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
         await _bridge.DisposeAsync().ConfigureAwait(false);
-        // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
+        // Stryker disable once Boolean,Statement : equivalent, Middleware.DisposeAsync is a no-op (=> default) that CA2215 asks to call; no SynchronizationContext is captured in tests
         await base.DisposeAsync().ConfigureAwait(false);
     }
 
@@ -170,6 +170,7 @@ internal sealed partial class DevToolsMiddleware : Middleware
                     Log.DevToolsUnknownId(_log, _persistence.Id);
                 }
 
+                // Stryker disable once Statement : equivalent, the exchange above left _connected 0, which nothing leaves once a send exists (2 is written once, before the first send), so GoInert below finds 0 and does nothing
                 return;
             }
         }
