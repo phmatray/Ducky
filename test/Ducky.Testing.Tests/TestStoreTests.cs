@@ -91,6 +91,34 @@ public sealed class TestStoreTests
         await store.Settled();
     }
 
+    // An explicit Settled bound replaces WallClockTimeout: with WallClockTimeout zero, Settled() fails at once, while
+    // Settled(30 s) waits until the effect's fake delay elapses.
+    [Fact]
+    public async Task TestStore_SettledTimeout_OverridesWallClockTimeout()
+    {
+        await using var store = TestStore.Create(d => d.AddSlice<CounterSlice>().AddEffect<LoadEffect>());
+        await store.DispatchAsync(new Load());
+
+        // The zero bound must hold while Settled(30 s) runs (else the remove-left mutant of
+        // `timeout ?? WallClockTimeout` survives), but DisposeAsync is bounded by it too: always
+        // restore it so a failing assertion surfaces instead of a disposal-timeout error.
+        store.WallClockTimeout = TimeSpan.Zero;
+        try
+        {
+            (await Should.ThrowAsync<DuckyAssertionException>(() => store.Settled())).Message.ShouldContain("00:00:00 of real time");
+            var settled = store.Settled(TimeSpan.FromSeconds(30));
+            settled.IsCompleted.ShouldBeFalse();
+            store.Time.Advance(TimeSpan.FromHours(1));
+            await settled;
+        }
+        finally
+        {
+            store.WallClockTimeout = TimeSpan.FromSeconds(10);
+        }
+
+        store.State.Get<Counter>().Value.ShouldBe(100);
+    }
+
     // The key comes from the declared state type: a derived state never matches its base's slice, and a state type
     // with no slice throws DUCKY350.
     [Fact]
@@ -177,6 +205,25 @@ public sealed class TestStoreTests
         store.InitialState.Get<Counter>().ShouldBe(new Counter(0));
         store.Json.ShouldNotBeNull();
         store.Processed.Select(c => c.Action).ShouldContain(a => a is StoreInitialized);
+    }
+
+    // Time replaces every TimeProvider registration, AddDucky's TimeProvider.System and the services callback's alike:
+    // the container holds exactly one, so an effect injecting IEnumerable<TimeProvider> sees no clock but Time.
+    [Fact]
+    public async Task TestStore_Create_TimeIsTheOnlyRegisteredTimeProvider()
+    {
+        List<TimeProvider>? providers = null;
+        await using var store = TestStore.Create(
+            d => d.AddSlice<CounterSlice>().AddValidation(sp =>
+            {
+                providers = [.. sp.GetServices<TimeProvider>()];
+                return [];
+            }),
+            services => services.AddSingleton(TimeProvider.System));
+
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
+
+        providers.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBeSameAs(store.Time);
     }
 
     // §15: the store's dispose bounds run on the FakeTimeProvider, so an effect run that ignores its token would hang

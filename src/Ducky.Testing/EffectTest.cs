@@ -118,6 +118,7 @@ public static class EffectTest
         // A run that ignores its token fails Settled and then disposal: the disposal failure carries the first one.
         try
         {
+            // Stryker disable once Boolean : ConfigureAwait is unobservable without a SynchronizationContext
             await store.DisposeAsync().ConfigureAwait(false);
         }
         catch (DuckyAssertionException disposal) when (first is not null)
