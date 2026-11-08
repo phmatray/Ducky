@@ -25,13 +25,11 @@ Every snippet in the guides is a region of a compiled, tested file. Every behavi
 
 ## Migration
 
+- [How Ducky compares](docs/compare.html): Ducky 2.0 beside Fluxor, TimeWarp.State and a hand-written state container, sourced and dated
+- [From Fluxor](docs/migration/fluxor.html)
+- [From TimeWarp.State](docs/migration/timewarp-state.html)
+- [From a hand-written state container](docs/migration/state-container.html)
 - [From Ducky 1.x](docs/migration/ducky-1x.html)
-- [From Mutty](docs/migration/mutty.html)
-- [From DuckyNext](docs/migration/duckynext.html)
-- [From the blazor-state monorepo](docs/migration/blazor-state.html)
-- [From Bustand](docs/migration/bustand.html)
-- [From TheBlazorState](docs/migration/theblazorstate.html)
-- [From BlazorMVU](docs/migration/blazormvu.html)
 
 ## Optional
 

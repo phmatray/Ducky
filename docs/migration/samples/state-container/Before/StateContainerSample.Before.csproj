@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The app the hand-written state container guide starts from (SPEC §22.9): no state library, only ASP.NET Core's own
+       components and the .NET 10 persistent component state, as Microsoft's Blazor docs describe them. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+</Project>

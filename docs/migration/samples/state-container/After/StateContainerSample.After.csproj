@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The state container app migrated to Ducky 2.0 (src/), SPEC §22.9; After.Tests runs its tests. -->
+  <PropertyGroup>
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src/Ducky/Ducky.csproj" />
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Blazor/Ducky.Blazor.csproj" />
+  </ItemGroup>
+</Project>

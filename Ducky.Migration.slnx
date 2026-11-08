@@ -1,7 +1,8 @@
 <Solution>
   <!-- The migration guides' compiled before/after samples (SPEC §17.1, §22): outside Ducky.slnx, built by the Docs target
-       with an unlocked restore. "Before" references Ducky 1.x from nuget.org, or a
-       vendored copy under docs/migration/samples/legacy/ for the libraries never published; "After" references src/. -->
+       with an unlocked restore. "Before" references Ducky 1.x, Fluxor or TimeWarp.State from nuget.org with an explicit
+       version, ASP.NET Core alone (the hand-written state container), or a vendored copy under
+       docs/migration/samples/legacy/ for the libraries never published; "After" references src/. -->
   <!-- The src projects an After sample references, so the solution's Release configuration reaches them and reuses
        Compile's output (a ProjectReference outside the solution would build in its default Debug configuration). -->
   <Folder Name="/src/">
@@ -16,6 +17,21 @@
     <Project Path="docs/migration/samples/ducky-1x/Before/Ducky1x.Before.csproj" />
     <Project Path="docs/migration/samples/ducky-1x/After/Ducky1x.After.csproj" />
     <Project Path="docs/migration/samples/ducky-1x/After.Tests/Ducky1x.After.Tests.csproj" />
+  </Folder>
+  <Folder Name="/fluxor/">
+    <Project Path="docs/migration/samples/fluxor/Before/FluxorSample.Before.csproj" />
+    <Project Path="docs/migration/samples/fluxor/After/FluxorSample.After.csproj" />
+    <Project Path="docs/migration/samples/fluxor/After.Tests/FluxorSample.After.Tests.csproj" />
+  </Folder>
+  <Folder Name="/timewarp-state/">
+    <Project Path="docs/migration/samples/timewarp-state/Before/TimeWarpSample.Before.csproj" />
+    <Project Path="docs/migration/samples/timewarp-state/After/TimeWarpSample.After.csproj" />
+    <Project Path="docs/migration/samples/timewarp-state/After.Tests/TimeWarpSample.After.Tests.csproj" />
+  </Folder>
+  <Folder Name="/state-container/">
+    <Project Path="docs/migration/samples/state-container/Before/StateContainerSample.Before.csproj" />
+    <Project Path="docs/migration/samples/state-container/After/StateContainerSample.After.csproj" />
+    <Project Path="docs/migration/samples/state-container/After.Tests/StateContainerSample.After.Tests.csproj" />
   </Folder>
   <Folder Name="/mutty/">
     <Project Path="docs/migration/samples/mutty/Before/MuttySample.Before.csproj" />

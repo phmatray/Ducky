@@ -3388,6 +3388,23 @@
    "done_definition": "Common DoD (PLAN.md §1)."
   },
   {
+   "id": "M15-09",
+   "milestone": "M15",
+   "title": "Migration guides from the market leaders and the comparison page",
+   "size": "M",
+   "depends_on": [
+    "M15-08"
+   ],
+   "area": "docs/migration/{fluxor,timewarp-state,state-container}, docs/migration/samples/{fluxor,timewarp-state,state-container}, docs/compare.md, docs/nav.yml, Ducky.Migration.slnx, site/index.html, site/llms.txt",
+   "invariants": [],
+   "scope": "Stage 18. Owner-added (2026-11-08): apart from Ducky 1.x nobody uses the owner's earlier libraries, so the guides that matter are those from the market leaders. SPEC §18 layout, §22 intro and §22.7-22.9. Guides from Fluxor 6.11.0 (the flagship: mapping table, prerender/static SSR, effect concurrency, dispatch result, exact-type matching and generated registration), TimeWarp.State 11.0.3 (the stable line; one paragraph on the net11.0 12.0 betas) and a hand-written state container with .NET 10 persistent component state, each with a checklist and a compiled Before/After sample in Ducky.Migration.slnx: Before is user code written from the library's own docs against its nuget.org package with an explicit version (no Fluxor-derived code in Ducky, R-PKG-4), After uses src/, and every behaviour change a guide states has a test in its After.Tests. docs/compare.md sets Ducky 2.0 beside Fluxor, TimeWarp.State and the container: every competitor cell sourced and dated as of 2026-11-08, every Ducky cell linked to the guide that proves it, where the others are ahead, and when not to choose Ducky. The Migrate tab groups Compare, From the market leaders and From Ducky 1.x; the home page's migration section and llms.txt link the four guides and the comparison instead of the trial guides, which stay unlisted.",
+   "acceptance_tests": [
+    "Docs builds the Fluxor, TimeWarp.State and state container Before/After pairs and runs their After tests",
+    "Docs renders compare.md and the three guides on the Migrate tab with every link, anchor and include resolved"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M16-01",
    "milestone": "M16",
    "title": "Nightly audit and benchmarks",
@@ -3478,7 +3495,8 @@
     "M14-06",
     "M15-06",
     "M15-07",
-    "M15-08"
+    "M15-08",
+    "M15-09"
    ],
    "area": "docs/spec/tests.yaml, build/Build.SpecTrace.cs",
    "invariants": [],

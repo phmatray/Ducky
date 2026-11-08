@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Fluxor 6.11.0 as published on nuget.org, the version the guide migrates from (SPEC §22.7): the app the guide starts
+       from, user code written from Fluxor's own tutorials. No Fluxor code is copied into Ducky (R-PKG-4). -->
+  <ItemGroup>
+    <PackageReference Include="Fluxor.Blazor.Web" Version="6.11.0" />
+  </ItemGroup>
+</Project>
