@@ -181,6 +181,7 @@ public sealed class ListDraft<T, TDraft> : IReadOnlyList<TDraft>, IRevocable
     {
         Flush();
         Drafts.RevokeAll(_drafts);
+        // Stryker disable once Update : equivalent, the only write of _version, read only by ==: n steps of -- or of ++ return to the start iff 2^32 divides n
         _version++;
     }
 }

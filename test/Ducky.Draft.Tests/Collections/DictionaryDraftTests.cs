@@ -328,6 +328,34 @@ public sealed class DictionaryDraftTests
         });
     }
 
+    // Every structural operation moves the walk's version the same way, so two of them never cancel out: a removal then a Clear,
+    // or a Clear then a removal, still fails the next step even with the walked keys put back, where the snapshot walk could
+    // otherwise resume.
+    [Fact]
+    public void DictionaryDraft_ElementDrafts_TwoStructuralOpsDuringEnumeration_Throws()
+    {
+        var source = ImmutableDictionary.CreateRange([KeyValuePair.Create(1, _a), KeyValuePair.Create(2, _b)]);
+
+        var removeThenClear = new DictionaryDraft<int, Todo, TodoDraft>(source, x => new TodoDraft(x));
+        using var first = removeThenClear.GetEnumerator();
+        first.MoveNext().ShouldBeTrue();
+        removeThenClear.Remove(first.Current.Key).ShouldBeTrue();
+        removeThenClear.Clear();
+        removeThenClear.Set(1, _a);
+        removeThenClear.Set(2, _b);
+        Should.Throw<InvalidOperationException>(() => first.MoveNext()).Message.ShouldContain("modified");
+
+        var clearThenRemove = new DictionaryDraft<int, Todo, TodoDraft>(source, x => new TodoDraft(x));
+        using var second = clearThenRemove.GetEnumerator();
+        second.MoveNext().ShouldBeTrue();
+        clearThenRemove.Clear();
+        clearThenRemove.Set(1, _a);
+        clearThenRemove.Set(2, _b);
+        clearThenRemove.Set(3, _a);
+        clearThenRemove.Remove(3).ShouldBeTrue();
+        Should.Throw<InvalidOperationException>(() => second.MoveNext()).Message.ShouldContain("modified");
+    }
+
     [Fact]
     public void DictionaryDraft_ElementDrafts_NullValueNotDrafted()
     {
