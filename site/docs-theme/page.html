@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title-text}} · Ducky docs</title>
+  <meta name="description" content="{{description}}">
+  <link rel="canonical" href="{{canonical}}">
+  <meta name="theme-color" content="#FFD425">
+  <link rel="icon" href="{{root}}_assets/duck.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{title-text}} · Ducky docs">
+  <meta property="og:description" content="{{description}}">
+  <meta property="og:url" content="{{canonical}}">
+  <meta property="og:image" content="https://phmatray.github.io/Ducky/og.png">
+  <link rel="preload" href="{{root}}_assets/fonts/anybody.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{root}}_assets/fonts/atkinson-next.woff2" as="font" type="font/woff2" crossorigin>
+  <script>document.documentElement.classList.add("js")</script>
+  <link rel="stylesheet" href="{{root}}_assets/tokens.css">
+  <link rel="stylesheet" href="{{root}}_assets/docs.css">
+  <script src="{{root}}_assets/docs.js" data-root="{{root}}" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="bar">
+    <a class="brand" href="{{home}}" aria-label="Ducky home">
+      <img src="{{root}}_assets/duck.svg" alt="" width="34" height="31">
+      <span>Ducky</span>
+    </a>
+    <a class="docs-mark" href="{{root}}index.html">Docs</a>
+    <form class="search" role="search" hidden>
+      <label class="sr-only" for="search-input">Search the docs</label>
+      <svg class="search-icon" aria-hidden="true" viewBox="0 0 20 20" width="18" height="18"><circle cx="8.5" cy="8.5" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="m13 13 5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <input id="search-input" type="search" placeholder="Search the docs" autocomplete="off" spellcheck="false"
+        role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list">
+      <kbd aria-hidden="true">/</kbd>
+      <div class="results" id="search-results" role="listbox" aria-label="Search results" hidden></div>
+    </form>
+    <nav class="site" aria-label="Site">
+      <a href="{{home}}">Home</a>
+      <a href="https://github.com/phmatray/Ducky" class="gh">
+        <svg aria-hidden="true" viewBox="0 0 16 16" width="18" height="18"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </header>
+
+  <div class="binder">
+    <nav class="tabs" aria-label="Sections">
+      <ul>{{tabs}}</ul>
+    </nav>
+
+    <details class="ledger" open>
+      <summary><span class="ledger-label">{{section}}</span> <span class="ledger-hint">pages</span></summary>
+      <nav aria-label="{{section}} pages">{{ledger}}</nav>
+    </details>
+
+    <main id="main" class="sheet">
+      <article class="page">
+        <h1>{{title}}</h1>
+        {{toc}}
+        <div class="prose">
+{{body}}
+        </div>
+        <footer class="sheet-foot">
+          <nav class="pager" aria-label="Previous and next page">{{pager}}</nav>
+          <a class="edit" href="{{edit}}">Edit this page on GitHub</a>
+        </footer>
+      </article>
+    </main>
+  </div>
+
+  <footer class="foot">
+    <div class="foot-grid">
+      <p class="foot-brand"><img src="{{root}}_assets/duck.svg" alt="" width="28" height="25"> Ducky. Apache-2.0. Every snippet here is a region of a compiled, tested file.</p>
+      <nav aria-label="Footer">
+        <a href="{{home}}">Home</a>
+        <a href="https://www.nuget.org/packages/Ducky">NuGet</a>
+        <a href="https://github.com/phmatray/Ducky">GitHub</a>
+        <a href="https://github.com/phmatray/Ducky/blob/v2/CHANGELOG.md">Changelog</a>
+      </nav>
+    </div>
+  </footer>
+  <p class="sr-only" aria-live="polite" id="announce"></p>
+</body>
+</html>

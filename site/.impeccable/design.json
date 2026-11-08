@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-08T00:00:00Z",
+  "generatedAt": "2026-11-08T12:00:00Z",
   "title": "Design System: Ducky",
   "extensions": {
     "colorMeta": {
@@ -193,11 +193,39 @@
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Uppercase column headers of the board and render-mode matrix only."
+        "purpose": "Uppercase wide labels: board and matrix column headers, the docs mark pill."
       },
       "code": {
         "displayName": "Code",
         "purpose": "Code blocks, install command, API/package/test names, board cells, readouts."
+      },
+      "reading": {
+        "displayName": "Reading",
+        "purpose": "Docs prose on the sheet at a 35rem measure; 1.02rem on phones."
+      },
+      "sheet-title": {
+        "displayName": "Sheet Title",
+        "purpose": "Docs page H1, max 22ch; clamp(1.9rem, 8.5vw, 2.4rem) at width 116% on phones."
+      },
+      "sheet-heading": {
+        "displayName": "Sheet Heading",
+        "purpose": "Docs H2, always under a 3px ink rule."
+      },
+      "sheet-subhead": {
+        "displayName": "Sheet Subhead",
+        "purpose": "Docs H3."
+      },
+      "label-small": {
+        "displayName": "Label Small",
+        "purpose": "ON THIS PAGE, ledger group titles, PREVIOUS/NEXT, search result tags, alert titles, table headers."
+      },
+      "tab-label": {
+        "displayName": "Tab Label",
+        "purpose": "Vertical uppercase labels on the binder's index tabs."
+      },
+      "code-sheet": {
+        "displayName": "Code on the Sheet",
+        "purpose": "Docs code slabs; 0.8rem on phones."
       }
     },
     "shadows": [],
@@ -215,15 +243,24 @@
       {
         "name": "state-swap",
         "value": "120ms",
-        "purpose": "Background/color swap on chips and ledger rows on hover."
+        "purpose": "Background/color swap on chips and ledger rows on hover. Docs tabs and pager cards swap over one beat instead."
       },
       {
         "name": "reduced-motion",
         "value": "1ms",
         "purpose": "All animations and transitions collapse under prefers-reduced-motion."
+      },
+      {
+        "name": "tab-pull",
+        "value": "translateX(3px) hover / 6px press over one beat",
+        "purpose": "Docs index tabs slide out of the binder (upward 3px/5px when along the top edge)."
       }
     ],
     "breakpoints": [
+      {
+        "name": "docs-rail",
+        "value": "1280px"
+      },
       {
         "name": "stack",
         "value": "960px"
@@ -231,6 +268,10 @@
       {
         "name": "phone",
         "value": "640px"
+      },
+      {
+        "name": "docs-binder",
+        "value": "1480px"
       }
     ]
   },
@@ -304,18 +345,74 @@
       "description": "Ruled ledger row link: fills yolk on hover, inverts to ink on press.",
       "html": "<ul class=\"ds-stack\"><li><a href=\"#\"><code>Ducky.Blazor</code><span>Persistence, prerender handoff, cross-tab sync, DevTools.</span></a></li></ul>",
       "css": ".ds-stack { list-style: none; margin: 0; padding: 0; background: #FFFFFF; border-top: 3px solid #17140F; } .ds-stack a { display: grid; grid-template-columns: minmax(10rem, 4fr) minmax(0, 8fr); gap: 0.4rem 2rem; align-items: baseline; padding: 1.35rem 0.8rem; border-bottom: 1.5px solid #17140F; color: #17140F; text-decoration: none; transition: background-color 120ms; } .ds-stack code { font: 700 1.3rem/1.1 'JetBrains Mono', monospace; } .ds-stack span { color: #4F4838; font-family: 'Atkinson Hyperlegible Next', sans-serif; } .ds-stack a:hover { background: #FFD425; } .ds-stack a:hover span { color: #4A3C00; } .ds-stack a:active { background: #17140F; color: #FFD425; } .ds-stack a:active span { color: #CBC3AA; } .ds-stack a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; }"
+    },
+    {
+      "name": "Binder Index Tabs",
+      "kind": "nav",
+      "refersTo": "index-tab",
+      "description": "Yolk tabs on the sheet's right edge with vertical wide labels; the current tab in ink shares the sheet's frame.",
+      "html": "<div class=\"ds-binder\"><div class=\"ds-sheet\">Effects and concurrency policies</div><ul class=\"ds-tabs\"><li><a href=\"#\">Start</a></li><li><a href=\"#\" aria-current=\"true\">Core</a></li><li><a href=\"#\">Blazor</a></li><li><a href=\"#\">Extras</a></li></ul></div>",
+      "css": ".ds-binder { display: flex; align-items: flex-start; padding: 1rem; background: var(--yolk, #FFD425); } .ds-sheet { position: relative; z-index: 1; flex: 1; min-height: 16rem; padding: 1.5rem; background: #FFFFFF; border: 3px solid #17140F; border-radius: 14px 0 14px 14px; font: 900 1.6rem/1 'Anybody', sans-serif; font-stretch: 128%; letter-spacing: -0.03em; color: #17140F; } .ds-tabs { list-style: none; margin: 1.4rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; } .ds-tabs a { position: relative; display: block; writing-mode: vertical-rl; margin-left: -3px; padding: 0.8rem 0.5rem 0.8rem 0.45rem; background: #FFD425; color: #17140F; border: 3px solid #17140F; border-left: 0; border-radius: 0 14px 14px 0; font: 900 0.74rem/1 'Anybody', sans-serif; font-stretch: 112%; letter-spacing: 0.07em; text-transform: uppercase; text-decoration: none; transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1), background-color 420ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-tabs a:hover { background: #FFFFFF; transform: translateX(3px); } .ds-tabs a:active { transform: translateX(6px); } .ds-tabs a[aria-current=\"true\"] { z-index: 2; background: #17140F; color: #FFD425; } .ds-tabs a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; border-radius: 4px; }"
+    },
+    {
+      "name": "Page Ledger",
+      "kind": "nav",
+      "refersTo": "ledger-row-current",
+      "description": "The section's ruled page list beside the sheet; current page inverted to ink with yolk text in an 8px row.",
+      "html": "<nav class=\"ds-ledger\"><p class=\"ds-ledger-label\">Core</p><p class=\"ds-group\">Concepts</p><ol><li><a href=\"#\">Slices and keys</a></li><li><a href=\"#\" aria-current=\"page\">Effects and concurrency policies</a></li><li><a href=\"#\">Selectors</a></li></ol></nav>",
+      "css": ".ds-ledger { width: 16rem; padding: 1rem; background: #FFD425; color: #17140F; font-family: 'Atkinson Hyperlegible Next', sans-serif; } .ds-ledger-label { margin: 0; padding-bottom: 0.7rem; border-bottom: 3px solid #17140F; font: 880 1.5rem/1 'Anybody', sans-serif; font-stretch: 125%; letter-spacing: -0.02em; } .ds-group { margin: 1.1rem 0 0.2rem; font: 900 0.7rem/1.2 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.08em; text-transform: uppercase; color: #4A3C00; } .ds-ledger ol { list-style: none; margin: 0; padding: 0; } .ds-ledger li { border-bottom: 1.5px solid #17140F; } .ds-ledger a { display: block; padding: 0.55rem 0.6rem 0.55rem 0; color: inherit; text-decoration: none; font-size: 0.98rem; line-height: 1.3; transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-ledger a:hover { transform: translateX(0.4rem); text-decoration: underline; text-decoration-thickness: 2px; } .ds-ledger a[aria-current=\"page\"] { background: #17140F; color: #FFD425; padding-left: 0.7rem; border-radius: 8px; font-weight: 700; transform: none; text-decoration: none; } .ds-ledger li:has(> a[aria-current=\"page\"]) { border-bottom-color: transparent; } .ds-ledger a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; border-radius: 4px; }"
+    },
+    {
+      "name": "On-This-Page Rail",
+      "kind": "nav",
+      "description": "Ruled rail at the sheet's head with lamp dots; a yolk lamp marks the section in view.",
+      "html": "<nav class=\"ds-toc\"><p>On this page</p><ol><li><a href=\"#\" aria-current=\"true\">An effect</a></li><li><a href=\"#\">Concurrency policies</a></li><li><a href=\"#\">Several actions in one class</a></li></ol></nav>",
+      "css": ".ds-toc { width: 13.5rem; padding: 1rem; background: #FFFFFF; color: #17140F; font-family: 'Atkinson Hyperlegible Next', sans-serif; } .ds-toc p { margin: 0; padding-bottom: 0.55rem; border-bottom: 3px solid #17140F; font: 900 0.72rem/1 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.08em; text-transform: uppercase; } .ds-toc ol { list-style: none; margin: 0; padding: 0; } .ds-toc a { position: relative; display: block; padding: 0.42rem 0 0.42rem 0.7rem; border-bottom: 1.5px solid #17140F; color: inherit; font-size: 0.9rem; line-height: 1.3; text-decoration: none; } .ds-toc a::before { content: ''; position: absolute; left: 0; top: 0.78rem; width: 0.38rem; height: 0.38rem; border-radius: 50%; border: 1.5px solid #17140F; } .ds-toc a:hover { text-decoration: underline; } .ds-toc a[aria-current=\"true\"] { font-weight: 700; } .ds-toc a[aria-current=\"true\"]::before { background: #FFD425; } .ds-toc a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; border-radius: 4px; }"
+    },
+    {
+      "name": "Code Slab with Provenance",
+      "kind": "card",
+      "refersTo": "code-slab",
+      "description": "Ink slab captioned with its source file and tested status, with a Copy pill.",
+      "html": "<figure class=\"ds-slab\"><figcaption><a href=\"#\">EffectsGuideTests.cs</a><span>from a tested file</span></figcaption><button class=\"ds-copy\" type=\"button\">Copy</button><pre><code><span class=\"ds-kw\">public sealed record</span> <span class=\"ds-type\">LoadForecast</span>(<span class=\"ds-kw\">string</span> City);</code></pre></figure>",
+      "css": ".ds-slab { position: relative; margin: 0; max-width: 60rem; background: #17140F; color: #FFFFFF; border-radius: 16px; overflow: hidden; } .ds-slab figcaption { display: flex; align-items: center; gap: 0.5rem 0.9rem; padding: 0.7rem 6.2rem 0.65rem 1.2rem; border-bottom: 1.5px solid #3A342A; font: 400 0.8rem/1.3 'JetBrains Mono', monospace; } .ds-slab figcaption a { color: #FFD425; font-weight: 600; text-decoration: none; } .ds-slab figcaption a:hover { text-decoration: underline; } .ds-slab figcaption span { display: inline-flex; align-items: center; gap: 0.45rem; color: #CBC3AA; font: 400 0.82rem 'Atkinson Hyperlegible Next', sans-serif; } .ds-slab figcaption span::before { content: ''; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: #FFD425; } .ds-slab pre { margin: 0; padding: 1.15rem 1.3rem 1.25rem; overflow-x: auto; font: 400 0.875rem/1.65 'JetBrains Mono', monospace; font-variant-ligatures: none; } .ds-kw { color: #FFD425; font-weight: 700; } .ds-type { color: #FFB27A; } .ds-copy { position: absolute; top: 0.45rem; right: 0.5rem; padding: 0.3rem 0.75rem; border: 2px solid #FFD425; border-radius: 999px; background: transparent; color: #FFD425; font: 600 0.78rem/1.2 'JetBrains Mono', monospace; cursor: pointer; } .ds-copy:hover { background: #FFD425; color: #17140F; } .ds-copy:active { background: #FFFFFF; border-color: #FFFFFF; color: #17140F; } .ds-copy:focus-visible { outline: 3px solid #FF6B1A; outline-offset: 3px; }"
+    },
+    {
+      "name": "Docs Prose: Inline Code, Table, Alert",
+      "kind": "custom",
+      "refersTo": "api-chip-docs",
+      "description": "Yolk highlighter inline code, a framed table ledger with an ink header row, a ruled alert with a stamped label and lamp.",
+      "html": "<div class=\"ds-prose\"><p>An effect reacts after the action is reduced: <code>context.Run</code> dispatches <code>started</code>, then <a href=\"#\">awaits the work</a>.</p><div class=\"ds-table\"><table><thead><tr><th>Policy</th><th>A new action while a run is going</th></tr></thead><tbody><tr><td><code>Switch</code></td><td>cancels the running one and starts the new one</td></tr><tr><td><code>Exhaust</code></td><td>is ignored until the running one finishes</td></tr></tbody></table></div><div class=\"ds-alert ds-warn\"><p class=\"ds-alert-title\">Warning</p><p>Never inject the store into an effect.</p></div></div>",
+      "css": ".ds-prose { max-width: 35rem; padding: 1.2rem; background: #FFFFFF; color: #17140F; font: 400 1.0625rem/1.66 'Atkinson Hyperlegible Next', sans-serif; } .ds-prose > * + * { margin-top: 1.05em; } .ds-prose p { margin: 0; } .ds-prose code { background: #FFD425; color: #17140F; border-radius: 4px; padding: 0.06em 0.32em; font: 400 0.86em 'JetBrains Mono', monospace; font-variant-ligatures: none; } .ds-prose a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 0.2em; } .ds-prose a:hover { background: #FFD425; border-radius: 3px; } .ds-prose a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; border-radius: 4px; } .ds-table { overflow-x: auto; border: 3px solid #17140F; border-radius: 14px; } .ds-table table { width: 100%; border-collapse: collapse; font-size: 0.95rem; line-height: 1.45; } .ds-table th { background: #17140F; color: #FFD425; text-align: left; padding: 0.7rem 0.9rem; font: 900 0.7rem/1.2 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.08em; text-transform: uppercase; } .ds-table th + th { border-left: 1.5px solid #3A342A; } .ds-table td { padding: 0.65rem 0.9rem; border-top: 1.5px solid #17140F; vertical-align: top; } .ds-table td + td { border-left: 1.5px solid #17140F; } .ds-alert { border: 3px solid #17140F; border-radius: 14px; padding: 0.95rem 1.2rem 1.05rem; } .ds-alert > * + * { margin-top: 0.6em; } .ds-alert-title { display: flex; align-items: center; gap: 0.5rem; font: 900 0.74rem/1 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.08em; text-transform: uppercase; } .ds-alert-title::before { content: ''; width: 0.7rem; height: 0.7rem; border-radius: 50%; border: 2px solid #17140F; background: #FFD425; } .ds-warn .ds-alert-title::before { background: #FF6B1A; }"
+    },
+    {
+      "name": "Docs Search",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Sheet pill field with a key hint; results drop as a ruled sheet; hits bold with a yolk underline.",
+      "html": "<div class=\"ds-searchwrap\"><form class=\"ds-search\" role=\"search\"><input type=\"search\" placeholder=\"Search the docs\" aria-label=\"Search the docs\"><kbd>/</kbd></form><div class=\"ds-results\"><a class=\"ds-result\" href=\"#\" aria-selected=\"true\"><span class=\"ds-rt\">Effects and concurrency policies <span class=\"ds-tag\">Core</span></span><span class=\"ds-rx\">An <mark>effect</mark> reacts to an action after it was reduced.</span></a><a class=\"ds-result\" href=\"#\"><span class=\"ds-rt\">Testing with Ducky.Testing <span class=\"ds-tag\">Core</span></span><span class=\"ds-rx\">Test an <mark>effect</mark> with fakes for its dependencies.</span></a></div></div>",
+      "css": ".ds-searchwrap { padding: 1rem; background: #FFD425; color: #17140F; font-family: 'Atkinson Hyperlegible Next', sans-serif; } .ds-search { position: relative; max-width: 26rem; } .ds-search input { width: 100%; height: 2.6rem; padding: 0 2.6rem 0 1rem; border: 3px solid #17140F; border-radius: 999px; background: #FFFFFF; color: #17140F; font: 400 1rem/1 'Atkinson Hyperlegible Next', sans-serif; appearance: none; } .ds-search input::placeholder { color: #4F4838; } .ds-search input:focus-visible { outline: 3px solid #17140F; outline-offset: 2px; } .ds-search kbd { position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%); min-width: 1.5rem; padding: 0.12rem 0.4rem; border: 1.5px solid #17140F; border-radius: 6px; font: 600 0.78rem/1.2 'JetBrains Mono', monospace; text-align: center; } .ds-search input:focus ~ kbd { display: none; } .ds-results { margin-top: 0.5rem; max-width: 40rem; background: #FFFFFF; border: 3px solid #17140F; border-radius: 14px; padding: 0.35rem 0; } .ds-result { display: block; padding: 0.7rem 1rem; color: inherit; text-decoration: none; border-top: 1.5px solid #17140F; } .ds-result:first-child { border-top: 0; } .ds-rt { display: flex; gap: 0.6rem; align-items: baseline; font-weight: 700; } .ds-tag { font: 900 0.72rem/1 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.08em; text-transform: uppercase; color: #4F4838; } .ds-rx { display: block; margin-top: 0.25rem; font-size: 0.9rem; line-height: 1.45; color: #4F4838; } .ds-result mark { background: none; color: inherit; font-weight: 800; text-decoration: underline 3px #FFD425; text-underline-offset: 0.18em; } .ds-result[aria-selected=\"true\"], .ds-result:hover { background: #17140F; color: #FFFFFF; } .ds-result[aria-selected=\"true\"] .ds-tag, .ds-result:hover .ds-tag, .ds-result[aria-selected=\"true\"] .ds-rx, .ds-result:hover .ds-rx { color: #CBC3AA; } .ds-result:focus-visible { outline: 3px solid #17140F; outline-offset: -3px; }"
+    },
+    {
+      "name": "Docs Pager",
+      "kind": "button",
+      "refersTo": "pager-link",
+      "description": "Framed previous/next cards with uppercase wide labels; hover yolk, press ink.",
+      "html": "<nav class=\"ds-pager\"><a href=\"#\"><span>Previous</span>Slices and keys</a><a class=\"ds-next\" href=\"#\"><span>Next</span>Selectors</a></nav>",
+      "css": ".ds-pager { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1.2rem 1rem 1rem; background: #FFFFFF; border-top: 3px solid #17140F; } .ds-pager a { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.9rem 1.1rem; border: 3px solid #17140F; border-radius: 14px; color: #17140F; text-decoration: none; font: 700 1.05rem/1.25 'Atkinson Hyperlegible Next', sans-serif; transition: background-color 420ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-pager span { font: 900 0.72rem/1 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.08em; text-transform: uppercase; color: #4F4838; } .ds-pager a:hover { background: #FFD425; } .ds-pager a:hover span { color: #4A3C00; } .ds-pager a:active { background: #17140F; color: #FFD425; } .ds-pager a:active span { color: #CBC3AA; } .ds-pager .ds-next { text-align: right; align-items: flex-end; } .ds-pager a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; }"
     }
   ],
   "narrative": {
     "northStar": "The Rubber Duck on the Desk",
-    "overview": "The site is the conversation a developer has with the rubber duck beside their keyboard. The duck asks, on a field of drenched vinyl yellow; Ducky answers on a white answer sheet, in black ink and compiled code. Every surface is one of three grounds (yolk, ink, sheet), every stroke is ink, and a single beak orange marks the thing to press. Nothing is tinted, graded or lit: depth comes from swapping grounds and from heavy ruled lines, the way a moulded toy or a printed form gets its structure.\n\nDensity is generous at the section level (sections breathe at 4 to 7rem) and tight inside instruments: the dispatcher board is a ruled grid of fixed cells, the API list and package stack are ruled ledgers, and proof is a column of test names with check lamps. Display type is Anybody pushed wide and black, stamped like a toy's moulded mark; body is Atkinson Hyperlegible Next; JetBrains Mono appears wherever the reader is looking at something they would type or run.\n\nMotion has one clock. A single beat (420ms, expo-out) drives the duck's squash-and-stretch quack, the speech bubble's wipe, the answer sheet's rise, the split-flap letters and lamps on the board, and the dispatcher's one-action-per-tick drain. Controls invert ink on press rather than glowing or lifting.",
+    "overview": "The site is the conversation a developer has with the rubber duck beside their keyboard. The duck asks, on a field of drenched vinyl yellow; Ducky answers on a white answer sheet, in black ink and compiled code. Every surface is one of three grounds (yolk, ink, sheet), every stroke is ink, and a single beak orange marks the thing to press. Nothing is tinted, graded or lit: depth comes from swapping grounds and from heavy ruled lines, the way a moulded toy or a printed form gets its structure.\n\nDensity is generous at the section level (sections breathe at 4 to 7rem) and tight inside instruments: the dispatcher board is a ruled grid of fixed cells, the API list and package stack are ruled ledgers, and proof is a column of test names with check lamps. Display type is Anybody pushed wide and black, stamped like a toy's moulded mark; body is Atkinson Hyperlegible Next; JetBrains Mono appears wherever the reader is looking at something they would type or run.\n\nMotion has one clock. A single beat (420ms, expo-out) drives the duck's squash-and-stretch quack, the speech bubble's wipe, the answer sheet's rise, the split-flap letters and lamps on the board, and the dispatcher's one-action-per-tick drain. Controls invert ink on press rather than glowing or lifting.\n\nThe documentation is the same world set as the duck's answer binder: yolk is the binder ground and its index tabs, the page being read is a white sheet in a 3px ink frame, ink is code, rules and the current tab. It runs denser than the home page (a reading ramp at a 35rem measure, small 3 to 8px radii on inline marks) but adds no new color, no shadow and no tint.",
     "keyCharacteristics": [
       "Three grounds (yolk, ink, sheet) and one action accent (beak); secondary text hues are darker or lighter shades of the ground they sit on, never decorative tints.",
       "3px ink rules for structure, 1.5px hairlines inside tables and ledgers.",
       "Wide, black Anybody display; Atkinson body; JetBrains Mono for code, API names, test names and the board.",
       "Pills for every control, 14 to 16px corners for panels and code, a 22px speech bubble with a drawn tail.",
       "One motion beat for the whole page; press = ink inversion.",
-      "Flat. No shadows, no gradients, no glows."
+      "Flat. No shadows, no gradients, no glows.",
+      "Docs: a yolk binder with index tabs on the white sheet's edge; ruled ledgers for every list of pages or headings."
     ],
     "rules": [
       {
@@ -330,12 +427,17 @@
       },
       {
         "name": "The One Beak Rule",
-        "body": "Beak marks the thing to press, or a dropped result. If two beak elements compete in one viewport, one of them is wrong.",
+        "body": "Beak marks the thing to press, or an alarm (a dropped result, a warning or caution lamp). If two beak elements compete in one viewport, one of them is wrong.",
         "section": "colors"
       },
       {
         "name": "The Stamped Mark Rule",
-        "body": "Headings are Anybody at 820 to 900 weight and at least 112% width, with negative tracking. A narrow or light display setting is off-system.",
+        "body": "Headings are Anybody at 820 to 900 weight and at least 112% width, with negative tracking. A narrow or light display setting is off-system. (The docs' H4 run-in in the body face is the only heading set outside the display face.)",
+        "section": "typography"
+      },
+      {
+        "name": "The Wide Label Rule",
+        "body": "Uppercase wide labels (Anybody 900, 150% width, 0.08em tracking) name an instrument's parts: column headers, table headers, ON THIS PAGE, ledger group titles, PREVIOUS / NEXT, search result tags, alert titles. They never sit above a section heading as a kicker.",
         "section": "typography"
       },
       {
@@ -356,7 +458,10 @@
       "Do set code, API names, package names, test names and live readouts in JetBrains Mono with tabular numerals where numbers change.",
       "Do make controls pills with a 3px border that invert ink on press and selection.",
       "Do time motion in multiples of the single 420ms beat on the expo-out curve, and honour reduced motion.",
-      "Do pair every claim with its proof: code block plus named tests."
+      "Do pair every claim with its proof: code block plus named tests.",
+      "Do hold docs prose to the 35rem measure and let code slabs and tables take up to 60rem.",
+      "Do caption every docs code slab with its source file and its tested status.",
+      "Do keep the reader's place visible on every docs page: current tab in ink, current ledger row in ink, yolk lamp on the section in view."
     ],
     "donts": [
       "Don't add shadows, gradients, glows or translucent overlays; depth is ground, rule and inversion.",
@@ -364,7 +469,10 @@
       "Don't put beak on more than one element per viewport outside the dispatcher board.",
       "Don't use cards with fills and corners as a layout device; use ruled ledgers and frames.",
       "Don't set prose or headings in mono, or code in the display face.",
-      "Don't give a section heading a small label above it; headings stand alone."
+      "Don't give a section heading a small label above it; headings stand alone.",
+      "Don't set inline code in docs prose as ink chips; use the yolk highlighter chip.",
+      "Don't style search hits with a fill or in mono; they are bold with a yolk underline so they never read as code.",
+      "Don't tint alerts by kind; the kind lives in the stamped title and its lamp."
     ]
   }
 }

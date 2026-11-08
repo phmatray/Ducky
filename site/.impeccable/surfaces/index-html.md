@@ -7,7 +7,7 @@ related_targets: []
 
 # Surface brief: Ducky landing (site/index.html)
 
-Scope: the GitHub Pages home of Ducky 2.0, served at the site root; docfx guides at ./docs/, WASM sample at ./sample/. Visitor mode: **Persuade**.
+Scope: the GitHub Pages home of Ducky 2.0, served at the site root; generated docs at ./docs/ (surface brief docs-theme-page-html.md), WASM sample at ./sample/. Visitor mode: **Persuade**.
 
 Audience and job: Blazor developers and tech leads choosing a state library. Action: install (`dotnet add package Ducky --prerelease`) and open the guide. Proof: compiled, tested snippets from test/Ducky.Docs.Tests; invariants INV-nn with their named tests (SPEC §4); CI gates (100% line+branch coverage, mutation ≥90 target / break 85, NativeAOT + trimmed AOT-WASM smoke, zero IL warnings). Constraint: 2.0 is pre-release; no adopters, downloads, stars or benchmark numbers.
 

@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Fallout.Common" />
     <PackageReference Include="Fallout.Components" />
+    <PackageReference Include="Markdig" />
   </ItemGroup>
 
   <ItemGroup>

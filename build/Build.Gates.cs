@@ -404,15 +404,16 @@ internal sealed partial class Build
 
     private AbsolutePath MigrationSolution => RootDirectory / "Ducky.Migration.slnx";
 
-    // SPEC §17.1, §19. The checks run first (fast), then the migration samples build (Ducky.Migration.slnx: a plain, unlocked
-    // restore, its Directory.Build.props sets RestoreLockedMode=false), their tests run, and docfx renders the site to
-    // artifacts/docs, with warnings as errors so an include of a missing file fails.
+    // SPEC §17.1, §19. The checks run first (fast), the docs site among them (Build.DocsSite.cs: every page, nav entry, link,
+    // anchor and include checked), then the migration samples build (Ducky.Migration.slnx: a plain, unlocked restore, its
+    // Directory.Build.props sets RestoreLockedMode=false), their tests run, and the rendered site is written to artifacts/docs.
     private Target Docs => _ => _
         .DependsOn(Compile)
         .Executes(() =>
         {
             var docs = (RootDirectory / "docs").GlobFiles("**/*.md")
                 .Select(f => (Path: RootDirectory.GetUnixRelativePathTo(f).ToString(), Text: f.ReadAllText())).ToList();
+            var site = RenderDocsSite(DocsSiteInputFrom(RootDirectory, docs));
             FailOnViolations("Docs", [
                 .. DocsFenceViolations(docs),
                 .. DocsRegionViolations(docs, path => RootDirectory / path is var file && file.FileExists() ? file.ReadAllText() : null),
@@ -424,12 +425,13 @@ internal sealed partial class Build
                 .. OneXApiSelfCheck(),
                 .. DiagnosticPageViolations(docs),
                 .. DiagnosticPageSelfCheck(),
+                .. site.Violations,
+                .. DocsSiteSelfCheck(),
             ]);
             DotNet($"build {MigrationSolution} -c Release -nodeReuse:false");
             // The After samples' test modules (the guides' behaviour-change tests); MTP skips the projects that are none.
             DotNet($"test --solution {MigrationSolution} -c Release --no-build");
-            (Artifacts / "docs").CreateOrCleanDirectory();
-            DotNet($"docfx build {RootDirectory / "docs" / "docfx.json"} --warningsAsErrors");
+            WriteDocsSite(site, Artifacts / "docs");
         });
 
     // Every snippet is a #region of a compiled, tested file (§17.1).
@@ -438,10 +440,10 @@ internal sealed partial class Build
             .SelectMany(d => CSharpFence.Matches(d.Text).Select(m =>
                 $"{d.Path}:{d.Text.AsSpan(0, m.Index).Count('\n') + 1}: fenced C# block; include a #region of a compiled, tested file instead"));
 
-    // docfx includes code with [!code-<lang>[title](path#region)] (any case, the language optional) and renders an unknown
-    // region as nothing, so each include is checked here: a #region (never a whole file, a line range or ?name=) of an
-    // existing file under a compiled, tested root. C# regions (no language: C#) are looked up; other languages mark regions
-    // differently and docfx resolves them itself. The :::code form is rejected outright: one include syntax, all checked.
+    // A page includes code with [!code-<lang>[title](path#region)] (any case, the language optional), so each include is
+    // checked here: a #region (never a whole file, a line range or ?name=) of an existing file under a compiled, tested root.
+    // The docs site renders the region's text (RenderDocsSite reports a region it cannot resolve, whatever the language). The
+    // :::code form is rejected outright: one include syntax, all checked.
     private static readonly Regex CodeInclude = new(@"\[!code(?:-([\w-]+))?\[[^\]]*\]\(\s*([^)#?\s]+)([#?][^)\s]*)?[^)]*\)\]", RegexOptions.IgnoreCase);
 
     private static readonly Regex TripleColonCode = new(@":::\s*code\b", RegexOptions.IgnoreCase);

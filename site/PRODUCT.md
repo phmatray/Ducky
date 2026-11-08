@@ -10,7 +10,7 @@ web
 
 ## Stack
 
-delegated: plain static HTML/CSS with a few small vanilla JS modules, no build step and no runtime dependency, in `site/`. Chosen because the GitHub Pages workflow (`.github/workflows/docs.yml`) already assembles a static artifact, the docfx reference renders beside it, and a dependency-free page cannot rot between releases.
+delegated: plain static HTML/CSS with a few small vanilla JS modules, no build step and no runtime dependency, in `site/`. Chosen because the GitHub Pages workflow (`.github/workflows/docs.yml`) already assembles a static artifact, the docs beside it are rendered by the build into the same world (`site/docs-theme`, owner: "really ugly docfx site, I'd prefer a custom solution", 2026-11-08), and a dependency-free page cannot rot between releases.
 
 ## Users
 
@@ -26,7 +26,7 @@ Every concurrency and lifecycle claim is an invariant (INV-nn) with a named test
 
 ## Operating Context
 
-Read in a browser next to an IDE; code is copied into `Program.cs`, slices and components. Packages: `Ducky`, `Ducky.Blazor`, `Ducky.Draft`, `Ducky.Reactive`, `Ducky.Testing` on NuGet, net10.0 only. Docs: docfx guides under `docs/`, every snippet a region of a compiled, tested file. A WASM sample is published beside the site under `sample/`.
+Read in a browser next to an IDE; code is copied into `Program.cs`, slices and components. Packages: `Ducky`, `Ducky.Blazor`, `Ducky.Draft`, `Ducky.Reactive`, `Ducky.Testing` on NuGet, net10.0 only. Docs: generated guides under `docs/` (the build's own Markdown renderer, `docs/nav.yml`), every snippet a region of a compiled, tested file. A WASM sample is published beside the site under `sample/`.
 
 ## Capabilities and Constraints
 
@@ -44,7 +44,7 @@ Name "Ducky". The 1.x repository is phmatray/Ducky; the duck is the name's only 
 
 - Compiled, tested snippets: `test/Ducky.Docs.Tests/**` (quick start, getting started, SliceStore, effects, persistence, render modes, Draft, testing).
 - Quality bar (SPEC §1.1 goal 7, §17): 100% line and branch coverage of library C#, Stryker mutation target ≥ 90% (break < 85%), property tests, named concurrency tests, Playwright for the JS, AOT gate, PublicAPI tracking, warnings as errors.
-- ~64 documented diagnostics (`docs/diagnostics`), 7 migration guides (Ducky 1.x, Mutty, DuckyNext, blazor-state, Bustand, TheBlazorState, BlazorMVU).
+- ~64 documented diagnostics (`docs/diagnostics`); the Ducky 1.x migration guide. The guides for the owner's earlier trials (Mutty, DuckyNext, blazor-state, Bustand, TheBlazorState, BlazorMVU) stay unlisted: "apart from Ducky 1.x nobody uses my other libraries" (owner, 2026-11-08). Market leaders to compare with and migrate from: Fluxor first, then TimeWarp.State and the plain state-container pattern.
 - Absent, never to fabricate: testimonials, adopters, download counts, benchmark numbers, star counts.
 
 ## Product Principles

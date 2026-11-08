@@ -1,0 +1,45 @@
+/* Ducky tokens and base: the three inks, the one beak, the faces and the browser surfaces. Shared by the home page
+   (styles.css) and the documentation (docs-theme/docs.css, which the Docs target ships with this file). */
+
+@font-face { font-family: "Anybody"; src: url("fonts/anybody.woff2") format("woff2"); font-weight: 100 900; font-stretch: 50% 150%; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible Next"; src: url("fonts/atkinson-next.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+
+:root {
+  --yolk: #FFD425;
+  --ink: #17140F;
+  --sheet: #FFFFFF;
+  --beak: #FF6B1A;
+  /* text-level hues, derived from the ground they sit on */
+  --on-yolk-2: #4A3C00;
+  --on-sheet-2: #4F4838;
+  --on-ink-2: #CBC3AA;
+  --ink-hairline: #3A342A;
+  --code-kw: #FFD425;
+  --code-type: #FFB27A;
+  --code-str: #FF8A4C;
+  --code-com: #A39C88;
+  --rule: 3px;
+  --beat: 420ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --display: "Anybody", "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --text: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --wrap: 1240px;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  color-scheme: light;
+  scrollbar-color: var(--ink) var(--yolk);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; background: var(--yolk); color: var(--ink); font: 400 1.125rem/1.6 var(--text); font-feature-settings: "tnum" 0; caret-color: var(--beak); }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 0.22em; }
+a:hover { text-decoration-thickness: 3px; }
+code { font-family: var(--mono); font-size: 0.88em; }
+::selection { background: var(--ink); color: var(--yolk); }
+:focus-visible { outline: var(--rule) solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 1rem; top: -4rem; z-index: 10; background: var(--ink); color: var(--yolk); padding: 0.6rem 1rem; border-radius: 999px; font-weight: 700; }
+.skip:focus { top: 1rem; }

@@ -1,0 +1,68 @@
+# The documentation's navigation (SPEC §19 Docs). Each section is one index tab of the docs binder; its groups form the
+# section's ruled page ledger, in this order. A page's title is its own H1. An entry with '*' is a glob over docs/,
+# expanded in ordinal order. Every page under docs/ outside spec/, adr/ and migration/samples/ is listed here once,
+# either in a section or under `unlisted` (built and linkable, but on no tab): the Docs target fails otherwise.
+sections:
+  - tab: Start
+    groups:
+      - pages:
+          - index.md
+          - guides/core/getting-started.md
+  - tab: Core
+    groups:
+      - pages:
+          - guides/core/slices-and-keys.md
+          - guides/core/effects.md
+          - guides/core/selectors.md
+          - guides/core/slice-store.md
+          - guides/core/entity-state.md
+          - guides/core/testing.md
+  - tab: Blazor
+    groups:
+      - pages:
+          - guides/blazor/render-modes.md
+          - guides/blazor/persistence.md
+          - guides/blazor/prerender.md
+          - guides/blazor/static-ssr.md
+          - guides/blazor/cross-tab.md
+          - guides/blazor/devtools.md
+  - tab: Extras
+    groups:
+      - pages:
+          - guides/reactive/recipes.md
+          - guides/draft/produce.md
+  - tab: Threading
+    groups:
+      - pages:
+          - threading.md
+  - tab: Migrate
+    groups:
+      - pages:
+          - migration/ducky-1x.md
+  - tab: Diagnostics
+    groups:
+      - title: Generator and analyzers
+        pages:
+          - diagnostics/DUCKY0*.md
+      - title: Draft generator
+        pages:
+          - diagnostics/DUCKY1*.md
+      - title: Configuration and runtime
+        pages:
+          - diagnostics/DUCKY3*.md
+      - title: Build
+        pages:
+          - diagnostics/DUCKY9*.md
+      - title: Migration from 1.x
+        pages:
+          - diagnostics/DUCKYM*.md
+
+# The guides of the owner's earlier state-management trials. Their archived repositories link here (SPEC §22); they are
+# kept reachable but stay off the tabs and the home page.
+unlisted:
+  - migration/mutty.md
+  - migration/duckynext.md
+  - migration/blazor-state.md
+  - migration/bustand.md
+  - migration/theblazorstate.md
+  - migration/blazormvu.md
