@@ -49,6 +49,17 @@ public sealed class NonDeterminismTests
             Verifier.Diagnostic(PurityDiagnostics.NonDeterministic).WithLocation(0).WithArguments("Random.Shared", arm),
             Verifier.Diagnostic(PurityDiagnostics.NonDeterministic).WithLocation(1).WithArguments("Random.Next", arm));
 
+    // The listed types are checked before the `System.IO.*` fallback, so a Random subtype there stays DUCKY001.
+    [Theory]
+    [MemberData(nameof(Arms), MemberType = typeof(PuritySources))]
+    public Task Ducky001_ListedTypeInIoNamespace_NotIo(string arm) =>
+        Verifier.VerifyAsync(
+            Host(arm, "s with { Count = {|#0:System.IO.Dice.Roll()|} }") + """
+
+            namespace System.IO { public sealed class Dice : System.Random { public static int Roll() => 0; } }
+            """,
+            Verifier.Diagnostic(PurityDiagnostics.NonDeterministic).WithLocation(0).WithArguments("Dice.Roll", arm));
+
     public static TheoryData<string, string> Silent
     {
         get

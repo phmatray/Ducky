@@ -22,6 +22,7 @@ public static class Consumer_DuckyRegistrations
         b.AddSlice<global::App.Trial>();
         b.AddEffect<global::App.TrialEffect>();
         b.AddEffect<global::App.OldEmptyId>();
+        b.AddSlice<global::App.TaggedSlice>();
         #pragma warning restore APP001, APP002, APP003
         #pragma warning restore CS0612, CS0618
         return b;

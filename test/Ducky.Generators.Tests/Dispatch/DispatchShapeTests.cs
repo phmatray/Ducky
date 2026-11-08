@@ -183,6 +183,47 @@ public sealed class DispatchShapeTests
                 Dictionary<string, int> Map = null, Dictionary<string, List<string>> Groups = null, Box<string> Boxed = null,
                 LooseBox<string> Loose = null, Sorted<string> Order = null, Holder<string>.Inner Inner = null);
             """,
+        // A non-annotated or annotated type with an oblivious type argument (a directive inside the type) keeps its own
+        // annotation; only the oblivious argument becomes nullable.
+        ["NullableMixed"] = """
+            using System.Collections.Generic;
+            namespace App;
+            [Ducky.DuckyAction]
+            public sealed record Mixed(
+                List<
+            #nullable disable
+                    string
+            #nullable restore
+                > Items,
+                List<
+            #nullable disable
+                    string
+            #nullable restore
+                >? Maybe);
+            """,
+        // Every position round-trips, enabled or oblivious: a one-element ValueTuple<T> (CreateTupleTypeSymbol takes two
+        // or more elements), a tuple of eight or more, nested tuples, arrays and generics, dynamic and nint arguments.
+        ["TypeRoundTrip"] = """
+            using System.Collections.Generic;
+            namespace App;
+            public class Outer<T> { public sealed class Inner { } public sealed class Leaf<U> { } }
+            public struct S<T> { }
+            [Ducky.DuckyAction]
+            public sealed record Enabled(
+                System.ValueTuple<int> X, System.ValueTuple<string> X2, System.ValueTuple<string?>? X3,
+                (int A, int B, int C, int D, int E, int F, int G, int H, int I) Long,
+                System.ValueTuple<int, int, int, int, int, int, int, System.ValueTuple<string>> Rest,
+                (int A, string? B)? Nullable, (int A, string B)[][,] Jagged, List<int[]>[] Lists, Dictionary<string, int>.KeyCollection Keys,
+                Outer<(int A, int B)>.Inner Inner, Outer<string?>.Leaf<(int X, string? Y)> Leaf, List<dynamic> Dynamic, List<dynamic?> MaybeDynamic,
+                List<nint> Native, S<string?> Struct, S<(string A, int B)>? MaybeStruct, System.Collections.Immutable.ImmutableArray<string>.Builder Builder,
+                System.Func<string?, (int R, int S)> Func, KeyValuePair<string, System.ValueTuple<int>> Pair, object?[]?[] Objects);
+            #nullable disable
+            [Ducky.DuckyAction]
+            public sealed record Oblivious(
+                System.ValueTuple<string> Y, System.ValueTuple<int> Y2, List<System.ValueTuple<string>> Y3,
+                System.ValueTuple<int, int, int, int, int, int, int, System.ValueTuple<string>> Rest,
+                (int A, string B, int C, int D, int E, int F, int G, string H) Long);
+            """,
         // A type nested in a generic type is not itself generic (IsGenericType counts containing types).
         ["GenericNesting"] = """
             using System.Collections.Generic;

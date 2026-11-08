@@ -30,8 +30,9 @@ public sealed class SelectInRenderAnalyzer : DiagnosticAnalyzer
     private const string CreateInferredEventCallback = "CreateInferredEventCallback";
 
     // The renderer calls these overrides after (or for) a render; OnInitialized(Async) and SetParametersAsync come first.
-    private static readonly ImmutableHashSet<string> _afterFirstRender =
-        ["BuildRenderTree", "OnParametersSet", "OnParametersSetAsync", "OnAfterRender", "OnAfterRenderAsync"];
+    // A method, not a static set: a static initializer runs before Stryker activates a mutant, so its strings went untested.
+    private static bool AfterFirstRender(string name) =>
+        name == "BuildRenderTree" || name == "OnParametersSet" || name == "OnParametersSetAsync" || name == "OnAfterRender" || name == "OnAfterRenderAsync";
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => SelectDiagnostics.Supported;
@@ -94,7 +95,7 @@ public sealed class SelectInRenderAnalyzer : DiagnosticAnalyzer
         {
             foreach (var (member, inFragment, location) in selects)
             {
-                if (inFragment || (member.IsOverride && _afterFirstRender.Contains(member.Name)) || handlers.Contains(member, SymbolEqualityComparer.Default))
+                if (inFragment || (member.IsOverride && AfterFirstRender(member.Name)) || handlers.Contains(member, SymbolEqualityComparer.Default))
                 {
                     // A property getter's templated delegate is named after the property.
                     var name = ((member as IMethodSymbol)?.AssociatedSymbol ?? member).Name;
