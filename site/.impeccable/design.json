@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-08T00:00:00Z",
+  "title": "Design System: Ducky",
+  "extensions": {
+    "colorMeta": {
+      "yolk": {
+        "role": "primary",
+        "displayName": "Duck-Vinyl Yolk",
+        "canonical": "oklch(88.2% 0.174 93.3)",
+        "tonalRamp": [
+          "oklch(15% 0.174 93.3)",
+          "oklch(26% 0.174 93.3)",
+          "oklch(38% 0.174 93.3)",
+          "oklch(50% 0.174 93.3)",
+          "oklch(62% 0.174 93.3)",
+          "oklch(74% 0.174 93.3)",
+          "oklch(85% 0.174 93.3)",
+          "oklch(95% 0.174 93.3)"
+        ]
+      },
+      "beak": {
+        "role": "secondary",
+        "displayName": "Beak Orange",
+        "canonical": "oklch(70.3% 0.198 43.4)",
+        "tonalRamp": [
+          "oklch(15% 0.198 43.4)",
+          "oklch(26% 0.198 43.4)",
+          "oklch(38% 0.198 43.4)",
+          "oklch(50% 0.198 43.4)",
+          "oklch(62% 0.198 43.4)",
+          "oklch(74% 0.198 43.4)",
+          "oklch(85% 0.198 43.4)",
+          "oklch(95% 0.198 43.4)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Moulded Ink",
+        "canonical": "oklch(19.3% 0.011 80.5)",
+        "tonalRamp": [
+          "oklch(15% 0.011 80.5)",
+          "oklch(26% 0.011 80.5)",
+          "oklch(38% 0.011 80.5)",
+          "oklch(50% 0.011 80.5)",
+          "oklch(62% 0.011 80.5)",
+          "oklch(74% 0.011 80.5)",
+          "oklch(85% 0.011 80.5)",
+          "oklch(95% 0.011 80.5)"
+        ]
+      },
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Answer-Sheet White",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0.000 0)",
+          "oklch(26% 0.000 0)",
+          "oklch(38% 0.000 0)",
+          "oklch(50% 0.000 0)",
+          "oklch(62% 0.000 0)",
+          "oklch(74% 0.000 0)",
+          "oklch(85% 0.000 0)",
+          "oklch(95% 0.000 0)"
+        ]
+      },
+      "on-yolk-2": {
+        "role": "neutral",
+        "displayName": "Yolk Shadow-Ink",
+        "canonical": "oklch(36.1% 0.074 94.1)",
+        "tonalRamp": [
+          "oklch(15% 0.074 94.1)",
+          "oklch(26% 0.074 94.1)",
+          "oklch(38% 0.074 94.1)",
+          "oklch(50% 0.074 94.1)",
+          "oklch(62% 0.074 94.1)",
+          "oklch(74% 0.074 94.1)",
+          "oklch(85% 0.074 94.1)",
+          "oklch(95% 0.074 94.1)"
+        ]
+      },
+      "on-sheet-2": {
+        "role": "neutral",
+        "displayName": "Sheet Graphite",
+        "canonical": "oklch(40.4% 0.027 87.2)",
+        "tonalRamp": [
+          "oklch(15% 0.027 87.2)",
+          "oklch(26% 0.027 87.2)",
+          "oklch(38% 0.027 87.2)",
+          "oklch(50% 0.027 87.2)",
+          "oklch(62% 0.027 87.2)",
+          "oklch(74% 0.027 87.2)",
+          "oklch(85% 0.027 87.2)",
+          "oklch(95% 0.027 87.2)"
+        ]
+      },
+      "on-ink-2": {
+        "role": "neutral",
+        "displayName": "Ink Parchment",
+        "canonical": "oklch(81.7% 0.035 92.3)",
+        "tonalRamp": [
+          "oklch(15% 0.035 92.3)",
+          "oklch(26% 0.035 92.3)",
+          "oklch(38% 0.035 92.3)",
+          "oklch(50% 0.035 92.3)",
+          "oklch(62% 0.035 92.3)",
+          "oklch(74% 0.035 92.3)",
+          "oklch(85% 0.035 92.3)",
+          "oklch(95% 0.035 92.3)"
+        ]
+      },
+      "ink-hairline": {
+        "role": "neutral",
+        "displayName": "Ink Hairline",
+        "canonical": "oklch(32.8% 0.019 80.5)",
+        "tonalRamp": [
+          "oklch(15% 0.019 80.5)",
+          "oklch(26% 0.019 80.5)",
+          "oklch(38% 0.019 80.5)",
+          "oklch(50% 0.019 80.5)",
+          "oklch(62% 0.019 80.5)",
+          "oklch(74% 0.019 80.5)",
+          "oklch(85% 0.019 80.5)",
+          "oklch(95% 0.019 80.5)"
+        ]
+      },
+      "code-type": {
+        "role": "code",
+        "displayName": "Code Type Peach",
+        "canonical": "oklch(82.5% 0.115 56.4)",
+        "tonalRamp": [
+          "oklch(15% 0.115 56.4)",
+          "oklch(26% 0.115 56.4)",
+          "oklch(38% 0.115 56.4)",
+          "oklch(50% 0.115 56.4)",
+          "oklch(62% 0.115 56.4)",
+          "oklch(74% 0.115 56.4)",
+          "oklch(85% 0.115 56.4)",
+          "oklch(95% 0.115 56.4)"
+        ]
+      },
+      "code-str": {
+        "role": "code",
+        "displayName": "Code String Orange",
+        "canonical": "oklch(75.1% 0.161 46.8)",
+        "tonalRamp": [
+          "oklch(15% 0.161 46.8)",
+          "oklch(26% 0.161 46.8)",
+          "oklch(38% 0.161 46.8)",
+          "oklch(50% 0.161 46.8)",
+          "oklch(62% 0.161 46.8)",
+          "oklch(74% 0.161 46.8)",
+          "oklch(85% 0.161 46.8)",
+          "oklch(95% 0.161 46.8)"
+        ]
+      },
+      "code-com": {
+        "role": "code",
+        "displayName": "Code Comment Stone",
+        "canonical": "oklch(69.3% 0.030 91.0)",
+        "tonalRamp": [
+          "oklch(15% 0.030 91.0)",
+          "oklch(26% 0.030 91.0)",
+          "oklch(38% 0.030 91.0)",
+          "oklch(50% 0.030 91.0)",
+          "oklch(62% 0.030 91.0)",
+          "oklch(74% 0.030 91.0)",
+          "oklch(85% 0.030 91.0)",
+          "oklch(95% 0.030 91.0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headline only, max 13ch."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings; the close uses a larger 900/140% setting."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Answer headings on the answer sheet."
+      },
+      "speech": {
+        "displayName": "Speech",
+        "purpose": "The duck's question in the speech bubble."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, ledes at 62ch, answers at 52ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase column headers of the board and render-mode matrix only."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Code blocks, install command, API/package/test names, board cells, readouts."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "beat",
+        "value": "420ms",
+        "purpose": "The single page clock: quack (2 beats), bubble wipe (1.5), answer rise (1.5, staggered by 1/3 and 2/3 beat), split-flap letters and lamps (0.7), dispatcher drain (1 per action), copied state (5)."
+      },
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Expo-out curve for every beat-driven animation and transform."
+      },
+      {
+        "name": "state-swap",
+        "value": "120ms",
+        "purpose": "Background/color swap on chips and ledger rows on hover."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "1ms",
+        "purpose": "All animations and transitions collapse under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stack",
+        "value": "960px"
+      },
+      {
+        "name": "phone",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Install Command",
+      "kind": "button",
+      "refersTo": "button-install",
+      "description": "Primary action: copy the install command. Ink slab, beak copy segment, inverts on press.",
+      "html": "<button class=\"ds-cmd\" type=\"button\"><code><span class=\"ds-prompt\">$</span> dotnet add package Ducky --prerelease</code><span class=\"ds-cmd-act\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\"><rect x=\"8\" y=\"8\" width=\"12\" height=\"12\" rx=\"2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/><path d=\"M16 4H6a2 2 0 0 0-2 2v10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/></svg>Copy</span></button>",
+      "css": ".ds-cmd { display: inline-flex; align-items: stretch; padding: 0; border: 3px solid #17140F; border-radius: 14px; overflow: hidden; background: #17140F; color: #FFFFFF; font: 400 1rem/1.6 'Atkinson Hyperlegible Next', system-ui, sans-serif; cursor: pointer; transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-cmd code { display: block; padding: 0.95rem 1.2rem; font: 400 1.02rem/1.6 'JetBrains Mono', ui-monospace, monospace; white-space: nowrap; } .ds-prompt { color: #FFD425; margin-right: 0.4ch; } .ds-cmd-act { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0 1.1rem; background: #FF6B1A; color: #17140F; font-weight: 800; border-left: 3px solid #17140F; } .ds-cmd:hover .ds-cmd-act { background: #FFD425; } .ds-cmd:active { transform: translateY(2px); } .ds-cmd:active code { background: #FFFFFF; color: #17140F; } .ds-cmd:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; }"
+    },
+    {
+      "name": "Question Chip",
+      "kind": "chip",
+      "refersTo": "chip-question",
+      "description": "Outline pill on yolk; hover fills sheet, selected and pressed invert to ink.",
+      "html": "<div class=\"ds-qwrap\"><button class=\"ds-chip\" aria-selected=\"true\">Two dispatches race</button><button class=\"ds-chip\">A second tab</button></div>",
+      "css": ".ds-qwrap { display: flex; gap: 0.55rem; padding: 1rem; background: #FFD425; } .ds-chip { font: 700 0.98rem/1 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: #17140F; background: transparent; border: 3px solid #17140F; border-radius: 999px; padding: 0.62rem 1rem; cursor: pointer; transition: background-color 120ms, color 120ms; } .ds-chip:hover { background: #FFFFFF; } .ds-chip[aria-selected=\"true\"], .ds-chip:active { background: #17140F; color: #FFD425; } .ds-chip:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; }"
+    },
+    {
+      "name": "Console Control",
+      "kind": "button",
+      "refersTo": "chip-control-on-ink",
+      "description": "Mono outline pill on ink; hover fills yolk, press flips to sheet.",
+      "html": "<div class=\"ds-ink\"><button class=\"ds-ctl\">LoadForecast(\"Paris\")</button><button class=\"ds-ctl ds-quiet\">Reset</button></div>",
+      "css": ".ds-ink { display: flex; gap: 0.55rem; padding: 1rem; background: #17140F; } .ds-ctl { font: 600 0.9rem/1 'JetBrains Mono', ui-monospace, monospace; color: #FFD425; background: transparent; border: 3px solid #FFD425; border-radius: 999px; padding: 0.62rem 1rem; cursor: pointer; transition: background-color 120ms, color 120ms; } .ds-ctl:hover { background: #FFD425; color: #17140F; } .ds-ctl:active { background: #FFFFFF; color: #17140F; border-color: #FFFFFF; } .ds-quiet { color: #CBC3AA; border-color: #CBC3AA; } .ds-quiet:hover { color: #17140F; border-color: #FFD425; } .ds-ctl:focus-visible { outline: 3px solid #FFD425; outline-offset: 3px; }"
+    },
+    {
+      "name": "Primary Nav",
+      "kind": "nav",
+      "description": "Top bar on yolk: wide wordmark, version badges, text links, GitHub pill.",
+      "html": "<header class=\"ds-bar\"><a class=\"ds-brand\" href=\"#\">Ducky</a><span class=\"ds-ver\"><span>2.0 preview</span><span>.NET 10</span></span><nav><a href=\"#\">Guide</a><a href=\"#\">Live sample</a><a class=\"ds-gh\" href=\"#\">GitHub</a></nav></header>",
+      "css": ".ds-bar { display: flex; align-items: center; gap: 1rem; padding: 1.1rem 1.5rem; background: #FFD425; color: #17140F; } .ds-brand { font: 900 1.5rem/1 'Anybody', sans-serif; font-stretch: 140%; letter-spacing: -0.02em; color: inherit; text-decoration: none; } .ds-ver { margin-right: auto; display: inline-flex; gap: 0.35rem; font: 700 0.8rem/1 'JetBrains Mono', monospace; } .ds-ver span { border: 2px solid #17140F; border-radius: 999px; padding: 0.3rem 0.55rem; } .ds-ver span:first-child { background: #17140F; color: #FFD425; } .ds-bar nav { display: flex; align-items: center; gap: 2rem; font: 700 1rem 'Atkinson Hyperlegible Next', sans-serif; } .ds-bar nav a { color: inherit; text-decoration: none; } .ds-bar nav a:hover { text-decoration: underline; text-decoration-thickness: 3px; } .ds-gh { border: 3px solid #17140F; border-radius: 999px; padding: 0.35rem 0.85rem; } .ds-gh:hover { background: #17140F; color: #FFD425 !important; } .ds-bar a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; border-radius: 4px; }"
+    },
+    {
+      "name": "Code Block",
+      "kind": "card",
+      "refersTo": "code-block",
+      "description": "Ink panel for compiled snippets; yolk keywords, beak-family syntax hues.",
+      "html": "<pre class=\"ds-code\" tabindex=\"0\"><code><span class=\"ds-com\">// completes once the action is reduced</span>\n<span class=\"ds-kw\">var</span> result = <span class=\"ds-kw\">await</span> store.RenameAsync(<span class=\"ds-str\">\"Grace\"</span>);\n<span class=\"ds-kw\">var</span> name = store.State.Get&lt;<span class=\"ds-type\">Greeting</span>&gt;().Name;</code></pre>",
+      "css": ".ds-code { margin: 0; background: #17140F; color: #FFFFFF; border-radius: 16px; padding: 1.3rem 1.4rem; overflow-x: auto; font: 400 0.9rem/1.65 'JetBrains Mono', ui-monospace, monospace; font-variant-ligatures: none; } .ds-kw { color: #FFD425; font-weight: 700; } .ds-type { color: #FFB27A; } .ds-str { color: #FF8A4C; } .ds-com { color: #A39C88; font-style: italic; } .ds-code:focus-visible { outline: 3px solid #FF6B1A; outline-offset: 3px; }"
+    },
+    {
+      "name": "Speech Bubble",
+      "kind": "custom",
+      "refersTo": "speech-bubble",
+      "description": "The duck's question: sheet bubble, 3px ink border, drawn tail.",
+      "html": "<div class=\"ds-stage\"><blockquote class=\"ds-bubble\"><p>So what happens when two dispatches race?</p></blockquote></div>",
+      "css": ".ds-stage { background: #FFD425; padding: 1.5rem 1.5rem 2.5rem; } .ds-bubble { position: relative; margin: 0; max-width: 22rem; padding: 1rem 1.25rem 1.1rem; background: #FFFFFF; border: 3px solid #17140F; border-radius: 22px; font: 820 1.3rem/1.18 'Anybody', sans-serif; font-stretch: 112%; letter-spacing: -0.01em; color: #17140F; } .ds-bubble p { margin: 0; } .ds-bubble::before, .ds-bubble::after { content: ''; position: absolute; left: 3.2rem; border-style: solid; } .ds-bubble::before { bottom: -22px; border-width: 22px 18px 0 0; border-color: #17140F transparent transparent; } .ds-bubble::after { bottom: -15px; left: calc(3.2rem + 3px); border-width: 16px 12px 0 0; border-color: #FFFFFF transparent transparent; }"
+    },
+    {
+      "name": "Dispatcher Board",
+      "kind": "custom",
+      "refersTo": "board-row",
+      "description": "Ruled board of fixed cells with per-row DispatchResult lamps.",
+      "html": "<div class=\"ds-boardwrap\"><table class=\"ds-board\"><thead><tr><th>#</th><th>Action</th><th>Result</th></tr></thead><tbody><tr><td>10</td><td>ForecastLoaded(\"Paris\")</td><td><span class=\"ds-lamp ds-reduced\">Reduced</span></td></tr><tr><td>9</td><td>ForecastLoaded(\"Paris\")</td><td><span class=\"ds-lamp ds-dropped\">Dropped</span></td></tr><tr><td>8</td><td>LoadForecast(\"Oslo\")</td><td><span class=\"ds-lamp ds-queued\">Queued</span></td></tr></tbody></table></div>",
+      "css": ".ds-boardwrap { background: #17140F; padding: 1rem; } .ds-board { width: 100%; border-collapse: separate; border-spacing: 0; border: 3px solid #FFD425; border-radius: 14px; overflow: hidden; color: #FFFFFF; font: 500 0.9rem/1 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; } .ds-board th { height: 2.6rem; background: #FFD425; color: #17140F; text-align: left; font: 900 0.78rem/1 'Anybody', sans-serif; font-stretch: 150%; text-transform: uppercase; letter-spacing: 0.08em; padding: 0 0.9rem; } .ds-board td { height: 2.75rem; padding: 0 0.9rem; border-top: 1.5px solid #3A342A; } .ds-board td:first-child { color: #CBC3AA; } .ds-lamp { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; } .ds-lamp::before { content: ''; width: 0.8rem; height: 0.8rem; border-radius: 50%; border: 2px solid currentColor; } .ds-reduced { color: #FFD425; } .ds-reduced::before { background: #FFD425; } .ds-dropped { color: #FF6B1A; } .ds-dropped::before { background: #FF6B1A; } .ds-queued { color: #CBC3AA; }"
+    },
+    {
+      "name": "Proof List",
+      "kind": "custom",
+      "description": "INV pills and named tests with yolk check discs under every answer.",
+      "html": "<aside class=\"ds-proof\"><p class=\"ds-proof-head\">Proved by <a href=\"#\">INV-01</a> <a href=\"#\">INV-10</a></p><ul><li>Reducers_NeverRunConcurrently</li><li>CrossTab_TwoPages_ChangeInAAppearsInB <span>Playwright</span></li></ul></aside>",
+      "css": ".ds-proof { background: #FFFFFF; color: #17140F; border-top: 3px solid #17140F; padding: 1rem; } .ds-proof-head { margin: 0; display: flex; gap: 0.5rem; align-items: center; font: 800 1rem/1.2 'Anybody', sans-serif; font-stretch: 115%; } .ds-proof-head a { font: 700 0.85rem/1 'JetBrains Mono', monospace; background: #FFD425; color: #17140F; border: 2px solid #17140F; border-radius: 999px; padding: 0.3rem 0.6rem; text-decoration: none; } .ds-proof-head a:hover { background: #17140F; color: #FFD425; } .ds-proof-head a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; } .ds-proof ul { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; gap: 0.55rem; } .ds-proof li { position: relative; padding-left: 1.9rem; font: 500 0.86rem/1.4 'JetBrains Mono', monospace; } .ds-proof li::before { content: ''; position: absolute; left: 0; top: 0.05rem; width: 1.25rem; height: 1.25rem; border-radius: 50%; border: 2px solid #17140F; background: #FFD425 center / 0.8rem no-repeat url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3L13 4.5' fill='none' stroke='%2317140F' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\"); } .ds-proof li span { font: 700 0.8rem 'Atkinson Hyperlegible Next', sans-serif; margin-left: 0.4rem; padding: 0.05rem 0.45rem; border: 1.5px solid #17140F; border-radius: 999px; }"
+    },
+    {
+      "name": "Package Ledger Row",
+      "kind": "card",
+      "refersTo": "list-row-link-hover",
+      "description": "Ruled ledger row link: fills yolk on hover, inverts to ink on press.",
+      "html": "<ul class=\"ds-stack\"><li><a href=\"#\"><code>Ducky.Blazor</code><span>Persistence, prerender handoff, cross-tab sync, DevTools.</span></a></li></ul>",
+      "css": ".ds-stack { list-style: none; margin: 0; padding: 0; background: #FFFFFF; border-top: 3px solid #17140F; } .ds-stack a { display: grid; grid-template-columns: minmax(10rem, 4fr) minmax(0, 8fr); gap: 0.4rem 2rem; align-items: baseline; padding: 1.35rem 0.8rem; border-bottom: 1.5px solid #17140F; color: #17140F; text-decoration: none; transition: background-color 120ms; } .ds-stack code { font: 700 1.3rem/1.1 'JetBrains Mono', monospace; } .ds-stack span { color: #4F4838; font-family: 'Atkinson Hyperlegible Next', sans-serif; } .ds-stack a:hover { background: #FFD425; } .ds-stack a:hover span { color: #4A3C00; } .ds-stack a:active { background: #17140F; color: #FFD425; } .ds-stack a:active span { color: #CBC3AA; } .ds-stack a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Rubber Duck on the Desk",
+    "overview": "The site is the conversation a developer has with the rubber duck beside their keyboard. The duck asks, on a field of drenched vinyl yellow; Ducky answers on a white answer sheet, in black ink and compiled code. Every surface is one of three grounds (yolk, ink, sheet), every stroke is ink, and a single beak orange marks the thing to press. Nothing is tinted, graded or lit: depth comes from swapping grounds and from heavy ruled lines, the way a moulded toy or a printed form gets its structure.\n\nDensity is generous at the section level (sections breathe at 4 to 7rem) and tight inside instruments: the dispatcher board is a ruled grid of fixed cells, the API list and package stack are ruled ledgers, and proof is a column of test names with check lamps. Display type is Anybody pushed wide and black, stamped like a toy's moulded mark; body is Atkinson Hyperlegible Next; JetBrains Mono appears wherever the reader is looking at something they would type or run.\n\nMotion has one clock. A single beat (420ms, expo-out) drives the duck's squash-and-stretch quack, the speech bubble's wipe, the answer sheet's rise, the split-flap letters and lamps on the board, and the dispatcher's one-action-per-tick drain. Controls invert ink on press rather than glowing or lifting.",
+    "keyCharacteristics": [
+      "Three grounds (yolk, ink, sheet) and one action accent (beak); secondary text hues are darker or lighter shades of the ground they sit on, never decorative tints.",
+      "3px ink rules for structure, 1.5px hairlines inside tables and ledgers.",
+      "Wide, black Anybody display; Atkinson body; JetBrains Mono for code, API names, test names and the board.",
+      "Pills for every control, 14 to 16px corners for panels and code, a 22px speech bubble with a drawn tail.",
+      "One motion beat for the whole page; press = ink inversion.",
+      "Flat. No shadows, no gradients, no glows."
+    ],
+    "rules": [
+      {
+        "name": "The Three Grounds Rule",
+        "body": "A section's ground is yolk, ink or sheet, full-bleed, and nothing else. Sections alternate grounds and separate with a 3px ink rule; no panel, card or band introduces a fourth ground.",
+        "section": "colors"
+      },
+      {
+        "name": "The Derived Text Rule",
+        "body": "A secondary text color belongs to its ground (on-yolk-2, on-sheet-2, on-ink-2) and exists for legibility. Never carry one ground's secondary hue onto another ground.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Beak Rule",
+        "body": "Beak marks the thing to press, or a dropped result. If two beak elements compete in one viewport, one of them is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Stamped Mark Rule",
+        "body": "Headings are Anybody at 820 to 900 weight and at least 112% width, with negative tracking. A narrow or light display setting is off-system.",
+        "section": "typography"
+      },
+      {
+        "name": "The Typed Things Rule",
+        "body": "If the reader could type it, run it or find it in a test report, it is set in JetBrains Mono; prose is never set in mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The Printed Object Rule",
+        "body": "No box-shadow, no gradient, no glow, no blur at rest. Separation is a rule, a border or a ground change.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do build every surface from yolk, ink and sheet, and reserve beak for the primary action and the dropped state.",
+      "Do separate sections and rows with ink rules: 3px for structure, 1.5px inside tables and ledgers.",
+      "Do set headings in Anybody at 820 to 900 weight and 112 to 150% width with negative tracking.",
+      "Do set code, API names, package names, test names and live readouts in JetBrains Mono with tabular numerals where numbers change.",
+      "Do make controls pills with a 3px border that invert ink on press and selection.",
+      "Do time motion in multiples of the single 420ms beat on the expo-out curve, and honour reduced motion.",
+      "Do pair every claim with its proof: code block plus named tests."
+    ],
+    "donts": [
+      "Don't add shadows, gradients, glows or translucent overlays; depth is ground, rule and inversion.",
+      "Don't introduce tints of yolk or ink as fills; secondary hues exist only as text on their own ground.",
+      "Don't put beak on more than one element per viewport outside the dispatcher board.",
+      "Don't use cards with fills and corners as a layout device; use ruled ledgers and frames.",
+      "Don't set prose or headings in mono, or code in the display face.",
+      "Don't give a section heading a small label above it; headings stand alone."
+    ]
+  }
+}

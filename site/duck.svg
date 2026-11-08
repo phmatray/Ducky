@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 360" role="img" aria-label="Ducky">
+  <g stroke="#17140F" stroke-width="16" stroke-linejoin="round" fill="#17140F">
+    <path d="M58 252C58 206 104 186 168 190L292 196C324 188 344 162 350 128C382 166 390 236 364 276C338 318 276 338 204 338C114 338 58 304 58 252Z"/>
+    <circle cx="152" cy="128" r="84"/>
+  </g>
+  <g fill="#FFD425">
+    <path d="M58 252C58 206 104 186 168 190L292 196C324 188 344 162 350 128C382 166 390 236 364 276C338 318 276 338 204 338C114 338 58 304 58 252Z"/>
+    <circle cx="152" cy="128" r="84"/>
+  </g>
+  <path d="M196 262C226 226 290 222 324 250M214 286C250 296 290 290 318 272" fill="none" stroke="#17140F" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M80 126C52 120 26 130 16 146C34 162 60 168 88 160Z" fill="#FF6B1A" stroke="#17140F" stroke-width="11" stroke-linejoin="round"/>
+  <path d="M22 147C42 148 62 146 84 140" fill="none" stroke="#17140F" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="132" cy="108" r="14" fill="#17140F"/>
+  <circle cx="137" cy="103" r="4.5" fill="#FFFFFF"/>
+</svg>

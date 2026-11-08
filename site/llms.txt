@@ -1,0 +1,39 @@
+# Ducky
+
+> Ducky 2.0 is a small, strict Redux store for .NET 10 and Blazor: typed slices of immutable state, pure reducers, one dispatcher that reduces one action at a time, effects with concurrency policies (Merge, Switch, Exhaust, Queue), source-generated registration and dispatch helpers, and Blazor integration (persistence to localStorage, sessionStorage or IDistributedCache, prerender handoff, cross-tab sync, Redux DevTools) that follows the same rules in every render mode. Status: 2.0 preview (`dotnet add package Ducky --prerelease`). License: Apache-2.0.
+
+Every snippet in the guides is a region of a compiled, tested file. Every behavioural rule maps to an invariant (INV-01 to INV-32) with named tests.
+
+## Guides
+
+- [Getting started](docs/guides/core/getting-started.html): install, declare a slice, register with `AddDuckyGenerated_{Assembly}()`, dispatch and read
+- [Slices and keys](docs/guides/core/slices-and-keys.html)
+- [Effects and concurrency policies](docs/guides/core/effects.html)
+- [Selectors](docs/guides/core/selectors.html)
+- [SliceStore](docs/guides/core/slice-store.html): a slice with methods, Zustand-style
+- [EntityState](docs/guides/core/entity-state.html)
+- [Testing with Ducky.Testing](docs/guides/core/testing.html): SliceTest, EffectTest, TestStore
+- [Blazor render modes and the load rule](docs/guides/blazor/render-modes.html)
+- [Persistence](docs/guides/blazor/persistence.html)
+- [Prerender](docs/guides/blazor/prerender.html)
+- [Static SSR with Server storage](docs/guides/blazor/static-ssr.html)
+- [Cross-tab sync](docs/guides/blazor/cross-tab.html)
+- [Redux DevTools](docs/guides/blazor/devtools.html)
+- [Reactive effects (R3)](docs/guides/reactive/recipes.html)
+- [Ducky.Draft (Produce)](docs/guides/draft/produce.html)
+- [Threading contract](docs/threading.html)
+
+## Migration
+
+- [From Ducky 1.x](docs/migration/ducky-1x.html)
+- [From Mutty](docs/migration/mutty.html)
+- [From DuckyNext](docs/migration/duckynext.html)
+- [From the blazor-state monorepo](docs/migration/blazor-state.html)
+- [From Bustand](docs/migration/bustand.html)
+- [From TheBlazorState](docs/migration/theblazorstate.html)
+- [From BlazorMVU](docs/migration/blazormvu.html)
+
+## Optional
+
+- [Specification](https://github.com/phmatray/Ducky/blob/v2/docs/spec/SPEC.md): invariants, threading contract, error model, quality gates
+- [Source](https://github.com/phmatray/Ducky)
