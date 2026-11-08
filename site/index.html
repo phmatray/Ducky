@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ducky: Blazor state you can explain to a duck</title>
+  <meta name="description" content="Ducky 2.0 is a small, strict Redux store for .NET 10 and Blazor: slices, effects, persistence, prerender handoff, cross-tab sync and Redux DevTools that work the same in every render mode. Every promise is a named test.">
+  <meta name="theme-color" content="#FFD425">
+  <link rel="icon" href="duck.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Ducky: Blazor state you can explain to a duck">
+  <meta property="og:description" content="A small, strict Redux store for .NET 10 and Blazor. Same rules in every render mode. Every promise is a named test.">
+  <meta property="og:url" content="https://phmatray.github.io/Ducky/">
+  <meta property="og:image" content="https://phmatray.github.io/Ducky/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="fonts/anybody.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/atkinson-next.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="bar">
+    <a class="brand" href="./" aria-label="Ducky home">
+      <img src="duck.svg" alt="" width="34" height="31">
+      <span>Ducky</span>
+    </a>
+    <p class="ver"><span>2.0 preview</span> <span>.NET 10</span></p>
+    <nav aria-label="Primary">
+      <a href="docs/guides/core/getting-started.html">Guide</a>
+      <a href="docs/threading.html">Threading contract</a>
+      <a href="sample/">Live sample</a>
+      <a href="https://github.com/phmatray/Ducky" class="gh">
+        <svg aria-hidden="true" viewBox="0 0 16 16" width="18" height="18"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- First viewport: the duck asks, Ducky answers -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <h1 id="hero-title">Blazor state you can explain to a&nbsp;duck.</h1>
+        <p class="offer">Ducky is a small, strict Redux store for .NET and Blazor. Slices, effects, persistence, prerender handoff, cross-tab sync and Redux DevTools follow the same rules in every render mode, and every promise it makes is a named test.</p>
+        <div class="install">
+          <button class="cmd" type="button" data-copy="dotnet add package Ducky --prerelease" aria-label="Copy the install command: dotnet add package Ducky --prerelease">
+            <code><span class="prompt" aria-hidden="true">$</span> dotnet add package Ducky <span class="nb">--prerelease</span></code>
+            <span class="cmd-act">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 4H6a2 2 0 0 0-2 2v10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              <span class="cmd-label">Copy</span>
+            </span>
+          </button>
+          <div class="links">
+            <a class="go" href="docs/guides/core/getting-started.html">Read the guide
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="plain" href="#questions">Ask the duck</a>
+          </div>
+        </div>
+      </div>
+
+      <figure class="duck-stage" aria-hidden="true">
+        <blockquote class="bubble" id="bubble"><p id="bubble-text">So what happens when two dispatches race?</p></blockquote>
+        <img class="duck" src="duck.svg" alt="" width="400" height="360">
+      </figure>
+
+      <div class="questions" id="questions">
+        <p class="q-lead" id="q-lead">The duck's questions</p>
+        <div class="q-list" role="tablist" aria-labelledby="q-lead">
+          <button role="tab" id="q-race" aria-controls="a-race" aria-selected="true" data-q="So what happens when two dispatches race?">Two dispatches race</button>
+          <button role="tab" id="q-prerender" aria-controls="a-prerender" aria-selected="false" tabindex="-1" data-q="The page prerendered. Does my data load twice?">Prerender, then interactive</button>
+          <button role="tab" id="q-tabs" aria-controls="a-tabs" aria-selected="false" tabindex="-1" data-q="Your user just opened a second tab. Now what?">A second tab</button>
+          <button role="tab" id="q-typing" aria-controls="a-typing" aria-selected="false" tabindex="-1" data-q="They type faster than your API answers. Who wins?">Faster than the API</button>
+          <button role="tab" id="q-aot" aria-controls="a-aot" aria-selected="false" tabindex="-1" data-q="Trimmed and AOT-compiled. Still works?">Trimmed and AOT</button>
+          <button role="tab" id="q-test" aria-controls="a-test" aria-selected="false" tabindex="-1" data-q="Fine. How do you test any of it?">How do I test it</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- The answer sheet -->
+    <section class="sheet" aria-label="Ducky's answers">
+      <article class="answer" role="tabpanel" id="a-race" aria-labelledby="q-race">
+        <div class="a-text">
+          <h2>One dispatcher. One action at a time.</h2>
+          <p>Every action goes through one queue, and a single drainer reduces it. Reducers never run concurrently, actions keep their order, and every committed snapshot comes from one commit, so no reader sees torn state.</p>
+          <p><code>await DispatchAsync</code> completes once the action is reduced, so you read your own write. It returns a <code>DispatchResult</code> and never faults.</p>
+        </div>
+        <pre class="code" tabindex="0"><code data-lang="cs">// generated: store.Dispatch(new Rename("Ada"))
+store.Rename("Ada");
+
+// completes once the action is reduced
+var result = await store.RenameAsync("Grace");
+
+var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
+        <aside class="proof" aria-label="Proved by">
+          <p class="proof-head">Proved by <a href="docs/threading.html">INV-01</a> <a href="docs/threading.html">INV-10</a></p>
+          <ul>
+            <li>Reducers_NeverRunConcurrently</li>
+            <li>Linearizability_DispatchVsModel</li>
+            <li>DispatchAsync_EveryPath_ReturnsExpectedResult</li>
+            <li>Api_AllAsyncMembers_NeverFault</li>
+          </ul>
+        </aside>
+      </article>
+
+      <article class="answer" role="tabpanel" id="a-prerender" aria-labelledby="q-prerender" hidden>
+        <div class="a-text">
+          <h2>Load once, in every render mode.</h2>
+          <p>Mark the slice <code>Persist&lt;T&gt;()</code> and <code>Prerender&lt;T&gt;()</code>. The prerendered page hands its state to the interactive store before the first interactive render, and your load effect asks one question: was this slice already restored?</p>
+          <p>The same rule holds on WebAssembly, Interactive Server, Interactive Auto and static SSR.</p>
+        </div>
+        <pre class="code" tabindex="0"><code data-lang="cs">public sealed class LoadCatalog(ICatalogApi api)
+    : Effect&lt;StoreInitialized&gt;
+{
+    public override async Task Handle(
+        StoreInitialized action,
+        EffectContext context,
+        CancellationToken cancellationToken)
+    {
+        // Storage or the prerender seed already restored it:
+        // don't load it again.
+        if (context.State.WasRestored&lt;CatalogState&gt;())
+        {
+            return;
+        }
+
+        context.Dispatch(new CatalogLoaded(
+            await api.GetProductsAsync(cancellationToken)));
+    }
+}</code></pre>
+        <aside class="proof" aria-label="Proved by">
+          <p class="proof-head">Proved by <a href="docs/guides/blazor/prerender.html">INV-13</a> <a href="docs/guides/blazor/prerender.html">INV-15</a></p>
+          <ul>
+            <li>Prerender_RestoredSlice_LoadEffectRunsOnceAcrossHandoff</li>
+            <li>PrerenderSeed_AppliedBeforeFirstInteractiveRender</li>
+            <li>Prerender_LoadEffectSlowerThanRender_SeedWaitsForIdle</li>
+            <li>PreInitDispatches_AreBufferedAndReplayedInOrder</li>
+          </ul>
+        </aside>
+      </article>
+
+      <article class="answer" role="tabpanel" id="a-tabs" aria-labelledby="q-tabs" hidden>
+        <div class="a-text">
+          <h2>Tabs converge. Nothing echoes.</h2>
+          <p>Turn on <code>SyncAcrossTabs</code> for a localStorage slice and a change in one tab reaches the others. A value received from another tab is never written back, even when two processes serialize the same state in different orders.</p>
+          <p>Sign out in one tab and <code>ClearPersistedState</code> resets the slice everywhere.</p>
+        </div>
+        <pre class="code" tabindex="0"><code data-lang="cs">public static DuckyBuilder AddSyncedPreferences(
+    DuckyBuilder ducky) =&gt; ducky
+    .UseJson(DocsJson.Default)
+    .AddSlice&lt;PreferencesSlice&gt;()
+    .Persist&lt;PreferencesSlice&gt;(options =&gt;
+        options.SyncAcrossTabs = true); // localStorage only</code></pre>
+        <aside class="proof" aria-label="Proved by">
+          <p class="proof-head">Proved by <a href="docs/guides/blazor/cross-tab.html">INV-18</a></p>
+          <ul>
+            <li>CrossTab_TwoPages_ChangeInAAppearsInB <span>Playwright</span></li>
+            <li>CrossTab_OriginNeverPersisted</li>
+            <li>CrossTab_ClearPersistedStateInOtherTab_ResetsSlice</li>
+            <li>CrossTab_SubscriberThatRedispatches_ConvergesWithinNWrites</li>
+          </ul>
+        </aside>
+      </article>
+
+      <article class="answer" role="tabpanel" id="a-typing" aria-labelledby="q-typing" hidden>
+        <div class="a-text">
+          <h2>The newest request wins. The stale one can't speak.</h2>
+          <p>Effects declare a concurrency policy. With <code>Switch</code>, a newer request for the same key cancels the running one, and a superseded run that ignores its token still can't dispatch: its late result is dropped, typed and counted.</p>
+          <p>Other keys load side by side.</p>
+        </div>
+        <pre class="code" tabindex="0"><code data-lang="cs">public sealed class LoadForecastEffect(IWeatherApi api)
+    : Effect&lt;LoadForecast&gt;
+{
+    // A newer LoadForecast for the same city cancels the running
+    // one; other cities load side by side.
+    public override Concurrency Policy =&gt; Concurrency.Switch;
+    protected override object? ConcurrencyKey(
+        LoadForecast action) =&gt; action.City;
+    public override Task Handle(
+        LoadForecast action,
+        EffectContext context,
+        CancellationToken cancellationToken) =&gt;
+        context.Run(
+            started: new ForecastLoading(action.City),
+            work: token =&gt;
+                api.GetForecastAsync(action.City, token),
+            succeeded: forecast =&gt; new ForecastLoaded(forecast),
+            failed: exception =&gt; new ForecastFailed(
+                action.City, exception.Message),
+            cancellationToken);
+}</code></pre>
+        <aside class="proof" aria-label="Proved by">
+          <p class="proof-head">Proved by <a href="docs/guides/core/effects.html">INV-11</a></p>
+          <ul>
+            <li>Switch_SupersededRunIgnoringToken_CannotDispatch</li>
+            <li>Switch_OldRunCompletion_DoesNotRemoveNewSlot</li>
+            <li>Switch_SupersededRunCallingSliceStoreSet_IsDropped</li>
+            <li>the full concurrency policy matrix</li>
+          </ul>
+        </aside>
+      </article>
+
+      <article class="answer" role="tabpanel" id="a-aot" aria-labelledby="q-aot" hidden>
+        <div class="a-text">
+          <h2>No reflection to trim away.</h2>
+          <p>Source generators write the registration, the dispatch helpers and the analyzers. Persistence serializes through each slice's <code>JsonTypeInfo</code>. Every runtime library builds with zero IL2xxx and IL3xxx warnings.</p>
+          <p>CI publishes a NativeAOT binary and a trimmed AOT WebAssembly app and runs both.</p>
+        </div>
+        <pre class="code" tabindex="0"><code data-lang="cs">// Persistence serializes each state through its declared
+// type's JsonTypeInfo: trim- and AOT-safe, no reflection.
+[JsonSerializable(typeof(Preferences))]
+[JsonSerializable(typeof(Basket))]
+public sealed partial class DocsJson : JsonSerializerContext;</code></pre>
+        <aside class="proof" aria-label="Proved by">
+          <p class="proof-head">Proved by <a href="https://github.com/phmatray/Ducky/tree/v2/test/Ducky.AotSmoke">INV-24</a></p>
+          <ul>
+            <li>AotSmoke <span>NativeAOT</span></li>
+            <li>WasmTrimmedSmoke <span>Playwright</span></li>
+            <li>zero IL2xxx/IL3xxx in every runtime library</li>
+          </ul>
+        </aside>
+      </article>
+
+      <article class="answer" role="tabpanel" id="a-test" aria-labelledby="q-test" hidden>
+        <div class="a-text">
+          <h2>Given, when, then. No browser required.</h2>
+          <p><code>Ducky.Testing</code> tests a slice in three lines, runs one effect against stub services, or spins up a whole <code>TestStore</code> you can seed, dispatch into and settle.</p>
+          <p>Every snippet on this page comes from a compiled, tested file in the repository.</p>
+        </div>
+        <pre class="code" tabindex="0"><code data-lang="cs">[Fact]
+public void ThemeChanged_NewTheme_Applied() =&gt;
+    SliceTest.For&lt;SettingsSlice, Settings&gt;()
+        .Given(new Settings("light", FontSize: 14))
+        .When(new ThemeChanged("dark"))
+        .Then(new Settings("dark", FontSize: 14));</code></pre>
+        <aside class="proof" aria-label="Tested in">
+          <p class="proof-head">Tested in <a href="docs/guides/core/testing.html">the testing guide</a></p>
+          <ul>
+            <li>ThemeChanged_NewTheme_Applied</li>
+            <li>ThemeChanged_SameTheme_Unchanged</li>
+            <li>LoadProfile_ApiAnswers_DispatchesProfileLoaded</li>
+            <li>TestStore_SeedDispatchSettle</li>
+          </ul>
+        </aside>
+      </article>
+    </section>
+
+    <!-- Code tour -->
+    <section class="tour" aria-labelledby="tour-title">
+      <div class="wrap">
+        <h2 id="tour-title">The whole API fits on one desk.</h2>
+        <p class="lede">State is an immutable record. Reducers are pure functions on it. The generator writes the registration and the dispatch helpers, so there is nothing to scan and nothing to wire by hand.</p>
+        <div class="tabs" data-tabs>
+          <div class="tab-list" role="tablist" aria-label="Ducky in five files">
+            <button role="tab" id="t-slice" aria-controls="p-slice" aria-selected="true">Slice.cs</button>
+            <button role="tab" id="t-program" aria-controls="p-program" aria-selected="false" tabindex="-1">Program.cs</button>
+            <button role="tab" id="t-component" aria-controls="p-component" aria-selected="false" tabindex="-1">Counter.razor</button>
+            <button role="tab" id="t-store" aria-controls="p-store" aria-selected="false" tabindex="-1">CartStore.cs</button>
+            <button role="tab" id="t-draft" aria-controls="p-draft" aria-selected="false" tabindex="-1">BoardSlice.cs</button>
+          </div>
+          <div class="tab-panel" role="tabpanel" id="p-slice" aria-labelledby="t-slice">
+            <pre class="code" tabindex="0"><code data-lang="cs">public sealed record Greeting(string Name);
+
+[DuckyAction]
+public sealed record Rename(string Name);
+
+public sealed class GreetingSlice : Slice&lt;Greeting&gt;
+{
+    public GreetingSlice() =&gt; On&lt;Rename&gt;((state, action) =&gt; state with { Name = action.Name });
+
+    protected override Greeting Initial =&gt; new("world");
+}</code></pre>
+            <p class="note"><code>[DuckyAction]</code> asks the generator for <code>store.Rename("Ada")</code> and <code>await store.RenameAsync("Ada")</code>.</p>
+          </div>
+          <div class="tab-panel" role="tabpanel" id="p-program" aria-labelledby="t-program" hidden>
+            <pre class="code" tabindex="0"><code data-lang="cs">builder.Services.AddDucky(ducky =&gt;
+{
+    // Every slice, SliceStore and effect of this assembly, and the [Persist] defaults.
+    ducky.AddDuckyGenerated_Ducky_Samples_Wasm().UseJson(SampleJson.Default);
+
+    // DevTools is never enabled by the library itself: the app opts in, in Development only.
+    if (builder.HostEnvironment.IsDevelopment())
+    {
+        ducky.UseDevTools(options =&gt;
+        {
+            options.Name = "Ducky.Samples.Wasm";
+            options.Trace = true;
+        });
+    }
+});</code></pre>
+            <p class="note">The WebAssembly sample's <code>Program.cs</code>. One store per app in the browser, one per circuit or request on the server. <a href="docs/guides/blazor/render-modes.html">Render modes</a></p>
+          </div>
+          <div class="tab-panel" role="tabpanel" id="p-component" aria-labelledby="t-component" hidden>
+            <pre class="code" tabindex="0"><code data-lang="razor">@page "/"
+@rendermode InteractiveAuto
+@inherits DuckyComponent&lt;CounterState&gt;
+
+&lt;h1&gt;Counter&lt;/h1&gt;
+&lt;p&gt;Count: @State.Value&lt;/p&gt;
+&lt;button disabled="@(!RendererInfo.IsInteractive)" @onclick="() =&gt; Dispatch(new Increment())"&gt;Increment&lt;/button&gt;
+&lt;p&gt;Rendered by @RendererInfo.Name.&lt;/p&gt;</code></pre>
+            <p class="note">The counter page of the server sample. It re-renders only when its own selection changes.</p>
+          </div>
+          <div class="tab-panel" role="tabpanel" id="p-store" aria-labelledby="t-store" hidden>
+            <pre class="code" tabindex="0"><code data-lang="cs">public sealed class CartStore : SliceStore&lt;Cart&gt; // key "cart"
+{
+    public CartStore() =&gt; On&lt;CheckedOut&gt;(_ =&gt; Initial); // still a slice: it reacts to actions
+    protected override Cart Initial =&gt; new([]);
+    public int Count =&gt; State.Lines.Count; // a point-in-time read
+    public void Add(CartLine line) =&gt; Set(cart =&gt; cart with { Lines = cart.Lines.Add(line) }); // DevTools: "cart/Add"
+    public void Remove(string sku) =&gt; Set(cart =&gt; cart with { Lines = cart.Lines.RemoveAll(line =&gt; line.Sku == sku) });
+    public Task&lt;DispatchResult&gt; ClearAsync() =&gt; SetAsync(_ =&gt; Initial);
+}</code></pre>
+            <p class="note">Prefer methods to actions? A <code>SliceStore</code> is a slice with methods, and still goes through every middleware, persistence and DevTools.</p>
+          </div>
+          <div class="tab-panel" role="tabpanel" id="p-draft" aria-labelledby="t-draft" hidden>
+            <pre class="code" tabindex="0"><code data-lang="cs">public sealed class BoardSlice : Slice&lt;Board&gt;
+{
+    public BoardSlice()
+    {
+        On&lt;CardAdded&gt;((state, action) =&gt; state.Produce(draft =&gt;
+            draft.Cards.Add(new Card(action.Id, action.Title, Done: false))));
+        On&lt;DoneCardsCleared&gt;(state =&gt; state.Produce(draft =&gt;
+            draft.Cards.RemoveAll(card =&gt; card.Done)));
+        On&lt;FilterChanged&gt;((state, action) =&gt; state.Produce(draft =&gt; draft.Filter = action.Filter));
+    }
+
+    protected override Board Initial =&gt; new([], Filter: "all");
+}</code></pre>
+            <p class="note"><code>Ducky.Draft</code>: write the change as a mutation, get an immutable record back. Untouched branches stay reference-equal.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- The dispatcher board -->
+    <section class="board-sec" aria-labelledby="board-title">
+      <div class="wrap">
+        <div class="board-head">
+          <h2 id="board-title">Watch the dispatcher work.</h2>
+          <p>Press anything, as fast as you like. Actions queue, and one drainer reduces them in order. Ask for Paris twice: the first run is superseded, and its late answer is dropped.</p>
+        </div>
+        <div class="console">
+          <div class="controls" role="group" aria-label="Dispatch actions">
+            <button type="button" data-act="inc">Increment</button>
+            <button type="button" data-act="paris">LoadForecast("Paris")</button>
+            <button type="button" data-act="oslo">LoadForecast("Oslo")</button>
+            <button type="button" data-act="burst">Five at once</button>
+            <button type="button" data-act="reset" class="quiet">Reset</button>
+          </div>
+          <div class="state" aria-live="polite">
+            <p><span>State v</span><b id="st-version">6</b></p>
+            <p><span>Count</span><b id="st-count">2</b></p>
+            <p><span>Paris</span><b id="st-paris">14°C</b></p>
+            <p><span>Oslo</span><b id="st-oslo">6°C</b></p>
+            <p><span>Queue</span><b id="st-queue">0</b></p>
+          </div>
+          <div class="board-wrap">
+            <table class="board" aria-describedby="board-note">
+              <colgroup><col class="c-seq"><col class="c-act"><col class="c-org"><col class="c-res"></colgroup>
+              <thead><tr><th scope="col">#</th><th scope="col">Action</th><th scope="col">Origin</th><th scope="col">Result</th></tr></thead>
+              <tbody id="board-rows" data-settled>
+                <tr><td>11</td><td>ForecastLoaded("Oslo")</td><td>Effect</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>10</td><td>ForecastLoaded("Paris")</td><td>Effect</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>9</td><td>ForecastLoaded("Paris") <em>stale run</em></td><td>Effect</td><td><span class="lamp dropped">Dropped</span></td></tr>
+                <tr><td>8</td><td>ForecastLoading("Oslo")</td><td>Effect</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>7</td><td>LoadForecast("Oslo")</td><td>Local</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>6</td><td>ForecastLoading("Paris")</td><td>Effect</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>5</td><td>LoadForecast("Paris")</td><td>Local</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>4</td><td>Increment</td><td>Local</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>3</td><td>ForecastLoading("Paris")</td><td>Effect</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>2</td><td>LoadForecast("Paris")</td><td>Local</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                <tr><td>1</td><td>Increment</td><td>Local</td><td><span class="lamp reduced">Reduced</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="board-note" id="board-note">A JavaScript model of the store, slowed to one beat per action so you can follow it. The real one is C#. <a href="sample/">Open the WebAssembly sample</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Render modes -->
+    <section class="modes" aria-labelledby="modes-title">
+      <div class="wrap">
+        <h2 id="modes-title">Same rule in every render mode.</h2>
+        <p class="lede">Blazor has five places your state can live, and they disagree about storage, lifetime and prerender. Ducky picks the right behaviour for each one, so your slices and effects don't change.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="modes-title">
+          <table class="matrix">
+            <thead>
+              <tr><th scope="col">Host</th><th scope="col">Store</th><th scope="col">Browser storage</th><th scope="col">Server storage</th><th scope="col">Prerender seed</th><th scope="col">Cross-tab</th><th scope="col">DevTools</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">WebAssembly</th><td data-label="Store">one per app</td><td data-label="Browser storage">read at init, written on the next turn</td><td data-label="Server storage">not used</td><td data-label="Prerender seed">taken at init</td><td data-label="Cross-tab" class="yes">yes</td><td data-label="DevTools" class="yes">yes</td></tr>
+              <tr><th scope="row">Interactive Server</th><td data-label="Store">one per circuit</td><td data-label="Browser storage">written 250&nbsp;ms after a change, retried after a disconnect</td><td data-label="Server storage"><code>IDistributedCache</code>, flushed when the circuit ends</td><td data-label="Prerender seed">taken before the first render</td><td data-label="Cross-tab" class="yes">yes</td><td data-label="DevTools" class="yes">yes</td></tr>
+              <tr><th scope="row">Interactive Auto</th><td data-label="Store">a circuit store and a WebAssembly store</td><td data-label="Browser storage">same keys, each write reaches the other store</td><td data-label="Server storage">circuit side</td><td data-label="Prerender seed">whichever side starts</td><td data-label="Cross-tab" class="yes">yes, between both stores</td><td data-label="DevTools" class="yes">yes</td></tr>
+              <tr><th scope="row">Static SSR</th><td data-label="Store">one per request</td><td data-label="Browser storage">not used</td><td data-label="Server storage">read at init, written through</td><td data-label="Prerender seed">none</td><td data-label="Cross-tab" class="no">no</td><td data-label="DevTools" class="no">no</td></tr>
+              <tr><th scope="row">Prerender pass</th><td data-label="Store">one per request, thrown away</td><td data-label="Browser storage">not used</td><td data-label="Server storage">as static SSR</td><td data-label="Prerender seed">written from the idle store</td><td data-label="Cross-tab" class="no">no</td><td data-label="DevTools" class="no">no</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Condensed from <a href="docs/guides/blazor/render-modes.html">Render modes and the load rule</a>, where every cell has its details.</p>
+      </div>
+    </section>
+
+    <!-- Built on .NET 10 -->
+    <section class="platform" aria-labelledby="platform-title">
+      <div class="wrap split">
+        <div>
+          <h2 id="platform-title">Built on .NET&nbsp;10, not around it.</h2>
+          <p class="lede">.NET 10 persists component state across prerender and circuit pauses. Ducky's prerender handoff uses that same mechanism. What Blazor leaves to you is everything around it.</p>
+        </div>
+        <dl class="apis">
+          <div><dt><code>Slice&lt;T&gt;</code> <code>On&lt;TAction&gt;</code></dt><dd>A store: pure reducers, one dispatcher, atomic commits across slices.</dd></div>
+          <div><dt><code>Concurrency.Switch</code></dt><dd>Effects with Merge, Switch, Exhaust and Queue policies, per-key cancellation, and failures you can see.</dd></div>
+          <div><dt><code>Persist&lt;T&gt;()</code></dt><dd>localStorage, sessionStorage or <code>IDistributedCache</code>, versioned with migrations, scoped per user.</dd></div>
+          <div><dt><code>SyncAcrossTabs</code></dt><dd>Tabs converge without echoes.</dd></div>
+          <div><dt><code>UseDevTools()</code></dt><dd>Redux DevTools: action log, state diff, time travel to the exact typed snapshot.</dd></div>
+          <div><dt><code>SliceTest</code> <code>EffectTest</code></dt><dd>Slice, effect and whole-store tests with <code>TestStore</code>, no browser.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- Packages -->
+    <section class="packages" aria-labelledby="packages-title">
+      <div class="wrap">
+        <h2 id="packages-title">Take what you need.</h2>
+        <ol class="stack">
+          <li><a href="docs/guides/core/getting-started.html"><code>Ducky</code><span>The store, effects, selectors, <code>SliceStore</code>, <code>EntityState</code>, and the generators and analyzers inside the package.</span></a></li>
+          <li><a href="docs/guides/blazor/render-modes.html"><code>Ducky.Blazor</code><span>Components, persistence, prerender handoff, the server cache, cross-tab sync and Redux DevTools.</span></a></li>
+          <li><a href="docs/guides/draft/produce.html"><code>Ducky.Draft</code><span>Immer-style <code>Produce</code> for <code>[Draftable]</code> records.</span></a></li>
+          <li><a href="docs/guides/reactive/recipes.html"><code>Ducky.Reactive</code><span>Reactive effects on R3: debounced search, polling, a switch per key, resubscribe with backoff.</span></a></li>
+          <li><a href="docs/guides/core/testing.html"><code>Ducky.Testing</code><span>Slice, effect and store tests without a browser.</span></a></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Receipts -->
+    <section class="receipts" aria-labelledby="receipts-title">
+      <div class="wrap split">
+        <div>
+          <h2 id="receipts-title">The duck checks the receipts.</h2>
+          <p class="lede">The specification states 32 invariants. Each one is enforced in exactly one place and has named tests, and a CI gate runs them on every change. The build fails when any of these breaks.</p>
+          <p><a class="go dark" href="https://github.com/phmatray/Ducky/blob/v2/docs/spec/SPEC.md">Read the specification
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
+        </div>
+        <ul class="ledger">
+          <li><b>100%</b><span>line and branch coverage of every library</span></li>
+          <li><b>≥ 90%</b><span>Stryker mutation score target; the build breaks below 85%</span></li>
+          <li><b>0</b><span>IL2xxx and IL3xxx warnings, with NativeAOT and trimmed WebAssembly smoke runs</span></li>
+          <li><b>32</b><span>invariants, each with named tests, including linearizability and property tests</span></li>
+          <li><b>64</b><span>diagnostic pages: every configuration error is coded and says how to fix it</span></li>
+          <li><b>3</b><span>browser engines run the Playwright end-to-end suite: Chromium, Firefox, WebKit</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Migration -->
+    <section class="migrate" aria-labelledby="migrate-title">
+      <div class="wrap">
+        <h2 id="migrate-title">Coming from somewhere else?</h2>
+        <p class="lede">Step-by-step guides map what you have to Ducky 2.0.</p>
+        <ul class="from">
+          <li><a href="docs/migration/ducky-1x.html">Ducky 1.x</a></li>
+          <li><a href="docs/migration/mutty.html">Mutty</a></li>
+          <li><a href="docs/migration/duckynext.html">DuckyNext</a></li>
+          <li><a href="docs/migration/blazor-state.html">blazor-state</a></li>
+          <li><a href="docs/migration/bustand.html">Bustand</a></li>
+          <li><a href="docs/migration/theblazorstate.html">TheBlazorState</a></li>
+          <li><a href="docs/migration/blazormvu.html">BlazorMVU</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Close -->
+    <section class="close" aria-labelledby="close-title">
+      <img class="duck small" src="duck.svg" alt="" width="200" height="180">
+      <h2 id="close-title">Explained. Ship it.</h2>
+      <button class="cmd" type="button" data-copy="dotnet add package Ducky --prerelease" aria-label="Copy the install command: dotnet add package Ducky --prerelease">
+        <code><span class="prompt" aria-hidden="true">$</span> dotnet add package Ducky <span class="nb">--prerelease</span></code>
+        <span class="cmd-act">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 4H6a2 2 0 0 0-2 2v10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <span class="cmd-label">Copy</span>
+        </span>
+      </button>
+      <p class="links center">
+        <a class="go" href="docs/guides/core/getting-started.html">Read the guide
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="plain" href="https://github.com/phmatray/Ducky">Star it on GitHub</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-grid">
+      <p class="foot-brand"><img src="duck.svg" alt="" width="28" height="25"> Ducky. Apache-2.0.</p>
+      <nav aria-label="Footer">
+        <a href="docs/index.html">Documentation</a>
+        <a href="docs/threading.html">Threading contract</a>
+        <a href="https://www.nuget.org/packages/Ducky">NuGet</a>
+        <a href="https://github.com/phmatray/Ducky">GitHub</a>
+        <a href="https://github.com/phmatray/Ducky/blob/v2/CHANGELOG.md">Changelog</a>
+      </nav>
+    </div>
+  </footer>
+  <p class="sr-only" aria-live="polite" id="announce"></p>
+</body>
+</html>
