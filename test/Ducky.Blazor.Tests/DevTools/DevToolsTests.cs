@@ -514,15 +514,23 @@ public sealed class DevToolsTests
     [Fact]
     public async Task DevTools_Trace_TrimmedFrame_RendersUnknown()
     {
-        // Metadata trimmed away (NativeAOT): DiagnosticMethodInfo is null, so each frame renders as <unknown>.
-        await using var x = new DevToolsHarness(static d => d.UseDevTools(static o =>
+        // Metadata trimmed away (NativeAOT): DiagnosticMethodInfo is null, so each frame renders as <unknown>. The frames
+        // are captured with new StackTrace(skipFrames, false) (§10): no file information, which no frame description reads.
+        var files = new List<string?>();
+        await using var x = new DevToolsHarness(d => d.UseDevTools(o =>
         {
             o.Trace = true;
-            o.DescribeFrame = static _ => null;
+            o.DescribeFrame = frame =>
+            {
+                files.Add(frame.GetFileName());
+                return null;
+            };
         }));
         await x.InitializeAsync();
 
         ((string)x.Sends.ShouldHaveSingleItem().Action["stack"]!).ShouldBe(string.Join("\n", Enumerable.Repeat("    at <unknown>", 10)));
+        files.Count.ShouldBe(10);
+        files.ShouldAllBe(static file => file == null);
     }
 
     [Fact]

@@ -166,9 +166,14 @@ internal sealed class PrerenderHandoff : Middleware
                 return false;
             }
 
-            if (JsonSerializer.Deserialize(utf8.AsSpan(), WireContext().SeedEnvelope) is { Slices: { } slices } seed)
+            // A null slice value is unreadable too: STJ does not apply RespectNullableAnnotations to dictionary values, and a
+            // null one would otherwise reach the JsonElement casts below as a NullReferenceException. Plain locals, no
+            // pattern variables: no mutant of the condition can leave one unassigned (Stryker Safe Mode, §17.8).
+            var seed = JsonSerializer.Deserialize(utf8.AsSpan(), WireContext().SeedEnvelope);
+            var slices = seed?.Slices;
+            if (slices is not null && slices.Values.All(static value => value is not null))
             {
-                Restore(seed, slices);
+                Restore(seed!, slices);
             }
             else
             {
@@ -281,7 +286,7 @@ internal sealed class PrerenderHandoff : Middleware
             {
                 try
                 {
-                    await Store.WhenIdleAsync(idle.Token).ConfigureAwait(false);
+                    await Store.WhenIdleAsync(idle.Token).ConfigureAwait(ConfigureAwaitOptions.None);
                 }
                 catch (OperationCanceledException)
                 {
@@ -295,6 +300,7 @@ internal sealed class PrerenderHandoff : Middleware
             // PersistentComponentState comes with Blazor's services, IJSRuntime included.
             string src;
             var bridge = _persistence.Gate.CreateBridge(_jsRuntime!, _logger);
+            // Stryker disable once Boolean : no SynchronizationContext is captured in tests; library awaits never resume on it
             await using (bridge.ConfigureAwait(false))
             {
                 src = _persistence.Gate.Resolve(_registration.Options.IsBrowser, bridge) == InteractivityMode.Interactive ? "pause" : "prerender";

@@ -133,10 +133,10 @@ internal sealed partial class PersistenceMiddleware
         /// </summary>
         public Task OnStorageChangedAsync(string source, string area, string? key, string? value, bool tooLarge)
         {
-            var accepted = Accepted(source, area);
+            var accepted = Accepted(area, syncedOnly: source == "tab");
             if (key is null)
             {
-                return Task.WhenAll(accepted.Select(entry => ReceiveAsync(entry.Slice, entry.Key, token => _owner._browser.ReadAsync(entry.Slice.Options.Storage, entry.Key, token))));
+                return ReadAllAsync(accepted);
             }
 
             // A plain local, not a pattern variable: no mutant of the test can leave it unassigned (Stryker Safe Mode, §17.8).
@@ -197,17 +197,17 @@ internal sealed partial class PersistenceMiddleware
             _reference.Dispose();
         }
 
-        // The exact current storage keys a notification may name: "tab" reaches synced slices, "doc" every browser-persisted
-        // slice; both in the notification's area, under the scope recorded for the current epoch, all read under _issue (a
+        // The exact current storage keys a notification may name: "tab" reaches synced slices only, "doc" every
+        // browser-persisted slice; both in the notification's area, under the scope recorded for the current epoch, all read under _issue (a
         // scoped key names nothing while that scope is null or not recorded yet: a switch bumps the epoch under this lock).
         // Returned from inside the lock: no mutant of an assignment can leave the epoch unassigned (Stryker Safe Mode, §17.8).
-        private (Persisted Slice, string Key)[] Accepted(string source, string area)
+        private (Persisted Slice, string Key)[] Accepted(string area, bool syncedOnly)
         {
             lock (_owner._issue)
             {
                 var epoch = _owner.Current!.Epoch;
                 return [.. _slices
-                    .Where(persisted => BrowserStorageProvider.Area(persisted.Options.Storage) == area && (source != "tab" || persisted.Options.SyncAcrossTabs))
+                    .Where(persisted => BrowserStorageProvider.Area(persisted.Options.Storage) == area && (!syncedOnly || persisted.Options.SyncAcrossTabs))
                     .Select(persisted => (Slice: persisted, Key: _owner.StorageKey(persisted.Slice.Key, persisted.Options, epoch)))
                     .Where(static entry => entry.Key is not null)
                     .Select(static entry => (entry.Slice, entry.Key!))];
@@ -314,7 +314,8 @@ internal sealed partial class PersistenceMiddleware
                 return null;
             }
 
-            var state = removal ? _owner.Store.InitialState.Get(sliceKey) : null;
+            // A removal restores the initial state; a value's TryRead below overwrites it.
+            object? state = _owner.Store.InitialState.Get(sliceKey);
             string? payload = null;
             var serialized = removal
                 ? _owner.Store.Json.TrySerialize(state!, type, out payload)
@@ -428,8 +429,8 @@ internal sealed partial class PersistenceMiddleware
 
         // §11.7: storageSet or storageRemove answered false, so ducky.js pruned this id (its deliveries failed past
         // DeliveryPruneAfter) and the circuit came back: register again with the same six arguments (idempotent), then re-read
-        // every key of each registered area, standing in for the notifications lost meanwhile. "doc" accepts every
-        // browser-persisted key of the area, so a lost relay of an unsynced key is re-read too. Nothing once disposal began:
+        // every key of each registered area, standing in for the notifications lost meanwhile. Synced or not, as for a
+        // "doc" notification: every browser-persisted key of the area, so a lost relay of an unsynced key is re-read too. Nothing once disposal began:
         // the flush's own writes name an id about to be removed.
         public void Repair()
         {
@@ -442,8 +443,12 @@ internal sealed partial class PersistenceMiddleware
             Watch();
             foreach (var area in _slices.Select(static persisted => BrowserStorageProvider.Area(persisted.Options.Storage)).Distinct())
             {
-                _ = OnStorageChangedAsync("doc", area, null, null, tooLarge: false);
+                _ = ReadAllAsync(Accepted(area, syncedOnly: false));
             }
         }
+
+        // A null key's notification, or a repair: every accepted key is re-read, each through its own debounce.
+        private Task ReadAllAsync((Persisted Slice, string Key)[] accepted) =>
+            Task.WhenAll(accepted.Select(entry => ReceiveAsync(entry.Slice, entry.Key, token => _owner._browser.ReadAsync(entry.Slice.Options.Storage, entry.Key, token))));
     }
 }

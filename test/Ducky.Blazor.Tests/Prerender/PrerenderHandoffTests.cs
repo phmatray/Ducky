@@ -208,6 +208,25 @@ public sealed partial class PrerenderHandoffTests : BunitContext
     }
 
     [Theory]
+    [InlineData("""{"v":1,"src":"prerender","ver":null,"slices":{"counter":{"Value":4}}}""", true)]
+    [InlineData("""{"v":1,"src":"prerender","dirty":null,"slices":{"counter":{"Value":4}}}""", true)]
+    [InlineData("""{"v":1,"src":"prerender","slices":{"counter":{"Value":4},"products":null}}""", false)]
+    public async Task Prerender_SeedWithNullMember_LoggedNothingRestored(string json, bool jsonException)
+    {
+        // (non-normative) A null ver or dirty is an unreadable seed (a JsonException: the envelope is read with
+        // RespectNullableAnnotations), and so is a null slice value (STJ does not check dictionary values): Warning 2010,
+        // never a null reference, and nothing of it is restored.
+        var collector = new FakeLogCollector();
+        Services.AddLogging(b => b.AddProvider(new FakeLoggerProvider(collector)));
+        await InteractiveAsync(Seeded(Encoding.UTF8.GetBytes(json)), static d => d.Prerender<CounterSlice>().Prerender<ProductsSlice>());
+
+        Render<CounterView>().Markup.ShouldBe("0");
+        SeedSettled.ShouldBeTrue();
+        Store.State.WasRestored<Counter>().ShouldBeFalse();
+        (collector.GetSnapshot().Where(static r => r.Id.Id == 2010).ShouldHaveSingleItem().Exception is JsonException).ShouldBe(jsonException);
+    }
+
+    [Theory]
     [InlineData("circuit")]
     [InlineData("browser-sync-prefix")]
     [InlineData("browser-first-registration")]

@@ -82,6 +82,40 @@ public sealed partial class ScopeSwitchWasmTests : BunitContext
         StorageReads().ShouldBe(["ducky:alice:counter", "ducky:bob:counter"]);
     }
 
+    [Fact]
+    public async Task Wasm_HandOffAfterDispose_UserChangeNeverRunsScope()
+    {
+        // (non-normative) §11.6: a hand-off after dispose still subscribes (its callback is never withdrawn), but the user
+        // change it hears takes no epoch and never calls the Scope delegate: dispose disposed the store-lifetime token the
+        // re-assertion check would pass it.
+        var auth = new SwitchingAuth("alice");
+        var scopeCalls = 0;
+        Services.AddSingleton<AuthenticationStateProvider>(auth);
+        Services.RemoveAll<IJSRuntime>();
+        Services.AddSingleton<IJSRuntime>(_js);
+        _js.Respond = Respond;
+        Func<IServiceProvider, CancellationToken, ValueTask<string?>> scope = (services, token) =>
+        {
+            scopeCalls++;
+            return DuckyScopes.NameIdentifier(services, token);
+        };
+        Services.AddDucky(d => d.UseJson(Persistence.HydrationJson.Default).AddSlice<CounterSlice>()
+            .AddBlazor(o => (o.IsBrowser, o.Scope) = (true, scope))
+            .Persist<CounterSlice>());
+        var store = Services.GetRequiredService<IStore>();
+        var init = store.InitializeAsync(Ct);
+        await store.DisposeAsync();
+        await init.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        scopeCalls.ShouldBe(0); // the epoch-0 resolution waits for the hand-off, which never came before dispose
+
+        Services.GetRequiredService<PersistenceSlice>().Gate.Register(isInteractive: true, Services);
+        auth.Subscribers.ShouldBe(1);
+        auth.Change("bob");
+
+        scopeCalls.ShouldBe(0);
+        store.State.Get<PersistenceState>().ScopeEpoch.ShouldBe(0);
+    }
+
     // A browser Scope app with one provider per scope, as a real WASM app has for MSAL: a Singleton store, whose scope is not
     // the renderer's, starts its init before any hand-off. Alice's key holds 4 and Bob's 6.
     private (IStore Store, Task Init, SwitchingAuth Renderer, SwitchingAuth StoreScope) StartPerScopeProviders()

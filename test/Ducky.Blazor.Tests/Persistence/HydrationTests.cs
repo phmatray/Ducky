@@ -342,6 +342,26 @@ public sealed class HydrationTests : BunitContext
         written[^1].ShouldBe("""{"Value":2}""");
     }
 
+    [Fact]
+    public async Task Hydration_ReadAlreadyFailed_FailureIsTheTerminal_NothingDiscarded()
+    {
+        // (non-normative) §11.5 step 7: a read that has already failed runs the whole attempt inside InitializeAsync's
+        // synchronous part. Its failure claims and issues the terminal, and the attempt ends there: no read result is left
+        // to discard (Debug 2041).
+        _storage[("local", "ducky:counter")] = Task.FromException<object?>(new JSException("SecurityError: the operation is insecure"));
+        Browser(static d => d.Persist<CounterSlice>());
+
+        var initialized = Store.InitializeAsync(Ct);
+        _logs.GetSnapshot().ShouldNotContain(static r => r.Id.Id == 2041);
+        await initialized;
+
+        _log.Entries.ShouldBe([
+            "restore:@ducky/persistence Hydrating:0",
+            "failed:JSException:0:System Failed:0",
+            "initialized Failed:0",
+        ]);
+    }
+
     [Theory]
     [InlineData("load throws")]
     [InlineData("timeout")]
@@ -808,6 +828,7 @@ public sealed class HydrationTests : BunitContext
             "failed:InvalidOperationException:0:System Failed:0",
             "initialized Failed:0",
         ]);
+        _log.Terminals.ShouldHaveSingleItem().ShouldBe(new HydrationFailed(nameof(InvalidOperationException), "No IJSRuntime is registered: JS interop is unavailable in this host."));
     }
 
     [Fact]

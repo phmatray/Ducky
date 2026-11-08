@@ -88,14 +88,12 @@ internal sealed partial class PersistenceMiddleware
     private async Task SwitchAsync()
     {
         var attempt = BeginSwitch(CheckScope());
-        if (attempt is null)
+        if (attempt is not null)
         {
-            return;
+            using var deadline = attempt.Deadline;
+            Persisted[] slices = [.. _readable.Where(p => attempt.Keys.Contains(p.Slice.Key))];
+            await HydrateAsync(slices, attempt, attempt.Cancellation!.Token).ConfigureAwait(ConfigureAwaitOptions.None);
         }
-
-        using var deadline = attempt.Deadline;
-        Persisted[] slices = [.. _readable.Where(p => attempt.Keys.Contains(p.Slice.Key))];
-        await HydrateAsync(slices, attempt, attempt.Cancellation!.Token).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     // The synchronous part, or null once the switches are stopped: a notification already in flight when dispose unsubscribed,

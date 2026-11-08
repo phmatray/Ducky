@@ -142,6 +142,34 @@ public sealed class CrossTabReceiptTests
     }
 
     [Fact]
+    public async Task CrossTab_ReceiptDuringHydration_RestoreFails_LocalStateWrittenOverItsBaseline()
+    {
+        // (non-normative) §11.7: a value received while the key's hydration read is open is a Hydration restore, and its
+        // writer is signalled at once. When that restore commits nothing (a BeforeReduce threw, §6.4), the baseline still
+        // names the value read, so once the read closes the writer finds the slice unlike it and writes it, as for any
+        // local state a receipt did not replace.
+        var failure = new CrossTabFailure { Origin = Origin.Hydration };
+        await using var x = new CrossTabHarness(
+            static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true).Use<FailCrossTab>(),
+            services: s => s.AddSingleton(failure));
+        var read = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.HoldNextRead(read);
+        var init = x.H.InitializeAsync();
+        await WriterHarness.Until(() => x.H.Js.Calls.Any(static call => call.Identifier == "storageGet"));
+
+        failure.Armed = true;
+        await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(2)));
+        failure.Armed.ShouldBeFalse();
+        x.H.Store.State.Get<Level>().ShouldBe(new(0));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":2}""");
+
+        read.SetResult(x.Envelope(new Level(1)));
+        await init;
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":0}""");
+        x.H.Store.State.Get<Level>().ShouldBe(new(0));
+    }
+
+    [Fact]
     public async Task CrossTab_PublicRestoreAheadOfQueuedReceipt_KeySignalledOnReceiptCommit_Deterministic()
     {
         // (non-normative) A public IStore.Restore with Origin.CrossTab queued ahead of a receipt's restore is not the
@@ -629,6 +657,8 @@ public sealed class CrossTabReceiptTests
         x.H.Storage.ContainsKey(("local", "ducky:level")).ShouldBeFalse();
         x.H.Middleware.LastKnownPayload.ContainsKey("ducky:level").ShouldBeFalse();
         x.H.Store.State.Get<Level>().ShouldBe(new(3));
+        x.H.Middleware.InFlight.ContainsKey("ducky:level").ShouldBeFalse();
+        x.H.Middleware.Resolved["ducky:level"].Task.IsCompleted.ShouldBeTrue();
 
         // Acknowledged, the removal is no longer in flight: another tab's later {5}, then its removal, both apply.
         await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(5)));
@@ -986,6 +1016,36 @@ public sealed class CrossTabReceiptTests
         x.H.Store.State.Get<Level>().ShouldBe(new(3));
         x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":3}""");
         x.H.Written.Select(static write => write.Payload).ShouldBe(["""{"Value":3}""", """{"Value":4}"""]);
+    }
+
+    [Fact]
+    public async Task CrossTab_UnreadableValueDuringOwnWrite_Ignored()
+    {
+        // §11.7: a value the EnvelopeReader can't read (a newer version, Warning 2031) is ignored, also while this store's
+        // own write is in flight: no restore, and that write's result alone moves the baseline.
+        await using var x = new CrossTabHarness(static d => d.Persist<LevelSlice>(static o => o.SyncAcrossTabs = true));
+        await x.H.InitializeAsync();
+        var ack = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        x.H.OnSet = _ => ack.Task;
+        x.H.Store.Dispatch(new SetLevel(4));
+        (await x.H.NextWriteAsync()).Payload.ShouldBe("""{"Value":4}""");
+        try
+        {
+            await x.ReceiveAsync("tab", "local", "ducky:level", x.Envelope(new Level(5), version: 2));
+            x.Restores.Entries.ShouldBeEmpty();
+            x.H.Store.State.Get<Level>().ShouldBe(new(4));
+        }
+        finally
+        {
+            ack.TrySetResult(true);
+        }
+
+        await WriterHarness.Until(() => !x.H.Middleware.InFlight.ContainsKey("ducky:level"));
+        await x.H.Store.WhenIdleAsync(Ct);
+        x.Restores.Entries.ShouldBeEmpty();
+        x.H.Store.State.Get<Level>().ShouldBe(new(4));
+        x.H.Middleware.LastKnownPayload["ducky:level"].ShouldBe("""{"Value":4}""");
+        x.EventIds(LogLevel.Warning).ShouldContain(2031);
     }
 
     [Fact]

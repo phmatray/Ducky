@@ -290,6 +290,8 @@ internal sealed partial class PersistenceMiddleware
     /// </summary>
     internal sealed class PersistenceWriter : IAsyncDisposable
     {
+        // §11 writer: Channel<bool>(capacity 1, DropOldest), a wake-up signal only.
+        // Stryker disable once Initializer : equivalent, TryWrite into a full Wait-mode channel returns false and keeps the one pending wake-up; its result is ignored and the item's value is never read
         private readonly Channel<bool> _signal = Channel.CreateBounded<bool>(new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest });
         private readonly CancellationTokenSource _stop = new(); // its own: not linked to the store's lifetime
         private readonly CancellationTokenSource _hurry; // the dispose flush: ends every wait (linked to _stop)
@@ -356,6 +358,7 @@ internal sealed partial class PersistenceMiddleware
         public void Signal()
         {
             Interlocked.Increment(ref _signals);
+            // Stryker disable once Boolean : equivalent, the item's value is never read (WaitAsync discards it), only its presence
             _signal.Writer.TryWrite(true);
         }
 
@@ -406,6 +409,7 @@ internal sealed partial class PersistenceMiddleware
         private void Wake()
         {
             Volatile.Read(ref _woken)?.TrySetResult();
+            // Stryker disable once Boolean : equivalent, the item's value is never read (WaitAsync discards it), only its presence
             _signal.Writer.TryWrite(true);
         }
 
@@ -438,7 +442,9 @@ internal sealed partial class PersistenceMiddleware
 #pragma warning disable VSTHRD003 // justification: the loop this writer started; it never faults and ends once its token is cancelled, or when a provider call ignoring it returns (FlushAsync bounds this wait)
             await _loop.ConfigureAwait(ConfigureAwaitOptions.None);
 #pragma warning restore VSTHRD003
+            // Stryker disable once Statement : equivalent, frees only _stop's registration of it: the loop has ended (awaited above), nothing reads its token, and Flushing reads IsCancellationRequested, which a disposed source still answers
             _hurry.Dispose();
+            // Stryker disable once Statement : equivalent, a source with no timer: the loop has ended (awaited above) and nothing reads its token any more
             _stop.Dispose();
         }
 
@@ -508,11 +514,8 @@ internal sealed partial class PersistenceMiddleware
         // A debounce or a backoff on the TimeProvider, which the flush ends early; once the loop is stopped, nothing follows.
         private async Task PauseAsync(TimeSpan delay, CancellationToken hurry)
         {
-            if (delay > TimeSpan.Zero)
-            {
-                await Task.Delay(delay, _owner._time, hurry).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-            }
-
+            // No pause for a zero or negative delay: Task.Delay(TimeSpan.Zero, …) completes at once.
+            await Task.Delay(TimeSpan.FromTicks(Math.Max(delay.Ticks, 0)), _owner._time, hurry).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
             _stop.Token.ThrowIfCancellationRequested();
         }
 

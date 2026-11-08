@@ -144,9 +144,10 @@ public sealed class InteractivityGateTests : BunitContext
         var ran = 0;
         gate.OnFirstRegistration(static () => throw new InvalidOperationException("broken built-in"));
         gate.OnFirstRegistration(() => ran++);
+        gate.OnFirstRegistration(static () => throw new InvalidOperationException("another broken built-in"));
 
         Should.Throw<AggregateException>(() => gate.Register(isInteractive: true, Services))
-            .InnerExceptions.ShouldHaveSingleItem().Message.ShouldBe("broken built-in");
+            .InnerExceptions.Select(static e => e.Message).ShouldBe(["broken built-in", "another broken built-in"]);
         gate.Register(isInteractive: true, Services);
 
         ran.ShouldBe(1);
