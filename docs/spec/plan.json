@@ -78,7 +78,7 @@
   {
    "id": "M15",
    "title": "Docs and migration guides",
-   "goal": "docfx with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the seven migration guides with compiled before/after samples and the 1.x API list check."
+   "goal": "A generated docs site (the answer binder) with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check."
   },
   {
    "id": "M16",
@@ -3246,7 +3246,7 @@
    ],
    "area": "docs/docfx.json, test/Ducky.Docs.Tests, build/Build.Gates.cs#Docs, .github/workflows/docs.yml",
    "invariants": [],
-   "scope": "Stage 18. docfx.json; Ducky.Docs.Tests replaces its skeleton region test (every snippet is a #region of a compiled, tested file); Ducky.Migration.slnx scaffold with per-guide Before/After projects whose docs/migration/samples/Directory.Build.props imports the root props and sets ManagePackageVersionsCentrally=false, RestoreLockedMode=false and NuGetAudit=false; full Docs target (builds Ducky.Migration.slnx without a lock file, fence check, docfx to artifacts/docs); hand-written docs.yml (on release: Docs + Pages with the WASM sample).",
+   "scope": "Stage 18. (docfx replaced by M15-08.) docfx.json; Ducky.Docs.Tests replaces its skeleton region test (every snippet is a #region of a compiled, tested file); Ducky.Migration.slnx scaffold with per-guide Before/After projects whose docs/migration/samples/Directory.Build.props imports the root props and sets ManagePackageVersionsCentrally=false, RestoreLockedMode=false and NuGetAudit=false; full Docs target (builds Ducky.Migration.slnx without a lock file, fence check, docfx to artifacts/docs); hand-written docs.yml (on release: Docs + Pages with the WASM sample).",
    "acceptance_tests": [
     "Docs target builds docfx with a region include from Ducky.Docs.Tests",
     "Planted check: a fenced csharp block fails Docs"
@@ -3370,6 +3370,24 @@
    "done_definition": "Common DoD (PLAN.md §1)."
   },
   {
+   "id": "M15-08",
+   "milestone": "M15",
+   "title": "Docs site generator replaces docfx",
+   "size": "M",
+   "depends_on": [
+    "M15-01",
+    "M15-04"
+   ],
+   "area": "build/Build.DocsSite.cs, build/Build.DocsHighlight.cs, build/Build.Gates.cs#Docs, docs/nav.yml, site/docs-theme, site/tokens.css, .github/workflows/docs.yml",
+   "invariants": [],
+   "scope": "Stage 18. Owner-added (2026-11-08). SPEC §17.1 Docs row, §18 layout, §19 Docs target, §20 docs.yml. Docs renders docs/**/*.md (outside spec/, adr/, migration/samples/) through docs/nav.yml (tabs, groups, globs, unlisted pages) and site/docs-theme/page.html with Markdig; includes become region text highlighted at build time with a link to their source lines; page links become .html, repository links GitHub URLs; a search index per H2 (listed pages only). The theme shares site/tokens.css with the home page. docfx, docs/docfx.json and docs/toc.yml are removed; the owner's earlier trials' guides stay reachable but unlisted.",
+   "acceptance_tests": [
+    "Docs fails on a page missing from docs/nav.yml, a broken link or anchor, a link leaving the repository, an image, a page without one leading H1 and an unresolved include (DocsSiteSelfCheck plants each)",
+    "Docs writes every listed and unlisted page, the search index and the theme assets to artifacts/docs"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M16-01",
    "milestone": "M16",
    "title": "Nightly audit and benchmarks",
@@ -3459,7 +3477,8 @@
     "M13-05",
     "M14-06",
     "M15-06",
-    "M15-07"
+    "M15-07",
+    "M15-08"
    ],
    "area": "docs/spec/tests.yaml, build/Build.SpecTrace.cs",
    "invariants": [],

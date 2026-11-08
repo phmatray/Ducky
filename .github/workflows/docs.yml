@@ -50,16 +50,16 @@ jobs:
         run: dotnet publish samples/Ducky.Samples.Wasm/Ducky.Samples.Wasm.csproj -c Release -o artifacts/sample
       - name: 'Assemble: Pages'
         run: |
-          # The home page (site/) at the root, the docfx guides under docs/, the WASM sample under sample/. The design
-          # records of site/ (PRODUCT.md, DESIGN.md, .impeccable/) are development files and stay out of the artifact.
+          # The home page (site/) at the root, the generated docs under docs/, the WASM sample under sample/. The design
+          # records of site/ (PRODUCT.md, DESIGN.md, .impeccable/) and the docs theme (copied into docs/_assets by Docs) stay out.
           mkdir -p artifacts/pages
-          rsync -a --exclude '.impeccable/' --exclude 'PRODUCT.md' --exclude 'DESIGN.md' site/ artifacts/pages/
+          rsync -a --exclude '.impeccable/' --exclude 'PRODUCT.md' --exclude 'DESIGN.md' --exclude 'docs-theme/' site/ artifacts/pages/
           cp -r artifacts/docs artifacts/pages/docs
           cp -r artifacts/sample/wwwroot artifacts/pages/sample
           # The site is served from /<repository>/, the sample from /<repository>/sample/.
           sed -i 's|<base href="/" */>|<base href="/${{ github.event.repository.name }}/sample/" />|' artifacts/pages/sample/index.html
           grep -q '<base href="/${{ github.event.repository.name }}/sample/"' artifacts/pages/sample/index.html
-          test -f artifacts/pages/index.html && test -f artifacts/pages/docs/index.html
+          test -f artifacts/pages/index.html && test -f artifacts/pages/tokens.css && test -f artifacts/pages/docs/index.html && test -f artifacts/pages/docs/_assets/docs.css
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

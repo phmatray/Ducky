@@ -2,7 +2,7 @@
 
 Status: plan derived from `SPEC.md` (authoritative, including review rounds "2 (recovered)" through 7 of `REVIEW-LOG.md`) and `adr/0001-0047`. Where this plan and the spec disagree, the spec wins; every planning decision that goes beyond the spec is listed in §3.
 
-154 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
+155 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
 
 ## 1. Workflow: strict TDD under full gates
 
@@ -66,7 +66,7 @@ Every story after M0-01 is one issue and one squash-merged PR on `v2`, and it fo
 | M12 | Server persistence | 9 | PersistStorage.Server over IDistributedCache, scopes, retries and the phase-5a flush, the auth-driven scope switch with epochs, init-phase deadlines, reconnect absorption and attempt supersession (INV-17), static SSR pins, pause seeds across scopes; AOT smoke for server persistence and DevTools payload. |
 | M13 | Generators, analyzers and tombstones | 12 | Shared generator helpers, GEN-01 dispatch helpers, GEN-02 core registration (step 7) and its Blazor arms (Prerender<T> at stage 11, PersistAttributeDefaults<T> and Ducky.Blazor.Generated.Tests at stage 12), multi-assembly fixture (INV-25), the stage-7 analyzers (DUCKY001-025 arms whose APIs exist by step 6), DUCKYM001-M008 tombstones, stage-7 PackageSmoke assertions. |
 | M14 | Samples, E2E and AOT | 6 | Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, and the trimmed AOT-WASM smoke that can't skip in the aot job. |
-| M15 | Docs and migration guides | 7 | docfx with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the seven migration guides with compiled before/after samples and the 1.x API list check. |
+| M15 | Docs and migration guides | 8 | A generated docs site (the answer binder) with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check. |
 | M16 | Release candidate | 6 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
 
 ## 5. Scheduling
@@ -94,7 +94,7 @@ Stories per stage (P1: `activeStage` reaches N once every story listed at N or b
 | 15 | DevTools | M8-01, M8-02, M8-03, M8-03b, M12-05 |
 | 16 | Ducky.Reactive | M11-01, M11-01b, M11-02, M11-02b, M11-03, M11-05 |
 | 17 | Ducky.Draft | M10-01, M10-02, M10-03, M10-04, M10-05, M10-06, M10-07, M10-07b, M11-04 |
-| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07 |
+| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08 |
 | 19 | RC and consumer migrations; GA | M16-01, M16-02, M16-03, M16-04, M16-05, M16-06 |
 
 Parallel lanes:
@@ -2324,16 +2324,16 @@ Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §1
 
 ### M15 — Docs and migration guides
 
-docfx with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the seven migration guides with compiled before/after samples and the 1.x API list check.
+A generated docs site (the answer binder) with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check.
 
 #### M15-01 Docs infrastructure (M)
 
 - **Stage:** 18
 - **Depends on:** M9-05, M0-11
-- **Unblocks:** M15-02, M15-03, M15-04, M15-05, M15-06, M15-07
+- **Unblocks:** M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08
 - **Area:** `docs/docfx.json, test/Ducky.Docs.Tests, build/Build.Gates.cs#Docs, .github/workflows/docs.yml`
 - **Invariants:** —
-- **Scope:** docfx.json; Ducky.Docs.Tests replaces its skeleton region test (every snippet is a #region of a compiled, tested file); Ducky.Migration.slnx scaffold with per-guide Before/After projects whose docs/migration/samples/Directory.Build.props imports the root props and sets ManagePackageVersionsCentrally=false, RestoreLockedMode=false and NuGetAudit=false; full Docs target (builds Ducky.Migration.slnx without a lock file, fence check, docfx to artifacts/docs); hand-written docs.yml (on release: Docs + Pages with the WASM sample).
+- **Scope:** (docfx replaced by M15-08.) docfx.json; Ducky.Docs.Tests replaces its skeleton region test (every snippet is a #region of a compiled, tested file); Ducky.Migration.slnx scaffold with per-guide Before/After projects whose docs/migration/samples/Directory.Build.props imports the root props and sets ManagePackageVersionsCentrally=false, RestoreLockedMode=false and NuGetAudit=false; full Docs target (builds Ducky.Migration.slnx without a lock file, fence check, docfx to artifacts/docs); hand-written docs.yml (on release: Docs + Pages with the WASM sample).
 - **Acceptance tests:**
   - `Docs` target builds docfx with a region include from Ducky.Docs.Tests
   - Planted check: a fenced csharp block fails Docs
@@ -2368,7 +2368,7 @@ docfx with compiled-snippet regions, user guides, threading.md, a complete diagn
 
 - **Stage:** 18
 - **Depends on:** M15-01, M13-06, M13-07, M13-08, M13-09, M13-10, M10-07, M13-04b, M11-05, M10-07b, M9-01c, M9-04c
-- **Unblocks:** M16-04
+- **Unblocks:** M15-08, M16-04
 - **Area:** `docs/diagnostics`
 - **Invariants:** —
 - **Scope:** Every DUCKY/DUCKYM ID has a page whose bad-example snippets are regions over the analyzer verifier tests' raw strings; HelpLinkUri of every descriptor points to its page; rerun the DUCKY001-003 false-positive corpus over all docs snippets. Adds the Docs check that fails when an ID of §8.2 or §16.2 (DUCKY001-025, DUCKY101-109, DUCKY300-353, DUCKY900-902, DUCKYM001-M008) has no docs/diagnostics/{ID}.md.
@@ -2414,6 +2414,19 @@ docfx with compiled-snippet regions, user guides, threading.md, a complete diagn
 - **Scope:** §13.4 and §22.5-22.6; the Mutty guide states the net10.0 requirement and the unmaintained last Mutty. The Produce row reads 'unchanged for scalar and nested-record edits; collection edits per the rows below', with rows for List<T>/List<MutableT> members, IReadOnlyList<T>/IReadOnlyCollection<T>, queue/stack/sorted-dictionary members (DUCKY109) and record struct (DUCKY101); the sample includes a Find-based recipe and a queue member.
 - **Acceptance tests:**
   - `Ducky`.Migration.slnx builds the Mutty Before/After pair
+- **Done:** Common DoD.
+
+#### M15-08 Docs site generator replaces docfx (M)
+
+- **Stage:** 18
+- **Depends on:** M15-01, M15-04
+- **Unblocks:** M16-04
+- **Area:** `build/Build.DocsSite.cs, build/Build.DocsHighlight.cs, build/Build.Gates.cs#Docs, docs/nav.yml, site/docs-theme, site/tokens.css, .github/workflows/docs.yml`
+- **Invariants:** —
+- **Scope:** Stage 18. Owner-added (2026-11-08). SPEC §17.1 Docs row, §18 layout, §19 Docs target, §20 docs.yml. Docs renders docs/**/*.md (outside spec/, adr/, migration/samples/) through docs/nav.yml (tabs, groups, globs, unlisted pages) and site/docs-theme/page.html with Markdig; includes become region text highlighted at build time with a link to their source lines; page links become .html, repository links GitHub URLs; a search index per H2 (listed pages only). The theme shares site/tokens.css with the home page. docfx, docs/docfx.json and docs/toc.yml are removed; the owner's earlier trials' guides stay reachable but unlisted.
+- **Acceptance tests:**
+  - Docs fails on a page missing from docs/nav.yml, a broken link or anchor, a link leaving the repository, an image, a page without one leading H1 and an unresolved include (DocsSiteSelfCheck plants each)
+  - Docs writes every listed and unlisted page, the search index and the theme assets to artifacts/docs
 - **Done:** Common DoD.
 
 ### M16 — Release candidate
@@ -2463,7 +2476,7 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
 #### M16-04 Spec closure (S)
 
 - **Stage:** 19
-- **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M15-06, M15-07
+- **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M15-06, M15-07, M15-08
 - **Unblocks:** M16-05
 - **Area:** `docs/spec/tests.yaml, build/Build.SpecTrace.cs`
 - **Invariants:** —
