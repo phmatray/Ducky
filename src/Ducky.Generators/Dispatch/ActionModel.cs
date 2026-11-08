@@ -128,6 +128,7 @@ internal sealed record ActionModel(
     private static IEnumerable<ITypeSymbol> Parts(ITypeSymbol type) => type switch
     {
         IArrayTypeSymbol => Parts(((IArrayTypeSymbol)type).ElementType),
+        // Stryker disable once Linq : equivalent, every consumer of Parts ignores order (Any, or Distinct then OrderBy)
         INamedTypeSymbol => Containers((INamedTypeSymbol)type).SelectMany(t => t.TypeArguments.SelectMany(Parts).Prepend(t)),
         _ => [],
     };
@@ -162,11 +163,12 @@ internal sealed record ActionModel(
         _ => type,
     };
 
-    // A nested type is looked up again in its erased containing type; a top-level one is its own definition.
+    // A nested type is looked up again in its erased containing type, which declares exactly one type of that name and
+    // arity (CS0102); a top-level one is its own definition.
     private static INamedTypeSymbol Definition(INamedTypeSymbol named, Compilation compilation) =>
         named.ContainingType is null
             ? named.ConstructedFrom
-            : ((INamedTypeSymbol)Erase(named.ContainingType, compilation)).GetTypeMembers(named.Name, named.Arity).Single();
+            : ((INamedTypeSymbol)Erase(named.ContainingType, compilation)).GetTypeMembers(named.Name, named.Arity)[0];
 
     private static string Declaration(IParameterSymbol parameter, Compilation compilation) =>
         (parameter.IsParams ? "params " : "")
@@ -194,19 +196,16 @@ internal sealed record ActionModel(
     // so `string Query = null` becomes `string? Query = null` in the #nullable enable file instead of CS8625, except as
     // the argument of a type parameter that can't be nullable (Dictionary<string, int> stays `string`, no CS8714). Arity,
     // not IsGenericType: a type nested in a generic type (Dictionary<K, V>.KeyCollection) has no type arguments of its own.
-    // A type with no oblivious position is returned as is, so nullable-enabled code is never rebuilt, and a tuple is
-    // rebuilt as a tuple: Construct would drop its element names (CS8123 on a named tuple literal).
+    // Every position is rebuilt with its own annotation, so a type with no oblivious position comes back equal. A tuple is
+    // rebuilt as a tuple: Construct would drop its element names (CS8123 on a named tuple literal); a one-element
+    // ValueTuple<T> has no names and goes through Construct (CreateTupleTypeSymbol takes two or more elements; v2 threw
+    // there on an oblivious ValueTuple<string>, CS8785).
     private static ITypeSymbol Annotate(ITypeSymbol type, Compilation compilation, bool nullable = true)
     {
-        if (!HasOblivious(type))
-        {
-            return type;
-        }
-
         var rebuilt = type switch
         {
             IArrayTypeSymbol => AnnotateArray((IArrayTypeSymbol)type, compilation),
-            INamedTypeSymbol { IsTupleType: true } => AnnotateTuple((INamedTypeSymbol)type, compilation),
+            INamedTypeSymbol { IsTupleType: true, TupleElements.Length: >= 2 } => AnnotateTuple((INamedTypeSymbol)type, compilation),
             INamedTypeSymbol { Arity: > 0 } => AnnotateGeneric((INamedTypeSymbol)type, compilation),
             _ => type,
         };
@@ -215,11 +214,6 @@ internal sealed record ActionModel(
             : nullable ? NullableAnnotation.Annotated
             : NullableAnnotation.NotAnnotated);
     }
-
-    private static bool HasOblivious(ITypeSymbol type) =>
-        (type.IsReferenceType && type.NullableAnnotation == NullableAnnotation.None)
-        || (type is IArrayTypeSymbol && HasOblivious(((IArrayTypeSymbol)type).ElementType))
-        || (type is INamedTypeSymbol && ((INamedTypeSymbol)type).TypeArguments.Any(HasOblivious));
 
     private static ITypeSymbol AnnotateTuple(INamedTypeSymbol tuple, Compilation compilation)
     {

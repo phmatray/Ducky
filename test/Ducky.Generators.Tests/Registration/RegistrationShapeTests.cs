@@ -124,6 +124,9 @@ public sealed class RegistrationShapeTests
             [System.Diagnostics.CodeAnalysis.Experimental("APP001")] public sealed class Trial : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
             [System.Diagnostics.CodeAnalysis.Experimental("APP001")] public sealed class TrialEffect : Ducky.EffectGroup { }
             [System.Obsolete("old", DiagnosticId = "")] public sealed class OldEmptyId : Ducky.EffectGroup { }
+            // Only [Obsolete]'s DiagnosticId is suppressed, not a DiagnosticId argument of another attribute.
+            [System.AttributeUsage(System.AttributeTargets.Class)] public sealed class TaggedAttribute : System.Attribute { public string DiagnosticId { get; set; } = ""; }
+            [Tagged(DiagnosticId = "APP009")] public sealed class TaggedSlice : Ducky.Slice<Cart> { protected override Cart Initial => new(0); }
             """,
         ["Names"] = """
             public sealed record Cart(int Count);
