@@ -1,19 +1,28 @@
+@* The page: top bar, the shop sheet, the code drawer and the inspector tape. X-ray is one
+   class on the desk; tags, outlines and render counters are CSS, so flipping it
+   re-renders only the components that selected it. *@
 @inherits ShopComponent
 @inject IJSRuntime Js
-@* The page: yolk desk, top bar, the shop sheet (catalogue left, order column right), the code drawer and the inspector tape.
-   X-ray is one class on the desk: the regions' tags, outlines and render counters are CSS, so flipping it re-renders
-   only the components that selected it. *@
 
-<div class="desk @(_view.Value.On ? "xray" : null) @(_view.Value.InspectorOpen ? "inspector-open" : null) @(_drawerOpen.Value ? "with-drawer" : null)">
-  <a class="skip" href="#shop" @onclick="SkipToShopAsync" @onclick:preventDefault>Skip to the shop</a>
+<div class="@DeskClass">
+  <a class="skip" href="#shop" @onclick="SkipToShopAsync" @onclick:preventDefault>
+    Skip to the shop
+  </a>
   <TopBar />
 
   <main id="shop" class="sheet" tabindex="-1">
     <div class="sheet-head">
       <h1>Rubber Duck Supply Co.</h1>
       <div class="lede">
-        <p>Hand-finished rubber ducks for people who explain their code out loud. The shop is built only from Ducky: switch on X-ray to see which part does what, and read the code that does it.</p>
-        <p class="demo-note">Nothing here is for sale. The ducks, the stock and the orders are demonstration data from a fake API running in your browser, and Pay charges nothing.</p>
+        <p>
+          Hand-finished rubber ducks for people who explain their code out loud. The shop
+          is built only from Ducky: switch on X-ray to see which part does what, and read
+          the code that does it.
+        </p>
+        <p class="demo-note">
+          Nothing here is for sale. The ducks, the stock and the orders are demonstration
+          data from a fake API running in your browser, and Pay charges nothing.
+        </p>
       </div>
     </div>
     <div class="shop-grid">
@@ -24,7 +33,7 @@
         <WarehouseDesk />
       </div>
       <div class="shop-side">
-        <CartPanel />
+        <BasketPanel />
         <CheckoutBox />
         <OrderTracker />
         <ProfilePanel />
@@ -32,7 +41,7 @@
     </div>
   </main>
 
-  <CartJump />
+  <BasketJump />
   <CodeDrawer />
   <InspectorTape />
 </div>
@@ -41,13 +50,29 @@
   private Selection<XrayView> _view = null!;
   private Selection<bool> _drawerOpen = null!;
 
-  // A plain "#shop" link would leave the page under its base href when the URL has a query (?devtools): scroll and
-  // focus here instead.
-  private async Task SkipToShopAsync() => await Js.InvokeVoidAsync("playground.jump", "shop");
+  private string DeskClass
+  {
+    get
+    {
+      string?[] classes =
+      [
+        "desk",
+        _view.Value.On ? "xray" : null,
+        _view.Value.InspectorOpen ? "inspector-open" : null,
+        _drawerOpen.Value ? "with-drawer" : null,
+      ];
+      return string.Join(' ', classes.OfType<string>());
+    }
+  }
 
   protected override void OnInitialized()
   {
     _view = Select<XrayView, XrayView>(static view => view);
     _drawerOpen = Select<DrawerView, bool>(static drawer => drawer.Feature is not null);
   }
+
+  // Under the base href, a bare "#shop" link would load another document when the URL
+  // has a query (?devtools), so the script scrolls and focuses in place.
+  private async Task SkipToShopAsync() =>
+    await Js.InvokeVoidAsync("playground.jump", "shop");
 }

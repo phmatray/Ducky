@@ -414,6 +414,7 @@ internal sealed partial class Build
             var docs = (RootDirectory / "docs").GlobFiles("**/*.md")
                 .Select(f => (Path: RootDirectory.GetUnixRelativePathTo(f).ToString(), Text: f.ReadAllText())).ToList();
             var site = RenderDocsSite(DocsSiteInputFrom(RootDirectory, docs));
+            var siteRoot = RootDirectory / "site";
             FailOnViolations("Docs", [
                 .. DocsFenceViolations(docs),
                 .. DocsRegionViolations(docs, path => RootDirectory / path is var file && file.FileExists() ? file.ReadAllText() : null),
@@ -426,7 +427,12 @@ internal sealed partial class Build
                 .. DiagnosticPageViolations(docs),
                 .. DiagnosticPageSelfCheck(),
                 .. site.Violations,
+                .. LlmsTxtViolations((siteRoot / "llms.txt").ReadAllText(), site.Files.Keys.ToList(),
+                    path => siteRoot / path.TrimEnd('/') is var entry && (entry.FileExists() || entry.DirectoryExists())),
                 .. DocsSiteSelfCheck(),
+                // The playground shows its own source in the X-ray drawer: readable widths, and every drawer mark resolves.
+                .. PlaygroundSourceViolations(RootDirectory),
+                .. PlaygroundSourceSelfCheck(),
             ]);
             DotNet($"build {MigrationSolution} -c Release -nodeReuse:false");
             // The After samples' test modules (the guides' behaviour-change tests); MTP skips the projects that are none.

@@ -1,3 +1,5 @@
+@* The X-ray switch calls a SliceStore method rather than dispatching an action. The
+   store still reduces the change, persists it and re-renders what selected it. *@
 @inherits ShopComponent
 @inject XrayStore Xray
 @inject DrawerStore Drawer
@@ -11,14 +13,23 @@
 
   <div class="region controls" style="--i: 0">
     @RenderCount
-    <div class="xtags"><XrayTag Feature="slice-store" Detail="@(_view.Value.On ? "xray/Toggle" : null)" /></div>
-    <button type="button" class="xswitch" role="switch" aria-checked="@(_view.Value.On ? "true" : "false")" @onclick="ToggleXray">
+    <div class="xtags">
+      <XrayTag FeatureId="slice-store"
+               Detail="@(_view.Value.On ? "xray/Toggle" : null)" />
+    </div>
+    <button type="button" class="xswitch" role="switch"
+            aria-checked="@(_view.Value.On ? "true" : "false")" @onclick="ToggleXray">
       <span class="xswitch-label">X-ray</span>
-      <span class="xswitch-track" aria-hidden="true"><span class="xswitch-knob"></span></span>
-      <span class="xswitch-state" aria-hidden="true">@(_view.Value.On ? "On" : "Off")</span>
+      <span class="xswitch-track" aria-hidden="true">
+        <span class="xswitch-knob"></span>
+      </span>
+      <span class="xswitch-state" aria-hidden="true">
+        @(_view.Value.On ? "On" : "Off")
+      </span>
     </button>
-    <button type="button" class="pill inspector-toggle" aria-pressed="@(_view.Value.InspectorOpen ? "true" : "false")" aria-controls="inspector"
-            @onclick="Xray.ToggleInspector">
+    <button type="button" class="pill inspector-toggle"
+            aria-pressed="@(_view.Value.InspectorOpen ? "true" : "false")"
+            aria-controls="inspector" @onclick="Xray.ToggleInspector">
       Inspector
     </button>
   </div>
@@ -32,11 +43,12 @@
 @code {
   private Selection<XrayView> _view = null!;
 
-  protected override void OnInitialized() => _view = Select<XrayView, XrayView>(static view => view);
+  protected override void OnInitialized() =>
+    _view = Select<XrayView, XrayView>(static view => view);
 
   private void ToggleXray()
   {
-    // Turning X-ray off hides the tags, so the drawer they open closes with them.
+    // Turning X-ray off hides the tags, so the drawer they opened closes with them.
     var wasOn = Xray.State.On;
     Xray.Toggle();
     if (wasOn)

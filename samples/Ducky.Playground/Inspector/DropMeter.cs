@@ -1,26 +1,35 @@
+// Dropped work never reaches a middleware, but the store counts it on its "Ducky"
+// Meter, so a MeterListener puts each drop on the inspector tape.
 using System.Diagnostics.Metrics;
 
 namespace Ducky.Playground.Inspector;
 
-// Dropped work never reaches a middleware, but the store counts it on its Meter (SPEC §9): ducky.effect.dropped for an
-// Exhaust drop, ducky.dispatch.dropped (tagged ducky.drop.reason) for a superseded run's dispatch. A MeterListener hears
-// both, synchronously, while the store processes the action that caused them.
 public sealed class DropMeter : IDisposable
 {
+    // An Exhaust effect skipped a run.
+    private const string EffectDropped = "ducky.effect.dropped";
+
+    // A superseded Switch run tried to dispatch, or a dispatch went past
+    // MaxDispatchDepth.
+    private const string DispatchDropped = "ducky.dispatch.dropped";
+
     private readonly MeterListener _listener = new();
 
+    // The listener hears each measurement synchronously, while the store is still
+    // processing the action that caused the drop.
     public DropMeter(Tape tape)
     {
         _listener.InstrumentPublished = static (instrument, listener) =>
         {
-            if (instrument.Meter.Name == "Ducky" && instrument.Name is "ducky.effect.dropped" or "ducky.dispatch.dropped")
+            if (instrument.Meter.Name == "Ducky"
+                && instrument.Name is EffectDropped or DispatchDropped)
             {
                 listener.EnableMeasurementEvents(instrument);
             }
         };
         _listener.SetMeasurementEventCallback<long>((instrument, _, tags, _) =>
         {
-            if (instrument.Name == "ducky.effect.dropped")
+            if (instrument.Name == EffectDropped)
             {
                 tape.EffectRunDropped();
                 return;
@@ -34,7 +43,9 @@ public sealed class DropMeter : IDisposable
                     reason = value;
                 }
             }
-            tape.DispatchDropped(reason == "depth" ? "past MaxDispatchDepth" : "its Switch run was superseded");
+            tape.DispatchDropped(reason == "depth"
+                ? "past MaxDispatchDepth"
+                : "its Switch run was superseded");
         });
         _listener.Start();
     }

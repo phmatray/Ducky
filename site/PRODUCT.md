@@ -43,7 +43,7 @@ Name "Ducky". The 1.x repository is phmatray/Ducky; the duck is the name's only 
 ## Evidence on Hand
 
 - Compiled, tested snippets: `test/Ducky.Docs.Tests/**` (quick start, getting started, SliceStore, effects, persistence, render modes, Draft, testing).
-- Quality bar (SPEC §1.1 goal 7, §17): 100% line and branch coverage of library C#, Stryker mutation target ≥ 90% (break < 85%), property tests, named concurrency tests, Playwright for the JS, AOT gate, PublicAPI tracking, warnings as errors.
+- Quality bar (SPEC §1.1 goal 7, §17): 100% line and branch coverage of library C#, Stryker mutation target ≥ 90% (break < 85%; measured 100% on all seven projects on 2026-11-09, strict run on the final tree), property tests, named concurrency tests, Playwright for the JS, AOT gate, PublicAPI tracking, warnings as errors.
 - ~64 documented diagnostics (`docs/diagnostics`); the Ducky 1.x migration guide. The guides for the owner's earlier trials (Mutty, DuckyNext, blazor-state, Bustand, TheBlazorState, BlazorMVU) stay unlisted: "apart from Ducky 1.x nobody uses my other libraries" (owner, 2026-11-08). Market leaders to compare with and migrate from: Fluxor first, then TimeWarp.State and the plain state-container pattern; their guides and the sourced comparison page (`docs/compare.md`) sit on the Migrate tab and the home page beside Ducky 1.x.
 - Absent, never to fabricate: testimonials, adopters, download counts, benchmark numbers, star counts. The one exception is the comparison page (`docs/compare.md`), which may show dated nuget.org download and GitHub star figures, each linked to its source, for every library it compares, Ducky 1.x included; Ducky 2.0 has no adopters or benchmark numbers to claim there either.
 

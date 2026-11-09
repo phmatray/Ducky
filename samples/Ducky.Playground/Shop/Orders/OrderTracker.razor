@@ -1,25 +1,30 @@
+@* The tracker only renders the OrdersState it selects; the reactive effect does the
+   polling, so this component never starts or stops a timer. *@
 @inherits ShopComponent
 
 <section class="region orders" style="--i: 3" aria-labelledby="orders-title">
   @RenderCount
-  <div class="xtags"><XrayTag Feature="orders" Detail="@Detail" /></div>
+  <div class="xtags"><XrayTag FeatureId="orders" Detail="@TagDetail" /></div>
   <h2 id="orders-title" class="side-title">Your order</h2>
 
   @if (_order.Value is { } order)
   {
-    <p class="order-id"><code>@order.Id</code> <span>@DuckColours.Price(order.Total)</span></p>
+    <p class="order-id"><code>@order.Id</code> <span>@Money.Format(order.Total)</span></p>
     <ol class="steps">
       @foreach (var status in Enum.GetValues<OrderStatus>())
       {
-        <li class="@(status < order.Status ? "done" : status == order.Status ? "current" : null)" aria-current="@(status == order.Status ? "step" : null)">
-          <span class="dot" aria-hidden="true"></span>@Label(status)
+        <li class="@StepClass(status, order.Status)"
+            aria-current="@(status == order.Status ? "step" : null)">
+          <span class="dot" aria-hidden="true"></span>@StatusLabel(status)
         </li>
       }
     </ol>
     <p class="side-note">To @order.DeliverTo</p>
     @if (order.Status == OrderStatus.Delivered)
     {
-      <button type="button" class="pill small" @onclick="() => Store.DismissOrder()">Done, thanks</button>
+      <button type="button" class="pill small" @onclick="() => Store.DismissOrder()">
+        Done, thanks
+      </button>
     }
   }
   else
@@ -31,16 +36,20 @@
 @code {
   private Selection<Order?> _order = null!;
 
-  private string Detail => _order.Value switch
+  private string TagDetail => _order.Value switch
   {
     null => "idle",
     { Status: OrderStatus.Delivered } order => $"stopped after {order.Polls} polls",
     var order => $"{order.Polls} polls",
   };
 
-  protected override void OnInitialized() => _order = Select<OrdersState, Order?>(static orders => orders.Current);
+  protected override void OnInitialized() =>
+    _order = Select<OrdersState, Order?>(static orders => orders.Current);
 
-  private static string Label(OrderStatus status) => status switch
+  private static string? StepClass(OrderStatus step, OrderStatus current) =>
+    step < current ? "done" : step == current ? "current" : null;
+
+  private static string StatusLabel(OrderStatus status) => status switch
   {
     OrderStatus.Placed => "Placed",
     OrderStatus.Packed => "Packed",

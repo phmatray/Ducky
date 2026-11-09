@@ -1,0 +1,130 @@
+@* The persisted basket: it survives a reload, follows your other tabs, and migrates an
+   entry written by version 1 of the shop (plant one with the X-ray button). *@
+@inherits ShopComponent
+@using System.Globalization
+@using System.Text.Json.Nodes
+@inject Tape Tape
+@inject IJSRuntime Js
+@inject NavigationManager Navigation
+@inject TimeProvider Time
+
+<section class="region basket" style="--i: 1" id="basket" aria-labelledby="basket-title">
+  @RenderCount
+  <div class="xtags">
+    <XrayTag FeatureId="basket"
+             Detail="@(_restored.Value ? "restored on load" : "v2, synced")" />
+  </div>
+  <h2 id="basket-title" class="side-title">
+    Basket <span class="count">@CountLabel</span>
+  </h2>
+
+  @if (_lines.Value.IsEmpty)
+  {
+    <p class="side-note">Empty for now. Every duck on the shelf has an Add button.</p>
+  }
+  else
+  {
+    <ul class="lines" role="list">
+      @foreach (var line in _lines.Value)
+      {
+        <li @key="line.DuckId">
+          <span class="line-name">@line.Name</span>
+          <span class="stepper">
+            <button type="button" aria-label="One fewer @line.Name"
+                    @onclick="() => Store.RemoveOneFromBasket(line.DuckId)">
+              <Icon Name="minus" Size="16" />
+            </button>
+            <span class="qty" aria-label="@line.Quantity in the basket">
+              @line.Quantity
+            </span>
+            <button type="button" aria-label="One more @line.Name"
+                    @onclick="() => AddOneMoreAsync(line)">
+              <Icon Name="plus" Size="16" />
+            </button>
+          </span>
+          <span class="line-total">@Money.Format(line.Total)</span>
+          <button type="button" class="remove" aria-label="Remove @line.Name"
+                  @onclick="() => Store.RemoveBasketLine(line.DuckId)">
+            <Icon Name="close" Size="16" />
+          </button>
+        </li>
+      }
+    </ul>
+    <p class="total">
+      <span>Total</span><b>@Money.Format(_lines.Value.Sum(static line => line.Total))</b>
+    </p>
+  }
+  @if (_veto is not null)
+  {
+    <p class="veto" role="status">Vetoed: @_veto</p>
+  }
+
+  <a class="text-link" href="./" target="_blank" rel="noopener">
+    Open this shop in another tab <Icon Name="tab" Size="16" />
+  </a>
+  <div class="xray-only tools">
+    <p>
+      Version 1 of this shop stored the basket as a map. Plant such an entry and reload:
+      the migration turns it into lines.
+    </p>
+    <button type="button" class="pill small" @onclick="PlantVersionOneAsync">
+      Plant a version-1 basket and reload
+    </button>
+  </div>
+</section>
+
+@code {
+  private Selection<ImmutableList<OrderLine>> _lines = null!;
+  private Selection<bool> _restored = null!;
+  private string? _veto;
+
+  private string CountLabel => _lines.Value.Sum(static line => line.Quantity) switch
+  {
+    0 => "",
+    1 => "1 duck",
+    var count => $"{count} ducks",
+  };
+
+  protected override void OnInitialized()
+  {
+    _lines = Select(Pricing.PricedBasket.Create());
+    // True when this store started from a basket restored from localStorage.
+    _restored = Select(static state => state.WasRestored<BasketState>());
+  }
+
+  private async Task AddOneMoreAsync(OrderLine line)
+  {
+    var result = await Store.AddToBasketAsync(line.DuckId);
+    if (result != DispatchResult.Vetoed)
+    {
+      _veto = null;
+      return;
+    }
+
+    var reason = ShopRules.RefusalReason(Store.State, line.DuckId)
+      ?? "the shop refused it.";
+    _veto = $"{line.Name}: {reason}";
+    Tape.Vetoed(AddToBasket.Type, _veto);
+  }
+
+  // Exactly what version 1 wrote: the map shape in a version-1 envelope, under the
+  // basket's storage key. After the reload the store runs Migrate(1, ...) over it and
+  // restores lines.
+  private async Task PlantVersionOneAsync()
+  {
+    var versionOneBasket = new JsonObject
+    {
+      [Stockroom.ClassicId] = 3,
+      [Stockroom.CursedId] = 1,
+    };
+    var entry = new JsonObject
+    {
+      ["v"] = 1,
+      ["at"] = Time.GetUtcNow().ToString("O", CultureInfo.InvariantCulture),
+      ["s"] = new JsonObject { ["Items"] = versionOneBasket },
+    };
+    await Js.InvokeVoidAsync("localStorage.setItem", BasketPersistence.StorageKey,
+      entry.ToJsonString());
+    Navigation.Refresh(forceReload: true);
+  }
+}

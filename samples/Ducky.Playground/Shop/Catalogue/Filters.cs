@@ -33,5 +33,6 @@ public sealed class FiltersSlice : Slice<Filters>
 
     public override string Key => "filters";
 
-    protected override Filters Initial => new(Colour: null, InStockOnly: false, ShelfSort.Featured);
+    protected override Filters Initial =>
+        new(Colour: null, InStockOnly: false, Sort: ShelfSort.Featured);
 }

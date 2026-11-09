@@ -1,17 +1,22 @@
+@* The code drawer: an ink panel beside the shop, never a modal (no backdrop, no focus
+   trap). It shows the app's own compiled source with the feature's line marked. *@
 @inherits DuckyComponent
 @inject DrawerStore Drawer
 @inject SourceFiles Sources
 @inject IJSRuntime Js
-@* The code drawer: an ink panel beside the shop, never a modal (no backdrop, no focus trap); the shop stays usable. *@
 
 @{ _feature = Features.Find(_view.Value.Feature); }
-<aside id="code-drawer" class="drawer" aria-labelledby="drawer-title" hidden="@(_feature is null)" @onkeydown="OnKey">
+<aside id="code-drawer" class="drawer" aria-labelledby="drawer-title"
+       hidden="@(_feature is null)" @onkeydown="OnDrawerKeyDown">
   @if (_feature is { } feature)
   {
-    var file = feature.Files[Math.Clamp(_view.Value.File, 0, feature.Files.Length - 1)];
+    var file = ShownFile(feature);
+    var fileCount = feature.Files.Length;
     <header class="drawer-head">
       <h2 id="drawer-title" tabindex="-1" @ref="_title">@feature.Title</h2>
-      <button type="button" class="pill on-ink" @onclick="Drawer.Close"><Icon Name="close" Size="16" /> Close</button>
+      <button type="button" class="pill on-ink" @onclick="Drawer.Close">
+        <Icon Name="close" Size="16" /> Close
+      </button>
     </header>
     <div class="drawer-body">
       <p class="drawer-summary">@feature.Summary</p>
@@ -23,30 +28,38 @@
         }
       </p>
       <div class="file-tabs" role="tablist" aria-label="Source files">
-        @for (var i = 0; i < feature.Files.Length; i++)
+        @for (var i = 0; i < fileCount; i++)
         {
           var index = i;
-          var selected = feature.Files[i] == file;
-          <button type="button" role="tab" id="file-tab-@i" aria-selected="@(selected ? "true" : "false")" aria-controls="file-panel"
-                  tabindex="@(selected ? 0 : -1)" @onclick="() => Drawer.ShowFile(index)" @onkeydown="e => OnTabKey(e, index, feature.Files.Length)">
-            @Name(feature.Files[i].Path)
+          var selected = feature.Files[index] == file;
+          <button type="button" role="tab" id="file-tab-@index" aria-controls="file-panel"
+                  aria-selected="@(selected ? "true" : "false")"
+                  tabindex="@(selected ? 0 : -1)"
+                  @onclick="() => Drawer.ShowFile(index)"
+                  @onkeydown="e => OnFileTabKeyDown(e, index, fileCount)">
+            @FileName(feature.Files[index].Path)
           </button>
         }
       </div>
-      <figure class="slab" id="file-panel" role="tabpanel" aria-labelledby="file-tab-@feature.Files.IndexOf(file)">
+      <figure class="slab" id="file-panel" role="tabpanel"
+              aria-labelledby="file-tab-@feature.Files.IndexOf(file)">
         <figcaption>
           <span class="slab-path">@file.Path</span>
-          <span class="slab-note"><span class="lamp-dot" aria-hidden="true"></span>the file compiled into this build</span>
+          <span class="slab-note">
+            <span class="lamp-dot" aria-hidden="true"></span>
+            the file compiled into this build
+          </span>
         </figcaption>
-        @if (_lines is null)
+        @if (_htmlLines is null)
         {
-          <p class="slab-loading">@(_failed ? "This file could not be loaded." : "Reading the file…")</p>
+          <p class="slab-loading">
+            @(_loadFailed ? "This file could not be loaded." : "Reading the file…")
+          </p>
         }
         else
         {
-          <pre tabindex="0" aria-label="@file.Path"><code>@for (var n = 0; n < _lines.Count; n++)
-{<span class="ln @(n == _focusLine ? "mark" : null)" id="@(n == _focusLine ? "focus-line" : null)"><span class="num" aria-hidden="true">@(n + 1)</span>@((MarkupString)_lines[n])</span>
-}</code></pre>
+          <pre tabindex="0"
+               aria-label="@file.Path"><code>@CodeLines(_htmlLines)</code></pre>
         }
       </figure>
     </div>
@@ -57,20 +70,22 @@
   private Selection<DrawerView> _view = null!;
   private ElementReference _title;
   private Feature? _feature;
-  private string? _shown;
+  private string? _shownPath;
   private string? _focusedFeature;
-  private IReadOnlyList<string>? _lines;
+  private IReadOnlyList<string>? _htmlLines;
   private int _focusLine = -1;
-  private bool _failed;
+  private bool _loadFailed;
 
-  protected override void OnInitialized() => _view = Select<DrawerView, DrawerView>(static drawer => drawer);
+  protected override void OnInitialized() =>
+    _view = Select<DrawerView, DrawerView>(static drawer => drawer);
 
+  // Loads the shown file after the render that opened it, then reveals its focus line.
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (_feature is null)
     {
       _focusedFeature = null;
-      _shown = null;
+      _shownPath = null;
       return;
     }
 
@@ -80,25 +95,26 @@
       await _title.FocusAsync();
     }
 
-    var file = _feature.Files[Math.Clamp(_view.Value.File, 0, _feature.Files.Length - 1)];
-    if (_shown == file.Path)
+    var file = ShownFile(_feature);
+    if (_shownPath == file.Path)
     {
       return;
     }
 
-    _shown = file.Path;
-    _lines = null;
-    _failed = false;
+    _shownPath = file.Path;
+    _htmlLines = null;
+    _loadFailed = false;
     StateHasChanged();
     var source = await Sources.ReadAsync(file.Path);
-    if (_shown != file.Path)
+    if (_shownPath != file.Path)
     {
+      // Another file was picked while this one loaded.
       return;
     }
 
-    _lines = source?.Html;
-    _failed = source is null;
-    _focusLine = source is null ? -1 : source.Find(file.Focus);
+    _htmlLines = source?.HtmlLines;
+    _loadFailed = source is null;
+    _focusLine = source?.FindFocusLine(file.Focus) ?? -1;
     StateHasChanged();
     await Task.Yield();
     if (_focusLine >= 0)
@@ -107,9 +123,25 @@
     }
   }
 
-  private static string Name(string path) => path[(path.LastIndexOf('/') + 1)..];
+  private SourceRef ShownFile(Feature feature) =>
+    feature.Files[Math.Clamp(_view.Value.FileIndex, 0, feature.Files.Length - 1)];
 
-  private void OnKey(KeyboardEventArgs e)
+  private static string FileName(string path) => path[(path.LastIndexOf('/') + 1)..];
+
+  // One numbered line per source line. Inside <pre> every character counts, so the markup
+  // between the line spans stays in code, where Razor emits no whitespace.
+  private RenderFragment CodeLines(IReadOnlyList<string> htmlLines) => __builder =>
+  {
+    for (var n = 0; n < htmlLines.Count; n++)
+    {
+      var isFocus = n == _focusLine;
+      <span class="ln @(isFocus ? "mark" : null)" id="@(isFocus ? "focus-line" : null)">
+        <span class="num" aria-hidden="true">@(n + 1)</span>@((MarkupString)htmlLines[n])
+      </span>
+    }
+  };
+
+  private void OnDrawerKeyDown(KeyboardEventArgs e)
   {
     if (e.Key == "Escape")
     {
@@ -117,8 +149,8 @@
     }
   }
 
-  // Arrow keys move between file tabs (the tablist pattern).
-  private async Task OnTabKey(KeyboardEventArgs e, int index, int count)
+  // Arrow keys, Home and End move between the file tabs (the WAI-ARIA tablist pattern).
+  private async Task OnFileTabKeyDown(KeyboardEventArgs e, int index, int count)
   {
     var next = e.Key switch
     {

@@ -172,6 +172,23 @@ p { margin: 0; text-wrap: pretty; }
 .board-note a { color: var(--yolk); }
 
 /* ---------- render modes ---------- */
+/* ---------- playground ---------- */
+.play-sec { background: var(--yolk); padding: clamp(4rem, 9vw, 7rem) 0; }
+.play-head { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1rem clamp(2rem, 6vw, 5rem); align-items: end; }
+.play-head .lede { margin: 0; color: var(--on-yolk-2); }
+.play-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 2.4rem clamp(2rem, 5vw, 4rem); align-items: start; margin-top: 2.4rem; }
+.play-shot { display: block; border: var(--rule) solid var(--ink); border-radius: 16px; overflow: hidden; background: var(--sheet); transition: transform var(--beat) var(--ease); }
+.play-shot img { width: 100%; height: auto; }
+.play-shot:hover { outline: var(--rule) solid var(--ink); outline-offset: 4px; }
+.play-shot:active { transform: translateY(2px); }
+.play-shot:focus-visible { outline-offset: 4px; }
+.play-try h3 { font-size: clamp(1.5rem, 2.2vw, 1.9rem); font-weight: 880; font-stretch: 122%; }
+.tries { margin: 1.2rem 0 1.8rem; border-top: var(--rule) solid var(--ink); }
+.tries div { padding: 0.9rem 0; border-bottom: 1.5px solid var(--ink); }
+.tries dt { font-weight: 800; }
+.tries dd { margin: 0.25rem 0 0; color: var(--on-yolk-2); font-size: 1rem; line-height: 1.5; }
+.tries code { font: 600 0.88em/1.2 var(--mono); color: var(--ink); }
+
 .modes { background: var(--sheet); padding: clamp(4rem, 9vw, 7rem) 0; }
 .modes .lede, .modes .note { color: var(--on-sheet-2); }
 .table-scroll { margin-top: 2.4rem; overflow-x: auto; border: var(--rule) solid var(--ink); border-radius: 16px; }
@@ -241,6 +258,7 @@ p { margin: 0; text-wrap: pretty; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 960px) {
+  .play-head, .play-grid { grid-template-columns: minmax(0, 1fr); }
   .hero { grid-template-columns: 1fr; grid-template-rows: auto; min-height: 0; padding-top: 1rem; }
   .duck-stage { grid-row: 2; width: min(100%, 340px); justify-self: end; padding-top: 6.5rem; margin-top: 1rem; }
   .bubble { left: -3rem; right: 2rem; }

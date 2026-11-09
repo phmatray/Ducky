@@ -6,22 +6,24 @@ Every snippet in the guides is a region of a compiled, tested file. Every behavi
 
 ## Guides
 
-- [Getting started](docs/guides/core/getting-started.html): install, declare a slice, register with `AddDuckyGenerated_{Assembly}()`, dispatch and read
-- [Slices and keys](docs/guides/core/slices-and-keys.html)
-- [Effects and concurrency policies](docs/guides/core/effects.html)
-- [Selectors](docs/guides/core/selectors.html)
-- [SliceStore](docs/guides/core/slice-store.html): a slice with methods, Zustand-style
-- [EntityState](docs/guides/core/entity-state.html)
-- [Testing with Ducky.Testing](docs/guides/core/testing.html): SliceTest, EffectTest, TestStore
-- [Blazor render modes and the load rule](docs/guides/blazor/render-modes.html)
-- [Persistence](docs/guides/blazor/persistence.html)
-- [Prerender](docs/guides/blazor/prerender.html)
-- [Static SSR with Server storage](docs/guides/blazor/static-ssr.html)
-- [Cross-tab sync](docs/guides/blazor/cross-tab.html)
-- [Redux DevTools](docs/guides/blazor/devtools.html)
-- [Reactive effects (R3)](docs/guides/reactive/recipes.html)
-- [Ducky.Draft (Produce)](docs/guides/draft/produce.html)
-- [Threading contract](docs/threading.html)
+- [Getting started](docs/guides/core/getting-started.md): install, declare a slice, register with `AddDuckyGenerated_{Assembly}()`, dispatch and read
+- [Slices and keys](docs/guides/core/slices-and-keys.md)
+- [Effects and concurrency policies](docs/guides/core/effects.md)
+- [Selectors](docs/guides/core/selectors.md)
+- [SliceStore](docs/guides/core/slice-store.md): a slice with methods, Zustand-style
+- [EntityState](docs/guides/core/entity-state.md)
+- [Testing with Ducky.Testing](docs/guides/core/testing.md): SliceTest, EffectTest, TestStore
+- [Blazor render modes and the load rule](docs/guides/blazor/render-modes.md)
+- [Persistence](docs/guides/blazor/persistence.md)
+- [Prerender](docs/guides/blazor/prerender.md)
+- [Static SSR with Server storage](docs/guides/blazor/static-ssr.md)
+- [Cross-tab sync](docs/guides/blazor/cross-tab.md)
+- [Redux DevTools](docs/guides/blazor/devtools.md)
+- [Reactive effects (R3)](docs/guides/reactive/recipes.md)
+- [Ducky.Draft (Produce)](docs/guides/draft/produce.md)
+- [Threading contract](docs/threading.md)
+
+Each docs page is published as HTML and as Markdown (the `.md` links below); [docs/llms-full.txt](docs/llms-full.txt) holds every page in reading order in one file.
 
 ## Playground
 
@@ -29,11 +31,11 @@ Every snippet in the guides is a region of a compiled, tested file. Every behavi
 
 ## Migration
 
-- [How Ducky compares](docs/compare.html): Ducky 2.0 beside Fluxor, TimeWarp.State and a hand-written state container, sourced and dated
-- [From Fluxor](docs/migration/fluxor.html)
-- [From TimeWarp.State](docs/migration/timewarp-state.html)
-- [From a hand-written state container](docs/migration/state-container.html)
-- [From Ducky 1.x](docs/migration/ducky-1x.html)
+- [How Ducky compares](docs/compare.md): Ducky 2.0 beside Fluxor, TimeWarp.State and a hand-written state container, sourced and dated
+- [From Fluxor](docs/migration/fluxor.md)
+- [From TimeWarp.State](docs/migration/timewarp-state.md)
+- [From a hand-written state container](docs/migration/state-container.md)
+- [From Ducky 1.x](docs/migration/ducky-1x.md)
 
 ## Optional
 
