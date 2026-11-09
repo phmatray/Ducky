@@ -24,7 +24,7 @@ internal sealed partial class Build
     private const string DocsSiteUrl = "https://phmatray.github.io/Ducky/docs/";
 
     // Pages under these prefixes are design records or sample projects, not user docs.
-    private static readonly string[] DocsSiteExcluded = ["spec/", "adr/", "migration/samples/"];
+    private static readonly string[] DocsSiteExcluded = ["spec/", "adr/", "migration/samples/", "tutorial/samples/"];
 
     internal sealed record DocsSiteInput(
         IReadOnlyDictionary<string, string> Pages,
@@ -143,11 +143,13 @@ internal sealed partial class Build
         {
             ["test/Ducky.Docs.Tests/A.cs"] = "class A\n{\n    #region a-region\n    public int X => 1;\n    #region inner\n    // inner\n    #endregion\n    #endregion\n    #region two-raw\n    var a = \"\"\"\n        one\n        \"\"\";\n    var b = \"\"\"\n        two\n        \"\"\";\n    #endregion\n}\n",
             ["README.md"] = "# Readme\n\n## Install\n",
+            // A Razor component's regions are Razor comments (the tutorial's samples, docs/tutorial/samples/).
+            ["docs/tutorial/samples/App/Card.razor"] = "@* A card. *@\n@* #region card *@\n@inherits DuckyComponent\n\n<p class=\"x\">@_count.Value</p> @* the count *@\n@* #region inner *@\n@code { int _count; }\n@* #endregion *@\n@* #endregion *@\n",
         };
         Dictionary<string, string> Clean() => new(StringComparer.Ordinal)
         {
             ["index.md"] = "# Home\n\nSee [the guide](guides/a.md#usage) and [DUCKY001](diagnostics/DUCKY001.md).\n",
-            ["guides/a.md"] = "# Guide `A`\n\nIntro.\n\n## Usage\n\n[!code-csharp[](../../test/Ducky.Docs.Tests/A.cs#a-region)]\n\n## More\n\nSee [the test](../../test/Ducky.Docs.Tests/A.cs) and [home](../index.md).\n",
+            ["guides/a.md"] = "# Guide `A`\n\nIntro.\n\n## Usage\n\n[!code-csharp[](../../test/Ducky.Docs.Tests/A.cs#a-region)]\n\n## More\n\nSee [the test](../../test/Ducky.Docs.Tests/A.cs) and [home](../index.md).\n\n[!code-razor[](../tutorial/samples/App/Card.razor#card)]\n",
             ["diagnostics/DUCKY001.md"] = "# DUCKY001: Something\n\nText.\n",
             ["old.md"] = "# Old &amp; gone\n\nBack [home](index.md), to [the docs](./) and to [install](../README.md#install) or [line 3](../test/Ducky.Docs.Tests/A.cs#L3).\n\n````markdown\n[!code-csharp[](test/Ducky.Docs.Tests/A.cs#a-region)]\n````\n\n[!code-csharp[](../test/Ducky.Docs.Tests/A.cs#two-raw)]\n",
         };
@@ -172,6 +174,9 @@ internal sealed partial class Build
             ("<li class=\"l2\"><a href=\"#usage\">Usage</a>", "the on-this-page list"),
             ("rel=\"prev\" href=\"../index.html\"", "the previous page"),
             ("<title>Guide A</title>", "the plain-text title"),
+            ("<code data-lang=\"razor\"><span class=\"tk-kw\">@inherits</span> <span class=\"tk-type\">DuckyComponent</span>", "a Razor region's text, highlighted as Razor"),
+            ("<span class=\"tk-com\">@* the count *@</span>\n<span class=\"tk-kw\">@code</span>", "a Razor comment as a comment, the nested region's markers dropped"),
+            ("https://github.com/phmatray/Ducky/blob/v2/docs/tutorial/samples/App/Card.razor#L3-L7", "the Razor snippet's source lines"),
         ];
         foreach (var (expected, why) in rendered)
         {
@@ -251,6 +256,7 @@ internal sealed partial class Build
             ("guides/a.md", "# Guide\n\nSee [the test](../../test/Ducky.Docs.Tests/A.cs#a-region).\n", "docs/guides/a.md:3: anchor '#a-region' does not exist in 'test/Ducky.Docs.Tests/A.cs'"),
             ("guides/a.md", "# Guide\n\nText [!code-csharp[](../../test/Ducky.Docs.Tests/A.cs#a-region)]\n", "docs/guides/a.md:3: a code include stands on its own line"),
             ("guides/a.md", "# Guide\n\n[!code-csharp[](../../test/Ducky.Docs.Tests/A.cs#nope)]\n", "docs/guides/a.md:3: code include '../../test/Ducky.Docs.Tests/A.cs#nope' resolves to no region"),
+            ("guides/a.md", "# Guide\n\n[!code-razor[](../tutorial/samples/App/Card.razor#inner-x)]\n", "docs/guides/a.md:3: code include '../tutorial/samples/App/Card.razor#inner-x' resolves to no region"),
             ("stray.md", "# Stray\n", "docs/nav.yml: docs/stray.md is neither on a tab nor unlisted"),
         ];
         foreach (var (page, text, expected) in planted)
@@ -724,14 +730,21 @@ internal sealed partial class Build
         return longest;
     }
 
-    private static readonly Regex RegionStart = new(@"^[ \t]*#region\b");
-    private static readonly Regex RegionEnd = new(@"^[ \t]*#endregion\b");
+    // A region marker: C#'s `#region name` / `#endregion`, or Razor's `@* #region name *@` / `@* #endregion *@` (a Razor
+    // comment, so the marker never reaches the rendered page).
+    private static readonly Regex RegionStart = new(@"^[ \t]*(?:@\*[ \t]*)?#region\b");
+    private static readonly Regex RegionEnd = new(@"^[ \t]*(?:@\*[ \t]*)?#endregion\b");
 
-    // The lines inside `#region name` up to its own `#endregion` (1-based first and last source line of the text).
+    // The start marker of one named region, in either syntax. Build.Gates.cs's DocsRegionViolations uses it too.
+    private static Regex RegionOpen(string region) =>
+        new($@"^[ \t]*(?:#region[ \t]+{Regex.Escape(region)}|@\*[ \t]*#region[ \t]+{Regex.Escape(region)}[ \t]*\*@)[ \t]*\r?$", RegexOptions.Multiline);
+
+    // The lines inside `#region name` (or `@* #region name *@`) up to its own end marker (1-based first and last source
+    // line of the text).
     internal static (string Text, int First, int Last)? ExtractRegion(string source, string region)
     {
         var lines = source.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
-        var open = new Regex($@"^[ \t]*#region[ \t]+{Regex.Escape(region)}[ \t]*$");
+        var open = RegionOpen(region);
         var start = Array.FindIndex(lines, l => open.IsMatch(l));
         if (start < 0)
         {

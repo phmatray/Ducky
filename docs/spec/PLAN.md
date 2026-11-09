@@ -2,7 +2,7 @@
 
 Status: plan derived from `SPEC.md` (authoritative, including review rounds "2 (recovered)" through 7 of `REVIEW-LOG.md`) and `adr/0001-0047`. Where this plan and the spec disagree, the spec wins; every planning decision that goes beyond the spec is listed in §3.
 
-159 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
+160 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
 
 ## 1. Workflow: strict TDD under full gates
 
@@ -66,12 +66,12 @@ Every story after M0-01 is one issue and one squash-merged PR on `v2`, and it fo
 | M12 | Server persistence | 9 | PersistStorage.Server over IDistributedCache, scopes, retries and the phase-5a flush, the auth-driven scope switch with epochs, init-phase deadlines, reconnect absorption and attempt supersession (INV-17), static SSR pins, pause seeds across scopes; AOT smoke for server persistence and DevTools payload. |
 | M13 | Generators, analyzers and tombstones | 12 | Shared generator helpers, GEN-01 dispatch helpers, GEN-02 core registration (step 7) and its Blazor arms (Prerender<T> at stage 11, PersistAttributeDefaults<T> and Ducky.Blazor.Generated.Tests at stage 12), multi-assembly fixture (INV-25), the stage-7 analyzers (DUCKY001-025 arms whose APIs exist by step 6), DUCKYM001-M008 tombstones, stage-7 PackageSmoke assertions. |
 | M14 | Samples, E2E and AOT | 7 | Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, the trimmed AOT-WASM smoke that can't skip in the aot job, and the Ducky Playground published to Pages. |
-| M15 | Docs and migration guides | 10 | A generated docs site (the answer binder) with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check. |
+| M15 | Docs and migration guides | 11 | A generated docs site (the answer binder) with compiled-snippet regions, user guides, a step-by-step tutorial on a compiled, tested app, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check. |
 | M16 | Release candidate | 7 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
 
 ## 5. Scheduling
 
-Longest dependency chain (37 stories): M0-01 → M0-02 → M0-03 → M0-04 → M0-11 → M0-12 → M1-01 → M1-02 → M1-04 → M1-05 → M1-06 → M1-07 → M1-10 → M1-11 → M1-12 → M4-01 → M2-01 → M2-02 → M2-03 → M2-04 → M2-05 → M2-06 → M3-05 → M4-07 → M4-10 → M13-01 → M10-03 → M10-04 → M10-05 → M10-07 → M10-07b → M15-04 → M15-08 → M15-09 → M16-04 → M16-05 → M16-06.
+Longest dependency chain (39 stories): M0-01 → M0-02 → M0-03 → M0-04 → M0-11 → M0-12 → M1-01 → M1-02 → M1-04 → M1-05 → M1-06 → M1-07 → M1-10 → M1-11 → M1-12 → M4-01 → M2-01 → M2-02 → M2-03 → M2-04 → M2-05 → M2-06 → M3-05 → M4-07 → M4-10 → M13-01 → M10-03 → M10-04 → M10-05 → M10-07 → M10-07b → M15-04 → M15-08 → M15-09 → M15-10 → M15-11 → M16-04 → M16-05 → M16-06.
 
 Stories per stage (P1: `activeStage` reaches N once every story listed at N or below is merged):
 
@@ -94,7 +94,7 @@ Stories per stage (P1: `activeStage` reaches N once every story listed at N or b
 | 15 | DevTools | M8-01, M8-02, M8-03, M8-03b, M12-05 |
 | 16 | Ducky.Reactive | M11-01, M11-01b, M11-02, M11-02b, M11-03, M11-05 |
 | 17 | Ducky.Draft | M10-01, M10-02, M10-03, M10-04, M10-05, M10-06, M10-07, M10-07b, M11-04 |
-| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M14-07, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09, M16-03b |
+| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M14-07, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09, M15-10, M15-11, M16-03b |
 | 19 | RC and consumer migrations; GA | M16-01, M16-02, M16-03, M16-04, M16-05, M16-06 |
 
 Parallel lanes:
@@ -2338,7 +2338,7 @@ Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §1
 
 ### M15 — Docs and migration guides
 
-A generated docs site (the answer binder) with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check.
+A generated docs site (the answer binder) with compiled-snippet regions, user guides, a step-by-step tutorial on a compiled, tested app, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check.
 
 #### M15-01 Docs infrastructure (M)
 
@@ -2460,13 +2460,26 @@ A generated docs site (the answer binder) with compiled-snippet regions, user gu
 
 - **Stage:** 18
 - **Depends on:** M15-09, M14-07
-- **Unblocks:** M16-04
+- **Unblocks:** M16-04, M15-11
 - **Area:** `site/index.html, site/styles.css, site/404.html, site/llms.txt, site/docs-theme, docs/index.md, build/Build.DocsSite.cs, build/Build.PlaygroundLint.cs, build/Build.Gates.cs#Docs, samples/Ducky.Playground, .github/workflows/docs.yml`
 - **Invariants:** —
 - **Scope:** Stage 18. Owner-added (2026-11-09). The home page leads to the playground (hero link, a section with a real X-ray screenshot, footer) and the docs bar and footer link it; docs/index.md gains next steps; every docs page has a Markdown twin and View/Copy as Markdown; docs/llms-full.txt holds every listed page; site/llms.txt points at the twins and Docs checks its links; a 404 page in the site's world; the playground source is wrapped at 90 columns with intention-revealing names, and Docs fails on a playground line over 100 columns or an X-ray focus that resolves to no code line.
 - **Acceptance tests:**
   - Docs fails on a site/llms.txt link to a missing page and on a playground source line over 100 columns or an unresolved X-ray focus (planted self-checks)
   - Docs writes a Markdown twin per page and docs/llms-full.txt
+- **Done:** Common DoD.
+
+#### M15-11 Step-by-step tutorial: a duck shop from an empty app to a tested one (M)
+
+- **Stage:** 18
+- **Depends on:** M15-10
+- **Unblocks:** M16-04
+- **Area:** `docs/tutorial, docs/tutorial/samples, docs/nav.yml, docs/index.md, site/llms.txt, Ducky.Migration.slnx, .editorconfig, build/Build.DocsSite.cs, build/Build.DocsHighlight.cs, build/Build.Gates.cs#Docs`
+- **Invariants:** —
+- **Scope:** Stage 18. Owner-added (2026-11-09): "add a tutorial step by step in the documentation; be pedagogic". SPEC §17.1 Docs row, §18 layout, §19 Docs target. A Tutorial tab right after Start: an overview (what you build, what you need, the mental model in words) and ten short pages, one concept each (create the app and register the store, a first slice and immutability, actions and reducers, components that select and dispatch, an effect that loads data, concurrency policies on a search box, a memoized selector, a persisted and versioned basket with the load rule, tests, where next). Each step opens with what you build and why, adds code in small pieces with a sentence before each snippet, and ends with Run it, Checkpoint and Common mistake (the diagnostic or symptom, and the fix). Every snippet is a region of docs/tutorial/samples: the Duck Shop, a Blazor WebAssembly app on src/, and its tests (xUnit v3, Ducky.Testing, bUnit), built and tested by Docs in Ducky.Migration.slnx; the few files an earlier step shows differently live as compiled, tested snapshots under the tests' Steps folder, and each Run it that a test can observe is backed by one. The docs generator and the Docs region check accept Razor regions (Razor comments marking a region, included as code-razor) and the tutorial's snippet root, each with planted self-checks. docs/index.md lists the tutorial first under Where to go next, and site/llms.txt lists its pages.
+- **Acceptance tests:**
+  - Docs builds the Duck Shop and runs its tests, and renders the Tutorial tab with every link, anchor and include resolved
+  - Docs fails on a Razor include whose region is missing and on an include outside the snippet roots, and renders a Razor region highlighted with its source lines (planted self-checks)
 - **Done:** Common DoD.
 
 ### M16 — Release candidate
@@ -2531,7 +2544,7 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
 #### M16-04 Spec closure (S)
 
 - **Stage:** 19
-- **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M14-07, M15-06, M15-07, M15-08, M15-09, M15-10
+- **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M14-07, M15-06, M15-07, M15-08, M15-09, M15-10, M15-11
 - **Unblocks:** M16-05
 - **Area:** `docs/spec/tests.yaml, build/Build.SpecTrace.cs`
 - **Invariants:** —

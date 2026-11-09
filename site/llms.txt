@@ -4,6 +4,20 @@
 
 Every snippet in the guides is a region of a compiled, tested file. Every behavioural rule maps to an invariant (INV-01 to INV-32) with named tests.
 
+## Tutorial
+
+- [Tutorial: build a duck shop](docs/tutorial/index.md): a Blazor WebAssembly shop from an empty app to a tested one, one concept per step
+- [Step 1: Create the app and add Ducky](docs/tutorial/01-create-the-app.md)
+- [Step 2: Your first slice](docs/tutorial/02-first-slice.md): immutable state and the initial state
+- [Step 3: Actions and reducers](docs/tutorial/03-actions-and-reducers.md)
+- [Step 4: Show state in components](docs/tutorial/04-components.md): DuckyComponent, Select, dispatch
+- [Step 5: Load data with an effect](docs/tutorial/05-effects.md): Effect<StoreInitialized>, context.Run, loading and error states
+- [Step 6: Search, and effects that overlap](docs/tutorial/06-concurrency.md): Switch, Merge, Exhaust, Queue
+- [Step 7: Derived data with a selector](docs/tutorial/07-selectors.md): Selector.Define, memoization
+- [Step 8: Keep the basket across reloads](docs/tutorial/08-persistence.md): Persist<T>, versions and migrations, SyncAcrossTabs, the load rule
+- [Step 9: Test the shop](docs/tutorial/09-testing.md): SliceTest, EffectTest, TestStore with a fake clock
+- [Where next](docs/tutorial/10-where-next.md)
+
 ## Guides
 
 - [Getting started](docs/guides/core/getting-started.md): install, declare a slice, register with `AddDuckyGenerated_{Assembly}()`, dispatch and read

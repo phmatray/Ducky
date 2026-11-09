@@ -1,0 +1,29 @@
+@* #region search-box *@
+@inherits DuckyComponent
+
+<div class="search">
+  <input type="search" value="@_search.Value.Query" @oninput="OnInput"
+         placeholder="Search the ducks" aria-label="Search the ducks" />
+  <p class="status" aria-live="polite">@StatusText</p>
+</div>
+
+@code {
+  private Selection<SearchState> _search = null!;
+
+  private string StatusText => _search.Value switch
+  {
+    { Searching: true } search => $"Searching for “{search.Query.Trim()}”…",
+    { Hits: { Count: 0 } } => "No duck matches.",
+    { Hits: { Count: 1 } } => "1 duck matches.",
+    { Hits: { } hits } => $"{hits.Count} ducks match.",
+    _ => "",
+  };
+
+  protected override void OnInitialized() =>
+    _search = Select((SearchState search) => search);
+
+  // Every keystroke dispatches TypeSearch; the effect's Switch policy decides which
+  // search is still worth answering.
+  private void OnInput(ChangeEventArgs e) => Store.TypeSearch(e.Value as string ?? "");
+}
+@* #endregion *@

@@ -1,0 +1,33 @@
+@* #region duck-card *@
+@inherits DuckyComponent
+
+<article class="duck">
+  <h2>@Duck.Name</h2>
+  <p class="price">@Duck.PriceText</p>
+  <button type="button" @onclick="Add">Add to basket</button>
+  @if (_inBasket.Value > 0)
+  {
+    <p class="in-basket">
+      @_inBasket.Value in your basket
+      <button type="button" class="link" @onclick="RemoveOne">Remove one</button>
+    </p>
+  }
+</article>
+
+@code {
+  private Selection<int> _inBasket = null!;
+
+  [Parameter, EditorRequired]
+  public Duck Duck { get; set; } = null!;
+
+  // Each card selects its own duck's quantity, so adding a pirate duck re-renders
+  // the pirate card and the badge, and no other card.
+  protected override void OnInitialized() =>
+    _inBasket = Select((BasketState basket) => basket.QuantityOf(Duck.Id));
+
+  // The generated helpers: Store.AddToBasket(id) is Dispatch(new AddToBasket(id)).
+  private void Add() => Store.AddToBasket(Duck.Id);
+
+  private void RemoveOne() => Store.RemoveFromBasket(Duck.Id);
+}
+@* #endregion *@

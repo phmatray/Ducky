@@ -1,5 +1,5 @@
 <Solution>
-  <!-- The migration guides' compiled before/after samples (SPEC §17.1, §22): outside Ducky.slnx, built by the Docs target
+  <!-- The migration guides' compiled before/after samples (SPEC §17.1, §22) and the tutorial's Duck Shop: outside Ducky.slnx, built by the Docs target
        with an unlocked restore. "Before" references Ducky 1.x, Fluxor or TimeWarp.State from nuget.org with an explicit
        version, ASP.NET Core alone (the hand-written state container), or a vendored copy under
        docs/migration/samples/legacy/ for the libraries never published; "After" references src/. -->
@@ -12,6 +12,11 @@
     <Project Path="src/Ducky.Draft/Ducky.Draft.csproj" />
     <Project Path="src/Ducky.Draft.Generators/Ducky.Draft.Generators.csproj" />
     <Project Path="src/Ducky.Testing/Ducky.Testing.csproj" />
+  </Folder>
+  <!-- The tutorial's Duck Shop (docs/tutorial): the app its steps are cut from, and its tests. -->
+  <Folder Name="/tutorial/">
+    <Project Path="docs/tutorial/samples/DuckShop/DuckShop.csproj" />
+    <Project Path="docs/tutorial/samples/DuckShop.Tests/DuckShop.Tests.csproj" />
   </Folder>
   <Folder Name="/ducky-1x/">
     <Project Path="docs/migration/samples/ducky-1x/Before/Ducky1x.Before.csproj" />

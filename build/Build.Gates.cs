@@ -448,13 +448,14 @@ internal sealed partial class Build
 
     // A page includes code with [!code-<lang>[title](path#region)] (any case, the language optional), so each include is
     // checked here: a #region (never a whole file, a line range or ?name=) of an existing file under a compiled, tested root.
-    // The docs site renders the region's text (RenderDocsSite reports a region it cannot resolve, whatever the language). The
+    // The docs site renders the region's text (RenderDocsSite reports a region it cannot resolve, whatever the language). A C#
+    // or Razor include names a region in either marker syntax: `#region name`, or `@* #region name *@` in a .razor file. The
     // :::code form is rejected outright: one include syntax, all checked.
     private static readonly Regex CodeInclude = new(@"\[!code(?:-([\w-]+))?\[[^\]]*\]\(\s*([^)#?\s]+)([#?][^)\s]*)?[^)]*\)\]", RegexOptions.IgnoreCase);
 
     private static readonly Regex TripleColonCode = new(@":::\s*code\b", RegexOptions.IgnoreCase);
 
-    private static readonly string[] SnippetRoots = ["test/", "docs/migration/samples/"];
+    private static readonly string[] SnippetRoots = ["test/", "docs/migration/samples/", "docs/tutorial/samples/"];
 
     private static IEnumerable<string> DocsRegionViolations(IEnumerable<(string Path, string Text)> docs, Func<string, string?> read) =>
         from d in docs
@@ -472,8 +473,10 @@ internal sealed partial class Build
             : target is null ? $"{at}: code include '{link}' leaves the repository"
             : !SnippetRoots.Any(r => target.StartsWith(r, StringComparison.Ordinal)) ? $"{at}: code include '{target}' is not under {string.Join(" or ", SnippetRoots)} (a compiled, tested file)"
             : text is null ? $"{at}: code include '{target}' does not exist"
-            : m.Groups[1].Value.ToLowerInvariant() is "" or "csharp" or "cs" && !Regex.IsMatch(text, $@"^[ \t]*#region[ \t]+{Regex.Escape(region[1..])}[ \t]*\r?$", RegexOptions.Multiline)
+            : m.Groups[1].Value.ToLowerInvariant() is "" or "csharp" or "cs" && !RegionOpen(region[1..]).IsMatch(text)
                 ? $"{at}: code include '{target}' has no '#region {region[1..]}'"
+            : m.Groups[1].Value.ToLowerInvariant() is "razor" or "cshtml" && !RegionOpen(region[1..]).IsMatch(text)
+                ? $"{at}: code include '{target}' has no '@* #region {region[1..]} *@'"
             : null
         where violation is not null
         select violation;
@@ -500,7 +503,7 @@ internal sealed partial class Build
         return string.Join('/', parts);
     }
 
-    // The acceptance checks of M0-11 and M15-01, planted on miniature docs.
+    // The acceptance checks of M0-11, M15-01 and M15-11 (Razor regions, the tutorial's snippet root), planted on miniature docs.
     private static IEnumerable<string> DocsSelfCheck()
     {
         const string fenced = "# Guide\n\n```csharp\nvar store = new Store();\n```\n";
@@ -541,13 +544,16 @@ internal sealed partial class Build
             ["src/Ducky/Store.cs"] = "#region store\n#endregion\n",
             ["test/Ducky.Docs.Tests/Crlf.cs"] = "#region crlf\r\n#endregion\r\n",
             ["docs/migration/samples/ducky-1x/Before/A.cs"] = "#region before\n#endregion\n",
+            ["docs/tutorial/samples/Shop/Card.razor"] = "@* #region card *@\n<p>card</p>\n@* #endregion *@\n@code {\n    #region code\n    int x;\n    #endregion\n}\n",
+            ["docs/tutorial/samples/Shop/Basket.cs"] = "#region basket\n#endregion\n",
         };
         string? Read(string path) => files.GetValueOrDefault(path);
         const string include = "[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs#select)]";
         (string Path, string Text)[] includes =
         [
             ("docs/guides/selectors.md", $"# Selectors\n\n{include}\n"),
-            ("docs/guides/razor.md", "[!code-razor[](../../test/Ducky.Docs.Tests/Guide.cs#other)]\n"),
+            ("docs/tutorial/razor.md", "[!code-razor[](samples/Shop/Card.razor#card)]\n[!code-razor[](samples/Shop/Card.razor#code)]\n"),
+            ("docs/tutorial/basket.md", "[!code-csharp[](samples/Shop/Basket.cs#basket)]\n"),
             ("docs/spec/SPEC.md", "[!code-csharp[](../../src/Nope.cs)]\n:::code source=\"../../src/Nope.cs\":::\n"),
             ("docs/guides/crlf.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Crlf.cs#crlf)]\n"),
             ("docs/migration/ducky-1x.md", "[!code-csharp[](samples/ducky-1x/Before/A.cs#before)]\n"),
@@ -561,7 +567,11 @@ internal sealed partial class Build
             ("docs/guides/region.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs#selector)]\n", "docs/guides/region.md:1: code include 'test/Ducky.Docs.Tests/Guide.cs' has no '#region selector'"),
             ("docs/guides/cs.md", "[!code-cs[title](../../test/Ducky.Docs.Tests/Guide.cs#nope \"t\")]\n", "has no '#region nope'"),
             ("docs/guides/missing.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Gone.cs#select)]\n", "code include 'test/Ducky.Docs.Tests/Gone.cs' does not exist"),
-            ("docs/guides/src.md", "[!code-csharp[](../../src/Ducky/Store.cs#store)]\n", "code include 'src/Ducky/Store.cs' is not under test/ or docs/migration/samples/"),
+            ("docs/guides/src.md", "[!code-csharp[](../../src/Ducky/Store.cs#store)]\n", "code include 'src/Ducky/Store.cs' is not under test/ or docs/migration/samples/ or docs/tutorial/samples/"),
+            ("docs/guides/razor.md", "[!code-razor[](../../test/Ducky.Docs.Tests/Guide.cs#other)]\n", "code include 'test/Ducky.Docs.Tests/Guide.cs' has no '@* #region other *@'"),
+            ("docs/tutorial/razor-missing.md", "[!code-razor[](samples/Shop/Card.razor#shelf)]\n", "docs/tutorial/razor-missing.md:1: code include 'docs/tutorial/samples/Shop/Card.razor' has no '@* #region shelf *@'"),
+            ("docs/tutorial/razor-prefix.md", "[!code-razor[](samples/Shop/Card.razor#car)]\n", "has no '@* #region car *@'"),
+            ("docs/tutorial/samples-up.md", "[!code-csharp[](samples/../../tutorial/samples/Shop/Gone.cs#basket)]\n", "code include 'docs/tutorial/samples/Shop/Gone.cs' does not exist"),
             ("docs/guides/up.md", "[!code-csharp[](../../../outside.cs#a)]\n", "code include '../../../outside.cs' leaves the repository"),
             ("docs/guides/prefix.md", "[!code-csharp[](../../test/Ducky.Docs.Tests/Guide.cs#sel)]\n", "has no '#region sel'"),
             ("docs/guides/nolang.md", "[!code[](../../test/Ducky.Docs.Tests/Guide.cs)]\n", "docs/guides/nolang.md:1: code include '../../test/Ducky.Docs.Tests/Guide.cs' names no #region"),

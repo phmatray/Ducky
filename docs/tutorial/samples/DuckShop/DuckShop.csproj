@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <!-- The tutorial's Duck Shop (docs/tutorial): the app the steps build, from the empty Blazor WebAssembly template. It
+       references src/ instead of the Ducky and Ducky.Blazor packages, with the generators wired by DuckyUseGenerators
+       (SPEC §18). Workload-free, like the playground. Built with warnings as errors, so Ducky's analyzers run on it. -->
+  <PropertyGroup>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src/Ducky/Ducky.csproj" />
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

@@ -16,6 +16,7 @@ Every snippet on this site is a region of a compiled, tested file.
 
 ## Where to go next
 
+- [The tutorial](tutorial/index.md) builds a small duck shop from an empty Blazor WebAssembly app to a tested one, one idea per step, for readers new to Redux-style stores.
 - [Getting started](guides/core/getting-started.md) builds a first slice, an effect and a component, step by step.
 - [Effects and concurrency policies](guides/core/effects.md) covers the part most state libraries leave to you: what happens when an action arrives while its effect is still running.
 - [Render modes and the load rule](guides/blazor/render-modes.md) shows the one rule that works in WebAssembly, Interactive Server, Interactive Auto and static SSR.
