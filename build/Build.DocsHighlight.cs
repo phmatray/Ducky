@@ -41,7 +41,8 @@ internal sealed partial class Build
 
     private static readonly Regex CSharpToken = new(CommentStringAttribute + Word, TokenOptions);
 
-    private static readonly Regex RazorToken = new(CommentStringAttribute + RazorMarkup + Word, TokenOptions);
+    // A Razor comment (@* … *@) comes first: inside it, nothing else is a token.
+    private static readonly Regex RazorToken = new(@"(?<com>@\*.*?\*@)|" + CommentStringAttribute + RazorMarkup + Word, TokenOptions);
 
     private static readonly Regex ShellToken = new(@"(?<com>(?<=^|[ \t])#[^\n]*)|(?<str>""(?:[^""\\\n]|\\.)*""|'[^'\n]*')", RegexOptions.Multiline);
 

@@ -1,0 +1,41 @@
+@* #region shelf *@
+@using System.Collections.Immutable
+@inherits DuckyComponent
+
+@* #region shelf-search *@
+<SearchBox />
+@* #endregion *@
+
+@if (_catalogue.Value.Loading)
+{
+  <p class="status">Loading ducks…</p>
+}
+else if (_catalogue.Value.Error is { } error)
+{
+  <p class="status error">Couldn't load the ducks: @error</p>
+}
+else if (_visible.Value.Count == 0)
+{
+  <p class="status">No duck matches your search.</p>
+}
+else
+{
+  <section class="shelf">
+    @foreach (var duck in _visible.Value)
+    {
+      <DuckCard @key="duck.Id" Duck="duck" />
+    }
+  </section>
+}
+
+@code {
+  private Selection<CatalogueState> _catalogue = null!;
+  private Selection<ImmutableList<Duck>> _visible = null!;
+
+  protected override void OnInitialized()
+  {
+    _catalogue = Select((CatalogueState catalogue) => catalogue);
+    _visible = Select(ShelfSelectors.VisibleDucks.Create());
+  }
+}
+@* #endregion *@

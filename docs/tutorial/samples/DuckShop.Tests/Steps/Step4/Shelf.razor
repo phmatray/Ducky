@@ -1,0 +1,18 @@
+@* The shelf as step 4 leaves it: two ducks typed by hand. Step 5 loads them from an API. *@
+@* #region step4-shelf *@
+<section class="shelf">
+  @foreach (var duck in _ducks)
+  {
+    <DuckCard @key="duck.Id" Duck="duck" />
+  }
+</section>
+
+@code {
+  // Two ducks typed by hand for now: step 5 loads the real catalogue.
+  private readonly Duck[] _ducks =
+  [
+    new("classic", "Classic Yellow", 4.50m),
+    new("pirate", "Pirate Duck", 7.90m),
+  ];
+}
+@* #endregion *@

@@ -1,0 +1,14 @@
+<Project>
+  <!-- The tutorial's Duck Shop (docs/tutorial, SPEC §17.1, §18): every tutorial snippet is a region of these projects, built
+       and tested by the Docs target through Ducky.Migration.slnx, outside Ducky.slnx, like the migration samples and with
+       the same restore: no lock file (so a locked restore would fail) and no audit. Package versions come from the root
+       Directory.Packages.props, as for test/. -->
+  <Import Project="../../../Directory.Build.props" />
+
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <RestoreLockedMode>false</RestoreLockedMode>
+    <NuGetAudit>false</NuGetAudit>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>

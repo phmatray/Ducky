@@ -69,3 +69,7 @@ dotnet_diagnostic.CA1707.severity = none
 # docs/migration/samples/: the After samples' tests use the test/ naming (SPEC §22).
 [docs/migration/samples/**.cs]
 dotnet_diagnostic.CA1707.severity = none
+
+# docs/tutorial/samples/: the Duck Shop's tests use the test/ naming too.
+[docs/tutorial/samples/**.cs]
+dotnet_diagnostic.CA1707.severity = none

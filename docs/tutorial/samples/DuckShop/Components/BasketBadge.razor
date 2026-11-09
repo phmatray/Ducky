@@ -1,0 +1,20 @@
+@* #region basket-badge *@
+@inherits DuckyComponent
+
+<p class="basket" aria-live="polite">Basket: @BasketText</p>
+
+@code {
+  private Selection<int> _count = null!;
+
+  private string BasketText => _count.Value switch
+  {
+    0 => "empty",
+    1 => "1 duck",
+    var count => $"{count} ducks",
+  };
+
+  // Select once, in OnInitialized. The badge re-renders only when the count changes.
+  protected override void OnInitialized() =>
+    _count = Select((BasketState basket) => basket.Count);
+}
+@* #endregion *@

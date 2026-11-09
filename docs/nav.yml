@@ -1,13 +1,28 @@
 # The documentation's navigation (SPEC §19 Docs). Each section is one index tab of the docs binder; its groups form the
 # section's ruled page ledger, in this order. A page's title is its own H1. An entry with '*' is a glob over docs/,
-# expanded in ordinal order. Every page under docs/ outside spec/, adr/ and migration/samples/ is listed here once,
-# either in a section or under `unlisted` (built and linkable, but on no tab): the Docs target fails otherwise.
+# expanded in ordinal order. Every page under docs/ outside spec/, adr/, migration/samples/ and tutorial/samples/ is
+# listed here once, either in a section or under `unlisted` (built and linkable, but on no tab): the Docs target fails
+# otherwise.
 sections:
   - tab: Start
     groups:
       - pages:
           - index.md
           - guides/core/getting-started.md
+  - tab: Tutorial
+    groups:
+      - pages:
+          - tutorial/index.md
+          - tutorial/01-create-the-app.md
+          - tutorial/02-first-slice.md
+          - tutorial/03-actions-and-reducers.md
+          - tutorial/04-components.md
+          - tutorial/05-effects.md
+          - tutorial/06-concurrency.md
+          - tutorial/07-selectors.md
+          - tutorial/08-persistence.md
+          - tutorial/09-testing.md
+          - tutorial/10-where-next.md
   - tab: Core
     groups:
       - pages:

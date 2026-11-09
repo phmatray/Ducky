@@ -78,7 +78,7 @@
   {
    "id": "M15",
    "title": "Docs and migration guides",
-   "goal": "A generated docs site (the answer binder) with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check."
+   "goal": "A generated docs site (the answer binder) with compiled-snippet regions, user guides, a step-by-step tutorial on a compiled, tested app, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check."
   },
   {
    "id": "M16",
@@ -3442,6 +3442,23 @@
    "done_definition": "Common DoD (PLAN.md §1)."
   },
   {
+   "id": "M15-11",
+   "milestone": "M15",
+   "title": "Step-by-step tutorial: a duck shop from an empty app to a tested one",
+   "size": "M",
+   "depends_on": [
+    "M15-10"
+   ],
+   "area": "docs/tutorial, docs/tutorial/samples, docs/nav.yml, docs/index.md, site/llms.txt, Ducky.Migration.slnx, .editorconfig, build/Build.DocsSite.cs, build/Build.DocsHighlight.cs, build/Build.Gates.cs#Docs",
+   "invariants": [],
+   "scope": "Stage 18. Owner-added (2026-11-09): \"add a tutorial step by step in the documentation; be pedagogic\". SPEC §17.1 Docs row, §18 layout, §19 Docs target. A Tutorial tab right after Start: an overview (what you build, what you need, the mental model in words) and ten short pages, one concept each (create the app and register the store, a first slice and immutability, actions and reducers, components that select and dispatch, an effect that loads data, concurrency policies on a search box, a memoized selector, a persisted and versioned basket with the load rule, tests, where next). Each step opens with what you build and why, adds code in small pieces with a sentence before each snippet, and ends with Run it, Checkpoint and Common mistake (the diagnostic or symptom, and the fix). Every snippet is a region of docs/tutorial/samples: the Duck Shop, a Blazor WebAssembly app on src/, and its tests (xUnit v3, Ducky.Testing, bUnit), built and tested by Docs in Ducky.Migration.slnx; the few files an earlier step shows differently live as compiled, tested snapshots under the tests' Steps folder, and each Run it that a test can observe is backed by one. The docs generator and the Docs region check accept Razor regions (Razor comments marking a region, included as code-razor) and the tutorial's snippet root, each with planted self-checks. docs/index.md lists the tutorial first under Where to go next, and site/llms.txt lists its pages.",
+   "acceptance_tests": [
+    "Docs builds the Duck Shop and runs its tests, and renders the Tutorial tab with every link, anchor and include resolved",
+    "Docs fails on a Razor include whose region is missing and on an include outside the snippet roots, and renders a Razor region highlighted with its source lines (planted self-checks)"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M16-01",
    "milestone": "M16",
    "title": "Nightly audit and benchmarks",
@@ -3554,7 +3571,8 @@
     "M15-07",
     "M15-08",
     "M15-09",
-    "M15-10"
+    "M15-10",
+    "M15-11"
    ],
    "area": "docs/spec/tests.yaml, build/Build.SpecTrace.cs",
    "invariants": [],

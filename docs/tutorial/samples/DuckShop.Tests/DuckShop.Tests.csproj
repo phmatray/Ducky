@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The Duck Shop's tests (docs/tutorial step 9) and the checks behind every "Run it" of the tutorial: an xUnit v3 module
+       on MTP, run by the Docs target. Steps/ holds the few files as they look at an earlier step, where the final app has
+       moved on; each is compiled and tested like the rest. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../DuckShop/DuckShop.csproj" />
+    <ProjectReference Include="$(RepoRoot)src/Ducky.Testing/Ducky.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="bunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>
