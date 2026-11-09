@@ -1,39 +1,48 @@
+@* Every keystroke dispatches TypeSearch; the Switch effect decides which one the
+   warehouse hears about. *@
 @inherits ShopComponent
 
 <section class="region search" style="--i: 1" aria-label="Search the shop">
   @RenderCount
-  <div class="xtags"><XrayTag Feature="search" Detail="@($"{_search.Value.Superseded} superseded")" /></div>
+  <div class="xtags">
+    <XrayTag FeatureId="search" Detail="@($"{_search.Value.Superseded} superseded")" />
+  </div>
   <label class="search-field">
     <span class="sr-only">Search the ducks</span>
     <Icon Name="search" />
-    <input type="search" value="@_search.Value.Query" @oninput="OnInput" placeholder="Try cursed, blue or state"
+    <input type="search" value="@_search.Value.Query" @oninput="OnInput"
+           placeholder="Try cursed, blue or state"
            autocomplete="off" spellcheck="false" />
   </label>
   <p class="search-status">
-    <span class="phase">@Phase</span>
-    <span class="xray-only superseded">@Superseded</span>
+    <span class="phase">@PhaseText</span>
+    <span class="xray-only superseded">@SupersededText</span>
   </p>
 </section>
 
 @code {
   private Selection<SearchState> _search = null!;
 
-  private string Phase => _search.Value switch
+  private string PhaseText => _search.Value switch
   {
     { Phase: SearchPhase.Waiting } => "Waiting for a pause in your typing",
-    { Phase: SearchPhase.Fetching } search => $"Asking the warehouse about “{search.Term}”",
+    { Phase: SearchPhase.Fetching } search =>
+      $"Asking the warehouse about “{search.Term}”",
     _ => "",
   };
 
-  private string Superseded => _search.Value switch
+  private string SupersededText => _search.Value switch
   {
-    { Superseded: 0 } => "Type fast: Switch cancels every run a newer keystroke overtakes.",
-    { Superseded: 1 } search => $"1 run superseded ({search.CancelledInFlight} in flight)",
-    var search => $"{search.Superseded} runs superseded ({search.CancelledInFlight} in flight)",
+    { Superseded: 0 } =>
+      "Type fast: Switch cancels every run a newer keystroke overtakes.",
+    { Superseded: 1 } search =>
+      $"1 run superseded ({search.CancelledInFlight} in flight)",
+    var search =>
+      $"{search.Superseded} runs superseded ({search.CancelledInFlight} in flight)",
   };
 
-  protected override void OnInitialized() => _search = Select<SearchState, SearchState>(static search => search);
+  protected override void OnInitialized() =>
+    _search = Select<SearchState, SearchState>(static search => search);
 
-  // Every keystroke is an action; the Switch effect decides which one the warehouse hears about.
   private void OnInput(ChangeEventArgs e) => Store.TypeSearch(e.Value as string ?? "");
 }

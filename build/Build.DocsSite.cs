@@ -49,7 +49,8 @@ internal sealed partial class Build
         string BodyHtml,
         List<DocHeading> Headings,
         HashSet<string> Ids,
-        List<(string Id, string Heading, string Text)> SearchSections);
+        List<(string Id, string Heading, string Text)> SearchSections,
+        string Markdown);
 
     private sealed record PendingAnchor(string From, int Line, string Target, string Anchor);
 
@@ -86,8 +87,10 @@ internal sealed partial class Build
         foreach (var page in pages.Values)
         {
             files[DocsHtmlPath(page.Path)] = FillDocsTemplate(input.Template, page, sections, unlisted, listed, pages);
+            files[page.Path] = page.Markdown;
         }
         files["_assets/search.json"] = DocsSearchIndex(sections, pages);
+        files["llms-full.txt"] = DocsLlmsFull(listed, pages);
         return new DocsSiteOutput(files, violations);
     }
 
@@ -176,6 +179,31 @@ internal sealed partial class Build
             {
                 yield return $"DocsSiteSelfCheck: guides/a.html must show {why} ('{expected}')";
             }
+        }
+        var twin = clean.Files.GetValueOrDefault("guides/a.md") ?? "";
+        (string Expected, string Why)[] markdownTwin =
+        [
+            ("Source: https://github.com/phmatray/Ducky/blob/v2/test/Ducky.Docs.Tests/A.cs#L4-L6\n\n```csharp\npublic int X => 1;", "the snippet's source link, then the region's text"),
+            ("[the test](https://github.com/phmatray/Ducky/blob/v2/test/Ducky.Docs.Tests/A.cs)", "a repository file as its GitHub URL"),
+            ("[home](../index.md)", "a page link kept as its relative .md twin"),
+        ];
+        foreach (var (expected, why) in markdownTwin)
+        {
+            if (!twin.Contains(expected, StringComparison.Ordinal))
+            {
+                yield return $"DocsSiteSelfCheck: guides/a.md must show {why} ('{expected}')";
+            }
+        }
+        var full = clean.Files.GetValueOrDefault("llms-full.txt") ?? "";
+        if (!full.Contains("# Guide `A`", StringComparison.Ordinal) || full.Contains("# Old", StringComparison.Ordinal))
+        {
+            yield return "DocsSiteSelfCheck: llms-full.txt holds every listed page and no unlisted one";
+        }
+        var llms = LlmsTxtViolations("- [a](docs/guides/a.md)\n- [b](docs/guides/a.html#x)\n- [p](playground/)\n- [gone](docs/gone.md)\n- [x](https://x.org/y)\n",
+            clean.Files.Keys.ToList(), _ => false).ToList();
+        if (llms.Count != 1 || !llms[0].Contains("'docs/gone.md'", StringComparison.Ordinal))
+        {
+            yield return $"DocsSiteSelfCheck: llms.txt must report only its missing page, got [{string.Join("; ", llms)}]";
         }
         var old = clean.Files.GetValueOrDefault("old.html") ?? "";
         (string Expected, string Why)[] unlistedPage =
@@ -372,8 +400,84 @@ internal sealed partial class Build
             body,
             headings,
             ids,
-            DocsSearchSections(document));
+            DocsSearchSections(document),
+            ReaderMarkdown(path, expanded, input));
     }
+
+    // The page as Markdown for readers and language models (llmstxt.org): includes already expanded, each snippet preceded
+    // by its source link, links to repository files as GitHub URLs; links between pages stay relative .md links.
+    private static string ReaderMarkdown(string page, string expanded, DocsSiteInput input)
+    {
+        var output = new StringBuilder();
+        string? openFence = null;
+        foreach (var line in expanded.Split('\n'))
+        {
+            var marker = FenceMarker.Match(line);
+            if (marker.Success && openFence is null)
+            {
+                openFence = marker.Groups[1].Value;
+                var source = Regex.Match(line, @"\bsrc=(\S+):(\d+)-(\d+)");
+                if (source.Success)
+                {
+                    var prefix = line[..marker.Index] + line[marker.Index..(marker.Index + marker.Length - marker.Groups[1].Length)];
+                    var url = $"{DocsRepositoryUrl}/blob/{DocsBranch}/{source.Groups[1].Value}#L{source.Groups[2].Value}-L{source.Groups[3].Value}";
+                    output.Append(prefix).Append("Source: ").Append(url).Append('\n').Append(prefix).Append('\n');
+                    output.Append(line[..source.Index].TrimEnd()).Append('\n');
+                    continue;
+                }
+            }
+            else if (marker.Success && marker.Groups[1].Value[0] == openFence![0] && marker.Groups[1].Value.Length >= openFence.Length
+                && line[(marker.Index + marker.Length)..].Trim().Length == 0)
+            {
+                openFence = null;
+            }
+            output.Append(openFence is null ? ReaderLinks(page, line, input) : line).Append('\n');
+        }
+        return output.ToString().TrimEnd() + "\n";
+    }
+
+    private static readonly Regex MarkdownLink = new(@"(\]\()([^)\s]+)(\))");
+
+    private static string ReaderLinks(string page, string line, DocsSiteInput input) => MarkdownLink.Replace(line, m =>
+    {
+        var url = m.Groups[2].Value;
+        if (url.StartsWith('#') || Regex.IsMatch(url, "^[a-z][a-z0-9+.-]*:", RegexOptions.IgnoreCase))
+        {
+            return m.Value;
+        }
+        var hash = url.IndexOf('#', StringComparison.Ordinal);
+        var target = hash < 0 ? url : url[..hash];
+        var repoPath = ResolveDocLink("docs/" + page, target);
+        if (repoPath is null || repoPath.StartsWith("docs/", StringComparison.Ordinal) && input.Pages.ContainsKey(repoPath["docs/".Length..]))
+        {
+            return m.Value;
+        }
+        var file = repoPath.TrimEnd('/');
+        var kind = input.ReadRepoFile(file) is null ? "tree" : "blob";
+        return $"{m.Groups[1].Value}{DocsRepositoryUrl}/{kind}/{DocsBranch}/{file}{(hash < 0 ? "" : url[hash..])}{m.Groups[3].Value}";
+    });
+
+    // Every listed page, in nav order, as one Markdown file (llmstxt.org's llms-full.txt).
+    private static string DocsLlmsFull(List<string> listed, Dictionary<string, DocPage> pages)
+    {
+        var text = new StringBuilder("# Ducky documentation\n\n> Every page of the Ducky 2.0 documentation in reading order, as Markdown. Every snippet is a region of a compiled, tested file; its source link precedes it.\n");
+        foreach (var path in listed.Where(pages.ContainsKey))
+        {
+            text.Append("\n---\n\n<!-- ").Append(DocsSiteUrl).Append(DocsHtmlPath(path)).Append(" -->\n\n").Append(pages[path].Markdown);
+        }
+        return text.ToString();
+    }
+
+    // The relative links of site/llms.txt name pages and files the published site has: a docs page or its .md twin (the
+    // Docs output), or a file or folder of site/ (playground/ is the published sample, checked by docs.yml).
+    internal static IEnumerable<string> LlmsTxtViolations(string llms, ICollection<string> docsFiles, Func<string, bool> siteHas) =>
+        from m in MarkdownLink.Matches(llms)
+        let url = m.Groups[2].Value
+        where !Regex.IsMatch(url, "^[a-z][a-z0-9+.-]*:", RegexOptions.IgnoreCase) && !url.StartsWith('#')
+        let path = url.Split('#')[0]
+        let ok = path.StartsWith("docs/", StringComparison.Ordinal) ? docsFiles.Contains(path["docs/".Length..]) : path == "playground/" || siteHas(path)
+        where !ok
+        select $"site/llms.txt: link '{url}' names nothing the published site has";
 
     private static MarkdownPipeline DocsPipeline() => new MarkdownPipelineBuilder()
         .UseAlertBlocks()
@@ -757,6 +861,7 @@ internal sealed partial class Build
             ["body"] = page.BodyHtml,
             ["pager"] = pager.ToString(),
             ["edit"] = $"{DocsRepositoryUrl}/edit/{DocsBranch}/docs/{page.Path}",
+            ["markdown"] = page.Path[(page.Path.LastIndexOf('/') + 1)..],
         };
         return Regex.Replace(template, @"\{\{([a-z-]+)\}\}", m => values.TryGetValue(m.Groups[1].Value, out var v) ? v : m.Value);
     }

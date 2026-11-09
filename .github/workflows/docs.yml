@@ -59,7 +59,10 @@ jobs:
           # The site is served from /<repository>/, the playground from /<repository>/playground/.
           sed -i 's|<base href="/" */>|<base href="/${{ github.event.repository.name }}/playground/" />|' artifacts/pages/playground/index.html
           grep -q '<base href="/${{ github.event.repository.name }}/playground/"' artifacts/pages/playground/index.html
-          test -f artifacts/pages/index.html && test -f artifacts/pages/tokens.css && test -f artifacts/pages/docs/index.html && test -f artifacts/pages/docs/_assets/docs.css
+          # 404.html is served at any depth, so its base is the site root.
+          sed -i 's|<base href="/Ducky/">|<base href="/${{ github.event.repository.name }}/">|' artifacts/pages/404.html
+          grep -q '<base href="/${{ github.event.repository.name }}/">' artifacts/pages/404.html
+          test -f artifacts/pages/index.html && test -f artifacts/pages/tokens.css && test -f artifacts/pages/docs/index.html && test -f artifacts/pages/docs/_assets/docs.css && test -f artifacts/pages/docs/llms-full.txt && test -f artifacts/pages/llms.txt
           test -f artifacts/pages/playground/tokens.css && test -f artifacts/pages/playground/_source/Program.cs.txt
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

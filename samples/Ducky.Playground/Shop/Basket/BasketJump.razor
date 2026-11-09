@@ -1,0 +1,25 @@
+@* On phones the basket sits below the shelf, so a sticky pill jumps to it. *@
+@inherits ShopComponent
+@inject IJSRuntime Js
+
+@if (_count.Value > 0)
+{
+  <a class="cart-jump" href="#basket"
+     @onclick="JumpToBasketAsync" @onclick:preventDefault>
+    <Icon Name="basket" Size="18" /> Basket, @CountLabel
+  </a>
+}
+
+@code {
+  private Selection<int> _count = null!;
+
+  private string CountLabel => _count.Value == 1 ? "1 duck" : $"{_count.Value} ducks";
+
+  protected override void OnInitialized() =>
+    _count = Select<BasketState, int>(static basket => basket.Count);
+
+  // Under the base href, a bare "#basket" link would load another document when the URL
+  // has a query, so the script scrolls and focuses in place.
+  private async Task JumpToBasketAsync() =>
+    await Js.InvokeVoidAsync("playground.jump", "basket");
+}

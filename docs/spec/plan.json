@@ -3424,6 +3424,24 @@
    "done_definition": "Common DoD (PLAN.md §1)."
   },
   {
+   "id": "M15-10",
+   "milestone": "M15",
+   "title": "Site polish: playground prominence, llms files, Markdown twins, readable playground source",
+   "size": "S",
+   "depends_on": [
+    "M15-09",
+    "M14-07"
+   ],
+   "area": "site/index.html, site/styles.css, site/404.html, site/llms.txt, site/docs-theme, docs/index.md, build/Build.DocsSite.cs, build/Build.PlaygroundLint.cs, build/Build.Gates.cs#Docs, samples/Ducky.Playground, .github/workflows/docs.yml",
+   "invariants": [],
+   "scope": "Stage 18. Owner-added (2026-11-09). The home page leads to the playground (hero link, a section with a real X-ray screenshot, footer) and the docs bar and footer link it; docs/index.md gains next steps; every docs page has a Markdown twin and View/Copy as Markdown; docs/llms-full.txt holds every listed page; site/llms.txt points at the twins and Docs checks its links; a 404 page in the site's world; the playground source is wrapped at 90 columns with intention-revealing names, and Docs fails on a playground line over 100 columns or an X-ray focus that resolves to no code line.",
+   "acceptance_tests": [
+    "Docs fails on a site/llms.txt link to a missing page and on a playground source line over 100 columns or an unresolved X-ray focus (planted self-checks)",
+    "Docs writes a Markdown twin per page and docs/llms-full.txt"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M16-01",
    "milestone": "M16",
    "title": "Nightly audit and benchmarks",
@@ -3535,7 +3553,8 @@
     "M15-06",
     "M15-07",
     "M15-08",
-    "M15-09"
+    "M15-09",
+    "M15-10"
    ],
    "area": "docs/spec/tests.yaml, build/Build.SpecTrace.cs",
    "invariants": [],

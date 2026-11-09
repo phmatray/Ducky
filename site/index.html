@@ -57,7 +57,7 @@
             <a class="go" href="docs/guides/core/getting-started.html">Read the guide
               <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a class="plain" href="#questions">Ask the duck</a>
+            <a class="plain" href="playground/">Try the playground</a>
           </div>
         </div>
       </div>
@@ -98,10 +98,10 @@ var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
         <aside class="proof" aria-label="Proved by">
           <p class="proof-head">Proved by <a href="docs/threading.html">INV-01</a> <a href="docs/threading.html">INV-10</a></p>
           <ul>
-            <li>Reducers_NeverRunConcurrently</li>
-            <li>Linearizability_DispatchVsModel</li>
-            <li>DispatchAsync_EveryPath_ReturnsExpectedResult</li>
-            <li>Api_AllAsyncMembers_NeverFault</li>
+            <li>Reducers_<wbr>NeverRunConcurrently</li>
+            <li>Linearizability_<wbr>DispatchVsModel</li>
+            <li>DispatchAsync_<wbr>EveryPath_<wbr>ReturnsExpectedResult</li>
+            <li>Api_<wbr>AllAsyncMembers_<wbr>NeverFault</li>
           </ul>
         </aside>
       </article>
@@ -134,10 +134,10 @@ var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
         <aside class="proof" aria-label="Proved by">
           <p class="proof-head">Proved by <a href="docs/guides/blazor/prerender.html">INV-13</a> <a href="docs/guides/blazor/prerender.html">INV-15</a></p>
           <ul>
-            <li>Prerender_RestoredSlice_LoadEffectRunsOnceAcrossHandoff</li>
-            <li>PrerenderSeed_AppliedBeforeFirstInteractiveRender</li>
-            <li>Prerender_LoadEffectSlowerThanRender_SeedWaitsForIdle</li>
-            <li>PreInitDispatches_AreBufferedAndReplayedInOrder</li>
+            <li>Prerender_<wbr>RestoredSlice_<wbr>LoadEffectRunsOnceAcrossHandoff</li>
+            <li>PrerenderSeed_<wbr>AppliedBeforeFirstInteractiveRender</li>
+            <li>Prerender_<wbr>LoadEffectSlowerThanRender_<wbr>SeedWaitsForIdle</li>
+            <li>PreInitDispatches_<wbr>AreBufferedAndReplayedInOrder</li>
           </ul>
         </aside>
       </article>
@@ -157,10 +157,10 @@ var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
         <aside class="proof" aria-label="Proved by">
           <p class="proof-head">Proved by <a href="docs/guides/blazor/cross-tab.html">INV-18</a></p>
           <ul>
-            <li>CrossTab_TwoPages_ChangeInAAppearsInB <span>Playwright</span></li>
-            <li>CrossTab_OriginNeverPersisted</li>
-            <li>CrossTab_ClearPersistedStateInOtherTab_ResetsSlice</li>
-            <li>CrossTab_SubscriberThatRedispatches_ConvergesWithinNWrites</li>
+            <li>CrossTab_<wbr>TwoPages_<wbr>ChangeInAAppearsInB <span>Playwright</span></li>
+            <li>CrossTab_<wbr>OriginNeverPersisted</li>
+            <li>CrossTab_<wbr>ClearPersistedStateInOtherTab_<wbr>ResetsSlice</li>
+            <li>CrossTab_<wbr>SubscriberThatRedispatches_<wbr>ConvergesWithinNWrites</li>
           </ul>
         </aside>
       </article>
@@ -195,9 +195,9 @@ var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
         <aside class="proof" aria-label="Proved by">
           <p class="proof-head">Proved by <a href="docs/guides/core/effects.html">INV-11</a></p>
           <ul>
-            <li>Switch_SupersededRunIgnoringToken_CannotDispatch</li>
-            <li>Switch_OldRunCompletion_DoesNotRemoveNewSlot</li>
-            <li>Switch_SupersededRunCallingSliceStoreSet_IsDropped</li>
+            <li>Switch_<wbr>SupersededRunIgnoringToken_<wbr>CannotDispatch</li>
+            <li>Switch_<wbr>OldRunCompletion_<wbr>DoesNotRemoveNewSlot</li>
+            <li>Switch_<wbr>SupersededRunCallingSliceStoreSet_<wbr>IsDropped</li>
             <li>the full concurrency policy matrix</li>
           </ul>
         </aside>
@@ -239,10 +239,10 @@ public void ThemeChanged_NewTheme_Applied() =&gt;
         <aside class="proof" aria-label="Tested in">
           <p class="proof-head">Tested in <a href="docs/guides/core/testing.html">the testing guide</a></p>
           <ul>
-            <li>ThemeChanged_NewTheme_Applied</li>
-            <li>ThemeChanged_SameTheme_Unchanged</li>
-            <li>LoadProfile_ApiAnswers_DispatchesProfileLoaded</li>
-            <li>TestStore_SeedDispatchSettle</li>
+            <li>ThemeChanged_<wbr>NewTheme_<wbr>Applied</li>
+            <li>ThemeChanged_<wbr>SameTheme_<wbr>Unchanged</li>
+            <li>LoadProfile_<wbr>ApiAnswers_<wbr>DispatchesProfileLoaded</li>
+            <li>TestStore_<wbr>SeedDispatchSettle</li>
           </ul>
         </aside>
       </article>
@@ -382,6 +382,33 @@ public sealed class GreetingSlice : Slice&lt;Greeting&gt;
       </div>
     </section>
 
+    <!-- Playground -->
+    <section class="play-sec" aria-labelledby="play-title">
+      <div class="wrap">
+        <div class="play-head">
+          <h2 id="play-title">A shop that explains itself.</h2>
+          <p class="lede">Rubber Duck Supply Co. is a small Blazor WebAssembly shop built only from Ducky, running in your browser. Switch on X-ray and every part names the feature behind it and opens the code that runs it.</p>
+        </div>
+        <div class="play-grid">
+          <a class="play-shot" href="playground/" aria-label="Open the playground">
+            <img src="playground.png" width="1440" height="900" loading="lazy" decoding="async"
+              alt="The playground with X-ray on: the search, the colour filters, the duck shelf and the basket, each outlined and tagged with the Ducky feature that runs it (Switch, EntityState and selectors, Persist and SyncAcrossTabs, Exhaust), and the inspector tape along the bottom.">
+          </a>
+          <div class="play-try">
+            <h3>Try to break it</h3>
+            <dl class="tries">
+              <div><dt>Type fast in the search</dt><dd><code>Concurrency.Switch</code> cancels the run a newer keystroke overtakes, so a slow answer never lands late.</dd></div>
+              <div><dt>Press Pay three times</dt><dd><code>Concurrency.Exhaust</code> lets one payment through and drops the other runs.</dd></div>
+              <div><dt>Open a second tab</dt><dd>The basket follows: <code>Persist</code> with <code>SyncAcrossTabs</code>, and it survives a reload.</dd></div>
+              <div><dt>Add an eleventh duck</dt><dd>A middleware vetoes it and <code>DispatchAsync</code> says so: <code>DispatchResult.Vetoed</code>.</dd></div>
+            </dl>
+            <a class="go" href="playground/">Open the playground
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Render modes -->
     <section class="modes" aria-labelledby="modes-title">
       <div class="wrap">
@@ -448,7 +475,7 @@ public sealed class GreetingSlice : Slice&lt;Greeting&gt;
         </div>
         <ul class="ledger">
           <li><b>100%</b><span>line and branch coverage of every library</span></li>
-          <li><b>≥ 90%</b><span>Stryker mutation score target; the build breaks below 85%</span></li>
+          <li><b>100%</b><span>Stryker mutation score of all seven projects, measured before the release candidate; the build breaks below 85%</span></li>
           <li><b>0</b><span>IL2xxx and IL3xxx warnings, with NativeAOT and trimmed WebAssembly smoke runs</span></li>
           <li><b>32</b><span>invariants, each with named tests, including linearizability and property tests</span></li>
           <li><b>64</b><span>diagnostic pages: every configuration error is coded and says how to fix it</span></li>
@@ -485,6 +512,7 @@ public sealed class GreetingSlice : Slice&lt;Greeting&gt;
       <p class="links center">
         <a class="go" href="docs/guides/core/getting-started.html">Read the guide
           <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="plain" href="playground/">Try the playground</a>
         <a class="plain" href="https://github.com/phmatray/Ducky">Star it on GitHub</a>
       </p>
     </section>
@@ -495,6 +523,7 @@ public sealed class GreetingSlice : Slice&lt;Greeting&gt;
       <p class="foot-brand"><img src="duck.svg" alt="" width="28" height="25"> Ducky. Apache-2.0.</p>
       <nav aria-label="Footer">
         <a href="docs/index.html">Documentation</a>
+        <a href="playground/">Playground</a>
         <a href="docs/threading.html">Threading contract</a>
         <a href="https://www.nuget.org/packages/Ducky">NuGet</a>
         <a href="https://github.com/phmatray/Ducky">GitHub</a>

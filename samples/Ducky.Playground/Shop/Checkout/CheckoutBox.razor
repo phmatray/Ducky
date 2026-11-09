@@ -2,23 +2,31 @@
 
 <section class="region checkout" style="--i: 2" aria-label="Checkout">
   @RenderCount
-  <div class="xtags"><XrayTag Feature="checkout" Detail="@Counts" /></div>
-  <button type="button" class="pay" disabled="@_lines.Value.IsEmpty" aria-busy="@(Paying ? "true" : "false")" @onclick="() => Store.CheckOut()">
-    @(Paying ? "Paying…" : _lines.Value.IsEmpty ? "Pay" : $"Pay {DuckColours.Price(_lines.Value.Sum(static line => line.Total))}")
+  <div class="xtags"><XrayTag FeatureId="checkout" Detail="@TagDetail" /></div>
+  <button type="button" class="pay" disabled="@_lines.Value.IsEmpty"
+          aria-busy="@(IsPaying ? "true" : "false")" @onclick="() => Store.CheckOut()">
+    @PayLabel
   </button>
-  <p class="xray-only side-note">The button stays enabled while paying. Click it three times: Exhaust drops the extra runs.</p>
+  <p class="xray-only side-note">
+    The button stays enabled while paying. Click it three times: Exhaust drops the extra
+    runs.
+  </p>
 
   @if (_checkout.Value is { Phase: CheckoutPhase.Declined, Problem: { } problem })
   {
     <div class="alert" role="alert">
       <p class="alert-title">Payment declined</p>
       <p>@problem</p>
-      <button type="button" class="pill small" @onclick="() => Store.DismissCheckoutProblem()">Dismiss</button>
+      <button type="button" class="pill small"
+              @onclick="() => Store.DismissCheckoutProblem()">
+        Dismiss
+      </button>
     </div>
   }
 
   <label class="xray-only check">
-    <input type="checkbox" checked="@_checkout.Value.FailNextPayment" @onchange="e => Store.RigNextPayment(e.Value is true)" />
+    <input type="checkbox" checked="@_checkout.Value.FailNextPayment"
+           @onchange="e => Store.RigNextPayment(e.Value is true)" />
     Make the next payment fail
   </label>
 </section>
@@ -27,13 +35,21 @@
   private Selection<CheckoutState> _checkout = null!;
   private Selection<ImmutableList<OrderLine>> _lines = null!;
 
-  private bool Paying => _checkout.Value.Phase == CheckoutPhase.Paying;
+  private bool IsPaying => _checkout.Value.Phase == CheckoutPhase.Paying;
 
-  private string Counts => $"{_checkout.Value.Requests} clicks, {_checkout.Value.Payments} paid";
+  private string PayLabel => (IsPaying, _lines.Value.IsEmpty) switch
+  {
+    (true, _) => "Paying…",
+    (_, true) => "Pay",
+    _ => $"Pay {Money.Format(_lines.Value.Sum(static line => line.Total))}",
+  };
+
+  private string TagDetail =>
+    $"{_checkout.Value.Requests} clicks, {_checkout.Value.Payments} paid";
 
   protected override void OnInitialized()
   {
     _checkout = Select<CheckoutState, CheckoutState>(static checkout => checkout);
-    _lines = Select(Pricing.BasketLines.Create());
+    _lines = Select(Pricing.PricedBasket.Create());
   }
 }

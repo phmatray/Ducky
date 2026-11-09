@@ -30,4 +30,4 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 ## Unresolved
 
 - Real adopters/testimonials: none exist; the page has no such section.
-- Mutation scores: the campaign (M16-02) is still running; the page states the gate, not a measured score.
+- Mutation scores: the campaign (M16-02) finished at 100% on all seven projects (strict run, 2026-11-09); the receipts ledger states the measured score and the gate.

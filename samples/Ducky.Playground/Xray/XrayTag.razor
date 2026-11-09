@@ -1,9 +1,12 @@
+@* A yolk tag naming the feature behind a region, shown in X-ray mode only (CSS). It
+   opens the code drawer, and focus returns to it when the drawer closes. *@
 @inherits DuckyComponent
 @inject DrawerStore Drawer
-@* A yolk tag naming the feature behind a region. Shown in X-ray mode only (CSS); pressing it opens the code drawer. *@
 
-<button @ref="_button" type="button" class="xtag" style="--i: @(_feature?.Order ?? 0)" aria-expanded="@(_open.Value ? "true" : "false")" aria-controls="code-drawer"
-        @onclick="() => Drawer.Toggle(Feature)">
+<button @ref="_button" type="button" class="xtag" style="--i: @(_feature?.Order ?? 0)"
+        aria-expanded="@(_drawerShowsThis.Value ? "true" : "false")"
+        aria-controls="code-drawer"
+        @onclick="() => Drawer.Toggle(FeatureId)">
   <Icon Name="code" Size="15" />
   <span class="sr-only">Show the code for</span>
   <span class="xtag-name">@_feature?.Tag</span>
@@ -16,32 +19,34 @@
 @code {
   private ElementReference _button;
   private Feature? _feature;
-  private Selection<bool> _open = null!;
-  private Selection<bool> _returnHere = null!;
-  private bool _returned;
+  private Selection<bool> _drawerShowsThis = null!;
+  private Selection<bool> _focusReturnsHere = null!;
+  private bool _focusReturned;
 
-  [Parameter, EditorRequired] public string Feature { get; set; } = "";
+  // The id of a feature in Features.All.
+  [Parameter, EditorRequired] public string FeatureId { get; set; } = "";
 
+  // A live figure shown after the tag's name, such as a counter.
   [Parameter] public string? Detail { get; set; }
 
   protected override void OnInitialized()
   {
-    _feature = Features.Find(Feature);
-    _open = Select<DrawerView, bool>(drawer => drawer.Feature == Feature);
-    _returnHere = Select<DrawerView, bool>(drawer => drawer.Feature is null && drawer.ReturnTo == Feature);
+    _feature = Features.Find(FeatureId);
+    _drawerShowsThis = Select<DrawerView, bool>(drawer => drawer.Feature == FeatureId);
+    _focusReturnsHere = Select<DrawerView, bool>(
+      drawer => drawer.Feature is null && drawer.ReturnFocusTo == FeatureId);
   }
 
-  // When the drawer this tag opened closes, focus comes back here.
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (_returnHere.Value && !_returned)
+    if (_focusReturnsHere.Value && !_focusReturned)
     {
-      _returned = true;
+      _focusReturned = true;
       await _button.FocusAsync();
     }
-    else if (!_returnHere.Value)
+    else if (!_focusReturnsHere.Value)
     {
-      _returned = false;
+      _focusReturned = false;
     }
   }
 }

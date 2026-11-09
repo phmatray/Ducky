@@ -1,3 +1,5 @@
+@* Each card selects its own duck and basket quantity by id, so adding a duck re-renders
+   only its card. Add awaits the dispatch to learn whether the middleware vetoed it. *@
 @inherits ShopComponent
 @inject Tape Tape
 
@@ -16,15 +18,18 @@
       }
     </p>
     <div class="duck-buy">
-      <span class="price">@DuckColours.Price(duck.Price)</span>
-      <span class="stock @(duck.Stock is > 0 and < 5 ? "low" : null)">@Stock(duck)</span>
-      <button type="button" class="add" disabled="@(!duck.InStock)" aria-label="Add @duck.Name to the basket" @onclick="AddAsync">
+      <span class="price">@Money.Format(duck.Price)</span>
+      <span class="@StockClass(duck)">@StockLabel(duck)</span>
+      <button type="button" class="add" disabled="@(!duck.InStock)"
+              aria-label="Add @duck.Name to the basket" @onclick="AddAsync">
         <Icon Name="plus" Size="18" /> Add
       </button>
     </div>
     @if (_inBasket.Value > 0)
     {
-      <p class="in-basket"><Icon Name="check" Size="16" /> @_inBasket.Value in your basket</p>
+      <p class="in-basket">
+        <Icon Name="check" Size="16" /> @_inBasket.Value in your basket
+      </p>
     }
     @if (_veto is not null)
     {
@@ -42,12 +47,14 @@
 
   protected override void OnInitialized()
   {
-    // Each card selects its own duck and its own basket line, by id: adding this duck re-renders this card, not the others.
     _duck = Select<CatalogueState, Duck?>(catalogue => catalogue.Ducks.Find(DuckId));
-    _inBasket = Select<Basket, int>(basket => basket.QuantityOf(DuckId));
+    _inBasket = Select<BasketState, int>(basket => basket.QuantityOf(DuckId));
   }
 
-  private static string Stock(Duck duck) => duck.Stock switch
+  private static string StockClass(Duck duck) =>
+    duck.Stock is > 0 and < 5 ? "stock low" : "stock";
+
+  private static string StockLabel(Duck duck) => duck.Stock switch
   {
     0 => "Sold out",
     < 5 => $"Only {duck.Stock} left",
@@ -56,12 +63,15 @@
 
   private async Task AddAsync()
   {
-    // QuantityLimitMiddleware may veto the action: the store then reduces nothing and says so in the result.
-    var result = await Store.AddToCartAsync(DuckId);
-    _veto = result == DispatchResult.Vetoed ? ShopRules.WhyNot(Store.State, DuckId) ?? "the shop refused it." : null;
-    if (_veto is not null)
+    var result = await Store.AddToBasketAsync(DuckId);
+    if (result != DispatchResult.Vetoed)
     {
-      Tape.Vetoed(AddToCart.Type, $"{_duck.Value?.Name}: {_veto}");
+      _veto = null;
+      return;
     }
+
+    // Vetoed: nothing was reduced. The same shop rule the middleware applied says why.
+    _veto = ShopRules.RefusalReason(Store.State, DuckId) ?? "the shop refused it.";
+    Tape.Vetoed(AddToBasket.Type, $"{_duck.Value?.Name}: {_veto}");
   }
 }

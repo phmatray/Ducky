@@ -1,17 +1,27 @@
+// The profile is a nested record edited with Ducky.Draft: a reducer writes through a
+// draft, and Produce returns a new Profile that keeps every untouched branch as is.
 using Ducky.Draft;
 
 namespace Ducky.Playground.Shop.Account;
 
-// [Draftable] records get a generated copy-on-write Draft: a reducer writes draft.Address.City = value and gets a new,
-// immutable Profile back, with every untouched branch (here Delivery) kept as the same instance.
+// [Draftable] generates a copy-on-write draft for each record of the tree.
 [Draftable]
-public sealed partial record Profile(string Name, string Email, Address Address, Delivery Delivery)
+public sealed partial record Profile(
+    string Name,
+    string Email,
+    Address Address,
+    Delivery Delivery)
 {
-    public string DeliverTo => $"{Name}, {Address.Street}, {Address.Postcode} {Address.City}";
+    public string DeliverTo =>
+        $"{Name}, {Address.Street}, {Address.Postcode} {Address.City}";
 }
 
 [Draftable]
-public sealed partial record Address(string Street, string City, string Postcode, string Country);
+public sealed partial record Address(
+    string Street,
+    string City,
+    string Postcode,
+    string Country);
 
 [Draftable]
 public sealed partial record Delivery(bool LeaveWithNeighbour, string Instructions);
@@ -39,8 +49,8 @@ public sealed class ProfileSlice : Slice<Profile>
 {
     public ProfileSlice()
     {
-        // Produce returns the original instance when the recipe changes nothing (the same value typed again), so the
-        // store commits nothing and no component re-renders.
+        // Produce returns the original instance when the recipe changes nothing (the same
+        // value typed again), so the store commits nothing and no component re-renders.
         On<EditProfile>((state, action) => state.Produce(draft =>
         {
             var value = action.Value.Trim();
@@ -69,7 +79,8 @@ public sealed class ProfileSlice : Slice<Profile>
                     break;
             }
         }));
-        On<SetLeaveWithNeighbour>((state, action) => state.Produce(draft => draft.Delivery.LeaveWithNeighbour = action.Allowed));
+        On<SetLeaveWithNeighbour>((state, action) =>
+            state.Produce(draft => draft.Delivery.LeaveWithNeighbour = action.Allowed));
     }
 
     public override string Key => "profile";

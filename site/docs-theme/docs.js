@@ -34,6 +34,27 @@
     figure.append(button);
   });
 
+  // ---------- copy the page as Markdown (the .md twin the Docs target writes beside each page) ----------
+  const mdLink = document.querySelector("a[data-markdown]");
+  if (mdLink && window.fetch) {
+    const copyMd = document.createElement("button");
+    copyMd.type = "button";
+    copyMd.className = "edit";
+    copyMd.textContent = "Copy page as Markdown";
+    copyMd.addEventListener("click", async () => {
+      try {
+        const text = await (await fetch(mdLink.href)).text();
+        await navigator.clipboard.writeText(text);
+        copyMd.textContent = "Copied";
+        announce("Page copied as Markdown.");
+      } catch {
+        copyMd.textContent = "Copy failed: use View as Markdown";
+      }
+      setTimeout(() => { copyMd.textContent = "Copy page as Markdown"; }, 2100);
+    });
+    mdLink.after(copyMd);
+  }
+
   // ---------- heading anchors ----------
   document.querySelectorAll(".prose :is(h2, h3, h4)[id]").forEach((heading) => {
     const link = document.createElement("a");

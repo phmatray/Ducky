@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- GitHub Pages serves this page for any missing path under the site, at any depth: every URL is site-absolute. -->
+  <base href="/Ducky/">
+  <title>Not here · Ducky</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#FFD425">
+  <link rel="icon" href="duck.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="tokens.css">
+  <style>
+    body { min-height: 100svh; display: grid; place-items: center; padding: 2rem var(--gutter); }
+    main { max-width: 34rem; text-align: center; }
+    main img { width: min(12rem, 45vw); margin: 0 auto 1.6rem; }
+    h1 { margin: 0; font: 900 clamp(2.4rem, 7vw, 4rem)/0.96 var(--display); font-stretch: 132%; letter-spacing: -0.03em; text-wrap: balance; }
+    p { margin: 1.1rem 0 0; color: var(--on-yolk-2); font-size: 1.12rem; text-wrap: pretty; }
+    nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.7rem; margin-top: 1.8rem; }
+    nav a { padding: 0.62rem 1.1rem; border: var(--rule) solid var(--ink); border-radius: 999px; font-weight: 700; text-decoration: none; }
+    nav a:first-child { background: var(--ink); color: var(--yolk); }
+    nav a:hover { background: var(--sheet); color: var(--ink); }
+    nav a:active { background: var(--ink); color: var(--yolk); }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="duck.svg" alt="" width="190" height="173">
+    <h1>Nothing at this address.</h1>
+    <p>The duck looked everywhere: this page does not exist, or it moved when the documentation was rebuilt. Try one of these instead.</p>
+    <nav aria-label="Where to go">
+      <a href="./">Home</a>
+      <a href="docs/index.html">Documentation</a>
+      <a href="playground/">Playground</a>
+    </nav>
+  </main>
+</body>
+</html>

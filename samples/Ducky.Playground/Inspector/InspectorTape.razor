@@ -1,21 +1,25 @@
+@* The dispatcher board: an ink tape docked at the bottom. Collapsed, it shows the newest
+   row; expanded, the ruled log, plus the payload and state diff of the row you open. *@
 @inherits DuckyComponent
+@using System.Globalization
 @using System.Text.Json.Nodes
 @inject Tape Tape
 @inject XrayStore Xray
-@* The dispatcher board made real: an ink tape docked at the bottom. Collapsed, it shows the newest row; expanded, the
-   ruled log, and the payload and state diff of the row you open. *@
 
-<section id="inspector" class="tape region @(_open.Value ? "open" : null)" aria-label="Inspector">
+<section id="inspector" class="tape region @(_open.Value ? "open" : null)"
+         aria-label="Inspector">
   <div class="tape-bar">
     <h2 class="tape-title">Inspector</h2>
-    <div class="xtags"><XrayTag Feature="audit" Detail="@($"{Tape.Total} rows")" /></div>
+    <div class="xtags">
+      <XrayTag FeatureId="audit" Detail="@($"{Tape.Total} rows")" />
+    </div>
     @if (Tape.Latest() is { } latest)
     {
       <p class="tape-latest" aria-live="off">
-        <span class="seq">@Seq(latest)</span>
+        <span class="seq">@SequenceText(latest)</span>
         <code class="type">@latest.ActionType</code>
         <span class="origin">@latest.Origin</span>
-        @Lamp(latest.Lamp)
+        @LampBadge(latest.Lamp)
       </p>
     }
     <p class="tape-counts">
@@ -33,36 +37,61 @@
         <span class="lamp failed">@Tape.FailedCount failed</span>
       }
     </p>
-    <button type="button" class="pill on-ink tape-toggle" aria-expanded="@(_open.Value ? "true" : "false")" aria-controls="tape-log" @onclick="Xray.ToggleInspector">
-      <Icon Name="@(_open.Value ? "down" : "up")" Size="16" /> <span class="tape-toggle-text">@(_open.Value ? "Collapse" : "Expand")</span><span class="sr-only"> the inspector</span>
+    <button type="button" class="pill on-ink tape-toggle"
+            aria-expanded="@(_open.Value ? "true" : "false")" aria-controls="tape-log"
+            @onclick="Xray.ToggleInspector">
+      <Icon Name="@(_open.Value ? "down" : "up")" Size="16" />
+      <span class="tape-toggle-text">@(_open.Value ? "Collapse" : "Expand")</span>
+      <span class="sr-only"> the inspector</span>
     </button>
   </div>
 
   @if (_open.Value)
   {
     var rows = Tape.Rows();
-    var selected = rows.FirstOrDefault(row => row.Number == _selected) ?? rows.FirstOrDefault();
+    var selected = rows.FirstOrDefault(row => row.Number == _selectedNumber)
+      ?? rows.FirstOrDefault();
     <div class="tape-body" id="tape-log">
       <div class="board-wrap" tabindex="-1">
         <table class="board">
-          <caption class="sr-only">Every action the store processed, newest first</caption>
-          <colgroup><col class="c-seq" /><col class="c-time" /><col class="c-act" /><col class="c-org" /><col class="c-res" /></colgroup>
-          <thead><tr><th scope="col">#</th><th scope="col">Time</th><th scope="col">Action</th><th scope="col">Origin</th><th scope="col">Result</th></tr></thead>
+          <caption class="sr-only">
+            Every action the store processed, newest first
+          </caption>
+          <colgroup>
+            <col class="c-seq" />
+            <col class="c-time" />
+            <col class="c-act" />
+            <col class="c-org" />
+            <col class="c-res" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Time</th>
+              <th scope="col">Action</th>
+              <th scope="col">Origin</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
           <tbody>
             @foreach (var row in rows)
             {
               <tr @key="row.Number" class="@(row == selected ? "selected" : null)">
-                <td>@Seq(row)</td>
+                <td>@SequenceText(row)</td>
                 <td>@row.Time</td>
                 <td>
-                  <button type="button" class="row-open" aria-pressed="@(row == selected ? "true" : "false")" @onclick="() => _selected = row.Number">@row.ActionType</button>
+                  <button type="button" class="row-open"
+                          aria-pressed="@(row == selected ? "true" : "false")"
+                          @onclick="() => _selectedNumber = row.Number">
+                    @row.ActionType
+                  </button>
                   @if (row.Note is not null)
                   {
                     <em title="@row.Note">@row.Note</em>
                   }
                 </td>
                 <td>@row.Origin</td>
-                <td>@Lamp(row.Lamp)</td>
+                <td>@LampBadge(row.Lamp)</td>
               </tr>
             }
           </tbody>
@@ -71,14 +100,14 @@
       <div class="tape-detail">
         @if (selected is not null)
         {
-          var detail = Detail(selected);
+          var detail = DetailOf(selected);
           <h3><code>@selected.ActionType</code></h3>
           <p class="detail-label">Payload</p>
           <pre class="detail-code">@detail.Payload</pre>
           <p class="detail-label">State changed</p>
           @if (detail.Changes.Count == 0)
           {
-            <p class="detail-none">@(selected.Lamp == Inspector.Lamp.Reduced ? "Nothing: every slice returned the same instance." : "Nothing was committed.")</p>
+            <p class="detail-none">@NothingChanged(selected.Lamp)</p>
           }
           else
           {
@@ -101,20 +130,21 @@
 
 @code {
   private Selection<bool> _open = null!;
-  private long _selected = -1;
+  private long _selectedNumber = -1;
   private bool _renderQueued;
-  private (long Number, Lamp Lamp, RowDetail Detail)? _detail;
+  private (long Number, Lamp Lamp, RowDetail Detail)? _cachedDetail;
 
   private sealed record RowDetail(string Payload, IReadOnlyList<DiffLine> Changes);
 
   protected override void OnInitialized()
   {
     _open = Select<XrayView, bool>(static view => view.InspectorOpen);
-    Tape.Changed += OnTape;
+    Tape.Changed += OnTapeChanged;
   }
 
-  // The tape changes on the drainer, often several times per user action: one render per batch.
-  private void OnTape()
+  // The tape changes on the store's drainer, often several times per user action: queue
+  // one render per batch instead of one per row.
+  private void OnTapeChanged()
   {
     if (_renderQueued)
     {
@@ -128,53 +158,77 @@
     });
   }
 
-  private static string Seq(TapeRow row) => row.Seq?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "–";
+  private static string SequenceText(TapeRow row) =>
+    row.Sequence?.ToString(CultureInfo.InvariantCulture) ?? "–";
 
-  private static RenderFragment Lamp(Lamp lamp) => __builder =>
+  private static string NothingChanged(Lamp lamp) => lamp == Lamp.Reduced
+    ? "Nothing: every slice returned the same instance."
+    : "Nothing was committed.";
+
+  private static RenderFragment LampBadge(Lamp lamp) => __builder =>
   {
     <span class="lamp @lamp.ToString().ToLowerInvariant()">@lamp</span>
   };
 
-  private RowDetail Detail(TapeRow row)
+  // Cached for the selected row; rebuilt when its lamp changes, as a row can turn Failed.
+  private RowDetail DetailOf(TapeRow row)
   {
-    if (_detail is { } cached && cached.Number == row.Number && cached.Lamp == row.Lamp)
+    if (_cachedDetail is { } cached
+      && cached.Number == row.Number
+      && cached.Lamp == row.Lamp)
     {
       return cached.Detail;
     }
 
-    var payload = row.Action switch
-    {
-      null => row.Note ?? "(none)",
-      EffectFailed failed => $"EffectType  {failed.EffectType}\nActionType  {failed.ActionType}\n{failed.Exception.GetType().Name}: {failed.Exception.Message}",
-      ReducerFailed failed => $"ActionType  {failed.ActionType}\nSliceKey    {failed.SliceKey}\n{failed.Exception.GetType().Name}: {failed.Exception.Message}",
-      var action when Store.Json.TrySerialize(action, action.GetType(), out var json) => JsonNode.Parse(json)?.ToJsonString(StateDiff.Indented) ?? json,
-      _ => "(no payload: a SliceStore method's change, or a library action outside the app's JSON context)",
-    };
+    var detail = new RowDetail(PayloadOf(row), ChangesOf(row));
+    _cachedDetail = (row.Number, row.Lamp, detail);
+    return detail;
+  }
 
+  private string PayloadOf(TapeRow row) => row.Action switch
+  {
+    null => row.Note ?? "(none)",
+    EffectFailed failed => $"EffectType  {failed.EffectType}\n"
+      + $"ActionType  {failed.ActionType}\n"
+      + $"{failed.Exception.GetType().Name}: {failed.Exception.Message}",
+    ReducerFailed failed => $"ActionType  {failed.ActionType}\n"
+      + $"SliceKey    {failed.SliceKey}\n"
+      + $"{failed.Exception.GetType().Name}: {failed.Exception.Message}",
+    var action when Store.Json.TrySerialize(action, action.GetType(), out var json) =>
+      JsonNode.Parse(json)?.ToJsonString(StateDiff.Indented) ?? json,
+    _ => "(no payload: a SliceStore method's change, "
+      + "or a library action outside the app's JSON context)",
+  };
+
+  // Each changed slice is serialized through the app's JSON context and diffed leaf by
+  // leaf.
+  private List<DiffLine> ChangesOf(TapeRow row)
+  {
     var changes = new List<DiffLine>();
-    if (row is { Before: { } before, After: { } after })
+    if (row is not { Before: { } before, After: { } after })
     {
-      foreach (var key in row.ChangedKeys)
-      {
-        var type = Store.Slices.FirstOrDefault(slice => slice.Key == key)?.StateType;
-        if (type is null || !before.Keys.Contains(key) || !after.Keys.Contains(key))
-        {
-          continue;
-        }
-        changes.AddRange(StateDiff.Compare(Store.Json.ToNode(before.Get(key), type), Store.Json.ToNode(after.Get(key), type), key));
-      }
+      return changes;
     }
 
-    var detail = new RowDetail(payload, changes);
-    _detail = (row.Number, row.Lamp, detail);
-    return detail;
+    foreach (var key in row.ChangedKeys)
+    {
+      var stateType = Store.Slices.FirstOrDefault(slice => slice.Key == key)?.StateType;
+      if (stateType is null || !before.Keys.Contains(key) || !after.Keys.Contains(key))
+      {
+        continue;
+      }
+      var beforeNode = Store.Json.ToNode(before.Get(key), stateType);
+      var afterNode = Store.Json.ToNode(after.Get(key), stateType);
+      changes.AddRange(StateDiff.Compare(beforeNode, afterNode, key));
+    }
+    return changes;
   }
 
   protected override void Dispose(bool disposing)
   {
     if (disposing)
     {
-      Tape.Changed -= OnTape;
+      Tape.Changed -= OnTapeChanged;
     }
     base.Dispose(disposing);
   }
