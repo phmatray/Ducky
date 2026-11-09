@@ -109,10 +109,10 @@ internal sealed partial class Dispatcher(
             }
         }
 
+        // Disposed leaves startInit, abort and drain false.
         if (disposed)
         {
             CompleteDisposed(p);
-            return;
         }
 
         if (startInit)

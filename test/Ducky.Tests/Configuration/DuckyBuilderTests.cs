@@ -2,6 +2,7 @@ using System.Text.Json;
 using Ducky.Tests.BuilderFixtures;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 
 namespace Ducky.Tests;
@@ -102,6 +103,21 @@ public sealed class DuckyBuilderTests
         services.AddKeyedSingleton<IStore>("other", (_, _) => null!);
 
         Should.NotThrow(() => services.AddDucky(d => d.AddSlice<CartSlice>()));
+    }
+
+    // Non-normative: a slice resolves from whatever IStore the container hands out. When the app replaced it with a store
+    // that holds no such slice, resolving the slice throws instead of handing out null.
+    [Fact]
+    public async Task AddDucky_AppReplacedIStoreWithoutSlice_SliceResolutionThrows()
+    {
+        await using var foreign = new DuckyStore([new OrderSlice()], NullLogger.Instance);
+        var services = new ServiceCollection();
+        services.AddDucky(d => d.AddSlice<CartSlice>());
+        services.AddSingleton<IStore>(foreign);
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+
+        Should.Throw<InvalidOperationException>(() => scope.ServiceProvider.GetService<CartSlice>());
     }
 
     // Non-normative: a valid configuration builds a store per resolution scope, each with its own slice instances in
@@ -340,8 +356,26 @@ public sealed class DuckyBuilderTests
         var exception = Should.Throw<DuckyConfigurationException>(() => scope.ServiceProvider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBeEmpty();
-        exception.InnerException.ShouldBeOfType<InvalidOperationException>().Message.ShouldContain("AddValidation");
+        exception.InnerException.ShouldBeOfType<InvalidOperationException>().Message.ShouldBe(
+            "An AddValidation rule resolved the store (or a service that depends on it) while the store was being validated. "
+            + "Resolve only the services the rule checks, never IStore, IDispatcher, a slice or anything built from them.");
         exception.Message.ShouldContain("AddValidation");
+    }
+
+    // Non-normative: a validation that throws out (here the container itself, on its first IServiceProviderIsService
+    // lookup) is not cached and leaves no re-entrancy mark: the next resolution validates again, and succeeds.
+    [Fact]
+    public async Task Build_ValidationThrowsOut_NextResolutionValidatesAgain()
+    {
+        var services = new ServiceCollection();
+        services.AddDucky(d => d.AddSlice<CartSlice>());
+        await using var provider = services.BuildServiceProvider();
+        var factory = services.Single(descriptor => descriptor.ServiceType == typeof(IStore)).ImplementationFactory!;
+        var container = new FailOnceProvider(provider, typeof(IServiceProviderIsService));
+
+        Should.Throw<InvalidOperationException>(() => factory(container)).Message.ShouldBe("container");
+        await using var store = (DuckyStore)factory(container);
+        store.Slices.ShouldHaveSingleItem().ShouldBeOfType<CartSlice>();
     }
 
     // Non-normative: AddDucky snapshots the builder, so a builder that leaks out of configure changes nothing later.
@@ -368,7 +402,10 @@ public sealed class DuckyBuilderTests
         Should.Throw<ArgumentNullException>(() => ((IServiceCollection)null!).AddDucky(_ => { })).ParamName.ShouldBe("services");
         Should.Throw<ArgumentNullException>(() => new ServiceCollection().AddDucky(null!)).ParamName.ShouldBe("configure");
         new ServiceCollection().AddDucky(d =>
-            Should.Throw<ArgumentNullException>(() => d.AddValidation(null!)).ParamName.ShouldBe("rule"));
+        {
+            Should.Throw<ArgumentNullException>(() => d.AddValidation(null!)).ParamName.ShouldBe("rule");
+            Should.Throw<ArgumentNullException>(() => d.AddEffect<Effect>(null!)).ParamName.ShouldBe("instance");
+        });
     }
 
     // Non-normative (§5.1, INV-06): MaxDispatchDepth reaches the store's depth guard. With 1, depths 0 and 1 are
@@ -398,5 +435,48 @@ public sealed class DuckyBuilderTests
 
         (await store.DispatchAsync(new DispatcherFixtures.Step("loop"))).ShouldBe(DispatchResult.Reduced);
         (await Task.WhenAll(children)).ShouldBe([DispatchResult.Reduced, DispatchResult.Dropped]);
+    }
+
+    // Regression (§5.1, §8.2 DUCKY318, INV-31): a negative MaxDispatchDepth used to reach the store, where even the
+    // depth-0 ReducerFailed reporting a drop was dropped and routed again, so a dispatch never returned. It is a
+    // configuration error: AddDucky doesn't throw, and first resolution reports it with the other errors. 0 stays valid
+    // (only root actions are reduced). Store_NegativeMaxDispatchDepth_Throws covers the store's own guard.
+    [Fact]
+    public async Task MaxDispatchDepth_Negative_ReportedAtFirstResolution()
+    {
+        var services = new ServiceCollection();
+        Should.NotThrow(() => services.AddDucky(d =>
+        {
+            d.Lifetime = ServiceLifetime.Transient;
+            d.MaxDispatchDepth = -1;
+            d.MaxDispatchDepth.ShouldBe(-1);
+        }));
+        await using var provider = services.BuildServiceProvider();
+
+        var exception = Should.Throw<DuckyConfigurationException>(() => provider.GetRequiredService<IStore>());
+        exception.Errors.ShouldBe([DuckyErrors.TransientLifetime(), DuckyErrors.NegativeMaxDispatchDepth(-1)], ignoreOrder: true);
+
+        var valid = new ServiceCollection();
+        valid.AddDucky(d => d.MaxDispatchDepth = 0);
+        await using var validProvider = valid.BuildServiceProvider();
+        await using var scope = validProvider.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<IStore>().ShouldNotBeNull();
+    }
+
+    // Throws on the first lookup of `failing`, as a faulty third-party container may; then delegates.
+    private sealed class FailOnceProvider(IServiceProvider inner, Type failing) : IServiceProvider
+    {
+        private bool _failed;
+
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == failing && !_failed)
+            {
+                _failed = true;
+                throw new InvalidOperationException("container");
+            }
+
+            return inner.GetService(serviceType);
+        }
     }
 }

@@ -10,14 +10,17 @@ namespace Ducky;
 #pragma warning disable CA1031 // justification: every non-fatal listener failure is swallowed by design (§6.3, INV-03)
 internal sealed class SafeTelemetry
 {
-    private static readonly ActivitySource _source = new("Ducky");
+    // The ActivitySource and Meter name (§9).
+    private const string Name = "Ducky";
+
+    private static readonly ActivitySource _source = new(Name);
 
     private readonly SafeLogger _logger;
 
     internal SafeTelemetry(SafeLogger logger, IMeterFactory? meterFactory)
     {
         _logger = logger;
-        var meter = meterFactory?.Create("Ducky");
+        var meter = meterFactory?.Create(Name);
         DispatchDuration = meter?.CreateHistogram<double>("ducky.dispatch.duration", "ms");
         DispatchDropped = meter?.CreateCounter<long>("ducky.dispatch.dropped");
         EffectFailures = meter?.CreateCounter<long>("ducky.effect.failures");

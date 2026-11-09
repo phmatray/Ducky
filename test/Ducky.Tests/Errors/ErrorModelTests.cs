@@ -13,9 +13,9 @@ public sealed class ErrorModelTests
     private const string CartSliceName = $"{Fixtures}CartSlice";
     private const string OtherCartSliceName = $"{Fixtures}OtherCartSlice";
 
-    // Every Ducky runtime code (DUCKY352 and DUCKY310-317 are Ducky.Blazor's): the catalogue factory, the error, its code,
-    // the concrete types and keys its message names, and what its fix names. Built per call, never cached in a static:
-    // Stryker switches the active mutant inside one test process.
+    // Every Ducky runtime code (DUCKY352 and DUCKY310-317 are Ducky.Blazor's; DUCKY318 is Ducky's): the catalogue
+    // factory, the error, its code, the concrete types and keys its message names, and what its fix names. Built per
+    // call, never cached in a static: Stryker switches the active mutant inside one test process.
     private static (string Factory, DuckyError Error, string Code, string[] InMessage, string[] InFix)[] Rows() =>
     [
         (nameof(DuckyErrors.AddDuckyTwice), DuckyErrors.AddDuckyTwice(), "DUCKY300", ["AddDucky", "IServiceCollection"],
@@ -65,6 +65,8 @@ public sealed class ErrorModelTests
         (nameof(DuckyErrors.ServiceKeyParameter), DuckyErrors.ServiceKeyParameter(typeof(CartSlice), "AddEffect", "tenant"),
             "DUCKY309", [CartSliceName, "AddEffect", "tenant", "[ServiceKey]"],
             ["Remove [ServiceKey] from tenant", "default value", "keyed effects or middleware"]),
+        (nameof(DuckyErrors.NegativeMaxDispatchDepth), DuckyErrors.NegativeMaxDispatchDepth(-1), "DUCKY318",
+            ["DuckyBuilder.MaxDispatchDepth is -1,", "ReducerFailed"], ["MaxDispatchDepth to 0 or more", "default of 64"]),
         (nameof(DuckyErrors.UnregisteredState), DuckyErrors.UnregisteredState(typeof(CartState)), "DUCKY350", [Cart],
             ["AddDuckyGenerated_Ducky_Tests()", "Ducky.Tests", "AddSlice<TSlice>()"]),
         (nameof(DuckyErrors.SliceStoreNotAttached), DuckyErrors.SliceStoreNotAttached(typeof(CartSlice)), "DUCKY351",
@@ -91,7 +93,7 @@ public sealed class ErrorModelTests
             rows.Select(row => row.Code).Distinct().ShouldBe(
             [
                 "DUCKY300", "DUCKY301", "DUCKY302", "DUCKY303", "DUCKY304", "DUCKY305", "DUCKY306", "DUCKY307", "DUCKY308",
-                "DUCKY309", "DUCKY350", "DUCKY351", "DUCKY353",
+                "DUCKY309", "DUCKY318", "DUCKY350", "DUCKY351", "DUCKY353",
             ]);
 
             // Every catalogue factory has a row, so a new factory can't skip the template.

@@ -35,6 +35,9 @@ internal sealed class DuckyStore : IStore
         Func<object>? disposeHook = null,
         IMeterFactory? meterFactory = null)
     {
+        // A negative depth drops even the depth-0 core failure action that reports a drop, so the drain would never end.
+        // AddDucky reports it as DUCKY318 before a store is built; this covers every other path to a store.
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDispatchDepth);
         Slice[] owned = [.. slices];
         foreach (var slice in owned)
         {

@@ -91,7 +91,7 @@ public sealed class StateSnapshot
 
             if (hydration && !IsRestored(ordinal))
             {
-                (restored ??= (ulong[])_restored.Clone())[ordinal >> 6] |= 1UL << ordinal;
+                (restored ??= (ulong[])_restored.Clone())[ordinal / 64] |= 1UL << ordinal;
             }
         }
 
@@ -104,8 +104,8 @@ public sealed class StateSnapshot
             ? ordinal
             : throw new DuckyConfigurationException([DuckyErrors.UnregisteredState(typeof(TState))]);
 
-    // A ulong shift count is taken modulo 64, so 1UL << ordinal is the ordinal's bit within its word.
-    private bool IsRestored(int ordinal) => (_restored[ordinal >> 6] & (1UL << ordinal)) != 0;
+    // ordinal / 64 is the ordinal's word; a ulong shift count is taken modulo 64, so 1UL << ordinal is its bit in that word.
+    private bool IsRestored(int ordinal) => (_restored[ordinal / 64] & (1UL << ordinal)) != 0;
 
     // The state at a registry ordinal: the dispatcher's lookup-free read (SPEC §6.4 step 6).
     internal object this[int ordinal] => _states[ordinal];
