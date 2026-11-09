@@ -197,7 +197,7 @@ Each invariant is enforced in one place (column 3) and verified by the named tes
 
 ## 5. Ducky core public API
 
-Namespace `Ducky` unless stated otherwise. Nullable is enabled. `PublicAPI.Shipped.txt` contains exactly this listing, plus the tombstones of §22.1. Null checks and XML docs are omitted here, but XML docs are required on every public member (CS1591 is an error). `[DAM]` means `[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]`.
+Namespace `Ducky` unless stated otherwise. Nullable is enabled. After `ShipPublicApi` (§21, run in the GA release PR), `PublicAPI.Shipped.txt` contains exactly this listing, plus the tombstones of §22.1; until then the whole surface sits in `PublicAPI.Unshipped.txt`. The options classes of §11.1 (`BlazorOptions`, `PersistOptions`, `DevToolsOptions`) keep their public parameterless constructors, the convention for options types, although only the `configure` delegates hand them out. Null checks and XML docs are omitted here, but XML docs are required on every public member (CS1591 is an error). `[DAM]` means `[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]`.
 
 ### 5.1 Registration
 
@@ -1043,6 +1043,8 @@ public sealed record ClearPersistedState;                                       
 public sealed record PersistenceState(PersistenceStatus Status)                       // slice key "@ducky/persistence"
 { internal int ScopeEpoch { get; init; } }                                            // allocated from a counter by each scope switch (§11.6);
                                                                                       // the slice ignores a terminal whose epoch differs
+// Record equality includes the internal ScopeEpoch while ToString prints only public members: after a scope switch, `new HydrationCompleted(true)`
+// does not equal the dispatched instance though both print alike. Tests compare the public members, not the records.
 public enum PersistenceStatus { NotStarted, Hydrating, Hydrated, Failed }
 
 // Components (C# classes, hand-written BuildRenderTree; no .razor in the library)
@@ -1488,7 +1490,7 @@ DUCKY901 warns while both Mutty and Ducky.Draft are referenced. The `docs/migrat
 ```csharp
 namespace Ducky.Reactive;
 
-public abstract class ReactiveEffect                         // DI-constructed; inject TimeProvider for time operators
+public abstract class ReactiveEffect                         // created by the store with its constructor dependencies (ActivatorUtilities, §14); inject TimeProvider for time operators
 {
     public abstract Observable<object> Handle(Observable<object> actions, Observable<StateSnapshot> state);
     protected internal virtual TimeSpan? RetryDelay(int attempt)          // null stops resubscribing
