@@ -1,0 +1,47 @@
+@inherits DuckyComponent
+@inject DrawerStore Drawer
+@* A yolk tag naming the feature behind a region. Shown in X-ray mode only (CSS); pressing it opens the code drawer. *@
+
+<button @ref="_button" type="button" class="xtag" style="--i: @(_feature?.Order ?? 0)" aria-expanded="@(_open.Value ? "true" : "false")" aria-controls="code-drawer"
+        @onclick="() => Drawer.Toggle(Feature)">
+  <Icon Name="code" Size="15" />
+  <span class="sr-only">Show the code for</span>
+  <span class="xtag-name">@_feature?.Tag</span>
+  @if (Detail is not null)
+  {
+    <span class="xtag-detail">@Detail</span>
+  }
+</button>
+
+@code {
+  private ElementReference _button;
+  private Feature? _feature;
+  private Selection<bool> _open = null!;
+  private Selection<bool> _returnHere = null!;
+  private bool _returned;
+
+  [Parameter, EditorRequired] public string Feature { get; set; } = "";
+
+  [Parameter] public string? Detail { get; set; }
+
+  protected override void OnInitialized()
+  {
+    _feature = Features.Find(Feature);
+    _open = Select<DrawerView, bool>(drawer => drawer.Feature == Feature);
+    _returnHere = Select<DrawerView, bool>(drawer => drawer.Feature is null && drawer.ReturnTo == Feature);
+  }
+
+  // When the drawer this tag opened closes, focus comes back here.
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_returnHere.Value && !_returned)
+    {
+      _returned = true;
+      await _button.FocusAsync();
+    }
+    else if (!_returnHere.Value)
+    {
+      _returned = false;
+    }
+  }
+}

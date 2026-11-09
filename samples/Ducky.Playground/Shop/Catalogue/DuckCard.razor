@@ -1,0 +1,67 @@
+@inherits ShopComponent
+@inject Tape Tape
+
+<li class="duck">
+  @RenderCount
+  @if (_duck.Value is { } duck)
+  {
+    <DuckGlyph Colour="duck.Colour" />
+    <h3 class="duck-name">@duck.Name</h3>
+    <p class="duck-blurb">@duck.Blurb</p>
+    <p class="duck-tags">
+      <span class="tag">@duck.Colour</span>
+      @foreach (var tag in duck.Tags)
+      {
+        <span class="tag">@tag</span>
+      }
+    </p>
+    <div class="duck-buy">
+      <span class="price">@DuckColours.Price(duck.Price)</span>
+      <span class="stock @(duck.Stock is > 0 and < 5 ? "low" : null)">@Stock(duck)</span>
+      <button type="button" class="add" disabled="@(!duck.InStock)" aria-label="Add @duck.Name to the basket" @onclick="AddAsync">
+        <Icon Name="plus" Size="18" /> Add
+      </button>
+    </div>
+    @if (_inBasket.Value > 0)
+    {
+      <p class="in-basket"><Icon Name="check" Size="16" /> @_inBasket.Value in your basket</p>
+    }
+    @if (_veto is not null)
+    {
+      <p class="veto" role="status">Vetoed: @_veto</p>
+    }
+  }
+</li>
+
+@code {
+  private Selection<Duck?> _duck = null!;
+  private Selection<int> _inBasket = null!;
+  private string? _veto;
+
+  [Parameter, EditorRequired] public string DuckId { get; set; } = "";
+
+  protected override void OnInitialized()
+  {
+    // Each card selects its own duck and its own basket line, by id: adding this duck re-renders this card, not the others.
+    _duck = Select<CatalogueState, Duck?>(catalogue => catalogue.Ducks.Find(DuckId));
+    _inBasket = Select<Basket, int>(basket => basket.QuantityOf(DuckId));
+  }
+
+  private static string Stock(Duck duck) => duck.Stock switch
+  {
+    0 => "Sold out",
+    < 5 => $"Only {duck.Stock} left",
+    _ => $"{duck.Stock} in stock",
+  };
+
+  private async Task AddAsync()
+  {
+    // QuantityLimitMiddleware may veto the action: the store then reduces nothing and says so in the result.
+    var result = await Store.AddToCartAsync(DuckId);
+    _veto = result == DispatchResult.Vetoed ? ShopRules.WhyNot(Store.State, DuckId) ?? "the shop refused it." : null;
+    if (_veto is not null)
+    {
+      Tape.Vetoed(AddToCart.Type, $"{_duck.Value?.Name}: {_veto}");
+    }
+  }
+}

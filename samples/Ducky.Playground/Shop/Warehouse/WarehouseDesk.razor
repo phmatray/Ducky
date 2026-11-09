@@ -1,0 +1,43 @@
+@inherits ShopComponent
+
+@* X-ray only: the warehouse feed, where a malformed action makes a reducer throw. *@
+<section class="region warehouse xray-only" style="--i: 5" aria-labelledby="warehouse-title">
+  @RenderCount
+  <div class="xtags"><XrayTag Feature="reducer-failed" Detail="@($"{_incidents.Value.Count} failed")" /></div>
+  <h2 id="warehouse-title" class="side-title">Warehouse feed</h2>
+  <p class="side-note">Stock adjustments arrive as actions, reduced by the catalogue and by a restock log. The Classic has @_classicStock.Value in stock; the log has accepted @(_log.Value.Accepted == 1 ? "1 adjustment" : $"{_log.Value.Accepted} adjustments").</p>
+  <div class="tool-row">
+    <button type="button" class="pill small" @onclick="() => AdjustAsync(6)"><Icon Name="restock" Size="16" /> Restock 6 Classics</button>
+    <button type="button" class="pill small" @onclick="() => AdjustAsync(-999)">Send a malformed restock, −999</button>
+  </div>
+  <p class="side-note" role="status">@_result</p>
+  @if (_incidents.Value.Last is { } last)
+  {
+    <p class="incident"><span class="lamp failed">ReducerFailed</span> <code>@last</code></p>
+  }
+</section>
+
+@code {
+  private Selection<int> _classicStock = null!;
+  private Selection<RestockLog> _log = null!;
+  private Selection<Incidents> _incidents = null!;
+  private string? _result;
+
+  protected override void OnInitialized()
+  {
+    _classicStock = Select<CatalogueState, int>(static catalogue => catalogue.Ducks.Find(Stockroom.ClassicId)?.Stock ?? 0);
+    _log = Select<RestockLog, RestockLog>(static log => log);
+    _incidents = Select<Incidents, Incidents>(static incidents => incidents);
+  }
+
+  private async Task AdjustAsync(int delta)
+  {
+    var result = await Store.AdjustStockAsync(Stockroom.ClassicId, delta);
+    _result = result switch
+    {
+      DispatchResult.Reduced => "Reduced: the catalogue and the log both moved, in one commit.",
+      DispatchResult.Failed => "DispatchResult.Failed: the reducer threw, so neither slice changed. The shop carries on.",
+      _ => $"DispatchResult.{result}.",
+    };
+  }
+}

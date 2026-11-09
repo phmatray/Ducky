@@ -26,7 +26,7 @@ Every concurrency and lifecycle claim is an invariant (INV-nn) with a named test
 
 ## Operating Context
 
-Read in a browser next to an IDE; code is copied into `Program.cs`, slices and components. Packages: `Ducky`, `Ducky.Blazor`, `Ducky.Draft`, `Ducky.Reactive`, `Ducky.Testing` on NuGet, net10.0 only. Docs: generated guides under `docs/` (the build's own Markdown renderer, `docs/nav.yml`), every snippet a region of a compiled, tested file. A WASM sample is published beside the site under `sample/`.
+Read in a browser next to an IDE; code is copied into `Program.cs`, slices and components. Packages: `Ducky`, `Ducky.Blazor`, `Ducky.Draft`, `Ducky.Reactive`, `Ducky.Testing` on NuGet, net10.0 only. Docs: generated guides under `docs/` (the build's own Markdown renderer, `docs/nav.yml`), every snippet a region of a compiled, tested file. The Ducky Playground (`samples/Ducky.Playground`, a Blazor WebAssembly shop with an X-ray mode) is published beside the site under `playground/`.
 
 ## Capabilities and Constraints
 

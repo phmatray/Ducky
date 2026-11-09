@@ -1,0 +1,43 @@
+@inherits ShopComponent
+
+<div class="region filters" style="--i: 2">
+  @RenderCount
+  <div class="xtags"><XrayTag Feature="renders" /></div>
+  <div class="chips" role="group" aria-label="Colour">
+    <button type="button" class="chip" aria-pressed="@(_filters.Value.Colour is null ? "true" : "false")" @onclick="() => Store.PickColour(null)">All colours</button>
+    @foreach (var colour in Enum.GetValues<DuckColour>())
+    {
+      <button type="button" class="chip" aria-pressed="@(_filters.Value.Colour == colour ? "true" : "false")" @onclick="() => Store.PickColour(colour)">
+        <span class="swatch" style="background:@DuckColours.Hex(colour)"></span>@colour
+      </button>
+    }
+  </div>
+  <div class="filter-row">
+    <button type="button" class="chip" aria-pressed="@(_filters.Value.InStockOnly ? "true" : "false")" @onclick="() => Store.ToggleInStockOnly()">
+      In stock only
+    </button>
+    <label class="sort">
+      <span>Sort</span>
+      <select value="@_filters.Value.Sort" @onchange="Sort">
+        <option value="@ShelfSort.Featured">Featured</option>
+        <option value="@ShelfSort.PriceLowToHigh">Price, low to high</option>
+        <option value="@ShelfSort.PriceHighToLow">Price, high to low</option>
+        <option value="@ShelfSort.Name">Name</option>
+      </select>
+    </label>
+  </div>
+</div>
+
+@code {
+  private Selection<Filters> _filters = null!;
+
+  protected override void OnInitialized() => _filters = Select<Filters, Filters>(static filters => filters);
+
+  private void Sort(ChangeEventArgs e)
+  {
+    if (Enum.TryParse<ShelfSort>(e.Value as string, out var sort))
+    {
+      Store.SortShelf(sort);
+    }
+  }
+}

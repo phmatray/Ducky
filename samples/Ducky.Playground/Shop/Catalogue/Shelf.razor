@@ -1,0 +1,50 @@
+@inherits ShopComponent
+
+<section class="region shelf-region" style="--i: 3" aria-labelledby="shelf-title">
+  @RenderCount
+  <div class="xtags">
+    <XrayTag Feature="catalogue" Detail="@($"{_ids.Value.Length} of {_total.Value}")" />
+    <XrayTag Feature="veto" />
+  </div>
+  <h2 id="shelf-title" class="shelf-title"><span aria-live="polite">@Count</span></h2>
+
+  @if (_loading.Value)
+  {
+    <p class="shelf-note">Unpacking the ducks…</p>
+  }
+  else if (_error.Value is { } error)
+  {
+    <p class="shelf-note" role="alert">The warehouse didn't answer: @error</p>
+  }
+  else if (_ids.Value.IsEmpty)
+  {
+    <p class="shelf-note">No duck answers to that. Try “yellow”, “cursed” or “state”, or clear the filters.</p>
+  }
+  else
+  {
+    <ul class="shelf" role="list">
+      @foreach (var id in _ids.Value)
+      {
+        <DuckCard @key="id" DuckId="@id" />
+      }
+    </ul>
+  }
+</section>
+
+@code {
+  private Selection<ImmutableArray<string>> _ids = null!;
+  private Selection<int> _total = null!;
+  private Selection<bool> _loading = null!;
+  private Selection<string?> _error = null!;
+
+  private string Count => _loading.Value ? "Ducks" : _ids.Value.Length == 1 ? "1 duck" : $"{_ids.Value.Length} ducks";
+
+  protected override void OnInitialized()
+  {
+    // Memoized, with a comparer: the same ids in the same order keep this render even when a duck's stock changed.
+    _ids = Select(ShelfSelectors.Visible.Create(), ShelfSelectors.SameIds);
+    _total = Select<CatalogueState, int>(static catalogue => catalogue.Ducks.Count);
+    _loading = Select<CatalogueState, bool>(static catalogue => catalogue.Loading);
+    _error = Select<CatalogueState, string?>(static catalogue => catalogue.Error);
+  }
+}

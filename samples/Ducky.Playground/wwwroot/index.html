@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ducky Playground: Rubber Duck Supply Co.</title>
+  <meta name="description" content="A small rubber duck shop built only from Ducky 2.0, with an X-ray mode that names the Ducky feature behind each behaviour and shows the code that runs it." />
+  <meta name="theme-color" content="#FFD425" />
+  <base href="/" />
+  <link rel="icon" href="duck.svg" type="image/svg+xml" />
+  <link rel="preload" href="fonts/anybody.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/atkinson-next.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="css/playground.css" />
+</head>
+
+<body>
+  <div id="app">
+    <div class="boot">
+      <img src="duck.svg" alt="" width="120" height="108" />
+      <p class="boot-title">Rubber Duck Supply Co.</p>
+      <p class="boot-note">Unpacking the ducks…</p>
+      <noscript><p class="boot-note">The playground is a Blazor WebAssembly app: it needs JavaScript.</p></noscript>
+    </div>
+  </div>
+  <div id="blazor-error-ui" role="alert" hidden>
+    Something broke in the playground. <a href="" class="reload">Reload</a>
+  </div>
+  <script src="js/playground.js"></script>
+  <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+  <script>
+    // .NET 10 fixes a standalone app's environment at build time. Program.cs enables Redux DevTools in Development only,
+    // so DevTools is on only for a page opened with ?devtools, and off by default even under `dotnet run` (ADR-0043).
+    Blazor.start({ environment: new URLSearchParams(location.search).has('devtools') ? 'Development' : 'Production' });
+  </script>
+</body>
+
+</html>

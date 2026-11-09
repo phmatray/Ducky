@@ -73,7 +73,7 @@
   {
    "id": "M14",
    "title": "Samples, E2E and AOT",
-   "goal": "Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, and the trimmed AOT-WASM smoke that can't skip in the aot job."
+   "goal": "Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, the trimmed AOT-WASM smoke that can't skip in the aot job, and the Ducky Playground published to Pages."
   },
   {
    "id": "M15",
@@ -3236,6 +3236,25 @@
    "done_definition": "Common DoD (PLAN.md §1); aot job green."
   },
   {
+   "id": "M14-07",
+   "milestone": "M14",
+   "title": "Ducky Playground",
+   "size": "M",
+   "depends_on": [
+    "M14-02",
+    "M15-08"
+   ],
+   "area": "samples/Ducky.Playground, Ducky.slnx, test/Ducky.E2E/Samples, .github/workflows/docs.yml, site/index.html, site/llms.txt",
+   "invariants": [],
+   "scope": "Stage 18. Owner-added (2026-11-09): the published sample was a bare todo list, kept as the E2E and trimmed-AOT fixture; the live demo becomes a playground. SPEC §18 layout and §20 docs.yml. A Blazor WebAssembly app, Rubber Duck Supply Co., built only from Ducky in the site's visual world (site/tokens.css and site/fonts copied by the build): live search on a Switch effect with a debounce on the TimeProvider, an EntityState catalogue behind memoized selectors, a basket persisted to localStorage with a version, a migration and SyncAcrossTabs, checkout on an Exhaust effect whose declined payment becomes EffectFailed, order tracking polled by a Ducky.Reactive pipeline until delivered, a profile edited with Ducky.Draft Produce on nested records, an audit middleware feeding an inspector tape and a MayDispatch veto, a ReducerFailed reachable in X-ray mode, a SliceStore for the X-ray state, render counters, and Redux DevTools only with ?devtools. An X-ray switch outlines every feature region and tags it; a tag opens a code drawer with the explanation, the guides and the app's own source files, which the build copies beside the app. docs.yml publishes it under playground/ instead of the WASM sample; the home page and llms.txt link it.",
+   "acceptance_tests": [
+    "Playground builds in Ducky.slnx with no workload, warnings as errors and the Ducky analyzers",
+    "Playground_Boots_SearchAddToCartCheckout (Ducky.E2E, non-normative)",
+    "docs.yml publishes the playground under playground/ with its base href patched and its source files present"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1) (samples are not coverage-gated; analyzers and warnings still apply)."
+  },
+  {
    "id": "M15-01",
    "milestone": "M15",
    "title": "Docs infrastructure",
@@ -3493,6 +3512,7 @@
     "M12-07",
     "M13-05",
     "M14-06",
+    "M14-07",
     "M15-06",
     "M15-07",
     "M15-08",

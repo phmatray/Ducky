@@ -1,0 +1,34 @@
+@* The site's duck (site/duck.svg), redrawn as a product silhouette in the duck's own colour: ink outline and details,
+   a beak that contrasts with the body (ink, or yolk on a black duck). Decorative: the duck's name is the text beside it. *@
+<svg class="duck-glyph" viewBox="0 0 400 360" aria-hidden="true" focusable="false">
+  <g stroke="@_line" stroke-width="16" stroke-linejoin="round" fill="@_fill">
+    <path d="@Body" />
+    <circle cx="152" cy="128" r="84" />
+  </g>
+  <path d="M196 262C226 226 290 222 324 250M214 286C250 296 290 290 318 272" fill="none" stroke="@_detail" stroke-width="11" stroke-linejoin="round" stroke-linecap="round" />
+  <path d="M80 126C52 120 26 130 16 146C34 162 60 168 88 160Z" fill="@_beak" stroke="@_line" stroke-width="11" stroke-linejoin="round" />
+  <circle cx="132" cy="108" r="14" fill="@_detail" />
+  <circle cx="137" cy="103" r="4.5" fill="@_glint" />
+</svg>
+
+@code {
+  private const string Body = "M58 252C58 206 104 186 168 190L292 196C324 188 344 162 350 128C382 166 390 236 364 276C338 318 276 338 204 338C114 338 58 304 58 252Z";
+
+  private string _fill = "";
+  private string _line = "";
+  private string _detail = "";
+  private string _beak = "";
+  private string _glint = "";
+
+  [Parameter] public DuckColour Colour { get; set; }
+
+  protected override void OnParametersSet()
+  {
+    var black = Colour == DuckColour.Black;
+    _fill = DuckColours.Hex(Colour);
+    _line = "#17140F";
+    _detail = black ? "#FFFFFF" : "#17140F";
+    _beak = black ? "#FFD425" : "#17140F";
+    _glint = black ? "#17140F" : "#FFFFFF";
+  }
+}

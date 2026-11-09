@@ -1,0 +1,51 @@
+@inherits ShopComponent
+
+<section class="region orders" style="--i: 3" aria-labelledby="orders-title">
+  @RenderCount
+  <div class="xtags"><XrayTag Feature="orders" Detail="@Detail" /></div>
+  <h2 id="orders-title" class="side-title">Your order</h2>
+
+  @if (_order.Value is { } order)
+  {
+    <p class="order-id"><code>@order.Id</code> <span>@DuckColours.Price(order.Total)</span></p>
+    <ol class="steps">
+      @foreach (var status in Enum.GetValues<OrderStatus>())
+      {
+        <li class="@(status < order.Status ? "done" : status == order.Status ? "current" : null)" aria-current="@(status == order.Status ? "step" : null)">
+          <span class="dot" aria-hidden="true"></span>@Label(status)
+        </li>
+      }
+    </ol>
+    <p class="side-note">To @order.DeliverTo</p>
+    @if (order.Status == OrderStatus.Delivered)
+    {
+      <button type="button" class="pill small" @onclick="() => Store.DismissOrder()">Done, thanks</button>
+    }
+  }
+  else
+  {
+    <p class="side-note">Nothing on its way yet. Pay for a basket and follow it here.</p>
+  }
+</section>
+
+@code {
+  private Selection<Order?> _order = null!;
+
+  private string Detail => _order.Value switch
+  {
+    null => "idle",
+    { Status: OrderStatus.Delivered } order => $"stopped after {order.Polls} polls",
+    var order => $"{order.Polls} polls",
+  };
+
+  protected override void OnInitialized() => _order = Select<OrdersState, Order?>(static orders => orders.Current);
+
+  private static string Label(OrderStatus status) => status switch
+  {
+    OrderStatus.Placed => "Placed",
+    OrderStatus.Packed => "Packed",
+    OrderStatus.Shipped => "Shipped",
+    OrderStatus.OutForDelivery => "Out for delivery",
+    _ => "Delivered",
+  };
+}

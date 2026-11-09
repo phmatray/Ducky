@@ -1,0 +1,181 @@
+@inherits DuckyComponent
+@using System.Text.Json.Nodes
+@inject Tape Tape
+@inject XrayStore Xray
+@* The dispatcher board made real: an ink tape docked at the bottom. Collapsed, it shows the newest row; expanded, the
+   ruled log, and the payload and state diff of the row you open. *@
+
+<section id="inspector" class="tape region @(_open.Value ? "open" : null)" aria-label="Inspector">
+  <div class="tape-bar">
+    <h2 class="tape-title">Inspector</h2>
+    <div class="xtags"><XrayTag Feature="audit" Detail="@($"{Tape.Total} rows")" /></div>
+    @if (Tape.Latest() is { } latest)
+    {
+      <p class="tape-latest" aria-live="off">
+        <span class="seq">@Seq(latest)</span>
+        <code class="type">@latest.ActionType</code>
+        <span class="origin">@latest.Origin</span>
+        @Lamp(latest.Lamp)
+      </p>
+    }
+    <p class="tape-counts">
+      <span>@Tape.Total rows</span>
+      @if (Tape.DroppedCount > 0)
+      {
+        <span class="lamp dropped">@Tape.DroppedCount dropped</span>
+      }
+      @if (Tape.VetoedCount > 0)
+      {
+        <span class="lamp vetoed">@Tape.VetoedCount vetoed</span>
+      }
+      @if (Tape.FailedCount > 0)
+      {
+        <span class="lamp failed">@Tape.FailedCount failed</span>
+      }
+    </p>
+    <button type="button" class="pill on-ink tape-toggle" aria-expanded="@(_open.Value ? "true" : "false")" aria-controls="tape-log" @onclick="Xray.ToggleInspector">
+      <Icon Name="@(_open.Value ? "down" : "up")" Size="16" /> <span class="tape-toggle-text">@(_open.Value ? "Collapse" : "Expand")</span><span class="sr-only"> the inspector</span>
+    </button>
+  </div>
+
+  @if (_open.Value)
+  {
+    var rows = Tape.Rows();
+    var selected = rows.FirstOrDefault(row => row.Number == _selected) ?? rows.FirstOrDefault();
+    <div class="tape-body" id="tape-log">
+      <div class="board-wrap" tabindex="-1">
+        <table class="board">
+          <caption class="sr-only">Every action the store processed, newest first</caption>
+          <colgroup><col class="c-seq" /><col class="c-time" /><col class="c-act" /><col class="c-org" /><col class="c-res" /></colgroup>
+          <thead><tr><th scope="col">#</th><th scope="col">Time</th><th scope="col">Action</th><th scope="col">Origin</th><th scope="col">Result</th></tr></thead>
+          <tbody>
+            @foreach (var row in rows)
+            {
+              <tr @key="row.Number" class="@(row == selected ? "selected" : null)">
+                <td>@Seq(row)</td>
+                <td>@row.Time</td>
+                <td>
+                  <button type="button" class="row-open" aria-pressed="@(row == selected ? "true" : "false")" @onclick="() => _selected = row.Number">@row.ActionType</button>
+                  @if (row.Note is not null)
+                  {
+                    <em title="@row.Note">@row.Note</em>
+                  }
+                </td>
+                <td>@row.Origin</td>
+                <td>@Lamp(row.Lamp)</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="tape-detail">
+        @if (selected is not null)
+        {
+          var detail = Detail(selected);
+          <h3><code>@selected.ActionType</code></h3>
+          <p class="detail-label">Payload</p>
+          <pre class="detail-code">@detail.Payload</pre>
+          <p class="detail-label">State changed</p>
+          @if (detail.Changes.Count == 0)
+          {
+            <p class="detail-none">@(selected.Lamp == Inspector.Lamp.Reduced ? "Nothing: every slice returned the same instance." : "Nothing was committed.")</p>
+          }
+          else
+          {
+            <ul class="diff" role="list">
+              @foreach (var change in detail.Changes)
+              {
+                <li>
+                  <code class="path">@change.Path</code>
+                  <code class="before">@(change.Before ?? "(none)")</code>
+                  <code class="after">@(change.After ?? "(removed)")</code>
+                </li>
+              }
+            </ul>
+          }
+        }
+      </div>
+    </div>
+  }
+</section>
+
+@code {
+  private Selection<bool> _open = null!;
+  private long _selected = -1;
+  private bool _renderQueued;
+  private (long Number, Lamp Lamp, RowDetail Detail)? _detail;
+
+  private sealed record RowDetail(string Payload, IReadOnlyList<DiffLine> Changes);
+
+  protected override void OnInitialized()
+  {
+    _open = Select<XrayView, bool>(static view => view.InspectorOpen);
+    Tape.Changed += OnTape;
+  }
+
+  // The tape changes on the drainer, often several times per user action: one render per batch.
+  private void OnTape()
+  {
+    if (_renderQueued)
+    {
+      return;
+    }
+    _renderQueued = true;
+    _ = InvokeAsync(() =>
+    {
+      _renderQueued = false;
+      StateHasChanged();
+    });
+  }
+
+  private static string Seq(TapeRow row) => row.Seq?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "–";
+
+  private static RenderFragment Lamp(Lamp lamp) => __builder =>
+  {
+    <span class="lamp @lamp.ToString().ToLowerInvariant()">@lamp</span>
+  };
+
+  private RowDetail Detail(TapeRow row)
+  {
+    if (_detail is { } cached && cached.Number == row.Number && cached.Lamp == row.Lamp)
+    {
+      return cached.Detail;
+    }
+
+    var payload = row.Action switch
+    {
+      null => row.Note ?? "(none)",
+      EffectFailed failed => $"EffectType  {failed.EffectType}\nActionType  {failed.ActionType}\n{failed.Exception.GetType().Name}: {failed.Exception.Message}",
+      ReducerFailed failed => $"ActionType  {failed.ActionType}\nSliceKey    {failed.SliceKey}\n{failed.Exception.GetType().Name}: {failed.Exception.Message}",
+      var action when Store.Json.TrySerialize(action, action.GetType(), out var json) => JsonNode.Parse(json)?.ToJsonString(StateDiff.Indented) ?? json,
+      _ => "(no payload: a SliceStore method's change, or a library action outside the app's JSON context)",
+    };
+
+    var changes = new List<DiffLine>();
+    if (row is { Before: { } before, After: { } after })
+    {
+      foreach (var key in row.ChangedKeys)
+      {
+        var type = Store.Slices.FirstOrDefault(slice => slice.Key == key)?.StateType;
+        if (type is null || !before.Keys.Contains(key) || !after.Keys.Contains(key))
+        {
+          continue;
+        }
+        changes.AddRange(StateDiff.Compare(Store.Json.ToNode(before.Get(key), type), Store.Json.ToNode(after.Get(key), type), key));
+      }
+    }
+
+    var detail = new RowDetail(payload, changes);
+    _detail = (row.Number, row.Lamp, detail);
+    return detail;
+  }
+
+  protected override void Dispose(bool disposing)
+  {
+    if (disposing)
+    {
+      Tape.Changed -= OnTape;
+    }
+    base.Dispose(disposing);
+  }
+}

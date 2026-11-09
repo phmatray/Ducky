@@ -23,6 +23,10 @@ Every snippet in the guides is a region of a compiled, tested file. Every behavi
 - [Ducky.Draft (Produce)](docs/guides/draft/produce.html)
 - [Threading contract](docs/threading.html)
 
+## Playground
+
+- [Ducky Playground](playground/): Rubber Duck Supply Co., a small shop built only from Ducky (Blazor WebAssembly, in the browser, no server). Live search on a Switch effect, an EntityState catalogue behind memoized selectors, a basket persisted to localStorage with a versioned migration and cross-tab sync, checkout on an Exhaust effect with a declined payment surfaced as EffectFailed, order tracking polled by a Ducky.Reactive pipeline, a profile edited with Ducky.Draft Produce, a MayDispatch veto, a ReducerFailed you can provoke, and a SliceStore. Its X-ray mode names the feature behind each region and shows the app's own compiled source; its inspector logs every action with its DispatchResult.
+
 ## Migration
 
 - [How Ducky compares](docs/compare.html): Ducky 2.0 beside Fluxor, TimeWarp.State and a hand-written state container, sourced and dated
