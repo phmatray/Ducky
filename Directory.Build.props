@@ -47,6 +47,10 @@
     <!-- Anchored: a relative path would resolve per project, into src/<Project>/artifacts/. -->
     <PackageOutputPath>$(RepoRoot)artifacts/packages/</PackageOutputPath>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- The SDK adds its workload library-packs folder as a restore source. A runner whose SDK ships its own copy of a
+         package there (the Windows image's Microsoft.NET.Sdk.WebAssembly.Pack 10.0.14) restores a nupkg whose content hash
+         differs from nuget.org's, and the locked restore fails with NU1403. Every package comes from nuget.org instead. -->
+    <DisableImplicitLibraryPacksFolder>true</DisableImplicitLibraryPacksFolder>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(CI)' == 'true'">
