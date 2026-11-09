@@ -2,7 +2,7 @@
 
 Status: plan derived from `SPEC.md` (authoritative, including review rounds "2 (recovered)" through 7 of `REVIEW-LOG.md`) and `adr/0001-0047`. Where this plan and the spec disagree, the spec wins; every planning decision that goes beyond the spec is listed in §3.
 
-160 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
+161 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
 
 ## 1. Workflow: strict TDD under full gates
 
@@ -67,7 +67,7 @@ Every story after M0-01 is one issue and one squash-merged PR on `v2`, and it fo
 | M13 | Generators, analyzers and tombstones | 12 | Shared generator helpers, GEN-01 dispatch helpers, GEN-02 core registration (step 7) and its Blazor arms (Prerender<T> at stage 11, PersistAttributeDefaults<T> and Ducky.Blazor.Generated.Tests at stage 12), multi-assembly fixture (INV-25), the stage-7 analyzers (DUCKY001-025 arms whose APIs exist by step 6), DUCKYM001-M008 tombstones, stage-7 PackageSmoke assertions. |
 | M14 | Samples, E2E and AOT | 7 | Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, the trimmed AOT-WASM smoke that can't skip in the aot job, and the Ducky Playground published to Pages. |
 | M15 | Docs and migration guides | 11 | A generated docs site (the answer binder) with compiled-snippet regions, user guides, a step-by-step tutorial on a compiled, tested app, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check. |
-| M16 | Release candidate | 7 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
+| M16 | Release candidate | 8 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
 
 ## 5. Scheduling
 
@@ -94,7 +94,7 @@ Stories per stage (P1: `activeStage` reaches N once every story listed at N or b
 | 15 | DevTools | M8-01, M8-02, M8-03, M8-03b, M12-05 |
 | 16 | Ducky.Reactive | M11-01, M11-01b, M11-02, M11-02b, M11-03, M11-05 |
 | 17 | Ducky.Draft | M10-01, M10-02, M10-03, M10-04, M10-05, M10-06, M10-07, M10-07b, M11-04 |
-| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M14-07, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09, M15-10, M15-11, M16-03b |
+| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M14-07, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09, M15-10, M15-11, M16-03b, CI-LOCKS |
 | 19 | RC and consumer migrations; GA | M16-01, M16-02, M16-03, M16-04, M16-05, M16-06 |
 
 Parallel lanes:
@@ -2530,7 +2530,7 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
 
 - **Stage:** 18
 - **Depends on:** M16-03
-- **Unblocks:** M16-05
+- **Unblocks:** M16-05, CI-LOCKS
 - **Area:** `Directory.Build.props, Directory.Build.targets, src/*/README.md, src/*/*.csproj (package metadata), build/package/icon.png, build/Build.Release.cs, .config/dotnet-tools.json`
 - **Invariants:** —
 - **Scope:** Stage 18. Owner-added (2026-11-09): every published package follows the NuGet package best practices of Microsoft and Gérald Barré (Meziantou) and carries the duck logo. SPEC §3 package metadata, §17.9, §18 layout, §19 Pack and ReleaseGates rows, §21 GA. Shared metadata in Directory.Build.props (Copyright, PackageProjectUrl https://phmatray.github.io/Ducky/, PackageIcon, PackageReadmeFile, EmbedUntrackedSources, ContinuousIntegrationBuild for CI and every Release build); Description and PackageTags per csproj; PackageReleaseNotes set after MinVer to the GitHub release and the changelog of the version tag; build/package/icon.png (site/duck.svg centred on a yolk square, 256x256, rendered once with Chrome) and a nuget.org README per package (install command with --prerelease until GA, a minimal example from the compiled docs regions, absolute links to the docs, the playground and the changelog) packed into all six packages; the generator PDBs packed next to the analyzer DLLs. Meziantou.Framework.NuGetPackageValidation.Tool pinned in the tool manifest: Pack runs it over every package with only the two network rules excluded (52 project and repository URLs, 119 source-linked files fetched from GitHub), with a planted self-check (canned reports and a bare planted package); ReleaseGates runs it again on the pushed tag with nothing excluded. PackageSmoke's layout check requires the icon, the README and the generator PDBs.
@@ -2541,10 +2541,23 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
   - The full rule set, nothing excluded, passes on packages built from a pushed commit
 - **Done:** Common DoD.
 
+#### CI-LOCKS Locked restore independent of the runner's SDK library-packs (S)
+
+- **Stage:** 18
+- **Depends on:** M16-03b
+- **Unblocks:** M16-04, M16-05
+- **Area:** `Directory.Build.props`
+- **Invariants:** —
+- **Scope:** Stage 18. Owner-added (2026-11-10), found by the PR's ci-cross-windows check: the Windows image's SDK library-packs folder holds its own Microsoft.NET.Sdk.WebAssembly.Pack 10.0.14, whose content hash differs from nuget.org's, so the locked restore of the WebAssembly projects failed with NU1403. DisableImplicitLibraryPacksFolder makes every package come from nuget.org.
+- **Acceptance tests:**
+  - The PR's ci-cross-windows check restores and passes
+  - A restore with an empty NuGet cache passes locked on macOS
+- **Done:** Common DoD.
+
 #### M16-04 Spec closure (S)
 
 - **Stage:** 19
-- **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M14-07, M15-06, M15-07, M15-08, M15-09, M15-10, M15-11
+- **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M14-07, M15-06, M15-07, M15-08, M15-09, M15-10, M15-11, CI-LOCKS
 - **Unblocks:** M16-05
 - **Area:** `docs/spec/tests.yaml, build/Build.SpecTrace.cs`
 - **Invariants:** —
@@ -2558,7 +2571,7 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
 #### M16-05 v2.0.0-rc.1 and consumer migrations (M)
 
 - **Stage:** 19
-- **Depends on:** M16-03, M16-03b, M16-04, M15-05, M15-02, M15-03
+- **Depends on:** M16-03, M16-03b, M16-04, M15-05, M15-02, M15-03, CI-LOCKS
 - **Unblocks:** M16-06
 - **Area:** `release (no repo code)`
 - **Invariants:** —

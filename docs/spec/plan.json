@@ -3540,6 +3540,23 @@
    "done_definition": "Common DoD (PLAN.md §1)."
   },
   {
+   "id": "CI-LOCKS",
+   "milestone": "M16",
+   "title": "Locked restore independent of the runner's SDK library-packs",
+   "size": "S",
+   "depends_on": [
+    "M16-03b"
+   ],
+   "area": "Directory.Build.props",
+   "invariants": [],
+   "scope": "Stage 18. Owner-added (2026-11-10), found by the PR's ci-cross-windows check: the Windows image's SDK library-packs folder holds its own Microsoft.NET.Sdk.WebAssembly.Pack 10.0.14, whose content hash differs from nuget.org's, so the locked restore of the WebAssembly projects failed with NU1403. DisableImplicitLibraryPacksFolder makes every package come from nuget.org.",
+   "acceptance_tests": [
+    "The PR's ci-cross-windows check restores and passes",
+    "A restore with an empty NuGet cache passes locked on macOS"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M16-04",
    "milestone": "M16",
    "title": "Spec closure",
@@ -3572,7 +3589,8 @@
     "M15-08",
     "M15-09",
     "M15-10",
-    "M15-11"
+    "M15-11",
+    "CI-LOCKS"
    ],
    "area": "docs/spec/tests.yaml, build/Build.SpecTrace.cs",
    "invariants": [],
@@ -3595,7 +3613,8 @@
     "M16-04",
     "M15-05",
     "M15-02",
-    "M15-03"
+    "M15-03",
+    "CI-LOCKS"
    ],
    "area": "release (no repo code)",
    "invariants": [],
