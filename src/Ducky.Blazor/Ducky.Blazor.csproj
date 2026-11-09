@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
+    <Description>Blazor integration for Ducky: components that re-render when a selected value changes, browser storage and IDistributedCache persistence, the prerender state handoff, cross-tab sync and Redux DevTools, in the WebAssembly, Server and Auto render modes.</Description>
+    <PackageTags>blazor;state-management;redux;flux;webassembly;persistence;prerender;devtools;ducky</PackageTags>
     <!-- Off here: pinning would promote Ducky's Extensions abstractions to direct nuspec dependencies, outside this
          package's SPEC §3 row; they flow through the Ducky dependency at the same version. -->
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>

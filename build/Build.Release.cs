@@ -31,14 +31,18 @@ internal sealed partial class Build
         ["Ducky.Testing"] = ["Ducky", "Microsoft.Extensions.TimeProvider.Testing", "Microsoft.Extensions.DependencyInjection"],
     };
 
-    // §3: the entries each library package must hold besides lib/net10.0/{Id}.dll and .xml. A package holds nothing else
+    // §3 (M16-03b): the duck icon and the nuget.org README every package carries, the tombstone included.
+    private static readonly string[] PackageMetadataFiles = ["icon.png", "README.md"];
+
+    // §3: the entries each library package must hold besides lib/net10.0/{Id}.dll and .xml and the PackageMetadataFiles
+    // (the generator PDBs ship next to their DLLs: the .snupkg only collects lib/ PDBs, §17.9). A package holds nothing else
     // but its nuspec and the OPC parts (PackagingEntry) plus, in Ducky.Blazor only, the Razor SDK's other generated build
     // files and the static web assets (BlazorEntry): no content/ or contentFiles/ entry ever ships.
     private static readonly Dictionary<string, string[]> LibraryLayouts = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Ducky"] = ["analyzers/dotnet/cs/Ducky.Generators.dll", "buildTransitive/Ducky.targets"],
+        ["Ducky"] = ["analyzers/dotnet/cs/Ducky.Generators.dll", "analyzers/dotnet/cs/Ducky.Generators.pdb", "buildTransitive/Ducky.targets"],
         ["Ducky.Blazor"] = ["staticwebassets/ducky.js", "build/Ducky.Blazor.props", "buildTransitive/Ducky.Blazor.props"],
-        ["Ducky.Draft"] = ["analyzers/dotnet/cs/Ducky.Draft.Generators.dll", "buildTransitive/Ducky.Draft.targets"],
+        ["Ducky.Draft"] = ["analyzers/dotnet/cs/Ducky.Draft.Generators.dll", "analyzers/dotnet/cs/Ducky.Draft.Generators.pdb", "buildTransitive/Ducky.Draft.targets"],
         ["Ducky.Reactive"] = [],
         ["Ducky.Testing"] = [],
     };
@@ -73,6 +77,8 @@ internal sealed partial class Build
             var violations = PackageSetViolations(MinVerVersion(), FileNames(Packages), FileNames(Tombstones))
                 .Concat(PackSelfCheck())
                 .ToList();
+            // §17.9 (M16-03b): Meziantou's validation tool over every package, offline (ReleaseGates adds the network rules).
+            violations.AddRange(PackageValidation(OfflineExcludedRules));
             violations.ForEach(v => Log.Error(v));
             Assert.True(violations.Count == 0, $"Pack: {violations.Count} violation(s)");
         });
@@ -351,6 +357,115 @@ internal sealed partial class Build
         }
     }
 
+    // §17.9 (M16-03b): Meziantou's NuGet package validation tool (the meziantou.validate-nuget-package local tool, pinned in
+    // .config/dotnet-tools.json) checks every produced package against its default rules: author, description, icon,
+    // license, project URL, readme, repository type/URL/commit, tags, XML documentation, optimized assemblies and symbols
+    // (present, portable, deterministic paths, compiler flags, every source file embedded or source-linked). Pack runs it
+    // offline: 52 (the project and repository URLs answer) and 119 (every source-linked file fetched from GitHub at the
+    // commit; excluding it also skips 120's hash comparison) need the network and a pushed commit, which a local or PR pack
+    // can't promise. ReleaseGates runs it again on the pushed tag with nothing excluded. The tombstone needs no exclusion:
+    // without an assembly, the symbols, XML documentation and optimization rules have nothing to check.
+    private static readonly int[] OfflineExcludedRules = [52, 119];
+
+    // The metadata rules a bare nuspec fails (author same as id, license, icon, default description, project URL, readme,
+    // repository type, URL and commit, tags).
+    private static readonly int[] PlantedBareRules = [12, 21, 32, 43, 51, 61, 72, 73, 74, 131];
+
+    // The tool's JSON key; a literal argument would read as the Packages property to CA1507.
+    private const string ValidationPackagesKey = "Packages";
+
+    private List<string> PackageValidation(int[] excludedRules)
+    {
+        var packages = Packages.GlobFiles("*.nupkg").Concat(Tombstones.GlobFiles("*.nupkg")).ToList();
+        Log.Information("Package validation: {Count} packages, excluded rules [{Excluded}]", packages.Count, string.Join(", ", excludedRules));
+        var violations = packages.Count == 0 ? ["package validation: no package to validate"] : RunPackageValidation(packages, excludedRules);
+        violations.AddRange(PackageValidationSelfCheck());
+
+        // The planted package proves the pinned tool still rejects: a bare nuspec misses every metadata rule.
+        var planted = Artifacts / "package-validation-selfcheck" / "Planted.Bare.1.0.0.nupkg";
+        planted.Parent.CreateOrCleanDirectory();
+        using (var zip = ZipFile.Open(planted, ZipArchiveMode.Create))
+        using (var nuspec = new StreamWriter(zip.CreateEntry("Planted.Bare.nuspec").Open()))
+        {
+            nuspec.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?><package xmlns=\"http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd\"><metadata>"
+                + "<id>Planted.Bare</id><version>1.0.0</version><authors>Planted.Bare</authors><description>Package Description</description></metadata></package>");
+        }
+        var reported = RunPackageValidation([planted], excludedRules);
+        foreach (var rule in PlantedBareRules.Where(r => !reported.Any(v => v.Contains($": rule {r} ", StringComparison.Ordinal))))
+        {
+            violations.Add($"PackageValidationSelfCheck: the planted bare package must fail rule {rule}, got [{string.Join("; ", reported)}]");
+        }
+        return violations;
+    }
+
+    private static List<string> RunPackageValidation(List<AbsolutePath> packages, int[] excludedRules)
+    {
+        var arguments = string.Join(' ', packages.Select(p => $"\"{p}\""))
+            + (excludedRules.Length > 0 ? $" --excluded-rule-ids {string.Join(',', excludedRules)}" : "");
+        var exitCode = 0;
+        var output = DotNet($"meziantou.validate-nuget-package {arguments:nq}", logOutput: false, exitHandler: p => exitCode = p.ExitCode);
+        return PackageValidationViolations(exitCode, string.Join('\n', output.Where(o => o.Type == OutputType.Std).Select(o => o.Text)));
+    }
+
+    // The tool prints {"IsValid", "Packages": {path: {"Errors": [{"ErrorCode", "Message", "HelpText", "FileName"}]}}} and
+    // exits non-zero when a package is invalid. A non-zero exit with nothing to report, or output that isn't that JSON, fails.
+    private static List<string> PackageValidationViolations(int exitCode, string output)
+    {
+        JsonElement? root;
+        try
+        {
+            root = JsonDocument.Parse(output).RootElement;
+        }
+        catch (JsonException)
+        {
+            root = null;
+        }
+        if (root is not { ValueKind: JsonValueKind.Object } result || !result.TryGetProperty(ValidationPackagesKey, out var packages) || packages.ValueKind != JsonValueKind.Object)
+        {
+            return [$"package validation: unreadable output (exit code {exitCode}): {output[..Math.Min(output.Length, 400)]}"];
+        }
+        var violations = packages.EnumerateObject()
+            .SelectMany(package => package.Value.GetProperty("Errors").EnumerateArray().Select(error =>
+                $"{Path.GetFileName(package.Name)}: rule {error.GetProperty("ErrorCode").GetInt32()} {error.GetProperty("Message").GetString()}"
+                + (error.TryGetProperty("FileName", out var file) && file.ValueKind == JsonValueKind.String ? $" ({file.GetString()})" : "")
+                + (error.TryGetProperty("HelpText", out var help) && help.ValueKind == JsonValueKind.String ? $": {help.GetString()}" : "")))
+            .ToList();
+        if (violations.Count == 0 && (exitCode != 0 || !result.TryGetProperty("IsValid", out var valid) || valid.ValueKind != JsonValueKind.True))
+        {
+            violations.Add($"package validation: exit code {exitCode} and IsValid not true, with no error listed");
+        }
+        return violations;
+    }
+
+    private static IEnumerable<string> PackageValidationSelfCheck()
+    {
+        const string valid = """{"IsValid": true, "Packages": {"/a/Ducky.2.0.0.nupkg": {"Errors": [], "IsValid": true}}}""";
+        const string iconless = """
+            {"IsValid": false, "Packages": {"/a/Ducky.2.0.0.nupkg": {"Errors": [{"ErrorCode": 32, "Message": "The package does not have an icon", "HelpText": null, "FileName": null}], "IsValid": false},
+             "/a/Ducky.Draft.2.0.0.nupkg": {"Errors": [{"ErrorCode": 111, "Message": "Symbol file not found", "HelpText": null, "FileName": "analyzers/dotnet/cs/Ducky.Draft.Generators.dll"}], "IsValid": false}}}
+            """;
+        foreach (var violation in PackageValidationViolations(0, valid))
+        {
+            yield return $"PackageValidationSelfCheck: the valid output must pass, got: {violation}";
+        }
+        (string Case, int ExitCode, string Output, string Expected)[] planted =
+        [
+            ("a missing icon", 1, iconless, "Ducky.2.0.0.nupkg: rule 32 The package does not have an icon"),
+            ("missing generator symbols", 1, iconless, "Ducky.Draft.2.0.0.nupkg: rule 111 Symbol file not found (analyzers/dotnet/cs/Ducky.Draft.Generators.dll)"),
+            ("a failed run with no JSON", 1, "Could not execute because the specified command or file was not found.", "package validation: unreadable output (exit code 1)"),
+            ("a non-zero exit without errors", 1, valid, "package validation: exit code 1 and IsValid not true"),
+            ("IsValid false without errors", 0, valid.Replace("\"IsValid\": true, \"Packages\"", "\"IsValid\": false, \"Packages\"", StringComparison.Ordinal), "package validation: exit code 0 and IsValid not true"),
+        ];
+        foreach (var (plantedCase, exitCode, output, expected) in planted)
+        {
+            var violations = PackageValidationViolations(exitCode, output);
+            if (!violations.Any(v => v.StartsWith(expected, StringComparison.Ordinal)))
+            {
+                yield return $"PackageValidationSelfCheck: {plantedCase} must report '{expected}', got [{string.Join("; ", violations)}]";
+            }
+        }
+    }
+
     private sealed record PackageContent(string Id, XElement Metadata, HashSet<string> Entries)
     {
         public static PackageContent Read(AbsolutePath nupkg)
@@ -388,13 +503,13 @@ internal sealed partial class Build
 
         foreach (var (id, package) in byId.Where(p => LibraryLayouts.ContainsKey(p.Key)))
         {
-            foreach (var violation in Layout(package, [$"lib/net10.0/{id}.dll", $"lib/net10.0/{id}.xml", .. LibraryLayouts[id]],
+            foreach (var violation in Layout(package, [$"lib/net10.0/{id}.dll", $"lib/net10.0/{id}.xml", .. PackageMetadataFiles, .. LibraryLayouts[id]],
                 id.Equals("Ducky.Blazor", StringComparison.OrdinalIgnoreCase) ? BlazorEntry : null))
             {
                 yield return violation;
             }
         }
-        foreach (var violation in Layout(tombstone, ["buildTransitive/Ducky.Generator.targets"]))
+        foreach (var violation in Layout(tombstone, ["buildTransitive/Ducky.Generator.targets", .. PackageMetadataFiles]))
         {
             yield return violation;
         }
@@ -470,16 +585,16 @@ internal sealed partial class Build
     {
         static PackageContent Package(string id, string? dependencies, params string[] entries) => new(id,
             XElement.Parse($"<metadata><id>{id}</id>{(dependencies is null ? "" : $"<dependencies><group targetFramework=\"net10.0\">{dependencies}</group></dependencies>")}</metadata>"),
-            [$"{id}.nuspec", "_rels/.rels", "[Content_Types].xml", .. id == "Ducky.Generator" ? [] : new[] { $"lib/net10.0/{id}.dll", $"lib/net10.0/{id}.xml" }, .. entries]);
+            [$"{id}.nuspec", "_rels/.rels", "[Content_Types].xml", .. PackageMetadataFiles, .. id == "Ducky.Generator" ? [] : new[] { $"lib/net10.0/{id}.dll", $"lib/net10.0/{id}.xml" }, .. entries]);
         const string onDucky = "<dependency id=\"Ducky\" version=\"2.0.0\" />";
         static List<PackageContent> Libraries(Func<PackageContent, PackageContent>? plant = null) =>
         [
             .. new[]
             {
                 Package("Ducky", "<dependency id=\"Microsoft.Extensions.DependencyInjection.Abstractions\" version=\"10.0.12\" /><dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"10.0.12\" />",
-                    "analyzers/dotnet/cs/Ducky.Generators.dll", "buildTransitive/Ducky.targets"),
+                    "analyzers/dotnet/cs/Ducky.Generators.dll", "analyzers/dotnet/cs/Ducky.Generators.pdb", "buildTransitive/Ducky.targets"),
                 Package("Ducky.Blazor", onDucky, "staticwebassets/ducky.js", "build/Ducky.Blazor.props", "buildTransitive/Ducky.Blazor.props"),
-                Package("Ducky.Draft", null, "analyzers/dotnet/cs/Ducky.Draft.Generators.dll", "buildTransitive/Ducky.Draft.targets"),
+                Package("Ducky.Draft", null, "analyzers/dotnet/cs/Ducky.Draft.Generators.dll", "analyzers/dotnet/cs/Ducky.Draft.Generators.pdb", "buildTransitive/Ducky.Draft.targets"),
                 Package("Ducky.Reactive", onDucky + "<dependency id=\"R3\" version=\"1.3.1\" />"),
                 Package("Ducky.Testing", onDucky),
             }.Select(p => plant?.Invoke(p) ?? p),
@@ -500,7 +615,7 @@ internal sealed partial class Build
                 [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", null)), tombstone, files)],
                 "Ducky: dependencies must be exactly"),
             ("Ducky without its generator",
-                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", "<dependency id=\"Microsoft.Extensions.DependencyInjection.Abstractions\" version=\"10.0.12\" /><dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"10.0.12\" />", "buildTransitive/Ducky.targets")), tombstone, files)],
+                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", "<dependency id=\"Microsoft.Extensions.DependencyInjection.Abstractions\" version=\"10.0.12\" /><dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"10.0.12\" />", "analyzers/dotnet/cs/Ducky.Generators.pdb", "buildTransitive/Ducky.targets")), tombstone, files)],
                 "Ducky: the package has no analyzers/dotnet/cs/Ducky.Generators.dll"),
             ("a Ducky.Draft dependency", [.. NuspecViolations(Libraries(p => Replace(p, "Ducky.Draft", onDucky)), tombstone, files)],
                 "Ducky.Draft: must have zero dependencies, has [Ducky]"),
@@ -521,9 +636,18 @@ internal sealed partial class Build
             ("a generator DLL in Ducky's lib/",
                 [.. NuspecViolations(Libraries(p => p.Id == "Ducky" ? p with { Entries = [.. p.Entries, "lib/net10.0/Ducky.Generators.dll"] } : p), tombstone, files)],
                 "Ducky: unexpected entry lib/net10.0/Ducky.Generators.dll"),
-            ("a readme in the tombstone",
-                [.. NuspecViolations(Libraries(), tombstone with { Entries = [.. tombstone.Entries, "README.md"] }, files)],
-                "Ducky.Generator: unexpected entry README.md"),
+            ("an assembly in the tombstone",
+                [.. NuspecViolations(Libraries(), tombstone with { Entries = [.. tombstone.Entries, "lib/net10.0/Ducky.Generator.dll"] }, files)],
+                "Ducky.Generator: unexpected entry lib/net10.0/Ducky.Generator.dll"),
+            ("a library without its README",
+                [.. NuspecViolations(Libraries(p => p.Id == "Ducky.Testing" ? p with { Entries = [.. p.Entries.Where(e => e != "README.md")] } : p), tombstone, files)],
+                "Ducky.Testing: the package has no README.md"),
+            ("the tombstone without its icon",
+                [.. NuspecViolations(Libraries(), tombstone with { Entries = [.. tombstone.Entries.Where(e => e != "icon.png")] }, files)],
+                "Ducky.Generator: the package has no icon.png"),
+            ("the Draft generator without its symbols",
+                [.. NuspecViolations(Libraries(p => p.Id == "Ducky.Draft" ? p with { Entries = [.. p.Entries.Where(e => !e.EndsWith(".pdb", StringComparison.Ordinal))] } : p), tombstone, files)],
+                "Ducky.Draft: the package has no analyzers/dotnet/cs/Ducky.Draft.Generators.pdb"),
             ("include=\"Compile,Runtime\" on Ducky.Testing's Ducky dependency",
                 [.. NuspecViolations(Libraries(p => Replace(p, "Ducky.Testing", "<dependency id=\"Ducky\" version=\"2.0.0\" include=\"Compile,Runtime\" />")), tombstone, files)],
                 "Ducky.Testing: its Ducky dependency carries include=\"Compile,Runtime\""),
@@ -659,9 +783,12 @@ internal sealed partial class Build
         });
 
     // release.yml uploads artifacts/packages and artifacts/tombstone after it; SpecTraceGate (in Ci) is strict for -rc.N
-    // and GA tags when ReleaseGates or Release is invoked.
+    // and GA tags when ReleaseGates or Release is invoked. §17.9 (M16-03b): the tag is pushed, so the validation tool also
+    // fetches every source-linked file from GitHub at its commit (rules 119 and 120) and reaches the project and repository
+    // URLs (52): every default rule, nothing excluded.
     private Target ReleaseGates => _ => _
-        .DependsOn(Ci, E2E, AotSmoke);
+        .DependsOn(Ci, E2E, AotSmoke)
+        .Executes(() => FailOnViolations("ReleaseGates", [.. PackageValidation([])]));
 
     // DependsOn(Compile), as Mutation: the fallback runs Mutation's body in this process, since a child build could not open
     // the build.log this run holds. The cost is a Compile in the release-mutation job even when a nightly run passes it.

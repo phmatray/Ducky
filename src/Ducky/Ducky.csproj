@@ -3,6 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
+    <Description>Predictable state management for .NET: immutable state in slices, changed only by reducers as actions pass through one store, with effects, selectors, middleware, SliceStore and EntityState. The package includes the source generators and analyzers (generated registration and dispatch helpers).</Description>
+    <PackageTags>state-management;state;redux;flux;store;reducer;immutable;effects;selectors;source-generator</PackageTags>
     <RootNamespace>Ducky</RootNamespace>
   </PropertyGroup>
 
@@ -21,6 +23,8 @@
   <ItemGroup>
     <ProjectReference Include="../Ducky.Generators/Ducky.Generators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <None Include="../Ducky.Generators/bin/$(Configuration)/netstandard2.0/Ducky.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <!-- Its symbols next to it: the SDK's .snupkg only collects lib/ PDBs (the validation tool's Symbols rule, §17.9). -->
+    <None Include="../Ducky.Generators/bin/$(Configuration)/netstandard2.0/Ducky.Generators.pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="buildTransitive/Ducky.targets" Pack="true" PackagePath="buildTransitive" />
   </ItemGroup>
 </Project>

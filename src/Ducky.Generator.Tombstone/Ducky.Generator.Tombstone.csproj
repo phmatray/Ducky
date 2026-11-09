@@ -11,6 +11,7 @@
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <PackageOutputPath>$(RepoRoot)artifacts/tombstone/</PackageOutputPath>
     <Description>Deprecated: the Ducky source generator ships inside the Ducky package from 2.0. Remove this reference.</Description>
+    <PackageTags>ducky;deprecated;source-generator</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
