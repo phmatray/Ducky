@@ -16,7 +16,16 @@ internal sealed partial class Dispatcher
             return;
         }
 
-        Enqueue(new Pending(failure, Origin.System, 0, correlationId, false, true, null, producer));
+        Enqueue(new Pending(
+            failure,
+            Origin.System,
+            0,
+            correlationId,
+            // Stryker disable once Boolean : equivalent, IsFailure is true and EnterScope reads InFailure || IsFailure; DepthExceeded, the only other reader, never sees depth 0 (DuckyStore rejects a negative MaxDispatchDepth)
+            false,
+            true,
+            null,
+            producer));
     }
 
     // Middleware.DispatchSystem (§6.5): a failure action sent synchronously under a failure action is a failure raised while

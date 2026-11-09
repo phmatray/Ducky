@@ -80,6 +80,15 @@ internal static class DuckyErrors
         $"Remove [ServiceKey] from {parameterName}, or give that parameter a default value: Ducky never creates keyed effects or middleware.");
 
 
+    public static DuckyError NegativeMaxDispatchDepth(int maxDispatchDepth)
+    {
+        var depth = maxDispatchDepth.ToString(CultureInfo.InvariantCulture);
+        return Create(
+            "DUCKY318",
+            $"DuckyBuilder.MaxDispatchDepth is {depth}, so even the depth-0 ReducerFailed that reports a dropped action would be dropped, again and again.",
+            "Set MaxDispatchDepth to 0 or more, or leave it unset to get the default of 64.");
+    }
+
     public static DuckyError UnregisteredState(Type stateType)
     {
         // ponytail: the generator's sanitizer (§16.1) also prefixes a leading digit or a C# keyword; a hint needs no more.

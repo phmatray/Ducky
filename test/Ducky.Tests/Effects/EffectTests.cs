@@ -216,6 +216,27 @@ public sealed class EffectTests
         ]);
     }
 
+    // Non-normative: a null action is a programmer error. Both EffectContext dispatches throw it synchronously to the
+    // handler, which catches it here, so the run ends normally and nothing is enqueued.
+    [Fact]
+    public async Task EffectContext_NullAction_ThrowsArgumentNull()
+    {
+        var thrown = new List<ArgumentNullException>();
+        var effect = new Handler<Load>((_, context, _) =>
+        {
+            thrown.Add(Should.Throw<ArgumentNullException>(() => context.Dispatch(null!)));
+            thrown.Add(Should.Throw<ArgumentNullException>(() => { _ = context.DispatchAsync(null!); }));
+            return Task.CompletedTask;
+        });
+        var store = new DuckyStore([new SeenSlice()], NullLogger.Instance, effects: () => [(effect, false)]);
+
+        store.Dispatch(new Load(1));
+
+        await store.WhenIdleAsync(TestContext.Current.CancellationToken);
+        thrown.Select(e => e.ParamName).ShouldBe(["action", "action"]);
+        store.State.Get<Seen>().Actions.ShouldBe([new Load(1)]);
+    }
+
     // Non-normative: an effect that throws (here synchronously, before any await) is observed: EffectFailed is enqueued as
     // a System action at depth 0 on its action's chain. An OperationCanceledException while the store's token is not
     // cancelled is not our cancellation, so it fails too (§6.6, §8.1; the failure rules of INV-12 are M2-02's).

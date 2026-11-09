@@ -129,4 +129,16 @@ public sealed class CausalScopeTests
         ExecutionContext.Run(childFlow!, _ => store.Dispatch(new Step("continuation")), null);
         seen["continuation"].ShouldBe(new Cause(4, 0, 1, false));
     }
+
+    // Regression (§6.4 step 1, INV-06): the store rejects a negative depth, whatever path built it. With -1 even a core
+    // failure action, enqueued at depth 0, was dropped, and its drop was routed as another depth-0 ReducerFailed, so one
+    // dispatch never returned (M16-02a). MaxDispatchDepth_Negative_ReportedAtFirstResolution covers the builder (DUCKY318).
+    [Fact]
+    public void Store_NegativeMaxDispatchDepth_Throws()
+    {
+        var exception = Should.Throw<ArgumentOutOfRangeException>(() => new DuckyStore([new StepSlice()], NullLogger.Instance, maxDispatchDepth: -1));
+        exception.ParamName.ShouldBe("maxDispatchDepth");
+        exception.ActualValue.ShouldBe(-1);
+        new DuckyStore([new StepSlice()], NullLogger.Instance, maxDispatchDepth: 0).ShouldNotBeNull();
+    }
 }

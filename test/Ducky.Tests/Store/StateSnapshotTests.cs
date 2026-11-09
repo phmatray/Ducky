@@ -88,7 +88,7 @@ public sealed class StateSnapshotTests
         later.Commit([(CounterOrdinal, new Counter(3))], Origin.Hydration).WasRestored("counter").ShouldBeTrue();
     }
 
-    // Non-normative: one Hydration commit can restore several slices.
+    // Non-normative: one Hydration commit can restore several slices, and a repeated ordinal is restored once.
     [Fact]
     public void Snapshot_HydrationCommit_RestoresEverySlotItChanges()
     {
@@ -98,6 +98,11 @@ public sealed class StateSnapshotTests
         restored.WasRestored<Todos>().ShouldBeTrue();
         restored.Get<Counter>().ShouldBe(new Counter(9));
         restored.Get<Todos>().ShouldBe(new Todos(9));
+
+        // The same ordinal twice in one Hydration commit sets its bit, and keeps it set.
+        var twice = Create().Commit([(CounterOrdinal, new Counter(1)), (CounterOrdinal, new Counter(2))], Origin.Hydration);
+        twice.WasRestored<Counter>().ShouldBeTrue();
+        twice.Get<Counter>().ShouldBe(new Counter(2));
     }
 
     // Non-normative: the restored bitset spans several 64-bit words; slice 64 is bit 0 of the second word, not slice 0.

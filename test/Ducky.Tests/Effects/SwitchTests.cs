@@ -42,6 +42,32 @@ public sealed class SwitchTests
         Should.Throw<ObjectDisposedException>(() => tokens[2].WaitHandle); // run 2 took its own slot out: it owned the Cts
     }
 
+    // Non-normative: two Switch effects handling the same action type hold one slot each; one's run never supersedes the
+    // other's.
+    [Fact]
+    public async Task Switch_TwoEffectsSameActionType_OneSlotEach()
+    {
+        var gate = new TaskCompletionSource();
+        var tokens = new List<CancellationToken>();
+        SwitchHandler<Load> Gated() => new(async (_, _, token) =>
+        {
+            tokens.Add(token);
+            await gate.Task.ConfigureAwait(false);
+        });
+        var first = Gated();
+        var second = Gated();
+        var store = new DuckyStore([new SeenSlice()], NullLogger.Instance, effects: () => [(first, false), (second, false)]);
+
+        store.Dispatch(new Load(1));
+        tokens.Count.ShouldBe(2);
+        tokens.ShouldAllBe(token => !token.IsCancellationRequested);
+        store.Dispatcher.SlotCount.ShouldBe(2);
+
+        gate.SetResult();
+        await store.WhenIdleAsync(TestContext.Current.CancellationToken);
+        store.Dispatcher.SlotCount.ShouldBe(0);
+    }
+
     // A superseded run that ignores its token still can't publish: both dispatch calls are dropped at call time (Debug
     // log), while the live run's dispatch from its synchronous prefix is reduced.
     [Fact]

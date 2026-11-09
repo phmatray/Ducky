@@ -640,7 +640,10 @@ public sealed class InitTests
 
         foreach (var origin in new[] { Origin.Local, Origin.Effect, Origin.System, (Origin)42 })
         {
-            Should.Throw<ArgumentOutOfRangeException>(() => store.Restore(values, origin)).ParamName.ShouldBe("origin");
+            var exception = Should.Throw<ArgumentOutOfRangeException>(() => store.Restore(values, origin));
+            exception.ParamName.ShouldBe("origin");
+            exception.ActualValue.ShouldBe(origin);
+            exception.Message.ShouldStartWith("Restore takes Origin.Hydration, Origin.CrossTab or Origin.DevTools.");
         }
 
         Should.Throw<ArgumentNullException>(() => store.Restore(null!, Origin.Hydration)).ParamName.ShouldBe("values");

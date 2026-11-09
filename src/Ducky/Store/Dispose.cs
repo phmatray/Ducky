@@ -80,7 +80,7 @@ internal sealed partial class Dispatcher
                 disposal.TrySetResult();
             }
 
-            await DisposeMaterializedAsync(drainExited, retired, materializing, disposal).ConfigureAwait(false);
+            await DisposeMaterializedAsync(drainExited, retired, materializing, disposal).ConfigureAwait(ConfigureAwaitOptions.None);
             ClearSubscribers();
         }
         finally
@@ -95,8 +95,7 @@ internal sealed partial class Dispatcher
     private async Task DisposeMaterializedAsync(Task drainExited, Task retired, bool materializing, TaskCompletionSource disposal)
     {
 #pragma warning disable VSTHRD003 // justification: the drain's exit is our own RunContinuationsAsynchronously TCS, never faulted
-        // Stryker disable once Boolean : either context only resumes after the drain exited, which is all 5a needs
-        await drainExited.ConfigureAwait(false);
+        await drainExited.ConfigureAwait(ConfigureAwaitOptions.None);
 #pragma warning restore VSTHRD003
         if (materializing)
         {
@@ -137,7 +136,7 @@ internal sealed partial class Dispatcher
             // completes at the bound, so no subscriber closure stays reachable; 5b stays chained on the runs.
             ClearSubscribers();
             disposal.TrySetResult();
-            await runs.ConfigureAwait(false);
+            await runs.ConfigureAwait(ConfigureAwaitOptions.None);
         }
 
         // 5b: owned effects in reverse construction order, then the store scope (browser) last; a null scope is skipped.

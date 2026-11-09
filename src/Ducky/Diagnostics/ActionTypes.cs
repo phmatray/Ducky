@@ -13,9 +13,12 @@ internal sealed class ActionTypes
     // SetState<T> carries its own {sliceKey}/{name} (§12): one SliceStore's changes have different names.
     public string Of(object action) => action is SetState set ? set.ActionType : _names.GetOrAdd(action.GetType(), Compute);
 
-    private static string Compute(Type type) =>
-        type.GetCustomAttribute<ActionTypeAttribute>(inherit: false)?.Name
-        ?? (type == typeof(HydrateSlices) ? "@ducky/restore" : Format(type));
+    private static string Compute(Type type)
+    {
+        // Stryker disable once Boolean : equivalent, ActionTypeAttribute is [AttributeUsage(Inherited = false)] (§5.8), so inherit: true reads exactly the same attributes
+        var named = type.GetCustomAttribute<ActionTypeAttribute>(inherit: false)?.Name;
+        return named ?? (type == typeof(HydrateSlices) ? "@ducky/restore" : Format(type));
+    }
 
     // Namespace.Outer.Inner, generic arguments as Name<Arg> named by the same rule, each nesting level with its own
     // arguments (Outer<A>.Inner<B>: the `N suffix of a level's Name counts the parameters that level declares), arrays as
@@ -39,7 +42,7 @@ internal sealed class ActionTypes
         foreach (var level in levels)
         {
             var tick = level.Name.IndexOf('`', StringComparison.Ordinal);
-            if (tick < 0)
+            if (tick == -1)
             {
                 parts.Add(level.Name);
                 continue;

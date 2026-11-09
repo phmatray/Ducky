@@ -80,6 +80,11 @@ internal sealed class DuckyConfig(
             errors.Add(DuckyErrors.TransientLifetime());
         }
 
+        if (maxDispatchDepth < 0)
+        {
+            errors.Add(DuckyErrors.NegativeMaxDispatchDepth(maxDispatchDepth));
+        }
+
         Dictionary<string, Type> keys = [];
         Dictionary<Type, Type> stateTypes = [];
         foreach (var (type, key, stateType, _) in slices)

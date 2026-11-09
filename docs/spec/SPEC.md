@@ -208,7 +208,7 @@ public sealed class DuckyBuilder
     public IServiceCollection Services { get; }
     public ServiceLifetime Lifetime { get; set; }            // default (unset): IsBrowser ? Singleton : Scoped, resolved when AddDucky
                                                              // registers the store, after configure ran (see below). Transient => DUCKY301
-    public int MaxDispatchDepth { get; set; } = 64;
+    public int MaxDispatchDepth { get; set; } = 64;          // negative => DUCKY318 at first resolution
     public bool ThrowOnUnhandledAction { get; set; }         // false; TestStore sets true before running configure
     public int InitBufferCapacity { get; set; } = 1024;      // soft bound; overflow aborts init, drops nothing (INV-13)
     public TimeSpan InitTimeout { get; set; } = TimeSpan.FromSeconds(10);
@@ -896,6 +896,7 @@ Analyzer IDs are in §16. Runtime codes appear in `DuckyError.Code`, in exceptio
 | DUCKY315 | `PersistStorage.Server` with the default scope but no `AuthenticationStateProvider` registered (first resolution; not evaluated when `BlazorOptions.IsBrowser`) | Ducky.Blazor |
 | DUCKY316 | `BlazorOptions.HydrationTimeout` ≥ `DuckyBuilder.InitTimeout` (the persistence timeout must fire first), or `PrerenderSeedWaitTimeout` ≥ `HydrationTimeout` | Ducky.Blazor |
 | DUCKY317 | `PersistStorage.Server` is used but `BlazorOptions.KeyPrefix` is still the default: "PersistStorage.Server requires BlazorOptions.KeyPrefix to be set to an app-unique value" (a shared `IDistributedCache` would otherwise mix apps and environments) | Ducky.Blazor |
+| DUCKY318 | `MaxDispatchDepth` is negative: even the depth-0 `ReducerFailed(DispatchLoopException)` that reports a drop (INV-06) would be dropped, again and again | Ducky |
 | DUCKY350 | `State.Get<T>()` for an unregistered state type (names the likely `AddDuckyGenerated_{Asm}`) | Ducky |
 | DUCKY351 | `SliceStore.State`/`Set`/`SetAsync` before the store attached it ("inject it, don't `new` it"); thrown synchronously as a `DuckyConfigurationException` | Ducky |
 | DUCKY352 | `Select` after the first render in a Ducky component | Ducky.Blazor |

@@ -292,8 +292,9 @@ public sealed class MiddlewareTests
     public async Task Middleware_StoreAndDisposeTimeout_AttachedByStore(TimeSpan configured, TimeSpan expected)
     {
         var detached = new Recorder("r", []);
-        Should.Throw<InvalidOperationException>(() => detached.AttachedStore);
-        Should.Throw<InvalidOperationException>(() => detached.AttachedDisposeTimeout);
+        const string NotAttached = "The store attaches Store and DisposeTimeout after the constructor returns; use them from InitializeAsync or a hook.";
+        Should.Throw<InvalidOperationException>(() => detached.AttachedStore).Message.ShouldBe(NotAttached);
+        Should.Throw<InvalidOperationException>(() => detached.AttachedDisposeTimeout).Message.ShouldBe(NotAttached);
 
         var services = new ServiceCollection()
             .AddSingleton<Journal>()

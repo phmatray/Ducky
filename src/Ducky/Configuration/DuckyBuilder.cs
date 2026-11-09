@@ -42,7 +42,8 @@ public sealed class DuckyBuilder
         set => _lifetime = value;
     }
 
-    /// <summary>Gets or sets the causal depth beyond which an action is dropped. Defaults to 64.</summary>
+    /// <summary>Gets or sets the causal depth beyond which an action is dropped. Defaults to 64. A negative value is a
+    /// configuration error (DUCKY318), reported at the first store resolution.</summary>
     public int MaxDispatchDepth { get; set; } = Dispatcher.DefaultMaxDispatchDepth;
 
     /// <summary>Gets or sets a value indicating whether a dispatched action that no reducer and no async effect handles
@@ -179,9 +180,16 @@ public sealed class DuckyBuilder
     public DuckyBuilder UseJson(IJsonTypeInfoResolver resolver)
     {
         ArgumentNullException.ThrowIfNull(resolver);
-        _json = resolver is JsonSerializerContext context
-            ? new JsonSerializerOptions(context.Options) { TypeInfoResolver = resolver }
-            : new JsonSerializerOptions { TypeInfoResolver = resolver };
+        if (resolver is JsonSerializerContext context)
+        {
+            // Stryker disable once Initializer : equivalent, a JsonSerializerContext's Options are read-only with the context itself as TypeInfoResolver (JsonSerializerContext ctor/Options getter), so the copy already carries it
+            _json = new JsonSerializerOptions(context.Options) { TypeInfoResolver = resolver };
+        }
+        else
+        {
+            _json = new JsonSerializerOptions { TypeInfoResolver = resolver };
+        }
+
         return this;
     }
 
