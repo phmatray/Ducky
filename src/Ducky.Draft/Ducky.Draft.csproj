@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
+    <Description>Immer-style Produce for immutable C# records: edit a generated draft and get a new record that shares every unchanged part. A source generator for [Draftable] records; it does not need Ducky. The successor of Mutty.</Description>
+    <PackageTags>immutable;records;immer;produce;draft;source-generator;mutty;ducky</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +16,8 @@
   <ItemGroup>
     <ProjectReference Include="../Ducky.Draft.Generators/Ducky.Draft.Generators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <None Include="../Ducky.Draft.Generators/bin/$(Configuration)/netstandard2.0/Ducky.Draft.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <!-- Its symbols next to it: the SDK's .snupkg only collects lib/ PDBs (the validation tool's Symbols rule, §17.9). -->
+    <None Include="../Ducky.Draft.Generators/bin/$(Configuration)/netstandard2.0/Ducky.Draft.Generators.pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="buildTransitive/Ducky.Draft.targets" Pack="true" PackagePath="buildTransitive" />
   </ItemGroup>
 </Project>

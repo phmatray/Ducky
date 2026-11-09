@@ -55,4 +55,13 @@
     <ProjectReference Include="$(RepoRoot)src/Ducky.Draft.Generators/Ducky.Draft.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <Import Project="$(RepoRoot)src/Ducky.Draft/buildTransitive/Ducky.Draft.targets" Condition="'$(DuckyUseDraftGenerator)' == 'true'" />
+
+  <!-- Release notes (§3, M16-03b): the GitHub release and the changelog of this version's tag. MinVer sets PackageVersion in
+       a target, so a static property would carry the SDK's 1.0.0. Every pushed version has its v-tag (§19 Publish). -->
+  <Target Name="DuckyPackageReleaseNotes" BeforeTargets="GenerateNuspec" DependsOnTargets="MinVer" Condition="'$(IsPackable)' == 'true'">
+    <PropertyGroup>
+      <PackageReleaseNotes>Release notes: https://github.com/phmatray/Ducky/releases/tag/v$(PackageVersion)
+Changelog: https://github.com/phmatray/Ducky/blob/v$(PackageVersion)/CHANGELOG.md</PackageReleaseNotes>
+    </PropertyGroup>
+  </Target>
 </Project>

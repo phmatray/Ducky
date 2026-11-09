@@ -3486,6 +3486,25 @@
    "done_definition": "Common DoD (PLAN.md §1)."
   },
   {
+   "id": "M16-03b",
+   "milestone": "M16",
+   "title": "NuGet package best practices and the duck icon",
+   "size": "M",
+   "depends_on": [
+    "M16-03"
+   ],
+   "area": "Directory.Build.props, Directory.Build.targets, src/*/README.md, src/*/*.csproj (package metadata), build/package/icon.png, build/Build.Release.cs, .config/dotnet-tools.json",
+   "invariants": [],
+   "scope": "Stage 18. Owner-added (2026-11-09): every published package follows the NuGet package best practices of Microsoft and Gérald Barré (Meziantou) and carries the duck logo. SPEC §3 package metadata, §17.9, §18 layout, §19 Pack and ReleaseGates rows, §21 GA. Shared metadata in Directory.Build.props (Copyright, PackageProjectUrl https://phmatray.github.io/Ducky/, PackageIcon, PackageReadmeFile, EmbedUntrackedSources, ContinuousIntegrationBuild for CI and every Release build); Description and PackageTags per csproj; PackageReleaseNotes set after MinVer to the GitHub release and the changelog of the version tag; build/package/icon.png (site/duck.svg centred on a yolk square, 256x256, rendered once with Chrome) and a nuget.org README per package (install command with --prerelease until GA, a minimal example from the compiled docs regions, absolute links to the docs, the playground and the changelog) packed into all six packages; the generator PDBs packed next to the analyzer DLLs. Meziantou.Framework.NuGetPackageValidation.Tool pinned in the tool manifest: Pack runs it over every package with only the two network rules excluded (52 project and repository URLs, 119 source-linked files fetched from GitHub), with a planted self-check (canned reports and a bare planted package); ReleaseGates runs it again on the pushed tag with nothing excluded. PackageSmoke's layout check requires the icon, the README and the generator PDBs.",
+   "acceptance_tests": [
+    "Pack green: the validation tool reports no error on the five libraries and the tombstone",
+    "Planted check: a bare planted package fails the author, license, icon, description, project URL, readme, repository and tags rules (non-normative)",
+    "Planted check: a library without its README or a tombstone without its icon fails the PackageSmoke layout check (non-normative)",
+    "The full rule set, nothing excluded, passes on packages built from a pushed commit"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M16-04",
    "milestone": "M16",
    "title": "Spec closure",
@@ -3535,6 +3554,7 @@
    "size": "M",
    "depends_on": [
     "M16-03",
+    "M16-03b",
     "M16-04",
     "M15-05",
     "M15-02",

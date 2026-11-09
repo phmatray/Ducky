@@ -36,15 +36,35 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Authors>Philippe Matray</Authors>
+    <!-- Package metadata (§3, M16-03b): what Meziantou's validation tool checks in Pack. Each packable csproj adds its own
+         Description and PackageTags; PackageReleaseNotes is set after MinVer (Directory.Build.targets). -->
+    <Copyright>Copyright (c) 2024-2026 Atypical Consulting SRL</Copyright>
+    <PackageProjectUrl>https://phmatray.github.io/Ducky/</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Generated obj/ sources go into the PDB: SourceLink maps every repository path to GitHub, where they don't exist. -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <!-- Anchored: a relative path would resolve per project, into src/<Project>/artifacts/. -->
     <PackageOutputPath>$(RepoRoot)artifacts/packages/</PackageOutputPath>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(CI)' == 'true'">
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <RestoreLockedMode>true</RestoreLockedMode>
   </PropertyGroup>
+
+  <!-- Deterministic source paths (/_/) on CI and in every Release build: the Fallout build compiles only Release, so a local
+       Pack yields the packages CI would (the validation tool's rule 112). Debug builds keep real paths for the debugger. -->
+  <PropertyGroup Condition="'$(CI)' == 'true' or '$(Configuration)' == 'Release'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!-- Every package carries the duck icon and its own nuget.org README (§3). Items are evaluated after every property, so
+       the csproj's IsPackable is already known here. -->
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(RepoRoot)build/package/icon.png" Pack="true" PackagePath="" Visible="false" />
+    <None Include="$(MSBuildProjectDirectory)/README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(DuckyIsSrcProject)' == 'true'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

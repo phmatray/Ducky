@@ -2,7 +2,7 @@
 
 Status: plan derived from `SPEC.md` (authoritative, including review rounds "2 (recovered)" through 7 of `REVIEW-LOG.md`) and `adr/0001-0047`. Where this plan and the spec disagree, the spec wins; every planning decision that goes beyond the spec is listed in §3.
 
-157 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
+158 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
 
 ## 1. Workflow: strict TDD under full gates
 
@@ -67,7 +67,7 @@ Every story after M0-01 is one issue and one squash-merged PR on `v2`, and it fo
 | M13 | Generators, analyzers and tombstones | 12 | Shared generator helpers, GEN-01 dispatch helpers, GEN-02 core registration (step 7) and its Blazor arms (Prerender<T> at stage 11, PersistAttributeDefaults<T> and Ducky.Blazor.Generated.Tests at stage 12), multi-assembly fixture (INV-25), the stage-7 analyzers (DUCKY001-025 arms whose APIs exist by step 6), DUCKYM001-M008 tombstones, stage-7 PackageSmoke assertions. |
 | M14 | Samples, E2E and AOT | 7 | Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, the trimmed AOT-WASM smoke that can't skip in the aot job, and the Ducky Playground published to Pages. |
 | M15 | Docs and migration guides | 9 | A generated docs site (the answer binder) with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check. |
-| M16 | Release candidate | 6 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
+| M16 | Release candidate | 7 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
 
 ## 5. Scheduling
 
@@ -94,7 +94,7 @@ Stories per stage (P1: `activeStage` reaches N once every story listed at N or b
 | 15 | DevTools | M8-01, M8-02, M8-03, M8-03b, M12-05 |
 | 16 | Ducky.Reactive | M11-01, M11-01b, M11-02, M11-02b, M11-03, M11-05 |
 | 17 | Ducky.Draft | M10-01, M10-02, M10-03, M10-04, M10-05, M10-06, M10-07, M10-07b, M11-04 |
-| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M14-07, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09 |
+| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M14-07, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09, M16-03b |
 | 19 | RC and consumer migrations; GA | M16-01, M16-02, M16-03, M16-04, M16-05, M16-06 |
 
 Parallel lanes:
@@ -2490,7 +2490,7 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
 
 - **Stage:** 19
 - **Depends on:** M0-11
-- **Unblocks:** M16-05
+- **Unblocks:** M16-03b, M16-05
 - **Area:** `build/Build.Release.cs, .github/workflows/release.yml, cliff.toml`
 - **Invariants:** —
 - **Scope:** Targets Changelog (git-cliff, --release-version via the ReleaseVersion parameter), Publish (no DependsOn, ordered after the gates; Pack's exact-set check on the downloaded packages; v* tag; git merge-base --is-ancestor against origin/$ReleaseBranch; dotnet nuget push artifacts/packages/*.nupkg and .snupkg with --source https://api.nuget.org/v3/index.json --api-key $NUGET_API_KEY --skip-duplicate; the tombstone push only for the exact v2.0.0 tag), GitHubRelease (gh with GH_TOKEN, prerelease flag), ReleaseGates (Ci, E2E, AotSmoke; SpecTraceGate --strict for -rc.N and GA tags; uploads artifacts/packages and artifacts/tombstone), MutationForSha (passes on a successful nightly-mutation run for the SHA, else runs Mutation, --strict at rc/GA; fails, never falls back, when the query errors), Release (local). Hand-written release.yml with three jobs: release-gates, release-mutation (contents: read, actions: read, issues: write) and publish (environment nuget with approval, NuGet/login trusted publishing, pinned git-cliff, `./build.sh Publish GitHubRelease` without --skip); fetch-depth: 0 on every job. Can be scheduled early to publish milestone alphas of the active stage.
@@ -2498,6 +2498,21 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
   - Tag v2.0.0-alpha.1 publishes prerelease packages after approval, without the tombstone
   - `Publish` refuses a tag not reachable from origin/$ReleaseBranch
   - Planted check: a failing gh query makes MutationForSha fail instead of starting a full run
+- **Done:** Common DoD.
+
+#### M16-03b NuGet package best practices and the duck icon (M)
+
+- **Stage:** 18
+- **Depends on:** M16-03
+- **Unblocks:** M16-05
+- **Area:** `Directory.Build.props, Directory.Build.targets, src/*/README.md, src/*/*.csproj (package metadata), build/package/icon.png, build/Build.Release.cs, .config/dotnet-tools.json`
+- **Invariants:** —
+- **Scope:** Stage 18. Owner-added (2026-11-09): every published package follows the NuGet package best practices of Microsoft and Gérald Barré (Meziantou) and carries the duck logo. SPEC §3 package metadata, §17.9, §18 layout, §19 Pack and ReleaseGates rows, §21 GA. Shared metadata in Directory.Build.props (Copyright, PackageProjectUrl https://phmatray.github.io/Ducky/, PackageIcon, PackageReadmeFile, EmbedUntrackedSources, ContinuousIntegrationBuild for CI and every Release build); Description and PackageTags per csproj; PackageReleaseNotes set after MinVer to the GitHub release and the changelog of the version tag; build/package/icon.png (site/duck.svg centred on a yolk square, 256x256, rendered once with Chrome) and a nuget.org README per package (install command with --prerelease until GA, a minimal example from the compiled docs regions, absolute links to the docs, the playground and the changelog) packed into all six packages; the generator PDBs packed next to the analyzer DLLs. Meziantou.Framework.NuGetPackageValidation.Tool pinned in the tool manifest: Pack runs it over every package with only the two network rules excluded (52 project and repository URLs, 119 source-linked files fetched from GitHub), with a planted self-check (canned reports and a bare planted package); ReleaseGates runs it again on the pushed tag with nothing excluded. PackageSmoke's layout check requires the icon, the README and the generator PDBs.
+- **Acceptance tests:**
+  - Pack green: the validation tool reports no error on the five libraries and the tombstone
+  - Planted check: a bare planted package fails the author, license, icon, description, project URL, readme, repository and tags rules (non-normative)
+  - Planted check: a library without its README or a tombstone without its icon fails the PackageSmoke layout check (non-normative)
+  - The full rule set, nothing excluded, passes on packages built from a pushed commit
 - **Done:** Common DoD.
 
 #### M16-04 Spec closure (S)
@@ -2517,7 +2532,7 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
 #### M16-05 v2.0.0-rc.1 and consumer migrations (M)
 
 - **Stage:** 19
-- **Depends on:** M16-03, M16-04, M15-05, M15-02, M15-03
+- **Depends on:** M16-03, M16-03b, M16-04, M15-05, M15-02, M15-03
 - **Unblocks:** M16-06
 - **Area:** `release (no repo code)`
 - **Invariants:** —

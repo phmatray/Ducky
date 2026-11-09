@@ -3,6 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
+    <Description>Test helpers for Ducky that work with any test framework: SliceTest for reducers, EffectTest for effects and TestStore, a real store with a fake clock. A failed check throws DuckyAssertionException.</Description>
+    <PackageTags>ducky;testing;state-management;reducer;effects;faketimeprovider</PackageTags>
     <!-- Off here: pinning would promote Ducky's Extensions abstractions to direct nuspec dependencies, outside this
          package's SPEC §3 row; they flow through the Ducky dependency at the same version. -->
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
