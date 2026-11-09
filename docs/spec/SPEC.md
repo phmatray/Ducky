@@ -1926,6 +1926,8 @@ Ducky/
 │  ├─ Ducky.Docs.Tests/  Ducky.PackageSmoke/ (+ feed/, nuget.config)  Ducky.AotSmoke/ (in Ducky.Aot.slnx only)
 │  └─ Ducky.E2E/                      Microsoft.Playwright tests; harness/ (static page for ducky.js specs); host fixture + static-file host
 ├─ samples/  Ducky.Samples.Wasm/  Ducky.Samples.Server/ (+ .Client, Interactive Auto)   (referenced by tests only through E2E URLs: ENG-04)
+│             Ducky.Playground/ (Blazor WebAssembly, published to Pages under playground/: a shop built only from Ducky with an
+│             X-ray mode that shows its own source, which the build copies with site/tokens.css and site/fonts/ into its wwwroot)
 ├─ benchmarks/ Ducky.Benchmarks/ (+ baseline/*.json)
 ├─ spikes/     week-1 throwaway prototypes (§23), outside every solution and gate
 ├─ site/       the GitHub Pages home page: static HTML, CSS and JS with self-hosted fonts, no build step, outside every solution
@@ -2062,7 +2064,7 @@ The four nightly workflows get an explicit token: their `JobEnd` step (in `night
 - `release-mutation` (in parallel, 330-minute limit, per S-9; `permissions: { contents: read, actions: read, issues: write }` and `GH_TOKEN: ${{ github.token }}`, for the run query and for the issue `Mutation` opens below 90 when it falls back): checks out with `fetch-depth: 0`, runs `./build.sh MutationForSha`, which passes at once when a successful `nightly-mutation` run exists for the tagged SHA and otherwise runs the full `Mutation` target.
 - `publish` (`needs: [release-gates, release-mutation]`, environment `nuget` with manual approval, permissions `id-token: write`, `contents: write`): checks out with `fetch-depth: 0` (git-cliff and the `git merge-base --is-ancestor $GITHUB_SHA origin/$ReleaseBranch` reachability check need full history and the remote branch), installs a pinned git-cliff binary (`taiki-e/install-action` with an exact `git-cliff@` version), downloads the packages, runs `NuGet/login@v1` (`user: phmatray`) as its first credentialed step, bridges `NUGET_API_KEY` from the step output into `$GITHUB_ENV`, sets `GH_TOKEN: ${{ github.token }}` for `gh release create`, and immediately runs `./build.sh Publish GitHubRelease` (`ReleaseVersion` defaults to the tag name without its `v`). `Publish` has no `DependsOn` (§19), so no `Restore` or `Compile` runs while the key is live and the pushed packages are exactly the uploaded ones, checked by `Publish`'s exact-set check. The short-lived trusted-publishing key (about one hour) is therefore used minutes after it is issued, never after a multi-hour gate run, and `needs` guarantees that nothing is pushed before every gate passed.
 
-Hand-written as well: `pr-title.yml` (`amannn/action-semantic-pull-request`) and `docs.yml` (on release: `Docs`, then deploy to GitHub Pages the home page `site/` at the root, the generated docs site under `docs/` and the published WASM sample under `sample/`). A failure in any `nightly-*` workflow opens or updates a GitHub issue through a `JobEnd` custom step.
+Hand-written as well: `pr-title.yml` (`amannn/action-semantic-pull-request`) and `docs.yml` (on release: `Docs`, then deploy to GitHub Pages the home page `site/` at the root, the generated docs site under `docs/` and the published Ducky Playground (`samples/Ducky.Playground`) under `playground/`; `Ducky.Samples.Wasm` stays the E2E and trimmed-AOT fixture and is not published). A failure in any `nightly-*` workflow opens or updates a GitHub issue through a `JobEnd` custom step.
 
 ### 20.2 Required checks and branch protection (ADR-0041)
 

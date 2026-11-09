@@ -1,0 +1,137 @@
+@inherits DuckyComponent
+@inject DrawerStore Drawer
+@inject SourceFiles Sources
+@inject IJSRuntime Js
+@* The code drawer: an ink panel beside the shop, never a modal (no backdrop, no focus trap); the shop stays usable. *@
+
+@{ _feature = Features.Find(_view.Value.Feature); }
+<aside id="code-drawer" class="drawer" aria-labelledby="drawer-title" hidden="@(_feature is null)" @onkeydown="OnKey">
+  @if (_feature is { } feature)
+  {
+    var file = feature.Files[Math.Clamp(_view.Value.File, 0, feature.Files.Length - 1)];
+    <header class="drawer-head">
+      <h2 id="drawer-title" tabindex="-1" @ref="_title">@feature.Title</h2>
+      <button type="button" class="pill on-ink" @onclick="Drawer.Close"><Icon Name="close" Size="16" /> Close</button>
+    </header>
+    <div class="drawer-body">
+      <p class="drawer-summary">@feature.Summary</p>
+      <p class="drawer-guides">
+        <span class="label">Guide</span>
+        @foreach (var guide in feature.Guides)
+        {
+          <a href="@guide.Href">@guide.Title</a>
+        }
+      </p>
+      <div class="file-tabs" role="tablist" aria-label="Source files">
+        @for (var i = 0; i < feature.Files.Length; i++)
+        {
+          var index = i;
+          var selected = feature.Files[i] == file;
+          <button type="button" role="tab" id="file-tab-@i" aria-selected="@(selected ? "true" : "false")" aria-controls="file-panel"
+                  tabindex="@(selected ? 0 : -1)" @onclick="() => Drawer.ShowFile(index)" @onkeydown="e => OnTabKey(e, index, feature.Files.Length)">
+            @Name(feature.Files[i].Path)
+          </button>
+        }
+      </div>
+      <figure class="slab" id="file-panel" role="tabpanel" aria-labelledby="file-tab-@feature.Files.IndexOf(file)">
+        <figcaption>
+          <span class="slab-path">@file.Path</span>
+          <span class="slab-note"><span class="lamp-dot" aria-hidden="true"></span>the file compiled into this build</span>
+        </figcaption>
+        @if (_lines is null)
+        {
+          <p class="slab-loading">@(_failed ? "This file could not be loaded." : "Reading the file…")</p>
+        }
+        else
+        {
+          <pre tabindex="0" aria-label="@file.Path"><code>@for (var n = 0; n < _lines.Count; n++)
+{<span class="ln @(n == _focusLine ? "mark" : null)" id="@(n == _focusLine ? "focus-line" : null)"><span class="num" aria-hidden="true">@(n + 1)</span>@((MarkupString)_lines[n])</span>
+}</code></pre>
+        }
+      </figure>
+    </div>
+  }
+</aside>
+
+@code {
+  private Selection<DrawerView> _view = null!;
+  private ElementReference _title;
+  private Feature? _feature;
+  private string? _shown;
+  private string? _focusedFeature;
+  private IReadOnlyList<string>? _lines;
+  private int _focusLine = -1;
+  private bool _failed;
+
+  protected override void OnInitialized() => _view = Select<DrawerView, DrawerView>(static drawer => drawer);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_feature is null)
+    {
+      _focusedFeature = null;
+      _shown = null;
+      return;
+    }
+
+    if (_focusedFeature != _feature.Id)
+    {
+      _focusedFeature = _feature.Id;
+      await _title.FocusAsync();
+    }
+
+    var file = _feature.Files[Math.Clamp(_view.Value.File, 0, _feature.Files.Length - 1)];
+    if (_shown == file.Path)
+    {
+      return;
+    }
+
+    _shown = file.Path;
+    _lines = null;
+    _failed = false;
+    StateHasChanged();
+    var source = await Sources.ReadAsync(file.Path);
+    if (_shown != file.Path)
+    {
+      return;
+    }
+
+    _lines = source?.Html;
+    _failed = source is null;
+    _focusLine = source is null ? -1 : source.Find(file.Focus);
+    StateHasChanged();
+    await Task.Yield();
+    if (_focusLine >= 0)
+    {
+      await Js.InvokeVoidAsync("playground.reveal", "focus-line");
+    }
+  }
+
+  private static string Name(string path) => path[(path.LastIndexOf('/') + 1)..];
+
+  private void OnKey(KeyboardEventArgs e)
+  {
+    if (e.Key == "Escape")
+    {
+      Drawer.Close();
+    }
+  }
+
+  // Arrow keys move between file tabs (the tablist pattern).
+  private async Task OnTabKey(KeyboardEventArgs e, int index, int count)
+  {
+    var next = e.Key switch
+    {
+      "ArrowRight" => (index + 1) % count,
+      "ArrowLeft" => (index - 1 + count) % count,
+      "Home" => 0,
+      "End" => count - 1,
+      _ => -1,
+    };
+    if (next >= 0)
+    {
+      Drawer.ShowFile(next);
+      await Js.InvokeVoidAsync("playground.focus", $"file-tab-{next}");
+    }
+  }
+}

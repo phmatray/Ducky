@@ -106,6 +106,33 @@ typography:
     fontWeight: 400
     lineHeight: 1.65
     fontFeature: "'liga' 0, 'calt' 0"
+  side-title:
+    fontFamily: "Anybody, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 880
+    lineHeight: 1.05
+    letterSpacing: "-0.02em"
+    fontVariation: "'wdth' 122"
+  action:
+    fontFamily: "Anybody, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1.15rem"
+    fontWeight: 900
+    lineHeight: 1
+    letterSpacing: "-0.01em"
+    fontVariation: "'wdth' 125"
+  switch-label:
+    fontFamily: "Anybody, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1.02rem"
+    fontWeight: 900
+    lineHeight: 1
+    letterSpacing: "0.06em"
+    fontVariation: "'wdth' 150"
+  annotation:
+    fontFamily: "JetBrains Mono, ui-monospace, SF Mono, Menlo, Consolas, monospace"
+    fontSize: "0.82rem"
+    fontWeight: 700
+    lineHeight: 1
+    fontFeature: "'liga' 0, 'calt' 0, 'tnum' 1"
 rounded:
   highlight: "3px"
   focus: "4px"
@@ -113,6 +140,7 @@ rounded:
   kbd: "6px"
   row-current: "8px"
   chip-code: "8px"
+  code-small: "12px"
   panel: "14px"
   code: "16px"
   bubble: "22px"
@@ -130,6 +158,10 @@ spacing:
   rail: "13.5rem"
   measure: "35rem"
   measure-wide: "60rem"
+  tape-bar: "3.6rem"
+  tape-open: "min(27rem, 54vh)"
+  drawer: "min(46rem, 46vw)"
+  xray-offset: "7px"
 components:
   button-install:
     backgroundColor: "{colors.ink}"
@@ -273,6 +305,141 @@ components:
   search-result-selected:
     backgroundColor: "{colors.ink}"
     textColor: "{colors.sheet}"
+  xray-switch:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    height: "3.1rem"
+    padding: "0.3rem 0.5rem 0.3rem 1.15rem"
+    typography: "{typography.switch-label}"
+  xray-switch-hover:
+    backgroundColor: "{colors.sheet}"
+  xray-switch-on:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.yolk}"
+  xray-tag:
+    backgroundColor: "{colors.yolk}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    height: "2.1rem"
+    padding: "0.3rem 0.75rem 0.3rem 0.6rem"
+    typography: "{typography.annotation}"
+  xray-tag-open:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.yolk}"
+  xray-tag-pressed:
+    backgroundColor: "{colors.sheet}"
+    textColor: "{colors.ink}"
+  render-count:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.yolk}"
+    rounded: "{rounded.pill}"
+    height: "1.7rem"
+    padding: "0 0.6rem"
+  control-pill:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    height: "2.6rem"
+    padding: "0.45rem 1.05rem"
+  control-pill-pressed:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.yolk}"
+  filter-chip:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    height: "2.2rem"
+    padding: "0.25rem 0.75rem"
+  filter-chip-hover:
+    backgroundColor: "{colors.yolk}"
+  filter-chip-selected:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.yolk}"
+  stepper-button:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    size: "2rem"
+  stepper-button-hover:
+    backgroundColor: "{colors.yolk}"
+  button-pay:
+    backgroundColor: "{colors.beak}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    height: "3.5rem"
+    padding: "0.5rem 1.2rem"
+    typography: "{typography.action}"
+  button-pay-hover:
+    backgroundColor: "{colors.yolk}"
+  button-pay-pressed:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.sheet}"
+  button-pay-busy:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.yolk}"
+  button-pay-disabled:
+    backgroundColor: "{colors.sheet}"
+    textColor: "{colors.on-sheet-2}"
+  field-pill:
+    backgroundColor: "{colors.sheet}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    height: "2.6rem"
+    padding: "0 1rem"
+  shop-search-field:
+    backgroundColor: "{colors.sheet}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    height: "3.4rem"
+    padding: "0 1.2rem"
+  code-drawer:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.sheet}"
+    rounded: "{rounded.code}"
+    width: "{spacing.drawer}"
+  file-tab:
+    backgroundColor: "transparent"
+    textColor: "{colors.yolk}"
+    rounded: "{rounded.pill}"
+    height: "2.2rem"
+    padding: "0.3rem 0.85rem"
+  file-tab-selected:
+    backgroundColor: "{colors.yolk}"
+    textColor: "{colors.ink}"
+  inspector-tape:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.sheet}"
+    rounded: "{rounded.code}"
+    height: "{spacing.tape-bar}"
+  tape-board-header:
+    backgroundColor: "{colors.yolk}"
+    textColor: "{colors.ink}"
+    height: "2.4rem"
+    padding: "0 0.8rem"
+    typography: "{typography.label-small}"
+  tape-board-row:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.sheet}"
+    height: "2.5rem"
+    padding: "0 0.8rem"
+  tape-board-row-selected:
+    backgroundColor: "{colors.yolk}"
+    textColor: "{colors.ink}"
+  tape-detail-code:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.sheet}"
+    rounded: "{rounded.code-small}"
+    padding: "0.8rem 0.9rem"
+  cart-jump:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.yolk}"
+    rounded: "{rounded.pill}"
+    height: "2.8rem"
+    padding: "0.4rem 1.1rem"
+  cart-jump-pressed:
+    backgroundColor: "{colors.sheet}"
+    textColor: "{colors.ink}"
 ---
 
 # Design System: Ducky
@@ -289,6 +456,8 @@ Motion has one clock. A single beat (420ms, expo-out) drives the duck's squash-a
 
 The documentation is the same world set as the duck's answer binder: yolk is the binder ground and its index tabs, the page being read is a white sheet in a 3px ink frame, ink is code, rules and the current tab. It runs denser than the home page (a reading ramp at a 35rem measure, small 3 to 8px radii on inline marks) but adds no new color, no shadow and no tint.
 
+The playground is the same world as a working shop on the desk: the yolk ground is the desk, the shop is one white answer sheet in a 3px ink frame, and the inspector is the home page's ink dispatcher board docked to the bottom edge as a tape. An X-ray switch turns the shop into its own annotated blueprint: ink outlines around every region, yolk tag pills naming the Ducky feature, ink render-count chips, all arriving in reading order inside one beat. Code opens in an ink drawer docked beside the sheet, never over it. It adds product colours (only inside the duck silhouettes and their filter dots) and no new ground, shadow or tint.
+
 **Key Characteristics:**
 - Three grounds (yolk, ink, sheet) and one action accent (beak); secondary text hues are darker or lighter shades of the ground they sit on, never decorative tints.
 - 3px ink rules for structure, 1.5px hairlines inside tables and ledgers.
@@ -297,6 +466,7 @@ The documentation is the same world set as the duck's answer binder: yolk is the
 - One motion beat for the whole page; press = ink inversion.
 - Flat. No shadows, no gradients, no glows.
 - Docs: a yolk binder with index tabs on the white sheet's edge; ruled ledgers for every list of pages or headings.
+- Playground: a yolk desk with one white shop sheet, an ink inspector tape docked at the bottom, an ink code drawer docked at the side, and an X-ray layer of ink outlines and yolk tags.
 
 ## Colors
 
@@ -319,12 +489,17 @@ A strict three-ink set on saturated toy-vinyl yellow, with beak orange as the on
 ### Code
 - **Code Type Peach** (code-type), **Code String Orange** (code-str), **Code Comment Stone** (code-com): syntax hues used only inside ink code blocks; keywords and attributes reuse yolk. They are beak's family seen on ink, kept inside code.
 
+### Product colours (playground)
+- **Duck product hues**: the playground's catalogue data carries each duck's own colour (yellow and black and white reuse yolk, ink and sheet; mint #7FD8BE, red #E5484D, blue #6CB6FF, lilac #B9A3F0, green #7E9A4A). They are data, not tokens: they fill the duck silhouette's body and the 0.85rem swatch dot in the matching filter chip, and nothing else. Outline and details stay ink; the beak is ink (yolk on the black duck), so beak orange stays reserved for the Pay button and alarms.
+
 ### Named Rules
 **The Three Grounds Rule.** A section's ground is yolk, ink or sheet, full-bleed, and nothing else. Sections alternate grounds and separate with a 3px ink rule; no panel, card or band introduces a fourth ground.
 
 **The Derived Text Rule.** A secondary text color belongs to its ground (on-yolk-2, on-sheet-2, on-ink-2) and exists for legibility. Never carry one ground's secondary hue onto another ground.
 
 **The One Beak Rule.** Beak marks the thing to press, or an alarm (a dropped result, a warning or caution lamp). If two beak elements compete in one viewport, one of them is wrong.
+
+**The Product Colour Rule.** A product hue lives inside the product's drawing (the duck's body, its swatch dot) and never becomes a fill, border, text color or ground in the interface. A duck is never drawn with a beak-orange beak.
 
 ## Typography
 
@@ -354,6 +529,16 @@ The docs set a denser ramp on the sheet. Body text is the reading token (1.0625r
 - **Labels** 0.7 to 0.8rem, uppercase wide (label and label-small); the index tabs use their own tab-label setting (900, 0.74rem, 0.07em, width 112%) because they are set vertically in a narrow strip.
 - **Code on the sheet** (code-sheet, 0.875rem / 1.65, 0.8rem on phones); captions and Copy in mono 0.78 to 0.8rem.
 
+### Playground ramp
+The playground's sheet reuses the docs steps: the shop name is sheet title (max 14ch; clamp(1.9rem, 8.5vw, 2.4rem) at width 116% on phones), the shelf count ("36 ducks") is sheet heading. It adds:
+- **Side title** (880, 1.5rem, 1.05, width 122%): the order column's headings (Basket, Your order, Profile), with a mono count beside them in on-sheet-2.
+- **Duck name** (840, 1.15rem, 1.12, width 114%): the product name in a shelf cell, a step below sheet subhead.
+- **Drawer title** (880, clamp(1.35rem, 2vw, 1.75rem), width 122%) in yolk on the ink drawer.
+- **Action** (900, 1.15rem, width 125%, tabular numerals): the Pay button's label, the price inside it.
+- **Switch label** (900, 1.02rem, 0.06em, uppercase, width 150%): the X-RAY word on the switch; the one wide label large enough to read as a control.
+- **Annotation** (JetBrains Mono 700, 0.82rem, tabular): X-ray tag names, lamps and tape readouts; render counts at 600, 0.74rem.
+- Body on the sheet runs at 1rem / 1.5 for the lede (54ch) and 0.92 to 0.95rem / 1.45 to 1.5 for cell blurbs and side notes; the drawer summary is 1rem / 1.62 at 62ch; body steps to 1.04rem on phones. Wide labels (label, label-small) name the tape (INSPECTOR), the board's columns, the drawer's GUIDE and the detail panel's Payload and State changed.
+
 ### Named Rules
 **The Stamped Mark Rule.** Headings are Anybody at 820 to 900 weight and at least 112% width, with negative tracking. A narrow or light display setting is off-system. (The docs' H4 run-in in the body face is the only heading set outside the display face.)
 
@@ -374,12 +559,25 @@ At 1280px the rail joins the sheet's head as a two-column ruled list (H3 entries
 
 Breakpoints: at 960px every split collapses to one column and the duck drops below the copy, right-aligned; at 640px the bar keeps only brand and GitHub, the install command goes full width, the board hides its origin column and lets rows grow, and the render-mode matrix becomes one ruled block per host with inline labels.
 
+### Playground desk
+The playground has no wrap: the shop sheet spans the yolk desk between the gutters (clamp(1.25rem, 4vw, 3rem); 0.75rem on phones) under a wrapping top bar (wordmark and PLAYGROUND badge, then the X-ray switch and Inspector toggle, then Docs and GitHub). The sheet pads clamp(1.2rem, 2.2vw, 2rem) on top and clamp(1.4rem, 3vw, 2.6rem) at the sides; its head is a 6fr / 5fr split (shop name, lede with the disclosure) over a 3px rule. Below, the shop grid runs a fluid main column (search, filters, shelf, warehouse) and an order column of 19 to 23rem (basket, checkout, order, profile) behind a 3px vertical rule; regions in the order column are separated by 3px rules with 2rem of air. The shelf is an auto-fill grid of cells at least 14rem wide.
+
+The inspector tape is fixed to the bottom edge at 3.6rem collapsed and min(27rem, 54vh) open, and the desk pads its foot by the tape's height plus 2rem so nothing hides behind it. Open, the tape is a 7fr board / 5fr detail split. The code drawer docks to the right edge at min(46rem, 46vw), from the top down to the tape; the sheet and top bar give up that width (plus 1rem) and the text links hide, so the shop stays usable beside the code.
+
+The sheet is a size container: below 860px of sheet width the order column drops under the shelf behind a 3px rule and the head stacks. At 1100px the drawer becomes a bottom sheet (full width, min(72vh, 42rem) tall, above the tape). At 960px a basket jump pill appears bottom-right above the tape once the basket has a duck, hidden while the inspector or the drawer is open; the open tape stacks board over detail. At 640px the shelf is one column of cells with the duck beside the text (4.6rem), tags hidden and blurbs clamped to two lines; the X-ray switch stretches across the bar; the tape bar keeps its title, the latest action and the toggle (icon only), and the board keeps only sequence, action and result.
+
+In X-ray mode, regions take 3rem more air on top (3.4rem gaps in the main column) so tags never cover content.
+
 ## Elevation & Depth
 
 Flat. There are no shadows anywhere. Depth is conveyed by changing ground (yolk to sheet to ink), by 3px ink rules and borders, and by inversion on press. The only lift is a 2px downward translate on the pressed install command, which reads as a key going down, not as elevation. In the docs, the index tabs slide 3px out on hover and 6px on press (upward along the top edge at 960px and below): a tab being pulled, not lifted. The current tab stacks above the sheet and shares its frame; the other tabs tuck behind it.
 
+The playground's docked panels follow the same law: the inspector tape and the code drawer are ink grounds docked to the viewport's edges with no shadow, no scrim and no backdrop; the shop beside them stays lit and usable. The drawer enters by sliding 2.5rem (up from the bottom at 1100px and below) with a fade over one beat; the Pay button drops 2px on press like the install command. X-ray outlines are outlines, not raised layers: they sit 7px off each region and tighten in from 16px as they appear.
+
 ### Named Rules
 **The Printed Object Rule.** No box-shadow, no gradient, no glow, no blur at rest. Separation is a rule, a border or a ground change.
+
+**The Docked Panel Rule.** A panel that opens over the page (code drawer, inspector tape) docks to a viewport edge as an ink ground and never dims, blurs or blocks what it sits beside: no backdrop, no focus trap.
 
 ## Shapes
 
@@ -387,7 +585,13 @@ Two families. Controls are full pills (999px) with a 3px ink border: question ch
 
 The docs add a small-radius family for inline marks: 3px on the yolk highlight behind a hovered link, 4px on inline code chips (and the focus ring), 6px on the search field's key hint, 8px on the current row of the page ledger. The sheet is 14px with a square top-right corner where the tab strip meets it (fully rounded once the tabs move to the top edge); tables, alerts, pager cards and the search results sheet share the 14px frame; code slabs keep 16px.
 
+The playground keeps both families. Every control is a pill with a 3px ink border (the X-ray switch, Inspector, filter chips, the sort select with a drawn chevron, form fields, Add, Pay, the basket jump), with 2px-bordered circles for stepper and remove buttons and 1.5px-bordered pill tags in shelf cells. Containers: the shop sheet and X-ray outlines at 14px, the tape board frame at 14px in yolk, the code drawer and inspector tape at 16px on their inner corners only (square where they meet the viewport edge), the drawer's code slab at 16px, and the detail panel's payload block at 12px (code-small, the same 12px the docs give phone code slabs). The checkout's check box is a 1.35rem square at the 6px key radius. Icons are one drawn set on a 24-unit grid, 2.4 stroke, round caps, currentColor.
+
 Round marks are lamps: filled or outlined circles with a 2px border (board result lamps, matrix "yes" dots, the yolk check discs beside test names). The docs reuse them: on-this-page dots (1.5px ring, yolk when the section is in view), alert lamps (yolk, beak for warning and caution), the yolk lamp before "from a tested file", and the punch holes down the sheet's left margin (yolk discs in a 3px ink ring, drawn as an SVG pattern).
+
+The playground adds: DispatchResult lamps in the tape (0.78rem, 2px ring), order steps (yolk lamp for done, ink lamp for current, empty ring for pending), the veto ring in a shelf cell, the yolk lamp before "the file compiled into this build", the yolk disc marking the line in the drawer's gutter, and the beak lamp before an alert title.
+
+The duck is the one figurative shape: the site's duck redrawn as a product silhouette (16-unit ink outline on a 400 by 360 grid, ink wing lines, eye with a white glint), filled with the product's colour.
 
 ## Components
 
@@ -438,6 +642,35 @@ A ruled board of fixed cells: yolk sticky header with wide uppercase labels, 2.7
 ### Proof List (signature)
 Under every answer: "Proved by" with INV pills, then test names in mono, each preceded by a yolk check disc with an ink border; a small outline tag names the harness when it is not the default.
 
+### X-ray (signature)
+- **X-ray switch (primary control):** a 3.1rem pill with a 3px ink border holding the wide X-RAY label, a 3.3 by 1.9rem track with a round ink knob, and a mono On / Off. Off it is transparent on yolk and fills sheet on hover; on, the whole pill inverts to ink with yolk text and the track turns yolk as the knob slides 1.4rem over one beat. A real `role="switch"`.
+- **Region outlines:** in X-ray mode every region gets a 3px ink outline at 7px offset with 14px corners. Inside the sheet the outlines nest within the white ground; the topbar controls are outlined too.
+- **Tags:** yolk pills (2.1rem, 3px ink border, annotation mono) sitting on the top edge of the outline: a drawn code icon, the feature name (Switch, Exhaust, Persist + SyncAcrossTabs, EntityState + selectors, Middleware veto), then a live detail after a 1.5px divider ("1 superseded", "v2, synced"). Each is a button that opens the code drawer; hover and the open tag invert to ink with yolk text, press flips to sheet, and focus returns to the tag when the drawer closes.
+- **Render counts:** ink pills (1.7rem, yolk mono 600 0.74rem, tabular) on the opposite corner of the outline (bottom-right inside the sheet, top-right inside each shelf cell) counting that component's renders.
+- **Reveal on one beat:** outlines tighten from 16px to 7px offset and tags and counts wipe in left to right (a pill-shaped clip) over 0.6 beat, staggered by 0.066 beat in reading order, top bar first and tape last, so the whole layer lands inside one beat. Off, the layer is display: none.
+- **X-ray-only content:** notes and controls that provoke the hard cases (the warehouse desk, "Make the next payment fail", the Exhaust note) render only in X-ray mode, in on-sheet-2 side notes.
+
+### Code Drawer (signature)
+A non-modal ink side panel: 16px inner corners, docked right between the top and the tape, sliding in over one beat. The head carries the feature title in yolk and an on-ink Close pill over an ink hairline; the body holds the summary in sheet text, a GUIDE label with yolk guide links, then file tabs: 2px yolk outline pills in mono (2.2rem) that fill yolk when selected or hovered and flip to sheet on press, a real tablist. Below them a code slab framed by an ink hairline at 16px, captioned with the file path in yolk mono and "the file compiled into this build" behind a yolk lamp; the code runs in mono 0.82rem / 1.65 with site token colours, on-ink-2 line numbers, and the line that matters marked by a yolk number with a yolk disc in the gutter, scrolled into view. Focus rings turn yolk, selection inverts to yolk, the slab's focus is the beak ring inset; scrollbars are yolk on ink. Esc closes it.
+
+### Inspector Tape (signature)
+The dispatcher board docked as a tape: an ink ground with 16px top corners fixed to the bottom edge. Collapsed, a 3.6rem bar holds the yolk INSPECTOR label, the latest action (sequence and origin in on-ink-2, action type in sheet mono, its lamp flipping in over 0.7 beat), counts of dropped, vetoed and failed lamps, and an on-ink Expand pill. Open, it adds the board (3px yolk frame, 14px; sticky yolk header 2.4rem with wide labels; 2.5rem ink rows ruled with ink hairlines; sequence, time and origin in on-ink-2) beside a detail panel. **DispatchResult lamps:** yolk filled for Reduced, beak filled for Dropped and Failed, an on-ink-2 ring for Vetoed (the playground has no queued state); a failed lamp on the white sheet keeps its beak fill with ink text and ring. Each action name is a button underlined in yolk on hover; the selected row fills yolk with ink text and ink lamps. **Detail panel:** the action type in yolk mono, label-small headings (Payload, State changed), the payload in a 12px hairline-framed mono block, and the state diff as a list ruled with ink hairlines: path in on-ink-2, "was" value, "now" value in yolk.
+
+### Shop
+- **Control pills:** 2.6rem, 3px ink, Atkinson 700 1rem; hover fills sheet on yolk and yolk on the sheet; press and pressed (Inspector open) invert to ink with yolk text. A small step (2.25rem, 0.92rem) serves Dismiss and form actions; the on-ink variant is the console control.
+- **Duck cells:** the shelf is a ruled specimen sheet, not a deck of cards: cells divided by 1.5px ink hairlines under a 3px rule, each holding the duck silhouette (4.8rem), the duck name, a blurb in on-sheet-2, 1.5px pill tags (colour first), then price in mono 700 tabular, stock in on-sheet-2 (ink bold when fewer than five), and an Add pill (2.3rem, drawn plus) that fills yolk on hover and inverts on press. Sold out disables Add to a dashed on-sheet-2 border. Under it, "N in your basket" with a drawn check, or a veto ring with the reason.
+- **Duck silhouette:** authored SVG of the site's duck in the product's colour with an ink outline, ink wing lines and eye; the beak is ink (yolk on the black duck), never beak orange: the One Beak Rule applied to the product. Decorative, the name is the text beside it.
+- **Filter chips:** 2.2rem pills, 3px ink border, Atkinson 700 0.88rem; each colour chip leads with a 0.85rem swatch dot in the product hue inside a 2px ink ring (the ring turns yolk when selected); hover fills yolk, selected and pressed invert to ink with yolk text. "In stock only" is the same chip as a toggle; Sort is a pill select with a drawn chevron that fills yolk on hover.
+- **Search field:** a 3.4rem sheet pill with a 3px ink border and a drawn magnifier, 1.1rem text, on-sheet-2 placeholder; focus is a 3px ink outline at 3px offset around the pill. A mono status line under it reports superseded runs.
+- **Basket lines and steppers:** a list under a 3px rule, rows ruled at 1.5px: name in Atkinson 700, a stepper (2rem round buttons with a 2px ink ring and drawn minus and plus, quantity in mono tabular between), line total in mono, and a borderless round remove button. Stepper and remove fill yolk on hover and invert on press. The total sits under the list in mono 700 1.25rem.
+- **Pay (the beak action):** the page's one beak element at rest. A full-width 3.5rem beak pill with a 3px ink border, label in the action setting with the total ("Pay €25.00"). Hover fills yolk; press inverts to ink with sheet text and drops 2px; while paying it holds ink with yolk text and reads "Paying…" (it stays enabled so Exhaust can drop repeated clicks); an empty basket disables it to sheet with a dashed on-sheet-2 border and on-sheet-2 label.
+- **Declined alert:** a 3px ink frame at 14px with no fill, a stamped label-small title behind a beak lamp, the reason, and a small Dismiss pill.
+- **Order tracker:** the order id and total in mono over a list ruled at 1.5px; each step leads with a lamp (yolk done, ink current flipping in over 0.7 beat, empty ring pending); pending steps in on-sheet-2, the current step bold.
+- **Fields:** 2.6rem sheet pills with a 3px ink border, Atkinson 400 1rem, labels in Atkinson 700 0.86rem above. Check boxes are 1.35rem 3px-ink squares at 6px that fill ink with a drawn yolk check.
+- **"Nothing is for sale" disclosure:** a bold ink line (700, 0.9rem) directly under the lede in the sheet's head, stating that the ducks, stock and orders are demonstration data and Pay charges nothing. It is part of the first viewport, never a banner, toast or footnote.
+- **Basket jump (phones):** an ink pill (2.8rem, yolk text, drawn basket) fixed bottom-right above the tape, reading "Basket, N ducks"; press flips to sheet. It scrolls to and focuses the basket.
+- **Top bar badge:** PLAYGROUND in label-small on an ink pill beside the wordmark (1.5rem, 900, width 140%).
+
 ## Do's and Don'ts
 
 ### Do:
@@ -451,6 +684,13 @@ Under every answer: "Proved by" with INV pills, then test names in mono, each pr
 - **Do** hold docs prose to the 35rem measure and let code slabs and tables take up to 60rem.
 - **Do** caption every docs code slab with its source file and its tested status.
 - **Do** keep the reader's place visible on every docs page: current tab in ink, current ledger row in ink, yolk lamp on the section in view.
+- **Do** dock the playground's panels to a viewport edge as ink grounds (tape at the bottom, drawer at the side, bottom sheet at 1100px) and keep the shop usable beside them.
+- **Do** annotate in X-ray with three marks only: a 3px ink outline at 7px offset, a yolk tag pill that opens the code, and an ink render-count chip; reveal them in reading order inside one beat.
+- **Do** show the app's own compiled source in the code drawer, captioned with its path, with the line that matters marked in yolk.
+- **Do** give every action in the inspector its DispatchResult lamp: yolk Reduced, beak Dropped and Failed, an on-ink-2 ring Vetoed.
+- **Do** draw products as the site's duck silhouette in the product's colour with an ink outline and an ink beak (yolk on a black duck).
+- **Do** state in the shop's first viewport that nothing is for sale and Pay charges nothing.
+- **Do** disable a control with a dashed on-sheet-2 border and on-sheet-2 text, not by fading it.
 
 ### Don't:
 - **Don't** add shadows, gradients, glows or translucent overlays; depth is ground, rule and inversion.
@@ -462,3 +702,7 @@ Under every answer: "Proved by" with INV pills, then test names in mono, each pr
 - **Don't** set inline code in docs prose as ink chips; use the yolk highlighter chip.
 - **Don't** style search hits with a fill or in mono; they are bold with a yolk underline so they never read as code.
 - **Don't** tint alerts by kind; the kind lives in the stamped title and its lamp.
+- **Don't** put a scrim, backdrop, blur or focus trap behind the code drawer or the inspector tape.
+- **Don't** let a product hue leave the duck's drawing and its swatch dot, and don't draw a duck with a beak-orange beak; beak orange belongs to Pay and alarms.
+- **Don't** show X-ray outlines, tags or render counts when X-ray is off, or use the tag pill as a decorative label.
+- **Don't** set the shelf as filled cards; it is a ruled specimen sheet of hairline cells.

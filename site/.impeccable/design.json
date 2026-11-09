@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-08T12:00:00Z",
+  "generatedAt": "2026-11-09T12:00:00Z",
   "title": "Design System: Ducky",
   "extensions": {
     "colorMeta": {
@@ -226,6 +226,22 @@
       "code-sheet": {
         "displayName": "Code on the Sheet",
         "purpose": "Docs code slabs; 0.8rem on phones."
+      },
+      "side-title": {
+        "displayName": "Side Title",
+        "purpose": "Playground order-column headings (Basket, Your order, Profile) with a mono count beside them."
+      },
+      "action": {
+        "displayName": "Action",
+        "purpose": "The Pay button's label and the total inside it, tabular numerals."
+      },
+      "switch-label": {
+        "displayName": "Switch Label",
+        "purpose": "The X-RAY word on the playground's primary switch; the one wide label large enough to read as a control."
+      },
+      "annotation": {
+        "displayName": "Annotation",
+        "purpose": "X-ray tag names, DispatchResult lamps and tape readouts in mono 700; render counts at 600, 0.74rem."
       }
     },
     "shadows": [],
@@ -254,6 +270,26 @@
         "name": "tab-pull",
         "value": "translateX(3px) hover / 6px press over one beat",
         "purpose": "Docs index tabs slide out of the binder (upward 3px/5px when along the top edge)."
+      },
+      {
+        "name": "xray-reveal",
+        "value": "calc(var(--beat) * 0.6) with a calc(var(--beat) * 0.066) stagger per reading-order index",
+        "purpose": "X-ray outlines tighten from 16px to 7px offset and tags and render counts wipe in (pill-shaped clip) top bar first, tape last, all inside one beat."
+      },
+      {
+        "name": "half-beat-swap",
+        "value": "calc(var(--beat) * 0.5)",
+        "purpose": "Playground pill and Pay background/color swaps; the X-ray switch and its knob swap and slide over a full beat."
+      },
+      {
+        "name": "drawer-dock",
+        "value": "translateX(2.5rem) to none with a fade over one beat (translateY at 1100px and below)",
+        "purpose": "The code drawer docking beside the shop, or rising as a bottom sheet."
+      },
+      {
+        "name": "lampflip",
+        "value": "perspective(200px) rotateX(-90deg) to none over 0.7 beat",
+        "purpose": "The latest action's lamp in the tape and the current order step's lamp flipping in."
       }
     ],
     "breakpoints": [
@@ -272,6 +308,14 @@
       {
         "name": "docs-binder",
         "value": "1480px"
+      },
+      {
+        "name": "playground-drawer-sheet",
+        "value": "1100px"
+      },
+      {
+        "name": "playground-sheet-stack (container, sheet width)",
+        "value": "860px"
       }
     ]
   },
@@ -400,11 +444,59 @@
       "description": "Framed previous/next cards with uppercase wide labels; hover yolk, press ink.",
       "html": "<nav class=\"ds-pager\"><a href=\"#\"><span>Previous</span>Slices and keys</a><a class=\"ds-next\" href=\"#\"><span>Next</span>Selectors</a></nav>",
       "css": ".ds-pager { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1.2rem 1rem 1rem; background: #FFFFFF; border-top: 3px solid #17140F; } .ds-pager a { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.9rem 1.1rem; border: 3px solid #17140F; border-radius: 14px; color: #17140F; text-decoration: none; font: 700 1.05rem/1.25 'Atkinson Hyperlegible Next', sans-serif; transition: background-color 420ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-pager span { font: 900 0.72rem/1 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.08em; text-transform: uppercase; color: #4F4838; } .ds-pager a:hover { background: #FFD425; } .ds-pager a:hover span { color: #4A3C00; } .ds-pager a:active { background: #17140F; color: #FFD425; } .ds-pager a:active span { color: #CBC3AA; } .ds-pager .ds-next { text-align: right; align-items: flex-end; } .ds-pager a:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; }"
+    },
+    {
+      "name": "X-ray Switch",
+      "kind": "custom",
+      "refersTo": "xray-switch",
+      "description": "The playground's primary control: a big pill switch that inverts to ink when X-ray is on.",
+      "html": "<button class=\"ds-xswitch\" role=\"switch\" aria-checked=\"false\" onclick=\"this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')\"><span class=\"ds-xl\">X-ray</span><span class=\"ds-track\"><span class=\"ds-knob\"></span></span><span class=\"ds-st\"></span></button>",
+      "css": ".ds-xswitch { display: inline-flex; align-items: center; gap: 0.75rem; min-height: 3.1rem; padding: 0.3rem 0.5rem 0.3rem 1.15rem; background: #FFD425; color: #17140F; border: 3px solid #17140F; border-radius: 999px; cursor: pointer; transition: background-color 420ms cubic-bezier(0.16, 1, 0.3, 1), color 420ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-xswitch:hover { background: #FFFFFF; } .ds-xl { font: 900 1.02rem/1 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.06em; text-transform: uppercase; } .ds-track { position: relative; width: 3.3rem; height: 1.9rem; border: 3px solid #17140F; border-radius: 999px; background: #FFFFFF; } .ds-knob { position: absolute; top: 0.2rem; left: 0.2rem; width: 1.15rem; height: 1.15rem; border-radius: 50%; background: #17140F; transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-st { min-width: 2.2rem; font: 700 0.86rem/1 'JetBrains Mono', monospace; } .ds-st::after { content: 'Off'; } .ds-xswitch[aria-checked='true'] { background: #17140F; color: #FFD425; } .ds-xswitch[aria-checked='true'] .ds-track { background: #FFD425; border-color: #FFD425; } .ds-xswitch[aria-checked='true'] .ds-knob { transform: translateX(1.4rem); } .ds-xswitch[aria-checked='true'] .ds-st::after { content: 'On'; } .ds-xswitch:focus-visible { outline: 3px solid #17140F; outline-offset: 4px; }"
+    },
+    {
+      "name": "X-ray Region, Tag and Render Count",
+      "kind": "custom",
+      "refersTo": "xray-tag",
+      "description": "A region in X-ray mode: 3px ink outline at 7px offset, a yolk tag pill that opens the code, an ink render-count chip.",
+      "html": "<div class=\"ds-xr-wrap\"><div class=\"ds-region\"><button class=\"ds-xtag\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5\"/></svg>Switch<span class=\"ds-xd\">1 superseded</span></button><p>Try cursed, blue or state</p><span class=\"ds-renders\">5 renders</span></div></div>",
+      "css": ".ds-xr-wrap { background: #FFFFFF; padding: 2.4rem 1.6rem 1.6rem; } .ds-region { position: relative; padding: 1.45rem 0.6rem 0.6rem; outline: 3px solid #17140F; outline-offset: 7px; border-radius: 14px; color: #17140F; font: 400 1rem/1.5 'Atkinson Hyperlegible Next', sans-serif; } .ds-region p { margin: 0; } .ds-xtag { position: absolute; left: 0.4rem; top: calc(-7px - 1.05rem); display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.1rem; padding: 0.3rem 0.75rem 0.3rem 0.6rem; background: #FFD425; color: #17140F; border: 3px solid #17140F; border-radius: 999px; font: 700 0.82rem/1 'JetBrains Mono', monospace; cursor: pointer; } .ds-xtag:hover { background: #17140F; color: #FFD425; } .ds-xtag:active { background: #FFFFFF; color: #17140F; } .ds-xtag:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; } .ds-xd { font-weight: 500; padding-left: 0.45rem; border-left: 1.5px solid currentColor; } .ds-renders { position: absolute; right: 0.4rem; bottom: calc(-7px - 0.85rem); display: inline-flex; align-items: center; min-height: 1.7rem; padding: 0 0.6rem; background: #17140F; color: #FFD425; border-radius: 999px; font: 600 0.74rem/1 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Pay Button",
+      "kind": "button",
+      "refersTo": "button-pay",
+      "description": "The beak action: the one beak element at rest on the playground; hover yolk, press inverts and drops 2px.",
+      "html": "<button class=\"ds-pay\">Pay €25.00</button>",
+      "css": ".ds-pay { width: 100%; min-height: 3.5rem; padding: 0.5rem 1.2rem; background: #FF6B1A; color: #17140F; border: 3px solid #17140F; border-radius: 999px; font: 900 1.15rem/1 'Anybody', sans-serif; font-stretch: 125%; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color 210ms cubic-bezier(0.16, 1, 0.3, 1), transform 210ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-pay:hover { background: #FFD425; } .ds-pay:active { background: #17140F; color: #FFFFFF; transform: translateY(2px); } .ds-pay:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; } .ds-pay:disabled { cursor: not-allowed; background: #FFFFFF; color: #4F4838; border: 3px dashed #4F4838; }"
+    },
+    {
+      "name": "Duck Cell and Filter Chip",
+      "kind": "card",
+      "refersTo": "filter-chip",
+      "description": "A shelf cell (hairline-ruled, not a card) with the duck silhouette in its product colour and an ink beak; a colour filter chip with its swatch dot.",
+      "html": "<div class=\"ds-shop\"><button class=\"ds-chip\" aria-pressed=\"false\"><span class=\"ds-sw\" style=\"background:#6CB6FF\"></span>Blue</button> <button class=\"ds-chip\" aria-pressed=\"true\">All colours</button><div class=\"ds-cell\"><svg class=\"ds-duck\" viewBox=\"0 0 400 360\" aria-hidden=\"true\"><g stroke=\"#17140F\" stroke-width=\"16\" stroke-linejoin=\"round\" fill=\"#6CB6FF\"><path d=\"M58 252C58 206 104 186 168 190L292 196C324 188 344 162 350 128C382 166 390 236 364 276C338 318 276 338 204 338C114 338 58 304 58 252Z\"/><circle cx=\"152\" cy=\"128\" r=\"84\"/></g><path d=\"M196 262C226 226 290 222 324 250M214 286C250 296 290 290 318 272\" fill=\"none\" stroke=\"#17140F\" stroke-width=\"11\" stroke-linecap=\"round\"/><path d=\"M80 126C52 120 26 130 16 146C34 162 60 168 88 160Z\" fill=\"#17140F\" stroke=\"#17140F\" stroke-width=\"11\" stroke-linejoin=\"round\"/><circle cx=\"132\" cy=\"108\" r=\"14\" fill=\"#17140F\"/><circle cx=\"137\" cy=\"103\" r=\"4.5\" fill=\"#FFFFFF\"/></svg><h3>Stack Overflow</h3><p>Blue, calm, has seen every error.</p><div class=\"ds-buy\"><span class=\"ds-price\">€7.00</span><button class=\"ds-add\">+ Add</button></div></div></div>",
+      "css": ".ds-shop { background: #FFFFFF; padding: 1.2rem; color: #17140F; font-family: 'Atkinson Hyperlegible Next', sans-serif; } .ds-chip { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.2rem; padding: 0.25rem 0.75rem; background: transparent; color: #17140F; border: 3px solid #17140F; border-radius: 999px; font: 700 0.88rem/1 'Atkinson Hyperlegible Next', sans-serif; cursor: pointer; } .ds-chip:hover { background: #FFD425; } .ds-chip[aria-pressed='true'], .ds-chip:active { background: #17140F; color: #FFD425; } .ds-sw { width: 0.85rem; height: 0.85rem; border-radius: 50%; border: 2px solid #17140F; } .ds-cell { margin-top: 1rem; max-width: 16rem; padding: 1.1rem; border-top: 3px solid #17140F; border-left: 1.5px solid #17140F; border-right: 1.5px solid #17140F; border-bottom: 1.5px solid #17140F; display: grid; gap: 0.35rem; } .ds-duck { width: 4.8rem; } .ds-cell h3 { margin: 0; font: 840 1.15rem/1.12 'Anybody', sans-serif; font-stretch: 114%; letter-spacing: -0.015em; } .ds-cell p { margin: 0; color: #4F4838; font-size: 0.92rem; line-height: 1.45; } .ds-buy { display: flex; align-items: center; gap: 0.7rem; margin-top: 0.6rem; } .ds-price { font: 700 1.05rem/1 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; } .ds-add { margin-left: auto; min-height: 2.3rem; padding: 0.25rem 0.9rem; background: transparent; color: #17140F; border: 3px solid #17140F; border-radius: 999px; font: 700 0.95rem/1 'Atkinson Hyperlegible Next', sans-serif; cursor: pointer; } .ds-add:hover { background: #FFD425; } .ds-add:active { background: #17140F; color: #FFD425; } .ds-chip:focus-visible, .ds-add:focus-visible { outline: 3px solid #17140F; outline-offset: 3px; }"
+    },
+    {
+      "name": "Inspector Tape with DispatchResult Lamps",
+      "kind": "custom",
+      "refersTo": "inspector-tape",
+      "description": "The dispatcher board docked to the bottom edge: wide yolk label, latest action in mono, DispatchResult lamps, on-ink toggle.",
+      "html": "<div class=\"ds-tape\"><span class=\"ds-tt\">Inspector</span><span class=\"ds-seq\">29</span><code>orders/status-polled</code><span class=\"ds-lamp ds-red\">Reduced</span><span class=\"ds-lamp ds-drop\">2 dropped</span><span class=\"ds-lamp ds-veto\">1 vetoed</span><button class=\"ds-tog\">Expand</button></div>",
+      "css": ".ds-tape { display: flex; align-items: center; gap: 1.1rem; height: 3.6rem; padding: 0 1.5rem; background: #17140F; color: #FFFFFF; border-radius: 16px 16px 0 0; font: 500 0.88rem/1 'JetBrains Mono', monospace; } .ds-tt { font: 900 0.78rem/1 'Anybody', sans-serif; font-stretch: 150%; letter-spacing: 0.08em; text-transform: uppercase; color: #FFD425; } .ds-seq { color: #CBC3AA; } .ds-lamp { display: inline-flex; align-items: center; gap: 0.45rem; font: 700 0.82rem/1 'JetBrains Mono', monospace; } .ds-lamp::before { content: ''; width: 0.78rem; height: 0.78rem; border-radius: 50%; border: 2px solid currentColor; } .ds-red { color: #FFD425; } .ds-red::before { background: #FFD425; } .ds-drop { color: #FF6B1A; } .ds-drop::before { background: #FF6B1A; } .ds-veto { color: #CBC3AA; } .ds-tog { margin-left: auto; min-height: 2.6rem; padding: 0.45rem 1.05rem; background: transparent; color: #FFD425; border: 3px solid #FFD425; border-radius: 999px; font: 600 0.86rem/1 'JetBrains Mono', monospace; cursor: pointer; } .ds-tog:hover { background: #FFD425; color: #17140F; } .ds-tog:active { background: #FFFFFF; color: #17140F; } .ds-tog:focus-visible { outline: 3px solid #FFD425; outline-offset: 3px; }"
+    },
+    {
+      "name": "Code Drawer File Tabs and Marked Line",
+      "kind": "custom",
+      "refersTo": "file-tab",
+      "description": "Inside the non-modal ink drawer: yolk outline file tabs and a captioned slab with the line that matters marked in yolk.",
+      "html": "<div class=\"ds-drawer\"><div class=\"ds-tabs\" role=\"tablist\"><button role=\"tab\" aria-selected=\"true\">SearchEffect.cs</button><button role=\"tab\" aria-selected=\"false\">SearchState.cs</button></div><figure class=\"ds-slab\"><figcaption><span class=\"ds-path\">Shop/Search/SearchEffect.cs</span><span class=\"ds-note\"><span class=\"ds-dot\"></span>the file compiled into this build</span></figcaption><pre><span class=\"ds-ln\"><span class=\"ds-num\">11</span></span><span class=\"ds-ln ds-mark\"><span class=\"ds-num\">12</span>    <span style=\"color:#FFD425;font-weight:700\">public override</span> <span style=\"color:#FFB27A\">Concurrency</span> Policy =&gt; Concurrency.Switch;</span></pre></figure></div>",
+      "css": ".ds-drawer { background: #17140F; color: #FFFFFF; padding: 1.2rem 1.5rem; border-radius: 16px 0 0 16px; display: grid; gap: 1rem; } .ds-tabs { display: flex; flex-wrap: wrap; gap: 0.45rem; } .ds-tabs button { min-height: 2.2rem; padding: 0.3rem 0.85rem; background: transparent; color: #FFD425; border: 2px solid #FFD425; border-radius: 999px; font: 600 0.84rem/1 'JetBrains Mono', monospace; cursor: pointer; } .ds-tabs button:hover, .ds-tabs button[aria-selected='true'] { background: #FFD425; color: #17140F; } .ds-tabs button:active { background: #FFFFFF; color: #17140F; } .ds-tabs button:focus-visible { outline: 3px solid #FFD425; outline-offset: 3px; } .ds-slab { margin: 0; border: 1.5px solid #3A342A; border-radius: 16px; overflow: hidden; } .ds-slab figcaption { display: flex; justify-content: space-between; gap: 1rem; padding: 0.7rem 1rem; border-bottom: 1.5px solid #3A342A; font: 600 0.8rem/1.3 'JetBrains Mono', monospace; } .ds-path { color: #FFD425; } .ds-note { display: inline-flex; align-items: center; gap: 0.45rem; color: #CBC3AA; font: 400 0.8rem/1.3 'Atkinson Hyperlegible Next', sans-serif; } .ds-dot { width: 0.65rem; height: 0.65rem; border-radius: 50%; background: #FFD425; } .ds-slab pre { margin: 0; padding: 0.9rem 0; font: 400 0.82rem/1.65 'JetBrains Mono', monospace; overflow: auto; } .ds-ln { display: block; } .ds-num { display: inline-block; position: relative; width: 4.2ch; margin-right: 1.4ch; padding-left: 1.6ch; text-align: right; color: #CBC3AA; } .ds-mark .ds-num { color: #FFD425; font-weight: 700; } .ds-mark .ds-num::before { content: ''; position: absolute; left: 0.4ch; top: 50%; width: 0.6rem; height: 0.6rem; margin-top: -0.3rem; border-radius: 50%; background: #FFD425; }"
     }
   ],
   "narrative": {
     "northStar": "The Rubber Duck on the Desk",
-    "overview": "The site is the conversation a developer has with the rubber duck beside their keyboard. The duck asks, on a field of drenched vinyl yellow; Ducky answers on a white answer sheet, in black ink and compiled code. Every surface is one of three grounds (yolk, ink, sheet), every stroke is ink, and a single beak orange marks the thing to press. Nothing is tinted, graded or lit: depth comes from swapping grounds and from heavy ruled lines, the way a moulded toy or a printed form gets its structure.\n\nDensity is generous at the section level (sections breathe at 4 to 7rem) and tight inside instruments: the dispatcher board is a ruled grid of fixed cells, the API list and package stack are ruled ledgers, and proof is a column of test names with check lamps. Display type is Anybody pushed wide and black, stamped like a toy's moulded mark; body is Atkinson Hyperlegible Next; JetBrains Mono appears wherever the reader is looking at something they would type or run.\n\nMotion has one clock. A single beat (420ms, expo-out) drives the duck's squash-and-stretch quack, the speech bubble's wipe, the answer sheet's rise, the split-flap letters and lamps on the board, and the dispatcher's one-action-per-tick drain. Controls invert ink on press rather than glowing or lifting.\n\nThe documentation is the same world set as the duck's answer binder: yolk is the binder ground and its index tabs, the page being read is a white sheet in a 3px ink frame, ink is code, rules and the current tab. It runs denser than the home page (a reading ramp at a 35rem measure, small 3 to 8px radii on inline marks) but adds no new color, no shadow and no tint.",
+    "overview": "The site is the conversation a developer has with the rubber duck beside their keyboard. The duck asks, on a field of drenched vinyl yellow; Ducky answers on a white answer sheet, in black ink and compiled code. Every surface is one of three grounds (yolk, ink, sheet), every stroke is ink, and a single beak orange marks the thing to press. Nothing is tinted, graded or lit: depth comes from swapping grounds and from heavy ruled lines, the way a moulded toy or a printed form gets its structure.\n\nDensity is generous at the section level (sections breathe at 4 to 7rem) and tight inside instruments: the dispatcher board is a ruled grid of fixed cells, the API list and package stack are ruled ledgers, and proof is a column of test names with check lamps. Display type is Anybody pushed wide and black, stamped like a toy's moulded mark; body is Atkinson Hyperlegible Next; JetBrains Mono appears wherever the reader is looking at something they would type or run.\n\nMotion has one clock. A single beat (420ms, expo-out) drives the duck's squash-and-stretch quack, the speech bubble's wipe, the answer sheet's rise, the split-flap letters and lamps on the board, and the dispatcher's one-action-per-tick drain. Controls invert ink on press rather than glowing or lifting.\n\nThe documentation is the same world set as the duck's answer binder: yolk is the binder ground and its index tabs, the page being read is a white sheet in a 3px ink frame, ink is code, rules and the current tab. It runs denser than the home page (a reading ramp at a 35rem measure, small 3 to 8px radii on inline marks) but adds no new color, no shadow and no tint.\n\nThe playground is the same world as a working shop on the desk: the yolk ground is the desk, the shop is one white answer sheet in a 3px ink frame, and the inspector is the home page's ink dispatcher board docked to the bottom edge as a tape. An X-ray switch turns the shop into its own annotated blueprint: ink outlines around every region, yolk tag pills naming the Ducky feature, ink render-count chips, all arriving in reading order inside one beat. Code opens in an ink drawer docked beside the sheet, never over it. It adds product colours (only inside the duck silhouettes and their filter dots) and no new ground, shadow or tint.",
     "keyCharacteristics": [
       "Three grounds (yolk, ink, sheet) and one action accent (beak); secondary text hues are darker or lighter shades of the ground they sit on, never decorative tints.",
       "3px ink rules for structure, 1.5px hairlines inside tables and ledgers.",
@@ -412,7 +504,8 @@
       "Pills for every control, 14 to 16px corners for panels and code, a 22px speech bubble with a drawn tail.",
       "One motion beat for the whole page; press = ink inversion.",
       "Flat. No shadows, no gradients, no glows.",
-      "Docs: a yolk binder with index tabs on the white sheet's edge; ruled ledgers for every list of pages or headings."
+      "Docs: a yolk binder with index tabs on the white sheet's edge; ruled ledgers for every list of pages or headings.",
+      "Playground: a yolk desk with one white shop sheet, an ink inspector tape docked at the bottom, an ink code drawer docked at the side, and an X-ray layer of ink outlines and yolk tags."
     ],
     "rules": [
       {
@@ -449,6 +542,16 @@
         "name": "The Printed Object Rule",
         "body": "No box-shadow, no gradient, no glow, no blur at rest. Separation is a rule, a border or a ground change.",
         "section": "elevation"
+      },
+      {
+        "name": "The Product Colour Rule",
+        "body": "A product hue lives inside the product's drawing (the duck's body, its swatch dot) and never becomes a fill, border, text color or ground in the interface. A duck is never drawn with a beak-orange beak.",
+        "section": "colors"
+      },
+      {
+        "name": "The Docked Panel Rule",
+        "body": "A panel that opens over the page (code drawer, inspector tape) docks to a viewport edge as an ink ground and never dims, blurs or blocks what it sits beside: no backdrop, no focus trap.",
+        "section": "elevation"
       }
     ],
     "dos": [
@@ -461,7 +564,14 @@
       "Do pair every claim with its proof: code block plus named tests.",
       "Do hold docs prose to the 35rem measure and let code slabs and tables take up to 60rem.",
       "Do caption every docs code slab with its source file and its tested status.",
-      "Do keep the reader's place visible on every docs page: current tab in ink, current ledger row in ink, yolk lamp on the section in view."
+      "Do keep the reader's place visible on every docs page: current tab in ink, current ledger row in ink, yolk lamp on the section in view.",
+      "Do dock the playground's panels to a viewport edge as ink grounds (tape at the bottom, drawer at the side, bottom sheet at 1100px) and keep the shop usable beside them.",
+      "Do annotate in X-ray with three marks only: a 3px ink outline at 7px offset, a yolk tag pill that opens the code, and an ink render-count chip; reveal them in reading order inside one beat.",
+      "Do show the app's own compiled source in the code drawer, captioned with its path, with the line that matters marked in yolk.",
+      "Do give every action in the inspector its DispatchResult lamp: yolk Reduced, beak Dropped and Failed, an on-ink-2 ring Vetoed.",
+      "Do draw products as the site's duck silhouette in the product's colour with an ink outline and an ink beak (yolk on a black duck).",
+      "Do state in the shop's first viewport that nothing is for sale and Pay charges nothing.",
+      "Do disable a control with a dashed on-sheet-2 border and on-sheet-2 text, not by fading it."
     ],
     "donts": [
       "Don't add shadows, gradients, glows or translucent overlays; depth is ground, rule and inversion.",
@@ -472,7 +582,11 @@
       "Don't give a section heading a small label above it; headings stand alone.",
       "Don't set inline code in docs prose as ink chips; use the yolk highlighter chip.",
       "Don't style search hits with a fill or in mono; they are bold with a yolk underline so they never read as code.",
-      "Don't tint alerts by kind; the kind lives in the stamped title and its lamp."
+      "Don't tint alerts by kind; the kind lives in the stamped title and its lamp.",
+      "Don't put a scrim, backdrop, blur or focus trap behind the code drawer or the inspector tape.",
+      "Don't let a product hue leave the duck's drawing and its swatch dot, and don't draw a duck with a beak-orange beak; beak orange belongs to Pay and alarms.",
+      "Don't show X-ray outlines, tags or render counts when X-ray is off, or use the tag pill as a decorative label.",
+      "Don't set the shelf as filled cards; it is a ruled specimen sheet of hairline cells."
     ]
   }
 }

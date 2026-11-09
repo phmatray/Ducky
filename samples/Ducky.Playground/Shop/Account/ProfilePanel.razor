@@ -1,0 +1,98 @@
+@inherits ShopComponent
+
+@{ var profile = Track(); }
+<section class="region profile" style="--i: 4" aria-labelledby="profile-title">
+  @RenderCount
+  <div class="xtags"><XrayTag Feature="profile" Detail="@_sharing" /></div>
+  <h2 id="profile-title" class="side-title">Deliver to</h2>
+
+  @if (!_editing)
+  {
+    <address>
+      @profile.Name<br />@profile.Address.Street<br />@profile.Address.Postcode @profile.Address.City<br />@profile.Address.Country
+    </address>
+    <p class="side-note">@(profile.Delivery.LeaveWithNeighbour ? "May be left with a neighbour." : "Hand it to me in person.") @profile.Delivery.Instructions</p>
+    <button @ref="_edit" type="button" class="pill small" aria-expanded="false" @onclick="() => Open(true)">
+      <Icon Name="edit" Size="16" /> Edit
+    </button>
+  }
+  else
+  {
+    <form id="profile-form" class="form" @onsubmit="() => Open(false)">
+      <label class="field">
+        <span>Name</span>
+        <input @ref="_firstField" value="@profile.Name" autocomplete="name" @onchange="e => Store.EditProfile(ProfileField.Name, e.Value as string ?? string.Empty)" />
+      </label>
+      @Field("Email", ProfileField.Email, profile.Email, "email")
+      @Field("Street", ProfileField.Street, profile.Address.Street, "street-address")
+      <div class="form-pair">
+        @Field("Postcode", ProfileField.Postcode, profile.Address.Postcode, "postal-code")
+        @Field("City", ProfileField.City, profile.Address.City, "address-level2")
+      </div>
+      @Field("Country", ProfileField.Country, profile.Address.Country, "country-name")
+      @Field("Instructions", ProfileField.Instructions, profile.Delivery.Instructions, "off")
+      <label class="check">
+        <input type="checkbox" checked="@profile.Delivery.LeaveWithNeighbour" @onchange="e => Store.SetLeaveWithNeighbour(e.Value is true)" />
+        May be left with a neighbour
+      </label>
+      <button type="submit" class="pill small">Done</button>
+    </form>
+  }
+  <p class="xray-only side-note">@_sharingNote</p>
+</section>
+
+@code {
+  private Selection<Profile> _profile = null!;
+  private Profile? _seen;
+  private string? _sharing;
+  private string _sharingNote = "Edit a field: Produce rebuilds only the records on the path to it.";
+  private bool _editing;
+  private bool _moveFocus;
+  private ElementReference _edit;
+  private ElementReference _firstField;
+
+  protected override void OnInitialized() => _profile = Select<Profile, Profile>(static profile => profile);
+
+  private void Open(bool editing)
+  {
+    _editing = editing;
+    _moveFocus = true;
+  }
+
+  // Focus follows the toggle: into the form's first field on Edit, back to Edit on Done.
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_moveFocus)
+    {
+      _moveFocus = false;
+      await (_editing ? _firstField : _edit).FocusAsync();
+    }
+  }
+
+  // Each field writes on change (blur or Enter), one EditProfile per edit.
+  private RenderFragment Field(string label, ProfileField field, string value, string autocomplete) => __builder =>
+  {
+    <label class="field">
+      <span>@label</span>
+      <input value="@value" autocomplete="@autocomplete" @onchange="e => Store.EditProfile(field, e.Value as string ?? string.Empty)" />
+    </label>
+  };
+
+  // Which records the last edit rebuilt and which it kept, by reference; read while rendering, so it costs no render.
+  private Profile Track()
+  {
+    var current = _profile.Value;
+    if (_seen is not null && !ReferenceEquals(_seen, current))
+    {
+      var kept = new List<string>();
+      var rebuilt = new List<string> { "Profile" };
+      (ReferenceEquals(_seen.Address, current.Address) ? kept : rebuilt).Add("Address");
+      (ReferenceEquals(_seen.Delivery, current.Delivery) ? kept : rebuilt).Add("Delivery");
+      _sharing = kept.Count == 0 ? "all rebuilt" : $"kept {string.Join(", ", kept)}";
+      _sharingNote = $"The last edit built a new {string.Join(" and ", rebuilt)}; "
+        + (kept.Count == 0 ? "nothing was kept." : $"{string.Join(" and ", kept)} is the same instance as before.");
+    }
+    _seen = current;
+    return current;
+  }
+}

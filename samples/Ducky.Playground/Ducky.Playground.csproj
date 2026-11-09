@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <!-- The Ducky Playground (M14-07): Rubber Duck Supply Co., a small shop built only from Ducky, with an X-ray layer that
+       names the feature behind each behaviour and shows the source that runs it. Published to Pages under playground/
+       (.github/workflows/docs.yml). Workload-free like Ducky.Samples.Wasm: never RunAOTCompilation here (NETSDK1147).
+       Built with warnings as errors, so Ducky's analyzers (DUCKY001-025, DUCKY101-109) run on it. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <DuckyUseGenerators>true</DuckyUseGenerators>
+    <DuckyUseDraftGenerator>true</DuckyUseDraftGenerator>
+    <!-- Blazor WebAssembly trims System.Diagnostics.Metrics out by default; the inspector's DropMeter listens to the
+         store's drop counters, so the feature stays on. -->
+    <MetricsSupport>true</MetricsSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Under TrimMode=full the trimmer would remove the root component and its children (blank page, spike S-3). -->
+    <TrimmerRootAssembly Include="$(AssemblyName)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Ducky.Blazor/Ducky.Blazor.csproj" />
+    <ProjectReference Include="../../src/Ducky.Reactive/Ducky.Reactive.csproj" />
+    <ProjectReference Include="../../src/Ducky.Draft/Ducky.Draft.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- The site's visual world, never forked, and the app's own source for the X-ray code drawer. Before static web assets
+       are resolved, the build copies into wwwroot (git-ignored, see .gitignore): site/tokens.css, site/duck.svg and the
+       self-hosted faces of site/fonts/, and every .cs and .razor file compiled into this assembly under _source/, with a
+       .txt suffix so any static host serves it as text. The drawer shows those files: the code that runs, never a copy
+       kept by hand. Copied, not linked: `dotnet run` serves static web assets from wwwroot only. -->
+  <PropertyGroup>
+    <PlaygroundSiteRoot>$(MSBuildThisFileDirectory)../../site/</PlaygroundSiteRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot/_source/**;wwwroot/fonts/**;wwwroot/tokens.css;wwwroot/duck.svg" />
+  </ItemGroup>
+
+  <Target Name="CopyPlaygroundAssets" DependsOnTargets="ResolveRazorComponentInputs" BeforeTargets="ResolveProjectStaticWebAssets">
+    <ItemGroup>
+      <_PlaygroundTop Include="$(PlaygroundSiteRoot)tokens.css;$(PlaygroundSiteRoot)duck.svg" />
+      <_PlaygroundFont Include="$(PlaygroundSiteRoot)fonts/*.woff2" />
+      <_PlaygroundSource Include="@(Compile)" Condition="!$([System.String]::Copy('%(FullPath)').StartsWith('$(MSBuildProjectDirectory)$([System.IO.Path]::DirectorySeparatorChar)obj'))" />
+      <_PlaygroundSource Include="@(RazorComponent)" />
+      <_PlaygroundCopied Include="@(_PlaygroundTop->'wwwroot/%(Filename)%(Extension)')" />
+      <_PlaygroundCopied Include="@(_PlaygroundFont->'wwwroot/fonts/%(Filename)%(Extension)')" />
+      <_PlaygroundCopied Include="@(_PlaygroundSource->'wwwroot/_source/%(RelativeDir)%(Filename)%(Extension).txt')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_PlaygroundTop)" DestinationFolder="wwwroot" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PlaygroundFont)" DestinationFolder="wwwroot/fonts" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PlaygroundSource)" DestinationFiles="@(_PlaygroundSource->'wwwroot/_source/%(RelativeDir)%(Filename)%(Extension).txt')" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <Content Remove="@(_PlaygroundCopied)" />
+      <Content Include="@(_PlaygroundCopied)" />
+      <FileWrites Include="@(_PlaygroundCopied)" />
+    </ItemGroup>
+  </Target>
+</Project>

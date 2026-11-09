@@ -1,0 +1,47 @@
+@inherits ShopComponent
+@inject XrayStore Xray
+@inject DrawerStore Drawer
+
+<header class="topbar">
+  <a class="brand" href="../" aria-label="Ducky home">
+    <img src="duck.svg" alt="" width="34" height="31" />
+    <span>Ducky</span>
+    <span class="brand-sub">Playground</span>
+  </a>
+
+  <div class="region controls" style="--i: 0">
+    @RenderCount
+    <div class="xtags"><XrayTag Feature="slice-store" Detail="@(_view.Value.On ? "xray/Toggle" : null)" /></div>
+    <button type="button" class="xswitch" role="switch" aria-checked="@(_view.Value.On ? "true" : "false")" @onclick="ToggleXray">
+      <span class="xswitch-label">X-ray</span>
+      <span class="xswitch-track" aria-hidden="true"><span class="xswitch-knob"></span></span>
+      <span class="xswitch-state" aria-hidden="true">@(_view.Value.On ? "On" : "Off")</span>
+    </button>
+    <button type="button" class="pill inspector-toggle" aria-pressed="@(_view.Value.InspectorOpen ? "true" : "false")" aria-controls="inspector"
+            @onclick="Xray.ToggleInspector">
+      Inspector
+    </button>
+  </div>
+
+  <nav class="topnav" aria-label="Ducky">
+    <a href="../docs/guides/core/getting-started.html">Docs</a>
+    <a class="gh" href="https://github.com/phmatray/Ducky">GitHub</a>
+  </nav>
+</header>
+
+@code {
+  private Selection<XrayView> _view = null!;
+
+  protected override void OnInitialized() => _view = Select<XrayView, XrayView>(static view => view);
+
+  private void ToggleXray()
+  {
+    // Turning X-ray off hides the tags, so the drawer they open closes with them.
+    var wasOn = Xray.State.On;
+    Xray.Toggle();
+    if (wasOn)
+    {
+      Drawer.Close();
+    }
+  }
+}

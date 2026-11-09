@@ -1,0 +1,5 @@
+# Copied by the build from site/ and from this project's own sources (Ducky.Playground.csproj, CopyPlaygroundAssets).
+wwwroot/_source/
+wwwroot/fonts/
+wwwroot/tokens.css
+wwwroot/duck.svg

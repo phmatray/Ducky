@@ -2,7 +2,7 @@
 
 Status: plan derived from `SPEC.md` (authoritative, including review rounds "2 (recovered)" through 7 of `REVIEW-LOG.md`) and `adr/0001-0047`. Where this plan and the spec disagree, the spec wins; every planning decision that goes beyond the spec is listed in §3.
 
-156 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
+157 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
 
 ## 1. Workflow: strict TDD under full gates
 
@@ -65,7 +65,7 @@ Every story after M0-01 is one issue and one squash-merged PR on `v2`, and it fo
 | M11 | Ducky.Reactive | 7 | R3 host, bridge and middleware; failures as system failure actions; resubscribe with backoff and its races; excluded from quiescence (INV-27); Reactive contract twins, generator arms and PackageSmoke consumer; AOT smoke for Draft and Reactive. |
 | M12 | Server persistence | 9 | PersistStorage.Server over IDistributedCache, scopes, retries and the phase-5a flush, the auth-driven scope switch with epochs, init-phase deadlines, reconnect absorption and attempt supersession (INV-17), static SSR pins, pause seeds across scopes; AOT smoke for server persistence and DevTools payload. |
 | M13 | Generators, analyzers and tombstones | 12 | Shared generator helpers, GEN-01 dispatch helpers, GEN-02 core registration (step 7) and its Blazor arms (Prerender<T> at stage 11, PersistAttributeDefaults<T> and Ducky.Blazor.Generated.Tests at stage 12), multi-assembly fixture (INV-25), the stage-7 analyzers (DUCKY001-025 arms whose APIs exist by step 6), DUCKYM001-M008 tombstones, stage-7 PackageSmoke assertions. |
-| M14 | Samples, E2E and AOT | 6 | Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, and the trimmed AOT-WASM smoke that can't skip in the aot job. |
+| M14 | Samples, E2E and AOT | 7 | Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, the trimmed AOT-WASM smoke that can't skip in the aot job, and the Ducky Playground published to Pages. |
 | M15 | Docs and migration guides | 9 | A generated docs site (the answer binder) with compiled-snippet regions, user guides, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check. |
 | M16 | Release candidate | 6 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
 
@@ -94,7 +94,7 @@ Stories per stage (P1: `activeStage` reaches N once every story listed at N or b
 | 15 | DevTools | M8-01, M8-02, M8-03, M8-03b, M12-05 |
 | 16 | Ducky.Reactive | M11-01, M11-01b, M11-02, M11-02b, M11-03, M11-05 |
 | 17 | Ducky.Draft | M10-01, M10-02, M10-03, M10-04, M10-05, M10-06, M10-07, M10-07b, M11-04 |
-| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09 |
+| 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M14-07, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09 |
 | 19 | RC and consumer migrations; GA | M16-01, M16-02, M16-03, M16-04, M16-05, M16-06 |
 
 Parallel lanes:
@@ -2220,7 +2220,7 @@ Shared generator helpers, GEN-01 dispatch helpers, GEN-02 core registration (ste
 
 ### M14 — Samples, E2E and AOT
 
-Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, and the trimmed AOT-WASM smoke that can't skip in the aot job.
+Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, the trimmed AOT-WASM smoke that can't skip in the aot job, and the Ducky Playground published to Pages.
 
 #### M14-01 Samples.Wasm (M)
 
@@ -2239,7 +2239,7 @@ Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §1
 
 - **Stage:** 18
 - **Depends on:** M12-04, M8-03, M13-04b, M12-06, M12-03c
-- **Unblocks:** M14-03, M14-04, M14-05, M15-03
+- **Unblocks:** M14-03, M14-04, M14-05, M14-07, M15-03
 - **Area:** `samples/Ducky.Samples.Server`
 - **Invariants:** —
 - **Scope:** Interactive Auto web app with shared .Client registration: Prerender slices loaded by effects, Local/Session/Server persistence (MemoryDistributedCache, KeyPrefix set, auth with a test login), cross-tab, DevTools, a DelegatingHandler page, large-slice and CJK pages for E2E. Includes a NameIdentifier-scoped Server-storage slice and a page that drops and restores the circuit connection.
@@ -2321,6 +2321,20 @@ Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §1
   - Planted check: a publish written to another directory fails WasmTrimmedSmoke in the aot job instead of skipping it
   - Planted check: a Samples.Wasm publish without -p:SuppressTrimAnalysisWarnings=false (no IL2104 reported), and a sample with an unsuppressed RequiresUnreferencedCode call (IL2026), each fail the AotSmoke target
 - **Done:** Common DoD; aot job green.
+
+#### M14-07 Ducky Playground (M)
+
+- **Stage:** 18
+- **Depends on:** M14-02, M15-08
+- **Unblocks:** M16-04
+- **Area:** `samples/Ducky.Playground, Ducky.slnx, test/Ducky.E2E/Samples, .github/workflows/docs.yml, site/index.html, site/llms.txt`
+- **Invariants:** —
+- **Scope:** Stage 18. Owner-added (2026-11-09): the published sample was a bare todo list, kept as the E2E and trimmed-AOT fixture; the live demo becomes a playground. SPEC §18 layout and §20 docs.yml. A Blazor WebAssembly app, Rubber Duck Supply Co., built only from Ducky in the site's visual world (site/tokens.css and site/fonts copied by the build): live search on a Switch effect with a debounce on the TimeProvider, an EntityState catalogue behind memoized selectors, a basket persisted to localStorage with a version, a migration and SyncAcrossTabs, checkout on an Exhaust effect whose declined payment becomes EffectFailed, order tracking polled by a Ducky.Reactive pipeline until delivered, a profile edited with Ducky.Draft Produce on nested records, an audit middleware feeding an inspector tape and a MayDispatch veto, a ReducerFailed reachable in X-ray mode, a SliceStore for the X-ray state, render counters, and Redux DevTools only with ?devtools. An X-ray switch outlines every feature region and tags it; a tag opens a code drawer with the explanation, the guides and the app's own source files, which the build copies beside the app. docs.yml publishes it under playground/ instead of the WASM sample; the home page and llms.txt link it.
+- **Acceptance tests:**
+  - Playground builds in Ducky.slnx with no workload, warnings as errors and the Ducky analyzers
+  - Playground_Boots_SearchAddToCartCheckout (Ducky.E2E, non-normative)
+  - docs.yml publishes the playground under playground/ with its base href patched and its source files present
+- **Done:** Common DoD (samples are not coverage-gated; analyzers and warnings still apply).
 
 ### M15 — Docs and migration guides
 
@@ -2420,7 +2434,7 @@ A generated docs site (the answer binder) with compiled-snippet regions, user gu
 
 - **Stage:** 18
 - **Depends on:** M15-01, M15-04
-- **Unblocks:** M15-09, M16-04
+- **Unblocks:** M14-07, M15-09, M16-04
 - **Area:** `build/Build.DocsSite.cs, build/Build.DocsHighlight.cs, build/Build.Gates.cs#Docs, docs/nav.yml, site/docs-theme, site/tokens.css, .github/workflows/docs.yml`
 - **Invariants:** —
 - **Scope:** Stage 18. Owner-added (2026-11-08). SPEC §17.1 Docs row, §18 layout, §19 Docs target, §20 docs.yml. Docs renders docs/**/*.md (outside spec/, adr/, migration/samples/) through docs/nav.yml (tabs, groups, globs, unlisted pages) and site/docs-theme/page.html with Markdig; includes become region text highlighted at build time with a link to their source lines; page links become .html, repository links GitHub URLs; a search index per H2 (listed pages only). The theme shares site/tokens.css with the home page. docfx, docs/docfx.json and docs/toc.yml are removed; the owner's earlier trials' guides stay reachable but unlisted.
@@ -2489,7 +2503,7 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
 #### M16-04 Spec closure (S)
 
 - **Stage:** 19
-- **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M15-06, M15-07, M15-08, M15-09
+- **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M14-07, M15-06, M15-07, M15-08, M15-09
 - **Unblocks:** M16-05
 - **Area:** `docs/spec/tests.yaml, build/Build.SpecTrace.cs`
 - **Invariants:** —
