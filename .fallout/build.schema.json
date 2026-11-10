@@ -40,11 +40,7 @@
         "Format",
         "GitHubRelease",
         "Mutation",
-        "MutationAggregate",
-        "MutationForSha",
-        "MutationPlan",
         "MutationPr",
-        "MutationPrAggregate",
         "Pack",
         "PackageSmoke",
         "PropertyLong",
@@ -139,7 +135,7 @@
       "properties": {
         "BaseRef": {
           "type": "string",
-          "description": "PR base for Stryker --since; default origin/$GITHUB_BASE_REF, else origin/{ReleaseBranch}"
+          "description": "MutationPr's base for Stryker --since (HEAD scores the uncommitted work); default origin/{ReleaseBranch}"
         },
         "NuGetFlatContainer": {
           "type": "string",
@@ -160,22 +156,13 @@
           "type": "string",
           "description": "Version (no v) of the release notes, the GitHub release and ShipPublicApi's analyzer release; default GITHUB_REF_NAME minus v, else MinVerVersion"
         },
-        "Shard": {
-          "type": "string",
-          "description": "Mutation and MutationPr: run only shard <index>/<count> of each project's files (CI's matrix); its report goes to artifacts/mutation-shards/<index> for MutationAggregate or MutationPrAggregate"
-        },
-        "Shards": {
-          "type": "integer",
-          "format": "int32",
-          "description": "MutationAggregate and MutationPrAggregate: the number of shards that must have reported"
-        },
         "Solution": {
           "type": "string",
           "description": "Path to a solution file that is automatically loaded"
         },
         "StrictStages": {
           "type": "boolean",
-          "description": "For -rc.N and GA tags: every stage counts as active; Mutation mutates and checks all seven projects (§17.8), SpecTraceGate fails on any inactive entry and checks all 32 invariants (§19)"
+          "description": "Every stage counts as active: Mutation mutates and checks all seven projects (§17.8; the pre-tag run of §21), SpecTraceGate fails on any inactive entry and checks all 32 invariants (-rc.N and GA tags, §19)"
         }
       }
     },

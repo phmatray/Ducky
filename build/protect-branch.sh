@@ -25,7 +25,7 @@ JSON
 jq -n '{
   required_status_checks: {
     strict: true,
-    checks: [("ci", "ci-cross-windows", "ci-cross-macos", "e2e", "aot", "mutation", "pr-title")
+    checks: [("ci", "ci-cross-windows", "ci-cross-macos", "e2e", "aot", "pr-title")
       | {context: ., app_id: 15368}]
   },
   enforce_admins: true,

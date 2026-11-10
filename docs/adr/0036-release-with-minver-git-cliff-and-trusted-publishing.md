@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-30
-- Related: SPEC §19, §21; ENG-05; review rounds 4, 5 and 6
+- Related: SPEC §19, §21; ENG-05; review rounds 4, 5 and 6; amended 2026-11-10 (CI-MUTATION-LOCAL, ADR-0048)
 
 ## Context
 
@@ -19,3 +19,12 @@ No long-lived NuGet key; reproducible versions from tags.
 ## Alternatives considered
 
 Nerdbank/GitVersion (rejected: extra system); API key secret (rejected: long-lived secret).
+
+## Amendment (2026-11-10): no release mutation job (ADR-0048)
+
+ADR-0048 supersedes the release-mutation part of this decision. `release.yml` has two jobs: `release-gates` and `publish`
+(`needs: [release-gates]`); `release-mutation`, `MutationForSha` and its nightly-run query, and the token scopes they needed,
+are gone, and the local `Release` chain is `ReleaseGates`, `Publish`, `GitHubRelease`. Mutation is a release prerequisite run
+before the tag: the maintainer runs `./build.sh Mutation --strict-stages` on the exact commit to tag (locally, or the same
+command under act) and tags only when all seven projects score 100% (SPEC §21). `BaseRef`, now only `MutationPr`'s local base,
+defaults to `origin/{ReleaseBranch}` instead of `origin/$GITHUB_BASE_REF`.

@@ -14,8 +14,9 @@ using static Fallout.Common.Tools.DotNet.DotNetTasks;
 // SPEC §3 (R-PKG-1, R-PKG-5, R-PKG-6), §17.9 and §19: Pack and PackageSmoke. PackageSmoke is staged (§17.9): this file
 // holds the step-1 checks and step 5 (the published consumers serve ducky.js); later consumers and assertions arrive with
 // their features.
-// SPEC §19, §20.1 and §21 (M16-03): the release targets Changelog, Publish, GitHubRelease, ReleaseGates, MutationForSha
-// and Release, and the checks of the hand-written release.yml.
+// SPEC §19, §20.1 and §21 (M16-03): the release targets Changelog, Publish, GitHubRelease, ReleaseGates and Release, and
+// the checks of the hand-written release.yml. Mutation is not a release job (ADR-0048): the maintainer runs Mutation
+// --strict-stages on the commit before tagging it (§21).
 internal sealed partial class Build
 {
     // R-PKG-6: the five library IDs Pack sends to artifacts/packages (each with its .snupkg), and the tombstone.
@@ -734,7 +735,7 @@ internal sealed partial class Build
 
     private static readonly Regex VersionTag = new(@"^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$", RegexOptions.CultureInvariant);
 
-    // -rc.N and GA (or patch) tags release every stage: SpecTraceGate and Mutation run --strict-stages (§19).
+    // -rc.N and GA (or patch) tags release every stage: SpecTraceGate runs --strict-stages (§19).
     private static readonly Regex StrictTag = new(@"^v\d+\.\d+\.\d+(-rc\.\d+)?$", RegexOptions.CultureInvariant);
 
     // git-cliff, from Conventional Commits (cliff.toml); not a dotnet tool, so release.yml installs a pinned binary.
@@ -754,7 +755,7 @@ internal sealed partial class Build
     // No DependsOn: in release.yml it pushes the packages release-gates built and uploaded, and a dependency would
     // rebuild the tree while the short-lived key is live. Every check runs before the key is read.
     private Target Publish => _ => _
-        .After(Ci, E2E, AotSmoke, MutationForSha, PackageSmoke)
+        .After(Ci, E2E, AotSmoke, PackageSmoke)
         .Executes(() =>
         {
             FailOnViolations(nameof(Publish), ReleaseSelfCheck());
@@ -790,30 +791,10 @@ internal sealed partial class Build
         .DependsOn(Ci, E2E, AotSmoke)
         .Executes(() => FailOnViolations("ReleaseGates", [.. PackageValidation([])]));
 
-    // DependsOn(Compile), as Mutation: the fallback runs Mutation's body in this process, since a child build could not open
-    // the build.log this run holds. The cost is a Compile in the release-mutation job even when a nightly run passes it.
-    private Target MutationForSha => _ => _
-        .DependsOn(Compile)
-        .Executes(() =>
-        {
-            FailOnViolations(nameof(MutationForSha), ReleaseSelfCheck());
-            var sha = EnvironmentInfo.GetVariable("GITHUB_SHA") is { Length: > 0 } s ? s : Git(RootDirectory, $"rev-parse HEAD").Single();
-            var strict = StrictStages || ReleaseTag() is { } tag && StrictTag.IsMatch(tag);
-            var failure = NightlyMutationOrRun(sha,
-                () =>
-                {
-                    var query = ProcessTasks.StartProcess("gh", $"run list --workflow nightly-mutation.yml --commit {sha} --status success --json databaseId --limit 1",
-                        RootDirectory, logOutput: false).AssertWaitForExit();
-                    // stdout alone is the JSON; a failure reports stderr too.
-                    return (query.ExitCode, string.Join('\n', query.Output.Where(o => query.ExitCode != 0 || o.Type == OutputType.Std).Select(o => o.Text)));
-                },
-                () => RunMutation(strict));
-            Assert.True(failure is null, failure);
-        });
-
-    // Local convenience only; release.yml splits it into three jobs (§20.1).
+    // Local convenience only; release.yml splits it into two jobs (§20.1). No Mutation: the pre-tag run of §21 scored this
+    // commit before the tag existed.
     private Target Release => _ => _
-        .DependsOn(ReleaseGates, MutationForSha, Publish, GitHubRelease);
+        .DependsOn(ReleaseGates, Publish, GitHubRelease);
 
     // The tag being released: the pushed tag in release.yml, else the one v* tag on HEAD (the local Release chain).
     private string? ReleaseTag() =>
@@ -860,38 +841,6 @@ internal sealed partial class Build
         return exitCode == 0;
     }
 
-    // §19 MutationForSha: a successful nightly-mutation run for the SHA passes; no run starts the full Mutation. A failed or
-    // unreadable query fails: reading it as "no run" would silently start a 330-minute run.
-    private static string? NightlyMutationOrRun(string sha, Func<(int ExitCode, string Output)> query, Action runMutation)
-    {
-        var (exitCode, output) = query();
-        if (exitCode != 0)
-        {
-            return $"MutationForSha: the nightly-mutation query failed (exit code {exitCode}), so no full run is started: {output}";
-        }
-        JsonNode? runs;
-        try
-        {
-            runs = JsonNode.Parse(output);
-        }
-        catch (JsonException)
-        {
-            runs = null;
-        }
-        if (runs is not JsonArray found)
-        {
-            return $"MutationForSha: the nightly-mutation query returned no JSON array, so no full run is started: {output}";
-        }
-        if (found.Count > 0)
-        {
-            Log.Information("MutationForSha: a successful nightly-mutation run exists for {Sha}", sha);
-            return null;
-        }
-        Log.Information("MutationForSha: no successful nightly-mutation run for {Sha}; running Mutation", sha);
-        runMutation();
-        return null;
-    }
-
     // The node at a path of mapping keys, or null.
     private static YamlNode? YamlAt(YamlNode? node, params string[] path)
     {
@@ -911,9 +860,9 @@ internal sealed partial class Build
         _ => [],
     };
 
-    // §20.1: the hand-written release.yml keeps its gates in front of the push: v* tags only, the three jobs with full
-    // history, publish behind both gate jobs (no if, no continue-on-error) and the nuget environment's approval, running
-    // Publish GitHubRelease unskipped.
+    // §20.1: the hand-written release.yml keeps its gate in front of the push: v* tags only, the two jobs with full history,
+    // publish behind the gate job (no if, no continue-on-error) and the nuget environment's approval, running Publish
+    // GitHubRelease unskipped. No mutation job (ADR-0048; MutationWorkflowViolations fails on one).
     private static IEnumerable<string> ReleaseWorkflowViolations(string workflow)
     {
         var stream = new YamlStream();
@@ -928,7 +877,6 @@ internal sealed partial class Build
         (string Job, string Run, string[] Permissions)[] expected =
         [
             ("release-gates", "./build.sh ReleaseGates", []),
-            ("release-mutation", "./build.sh MutationForSha", ["actions: read", "contents: read", "issues: write"]),
             ("publish", "./build.sh Publish GitHubRelease", ["contents: write", "id-token: write"]),
         ];
         var jobs = YamlScalars(YamlAt(root, "jobs")).Select(j => j[..j.IndexOf(':', StringComparison.Ordinal)]).Order(StringComparer.Ordinal).ToList();
@@ -968,9 +916,9 @@ internal sealed partial class Build
             yield return "publish: environment must be nuget (its required reviewer approves every push)";
         }
         var needs = YamlScalars(YamlAt(root, "jobs", "publish", "needs"));
-        if (!needs.Contains("release-gates") || !needs.Contains("release-mutation"))
+        if (!needs.Contains("release-gates"))
         {
-            yield return "publish: needs must hold release-gates and release-mutation (nothing is pushed before every gate passed)";
+            yield return "publish: needs must hold release-gates (nothing is pushed before the gates passed)";
         }
         if (YamlAt(root, "jobs", "publish", "if") is not null)
         {
@@ -979,7 +927,7 @@ internal sealed partial class Build
     }
 
     // The acceptance checks of M16-03: the tombstone and prerelease decisions, the reachability refusal on a planted
-    // repository, a failing gh query, and release.yml's gates on a miniature workflow.
+    // repository, and release.yml's gates on a miniature workflow.
     private static List<string> ReleaseSelfCheck()
     {
         var failures = new List<string>();
@@ -1045,23 +993,7 @@ internal sealed partial class Build
             repository.DeleteDirectory();
         }
 
-        // MutationForSha: only a successful query decides; a failure never starts the full run.
-        (string Case, int ExitCode, string Output, bool Fails, bool Runs)[] queries =
-        [
-            ("a failing gh query (HTTP 403)", 1, "HTTP 403: Resource not accessible by integration", true, false),
-            ("a query that is not JSON", 0, "<html>rate limited</html>", true, false),
-            ("no successful nightly-mutation run", 0, "[]", false, true),
-            ("a successful nightly-mutation run", 0, "[{\"databaseId\":42}]", false, false),
-        ];
-        foreach (var (queryCase, exitCode, output, fails, runs) in queries)
-        {
-            var ran = false;
-            var failure = NightlyMutationOrRun("abc123", () => (exitCode, output), () => ran = true);
-            Expect((failure is not null) == fails && ran == runs,
-                $"{queryCase} must {(fails ? "fail" : "pass")} and {(runs ? "" : "not ")}run Mutation; got failure '{failure}', ran {ran}");
-        }
-
-        // release.yml: publish waits for both gate jobs and the nuget environment's approval.
+        // release.yml: publish waits for the gate job and the nuget environment's approval.
         const string workflow = """
             on:
               push:
@@ -1073,18 +1005,8 @@ internal sealed partial class Build
                     with:
                       fetch-depth: 0
                   - run: ./build.sh ReleaseGates
-              release-mutation:
-                permissions:
-                  contents: read
-                  actions: read
-                  issues: write
-                steps:
-                  - uses: actions/checkout@v7
-                    with:
-                      fetch-depth: 0
-                  - run: ./build.sh MutationForSha
               publish:
-                needs: [release-gates, release-mutation]
+                needs: [release-gates]
                 environment: nuget
                 permissions:
                   id-token: write
@@ -1100,21 +1022,20 @@ internal sealed partial class Build
         (string Case, string From, string To, string Expected)[] workflows =
         [
             ("publish without the nuget environment", "    environment: nuget\n", "", "publish: environment must be nuget"),
-            ("publish not waiting for release-mutation", "[release-gates, release-mutation]", "[release-gates]", "publish: needs must hold release-gates and release-mutation"),
-            ("a shallow checkout", "          fetch-depth: 0\n      - run: ./build.sh MutationForSha", "          fetch-depth: 1\n      - run: ./build.sh MutationForSha",
-                "release-mutation: checkout must set fetch-depth: 0"),
+            ("publish not waiting for release-gates", "[release-gates]", "[]", "publish: needs must hold release-gates"),
+            ("a shallow checkout", "          fetch-depth: 0\n      - run: ./build.sh ReleaseGates", "          fetch-depth: 1\n      - run: ./build.sh ReleaseGates",
+                "release-gates: checkout must set fetch-depth: 0"),
             ("publish skipping targets", "./build.sh Publish GitHubRelease", "./build.sh Publish GitHubRelease --skip Restore", "publish: must run exactly ./build.sh Publish GitHubRelease"),
-            ("release-mutation without issues: write", "      issues: write\n", "      issues: read\n", "release-mutation: permissions must be"),
             ("publish without id-token: write", "      id-token: write\n", "", "publish: permissions must be"),
             ("a branch trigger", "tags: ['v*']", "branches: [v2]", "release.yml must run on v* tags only"),
-            ("a fourth job", "jobs:\n", "jobs:\n  extra:\n    steps: []\n", "release.yml must have exactly the jobs"),
-            ("publish running after a failed gate", "    needs: [release-gates, release-mutation]\n", "    needs: [release-gates, release-mutation]\n    if: always()\n",
+            ("a third job", "jobs:\n", "jobs:\n  extra:\n    steps: []\n", "release.yml must have exactly the jobs"),
+            ("publish running after a failed gate", "    needs: [release-gates]\n", "    needs: [release-gates]\n    if: always()\n",
                 "publish: must have no if"),
-            ("a gate job continuing on error", "  release-mutation:\n", "  release-mutation:\n    continue-on-error: true\n", "release-mutation: must not set continue-on-error"),
+            ("a gate job continuing on error", "  release-gates:\n", "  release-gates:\n    continue-on-error: true\n", "release-gates: must not set continue-on-error"),
             ("a gate step continuing on error", "      - run: ./build.sh ReleaseGates\n", "      - run: ./build.sh ReleaseGates\n        continue-on-error: true\n",
                 "release-gates: must not set continue-on-error"),
-            ("a skipped gate step", "      - run: ./build.sh MutationForSha\n", "      - run: ./build.sh MutationForSha\n        if: false\n",
-                "release-mutation: the ./build.sh step must have no if"),
+            ("a skipped gate step", "      - run: ./build.sh ReleaseGates\n", "      - run: ./build.sh ReleaseGates\n        if: false\n",
+                "release-gates: the ./build.sh step must have no if"),
         ];
         foreach (var (workflowCase, from, to, expected) in workflows)
         {

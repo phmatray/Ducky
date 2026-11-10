@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-30
-- Related: SPEC §20.2; ENG-01
+- Related: SPEC §20.2; ENG-01; amended 2026-11-10 (CI-MUTATION-LOCAL, ADR-0048)
 
 ## Context
 
@@ -19,3 +19,8 @@ Gates are enforced by CI, not by reviewers; reproducible configuration.
 ## Alternatives considered
 
 Required approval (rejected: blocks merges or needs admin bypass).
+
+## Amendment (2026-11-10): no `mutation` required check (ADR-0048)
+
+ADR-0048 removes the `mutation` workflow, so the required checks are `ci`, `ci-cross-windows`, `ci-cross-macos`, `e2e`, `aot`
+and `pr-title`. `build/protect-branch.sh` no longer lists `mutation`; the owner removes it from the live branch protection.

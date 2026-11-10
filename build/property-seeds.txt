@@ -1,5 +1,5 @@
-# CsCheck seeds of the gated runs (SPEC §17.1). With DUCKY_PROPERTY_SEEDS set (Test, MutationPr, Mutation,
-# MutationForSha), Property.Check replays every seed below for each property with iter 1 and threads 1, so each
+# CsCheck seeds of the gated runs (SPEC §17.1). With DUCKY_PROPERTY_SEEDS set (Test, MutationPr, Mutation),
+# Property.Check replays every seed below for each property with iter 1 and threads 1, so each
 # seed is exactly one case. One seed per line; blank lines and lines starting with # are skipped. PropertyLong
 # (nightly, random seeds) prints the seed of any failure: the fixing change appends it here.
 5mD6HO8GZqN1

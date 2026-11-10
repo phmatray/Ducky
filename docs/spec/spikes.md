@@ -474,6 +474,15 @@ actionlint 1.7 with shellcheck reports nothing on the generated files.
 
 ## S-9: Stryker run time per mutated project (M0-14)
 
+**Moot since CI-MUTATION-LOCAL (ADR-0048, 2026-11-10).** No GitHub workflow runs mutation any more, so there is no
+`nightly-mutation` or `release-mutation` budget to size and no split to design; the record below is history. What ended it,
+measured on PR #283: each of the four `mutation` shards took 2 h 23 to 3 h 23 on `ubuntu-latest` (about 11.5 runner-hours
+a run), one shard died twice with "The runner has received a shutdown signal" (it passed locally under act at 4 CPUs and
+16 GB in 2 h 31, at 100%), and `MutationForSha` started a full single-runner run that cannot finish inside 330 minutes (the
+local strict run of the seven projects took over 4 hours on 10 cores). `coverage-analysis: "off"` (S-6) makes every mutant
+run every test of all eight test projects. The full `Mutation --strict-stages` run is now the maintainer's local pre-tag step
+(SPEC §21).
+
 **Question.** How long does a full Stryker run take per mutated project, which `timeout-minutes` does that give
 `nightly-mutation` and `release-mutation`, and how does the nightly split per project if one job no longer fits?
 
@@ -617,6 +626,10 @@ gates (load average 140 to 330 throughout), the two runs one after the other fro
   `release-mutation` if it passes 254 minutes) stands.
 
 ## M0-15: Stryker `--mutate` patterns for shards and baseline reruns
+
+**Superseded by CI-MUTATION-LOCAL (ADR-0048, 2026-11-10).** The shards, their aggregate targets and the additive-test
+baseline existed for the CI workflows and were removed with them; the record below is history. `MutationPr` keeps the skip
+predicate, and a project whose only change is an added test file gets a full run.
 
 **Question.** Owner-added story M0-15 shards the mutation runs and reruns individual mutants against a baseline. Two
 platform questions first: (a) does a `--mutate` pattern given on the command line replace the `mutate` of

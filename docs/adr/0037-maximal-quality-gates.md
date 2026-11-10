@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-30
-- Related: SPEC §17; owner decision; open question 14; review rounds 4, 5, 6 and 7
+- Related: SPEC §17; owner decision; open question 14; review rounds 4, 5, 6 and 7; amended 2026-11-10 (CI-MUTATION-LOCAL, ADR-0048)
 
 ## Context
 
@@ -19,3 +19,9 @@ Every public line has a meaningful test; the surface is kept small to make the b
 ## Alternatives considered
 
 Lower thresholds (rejected by the owner).
+
+## Amendment (2026-11-10): mutation is a local gate (ADR-0048)
+
+ADR-0048 supersedes "Stryker break 85 / target 90 (PR diff, nightly and release full)" as a statement of where the gate runs.
+The thresholds and every mutation check stay; no GitHub workflow runs them. `MutationPr` is a story's local check and the full
+`Mutation --strict-stages` run, at 100% on all seven projects, is the maintainer's prerequisite for every tag (SPEC §17.8, §21).

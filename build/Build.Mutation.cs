@@ -4,7 +4,6 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Fallout.Common;
-using Fallout.Common.CI.GitHubActions;
 using Fallout.Common.IO;
 using Fallout.Common.Tooling;
 using Serilog;
@@ -12,6 +11,8 @@ using YamlDotNet.Serialization;
 using static Fallout.Common.Tools.DotNet.DotNetTasks;
 
 // SPEC §17.8 and §19: MutationPr, Mutation, PropertyLong, and the stryker-config.json checks of ExclusionGate (§17.1).
+// Mutation testing is local only (ADR-0048): no GitHub workflow runs Mutation or MutationPr, VerifyWorkflows fails on one
+// that does (MutationWorkflowViolations, Build.CI.cs), and the maintainer runs Mutation --strict-stages before a tag (§21).
 internal sealed partial class Build
 {
     // The mutated projects and their stages, pinned by §17.8 (the §24 step that gives each one real logic): the manifest's
@@ -27,26 +28,28 @@ internal sealed partial class Build
     private const double BreakScore = 85;
     private const double TargetScore = 90;
 
+    // MutationPr's plan modes (PlanProjects).
+    private const string SinceMode = "since";
+    private const string FullMode = "full";
+
     [Parameter("Mutation: mutate only this project (repeatable); default every active mutated project")]
     private readonly string[] Project = [];
 
     // SPEC's `--strict` (§17.8, §19): Fallout 10.4 reserves `strict` (its execution planner then demands one total target
     // order and fails every run of this build), so the switch is --strict-stages. SpecTraceGate shares it.
-    [Parameter("For -rc.N and GA tags: every stage counts as active; Mutation mutates and checks all seven projects (§17.8), SpecTraceGate fails on any inactive entry and checks all 32 invariants (§19)")]
+    [Parameter("Every stage counts as active: Mutation mutates and checks all seven projects (§17.8; the pre-tag run of §21), SpecTraceGate fails on any inactive entry and checks all 32 invariants (-rc.N and GA tags, §19)")]
     private readonly bool StrictStages;
 
     private AbsolutePath Manifest => RootDirectory / "docs" / "spec" / "tests.yaml";
 
-    // --since per active project; Stryker scores only the mutants of changed files, and a diff without any is green,
-    // unless a test, shared-helper or build input changed (CanChangeResultsOf): that project gets a full run, or a baseline
-    // run when the only such changes are added test files (PlanProjects). Nothing relevant changed: no Stryker run at all.
-    // With --shard, only the shard's files are mutated and the checks wait for MutationPrAggregate.
+    // A story's local check (ADR-0048): --since per active project; Stryker scores only the mutants of changed files, and a
+    // diff without any is green, unless a test, shared-helper or build input changed (CanChangeResultsOf): that project gets
+    // a full run (PlanProjects). Nothing relevant changed: no Stryker run at all.
     private Target MutationPr => _ => _
         .DependsOn(Compile)
         .Executes(() =>
         {
-            var shard = StartShard();
-            var pr = PlanMutationPr(baseline: true);
+            var pr = PlanMutationPr();
             if (pr.Plan is null)
             {
                 return;
@@ -58,11 +61,7 @@ internal sealed partial class Build
             {
                 var since = mode == SinceMode ? pr.Since : null;
                 var output = Artifacts / "mutation" / project;
-                if (shard is { } s)
-                {
-                    RunShard(nameof(MutationPr), project, mode, since, pr.MergeBase, workspace, s, changed, failures);
-                }
-                else if (RunProject(project, mode, since, pr.MergeBase, workspace, null, output, changed, failures) is { } report)
+                if (Stryker(project, since, workspace, output, failures) is { } report)
                 {
                     CheckReport(project, since, report, changed, failures, Relative(output));
                 }
@@ -71,46 +70,32 @@ internal sealed partial class Build
             Assert.True(failures.Count == 0, $"MutationPr: {failures.Count} failure(s)");
         });
 
-    // Nightly full run per active project (or --project); below 90% an issue is opened, below 85% or with zero mutants
-    // the target fails.
+    // Full run per active project (or --project), on the maintainer's machine or under act before a release (§21,
+    // ADR-0048: no GitHub workflow runs mutation). Below 85% or with zero mutants the target fails; below the 90% target it
+    // warns. The last line lists every score: a tag needs 100% on all seven with --strict-stages.
     private Target Mutation => _ => _
         .DependsOn(Compile)
-        .Executes(() => RunMutation(StrictStages));
-
-    // Mutation's body, also run in-process by MutationForSha's fallback: a child build could not open the build.log
-    // this process holds. With --shard, only the shard's files are mutated and the checks wait for MutationAggregate.
-    private void RunMutation(bool strict)
-    {
-        var shard = StartShard();
-        var failures = new List<string>();
-        var belowTarget = new List<(string Project, double Score)>();
-        foreach (var project in MutationProjects(strict))
+        .Executes(() =>
         {
-            var output = Artifacts / "mutation" / project;
-            if (shard is { } s)
+            var failures = new List<string>();
+            var scores = new List<string>();
+            foreach (var project in MutationProjects(StrictStages))
             {
-                RunShard(nameof(Mutation), project, FullMode, null, null, RootDirectory, s, [], failures);
-                continue;
+                var output = Artifacts / "mutation" / project;
+                var score = Stryker(project, null, RootDirectory, output, failures) is { } report
+                    ? CheckReport(project, null, report, null, failures, Relative(output))
+                    : null;
+                var shown = score?.ToString("F2", CultureInfo.InvariantCulture) ?? "none";
+                scores.Add($"{project} {shown}");
+                if (score < TargetScore)
+                {
+                    Log.Warning("{Project}: mutation score {Score}% is below the {Target}% target", project, shown, TargetScore);
+                }
             }
-            var before = failures.Count;
-            if (RunProject(project, FullMode, null, null, RootDirectory, null, output, [], failures) is not { } report)
-            {
-                continue;
-            }
-            if (CheckReport(project, null, report, null, failures, Relative(output)) is { } score && OpensScoreIssue(score))
-            {
-                belowTarget.Add((project, score));
-            }
-            // A failed run (a Stryker exit code, a broken report) is no baseline: it may hold Pending mutants.
-            if (failures.Count == before)
-            {
-                WriteBaseline(project, report);
-            }
-        }
-        OpenScoreIssues(belowTarget, failures);
-        failures.ForEach(f => Log.Error(f));
-        Assert.True(failures.Count == 0, $"Mutation: {failures.Count} failure(s)");
-    }
+            Log.Information("Mutation scores: {Scores}", string.Join(", ", scores));
+            failures.ForEach(f => Log.Error(f));
+            Assert.True(failures.Count == 0, $"Mutation: {failures.Count} failure(s)");
+        });
 
     // The active projects (all seven when strict), narrowed to --project.
     private List<string> MutationProjects(bool strict)
@@ -186,12 +171,11 @@ internal sealed partial class Build
         return (activeStage, [.. stages.Where(s => s.Value <= activeStage).Select(s => s.Key)]);
     }
 
-    // MutationPr's base, merge base, changed paths (with git's status letter) and plan (PlanProjects); baseline: whether a
-    // restored baseline report may be used (the aggregate and plan jobs have none and only need the modes it allows).
-    private (string Since, string MergeBase, List<(char Status, string Path)> Changed, List<(string Project, string Mode, string Why)>? Plan) PlanMutationPr(bool baseline)
+    // MutationPr's base, merge base, changed paths (with git's status letter) and plan (PlanProjects).
+    private (string Since, string MergeBase, List<(char Status, string Path)> Changed, List<(string Project, string Mode, string Why)>? Plan) PlanMutationPr()
     {
         var projects = MutatedProjectsToRun(strict: false);
-        var baseRef = BaseRef ?? $"origin/{(EnvironmentInfo.GetVariable("GITHUB_BASE_REF") is { Length: > 0 } b ? b : ReleaseBranch)}";
+        var baseRef = BaseRef ?? $"origin/{ReleaseBranch}";
         var since = Git(RootDirectory, $"rev-parse --verify {baseRef + "^{commit}"}").Single();
         var mergeBase = Git(RootDirectory, $"merge-base {since} HEAD").Single();
         // activeStage only moves up (PLAN P1): a lowered one would stop mutating active projects, so it fails before the
@@ -203,8 +187,7 @@ internal sealed partial class Build
         Assert.True(activeStage >= baseStage, $"{Relative(Manifest)}: activeStage {activeStage} is below {baseStage} at the merge base {mergeBase}; it never moves down");
         var changed = ChangedPaths(RootDirectory, mergeBase);
         var plan = PlanProjects(projects, activeAtBase, projects.ToDictionary(p => p, TestDirectoriesOf), changed,
-            project => baseline ? ParseBaseline(BaselineFile(project).FileExists() ? BaselineFile(project).ReadAllText() : null, mergeBase).Problem : null,
-            projects.ToDictionary(p => p, p => ProjectFiles(RootDirectory, p).Where(f => !f.StartsWith($"src/{p}/", StringComparison.Ordinal)).ToList()));
+            projects.ToDictionary(p => p, p => LinkedFiles(RootDirectory, p)));
         if (plan is null)
         {
             Log.Information("MutationPr: nothing changed since {MergeBase} can change a mutation result of [{Projects}]; no Stryker run", mergeBase, string.Join(", ", projects));
@@ -216,11 +199,11 @@ internal sealed partial class Build
         return (since, mergeBase, changed, plan);
     }
 
-    // Runs Stryker from <workspace>/src/<project> (its stryker-config.json), on the given project-relative --mutate patterns
-    // when filters is not null, and returns its report with repository-relative file keys, or null when Stryker wrote none.
+    // Runs Stryker from <workspace>/src/<project> (its stryker-config.json) and returns its report with repository-relative
+    // file keys, or null when Stryker wrote none.
     // The test hosts inherit the Stryker process environment (S-6): one repetition, fixed seeds, one CsCheck thread.
-    // --break-at 0: the break threshold is CheckReport's, on the whole project's score (a shard's or a rerun's is partial).
-    private JsonObject? Stryker(string project, string? since, AbsolutePath workspace, List<string>? filters, AbsolutePath output, List<string> failures)
+    // --break-at 0: the break threshold is CheckReport's, which reports it with the other failures of the run.
+    private JsonObject? Stryker(string project, string? since, AbsolutePath workspace, AbsolutePath output, List<string> failures)
     {
         output.CreateOrCleanDirectory();
         // The dotnet-stryker local tool (.config/dotnet-tools.json, the one pin), like reportgenerator in CoverageGate:
@@ -241,10 +224,9 @@ internal sealed partial class Build
             ["TEMP"] = temp,
         };
         var sinceArgument = since is null ? "" : $"--since:{since}";
-        var mutateArguments = string.Concat((filters ?? []).Select(f => $" --mutate \"{f}\""));
         var exitCode = 0;
         // --verbosity info on the command line, over any stryker-config.json key: SafeModeFailures reads the INF Safe Mode line.
-        var log = DotNet($"stryker --test-runner mtp --verbosity info --reporter Progress --reporter Html --reporter Json --break-at 0 --output {output} {sinceArgument:nq}{mutateArguments:nq}",
+        var log = DotNet($"stryker --test-runner mtp --verbosity info --reporter Progress --reporter Html --reporter Json --break-at 0 --output {output} {sinceArgument:nq}",
             workingDirectory: workspace / "src" / project,
             environmentVariables: environment,
             exitHandler: p => exitCode = p.ExitCode);
@@ -253,7 +235,6 @@ internal sealed partial class Build
         {
             failures.Add($"{project}: Stryker exited with code {exitCode}");
         }
-        // In a shard these land in the shard's failures, which MergeShards reports, so both aggregates fail on them too.
         failures.AddRange(SafeModeFailures(project, workspace, log.Select(o => o.Text)));
 
         // Stryker writes the report even with zero mutants ("a mutant-free world"), so a missing one is a broken run.
@@ -304,9 +285,8 @@ internal sealed partial class Build
 
     private static readonly Regex SafeMode = new(@"Safe Mode! Stryker will remove all mutations in (?<scope>.+) and mark them as 'compile error'\.");
 
-    // MutationPr's and Mutation's checks of one project's report (a single run's, or merged from shards or a baseline),
-    // returning the score, or null when no mutant counts. Logs the mutants ignored by `// Stryker disable once` comments
-    // (§17.8: CI reports the count). Added to failures: zero mutants on a full run (since null; a --since run may
+    // MutationPr's and Mutation's checks of one project's report, returning the score, or null when no mutant counts. Logs
+    // the mutants ignored by `// Stryker disable once` comments (§17.8: every run reports the count). Added to failures: zero mutants on a full run (since null; a --since run may
     // legitimately have none), a score below the break threshold, a disable that ignored mutants beyond DisableReach lines
     // below it, a Killed mutant without killedBy, and, on a full run, tests that killed every killed mutant across several
     // files (they fail on every mutated build, whatever the active mutant, S-6).
@@ -375,7 +355,7 @@ internal sealed partial class Build
                 "mutant, so the always-failing-test check cannot run (S-6 saw killedBy on every Killed mutant under Stryker 4.16 and MTP)");
         }
         // Full runs only: a --since run scores the changed files, where one broad test can rightly kill every mutant. A test
-        // that fails on every mutated build comes from a test change (a full run, MutationPr) or from Stryker (the nightly).
+        // that fails on every mutated build comes from a test change, which MutationPr gives a full run, or from Stryker.
         else if (since is null && killed.Count >= AlwaysFailingMinimumKilled && killed.Select(k => k.File).Distinct().Count() >= AlwaysFailingMinimumFiles)
         {
             var common = killed.Select(k => k.Tests).Aggregate((all, next) => [.. all.Intersect(next)]);
@@ -465,36 +445,194 @@ internal sealed partial class Build
             || path is "global.json" or "build/property-seeds.txt" or ".config/dotnet-tools.json";
     }
 
-    // §17.8: below the 90% target the nightly opens an issue (workflow permission issues: write, §20.1), or comments on
-    // the open one. A gh failure is a failure of the run, after every project was mutated.
-    private void OpenScoreIssues(List<(string Project, double Score)> belowTarget, List<string> failures)
+    // The files src/<project>'s csproj links from outside it (src/Shared.Generators, SPEC §16.1), repository-relative:
+    // Stryker mutates them as the project's own files.
+    private static List<string> LinkedFiles(AbsolutePath workspace, string project)
     {
-        foreach (var (project, score) in belowTarget)
+        var directory = workspace / "src" / project;
+        return [.. XDocument.Load(directory / $"{project}.csproj").Descendants("Compile")
+            .Select(c => ((string?)c.Attribute("Include"))?.Replace('\\', '/'))
+            .Where(i => i?.StartsWith("../", StringComparison.Ordinal) == true)
+            .Select(i => workspace.GetUnixRelativePathTo((AbsolutePath)Path.GetFullPath(Path.Combine(directory, i!))).ToString())
+            .Order(StringComparer.Ordinal)];
+    }
+
+    // A changed path that can change some active project's mutation result: any src/ file, a full-run trigger of an active
+    // project (CanChangeResultsOf), or the mutation build code.
+    private static bool MutationRelevant(string path, Dictionary<string, List<string>> testDirectories) =>
+        path.StartsWith("src/", StringComparison.Ordinal)
+        || (path.StartsWith("build/Build.Mutation", StringComparison.Ordinal) && path.EndsWith(".cs", StringComparison.Ordinal))
+        || testDirectories.Any(p => CanChangeResultsOf(p.Key, p.Value, path));
+
+    // MutationPr's plan: null when no relevant path changed and no project became active (the target passes without
+    // Stryker); else per project a --since run, or a full run (a newly active project, a changed linked file, or a trigger
+    // of CanChangeResultsOf).
+    private static List<(string Project, string Mode, string Why)>? PlanProjects(List<string> projects, List<string> activeAtBase,
+        Dictionary<string, List<string>> testDirectories, List<(char Status, string Path)> changed, Dictionary<string, List<string>> linkedFiles)
+    {
+        if (projects.Count == 0 || (projects.All(activeAtBase.Contains) && !changed.Any(c => MutationRelevant(c.Path, testDirectories))))
         {
-            var prefix = $"Mutation score of {project} is ";
-            var title = $"{prefix}{score.ToString("F2", CultureInfo.InvariantCulture)}% (target {TargetScore}%)";
-            if (GitHubActions.Instance is not { } actions)
+            return null;
+        }
+        return [.. projects.Select(project =>
+        {
+            if (!activeAtBase.Contains(project))
             {
-                Log.Warning("{Title}: the issue is opened on CI only", title);
-                continue;
+                return (project, FullMode, "inactive at the merge base, active now");
             }
-            var body = $"The `Mutation` run {actions.ServerUrl}/{actions.Repository}/actions/runs/{actions.RunId} scored {project} below {TargetScore}%. The HTML report is in its artifacts.";
-            try
+            // Stryker 4.16 matches its --since diff against the unnormalized src/<project>/../X.cs path of a linked file, so
+            // it since-filters every mutant of a changed linked file: only a full run scores it.
+            if (changed.FirstOrDefault(c => linkedFiles.GetValueOrDefault(project)?.Contains(c.Path) == true).Path is { } linked)
             {
-                var open = JsonNode.Parse(string.Join('\n', ProcessTasks.StartProcess("gh", $"issue list --state open --search {$"in:title {prefix}"} --json number,title", logOutput: false)
-                        .AssertZeroExitCode().Output.Where(o => o.Type == OutputType.Std).Select(o => o.Text)))!
-                    .AsArray()
-                    .FirstOrDefault(i => ((string)i!["title"]!).StartsWith(prefix, StringComparison.Ordinal));
-                var process = open is null
-                    ? ProcessTasks.StartProcess("gh", $"issue create --title {title} --body {body}")
-                    : ProcessTasks.StartProcess("gh", $"issue comment {(int)open["number"]!} --body {$"{title}. {body}"}");
-                process.AssertZeroExitCode();
+                return (project, FullMode, $"{linked} is linked: Stryker's --since filter cannot see a linked file");
             }
-            catch (Exception e)
+            return changed.FirstOrDefault(c => CanChangeResultsOf(project, testDirectories[project], c.Path)) is { Path: { } path } trigger
+                ? (project, FullMode, $"{path} ({trigger.Status}) can change its results without changing a mutant")
+                : (project, SinceMode, "no test or build input changed");
+        })];
+    }
+
+    // The acceptance checks of M0-15 and M0-16 that outlive the CI mutation workflows (ADR-0048), planted: the skip
+    // predicate per trigger class and the plan modes, the linked files, Safe Mode, and the report rules (scores at
+    // 84.99/85/90, zero mutants on a full and a --since run, a since-filtered linked file).
+    private static List<string> MutationSelfCheck()
+    {
+        var failures = new List<string>();
+        void Expect(bool condition, string message)
+        {
+            if (!condition)
             {
-                failures.Add($"{project}: could not open or update the issue '{title}': {e.Message}");
+                failures.Add($"MutationSelfCheck: {message}");
             }
         }
+        static string Show<T>(IEnumerable<T>? items) => items is null ? "null" : $"[{string.Join("; ", items)}]";
+
+        // Skip predicate and plan: Ducky active at the base and now, its test projects as in src/Ducky/stryker-config.json.
+        var directories = new Dictionary<string, List<string>> { ["Ducky"] = ["test/Ducky.Concurrency.Tests/", "test/Ducky.Tests/"] };
+        var linkedFiles = new Dictionary<string, List<string>> { ["Ducky"] = ["src/Shared.Generators/X.cs"] };
+        List<(string Project, string Mode, string Why)>? Plan(params (char Status, string Path)[] changed) =>
+            PlanProjects(["Ducky"], ["Ducky"], directories, [.. changed], linkedFiles);
+        var irrelevant = new (char, string)[]
+        {
+            ('M', "docs/spec/SPEC.md"), ('M', "docs/spec/tests.yaml"), ('M', ".github/workflows/ci.yml"), ('M', "build/Build.Gates.cs"),
+            ('A', "spikes/S-6-mutation/Plain/Budget.cs"), ('M', "CHANGELOG.md"), ('M', "test/Ducky.Blazor.Tests/SomeTests.cs"),
+        };
+        Expect(Plan(irrelevant) is null, $"a change to only {Show(irrelevant)} must skip, planned {Show(Plan(irrelevant))}");
+        Expect(Plan() is null, "an empty diff must skip");
+        foreach (var trigger in new[]
+                 {
+                     "src/Ducky/Dispatcher.cs", "src/Ducky.Draft/Draft.cs", "src/Ducky/Ducky.csproj", "src/Ducky/stryker-config.json",
+                     "test/Ducky.Tests/DispatchTests.cs", "test/Ducky.Concurrency.Tests/RaceTests.cs", "test/Shared/Interleaving.cs",
+                     "test/BannedSymbols.txt", "Directory.Build.props", "Directory.Packages.props", "src/Directory.Build.targets",
+                     "test/Directory.Build.props", "global.json", ".config/dotnet-tools.json", "build/property-seeds.txt",
+                     "build/Build.Mutation.cs",
+                 })
+        {
+            Expect(Plan([.. irrelevant, ('M', trigger)]) is not null, $"a change to {trigger} must not skip");
+            Expect(Plan([.. irrelevant, ('D', trigger)]) is not null, $"deleting {trigger} must not skip");
+        }
+        Expect(PlanProjects(["Ducky"], [], directories, [], linkedFiles) is [("Ducky", FullMode, _)],
+            $"a project active now but not at the merge base must get a full run, planned {Show(PlanProjects(["Ducky"], [], directories, [], linkedFiles))}");
+        Expect(PlanProjects([], [], directories, [('M', "src/Ducky/Dispatcher.cs")], linkedFiles) is null, "no active project must skip");
+        (string Case, (char, string)[] Changed, string Mode)[] modes =
+        [
+            ("a src change", [('M', "src/Ducky/Dispatcher.cs")], SinceMode),
+            ("a mutation build change", [('M', "build/Build.Mutation.cs")], SinceMode),
+            ("a modified test", [('M', "test/Ducky.Tests/DispatchTests.cs")], FullMode),
+            ("an added test file", [('A', "test/Ducky.Tests/NewTests.cs"), ('M', "src/Ducky/Dispatcher.cs")], FullMode),
+            ("a renamed test (--no-renames: delete and add)", [('D', "test/Ducky.Tests/A.cs"), ('A', "test/Ducky.Tests/B.cs")], FullMode),
+            ("an added shared helper", [('A', "test/Shared/NewHelper.cs")], FullMode),
+            ("a build input", [('M', "Directory.Build.props")], FullMode),
+            ("a changed linked file", [('M', "src/Shared.Generators/X.cs")], FullMode),
+            ("a changed shared file the project does not link", [('M', "src/Shared.Generators/Other.cs")], SinceMode),
+        ];
+        foreach (var (modeCase, changed, mode) in modes)
+        {
+            var plan = Plan(changed);
+            Expect(plan is [(_, var planned, _)] && planned == mode, $"{modeCase} must plan '{mode}', planned {Show(plan)}");
+        }
+
+        // Safe Mode (M0-16): Stryker's own output with an unattributed compile error fails, naming file, method and error;
+        // ordinary output (a mutant-free world, mutants found and rolled back) passes.
+        string[] safeModeOutput =
+        [
+            "[15:21:56 INF] 1077 mutants created",
+            "[15:21:57 WRN] An unidentified mutation in /w/src/Ducky/Effects/EffectContextExtensions.cs resulted in a compile error (at 66:35) with id: CS0165, message: Use of unassigned local variable 'result' (Source code: result)",
+            "[15:21:57 INF] Safe Mode! Stryker will remove all mutations in RunCoreAsync and mark them as 'compile error'.",
+        ];
+        var safeMode = SafeModeFailures("Ducky", "/w", safeModeOutput);
+        string[] named = ["Ducky: ", "src/Ducky/Effects/EffectContextExtensions.cs", "RunCoreAsync", "CS0165 at 66:35", "Use of unassigned local variable 'result'"];
+        Expect(safeMode is [var safeModeFailure] && named.All(p => safeModeFailure.Contains(p, StringComparison.Ordinal)),
+            $"a Safe Mode record must fail with the file, the method and the compile error, got {Show(safeMode)}");
+        // The WRN line alone (the INF Safe Mode line hidden by a warning verbosity) still fails, naming file and error.
+        var warningOnly = SafeModeFailures("Ducky", "/w", safeModeOutput[..2]);
+        Expect(warningOnly is [var warningFailure] && named.Where(p => p != "RunCoreAsync").All(p => warningFailure.Contains(p, StringComparison.Ordinal)),
+            $"an unattributed compile error without a Safe Mode line must fail with the file and the compile error, got {Show(warningOnly)}");
+        string[] cleanOutput =
+        [
+            "[15:16:27 WRN] It's a mutant-free world, nothing to test.",
+            "[15:21:56 INF] 1077 mutants created",
+            "[15:21:57 DBG] Found mutant 12 of type 'Statement' controlled by 'IfEngine'.",
+            "[15:21:57 DBG] RolledBack to if (true) {}",
+        ];
+        Expect(SafeModeFailures("Ducky", "/w", cleanOutput).Count == 0, $"output without Safe Mode must pass, got {Show(SafeModeFailures("Ducky", "/w", cleanOutput))}");
+
+        // Linked sources (src/Shared.Generators, SPEC §16.1): only the files the csproj links from outside the project.
+        var linked = (AbsolutePath)Path.Combine(Path.GetTempPath(), $"dks-self-{Guid.NewGuid():N}");
+        try
+        {
+            (linked / "src" / "P" / "A.cs").WriteAllText("class A { }\n");
+            (linked / "src" / "Shared.Generators" / "X.cs").WriteAllText("class X { }\n");
+            (linked / "src" / "Shared.Generators" / "Unlinked.cs").WriteAllText("class U { }\n");
+            (linked / "src" / "P" / "P.csproj").WriteAllText(
+                "<Project><ItemGroup><Compile Include=\"../Shared.Generators/X.cs\" Link=\"Shared/X.cs\" /></ItemGroup></Project>");
+            var files = LinkedFiles(linked, "P");
+            Expect(files.SequenceEqual(["src/Shared.Generators/X.cs"]), $"LinkedFiles must list the linked files only, got {Show(files)}");
+        }
+        finally
+        {
+            linked.DeleteDirectory();
+        }
+
+        // Reports: one mutant per line, a unique killing test per mutant so the always-failing check stays quiet.
+        var nextTest = 0;
+        JsonObject Mutant(string status, int line, string? reason = null, string mutator = "Equality") => new()
+        {
+            ["id"] = $"{line}{mutator}", ["mutatorName"] = mutator, ["replacement"] = "x", ["status"] = status, ["statusReason"] = reason,
+            ["location"] = new JsonObject { ["start"] = new JsonObject { ["line"] = line, ["column"] = 5 }, ["end"] = new JsonObject { ["line"] = line, ["column"] = 7 } },
+            ["killedBy"] = status == "Killed" ? new JsonArray($"t{nextTest++}") : new JsonArray(),
+        };
+        static string Source(int lines) => string.Concat(Enumerable.Range(1, lines).Select(i => $"// {i:D3}\n"));
+        static JsonObject Report(params (string File, JsonObject[] Mutants)[] files) => new()
+        {
+            ["schemaVersion"] = "2",
+            ["files"] = new JsonObject(files.Select(f => KeyValuePair.Create(f.File, (JsonNode?)new JsonObject
+            {
+                ["language"] = "cs", ["source"] = Source(Math.Max(1, f.Mutants.Length)), ["mutants"] = new JsonArray([.. f.Mutants]),
+            }))),
+            ["testFiles"] = new JsonObject(),
+        };
+        JsonObject[] Mutants(int killed, int survived) =>
+            [.. Enumerable.Range(1, killed).Select(i => Mutant("Killed", i)), .. Enumerable.Range(killed + 1, survived).Select(i => Mutant("Survived", i))];
+
+        // The rules on a report: break below 85, a full run fails on zero mutants or no score, a --since run may have none.
+        foreach (var (killed, survived, breaks) in new[] { (8499, 1501, true), (85, 15, false), (90, 10, false) })
+        {
+            var scoreFailures = new List<string>();
+            var score = CheckReport("P", null, Report(("src/P/A.cs", Mutants(killed, survived))), null, scoreFailures, "report");
+            Expect(scoreFailures.Any(f => f.Contains("below the break threshold", StringComparison.Ordinal)) == breaks,
+                $"a score of {score:F2} must {(breaks ? "" : "not ")}break, got {Show(scoreFailures)}");
+        }
+        var zeroFull = new List<string>();
+        CheckReport("P", null, Report(("src/P/A.cs", [Mutant("Ignored", 1, "Removed by block already covered filter")])), null, zeroFull, "report");
+        Expect(zeroFull.Any(f => f.Contains("zero mutants or no score", StringComparison.Ordinal)), $"a full run with zero mutants must fail, got {Show(zeroFull)}");
+        var zeroSince = new List<string>();
+        CheckReport("P", "base", Report(("src/P/A.cs", [])), [], zeroSince, "report");
+        Expect(zeroSince.Count == 0, $"a --since run with zero mutants must pass, got {Show(zeroSince)}");
+        var linkedSince = new List<string>();
+        CheckReport("P", "base", Report(("src/Shared.Generators/X.cs", [Mutant("Killed", 1), Mutant("Ignored", 2, "Removed by since filter")])), ["src/Shared.Generators/X.cs"], linkedSince, "report");
+        Expect(linkedSince.Any(f => f.Contains("the --since diff is wrong", StringComparison.Ordinal)), $"a changed linked file with since-filtered mutants must fail, got {Show(linkedSince)}");
+        return failures;
     }
 
     // ExclusionGate (§17.1): the seven stryker-config.json files, nothing else named like a Stryker config, and in each

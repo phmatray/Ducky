@@ -3627,6 +3627,25 @@
    "done_definition": "Common DoD (PLAN.md §1)."
   },
   {
+   "id": "CI-MUTATION-LOCAL",
+   "milestone": "M16",
+   "title": "Mutation testing runs locally, not in GitHub Actions",
+   "size": "M",
+   "depends_on": [
+    "M16-04"
+   ],
+   "area": ".github/workflows/, build/Build.Mutation.cs, build/Build.CI.cs, build/Build.Release.cs, build/protect-branch.sh, docs/spec/SPEC.md, docs/adr/",
+   "invariants": [],
+   "scope": "Stage 19. Owner-added (2026-11-10): \"il va falloir alléger la mutation. elle ne peut pas passer sur le CI\", then \"Supprimer du CI\". With coverage-analysis off (spike S-6) every mutant runs every test of all eight test projects: on PR #283 each of the four mutation shards took 2h23 to 3h23 on ubuntu-latest (about 11.5 runner-hours a run), one shard died twice on a runner shutdown signal (it passed locally under act in 2h31), and release-mutation started a full single-runner run that cannot finish inside 330 minutes. mutation.yml, nightly-mutation.yml and the release-mutation job are deleted; MutationForSha and its nightly-run query, MutationPlan, MutationPrAggregate, MutationAggregate, the shard parameters, the additive-test baseline and the nightly's score issue go with their self-checks; Mutation and MutationPr stay local targets with every check. VerifyWorkflows fails on any workflow step that runs a Mutation target or Stryker; protect-branch.sh no longer requires a mutation check. Release discipline: before every tag the maintainer runs ./build.sh Mutation --strict-stages on the exact commit (locally, or the same command under act) and tags only when all seven projects score 100%. SPEC §17.1, §17.8, §19, §20.1, §20.2, §21 and §23 (S-9 moot); ADR-0048 supersedes the CI parts of ADR-0035, ADR-0036, ADR-0037 and ADR-0041.",
+   "acceptance_tests": [
+    "Planted check: a workflow step running the Mutation target, MutationPr through dotnet fallout, Stryker or a Stryker action fails VerifyWorkflows",
+    "VerifyWorkflows green with no mutation workflow and a two-job release.yml",
+    "Mutation --project Ducky.Testing runs locally and scores 100%",
+    "SpecTraceGate --strict-stages and Ci green"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M16-05",
    "milestone": "M16",
    "title": "v2.0.0-rc.1 and consumer migrations",
@@ -3639,7 +3658,8 @@
     "M15-02",
     "M15-03",
     "CI-LOCKS",
-    "BLAZOR-RERENDER"
+    "BLAZOR-RERENDER",
+    "CI-MUTATION-LOCAL"
    ],
    "area": "release (no repo code)",
    "invariants": [],
