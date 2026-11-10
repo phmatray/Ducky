@@ -70,6 +70,7 @@ tests:
   - { name: Auto_SessionAndUnsyncedLocalSlices_ConvergeInOneDocument, projects: [Ducky.E2E], invariants: [INV-18], stage: 18 }
   - { name: Auto_SharedServerPersistRegistration_WasmStartsAndSkipsServerSlices, projects: [Ducky.E2E], stage: 18 }
   - { name: BeforeReduceThrows_NoCommitNoNotify_EffectsStart, projects: [Ducky.Tests], invariants: [INV-08], stage: 5 }
+  - { name: BlockingClick_DispatchingTwice_OtherComponentRerendersEachTime, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: BrowserLifetime_RootAndScopes_ResolveOneStore, projects: [Ducky.Tests], invariants: [INV-22], stage: 2 }
   - { name: Browser_ServerStorageWithoutCacheOrAuth_NoConfigurationError, projects: [Ducky.Blazor.Tests], stage: 13 }
   - { name: Build_EffectCtorDependencyMissing_ReportedWithOtherErrors, projects: [Ducky.Tests], invariants: [INV-31], stage: 4 }
@@ -91,6 +92,7 @@ tests:
   - { name: Clear_RemovesOnlyPersistedKeysOfThisScope, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
   - { name: Clear_WithPendingDebouncedChange_KeyStaysRemoved, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
   - { name: Clear_WriterInRetryBackoff_RemovedImmediately, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
+  - { name: Click_DispatchInHandler_TestThreadLeftOffRenderer, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: Component_ChangeToOtherItem_NoRerender, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: Component_ChangeToSelectedItem_Rerenders, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: Component_ParamChangeThenStoreChangeBackToOldValue_Rerenders, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
@@ -231,6 +233,8 @@ tests:
   - { name: DuckySelect_SelectorParameterChange_Reevaluates, projects: [Ducky.Blazor.Tests], stage: 10 }
   - { name: DuplicateHandler_ThrowsAtConstruction, projects: [Ducky.Tests], stage: 2 }
   - { name: DuplicateRegistration_AddSliceTwice_OneSlice, projects: [Ducky.Blazor.Tests], stage: 10 }
+  - { name: Effect_ClockAdvancedInsideRenderer_Rerenders, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Effect_ClockAdvancedOnTestThreadAfterClick_Rerenders, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: EffectContext_Run_HttpTimeout_DispatchesFailed, projects: [Ducky.Tests], stage: 4 }
   - { name: EffectOnEffectFailed_ThrowsAfterAwait_LogsOnly, projects: [Ducky.Tests], invariants: [INV-12], stage: 4 }
   - { name: EffectOnEffectFailed_ThrowsSync_LogsOnly_NoLoop, projects: [Ducky.Tests], invariants: [INV-12], stage: 4 }
@@ -248,6 +252,8 @@ tests:
   - { name: Effect_KeyedSwitch_ProductB_DoesNotCancelProductA, projects: [Ducky.Tests], stage: 4 }
   - { name: Effect_PolicyCancellation_NeverEffectFailed, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
   - { name: Effect_RegisteredInDi_StillStoreOwnedPerStore, projects: [Ducky.Tests], stage: 4 }
+  - { name: EmptyContext_CarriesNoAsyncLocal, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: EmptyContext_NoThreads_Null, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: EntityState_JsonRoundTrip, projects: [Ducky.Tests], stage: 8 }
   - { name: EntityState_ModelBased, projects: [Ducky.Tests], invariants: [INV-32], stage: 8 }
   - { name: EntityState_NoOp_ReturnsSameInstance, projects: [Ducky.Tests], invariants: [INV-32], stage: 8 }
@@ -402,9 +408,13 @@ tests:
   - { name: Restore_JsonElementFromDisposedDocument_WhileOtherThreadDrains_Restores_Deterministic, projects: [Ducky.Tests], invariants: [INV-01, INV-04, INV-07], stage: 6 }
   - { name: SafeLogger_ProviderThrows_NeverEscapes, projects: [Ducky.Blazor.Tests, Ducky.Reactive.Tests, Ducky.Tests], invariants: [INV-03], stage: 16 }
   - { name: SameInputRefs_SameOutputInstance, projects: [Ducky.Tests], invariants: [INV-21], stage: 5 }
+  - { name: Schedule_CoreCreatedInEffectContinuation_RenderDispatchStartsOwnChain, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: Schedule_DoesNotFlowCausalScope, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Schedule_DrainerInOutsideCallersWorkItem_CallerLeavesOffRenderer, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Schedule_DrainerOffRendererWhileRendererIdle_DoesNotFlowCausalScope, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: Schedule_DrainerOnRendererThread_InlineInvoke_DoesNotFlowCausalScope, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: Schedule_InvokeAsyncThrows_FlagReset, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: Schedule_NoEmptyContext_SuppressesFlow, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: ScopeSwitch_AuthChangeDuringInitialScopeResolution_NeverWritesUnderOldScope, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
   - { name: ScopeSwitch_BetweenInitialTerminalAndInitReturn_HungRead_FailsAtOwnTimeout, projects: [Ducky.Blazor.Tests], invariants: [INV-14], stage: 13 }
   - { name: ScopeSwitch_ChangeCommittedJustBeforeSwitch_WrittenUnderOldKey, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 13 }

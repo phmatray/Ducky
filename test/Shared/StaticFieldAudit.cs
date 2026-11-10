@@ -27,6 +27,7 @@ internal static class StaticFieldAudit
         "System.Text.Json.JsonEncodedText",
         "System.Buffers.SearchValues`1",
         "System.Text.CompositeFormat",
+        "System.Threading.ExecutionContext", // Ducky.Blazor's empty context (SubscriptionCore.EmptyContext, §11.2): no values
         "Ducky.EntityState`2", // immutable types owned by the library
     ];
 
