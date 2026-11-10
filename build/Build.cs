@@ -16,7 +16,7 @@ internal sealed partial class Build : FalloutBuild, IHasSolution, IConfigureGitH
     [Parameter("Branch releases come from; flipped to main by the GA rename PR (§21)")]
     private readonly string ReleaseBranch = "v2";
 
-    [Parameter("PR base for Stryker --since; default origin/$GITHUB_BASE_REF, else origin/{ReleaseBranch}")]
+    [Parameter("MutationPr's base for Stryker --since (HEAD scores the uncommitted work); default origin/{ReleaseBranch}")]
     private readonly string? BaseRef;
 
     [Parameter("Version (no v) of the release notes, the GitHub release and ShipPublicApi's analyzer release; default GITHUB_REF_NAME minus v, else MinVerVersion")]

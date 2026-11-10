@@ -46,7 +46,7 @@
     {
       "description": "Fallout pins the actions of the generated workflows (only release.yml, pr-title.yml and docs.yml are hand-written); an edit there fails VerifyWorkflows. They move with a Fallout bump and a regeneration.",
       "matchManagers": ["github-actions"],
-      "matchFileNames": [".github/workflows/{ci,ci-cross-windows,ci-cross-macos,e2e,aot,mutation}.yml", ".github/workflows/nightly-*.yml"],
+      "matchFileNames": [".github/workflows/{ci,ci-cross-windows,ci-cross-macos,e2e,aot}.yml", ".github/workflows/nightly-*.yml"],
       "enabled": false
     },
     {

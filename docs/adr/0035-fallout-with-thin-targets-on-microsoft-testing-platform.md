@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-09-30
-- Related: SPEC §19; ENG-05; owner decision; open question 18
+- Related: SPEC §19; ENG-05; owner decision; open question 18; amended 2026-11-10 (CI-MUTATION-LOCAL, ADR-0048)
 
 ## Context
 
@@ -19,3 +19,10 @@ Works with xUnit v3 on MTP; replacing Fallout with plain workflow steps stays me
 ## Alternatives considered
 
 Compose `ITest`/`IReportCoverage` (rejected: breaks on MTP); plain GitHub Actions (rejected by the owner).
+
+## Amendment (2026-11-10): no mutation workflows (ADR-0048)
+
+ADR-0048 supersedes the mutation-in-CI part of this decision. `mutation.yml` and `nightly-mutation.yml` are deleted and
+`release.yml` has two jobs, `release-gates` and `publish`; `VerifyWorkflows` no longer checks shard matrices, and instead
+fails on any committed workflow step that runs a `Mutation*` target or Stryker. Stryker stays a thin wrapper of the local
+`Mutation` and `MutationPr` targets.

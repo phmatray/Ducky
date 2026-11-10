@@ -1,8 +1,8 @@
 # Ducky 2.0 Implementation Plan
 
-Status: plan derived from `SPEC.md` (authoritative, including review rounds "2 (recovered)" through 7 of `REVIEW-LOG.md`) and `adr/0001-0047`. Where this plan and the spec disagree, the spec wins; every planning decision that goes beyond the spec is listed in §3.
+Status: plan derived from `SPEC.md` (authoritative, including review rounds "2 (recovered)" through 7 of `REVIEW-LOG.md`) and `adr/0001-0048`. Where this plan and the spec disagree, the spec wins; every planning decision that goes beyond the spec is listed in §3.
 
-162 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
+163 stories in 17 milestones. Every story is S or M (one agent session), names its dependencies, its **stage** (the §24 step whose manifest entries it activates, P1), an `area` used to avoid parallel conflicts, the invariants it covers, and named acceptance tests. Names without a qualifier are the spec's normative test names (they are in `docs/spec/tests.yaml`); a project in parentheses says where a name runs when it is not the story's default test project; names marked *(non-normative)* are additional tests or checks the story adds.
 
 ## 1. Workflow: strict TDD under full gates
 
@@ -67,11 +67,11 @@ Every story after M0-01 is one issue and one squash-merged PR on `v2`, and it fo
 | M13 | Generators, analyzers and tombstones | 12 | Shared generator helpers, GEN-01 dispatch helpers, GEN-02 core registration (step 7) and its Blazor arms (Prerender<T> at stage 11, PersistAttributeDefaults<T> and Ducky.Blazor.Generated.Tests at stage 12), multi-assembly fixture (INV-25), the stage-7 analyzers (DUCKY001-025 arms whose APIs exist by step 6), DUCKYM001-M008 tombstones, stage-7 PackageSmoke assertions. |
 | M14 | Samples, E2E and AOT | 7 | Samples.Wasm and Samples.Server (Interactive Auto), every Playwright test of §17.6 at stage 18, the trimmed AOT-WASM smoke that can't skip in the aot job, and the Ducky Playground published to Pages. |
 | M15 | Docs and migration guides | 11 | A generated docs site (the answer binder) with compiled-snippet regions, user guides, a step-by-step tutorial on a compiled, tested app, threading.md, a complete diagnostics catalogue checked by Docs, and the migration guides with compiled before/after samples and the 1.x API list check. |
-| M16 | Release candidate | 9 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
+| M16 | Release candidate | 10 | Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job release pipeline (trusted publishing), spec closure (activeStage 19, SpecTraceGate --strict), v2.0.0-rc.1 with the two consumer migrations, and the GA runbook. |
 
 ## 5. Scheduling
 
-Longest dependency chain (39 stories): M0-01 → M0-02 → M0-03 → M0-04 → M0-11 → M0-12 → M1-01 → M1-02 → M1-04 → M1-05 → M1-06 → M1-07 → M1-10 → M1-11 → M1-12 → M4-01 → M2-01 → M2-02 → M2-03 → M2-04 → M2-05 → M2-06 → M3-05 → M4-07 → M4-10 → M13-01 → M10-03 → M10-04 → M10-05 → M10-07 → M10-07b → M15-04 → M15-08 → M15-09 → M15-10 → M15-11 → M16-04 → M16-05 → M16-06.
+Longest dependency chain (41 stories): M0-01 → M0-02 → M0-03 → M0-04 → M0-11 → M0-12 → M1-01 → M1-02 → M1-04 → M1-05 → M1-06 → M1-07 → M1-10 → M1-11 → M1-12 → M4-01 → M2-01 → M2-02 → M2-03 → M2-04 → M2-05 → M2-06 → M3-05 → M4-07 → M4-10 → M13-01 → M10-03 → M10-04 → M10-05 → M10-07 → M10-07b → M15-04 → M15-08 → M15-09 → M15-10 → M15-11 → BLAZOR-RERENDER → M16-04 → CI-MUTATION-LOCAL → M16-05 → M16-06.
 
 Stories per stage (P1: `activeStage` reaches N once every story listed at N or below is merged):
 
@@ -95,7 +95,7 @@ Stories per stage (P1: `activeStage` reaches N once every story listed at N or b
 | 16 | Ducky.Reactive | M11-01, M11-01b, M11-02, M11-02b, M11-03, M11-05 |
 | 17 | Ducky.Draft | M10-01, M10-02, M10-03, M10-04, M10-05, M10-06, M10-07, M10-07b, M11-04 |
 | 18 | AOT/trim smoke, E2E, docs, samples, migration guides | M14-01, M14-02, M14-03, M14-04, M14-05, M14-06, M14-07, M15-01, M15-02, M15-03, M15-04, M15-05, M15-06, M15-07, M15-08, M15-09, M15-10, M15-11, M16-03b, CI-LOCKS, BLAZOR-RERENDER |
-| 19 | RC and consumer migrations; GA | M16-01, M16-02, M16-03, M16-04, M16-05, M16-06 |
+| 19 | RC and consumer migrations; GA | M16-01, M16-02, M16-03, M16-04, CI-MUTATION-LOCAL, M16-05, M16-06 |
 
 Parallel lanes:
 
@@ -2573,7 +2573,7 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
 
 - **Stage:** 19
 - **Depends on:** M16-02, M15-04, M1-14, M2-07, M2-09, M3-02, M3-04, M4-04, M6-09, M7-02b, M7-03, M8-03b, M9-01b, M9-02, M9-04b, M11-01b, M11-02b, M11-03, M12-07, M13-05, M14-06, M14-07, M15-06, M15-07, M15-08, M15-09, M15-10, M15-11, CI-LOCKS, BLAZOR-RERENDER
-- **Unblocks:** M16-05
+- **Unblocks:** M16-05, CI-MUTATION-LOCAL
 - **Area:** `docs/spec/tests.yaml, build/Build.SpecTrace.cs`
 - **Invariants:** —
 - **Scope:** activeStage reaches 19 (P1): every manifest entry active, SpecTraceGate --strict green over all 32 invariants, Mutation --strict green on all seven projects; public API diff reviewed against §5, §11.1, §12-15.
@@ -2583,10 +2583,25 @@ Nightly audit/benchmarks, mutation budget (S-9) and score >= 90, the three-job r
   - `Ci` green with every manifest test active
 - **Done:** Common DoD.
 
+#### CI-MUTATION-LOCAL Mutation testing runs locally, not in GitHub Actions (M)
+
+- **Stage:** 19
+- **Depends on:** M16-04
+- **Unblocks:** M16-05
+- **Area:** `.github/workflows/, build/Build.Mutation.cs, build/Build.CI.cs, build/Build.Release.cs, build/protect-branch.sh, docs/spec/SPEC.md, docs/adr/`
+- **Invariants:** —
+- **Scope:** Stage 19. Owner-added (2026-11-10): "il va falloir alléger la mutation. elle ne peut pas passer sur le CI", then "Supprimer du CI". With coverage-analysis off (spike S-6) every mutant runs every test of all eight test projects: on PR #283 each of the four mutation shards took 2h23 to 3h23 on ubuntu-latest (about 11.5 runner-hours a run), one shard died twice on a runner shutdown signal (it passed locally under act in 2h31), and release-mutation started a full single-runner run that cannot finish inside 330 minutes. mutation.yml, nightly-mutation.yml and the release-mutation job are deleted; MutationForSha and its nightly-run query, MutationPlan, MutationPrAggregate, MutationAggregate, the shard parameters, the additive-test baseline and the nightly's score issue go with their self-checks; Mutation and MutationPr stay local targets with every check. VerifyWorkflows fails on any workflow step that runs a Mutation target or Stryker; protect-branch.sh no longer requires a mutation check. Release discipline: before every tag the maintainer runs ./build.sh Mutation --strict-stages on the exact commit (locally, or the same command under act) and tags only when all seven projects score 100%. SPEC §17.1, §17.8, §19, §20.1, §20.2, §21 and §23 (S-9 moot); ADR-0048 supersedes the CI parts of ADR-0035, ADR-0036, ADR-0037 and ADR-0041.
+- **Acceptance tests:**
+  - Planted check: a workflow step running the Mutation target, MutationPr through dotnet fallout, Stryker or a Stryker action fails VerifyWorkflows
+  - VerifyWorkflows green with no mutation workflow and a two-job release.yml
+  - Mutation --project Ducky.Testing runs locally and scores 100%
+  - SpecTraceGate --strict-stages and Ci green
+- **Done:** Common DoD.
+
 #### M16-05 v2.0.0-rc.1 and consumer migrations (M)
 
 - **Stage:** 19
-- **Depends on:** M16-03, M16-03b, M16-04, M15-05, M15-02, M15-03, CI-LOCKS, BLAZOR-RERENDER
+- **Depends on:** M16-03, M16-03b, M16-04, M15-05, M15-02, M15-03, CI-LOCKS, BLAZOR-RERENDER, CI-MUTATION-LOCAL
 - **Unblocks:** M16-06
 - **Area:** `release (no repo code)`
 - **Invariants:** —

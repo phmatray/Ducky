@@ -1,7 +1,8 @@
 # Hand-written (SPEC §20.1): VerifyWorkflows does not regenerate it, but checks its gates (ReleaseWorkflowViolations in
 # build/Build.Release.cs) and that its job names are unique across workflows (§20.2).
-# A v* tag runs the gates and the mutation check in parallel; publish waits for both and for the nuget environment's
-# approval, then pushes the uploaded packages with a short-lived trusted-publishing key.
+# A v* tag runs the gates; publish waits for them and for the nuget environment's approval, then pushes the uploaded
+# packages with a short-lived trusted-publishing key. Mutation testing is no job here (ADR-0048): the maintainer runs
+# ./build.sh Mutation --strict-stages on the commit before tagging it and tags only at 100% on all seven projects (§21).
 name: release
 
 on:
@@ -37,30 +38,9 @@ jobs:
             artifacts/tombstone
           if-no-files-found: error
 
-  release-mutation:
-    name: release-mutation
-    runs-on: ubuntu-latest
-    timeout-minutes: 330
-    permissions:
-      contents: read
-      actions: read
-      issues: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - name: 'Setup: .NET SDK'
-        uses: actions/setup-dotnet@v6
-        with:
-          global-json-file: global.json
-      - name: 'Run: MutationForSha'
-        run: ./build.sh MutationForSha
-
   publish:
     name: publish
-    needs: [release-gates, release-mutation]
+    needs: [release-gates]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: nuget

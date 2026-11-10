@@ -10,8 +10,8 @@ using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 // SPEC §20.1: the workflows generated from these attributes (VerifyWorkflows keeps .github/workflows in sync); nightly-audit
-// runs Audit and Benchmarks (Build.Audit.cs, M16-01). mutation.yml and nightly-mutation.yml are hand-written shard matrices (M0-15),
-// checked by MutationWorkflowViolations. The Docs target is in Build.Gates.cs.
+// runs Audit and Benchmarks (Build.Audit.cs, M16-01). No workflow runs mutation testing (ADR-0048): VerifyWorkflows fails on
+// one that does (MutationWorkflowViolations). The Docs target is in Build.Gates.cs.
 [DuckyGitHubActions("ci", GitHubActionsImage.UbuntuLatest, FetchDepth = 0,
     OnPullRequestBranches = ["v2", "main"], OnPushBranches = ["v2", "main"],
     ConcurrencyGroup = "${{ github.workflow }}-${{ github.ref }}", ConcurrencyCancelInProgress = true,
@@ -49,6 +49,12 @@ internal sealed partial class Build
 
     private static readonly Regex RequiredChecks = new(@"checks: \[\(([^)]*)\)");
 
+    // A workflow command line that runs a Mutation* target through the build (./build.sh, build.cmd, build.ps1, dotnet
+    // fallout) or Stryker itself; a target name inside another word (Ducky.Mutation, --no-mutation) does not count.
+    private static readonly Regex MutationBuildCommand = new(@"\b(?:build\.(?:sh|cmd|ps1)|fallout)\b.*?(?<![\w.-])mutation\w*(?![\w.-])", RegexOptions.IgnoreCase);
+
+    private static readonly Regex StrykerCommand = new("stryker", RegexOptions.IgnoreCase);
+
     private AbsolutePath Workflows => RootDirectory / ".github" / "workflows";
 
     private Target VerifyWorkflows => _ => _
@@ -77,7 +83,7 @@ internal sealed partial class Build
                 .Concat(WorkflowSelfCheck())
                 .Concat(ReleaseWorkflowViolations((Workflows / "release.yml").ReadAllText()).Select(v => $"release.yml: {v}"))
                 .Concat(ReleaseSelfCheck())
-                .Concat(((string[])["mutation.yml", "nightly-mutation.yml"]).SelectMany(f => MutationWorkflowViolations(f, (Workflows / f).ReadAllText())))
+                .Concat(MutationWorkflowViolations(ReadYaml(Workflows)))
                 .Concat(MutationSelfCheck())
                 .ToList();
             violations.ForEach(v => Log.Error(v));
@@ -234,8 +240,7 @@ internal sealed partial class Build
     }
 
     // The job names a pull-request workflow reports on their own: every job, minus those that a required job with
-    // `if: always()` needs, directly or through other needed jobs (a shard matrix reports through its required aggregate,
-    // M0-15). Without always() a failed needed job skips the required one, which branch protection counts as passing.
+    // `if: always()` needs, directly or through other needed jobs (a matrix reports through its required aggregate). Without always() a failed needed job skips the required one, which branch protection counts as passing.
     private static IEnumerable<string> ReportingJobs(string workflow, HashSet<string> required)
     {
         var stream = new YamlStream();
@@ -283,7 +288,40 @@ internal sealed partial class Build
         return events.Any(e => e.Value is "pull_request" or "pull_request_target");
     }
 
-    // The acceptance checks of M0-11, planted on miniature workflows.
+    // ADR-0048: mutation testing runs only locally (./build.sh Mutation, or the same command under act) before a release.
+    // A step that runs a Mutation* target or Stryker (run:), or a Stryker action (uses:), in any committed workflow would
+    // bring back a check that cannot finish on a hosted runner: with coverage-analysis off (spike S-6) every mutant runs
+    // every test of all eight test projects. A workflow that is not YAML is reported by WorkflowViolations.
+    private static IEnumerable<string> MutationWorkflowViolations(Dictionary<string, string> committed)
+    {
+        foreach (var (file, text) in committed.OrderBy(c => c.Key, StringComparer.Ordinal))
+        {
+            var stream = new YamlStream();
+            try
+            {
+                stream.Load(new StringReader(text));
+            }
+            catch (YamlException)
+            {
+                continue;
+            }
+            var root = stream.Documents.FirstOrDefault()?.RootNode;
+            foreach (var (key, _) in Jobs(text))
+            {
+                var steps = (YamlAt(root, "jobs", key, "steps") as YamlSequenceNode)?.Children ?? [];
+                var commands = steps.SelectMany(s => YamlScalars(YamlAt(s, "run")).SelectMany(r => r.Split('\n'))
+                        .Where(l => MutationBuildCommand.IsMatch(l) || StrykerCommand.IsMatch(l))
+                        .Concat(YamlScalars(YamlAt(s, "uses")).Where(u => StrykerCommand.IsMatch(u))))
+                    .Concat(YamlScalars(YamlAt(root, "jobs", key, "uses")).Where(u => StrykerCommand.IsMatch(u)));
+                foreach (var command in commands)
+                {
+                    yield return $"{file}: job '{key}' runs mutation testing ({command.Trim()}): it runs only locally before a release, never in GitHub Actions (ADR-0048)";
+                }
+            }
+        }
+    }
+
+    // The acceptance checks of M0-11 and CI-MUTATION-LOCAL, planted on miniature workflows.
     private static IEnumerable<string> WorkflowSelfCheck()
     {
         static string Workflow(string name, string jobKey, string jobName, bool generatedFile = true) =>
@@ -310,10 +348,30 @@ internal sealed partial class Build
             ["e2e.yml"] = Pr("pull_request", "e2e"),
             ["nightly.yml"] = Pr("\n  schedule:\n    - cron: '0 2 * * *'", "nightly"),
             ["broken.yml"] = "jobs: [\n",
-            // A matrix behind one required aggregate (M0-15): the jobs it needs, directly or not, report through it.
-            ["mutation.yml"] = "name: mutation\non: pull_request\njobs:\n  mutation-plan:\n    runs-on: ubuntu-latest\n  mutation-shard:\n" +
-                "    name: mutation-shard-${{ matrix.shard }}\n    needs: mutation-plan\n  mutation:\n    needs: [mutation-shard]\n    if: always()\n",
+            // A matrix behind one required aggregate: the jobs it needs, directly or not, report through it.
+            ["suite.yml"] = "name: suite\non: pull_request\njobs:\n  suite-plan:\n    runs-on: ubuntu-latest\n  suite-shard:\n" +
+                "    name: suite-shard-${{ matrix.shard }}\n    needs: suite-plan\n  suite:\n    needs: [suite-shard]\n    if: always()\n",
         };
+        // CI-MUTATION-LOCAL (ADR-0048): steps that build, test or mention mutation without running it pass; any step that runs it fails.
+        static string Steps(params string[] steps) =>
+            "name: nightly\non: [push]\njobs:\n  nightly:\n    runs-on: ubuntu-latest\n    steps:\n" + string.Concat(steps.Select(step => $"      - {step}\n"));
+        var quietSteps = new Dictionary<string, string>
+        {
+            ["nightly.yml"] = Steps("uses: actions/checkout@v7", "name: 'Run: Ci (mutation runs locally, ADR-0048)'\n        run: dotnet fallout Ci",
+                "run: ./build.sh PropertyLong --project Ducky.Mutation.Fixtures", "run: ./build.sh Ci --no-mutation-hint"),
+        };
+        static Dictionary<string, string> Planted(string step) => new() { ["nightly.yml"] = Steps("uses: actions/checkout@v7", step) };
+        (string Case, List<string> Violations, string Expected)[] mutationSteps =
+        [
+            ("a workflow running the Mutation target", [.. MutationWorkflowViolations(Planted("run: ./build.sh Mutation --project Ducky"))],
+                "nightly.yml: job 'nightly' runs mutation testing (./build.sh Mutation --project Ducky)"),
+            ("a generated workflow running MutationPr", [.. MutationWorkflowViolations(Planted("run: dotnet fallout MutationPr"))], "runs mutation testing (dotnet fallout MutationPr)"),
+            ("a Windows workflow running the Mutation target", [.. MutationWorkflowViolations(Planted("run: .\\build.cmd Ci Mutation --strict-stages"))],
+                "runs mutation testing (.\\build.cmd Ci Mutation --strict-stages)"),
+            ("a multi-line step running Stryker", [.. MutationWorkflowViolations(Planted("run: |\n          cd src/Ducky\n          dotnet stryker --test-runner mtp"))],
+                "runs mutation testing (dotnet stryker --test-runner mtp)"),
+            ("a Stryker action", [.. MutationWorkflowViolations(Planted("uses: stryker-mutator/github-action@v1"))], "runs mutation testing (stryker-mutator/github-action@v1)"),
+        ];
         static string ProtectScript(params string[] checks) =>
             $"jq -n '{{\n    checks: [({string.Join(", ", checks.Select(c => $"\"{c}\""))})\n      | {{context: ., app_id: 15368}}]\n}}'\n";
         (string Case, List<string> Violations, string Expected)[] planted =
@@ -330,15 +388,15 @@ internal sealed partial class Build
                 "ci.yml: job 'ci' is named 'ubuntu-latest', not after its workflow 'ci' (S-8)"),
             ("Fallout's default job names, shared by two workflows", [.. WorkflowViolations(Fallout(Generated()), Fallout(Committed()))],
                 "job name 'ubuntu-latest' is not unique: aot.yml, ci.yml"),
-            ("a pull-request job missing from the required checks", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "mutation"))],
+            ("a pull-request job missing from the required checks", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "suite"))],
                 "job 'e2e' runs on pull requests but is not a required check in build/protect-branch.sh"),
-            ("a required check no pull-request job reports", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e", "mutation", "nightly"))],
+            ("a required check no pull-request job reports", [.. RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e", "suite", "nightly"))],
                 "build/protect-branch.sh requires check 'nightly', which no pull-request job reports"),
-            ("a matrix job that no required job needs", [.. RequiredCheckViolations(new(prWorkflows) { ["mutation.yml"] = prWorkflows["mutation.yml"].Replace("    needs: [mutation-shard]\n", "", StringComparison.Ordinal) },
-                ProtectScript("ci", "pr-title", "e2e", "mutation"))], "job 'mutation-shard-${{ matrix.shard }}' runs on pull requests but is not a required check"),
+            ("a matrix job that no required job needs", [.. RequiredCheckViolations(new(prWorkflows) { ["suite.yml"] = prWorkflows["suite.yml"].Replace("    needs: [suite-shard]\n", "", StringComparison.Ordinal) },
+                ProtectScript("ci", "pr-title", "e2e", "suite"))], "job 'suite-shard-${{ matrix.shard }}' runs on pull requests but is not a required check"),
             // A required job without if: always() is skipped, which branch protection counts as passing, when a job it needs fails.
-            ("a required job that a failed job it needs would skip", [.. RequiredCheckViolations(new(prWorkflows) { ["mutation.yml"] = prWorkflows["mutation.yml"].Replace("    if: always()\n", "", StringComparison.Ordinal) },
-                ProtectScript("ci", "pr-title", "e2e", "mutation"))], "job 'mutation-plan' runs on pull requests but is not a required check"),
+            ("a required job that a failed job it needs would skip", [.. RequiredCheckViolations(new(prWorkflows) { ["suite.yml"] = prWorkflows["suite.yml"].Replace("    if: always()\n", "", StringComparison.Ordinal) },
+                ProtectScript("ci", "pr-title", "e2e", "suite"))], "job 'suite-plan' runs on pull requests but is not a required check"),
             ("a protect-branch.sh without a checks list", [.. RequiredCheckViolations(prWorkflows, "echo hi\n")],
                 "build/protect-branch.sh: no required checks list"),
             ("a committed workflow that is not YAML", [.. WorkflowViolations(Generated(), Committed(c => c["broken.yml"] = "jobs: [\n"))],
@@ -352,11 +410,15 @@ internal sealed partial class Build
         {
             yield return $"WorkflowSelfCheck: a CRLF checkout of ci.yml must pass, got: {violation}";
         }
-        foreach (var violation in RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e", "mutation")))
+        foreach (var violation in RequiredCheckViolations(prWorkflows, ProtectScript("ci", "pr-title", "e2e", "suite")))
         {
             yield return $"WorkflowSelfCheck: the unplanted required checks must pass, got: {violation}";
         }
-        foreach (var (plantedCase, violations, expected) in planted.Where(p => !p.Violations.Any(v => v.Contains(p.Expected, StringComparison.Ordinal))))
+        foreach (var violation in MutationWorkflowViolations(quietSteps))
+        {
+            yield return $"WorkflowSelfCheck: steps that do not run mutation testing must pass, got: {violation}";
+        }
+        foreach (var (plantedCase, violations, expected) in planted.Concat(mutationSteps).Where(p => !p.Violations.Any(v => v.Contains(p.Expected, StringComparison.Ordinal))))
         {
             yield return $"WorkflowSelfCheck: {plantedCase} must report '{expected}', got [{string.Join("; ", violations)}]";
         }
