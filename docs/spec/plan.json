@@ -3557,6 +3557,29 @@
    "done_definition": "Common DoD (PLAN.md §1)."
   },
   {
+   "id": "BLAZOR-RERENDER",
+   "milestone": "M16",
+   "title": "Change check scheduled under an empty ExecutionContext",
+   "size": "S",
+   "depends_on": [
+    "M5-03",
+    "M15-11",
+    "CI-LOCKS"
+   ],
+   "area": "src/Ducky.Blazor/Components/SubscriptionCore.cs",
+   "invariants": [
+    "INV-19"
+   ],
+   "scope": "Stage 18. Owner-added (2026-11-10), found by the M15-11 tutorial's component tests: a component sometimes missed a re-render after a second dispatch from a click handler or after an effect resumed by a fake clock. The change check was posted with ExecutionContext flow suppressed, so it carried no context; RendererSynchronizationContext.PostAsync never restores the synchronization context it sets, so an outside caller of the dispatcher's InvokeAsync(Func<Task>) (bUnit's event dispatch; on Blazor Server circuit start, root component updates and location changing) was left on the renderer's context and later ran renderer work concurrently with renders, and an idle renderer ran the check inside the drain under the drainer's causal scope (INV-19). The check is now scheduled under the empty ExecutionContext (captured once per process on a thread started without flow; the suppressed-flow fallback only where no thread can start), never the creating component's context, which could carry an earlier effect's causal scope and effect run. SPEC §11.2, INV-19 and §17.6, ADR-0028 amendment; the tutorial's two-click Step 4 test is restored.",
+   "acceptance_tests": [
+    "The detector tests fail on the previous scheduling and pass: the drainer off the renderer while it is idle does not flow its causal scope, an outside caller leaves the renderer's context, a click handler's dispatch leaves the test thread off the renderer",
+    "A component created in an effect continuation dispatches from a later render in its own chain",
+    "The tutorial's two-click Step 4 test passes 50 runs in a row",
+    "Mutation of Ducky.Blazor at 100%"
+   ],
+   "done_definition": "Common DoD (PLAN.md §1)."
+  },
+  {
    "id": "M16-04",
    "milestone": "M16",
    "title": "Spec closure",
@@ -3590,7 +3613,8 @@
     "M15-09",
     "M15-10",
     "M15-11",
-    "CI-LOCKS"
+    "CI-LOCKS",
+    "BLAZOR-RERENDER"
    ],
    "area": "docs/spec/tests.yaml, build/Build.SpecTrace.cs",
    "invariants": [],
@@ -3614,7 +3638,8 @@
     "M15-05",
     "M15-02",
     "M15-03",
-    "CI-LOCKS"
+    "CI-LOCKS",
+    "BLAZOR-RERENDER"
    ],
    "area": "release (no repo code)",
    "invariants": [],
