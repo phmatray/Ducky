@@ -253,6 +253,7 @@ tests:
   - { name: Effect_PolicyCancellation_NeverEffectFailed, projects: [Ducky.Tests], invariants: [INV-11], stage: 4 }
   - { name: Effect_RegisteredInDi_StillStoreOwnedPerStore, projects: [Ducky.Tests], stage: 4 }
   - { name: EmptyContext_CarriesNoAsyncLocal, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
+  - { name: EmptyContext_JoinsTheThread, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: EmptyContext_NoThreads_Null, projects: [Ducky.Blazor.Tests], invariants: [INV-19], stage: 10 }
   - { name: EntityState_JsonRoundTrip, projects: [Ducky.Tests], stage: 8 }
   - { name: EntityState_ModelBased, projects: [Ducky.Tests], invariants: [INV-32], stage: 8 }

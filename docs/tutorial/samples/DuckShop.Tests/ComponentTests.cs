@@ -9,34 +9,22 @@ namespace DuckShop.Tests;
 // with WaitForAssertionAsync.
 public sealed class Step4ComponentTests : ShopContext
 {
-    // One click per rendered badge: a second store change made from a renderer event while
-    // the badge is on screen sometimes leaves it un-re-rendered under bUnit (under
-    // investigation), so the second step starts from a basket filled before rendering.
     [Fact]
-    public async Task Step4_AddToBasket_BadgeAndCardFollow()
+    public async Task Step4_AddAndRemove_BadgeAndCardFollow()
     {
         var badge = Render<BasketBadge>();
         var shelf = Render<Steps.Step4.Shelf>();
         badge.Markup.ShouldContain("Basket: empty");
 
         await shelf.FindAll("button")[0].ClickAsync(new MouseEventArgs()); // Add to basket, on the Classic Yellow
-
         await badge.WaitForAssertionAsync(() => badge.Find("p").TextContent.ShouldBe("Basket: 1 duck"));
         await shelf.WaitForAssertionAsync(() => shelf.Find(".in-basket").TextContent.ShouldContain("1 in your basket"));
-    }
 
-    [Fact]
-    public async Task Step4_TwoInTheBasket_RemoveOne_BadgeAndCardFollow()
-    {
-        Store.AddToBasket("classic");
-        Store.AddToBasket("classic");
-        var badge = Render<BasketBadge>();
-        var shelf = Render<Steps.Step4.Shelf>();
-        badge.Find("p").TextContent.ShouldBe("Basket: 2 ducks");
-        shelf.Find(".in-basket").TextContent.ShouldContain("2 in your basket");
+        await shelf.FindAll("button")[0].ClickAsync(new MouseEventArgs()); // and a second one
+        await badge.WaitForAssertionAsync(() => badge.Find("p").TextContent.ShouldBe("Basket: 2 ducks"));
+        await shelf.WaitForAssertionAsync(() => shelf.Find(".in-basket").TextContent.ShouldContain("2 in your basket"));
 
         await shelf.Find("button.link").ClickAsync(new MouseEventArgs()); // Remove one
-
         await badge.WaitForAssertionAsync(() => badge.Find("p").TextContent.ShouldBe("Basket: 1 duck"));
         await shelf.WaitForAssertionAsync(() => shelf.Find(".in-basket").TextContent.ShouldContain("1 in your basket"));
     }
@@ -69,7 +57,7 @@ public sealed class Step5ComponentTests : ShopContext
 
         var shelf = Render<Steps.Step5.Shelf>();
         shelf.Find(".status").TextContent.ShouldBe("Loading ducks…");
-        await AdvanceAsync(FakeCatalogueApi.Latency);
+        Time.Advance(FakeCatalogueApi.Latency);
 
         await shelf.WaitForAssertionAsync(() => shelf.FindComponents<DuckCard>().Count.ShouldBe(6));
     }
@@ -99,7 +87,7 @@ public sealed class FinalShelfTests : ShopContext
         await shelf.Find("input").InputAsync("yel");
         await shelf.WaitForAssertionAsync(() => Status(shelf).ShouldBe("Searching for “yel”…"));
         shelf.FindComponents<DuckCard>().Count.ShouldBe(6); // the shelf waits for the answer
-        await AdvanceAsync(FakeSearchApi.Latency("yel"));
+        Time.Advance(FakeSearchApi.Latency("yel"));
 
         await shelf.WaitForAssertionAsync(() => Status(shelf).ShouldBe("2 ducks match."));
         await shelf.WaitForAssertionAsync(() => shelf.FindAll(".duck h2").Select(name => name.TextContent)
@@ -112,7 +100,7 @@ public sealed class FinalShelfTests : ShopContext
         var shelf = await LoadedShelf();
 
         await shelf.Find("input").InputAsync("swan");
-        await AdvanceAsync(FakeSearchApi.Latency("swan"));
+        Time.Advance(FakeSearchApi.Latency("swan"));
 
         await shelf.WaitForAssertionAsync(() => Status(shelf).ShouldBe("No duck matches."));
         await shelf.WaitForAssertionAsync(() => shelf.FindAll("p.status").Select(p => p.TextContent)
@@ -124,7 +112,7 @@ public sealed class FinalShelfTests : ShopContext
     private async Task<IRenderedComponent<Shelf>> LoadedShelf()
     {
         await Store.InitializeAsync(Cancellation);
-        await AdvanceAsync(FakeCatalogueApi.Latency);
+        Time.Advance(FakeCatalogueApi.Latency);
         await Store.WhenIdleAsync(Cancellation); // the catalogue is in: no other work runs
         var shelf = Render<Shelf>();
         shelf.FindComponents<DuckCard>().Count.ShouldBe(6);
