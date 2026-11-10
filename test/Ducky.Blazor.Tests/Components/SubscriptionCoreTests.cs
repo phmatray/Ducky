@@ -310,6 +310,12 @@ public sealed class SubscriptionCoreTests
         SubscriptionCore.CaptureEmptyContext(static _ => throw new PlatformNotSupportedException()).ShouldBeNull();
 
     [Fact]
+    public void EmptyContext_JoinsTheThread() =>
+        // It returns what the thread captured only after joining it: a thread never started fails the join, instead of
+        // a context read before the thread wrote it.
+        Should.Throw<ThreadStateException>(() => SubscriptionCore.CaptureEmptyContext(static _ => { }));
+
+    [Fact]
     public async Task Evaluate_SelectorThrows_AtMostOnePendingInvoke()
     {
         // Evaluate resets the flag first; a commit during its run schedules the next one. A selector that then throws is
@@ -607,6 +613,7 @@ public sealed class SubscriptionCoreTests
             await _provider.DisposeAsync();
         }
     }
+
 }
 
 internal sealed record Probe;

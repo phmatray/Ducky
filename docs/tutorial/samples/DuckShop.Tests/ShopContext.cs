@@ -28,8 +28,4 @@ public abstract class ShopContext : BunitContext
     protected IStore Store => Services.GetRequiredService<IStore>();
 
     protected static CancellationToken Cancellation => Xunit.TestContext.Current.CancellationToken;
-
-    // Moves the fake clock from a pool thread, where a real timer fires: the fake servers then
-    // answer outside bUnit's renderer context, as they would in the browser or on a server.
-    protected Task AdvanceAsync(TimeSpan by) => Task.Run(() => Time.Advance(by), Cancellation);
 }
