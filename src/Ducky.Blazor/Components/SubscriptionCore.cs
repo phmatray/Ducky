@@ -12,6 +12,13 @@ namespace Ducky.Blazor;
 /// </summary>
 internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invokeAsync, Action stateHasChanged, ILogger logger) : IDisposable
 {
+    // An empty ExecutionContext: ExecutionContext.Default, which is not public, is what Capture returns on a thread started
+    // without flow. Captured once per process. Null where no thread can start (single-threaded WebAssembly, WASI): there
+    // the renderer dispatches inline (NullDispatcher), so no posted check ever runs on another caller's thread.
+#pragma warning disable CA1416 // justification: on browser UnsafeStart throws PlatformNotSupportedException, which CaptureEmptyContext catches
+    internal static readonly ExecutionContext? EmptyContext = CaptureEmptyContext(static thread => thread.UnsafeStart());
+#pragma warning restore CA1416
+
     private readonly SafeLogger _logger = new(logger);
 
     // Renderer-only: Select (registration), each check's baseline (render reads and Evaluate) and Dispose.
@@ -19,6 +26,10 @@ internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invo
     private Selection<StateSnapshot>? _subscription;
     private volatile bool _disposed;
     private int _scheduled;
+
+    // The context the change check is scheduled under (§11.2): the empty one, so neither the drainer's nor the creator's
+    // AsyncLocals (a causal scope, an effect run) reach it. Tests set null to take the fallback.
+    internal ExecutionContext? Context { private get; init; } = EmptyContext;
 
     /// <summary>
     /// Creates a core that logs through the container's <see cref="ILogger{TCategoryName}"/>, when there is one. It first
@@ -58,30 +69,52 @@ internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invo
         _subscription?.Dispose();
     }
 
+    // Runs ExecutionContext.Capture on a new thread, started by start without flow (UnsafeStart), so the thread has no
+    // context and Capture returns the empty one. Null when the platform can't start a thread.
+    internal static ExecutionContext? CaptureEmptyContext(Action<Thread> start)
+    {
+        ExecutionContext? empty = null;
+        var thread = new Thread(() => empty = ExecutionContext.Capture());
+        try
+        {
+            start(thread);
+        }
+        catch (PlatformNotSupportedException)
+        {
+            return null;
+        }
+
+        thread.Join();
+        return empty;
+    }
+
     // Drainer. The full-fence CAS orders this commit's snapshot write before a pending Evaluate's reset, so that Evaluate
-    // reads it: no lost wake-up, and at most one pending InvokeAsync.
+    // reads it: no lost wake-up, and at most one pending InvokeAsync. Scheduled under the empty context, everything the
+    // check posts carries it, so it runs with no AsyncLocal wherever it runs, ExecutionContext.RunInternal restores the
+    // thread it ran on, and ExecutionContext.Run gives the drainer back its own context and synchronization context.
     private void OnCommit()
     {
         if (Interlocked.CompareExchange(ref _scheduled, 1, 0) == 0)
         {
-            _ = ScheduleAsync();
+            if (Context is null)
+            {
+                _ = ScheduleAsync();
+            }
+            else
+            {
+                ExecutionContext.Run(Context, static core => _ = ((SubscriptionCore)core!).ScheduleAsync(), this);
+            }
         }
     }
 
-    // SuppressFlow keeps the drainer's ExecutionContext (its causal scope) out of posted work; when InvokeAsync runs the
-    // delegate inline (the drainer is on the renderer), the Task.Yield inside the suppressed region posts Evaluate with an
-    // empty one. Evaluate never throws, so a failure here happened before it started: only then is the flag reset.
+    // When InvokeAsync runs the delegate inline (the drainer is on the renderer, or the renderer is idle), the Task.Yield
+    // posts Evaluate behind the current work item. Evaluate never throws, so a failure here happened before it started:
+    // only then is the flag reset.
     private async Task ScheduleAsync()
     {
         try
         {
-            Task evaluation;
-            using (ExecutionContext.SuppressFlow())
-            {
-                evaluation = invokeAsync(EvaluateAsync);
-            }
-
-            await evaluation.ConfigureAwait(ConfigureAwaitOptions.None);
+            await StartEvaluationAsync().ConfigureAwait(ConfigureAwaitOptions.None);
         }
         catch (ObjectDisposedException)
         {
@@ -91,6 +124,22 @@ internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invo
         {
             Interlocked.CompareExchange(ref _scheduled, 0, 1);
             Log.ScheduleFailed(_logger, ex);
+        }
+    }
+
+    // Under the empty context (OnCommit), the work InvokeAsync posts carries it. Without one, flow is suppressed here, which
+    // keeps the drainer's context out of work that runs on a thread-pool thread; there is no renderer synchronization
+    // context to leak on the platforms where that happens.
+    private Task StartEvaluationAsync()
+    {
+        if (Context is not null)
+        {
+            return invokeAsync(EvaluateAsync);
+        }
+
+        using (ExecutionContext.SuppressFlow())
+        {
+            return invokeAsync(EvaluateAsync);
         }
     }
 

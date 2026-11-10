@@ -175,6 +175,141 @@ public sealed class SubscriptionCoreTests
     }
 
     [Fact]
+    public async Task Schedule_DrainerOffRendererWhileRendererIdle_DoesNotFlowCausalScope()
+    {
+        // The renderer is idle, so InvokeAsync runs the delegate inline on the drainer, inside the drain; the check it posts
+        // waits for that work item and then runs inline on the drainer too. A continuation posted with flow suppressed
+        // carries no ExecutionContext and runs under the executing thread's, the drainer's here: the check must run under the
+        // core's own context instead, so a render that dispatches starts its own chain.
+        await using var host = await Host.CreateAsync();
+        var renderer = RendererDispatcher.CreateDefault();
+        var ambient = new AsyncLocal<string>();
+        string? seen = "unset";
+        using var core = host.Core(renderer.InvokeAsync, () =>
+        {
+            seen = ambient.Value;
+            host.Store.Dispatch(new Probe());
+        });
+        using var count = core.Select(Count);
+        count.Value.ShouldBe(0);
+
+        ambient.Value = "drainer";
+        host.Store.Dispatch(new Increment());
+        await host.Rendered.Task.WaitAsync(_bound, TestContext.Current.CancellationToken);
+
+        seen.ShouldBeNull();
+        host.ShouldStartOwnChain<Probe>();
+    }
+
+    [Fact]
+    public async Task Schedule_DrainerInOutsideCallersWorkItem_CallerLeavesOffRenderer()
+    {
+        // An outside caller's InvokeAsync(Func<Task>) (bUnit's event dispatch; Blazor Server's circuit start, navigation
+        // and root component updates) runs inline while the renderer is idle, and a dispatch in it drains on the renderer.
+        // The check posted meanwhile runs inline on the caller's thread when the work item completes. The renderer's
+        // context sets itself as current around posted work and leaves the restore to the thread pool or to the posted
+        // continuation's ExecutionContext: posted with none, it left the caller on the renderer's context, where
+        // CheckAccess() passes outside the renderer's queue and the caller's renderer calls race renders on other threads.
+        await using var host = await Host.CreateAsync();
+        var renderer = RendererDispatcher.CreateDefault();
+        using var core = host.Core(renderer.InvokeAsync);
+        using var count = core.Select(Count);
+        count.Value.ShouldBe(0);
+        SynchronizationContext.Current.ShouldBeNull();
+
+        try
+        {
+            await renderer.InvokeAsync(() =>
+            {
+                host.Store.Dispatch(new Increment());
+                return Task.CompletedTask;
+            });
+
+            host.Renders.ShouldBe(1);
+            SynchronizationContext.Current.ShouldBeNull();
+            renderer.CheckAccess().ShouldBeFalse();
+        }
+        finally
+        {
+            // A failed run must not leave this test thread on the renderer's context for the tests after it.
+            SynchronizationContext.SetSynchronizationContext(null);
+        }
+    }
+
+    [Fact]
+    public async Task Schedule_NoEmptyContext_SuppressesFlow()
+    {
+        // Where no thread can start there is no empty context: the core then suppresses flow when it schedules, so work
+        // posted while the renderer is busy runs on a thread-pool thread with none of the drainer's context, and renders.
+        await using var host = await Host.CreateAsync();
+        var renderer = RendererDispatcher.CreateDefault();
+        var ambient = new AsyncLocal<string>();
+        string? seen = "unset";
+        using var core = host.Core(renderer.InvokeAsync, () => seen = ambient.Value, withoutEmptyContext: true);
+        using var count = core.Select(Count);
+        count.Value.ShouldBe(0);
+
+        await renderer.InvokeAsync(() =>
+        {
+            var rendererContext = SynchronizationContext.Current;
+            SynchronizationContext.SetSynchronizationContext(null);
+            try
+            {
+                ambient.Value = "drainer";
+                host.Store.Dispatch(new Increment());
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(rendererContext);
+            }
+        });
+        await host.Rendered.Task.WaitAsync(_bound, TestContext.Current.CancellationToken);
+
+        seen.ShouldBeNull();
+        host.Renders.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Schedule_CoreCreatedInEffectContinuation_RenderDispatchStartsOwnChain()
+    {
+        // A component created on an effect's flow (a dialog the continuation opens, a page it navigates to) is created
+        // under that run's causal scope and run token. Its later checks run under none of it: a dispatch from a render a
+        // later commit triggers starts its own chain, and is reduced.
+        var opener = new ViewOpener();
+        await using var host = await Host.CreateAsync(d => d.AddEffect(new OpenViewEffect(opener)));
+        var renderer = RendererDispatcher.CreateDefault();
+        opener.Create = () => host.Core(renderer.InvokeAsync, () => host.Store.Dispatch(new Probe()));
+
+        host.Store.Dispatch(new OpenView());
+        using var core = await opener.Created.Task.WaitAsync(_bound, TestContext.Current.CancellationToken);
+        using var count = core.Select(Count);
+        count.Value.ShouldBe(0);
+        host.Store.Dispatch(new Increment());
+        await host.Rendered.Task.WaitAsync(_bound, TestContext.Current.CancellationToken);
+        await host.Store.WhenIdleAsync(TestContext.Current.CancellationToken);
+
+        host.Store.State.Get<Probed>().Count.ShouldBe(1);
+        host.ShouldStartOwnChain<Probe>();
+    }
+
+    [Fact]
+    public void EmptyContext_CarriesNoAsyncLocal()
+    {
+        var ambient = new AsyncLocal<string> { Value = "caller" };
+        string? seen = "unset";
+
+        ExecutionContext.Run(SubscriptionCore.CaptureEmptyContext(static thread => thread.UnsafeStart())!, _ => seen = ambient.Value, null);
+
+        seen.ShouldBeNull();
+        ambient.Value.ShouldBe("caller");
+        SubscriptionCore.EmptyContext.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void EmptyContext_NoThreads_Null() =>
+        SubscriptionCore.CaptureEmptyContext(static _ => throw new PlatformNotSupportedException()).ShouldBeNull();
+
+    [Fact]
     public async Task Evaluate_SelectorThrows_AtMostOnePendingInvoke()
     {
         // Evaluate resets the flag first; a commit during its run schedules the next one. A selector that then throws is
@@ -430,23 +565,30 @@ public sealed class SubscriptionCoreTests
 
         public int Renders => Volatile.Read(ref _renders);
 
-        public static async Task<Host> CreateAsync()
+        public static async Task<Host> CreateAsync(Action<DuckyBuilder>? configure = null)
         {
             var services = new ServiceCollection();
             services.AddSingleton<CausalJournal>();
-            services.AddDucky(d => d.AddSlice<CounterSlice>().AddSlice<ProbeSlice>().Use<CausalRecorder>());
+            services.AddDucky(d =>
+            {
+                d.AddSlice<CounterSlice>().AddSlice<ProbeSlice>().Use<CausalRecorder>();
+                configure?.Invoke(d);
+            });
             var host = new Host(services.BuildServiceProvider());
             await host.Store.InitializeAsync(TestContext.Current.CancellationToken);
             return host;
         }
 
-        public SubscriptionCore Core(Func<Func<Task>, Task> invokeAsync, Action? stateHasChanged = null) =>
+        public SubscriptionCore Core(Func<Func<Task>, Task> invokeAsync, Action? stateHasChanged = null, bool withoutEmptyContext = false) =>
             new(Store, invokeAsync, () =>
             {
                 stateHasChanged?.Invoke();
                 Interlocked.Increment(ref _renders);
                 Rendered.TrySetResult();
-            }, new FakeLogger(_collector));
+            }, new FakeLogger(_collector))
+            {
+                Context = withoutEmptyContext ? null : SubscriptionCore.EmptyContext,
+            };
 
         public IEnumerable<(int Id, LogLevel Level, string Message, Exception? Exception)> Logs() =>
             _collector.GetSnapshot().Select(record => (record.Id.Id, record.Level, record.Message, record.Exception));
@@ -486,4 +628,23 @@ internal sealed class CausalJournal
 internal sealed class CausalRecorder(CausalJournal journal) : Middleware
 {
     public override void BeforeReduce(ActionContext context) => journal.Seen.Enqueue(context);
+}
+
+internal sealed record OpenView;
+
+// Lets a test create a core on an effect's flow, after the run has really yielded.
+internal sealed class ViewOpener
+{
+    public Func<SubscriptionCore> Create { get; set; } = null!;
+
+    public TaskCompletionSource<SubscriptionCore> Created { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+}
+
+internal sealed class OpenViewEffect(ViewOpener opener) : Effect<OpenView>
+{
+    public override async Task Handle(OpenView action, EffectContext context, CancellationToken cancellationToken)
+    {
+        await Task.Yield();
+        opener.Created.SetResult(opener.Create());
+    }
 }
