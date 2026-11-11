@@ -65,7 +65,7 @@ jobs:
           test -f artifacts/pages/index.html && test -f artifacts/pages/tokens.css && test -f artifacts/pages/docs/index.html && test -f artifacts/pages/docs/_assets/docs.css && test -f artifacts/pages/docs/llms-full.txt && test -f artifacts/pages/llms.txt
           test -f artifacts/pages/playground/tokens.css && test -f artifacts/pages/playground/_source/Program.cs.txt
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: artifacts/pages
       - id: deploy
