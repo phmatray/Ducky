@@ -25,7 +25,9 @@ internal sealed partial class InitCoordinator(Lazy<Materialized> materialized, S
     // started. Read it once PrefixDone completed.
     internal Task?[] InitTasks { get; private set; } = [];
 
+#pragma warning disable VSTHRD003 // justification: a test seam returning the coordinator's own RunContinuationsAsynchronously TCS, never awaited by src
     internal Task PrefixDone => _prefixDone.Task;
+#pragma warning restore VSTHRD003
 
     // Idempotent; once started, one volatile read.
     internal void Start(Dispatcher dispatcher)
