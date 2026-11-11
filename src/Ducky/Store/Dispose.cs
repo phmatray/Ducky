@@ -29,7 +29,9 @@ internal sealed partial class Dispatcher
     private Task? _disposalSteps;
 
     // For tests: every disposal step, those chained past a step-3 timeout included; null before disposal.
+#pragma warning disable VSTHRD003 // justification: a test seam returning the chain this dispatcher's own dispose started, never awaited by src
     internal Task? DisposalSteps => Volatile.Read(ref _disposalSteps);
+#pragma warning restore VSTHRD003
 
     // The store lifetime, cancelled at step 2: effect runs and init link their tokens to it.
     internal CancellationToken Lifetime => _lifetime.Token;
