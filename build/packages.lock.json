@@ -4,24 +4,24 @@
     "net10.0": {
       "Fallout.Common": {
         "type": "Direct",
-        "requested": "[10.4.0, 10.4.0]",
-        "resolved": "10.4.0",
-        "contentHash": "uPP+bFDN9T+tAXJOkrCpA1iyXK2bUwwNQU9l9HNptfzJwlaUNnTGz4s1dTHeH4DbBJfaPVlL/WYlNVTpGowktQ==",
+        "requested": "[10.5.0, 10.5.0]",
+        "resolved": "10.5.0",
+        "contentHash": "cNTvzgS1GOr+MJoGHl2C1l8AehD6blTFxXbhdU4fuszuJ4GZCvRNmTCtzuOLAvo8OtCGmYqFJ/7ifV+rJGn6Ng==",
         "dependencies": {
           "Azure.Identity": "1.17.1",
           "Azure.Security.KeyVault.Certificates": "4.8.0",
           "Azure.Security.KeyVault.Keys": "4.8.0",
           "Azure.Security.KeyVault.Secrets": "4.8.0",
-          "Fallout.Build": "10.4.0",
-          "Fallout.Build.Shared": "10.4.0",
-          "Fallout.ProjectModel": "10.4.0",
-          "Fallout.Solution": "10.4.0",
-          "Fallout.Tooling": "10.4.0",
-          "Fallout.Utilities": "10.4.0",
-          "Fallout.Utilities.IO.Compression": "10.4.0",
-          "Fallout.Utilities.IO.Globbing": "10.4.0",
-          "Fallout.Utilities.Net": "10.4.0",
-          "Fallout.Utilities.Text.Json": "10.4.0",
+          "Fallout.Build": "10.5.0",
+          "Fallout.Build.Shared": "10.5.0",
+          "Fallout.ProjectModel": "10.5.0",
+          "Fallout.Solution": "10.5.0",
+          "Fallout.Tooling": "10.5.0",
+          "Fallout.Utilities": "10.5.0",
+          "Fallout.Utilities.IO.Compression": "10.5.0",
+          "Fallout.Utilities.IO.Globbing": "10.5.0",
+          "Fallout.Utilities.Net": "10.5.0",
+          "Fallout.Utilities.Text.Json": "10.5.0",
           "Glob": "1.1.9",
           "Microsoft.Build": "18.0.2",
           "Microsoft.Build.Framework": "18.0.2",
@@ -29,29 +29,31 @@
           "Microsoft.Build.Tasks.Core": "18.0.2",
           "Microsoft.Build.Utilities.Core": "18.0.2",
           "Microsoft.Extensions.DependencyModel": "10.0.0",
-          "NuGet.Packaging": "6.14.3",
+          "NuGet.Frameworks": "7.9.0",
+          "NuGet.Packaging": "7.9.0",
           "Octokit": "14.0.0",
           "Serilog": "4.3.0",
           "Serilog.Formatting.Compact": "3.0.0",
           "Serilog.Formatting.Compact.Reader": "4.0.0",
           "Serilog.Sinks.Console": "6.1.1",
           "Serilog.Sinks.File": "7.0.0",
-          "SharpZipLib": "1.4.2",
-          "System.Security.Cryptography.Xml": "10.0.10",
+          "SharpCompress": "0.50.1",
+          "System.Security.Cryptography.Pkcs": "10.0.13",
+          "System.Security.Cryptography.Xml": "10.0.13",
           "YamlDotNet": "16.3.0"
         }
       },
       "Fallout.Components": {
         "type": "Direct",
-        "requested": "[10.4.0, 10.4.0]",
-        "resolved": "10.4.0",
-        "contentHash": "XRoFIqKpoPDa1DBB6c+EIlYtSRPJcuWRnG3p8uDMbxIIIzFlhE+KTuHTylya0kc1e7eNSk9EjbR+1h8PCrIFWw==",
+        "requested": "[10.5.0, 10.5.0]",
+        "resolved": "10.5.0",
+        "contentHash": "6S08CZO4MSZA3gUWG/4WZeWG7UQMPsyD7dVahJ/1twq++E7ndjv7tEQTYqM9GcNGfkEOffnB0+/TyGv0qww2Zg==",
         "dependencies": {
           "Azure.Identity": "1.17.1",
           "Azure.Security.KeyVault.Certificates": "4.8.0",
           "Azure.Security.KeyVault.Keys": "4.8.0",
           "Azure.Security.KeyVault.Secrets": "4.8.0",
-          "Fallout.Common": "10.4.0",
+          "Fallout.Common": "10.5.0",
           "Glob": "1.1.9",
           "Microsoft.Build": "18.0.2",
           "Microsoft.Build.Framework": "18.0.2",
@@ -59,15 +61,17 @@
           "Microsoft.Build.Tasks.Core": "18.0.2",
           "Microsoft.Build.Utilities.Core": "18.0.2",
           "Microsoft.Extensions.DependencyModel": "10.0.0",
-          "NuGet.Packaging": "6.14.3",
+          "NuGet.Frameworks": "7.9.0",
+          "NuGet.Packaging": "7.9.0",
           "Octokit": "14.0.0",
           "Serilog": "4.3.0",
           "Serilog.Formatting.Compact": "3.0.0",
           "Serilog.Formatting.Compact.Reader": "4.0.0",
           "Serilog.Sinks.Console": "6.1.1",
           "Serilog.Sinks.File": "7.0.0",
-          "SharpZipLib": "1.4.2",
-          "System.Security.Cryptography.Xml": "10.0.10",
+          "SharpCompress": "0.50.1",
+          "System.Security.Cryptography.Pkcs": "10.0.13",
+          "System.Security.Cryptography.Xml": "10.0.13",
           "YamlDotNet": "16.3.0"
         }
       },
@@ -129,19 +133,19 @@
       },
       "Fallout.Build": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "5qcUCCHRyjYEZjkxFQiJdTCdJagBGKwsYsKamV6YigsF0UCMYaCOJk10EE2yxOorfdA34jz1Rmc8PBQHeWktbg==",
+        "resolved": "10.5.0",
+        "contentHash": "rZ+VM9/CPsnAKewiP8dzcuq5gqQi78yPSMtKwVHwV/40FWwmUAXY2JxVsoyQaTUpdfN6KJ5xwZM+FvOsXbXunw==",
         "dependencies": {
-          "Fallout.Build.Shared": "10.4.0",
-          "Fallout.Core": "10.4.0",
-          "Fallout.ProjectModel": "10.4.0",
-          "Fallout.Solution": "10.4.0",
-          "Fallout.Tooling": "10.4.0",
-          "Fallout.Utilities": "10.4.0",
-          "Fallout.Utilities.IO.Globbing": "10.4.0",
-          "Fallout.Utilities.Net": "10.4.0",
-          "Fallout.Utilities.Text.Json": "10.4.0",
-          "Fallout.Utilities.Text.Yaml": "10.4.0",
+          "Fallout.Build.Shared": "10.5.0",
+          "Fallout.Core": "10.5.0",
+          "Fallout.ProjectModel": "10.5.0",
+          "Fallout.Solution": "10.5.0",
+          "Fallout.Tooling": "10.5.0",
+          "Fallout.Utilities": "10.5.0",
+          "Fallout.Utilities.IO.Globbing": "10.5.0",
+          "Fallout.Utilities.Net": "10.5.0",
+          "Fallout.Utilities.Text.Json": "10.5.0",
+          "Fallout.Utilities.Text.Yaml": "10.5.0",
           "Glob": "1.1.9",
           "Microsoft.Build": "18.0.2",
           "Microsoft.Build.Framework": "18.0.2",
@@ -149,117 +153,123 @@
           "Microsoft.Build.Tasks.Core": "18.0.2",
           "Microsoft.Build.Utilities.Core": "18.0.2",
           "Microsoft.Extensions.DependencyModel": "10.0.0",
-          "NuGet.Packaging": "6.14.3",
+          "NuGet.Frameworks": "7.9.0",
+          "NuGet.Packaging": "7.9.0",
           "Serilog": "4.3.0",
           "Serilog.Formatting.Compact": "3.0.0",
           "Serilog.Formatting.Compact.Reader": "4.0.0",
           "Serilog.Sinks.Console": "6.1.1",
           "Serilog.Sinks.File": "7.0.0",
-          "System.Security.Cryptography.Xml": "10.0.10",
+          "System.Security.Cryptography.Pkcs": "10.0.13",
+          "System.Security.Cryptography.Xml": "10.0.13",
           "YamlDotNet": "16.3.0"
         }
       },
       "Fallout.Build.Shared": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "31k0sdj2XA/Ppfih6s6hxU/Mj/tUBPjpmK7+4HieF7bSPC7mLFGRfsHgJO5Jmt3EiSlOWgif2jB8NNmZaSKnrg==",
+        "resolved": "10.5.0",
+        "contentHash": "sP9nMbJBsYVx+Dknnj856bDVm5I4csWWmgsoy8SmDOjAejpKwztUEbQLClkUL8s+RhmSiuVfovREqbq5mri2Wg==",
         "dependencies": {
-          "Fallout.Utilities": "10.4.0"
+          "Fallout.Utilities": "10.5.0"
         }
       },
       "Fallout.Core": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "ilTGkC+KQbzbxRgCcGLRPoiSNGkH4mqPjzLLTZW9RVbCbTRBuCQ5n9C7G7Uu7sExw3R03VrNp86wlorrNPi8WA=="
+        "resolved": "10.5.0",
+        "contentHash": "QdRg+cp5vpXFqeLF89jfKTjg/8DN3kjc6/A8bExgVyIjukMgK1F4chhu3rPnzej8LEEn96xRzaZQSqivJdlKBw=="
       },
       "Fallout.Persistence.Solution": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "s7ieZUuWrtIDit7VgkiKu8Bk9xIro2mn4/DAejwU0Jt6Esp8DrYtRkZiwpP20QyM4DuomGyGZl4zTDz7z1LbXg=="
+        "resolved": "10.5.0",
+        "contentHash": "UONzXTP947bRYEiScIQHoqwS497L0/UHv31ExhOwuFZfvKcdyvjfyQSVQXdrIAZXHH2mZIvRLMWo9axXuRiHHA=="
       },
       "Fallout.ProjectModel": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "UzyzaaBgH71DHcLEdKLzUq/oKknyOkZUy6M0HGP8N9eXKBnImARP5b6ogtefv/Lnod88wUYiCaOdOy6rXlHJ8g==",
+        "resolved": "10.5.0",
+        "contentHash": "J60ApXvqc+pYpzLYPPdack5K16QUIy7cd4ZJZf9p5YZ90geNepQwmAJEDMAHP+ilufg52Qb/ncXNKRCyDb3d/A==",
         "dependencies": {
-          "Fallout.Solution": "10.4.0",
-          "Fallout.Tooling": "10.4.0",
-          "Fallout.Utilities": "10.4.0",
+          "Fallout.Solution": "10.5.0",
+          "Fallout.Tooling": "10.5.0",
+          "Fallout.Utilities": "10.5.0",
           "Microsoft.Build": "18.0.2",
           "Microsoft.Build.Framework": "18.0.2",
           "Microsoft.Build.Locator": "1.7.8",
           "Microsoft.Build.Tasks.Core": "18.0.2",
           "Microsoft.Build.Utilities.Core": "18.0.2",
-          "NuGet.Packaging": "6.14.3",
+          "NuGet.Frameworks": "7.9.0",
+          "NuGet.Packaging": "7.9.0",
           "Serilog": "4.3.0",
-          "System.Security.Cryptography.Xml": "10.0.10"
+          "System.Security.Cryptography.Pkcs": "10.0.13",
+          "System.Security.Cryptography.Xml": "10.0.13"
         }
       },
       "Fallout.Solution": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "+SLF0guesiAfcXdxL4AM57RsVS6Tgo6qkVqODsFOa2fHm6qDrczYfJ3CpGw7F1yas9z8Ishw0LCyc8DmGbMO2w==",
+        "resolved": "10.5.0",
+        "contentHash": "6F1E/a+H2GMwqa0xpjTJmJalz0leYh4dj5P8yYZVSs6+aN7WMWye7RFlmL+tH8EfIUBkgt5U6m96jlNjnUpSxg==",
         "dependencies": {
-          "Fallout.Persistence.Solution": "10.4.0",
-          "Fallout.Utilities": "10.4.0"
+          "Fallout.Persistence.Solution": "10.5.0",
+          "Fallout.Utilities": "10.5.0"
         }
       },
       "Fallout.Tooling": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "AZN2wYDZVBxg1E54yMcKAQeePUpIpOMAW4b/+KLavvLnUM3Oz9TdCOyu4Fr9emT197/qmgQ9gwQ7FSYcdBEYpg==",
+        "resolved": "10.5.0",
+        "contentHash": "wrcGUZpVbrAgheZi5gUFURGEASzM9GpqUStwWbnV5LxjS3CKgn3cCC4en9kmgO5v5y+LiY0eoUd11e80reQvVw==",
         "dependencies": {
-          "Fallout.Utilities": "10.4.0",
-          "Fallout.Utilities.Text.Json": "10.4.0",
-          "NuGet.Packaging": "6.14.3",
-          "Serilog": "4.3.0"
+          "Fallout.Utilities": "10.5.0",
+          "Fallout.Utilities.Text.Json": "10.5.0",
+          "NuGet.Frameworks": "7.9.0",
+          "NuGet.Packaging": "7.9.0",
+          "Serilog": "4.3.0",
+          "System.Security.Cryptography.Pkcs": "10.0.13"
         }
       },
       "Fallout.Utilities": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "tp1y1ZtIW1kj6b+Ht/TtTFkjBY5TnPBH6gzGQcn3RMPZMdJG9K8AP/9iXpO5G8uE6Beu4V6mR2X4e0E8c2B2kQ=="
+        "resolved": "10.5.0",
+        "contentHash": "5aTtrIyz3RjEitQpNzsLnm4gZdDV16uaazTJa71xZfNTfq3GYqzIh+Vmb0Qskax+KKq1oPPbO0pnlLaJgPSkrg=="
       },
       "Fallout.Utilities.IO.Compression": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "vDDK3utgZPf3SqwvnhO9IR+hrlePWoVgLFfjfZrWLVX32yXe8x9pbM6iTUeFfCRicTMLHOf0ehVtYLVdKvOnjA==",
+        "resolved": "10.5.0",
+        "contentHash": "whakhMCM5J+zg/eIOjTHBpsYe7KscqMImmlG9gvloHs8zUrLN7mVRH79h8fGrRcQ1pPGWHcQI3D2vM9NYdGDMg==",
         "dependencies": {
-          "Fallout.Utilities": "10.4.0",
-          "SharpZipLib": "1.4.2"
+          "Fallout.Utilities": "10.5.0",
+          "SharpCompress": "0.50.1"
         }
       },
       "Fallout.Utilities.IO.Globbing": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "fIL7rrjlMRua9cVUOuiOQy+xAyNfJjCFXv7sU8n+mV846n/3Oy4qB6sERMuYGzRqLYSZrdEVMc4qLMAclnJixg==",
+        "resolved": "10.5.0",
+        "contentHash": "XmUv0ffrmHBBYPSMADaAp5YNtxuuPiXhv81v8lu59GOxZtOQfo4doDFnMyc3VdpvKfMgRO69q/Wslgi2dN5LuA==",
         "dependencies": {
-          "Fallout.Utilities": "10.4.0",
+          "Fallout.Utilities": "10.5.0",
           "Glob": "1.1.9"
         }
       },
       "Fallout.Utilities.Net": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "XQIc90BfuPNFkysreQWv1ynkxG9ZUMNnraUqd9i7+K19SRA9MZ4NjsRhWPEFVAKhwUogD23AzUu2BdzycfllyA==",
+        "resolved": "10.5.0",
+        "contentHash": "PvToJGuRqtIppkCON5HUm78+/Te2c0Xo5fSF2ZxSnQCpAK5O0nvzCw9YbY6rZHLZxOSWPtZs2Adn192N+/ZniA==",
         "dependencies": {
-          "Fallout.Utilities": "10.4.0"
+          "Fallout.Utilities": "10.5.0"
         }
       },
       "Fallout.Utilities.Text.Json": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "yOQVHOVep347EUOhH6MbKE0LK1jLH4dNrJ0ESDrwbc42m0O5+X/oIT/nB5EuXMN5cX6yLeoQsk0FC+01Y4FssQ==",
+        "resolved": "10.5.0",
+        "contentHash": "Oet5Rc97QrDZwO3LSs9xYZalDbGYQB5mMRHDox3+JIFHlOZIG/6BtKRsWANs0kwXIUKVu9GrWI5J/aa3QgDEPg==",
         "dependencies": {
-          "Fallout.Utilities": "10.4.0"
+          "Fallout.Utilities": "10.5.0"
         }
       },
       "Fallout.Utilities.Text.Yaml": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "nW8W7dbah2DatmEKWLODW8dopIN0Ks+MQOWB3kSgcOiX3S36+8bObBTP6INsC2A3XRiARpUkIWuUV761i024DA==",
+        "resolved": "10.5.0",
+        "contentHash": "JL1rDsu9WJjWoyFNMCMK8OWM95Yof+6g06JRsO7Mc0B1RgzuAIyW7/oIC23MlFVpSWjfKdXibmoS2E4qH+vYRA==",
         "dependencies": {
-          "Fallout.Utilities": "10.4.0",
+          "Fallout.Utilities": "10.5.0",
           "YamlDotNet": "16.3.0"
         }
       },
@@ -365,41 +375,41 @@
       },
       "NuGet.Common": {
         "type": "Transitive",
-        "resolved": "6.14.3",
-        "contentHash": "c0YD/rJFhoX38/T0qdpdYBd5RI6CjcycgzvwgaYA/iDA6Isdq4sOHRnXbDEdao5qdmAytKQhITTcjryrAATUQw==",
+        "resolved": "7.9.0",
+        "contentHash": "OWFEzHpwvgzSaHYmWzfbyTm6oBOy/BFSFEDk73zM9jiJaxdopYZ/DrqIQogaM3F+ZGTppBJffmzu5adetEI/YA==",
         "dependencies": {
-          "NuGet.Frameworks": "6.14.3"
+          "NuGet.Frameworks": "7.9.0"
         }
       },
       "NuGet.Configuration": {
         "type": "Transitive",
-        "resolved": "6.14.3",
-        "contentHash": "c33QiOCrSykKHGNsyGrCUWcXgrg5CTZaZafFhu96xqTHlweqAynDPixqVYmNa/S4W+6B36YpTtBdoGtDxDNEuw==",
+        "resolved": "7.9.0",
+        "contentHash": "oY9XZp+TWjOmiGmU4R4JWBRY3F4TAVo7tqPr/z7MOsFcEpdYHMryjNSscoLBxUTR3WmFmYgO0Gvu4eRbz6pzOg==",
         "dependencies": {
-          "NuGet.Common": "6.14.3",
-          "System.Security.Cryptography.ProtectedData": "4.4.0"
+          "NuGet.Common": "7.9.0",
+          "System.Security.Cryptography.ProtectedData": "8.0.0"
         }
       },
       "NuGet.Frameworks": {
         "type": "Transitive",
-        "resolved": "6.14.3",
-        "contentHash": "fxJsortJk2Jscr0MVGyUfKtIYQ4+Uiw7ucqTS4gEvUdDRUnvWj0yyns4S+jS8s4+FzBnjOJWCm/b0al123gqCw=="
+        "resolved": "7.9.0",
+        "contentHash": "w2adPmgUafmW9ON1MzDjuHmViN0vtiPV48Dz3OE6px8BiGSqrnWHOjwFEPOEPAZx20J1c7bxp90Hxo9l4xGWtw=="
       },
       "NuGet.Packaging": {
         "type": "Transitive",
-        "resolved": "6.14.3",
-        "contentHash": "wQJkyDimC9UEulF0ECuUuXyXhV7tfPHdocTzWqV9zf2RQASEtHWDh4fSZIsM1+dQ98fMojzRJuE1KgxEsP7WPg==",
+        "resolved": "7.9.0",
+        "contentHash": "Q2jxuud5kJLV0rUzsC02iC5ts8QsQu9UVyMvF8lULY3TwHL/W/PrnQ9bQFvMR7jJkzF1uilRPI1o+7VOtc2XMg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "NuGet.Configuration": "6.14.3",
-          "NuGet.Versioning": "6.14.3",
-          "System.Security.Cryptography.Pkcs": "6.0.4"
+          "NuGet.Configuration": "7.9.0",
+          "NuGet.Versioning": "7.9.0",
+          "System.Security.Cryptography.Pkcs": "8.0.1"
         }
       },
       "NuGet.Versioning": {
         "type": "Transitive",
-        "resolved": "6.14.3",
-        "contentHash": "EgsT9IoRrOGDShPX+4BHYpsyra7dbawZYL2btwWONlwr8niv2AoctZs/F7jANzDPhCFCsOxvFhJ+S/zaaU31mA=="
+        "resolved": "7.9.0",
+        "contentHash": "r4sZuVpVqwSBLe4qYDrnpScqdyctlRXg0HSF5OoCGkeBc8b+o8BBYHuI/u1RoWYX78PbieijU13TBt71/Xf3lw=="
       },
       "Octokit": {
         "type": "Transitive",
@@ -444,10 +454,10 @@
           "Serilog": "4.2.0"
         }
       },
-      "SharpZipLib": {
+      "SharpCompress": {
         "type": "Transitive",
-        "resolved": "1.4.2",
-        "contentHash": "yjj+3zgz8zgXpiiC3ZdF/iyTBbz2fFvMxZFEBPUcwZjIvXOf37Ylm+K58hqMfIBt5JgU/Z2uoUS67JmTLe973A=="
+        "resolved": "0.50.1",
+        "contentHash": "VY90K8BBvaAMvvRDJ8EvsfI/GgoIYxlgxMpxdgwpzaesJ0pGSHTLbZ7SD4JYxsGCnOibzua/+8HvDjV6KTw4jA=="
       },
       "System.ClientModel": {
         "type": "Transitive",
