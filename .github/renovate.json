@@ -50,8 +50,8 @@
       "enabled": false
     },
     {
-      "description": "S-1 (R-PKG-3, ADR-0003): Microsoft.CodeAnalysis.CSharp 5.0.0 is the Roslyn of SDK 10.0.100, the generator floor, and global.json pins that SDK. Never update either.",
-      "matchPackageNames": ["Microsoft.CodeAnalysis.CSharp", "dotnet-sdk"],
+      "description": "S-1 (R-PKG-3, ADR-0003): Microsoft.CodeAnalysis.CSharp 5.0.0 is the Roslyn of SDK 10.0.100, the generator floor, and global.json pins that SDK. Never update either. Microsoft.CodeAnalysis.CSharp.Workspaces (the analyzer verifier tests) stays on the same floor: it depends on exactly its own Microsoft.CodeAnalysis.Common, so any other version fails the restore with NU1107 against the 5.0.0 pin.",
+      "matchPackageNames": ["Microsoft.CodeAnalysis.CSharp", "Microsoft.CodeAnalysis.CSharp.Workspaces", "dotnet-sdk"],
       "enabled": false
     },
     {
