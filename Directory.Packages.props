@@ -52,7 +52,7 @@
     <!-- Component tests (SPEC §17.2: bUnit 2.x, sets RendererInfo). -->
     <PackageVersion Include="bunit" Version="2.11.3" />
     <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
 
     <!-- Audit (SPEC §17.1): transitive pins of patched versions. 10.0.12 and 9.0.6 have high advisories (GHSA-846f-f764-76mx,
