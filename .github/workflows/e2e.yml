@@ -40,7 +40,7 @@ jobs:
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj', '**/Directory.Packages.props') }}
       - name: 'Install: Playwright dependencies'
-        run: npx --yes playwright@1.63.0 install-deps chromium
+        run: npx --yes playwright@1.64.1 install-deps chromium
       - name: 'Setup: .NET SDK'
         uses: actions/setup-dotnet@v6
         with:
