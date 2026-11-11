@@ -1,9 +1,10 @@
 <Project>
-  <!-- The repository pins (Directory.Packages.props), plus the Blazor packages of the prototype apps (SPEC §23). -->
+  <!-- The repository pins (Directory.Packages.props), plus the Blazor packages of the prototype apps (SPEC §23). Never repeat
+       a package the repository already pins (Microsoft.AspNetCore.Components.WebAssembly.Server since M14-02): the duplicate
+       fails every restore with NU1506, Renovate's lock-file update included, which restores every project of the repository. -->
   <Import Project="../../Directory.Packages.props" />
   <ItemGroup>
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Authentication.WebAssembly.Msal" Version="10.0.12" />
   </ItemGroup>
 </Project>
