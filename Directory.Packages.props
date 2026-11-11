@@ -53,7 +53,7 @@
     <PackageVersion Include="bunit" Version="2.11.3" />
     <!-- MTP extensions behind the coverage (cobertura) and TRX options of dotnet test (SPEC §17.2, §19). -->
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.2" />
 
     <!-- Audit (SPEC §17.1): transitive pins of patched versions. 10.0.12 and 9.0.6 have high advisories (GHSA-846f-f764-76mx,
          GHSA-7hqp-7c5m-4vq6, GHSA-c399-9853-6jmj, GHSA-r955-8q5j-3h83), reached through Microsoft.AspNetCore.DataProtection
