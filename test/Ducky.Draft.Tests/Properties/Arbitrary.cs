@@ -11,7 +11,7 @@ internal static class Arbitrary
 
     public static readonly Gen<string> Text = Gen.Int[0, 3].Select(n => new string('a', n) + "b");
 
-    public static readonly Gen<string> Key = Gen.OneOfConst("a", "A", "b", "c").Select(Copy);
+    public static readonly Gen<string> Key = Gen.OneOf("a", "A", "b", "c").Select(Copy);
 
     public static readonly Gen<int> Small = Gen.Int[0, 4];
 
@@ -40,10 +40,10 @@ internal static class Arbitrary
     public static readonly Gen<ImmutableDictionary<string, int>> Counts = Dictionary(Small, Parity);
 
     public static readonly Gen<ImmutableHashSet<string>> Tags =
-        Gen.Select(Gen.OneOfConst(StringComparer.Ordinal, StringComparer.OrdinalIgnoreCase), Key.List[0, 4], ImmutableHashSet.CreateRange);
+        Gen.Select(Gen.OneOf(StringComparer.Ordinal, StringComparer.OrdinalIgnoreCase), Key.List[0, 4], ImmutableHashSet.CreateRange);
 
     public static readonly Gen<ImmutableSortedSet<int>> Ranks =
-        Gen.Select(Gen.OneOfConst(Comparer<int>.Default, Descending), Small.List[0, 4], ImmutableSortedSet.CreateRange);
+        Gen.Select(Gen.OneOf(Comparer<int>.Default, Descending), Small.List[0, 4], ImmutableSortedSet.CreateRange);
 
     public static readonly Gen<ImmutableList<string>?> Names = Text.List[0, 3].Select(ImmutableList.CreateRange).Null(0.3);
 
@@ -67,8 +67,8 @@ internal static class Arbitrary
     // Either key comparer (case-only key pairs collide under OrdinalIgnoreCase) and either value comparer, so the
     // comparer-identity checks of Structural are never vacuous.
     private static Gen<ImmutableDictionary<string, T>> Dictionary<T>(Gen<T> value, IEqualityComparer<T> valueComparer) => Gen.Select(
-        Gen.OneOfConst(StringComparer.Ordinal, StringComparer.OrdinalIgnoreCase),
-        Gen.OneOfConst(EqualityComparer<T>.Default, valueComparer),
+        Gen.OneOf(StringComparer.Ordinal, StringComparer.OrdinalIgnoreCase),
+        Gen.OneOf(EqualityComparer<T>.Default, valueComparer),
         Gen.Select(Key, value).List[0, 4],
         (keys, values, pairs) => pairs.Aggregate(ImmutableDictionary.Create<string, T>(keys, values), (d, p) => d.SetItem(p.Item1, p.Item2)));
 
