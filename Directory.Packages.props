@@ -75,7 +75,7 @@
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
 
     <!-- Fallout build (SPEC §19, ADR-0035): exact pin. -->
-    <PackageVersion Include="Fallout.Common" Version="[10.4.0]" />
+    <PackageVersion Include="Fallout.Common" Version="[10.5.0]" />
     <PackageVersion Include="Fallout.Components" Version="[10.4.0]" />
     <!-- The Docs target's static documentation site (SPEC §19): Markdown to HTML. -->
     <PackageVersion Include="Markdig" Version="1.6.0" />
