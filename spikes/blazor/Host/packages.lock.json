@@ -10,12 +10,9 @@
       },
       "Microsoft.AspNetCore.Components.WebAssembly.Server": {
         "type": "Direct",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "0fLVpTv9PMxOihGgSCxwTFQ8MOk0He2lqD5Hh97WKhXyZPiOj3N7c3SEBNYwUlk7J4Bv6Qe49G58SldIoJq1EA==",
-        "dependencies": {
-          "Microsoft.AspNetCore.Components.WebAssembly": "10.0.15"
-        }
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "I5CdPhgM4Vywbfa9wxnbnVxWwomxiOx4ZO16qoCOfLCr4cfK7vhl6h9w510tnz7tXsXYewgFoRsV6lz89lTNsQ=="
       },
       "MinVer": {
         "type": "Direct",
@@ -23,42 +20,37 @@
         "resolved": "8.0.0",
         "contentHash": "AJy/KVjXgUbgjf6HiI8wAk4DSSq0SCmvXQF8aU6IB+pnIQq+YJvofvMczug2hqO8yEvnQY557ryew66KPpyCsA=="
       },
-      "Microsoft.JSInterop.WebAssembly": {
+      "Microsoft.DotNet.HotReload.WebAssembly.Browser": {
         "type": "Transitive",
-        "resolved": "10.0.15",
-        "contentHash": "/UTg2l5MAipHsPlCXBTfTCCLHUsyVeQM+z+QSStjfbP2b4RCrxl9NoKVZ7Ls9heBUT1/4yRjhMbqojl59A/xew=="
+        "resolved": "10.0.100",
+        "contentHash": "bTCi3TK6L54rXu7pA0duoG6/OFt//LI1tK+oPD3HTrT4ghzGi5Jgn52X8xeFGpqadSIGf5JgIxRV/uvKXNP+ig=="
       },
       "client": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.WebAssembly": "[10.0.15, )",
-          "Microsoft.AspNetCore.Components.WebAssembly.Authentication": "[10.0.15, )",
-          "Microsoft.Authentication.WebAssembly.Msal": "[10.0.15, )"
+          "Microsoft.AspNetCore.Components.WebAssembly": "[11.0.0, )",
+          "Microsoft.AspNetCore.Components.WebAssembly.Authentication": "[11.0.0, )",
+          "Microsoft.Authentication.WebAssembly.Msal": "[11.0.0, )",
+          "Microsoft.DotNet.HotReload.WebAssembly.Browser": "[10.0.100, )"
         }
       },
       "Microsoft.AspNetCore.Components.WebAssembly": {
         "type": "CentralTransitive",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "YWFk0tbTM25BfeJ2kFuUQ9E2HB0t6GK8jWFm2oIJeTVp3CS7CXGPU/TEpwLvtvK/uQGSX7eL4lpoRQGXgyWJZA==",
-        "dependencies": {
-          "Microsoft.JSInterop.WebAssembly": "10.0.15"
-        }
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "ALx0RdIo5DXIFN/HxSCrcrpSrptaYhBelAMWeh8JJidux3Qjx0Zu+D0bB7XcGgwWk0/UAs7zgzEERNg4WgcgQQ=="
       },
       "Microsoft.AspNetCore.Components.WebAssembly.Authentication": {
         "type": "CentralTransitive",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "QuN6lTvKLluAIzLYA6KZ5w5ny6nI/n/Fm7Pr9ZLfeFwSgv1HfaYkGDTVWEhkga4p+1Bl/9ZMZXmgDDJZSL+mnA=="
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "6KBbiQYjaJ1jio/V25V/7MCrg8Y+t7jYlA18lMdtdo8tpXrUACaUYmeCQhQQSDTsveT00jJkwi7ZjlvoBgAZMQ=="
       },
       "Microsoft.Authentication.WebAssembly.Msal": {
         "type": "CentralTransitive",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "7kFqnNGI+kGA42R8Qd46+ecy2SJSRE15+F5VM+5pyZupsQjx+ymkPhJQeR30ELN53fRFbXFRTV9dHV5F7hmrGA==",
-        "dependencies": {
-          "Microsoft.AspNetCore.Components.WebAssembly.Authentication": "10.0.15"
-        }
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "dh79Z5Hqkm0mUDu4XIvuQ2UiVrMXVF+1hSXmgmZbslZ6V40ybcLF8FkIcPtdZQ8GBYgmTrsVXQAVqVeYyo1Q5Q=="
       }
     }
   }

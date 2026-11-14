@@ -4,7 +4,7 @@
        fails every restore with NU1506, Renovate's lock-file update included, which restores every project of the repository. -->
   <Import Project="../../Directory.Packages.props" />
   <ItemGroup>
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.15" />
-    <PackageVersion Include="Microsoft.Authentication.WebAssembly.Msal" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Authentication.WebAssembly.Msal" Version="11.0.0" />
   </ItemGroup>
 </Project>
