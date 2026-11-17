@@ -5,7 +5,7 @@ ADR-0014).
 
 ## What happened
 
-The task of `DispatchAsync`, `SetAsync`, `WhenIdleAsync` or `InitializeAsync` (on `IStore`, `IDispatcher`,
+The task of `DispatchAsync`, `SetAsync`, `WhenIdleAsync`, `WhenRenderedAsync` (Ducky.Blazor's test settle) or `InitializeAsync` (on `IStore`, `IDispatcher`,
 `EffectContext`, `Middleware`, `SliceStore`, `DuckyComponent`, `DuckyLayout` or Ducky.Testing's `TestStore`) is waited on synchronously with `.Result`,
 `.Wait()` or `GetAwaiter().GetResult()`, through `ConfigureAwait(...)` too. These tasks complete only once the store's
 drainer makes progress: if the caller is the drainer, the wait is a self-deadlock, and Blazor WebAssembly has a single
@@ -21,4 +21,4 @@ For example, this code is reported:
 ## How to fix it
 
 `await` the task. To fire an action without waiting, call `Dispatch` (or `Set` instead of `SetAsync`); to wait for the
-store to settle in a test, `await WhenIdleAsync()`.
+store to settle in a test, `await WhenIdleAsync()`, or `await store.WhenRenderedAsync(Renderer.Dispatcher)` when a bUnit-rendered component must have rendered too.
