@@ -8,7 +8,7 @@ namespace Ducky.Generators;
 
 /// <summary>
 /// DUCKY010 (SPEC §7, §16.2, ADR-0014): blocking on the task of a Ducky, Ducky.Blazor or Ducky.Testing
-/// <c>DispatchAsync</c>, <c>SetAsync</c> (SliceStore), <c>WhenIdleAsync</c> or <c>InitializeAsync</c> with
+/// <c>DispatchAsync</c>, <c>SetAsync</c> (SliceStore), <c>WhenIdleAsync</c>, <c>WhenRenderedAsync</c> or <c>InitializeAsync</c> with
 /// <c>.Result</c>, <c>.Wait()</c> or <c>GetAwaiter().GetResult()</c> (through <c>ConfigureAwait</c> too): on the drainer
 /// that is a self-deadlock.
 /// </summary>
@@ -72,7 +72,7 @@ public sealed class BlockingAnalyzer : DiagnosticAnalyzer
             call = call.Instance as IInvocationOperation;
         }
 
-        if (call?.TargetMethod.Name is "DispatchAsync" or "SetAsync" or "WhenIdleAsync" or "InitializeAsync" && owners.Contains(call.TargetMethod.ContainingAssembly, SymbolEqualityComparer.Default))
+        if (call?.TargetMethod.Name is "DispatchAsync" or "SetAsync" or "WhenIdleAsync" or "WhenRenderedAsync" or "InitializeAsync" && owners.Contains(call.TargetMethod.ContainingAssembly, SymbolEqualityComparer.Default))
         {
             context.ReportDiagnostic(Diagnostic.Create(UsageDiagnostics.Blocking, context.Operation.Syntax.GetLocation(), call.TargetMethod.Name, how));
         }

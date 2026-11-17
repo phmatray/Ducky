@@ -42,3 +42,13 @@ The actions an effect dispatches usually have no reducer in the test; they are r
 - `DisposeAsync` has the same real-time bound, so a test whose effect ignores cancellation fails instead of hanging.
 
 Advance the fake clock with `store.Time.Advance(...)` to run timers and delays that effects create with `context.Time`.
+
+## Components
+
+A component that selects from the store (`DuckyComponent`, `DuckySelect`) re-renders after the store commits: the store drains on its own thread, then posts a change check to the renderer. An assertion made right after a dispatch or an interaction can therefore run before the markup changes. `WhenIdleAsync` and `Settled()` only wait for the store.
+
+After a dispatch or interaction, settle before asserting on markup. `WhenRenderedAsync` (Ducky.Blazor) waits until the store is idle and then until the render it requested has run:
+
+[!code-csharp[](../../../test/Ducky.Blazor.Tests/Components/StoreRenderingTests.cs#when-rendered)]
+
+It is async, so there is nothing to block on: [DUCKY010](../../diagnostics/DUCKY010.md) reports `WhenRenderedAsync(...).GetAwaiter().GetResult()` like the other Ducky tasks. Output that depends on the culture follows the render's execution context, which is empty (see #296).
