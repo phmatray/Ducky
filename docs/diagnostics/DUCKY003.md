@@ -32,8 +32,9 @@ state and is still reported. The types are matched by metadata name, so the rule
 follows references, not data flow: an alias (`var items = s.Items; items.Add(x);`), a call result and a write through an `out` or `ref`
 argument (`int.TryParse(text, out _count)`) are not tracked.
 Only the lambda written directly as the `On<T>` reducer, the `Set`/`SetAsync` mutator or the `Define` projector is
-analysed; method groups, stored
-delegates and generated code are not.
+analysed, and so is a `Reduce` override of `Slice<TState, TAction>`, a reducer whose parameters stand for the lambda's
+(ADR-0051). An `On<T>`, `Set`/`SetAsync` or `Define` lambda written inside `Reduce` is its own reducer, mutator or
+projector, so a write in it is reported once, for that lambda. Method groups, stored delegates and generated code are not.
 
 For example, this code is reported:
 
