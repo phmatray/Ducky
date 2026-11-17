@@ -34,6 +34,37 @@ public sealed class CircuitTests
         errors.ShouldBeEmpty();
     }
 
+    // The same, with the pause requested by the server, as a host shutting down does (Circuit.RequestCircuitPauseAsync,
+    // ASP.NET Core 11): the client runs its graceful pause, the store's persisting callback writes the seed, the circuit
+    // closes, and the resumed circuit's new store takes the seed rather than reloading.
+    [Fact]
+    public async Task Circuit_ServerRequestedPause_ResumeKeepsPrerenderSlices()
+    {
+        await using var host = await ServerPages.StartAsync();
+        await using var harness = await Harness.StartAsync();
+        var page = await harness.NewPageAsync();
+        var errors = ServerPages.CollectErrors(page);
+        await ServerPages.HoldWebAssemblyAsync(page);
+        await page.GotoAsync(host, "/products");
+        await Assertions.Expect(page.GetByTestId("idle")).ToHaveTextAsync("Server", new() { Timeout = ServerPages.InteractiveTimeoutMs });
+        (await ServerPages.LoadsAsync(host)).ShouldBe("1");
+
+        using var http = new HttpClient { BaseAddress = host.BaseUrl };
+        using var request = await http.PostAsync(new Uri("/api/circuit/pause", UriKind.Relative), null, TestContext.Current.CancellationToken);
+        (await request.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldBe("true");
+        // The pause is a request the client honours: the server's circuit is gone once the client has paused.
+        await page.WaitForFunctionAsync("async () => (await (await fetch('/api/circuit/open')).text()) === '0'",
+            null, new() { PollingInterval = 50, Timeout = ServerPages.InteractiveTimeoutMs });
+
+        await page.EvaluateAsync("() => document.querySelector('[data-testid=idle]').remove()");
+        await ResumeAsync(page);
+
+        await Assertions.Expect(page.GetByTestId("idle")).ToHaveTextAsync("Server", new() { Timeout = ServerPages.InteractiveTimeoutMs });
+        await Assertions.Expect(page.Locator("[data-testid=products] li")).ToHaveTextAsync(["Rubber duck", "Duck pond", "Bread crumbs"]);
+        (await ServerPages.LoadsAsync(host)).ShouldBe("1");
+        errors.ShouldBeEmpty();
+    }
+
     // The large slice (Local, Prerender) holds 1 KB in the circuit while localStorage still holds an older 100 KB value: the
     // write failed (here localStorage.setItem throws for the key, standing in for writes lost while the connection was
     // down), so the key is dirty when the pause is taken. The resumed store keeps the seed value over the stale storage and
