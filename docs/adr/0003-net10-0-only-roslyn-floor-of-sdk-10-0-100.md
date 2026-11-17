@@ -1,6 +1,6 @@
 # ADR-0003: net10.0 only, Roslyn floor of SDK 10.0.100
 
-- Status: Accepted
+- Status: Superseded by ADR-0049
 - Date: 2026-09-30
 - Related: SPEC §3 R-PKG-3; matrix conflict 18; open question 13
 
