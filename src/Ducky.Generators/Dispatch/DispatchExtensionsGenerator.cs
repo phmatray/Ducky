@@ -8,16 +8,19 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Ducky.Generators;
 
-/// <summary>GEN-01: emits the dispatch helpers of <c>[DuckyAction]</c> types (SPEC §16.1).</summary>
+/// <summary>GEN-01: emits the dispatch helpers of <c>[DuckyAction]</c> types, one set per case for a union (SPEC §16.1).</summary>
 [Generator(LanguageNames.CSharp)]
 public sealed class DispatchExtensionsGenerator : IIncrementalGenerator
 {
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var actions = context.SyntaxProvider
+        var targets = context.SyntaxProvider
             .ForAttributeWithMetadataName("Ducky.DuckyActionAttribute", static (n, _) => n is TypeDeclarationSyntax, static (c, _) => ActionModel.Create(c))
-            .WithTrackingName("DispatchActions");
+            .WithTrackingName("DispatchTargets");
+        var actions = targets.SelectMany(static (t, _) => t.Actions.Items).WithTrackingName("DispatchActions");
+        context.RegisterSourceOutput(targets.Where(static t => t.IgnoredMethodName is not null), static (spc, t) =>
+            spc.ReportDiagnostic(Diagnostic.Create(DispatchDiagnostics.UnionMethodName, t.Location.ToLocation(), t.IgnoredMethodName)));
         var reservedNames = context.CompilationProvider
             .Select(static (c, _) => ReservedNames(c))
             .WithTrackingName("DispatchReservedNames");
@@ -42,8 +45,10 @@ public sealed class DispatchExtensionsGenerator : IIncrementalGenerator
             .Select(m => m.Name)
             .ToImmutableArray());
 
-    private static void Emit(SourceProductionContext context, ImmutableArray<ActionModel> actions, EquatableArray<string> reservedNames)
+    private static void Emit(SourceProductionContext context, ImmutableArray<ActionModel> all, EquatableArray<string> reservedNames)
     {
+        // A case shared by two [DuckyAction] unions is emitted once, for the first of them.
+        var actions = all.GroupBy(a => a.TypeName).Select(g => g.First()).ToImmutableArray();
         var reserved = new HashSet<string>(reservedNames.Items);
         var sharedClass = actions.Where(a => a.Error is null)
             .GroupBy(a => (a.Namespace, a.ClassName))

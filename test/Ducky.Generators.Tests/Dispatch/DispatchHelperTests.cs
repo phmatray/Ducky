@@ -75,6 +75,33 @@ public sealed class DispatchHelperTests
         result.ShouldBe("Inc { By = 1 } | Reduced Inc { By = 1 } | Reduced Inc { By = 5 }");
     }
 
+    // #314 acceptance 2: [DuckyAction] on a union gives each case a helper named after it; store.AddItem(...) dispatches
+    // AddItem, the case itself, which is what dispatching the union delivers (#304).
+    [Fact]
+    public async Task Helper_UnionCase_DispatchesTheCase()
+    {
+        var result = await RunProbe("AddItem", """
+            namespace App;
+            public sealed record AddItem(string Name);
+            public sealed record RemoveItem(string Name);
+            public sealed record Clear;
+            [Ducky.DuckyAction] public union CartAction(AddItem, RemoveItem, Clear);
+            public static class Probe
+            {
+                public static async System.Threading.Tasks.Task<string> Run(Ducky.IStore store)
+                {
+                    store.AddItem("pear");
+                    await store.WhenIdleAsync();
+                    var first = store.State.Get<Seen>().Action;
+                    var result = await store.AddItemAsync("apple");
+                    return $"{first} | {result} {store.State.Get<Seen>().Action}";
+                }
+            }
+            """);
+
+        result.ShouldBe("AddItem { Name = pear } | Reduced AddItem { Name = apple }");
+    }
+
     // Non-normative: every default literal kind dispatches the constructor's own default (NaN, infinities, -0.0, enums,
     // decimal precision, escaped strings): the action equals `new Configure()`.
     [Fact]

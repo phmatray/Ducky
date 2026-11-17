@@ -28,3 +28,4 @@ DUCKY024 | Ducky | Info | DispatchDiagnostics
 DUCKY025 | Ducky | Warning | UsageDiagnostics
 DUCKY026 | Ducky | Error | RegistrationDiagnostics
 DUCKY027 | Ducky | Error | RegistrationDiagnostics
+DUCKY028 | Ducky | Warning | DispatchDiagnostics

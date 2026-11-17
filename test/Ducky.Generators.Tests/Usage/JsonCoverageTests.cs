@@ -85,6 +85,17 @@ public sealed class JsonCoverageTests
             Missing("Feature.Reset"),
             Missing("Total"));
 
+    // A [DuckyAction] union asks for its cases of this compilation, which its helpers dispatch, and not for itself or a BCL
+    // case (#314).
+    [Fact]
+    public Task Ducky006_UnionAction_ReportsItsCases() =>
+        VerifyAsync(
+            Source(Both, "{|#0:AppJson.Default|}", """
+                public sealed record Remove(int Amount);
+                [DuckyAction] public union Change(Add, Remove, string);
+                """),
+            Missing("Remove"));
+
     // A state type that contains a type parameter can't be named in [JsonSerializable(typeof(...))], so it is skipped;
     // a nested reference type's nullable annotation is dropped from the message (typeof(Count?) is CS8639).
     [Fact]

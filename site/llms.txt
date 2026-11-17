@@ -23,6 +23,7 @@ Every snippet in the guides is a region of a compiled, tested file. Every behavi
 - [Getting started](docs/guides/core/getting-started.md): install, declare a slice, register with `AddDuckyGenerated_{Assembly}()`, dispatch and read
 - [Slices and keys](docs/guides/core/slices-and-keys.md)
 - [Effects and concurrency policies](docs/guides/core/effects.md)
+- [Union effects and dispatch helpers](docs/guides/core/union-effects.md)
 - [Selectors](docs/guides/core/selectors.md)
 - [SliceStore](docs/guides/core/slice-store.md): a slice with methods, Zustand-style
 - [EntityState](docs/guides/core/entity-state.md)

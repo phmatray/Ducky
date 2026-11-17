@@ -28,6 +28,11 @@ internal static class DispatchDiagnostics
     private const string AmbiguousMessage = "The dispatch helper '{0}' of '{1}' has the same name and parameter types as the one of '{2}': a call that sees both is ambiguous (CS0121); set MethodName on one of them";
     private const string AmbiguousHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY024.md";
 
+    private const string UnionMethodNameId = "DUCKY028";
+    private const string UnionMethodNameTitle = "MethodName ignored on a union [DuckyAction]";
+    private const string UnionMethodNameMessage = "MethodName on the union '{0}' is ignored: each case's dispatch helpers are named after the case";
+    private const string UnionMethodNameHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY028.md";
+
     public static readonly DiagnosticDescriptor InvalidAction = new(
         InvalidId, InvalidTitle, InvalidMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: InvalidHelp);
 
@@ -37,5 +42,8 @@ internal static class DispatchDiagnostics
     public static readonly DiagnosticDescriptor AmbiguousHelpers = new(
         AmbiguousId, AmbiguousTitle, AmbiguousMessage, Category, DiagnosticSeverity.Info, Enabled, helpLinkUri: AmbiguousHelp);
 
-    public static readonly ImmutableArray<DiagnosticDescriptor> All = [InvalidAction, NameCollision, AmbiguousHelpers];
+    public static readonly DiagnosticDescriptor UnionMethodName = new(
+        UnionMethodNameId, UnionMethodNameTitle, UnionMethodNameMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: UnionMethodNameHelp);
+
+    public static readonly ImmutableArray<DiagnosticDescriptor> All = [InvalidAction, NameCollision, AmbiguousHelpers, UnionMethodName];
 }

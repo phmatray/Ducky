@@ -270,3 +270,7 @@ Ducky.IState
 Ducky.MemoizedSelector
 Ducky.NormalizedState<TKey, TEntity, TState>
 Ducky.SliceReducers<TState>
+abstract Ducky.EffectGroup<TAction>.Handle(TAction action, Ducky.EffectContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Ducky.EffectGroup<TAction>
+Ducky.EffectGroup<TAction>.EffectGroup() -> void
+virtual Ducky.EffectGroup<TAction>.RegisterCases() -> void

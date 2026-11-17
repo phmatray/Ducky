@@ -24,12 +24,12 @@ internal static class RegistrationDiagnostics
     private const string ExcludedHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY023.md";
 
     private const string NotUnionId = "DUCKY026";
-    private const string NotUnionTitle = "Union slice action type is not a union";
-    private const string NotUnionMessage = "'{0}' derives from Slice<TState, TAction>, but its action type '{1}' is not a C# union";
+    private const string NotUnionTitle = "Union-first action type is not a union";
+    private const string NotUnionMessage = "'{0}' derives from {1}, but its action type '{2}' is not a C# union";
     private const string NotUnionHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY026.md";
 
     private const string NotPartialId = "DUCKY027";
-    private const string NotPartialTitle = "Union slice is not partial";
+    private const string NotPartialTitle = "Union-first type is not partial";
     private const string NotPartialMessage = "The cases of '{0}' can't be registered: declare {1} partial";
     private const string NotPartialHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY027.md";
 
