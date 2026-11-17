@@ -2,13 +2,13 @@
 
 This guide takes a Blazor app from Fluxor 6.11.0 (`Fluxor` and `Fluxor.Blazor.Web`, the latest release as of 2026-11-08) to Ducky 2.0. The two libraries share the Redux model: a feature state becomes a slice, a reducer method becomes an `On<TAction>` in that slice, an effect method becomes an `Effect<TAction>`. What changes is mostly around the edges: how the store is registered and started, what an effect can do about concurrency, and what a dispatch tells you.
 
-Ducky 2.0 targets `net10.0` only, and it is a pre-release. Fluxor 6.11.0 targets `net8.0`, `net9.0` and `net10.0` and has years of production use. If your app can't move to .NET 10 yet, stay on Fluxor. [How Ducky compares](../compare.md) sets the two side by side.
+Ducky 2.0 targets `net11.0` only, and it is a pre-release. Fluxor 6.11.0 targets `net8.0`, `net9.0` and `net10.0` and has years of production use. If your app can't move to .NET 11 yet, stay on Fluxor. [How Ducky compares](../compare.md) sets the two side by side.
 
 Every snippet on this page comes from the compiled sample in `docs/migration/samples/fluxor`. `Before` is user code against `Fluxor.Blazor.Web` 6.11.0 from nuget.org, written from Fluxor's own [tutorials](https://github.com/mrpmorris/Fluxor/tree/6.11.0/Source/Tutorials/02-Blazor). `After` is the same app on Ducky 2.0, and `After.Tests` holds its tests and one test per behaviour change below.
 
 ## Checklist
 
-1. Target `net10.0`. Replace `Fluxor` and `Fluxor.Blazor.Web` with `Ducky` and `Ducky.Blazor`, and add `Ducky.Testing` to test projects. Remove `Fluxor.Blazor.Web.ReduxDevTools` (DevTools ship in `Ducky.Blazor`) and the community `Fluxor.Persist` (persistence ships in `Ducky.Blazor`).
+1. Target `net11.0`. Replace `Fluxor` and `Fluxor.Blazor.Web` with `Ducky` and `Ducky.Blazor`, and add `Ducky.Testing` to test projects. Remove `Fluxor.Blazor.Web.ReduxDevTools` (DevTools ship in `Ducky.Blazor`) and the community `Fluxor.Persist` (persistence ships in `Ducky.Blazor`).
 2. Make each `[FeatureState]` a plain record, and move its `[ReducerMethod]`s into the constructor of a `Slice<TState>`, one `On<TAction>` each (see [State, actions and reducers](#state-actions-and-reducers)).
 3. Turn each `[EffectMethod]` into an `Effect<TAction>` that dispatches through its `context`, passes its `cancellationToken` on, and picks a `Policy` (see [Effects](#effects)).
 4. Replace `FluxorComponent` with `DuckyComponent`, and each injected `IState<T>` or `IStateSelection<TState, TValue>` with a `Select` in `OnInitialized` (see [Components](#components)).
@@ -91,7 +91,7 @@ Fluxor column: Fluxor 6.11.0, as of 2026-11-08.
 
 | Fluxor 6.11 | Ducky 2.0 |
 |---|---|
-| `Fluxor`, `Fluxor.Blazor.Web` (`net8.0`, `net9.0`, `net10.0`) | `Ducky`, `Ducky.Blazor` (`net10.0`) |
+| `Fluxor`, `Fluxor.Blazor.Web` (`net8.0`, `net9.0`, `net10.0`) | `Ducky`, `Ducky.Blazor` (`net11.0`) |
 | `services.AddFluxor(o => o.ScanAssemblies(asm))` | `services.AddDucky(d => d.AddDuckyGenerated_{Assembly}())`, generated at build time |
 | `o.ScanTypes(...)` | `d.AddSlice<TSlice>()`, `d.AddEffect<TEffect>()` |
 | `o.AddMiddleware<T>()` | `d.Use<T>()` |

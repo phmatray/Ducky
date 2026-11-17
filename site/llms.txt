@@ -1,6 +1,6 @@
 # Ducky
 
-> Ducky 2.0 is a small, strict Redux store for .NET 10 and Blazor: typed slices of immutable state, pure reducers, one dispatcher that reduces one action at a time, effects with concurrency policies (Merge, Switch, Exhaust, Queue), source-generated registration and dispatch helpers, and Blazor integration (persistence to localStorage, sessionStorage or IDistributedCache, prerender handoff, cross-tab sync, Redux DevTools) that follows the same rules in every render mode. Status: 2.0 preview (`dotnet add package Ducky --prerelease`). License: Apache-2.0.
+> Ducky 2.0 is a small, strict Redux store for .NET 11 and Blazor: typed slices of immutable state, pure reducers, one dispatcher that reduces one action at a time, effects with concurrency policies (Merge, Switch, Exhaust, Queue), source-generated registration and dispatch helpers, and Blazor integration (persistence to localStorage, sessionStorage or IDistributedCache, prerender handoff, cross-tab sync, Redux DevTools) that follows the same rules in every render mode. Status: 2.0 preview (`dotnet add package Ducky --prerelease`). License: Apache-2.0.
 
 Every snippet in the guides is a region of a compiled, tested file. Every behavioural rule maps to an invariant (INV-01 to INV-32) with named tests.
 

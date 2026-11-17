@@ -8,7 +8,7 @@ Every snippet on this page comes from the compiled sample in `docs/migration/sam
 
 ## Checklist
 
-1. Target `net10.0`. Add `Ducky` and `Ducky.Blazor`, and `Ducky.Testing` to test projects.
+1. Target `net11.0`. Add `Ducky` and `Ducky.Blazor`, and `Ducky.Testing` to test projects.
 2. Gather the container's properties into one immutable record and derive the container from `SliceStore<TState>`; each method that changes state calls `Set` (see [The container becomes a SliceStore](#the-container-becomes-a-slicestore)).
 3. Move each method that awaits a service into an effect that injects the service and the SliceStore, triggered by an action: callers of `LoadAsync()` now dispatch `LoadCount` (see [Async methods become effects](#async-methods-become-effects)).
 4. Move the first load into an effect on `StoreInitialized` that returns early when the slice was restored (the load rule), and register the slice with `Prerender<TSlice, TState>(include)`, whose predicate seeds only a loaded state (see [Registration](#registration)).
