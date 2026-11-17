@@ -29,7 +29,7 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
             .WithTrackingName("RegistrationEmit");
         context.RegisterSourceOutput(registered.Collect().Combine(gates), static (spc, input) => Emit(spc, input.Left, input.Right));
 
-        // ADR-0051: one RegisterCases override per union slice, from symbol-free models (Location dropped, as above); the
+        // ADR-0051: one RegisterCases override per union slice or union effect group, from symbol-free models (Location dropped, as above); the
         // diagnostics read the located ones. A partial slice yields one model per declaration, hence Distinct.
         var unionSlices = context.SyntaxProvider
             .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, UnionSliceModel.From)
@@ -138,11 +138,11 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
                 writer.Close();
             }
 
-            context.AddSource(model.HintName + ".UnionSlice.g.cs", writer.ToString());
+            context.AddSource(model.HintName + ".g.cs", writer.ToString());
         }
     }
 
-    // DUCKY026 for a union slice whose action type is not a union, DUCKY027 for one not partial (or nested in a type that
+    // DUCKY026 for a union slice or effect group whose action type is not a union, DUCKY027 for one not partial (or nested in a type that
     // isn't): neither gets a RegisterCases override.
     private static void ReportUnionSlices(SourceProductionContext context, ImmutableArray<UnionSliceModel?> models)
     {
@@ -150,7 +150,7 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
         {
             if (model.NotUnion is not null)
             {
-                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.NotUnion, model.Location, model.Display, model.NotUnion));
+                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.NotUnion, model.Location, model.Display, model.Base, model.NotUnion));
             }
             else if (model.NotPartial is not null)
             {
