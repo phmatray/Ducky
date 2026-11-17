@@ -2,7 +2,7 @@
   <!-- Fallout build (SPEC §19, ADR-0035). Not in Ducky.slnx: ./build.sh builds and runs it through the fallout tool. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <RootNamespace></RootNamespace>
     <IsPackable>false</IsPackable>
     <FalloutRootDirectory>..</FalloutRootDirectory>

@@ -44,7 +44,7 @@ jobs:
         with:
           global-json-file: global.json
       - name: 'Install: wasm-tools'
-        run: dotnet workload install wasm-tools-net10
+        run: dotnet workload install wasm-tools
       - name: 'Setup: .NET SDK'
         uses: actions/setup-dotnet@v6
         with:

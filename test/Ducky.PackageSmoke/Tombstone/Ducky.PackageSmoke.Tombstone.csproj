@@ -3,7 +3,7 @@
        DUCKY900. Not in Ducky.PackageSmoke.slnx (it must fail); the PackageSmoke target builds it on its own. No code:
        the error stops the build before CoreCompile. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

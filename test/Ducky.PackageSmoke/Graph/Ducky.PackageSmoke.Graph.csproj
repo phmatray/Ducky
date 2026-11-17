@@ -2,7 +2,7 @@
   <!-- Restore-graph consumer (SPEC §17.9 step 3, R-PKG-1): references all five library packages, so the transitive scan
        covers every package's whole graph, including Ducky.Testing, which no other consumer references. No code. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

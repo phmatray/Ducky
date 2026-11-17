@@ -83,7 +83,7 @@ internal sealed partial class Build
                 <Project Sdk="Microsoft.NET.Sdk">
                   <Import Project="Imported.props" />
                   <PropertyGroup>
-                    <TargetFramework>net10.0</TargetFramework>{properties}
+                    <TargetFramework>net11.0</TargetFramework>{properties}
                   </PropertyGroup>
                   <ItemGroup>{items}</ItemGroup>
                 </Project>

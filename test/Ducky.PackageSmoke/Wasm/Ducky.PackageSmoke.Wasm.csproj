@@ -2,7 +2,7 @@
   <!-- WASM consumer (SPEC §17.9 step 1): compiles against the packed Ducky and Ducky.Blazor with TreatWarningsAsErrors,
        calling AddDuckyGenerated_PackageSmoke() (hence the assembly name) and the generated Increment helper. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <AssemblyName>PackageSmoke</AssemblyName>
   </PropertyGroup>
 

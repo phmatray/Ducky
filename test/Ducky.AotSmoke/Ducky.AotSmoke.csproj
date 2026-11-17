@@ -2,7 +2,7 @@
   <!-- NativeAOT smoke (SPEC §10, INV-24). Only in Ducky.Aot.slnx: with PublishAot a lock file would record the host-RID
        ILCompiler package (NU1004 on other hosts), so it is restored unlocked, by the AotSmoke target on Linux only. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <!-- Set here, not only as a global -p: on the command line it would also reach the netstandard2.0 generator that
          src/Ducky builds (NETSDK1207). -->

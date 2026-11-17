@@ -37,13 +37,13 @@ internal sealed partial class Build
             Assert.True(selfCheck.Count == 0, $"AotSmoke: {selfCheck.Count} self-check violation(s)");
             Assert.True(OperatingSystem.IsLinux(), "AotSmoke publishes Ducky.AotSmoke for linux-x64 and runs it: Linux only (SPEC §10)");
 
-            DotNet("workload install wasm-tools-net10");
+            DotNet("workload install wasm-tools");
             DotNet($"restore {AotSolution}");
             // PublishAot=true comes from the csproj: as a global -p: it would reach the netstandard2.0 generator (NETSDK1207).
             // Cleaned first, so files left by an earlier publish can't hide what this one produced. The RID intermediates go
             // too: with them, csc and ILC are up to date on a re-run and print no warning, so the IL check would read nothing.
             AotPublish.CreateOrCleanDirectory();
-            (RootDirectory / "test" / AotSmokeProject / "obj" / "Release" / "net10.0" / "linux-x64").DeleteDirectory();
+            (RootDirectory / "test" / AotSmokeProject / "obj" / "Release" / "net11.0" / "linux-x64").DeleteDirectory();
             var publishOutput = DotNet($"publish {RootDirectory / "test" / AotSmokeProject / $"{AotSmokeProject}.csproj"} -c Release -r linux-x64 --no-restore -o {AotPublish}")
                 .Select(o => o.Text);
             var publishViolations = AotPublishViolations(AotPublish.GetFiles().Select(f => f.Name))
@@ -66,14 +66,14 @@ internal sealed partial class Build
             // Stage 18: the trimmed AOT-WASM smoke (§10, spike S-3). The sample's intermediates go first: an up-to-date ILLink
             // prints no warning, so the IL2104 positive control would read nothing.
             WasmTrimmedPublish.CreateOrCleanDirectory();
-            (RootDirectory / "samples" / WasmSample / "obj" / "Release" / "net10.0").DeleteDirectory();
+            (RootDirectory / "samples" / WasmSample / "obj" / "Release" / "net11.0").DeleteDirectory();
             var wasmOutput = DotNet($"publish {RootDirectory / "samples" / WasmSample / $"{WasmSample}.csproj"} -c Release -p:RunAOTCompilation=true -p:TrimMode=full -p:RestoreLockedMode=false -p:SuppressTrimAnalysisWarnings=false -p:ILLinkTreatWarningsAsErrors=false -o {WasmTrimmedPublish}")
                 .Select(o => o.Text);
             FailOnViolations("AotSmoke", [.. WasmIlWarningViolations(wasmOutput)]);
 
             // DUCKY_REQUIRE_TRIMMED_PUBLISH makes a publish that landed elsewhere fail WasmTrimmedSmoke instead of skipping it,
             // and the TRX must hold exactly that one test, passed (INV-24).
-            ProcessTasks.StartProcess("pwsh", $"{E2EProject.Parent / "bin" / "Release" / "net10.0" / "playwright.ps1"} install --with-deps chromium")
+            ProcessTasks.StartProcess("pwsh", $"{E2EProject.Parent / "bin" / "Release" / "net11.0" / "playwright.ps1"} install --with-deps chromium")
                 .AssertZeroExitCode();
             var environment = new Dictionary<string, string>(EnvironmentInfo.Variables)
             {
@@ -228,7 +228,7 @@ internal sealed partial class Build
 
         // The trimmed Ducky.Samples.Wasm publish (M14-06): ILLink's line format (macOS arm64, 10.0.14).
         static string Il2104(string assembly) =>
-            $"/nuget/{assembly.ToLowerInvariant()}/10.0.14/lib/net10.0/{assembly}.dll : warning IL2104: Assembly '{assembly}' produced trim warnings. For more information see https://aka.ms/il2104 [/repo/samples/Ducky.Samples.Wasm/Ducky.Samples.Wasm.csproj]";
+            $"/nuget/{assembly.ToLowerInvariant()}/11.0.0/lib/net11.0/{assembly}.dll : warning IL2104: Assembly '{assembly}' produced trim warnings. For more information see https://aka.ms/il2104 [/repo/samples/Ducky.Samples.Wasm/Ducky.Samples.Wasm.csproj]";
         var components = Il2104("Microsoft.AspNetCore.Components");
         var jsInterop = Il2104("Microsoft.JSInterop");
         foreach (var violation in WasmIlWarningViolations(["Optimizing assemblies for size", components, jsInterop, components, jsInterop]))
@@ -248,7 +248,7 @@ internal sealed partial class Build
                 [components, jsInterop, "/repo/src/Ducky.Blazor/Core/JsArg.cs(21,28): Trim analysis warning IL2091: Ducky.Blazor.JsArg.Ref<T>(DotNetObjectReference<T>): 'TValue' generic argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicMethods'"],
                 "outside the allowance: /repo/src/Ducky.Blazor/Core/JsArg.cs(21,28): Trim analysis warning IL2091"),
             ("an IL2104 for another assembly", [components, jsInterop, Il2104("Microsoft.AspNetCore.Components.Web")],
-                "outside the allowance: /nuget/microsoft.aspnetcore.components.web/10.0.14/lib/net10.0/Microsoft.AspNetCore.Components.Web.dll : warning IL2104"),
+                "outside the allowance: /nuget/microsoft.aspnetcore.components.web/11.0.0/lib/net11.0/Microsoft.AspNetCore.Components.Web.dll : warning IL2104"),
         ];
         foreach (var (plantedCase, output, expected) in plantedWasm)
         {

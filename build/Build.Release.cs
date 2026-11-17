@@ -27,7 +27,7 @@ internal sealed partial class Build
     // allows each of them (later stories add the non-Ducky ones with their features).
     private static readonly Dictionary<string, string[]> DuckyDependents = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Ducky.Blazor"] = ["Ducky", "Microsoft.AspNetCore.Components.Web", "Microsoft.AspNetCore.Components.Authorization", "Microsoft.Extensions.Caching.Abstractions"],
+        ["Ducky.Blazor"] = ["Ducky", "Microsoft.AspNetCore.Components.Web", "Microsoft.AspNetCore.Components.Authorization"],
         ["Ducky.Reactive"] = ["Ducky", "R3"],
         ["Ducky.Testing"] = ["Ducky", "Microsoft.Extensions.TimeProvider.Testing", "Microsoft.Extensions.DependencyInjection"],
     };
@@ -35,14 +35,14 @@ internal sealed partial class Build
     // §3 (M16-03b): the duck icon and the nuget.org README every package carries, the tombstone included.
     private static readonly string[] PackageMetadataFiles = ["icon.png", "README.md"];
 
-    // §3: the entries each library package must hold besides lib/net10.0/{Id}.dll and .xml and the PackageMetadataFiles
+    // §3: the entries each library package must hold besides lib/net11.0/{Id}.dll and .xml and the PackageMetadataFiles
     // (the generator PDBs ship next to their DLLs: the .snupkg only collects lib/ PDBs, §17.9). A package holds nothing else
     // but its nuspec and the OPC parts (PackagingEntry) plus, in Ducky.Blazor only, the Razor SDK's other generated build
     // files and the static web assets (BlazorEntry): no content/ or contentFiles/ entry ever ships.
     private static readonly Dictionary<string, string[]> LibraryLayouts = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Ducky"] = ["analyzers/dotnet/cs/Ducky.Generators.dll", "analyzers/dotnet/cs/Ducky.Generators.pdb", "buildTransitive/Ducky.targets"],
-        ["Ducky.Blazor"] = ["staticwebassets/ducky.js", "build/Ducky.Blazor.props", "buildTransitive/Ducky.Blazor.props"],
+        ["Ducky.Blazor"] = ["staticwebassets/ducky.js", "build/Ducky.Blazor.targets", "build/Ducky.Blazor.PackageAssets.json", "build/Microsoft.AspNetCore.StaticWebAssets.targets", "buildMultiTargeting/Ducky.Blazor.targets", "buildTransitive/Ducky.Blazor.targets"],
         ["Ducky.Draft"] = ["analyzers/dotnet/cs/Ducky.Draft.Generators.dll", "analyzers/dotnet/cs/Ducky.Draft.Generators.pdb", "buildTransitive/Ducky.Draft.targets"],
         ["Ducky.Reactive"] = [],
         ["Ducky.Testing"] = [],
@@ -53,8 +53,8 @@ internal sealed partial class Build
     // `dotnet list package --format json` sections of one framework.
     private static readonly string[] ListedPackageKinds = ["topLevelPackages", "transitivePackages"];
 
-    // §3: Ducky's only runtime dependencies.
-    private static readonly string[] DuckyDependencies = ["Microsoft.Extensions.DependencyInjection.Abstractions", "Microsoft.Extensions.Logging.Abstractions"];
+    // §3: Ducky has no runtime package dependency (the Microsoft.Extensions abstractions ship in the net11.0 shared framework).
+    private static readonly string[] DuckyDependencies = [];
 
     // R-PKG-1: package IDs no package may bring into a consumer's restore graph (NuGet IDs are case-insensitive). The
     // Microsoft.AspNetCore.App framework reference is checked in the nuspec: `dotnet list package` doesn't list frameworks.
@@ -504,7 +504,7 @@ internal sealed partial class Build
 
         foreach (var (id, package) in byId.Where(p => LibraryLayouts.ContainsKey(p.Key)))
         {
-            foreach (var violation in Layout(package, [$"lib/net10.0/{id}.dll", $"lib/net10.0/{id}.xml", .. PackageMetadataFiles, .. LibraryLayouts[id]],
+            foreach (var violation in Layout(package, [$"lib/net11.0/{id}.dll", $"lib/net11.0/{id}.xml", .. PackageMetadataFiles, .. LibraryLayouts[id]],
                 id.Equals("Ducky.Blazor", StringComparison.OrdinalIgnoreCase) ? BlazorEntry : null))
             {
                 yield return violation;
@@ -585,16 +585,16 @@ internal sealed partial class Build
     private static IEnumerable<string> NuspecSelfCheck()
     {
         static PackageContent Package(string id, string? dependencies, params string[] entries) => new(id,
-            XElement.Parse($"<metadata><id>{id}</id>{(dependencies is null ? "" : $"<dependencies><group targetFramework=\"net10.0\">{dependencies}</group></dependencies>")}</metadata>"),
-            [$"{id}.nuspec", "_rels/.rels", "[Content_Types].xml", .. PackageMetadataFiles, .. id == "Ducky.Generator" ? [] : new[] { $"lib/net10.0/{id}.dll", $"lib/net10.0/{id}.xml" }, .. entries]);
+            XElement.Parse($"<metadata><id>{id}</id>{(dependencies is null ? "" : $"<dependencies><group targetFramework=\"net11.0\">{dependencies}</group></dependencies>")}</metadata>"),
+            [$"{id}.nuspec", "_rels/.rels", "[Content_Types].xml", .. PackageMetadataFiles, .. id == "Ducky.Generator" ? [] : new[] { $"lib/net11.0/{id}.dll", $"lib/net11.0/{id}.xml" }, .. entries]);
         const string onDucky = "<dependency id=\"Ducky\" version=\"2.0.0\" />";
         static List<PackageContent> Libraries(Func<PackageContent, PackageContent>? plant = null) =>
         [
             .. new[]
             {
-                Package("Ducky", "<dependency id=\"Microsoft.Extensions.DependencyInjection.Abstractions\" version=\"10.0.12\" /><dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"10.0.12\" />",
+                Package("Ducky", null,
                     "analyzers/dotnet/cs/Ducky.Generators.dll", "analyzers/dotnet/cs/Ducky.Generators.pdb", "buildTransitive/Ducky.targets"),
-                Package("Ducky.Blazor", onDucky, "staticwebassets/ducky.js", "build/Ducky.Blazor.props", "buildTransitive/Ducky.Blazor.props"),
+                Package("Ducky.Blazor", onDucky, "staticwebassets/ducky.js", "build/Ducky.Blazor.targets", "build/Ducky.Blazor.PackageAssets.json", "build/Microsoft.AspNetCore.StaticWebAssets.targets", "buildMultiTargeting/Ducky.Blazor.targets", "buildTransitive/Ducky.Blazor.targets"),
                 Package("Ducky.Draft", null, "analyzers/dotnet/cs/Ducky.Draft.Generators.dll", "analyzers/dotnet/cs/Ducky.Draft.Generators.pdb", "buildTransitive/Ducky.Draft.targets"),
                 Package("Ducky.Reactive", onDucky + "<dependency id=\"R3\" version=\"1.3.1\" />"),
                 Package("Ducky.Testing", onDucky),
@@ -610,13 +610,13 @@ internal sealed partial class Build
                 [.. NuspecViolations(Libraries(p => Replace(p, "Ducky.Blazor", "<dependency id=\"Ducky\" version=\"2.0.0\" exclude=\"Build,Analyzers\" />")), tombstone, files)],
                 "Ducky.Blazor: its Ducky dependency carries exclude=\"Build,Analyzers\""),
             ("an xunit dependency of Ducky",
-                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", "<dependency id=\"Microsoft.Extensions.DependencyInjection.Abstractions\" version=\"10.0.12\" /><dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"10.0.12\" /><dependency id=\"xunit.v3.mtp-v2\" version=\"4.0.1\" />")), tombstone, files)],
+                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", "<dependency id=\"xunit.v3.mtp-v2\" version=\"4.0.1\" />")), tombstone, files)],
                 "Ducky: dependency xunit.v3.mtp-v2 is forbidden (R-PKG-1)"),
-            ("Ducky without its Extensions abstractions",
-                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", null)), tombstone, files)],
+            ("an Extensions abstractions dependency of Ducky",
+                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", "<dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"11.0.0\" />")), tombstone, files)],
                 "Ducky: dependencies must be exactly"),
             ("Ducky without its generator",
-                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", "<dependency id=\"Microsoft.Extensions.DependencyInjection.Abstractions\" version=\"10.0.12\" /><dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"10.0.12\" />", "analyzers/dotnet/cs/Ducky.Generators.pdb", "buildTransitive/Ducky.targets")), tombstone, files)],
+                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky", null, "analyzers/dotnet/cs/Ducky.Generators.pdb", "buildTransitive/Ducky.targets")), tombstone, files)],
                 "Ducky: the package has no analyzers/dotnet/cs/Ducky.Generators.dll"),
             ("a Ducky.Draft dependency", [.. NuspecViolations(Libraries(p => Replace(p, "Ducky.Draft", onDucky)), tombstone, files)],
                 "Ducky.Draft: must have zero dependencies, has [Ducky]"),
@@ -629,17 +629,17 @@ internal sealed partial class Build
             ("the tombstone in artifacts/packages", [.. NuspecViolations(Libraries(), tombstone, [.. files, TombstonePackage])],
                 $"artifacts/packages holds {TombstonePackage}"),
             ("a Microsoft.AspNetCore.App framework reference",
-                [.. NuspecViolations(Libraries(p => p.Id == "Ducky.Blazor" ? p with { Metadata = XElement.Parse("<metadata><id>Ducky.Blazor</id><dependencies><group targetFramework=\"net10.0\"><dependency id=\"Ducky\" version=\"2.0.0\" /></group></dependencies><frameworkReferences><group targetFramework=\"net10.0\"><frameworkReference name=\"Microsoft.AspNetCore.App\" /></group></frameworkReferences></metadata>") } : p), tombstone, files)],
+                [.. NuspecViolations(Libraries(p => p.Id == "Ducky.Blazor" ? p with { Metadata = XElement.Parse("<metadata><id>Ducky.Blazor</id><dependencies><group targetFramework=\"net11.0\"><dependency id=\"Ducky\" version=\"2.0.0\" /></group></dependencies><frameworkReferences><group targetFramework=\"net11.0\"><frameworkReference name=\"Microsoft.AspNetCore.App\" /></group></frameworkReferences></metadata>") } : p), tombstone, files)],
                 "Ducky.Blazor: framework reference Microsoft.AspNetCore.App is forbidden (R-PKG-1)"),
             ("a stryker-config.json Content item packed into Ducky.Blazor",
-                [.. NuspecViolations(Libraries(p => p.Id == "Ducky.Blazor" ? p with { Entries = [.. p.Entries, "content/stryker-config.json", "contentFiles/any/net10.0/stryker-config.json"] } : p), tombstone, files)],
-                "Ducky.Blazor: unexpected entry contentFiles/any/net10.0/stryker-config.json"),
+                [.. NuspecViolations(Libraries(p => p.Id == "Ducky.Blazor" ? p with { Entries = [.. p.Entries, "content/stryker-config.json", "contentFiles/any/net11.0/stryker-config.json"] } : p), tombstone, files)],
+                "Ducky.Blazor: unexpected entry contentFiles/any/net11.0/stryker-config.json"),
             ("a generator DLL in Ducky's lib/",
-                [.. NuspecViolations(Libraries(p => p.Id == "Ducky" ? p with { Entries = [.. p.Entries, "lib/net10.0/Ducky.Generators.dll"] } : p), tombstone, files)],
-                "Ducky: unexpected entry lib/net10.0/Ducky.Generators.dll"),
+                [.. NuspecViolations(Libraries(p => p.Id == "Ducky" ? p with { Entries = [.. p.Entries, "lib/net11.0/Ducky.Generators.dll"] } : p), tombstone, files)],
+                "Ducky: unexpected entry lib/net11.0/Ducky.Generators.dll"),
             ("an assembly in the tombstone",
-                [.. NuspecViolations(Libraries(), tombstone with { Entries = [.. tombstone.Entries, "lib/net10.0/Ducky.Generator.dll"] }, files)],
-                "Ducky.Generator: unexpected entry lib/net10.0/Ducky.Generator.dll"),
+                [.. NuspecViolations(Libraries(), tombstone with { Entries = [.. tombstone.Entries, "lib/net11.0/Ducky.Generator.dll"] }, files)],
+                "Ducky.Generator: unexpected entry lib/net11.0/Ducky.Generator.dll"),
             ("a library without its README",
                 [.. NuspecViolations(Libraries(p => p.Id == "Ducky.Testing" ? p with { Entries = [.. p.Entries.Where(e => e != "README.md")] } : p), tombstone, files)],
                 "Ducky.Testing: the package has no README.md"),
@@ -653,7 +653,7 @@ internal sealed partial class Build
                 [.. NuspecViolations(Libraries(p => Replace(p, "Ducky.Testing", "<dependency id=\"Ducky\" version=\"2.0.0\" include=\"Compile,Runtime\" />")), tombstone, files)],
                 "Ducky.Testing: its Ducky dependency carries include=\"Compile,Runtime\""),
             ("a pinned transitive dependency promoted into Ducky.Reactive",
-                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky.Reactive", onDucky + "<dependency id=\"R3\" version=\"1.3.1\" /><dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"10.0.12\" exclude=\"Analyzers\" />")), tombstone, files)],
+                [.. NuspecViolations(Libraries(p => Replace(p, "Ducky.Reactive", onDucky + "<dependency id=\"R3\" version=\"1.3.1\" /><dependency id=\"Microsoft.Extensions.Logging.Abstractions\" version=\"11.0.0\" exclude=\"Analyzers\" />")), tombstone, files)],
                 "Ducky.Reactive: dependency Microsoft.Extensions.Logging.Abstractions is not in its §3 row"),
             ("a missing library", [.. NuspecViolations([.. Libraries().Where(p => p.Id != "Ducky.Testing")], tombstone, files)],
                 "Ducky.Testing: package not found"),
@@ -703,7 +703,7 @@ internal sealed partial class Build
     {
         static string Project(string name, string frameworks) => $$"""{"path":"/smoke/{{name}}/{{name}}.csproj"{{frameworks}}}""";
         static string Framework(string topLevel, string transitive = "") =>
-            $$""","frameworks":[{"framework":"net10.0","topLevelPackages":[{{topLevel}}],"transitivePackages":[{{transitive}}]}]""";
+            $$""","frameworks":[{"framework":"net11.0","topLevelPackages":[{{topLevel}}],"transitivePackages":[{{transitive}}]}]""";
         const string ducky = """{"id":"Ducky","requestedVersion":"2.0.0","resolvedVersion":"2.0.0"}""";
         static List<string> Run(params string[] projects)
         {

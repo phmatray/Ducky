@@ -4,7 +4,7 @@
        GenerateDocumentationFile (set here, not only inherited). Its DUCKY901 variant sets -p:SmokeMutty=2.0.0 (the
        committed fake). -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

@@ -32,7 +32,7 @@ internal static class AnalyzerVerifier<TAnalyzer>
         var test = new Test
         {
             TestCode = source,
-            ReferenceAssemblies = new ReferenceAssemblies("net10.0"),
+            ReferenceAssemblies = new ReferenceAssemblies("net11.0"),
             CompilerDiagnostics = CompilerDiagnostics.Warnings,
             // Generator output is not compared; and the rule reports in generated code on purpose (Razor @code blocks).
             TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck | TestBehaviors.SkipGeneratedCodeCheck,
