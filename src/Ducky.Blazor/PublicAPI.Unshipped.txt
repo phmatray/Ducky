@@ -59,6 +59,8 @@ Ducky.Blazor.DuckySelect<TResult>.Dispose() -> void
 Ducky.Blazor.DuckySelect<TResult>.DuckySelect() -> void
 Ducky.Blazor.DuckySelect<TResult>.Selector.get -> System.Func<Ducky.StateSnapshot!, TResult>!
 Ducky.Blazor.DuckySelect<TResult>.Selector.set -> void
+Ducky.Blazor.StoreRenderingExtensions
+static Ducky.Blazor.StoreRenderingExtensions.WhenRenderedAsync(this Ducky.IStore! store, Microsoft.AspNetCore.Components.Dispatcher! dispatcher, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Ducky.Blazor.StoreSelectionExtensions
 static Ducky.Blazor.StoreSelectionExtensions.Select<T>(this Ducky.IStore! store, System.Func<Ducky.StateSnapshot!, T>! selector, System.Func<System.Func<System.Threading.Tasks.Task!>!, System.Threading.Tasks.Task!>! invokeAsync, System.Action! stateHasChanged, Microsoft.AspNetCore.Components.RendererInfo! rendererInfo, System.IServiceProvider! services, System.Collections.Generic.IEqualityComparer<T>? comparer = null) -> Ducky.Selection<T>!
 override Ducky.Blazor.DuckySelect<TResult>.SetParametersAsync(Microsoft.AspNetCore.Components.ParameterView parameters) -> System.Threading.Tasks.Task!

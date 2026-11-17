@@ -76,6 +76,19 @@ public sealed class BlockingTests
     [MemberData(nameof(NotReported))]
     public Task Ducky010_NotBlockingOnDuckyTask_NotReported(string body) => Verifier.VerifyAsync(Source(body));
 
+    // Ducky.Blazor's WhenRenderedAsync (#297), the bUnit settle, is blocked on like WhenIdleAsync.
+    [Fact]
+    public Task Ducky010_WhenRenderedAsync_Reported() =>
+        Verifier.VerifyAsync(
+            """
+            public static class Calls
+            {
+                public static void Run(Ducky.IStore store, Microsoft.AspNetCore.Components.Dispatcher dispatcher) =>
+                    {|#0:Ducky.Blazor.StoreRenderingExtensions.WhenRenderedAsync(store, dispatcher).GetAwaiter().GetResult()|};
+            }
+            """,
+            Verifier.Diagnostic(UsageDiagnostics.Blocking).WithLocation(0).WithArguments("WhenRenderedAsync", "GetAwaiter().GetResult()"));
+
     // Ducky.Blazor's protected DispatchAsync of a component, called from a handler.
     [Fact]
     public Task Ducky010_ComponentDispatchAsync_Reported() =>
