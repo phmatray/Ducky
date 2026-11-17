@@ -15,13 +15,14 @@ namespace Ducky.Generators.Registration;
 /// A union-first type (ADR-0051) deriving directly from <c>Ducky.Slice&lt;TState, TAction&gt;</c> or
 /// <c>Ducky.EffectGroup&lt;TAction&gt;</c>, symbol-free. Emitted as an override of
 /// <c>RegisterCases</c> in its <see cref="Declarations"/> (outermost first, inside <see cref="Namespace"/>), one
-/// <see cref="Registrations"/> line per case of the union, when <see cref="Rule"/> is null; otherwise that diagnostic,
+/// <see cref="Registrations"/> line per case of the union (suppressing the <see cref="Suppressed"/> ids of the
+/// [Experimental] and [Obsolete] cases besides CS0612/CS0618), when <see cref="Rule"/> is null; otherwise that diagnostic,
 /// formatted with <see cref="Arguments"/>, at <see cref="Location"/>: DUCKY026 (not a union), DUCKY027 (not partial),
 /// DUCKY029 (a case dispatch never matches), DUCKY030 (file-local) or DUCKY031 (a hand-written <c>RegisterCases</c>).
 /// </summary>
 internal sealed record UnionSliceModel(
     string Display, string HintName, string? Namespace, EquatableArray<string> Declarations, EquatableArray<string> Registrations,
-    DiagnosticDescriptor? Rule, EquatableArray<string> Arguments, Location Location)
+    DiagnosticDescriptor? Rule, EquatableArray<string> Arguments, Location Location, EquatableArray<string> Suppressed = default)
 {
     private static readonly SymbolDisplayFormat _declaration = new(
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
@@ -103,6 +104,8 @@ internal sealed record UnionSliceModel(
             Namespace = type.ContainingNamespace.IsGlobalNamespace ? null : type.ContainingNamespace.ToDisplayString(),
             Declarations = new([.. chain.Select(t => $"partial {Keyword(t)} {t.ToDisplayString(_declaration)}")]),
             Registrations = new([.. registrations]),
+            Suppressed = new([.. RegistrationModel.SuppressedIds(cases.SelectMany(c => Containing(c.Case)).Concat(Containing(action)), compilation)
+                .Distinct().OrderBy(id => id, StringComparer.Ordinal)]),
         };
     }
 
@@ -120,6 +123,14 @@ internal sealed record UnionSliceModel(
         var kind = baseType is null ? null
             : _kinds.FirstOrDefault(k => SymbolEqualityComparer.Default.Equals(baseType.OriginalDefinition, compilation.GetTypeByMetadataName(k.MetadataName)));
         return kind is null || baseType!.TypeArguments[kind.ActionIndex] is ITypeParameterSymbol ? (null, null) : (kind, baseType.TypeArguments[kind.ActionIndex]);
+    }
+
+    private static IEnumerable<ISymbol> Containing(ISymbol symbol)
+    {
+        for (var s = symbol; s is INamedTypeSymbol; s = s.ContainingType)
+        {
+            yield return s;
+        }
     }
 
     private static string Keyword(INamedTypeSymbol type) =>
