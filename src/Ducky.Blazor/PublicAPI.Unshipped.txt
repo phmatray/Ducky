@@ -83,6 +83,8 @@ Ducky.Blazor.PersistenceStatus.Hydrating = 1 -> Ducky.Blazor.PersistenceStatus
 Ducky.Blazor.PersistenceStatus.NotStarted = 0 -> Ducky.Blazor.PersistenceStatus
 static Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<TSlice, TState>(this Ducky.DuckyBuilder! builder, System.Func<TState!, bool>! include) -> Ducky.DuckyBuilder!
 static Ducky.Blazor.DuckyBlazorBuilderExtensions.Prerender<TSlice>(this Ducky.DuckyBuilder! builder) -> Ducky.DuckyBuilder!
+Ducky.Blazor.BlazorOptions.InitializeOnStart.get -> bool
+Ducky.Blazor.BlazorOptions.InitializeOnStart.set -> void
 Ducky.Blazor.BlazorOptions.HydrationTimeout.get -> System.TimeSpan
 Ducky.Blazor.BlazorOptions.HydrationTimeout.set -> void
 Ducky.Blazor.BlazorOptions.Scope.get -> System.Func<System.IServiceProvider!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<string?>>?

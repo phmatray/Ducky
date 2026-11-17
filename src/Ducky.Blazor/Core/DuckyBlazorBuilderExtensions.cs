@@ -112,6 +112,7 @@ public static partial class DuckyBlazorBuilderExtensions
         builder.Services.AddSingleton(registration).AddSingleton(registration.Options);
         builder.Use<PrerenderHandoff>().Use<PersistenceMiddleware>();
         builder.AddSlice<PersistenceSlice>();
+        builder.Services.AddHostedService<DuckyInitializationService>();
 
         // At first resolution, on the final composed options: a later call may still fix what an earlier one set (§11.1).
         builder.AddValidation(_ => registration.Validate(builder));
