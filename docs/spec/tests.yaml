@@ -87,6 +87,7 @@ tests:
   - { name: Circuit_ResumeAfterVersionBump_DirtySeedKeyDropped_StorageMigrated, projects: [Ducky.Blazor.Tests], invariants: [INV-15], stage: 12 }
   - { name: Circuit_ResumeUnderOtherUser_PauseSeedScopedSlicesNotRestoredOrWritten, projects: [Ducky.Blazor.Tests], invariants: [INV-17], stage: 13 }
   - { name: Circuit_Resume_SeedRestoresPrerenderSlices, projects: [Ducky.Blazor.Tests, Ducky.E2E], stage: 18 }
+  - { name: Circuit_ServerRequestedPause_ResumeKeepsPrerenderSlices, projects: [Ducky.E2E], stage: 18 }
   - { name: ClearPersistedState_Strict_NoFailure, projects: [Ducky.Blazor.Tests], stage: 12 }
   - { name: Clear_DuringInFlightWrite_KeyStaysRemoved, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }
   - { name: Clear_RemovesOnlyPersistedKeysOfThisScope, projects: [Ducky.Blazor.Tests], invariants: [INV-16], stage: 12 }

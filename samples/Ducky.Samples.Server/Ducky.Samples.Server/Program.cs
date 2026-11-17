@@ -4,12 +4,14 @@ using Ducky.Samples.Server.Client;
 using Ducky.Samples.Server.Components;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents().AddInteractiveServerComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHealthChecks();
+builder.Services.AddScoped<CircuitHandler, CircuitPauser>();
 // PersistStorage.Server over the real MemoryDistributedCache; NameIdentifier (the default scope) comes from the cookie.
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddDuckySample();
@@ -24,6 +26,9 @@ app.MapHealthChecks("/health");
 app.MapGet("/api/products", (IProductCatalog catalog, CancellationToken cancellationToken) => catalog.GetAsync(cancellationToken));
 app.MapGet("/api/products/loads", (ServerProductCatalog catalog) => catalog.Loads);
 app.MapGet("/api/ping", () => "pong");
+// Test hooks: the server asks every open circuit to pause, as a host shutting down does.
+app.MapPost("/api/circuit/pause", (CancellationToken cancellationToken) => CircuitPauser.RequestPauseAsync(cancellationToken));
+app.MapGet("/api/circuit/open", () => CircuitPauser.Open);
 // A test login for the E2E specs, not an auth recipe: any user name signs in, through a GET.
 app.MapGet("/login", async (HttpContext context, string user, string? returnUrl) =>
 {
