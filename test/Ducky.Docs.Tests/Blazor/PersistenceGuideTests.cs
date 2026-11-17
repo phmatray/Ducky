@@ -36,6 +36,7 @@ public sealed class PreferencesSlice : Slice<Preferences>
 [JsonSerializable(typeof(Core.EffectsGuideTests.TickCount))]
 [JsonSerializable(typeof(Core.Greeting))]
 [JsonSerializable(typeof(Core.Layout))]
+[JsonSerializable(typeof(Core.Parcel))]
 [JsonSerializable(typeof(Core.Rename))]
 [JsonSerializable(typeof(Core.Settings))]
 [JsonSerializable(typeof(Core.Todos))]
