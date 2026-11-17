@@ -51,6 +51,11 @@ public abstract class EffectGroup : Effect
                 $"{GetType()} calls On<{actionType}>() after a store created its runners. Call On<T>() only from the constructor.");
         }
 
+        if (typeof(System.Runtime.CompilerServices.IUnion).IsAssignableFrom(actionType))
+        {
+            throw new DuckyConfigurationException([DuckyErrors.UnionHandlerType(GetType(), actionType)]);
+        }
+
         // Interfaces are abstract too.
         if (actionType.IsAbstract || actionType == typeof(object))
         {

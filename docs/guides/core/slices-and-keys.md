@@ -40,3 +40,11 @@ Two slices with the same key are a configuration error, reported at the first st
 ## Action names
 
 DevTools and `ActionContext.ActionType` show an action as `Namespace.Name`. `[ActionType("settings/theme-changed")]` gives it a readable name instead, as on `ThemeChanged` above.
+
+## Actions and state as C# 15 unions
+
+A C# 15 `union` of record cases is a natural action set. Dispatching the union value dispatches its case: reducers, effects, middleware and `ActionContext` all see `AddProduct`, not `ParcelAction`, so handlers match exactly as before. Register one `On<T>()` per case; `On<ParcelAction>()` is a configuration error ([DUCKY319](../../diagnostics/DUCKY319.md)). A default union has no case and fails like a `null` action.
+
+[!code-csharp[](../../../test/Ducky.Docs.Tests/Core/UnionActionsGuideTests.cs#union-actions)]
+
+A union inside a state record serializes through the System.Text.Json resolver you pass to `UseJson`, like any other state type; cases that share a JSON shape need a type classifier on your side.

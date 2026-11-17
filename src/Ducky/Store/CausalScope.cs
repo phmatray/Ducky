@@ -25,6 +25,13 @@ internal sealed partial class Dispatcher
     // a DispatchSystem failure action (isFailure) follows it.
     internal Pending NewPending(object action, Origin origin, TaskCompletionSource<DispatchResult>? completion, bool isFailure = false)
     {
+        // A C# 15 union dispatches as its case, so exact-type matching (ADR-0008) sees the case; nested unions unwrap too.
+        // A default union has no case: it fails like a null action.
+        while (action is System.Runtime.CompilerServices.IUnion union)
+        {
+            action = union.Value ?? throw new ArgumentNullException(nameof(action), "A default union has no case to dispatch.");
+        }
+
         var c = _causal.Value;
         if (c is null)
         {
