@@ -15,7 +15,8 @@ public sealed class CounterSlice : Slice<Counter>
     protected override Counter Initial => new(0);
 }
 
-// One reduced dispatch through the real store, alone and with selections whose onChange it notifies.
+// One reduced dispatch through the real store, alone and with selections whose onChange it notifies; and the same dispatch
+// followed by WhenIdleAsync, the async path (drainer and idle wait) that .NET 11 runtime async changes.
 [MemoryDiagnoser]
 public class DispatchBenchmarks
 {
@@ -45,4 +46,11 @@ public class DispatchBenchmarks
 
     [Benchmark]
     public Task<DispatchResult> Dispatch() => _store.DispatchAsync(_increment);
+
+    [Benchmark]
+    public async Task DispatchThenWhenIdle()
+    {
+        await _store.DispatchAsync(_increment).ConfigureAwait(false);
+        await _store.WhenIdleAsync().ConfigureAwait(false);
+    }
 }

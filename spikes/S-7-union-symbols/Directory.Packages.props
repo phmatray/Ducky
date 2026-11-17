@@ -1,0 +1,4 @@
+<Project>
+  <!-- The repository pins (Roslyn 5.0.0 included), as the S-4 spike does. -->
+  <Import Project="../../Directory.Packages.props" />
+</Project>
