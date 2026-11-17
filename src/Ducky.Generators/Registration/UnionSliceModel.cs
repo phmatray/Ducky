@@ -93,8 +93,9 @@ internal sealed record UnionSliceModel(
         // Dispatch matches an action's exact runtime type (ADR-0008): never an abstract type, an interface or object
         // (On<T> throws DUCKY307), nor a Nullable<T>, which boxes to its T. The first path to a case wins, since On<T>
         // takes one handler per type.
-        var cases = UnionCases.Of(action, iunion);
-        var undispatchable = cases.Where(c => c.Case.IsAbstract || c.Case.SpecialType == SpecialType.System_Object
+        var seen = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+        var cases = UnionCases.Of(action, iunion, seen);
+        var undispatchable = cases.Where(c => c.Case.IsAbstract || c.Case.SpecialType == SpecialType.System_Object || c.Case.TypeKind == TypeKind.Dynamic
                 || c.Case.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
             .Select(c => $"'{c.Case.ToDisplayString()}'").ToList();
         if (undispatchable.Count > 0)
@@ -109,16 +110,22 @@ internal sealed record UnionSliceModel(
             Namespace = type.ContainingNamespace.IsGlobalNamespace ? null : type.ContainingNamespace.ToDisplayString(),
             Declarations = new([.. chain.Select(t => $"partial {Keyword(t)} {t.ToDisplayString(_declaration)}")]),
             Registrations = new([.. registrations]),
-            Suppressed = new([.. RegistrationModel.SuppressedIds(cases.SelectMany(c => Containing(c.Case)).Concat(Containing(action)), compilation)
+            // Every type the registrations name: the cases, the unions the wraps construct, their containing types and type
+            // arguments.
+            Suppressed = new([.. RegistrationModel.SuppressedIds(seen.SelectMany(Referenced), compilation)
                 .Distinct().OrderBy(id => id, StringComparer.Ordinal)]),
         };
     }
 
-    private static IEnumerable<ISymbol> Containing(ISymbol symbol)
+    private static IEnumerable<ISymbol> Referenced(ITypeSymbol type)
     {
-        for (var s = symbol; s is INamedTypeSymbol; s = s.ContainingType)
+        for (var t = type as INamedTypeSymbol; t is not null; t = t.ContainingType)
         {
-            yield return s;
+            yield return t;
+            foreach (var argument in t.TypeArguments.SelectMany(Referenced))
+            {
+                yield return argument;
+            }
         }
     }
 

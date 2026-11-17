@@ -110,7 +110,7 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
     private static void OnReduce(OperationAnalysisContext op, INamedTypeSymbol? unionSlice)
     {
         var method = (IMethodSymbol)op.ContainingSymbol;
-        if (PurityAnalyzer.IsUnionReduce(method, unionSlice))
+        if (UnionCases.IsReduce(method, unionSlice))
         {
             ReportEmptyWith(op, op.Operation, method.Parameters[0]);
         }

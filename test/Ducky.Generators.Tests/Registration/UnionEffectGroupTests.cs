@@ -122,6 +122,7 @@ public sealed class UnionEffectGroupTests
             """);
 
         diagnostic.Id.ShouldBe(id);
+        diagnostic.Location.SourceTree.ShouldNotBeNull().ToString().Substring(diagnostic.Location.SourceSpan.Start, diagnostic.Location.SourceSpan.Length).ShouldBe("CartEffects");
     }
 
     // One diagnostic, no override emitted, and the output still compiles (the group merely registers nothing).

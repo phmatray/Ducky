@@ -143,22 +143,10 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         Drafts drafts)
     {
         var method = (IMethodSymbol)context.ContainingSymbol;
-        if (IsUnionReduce(method, unionSlice))
+        if (UnionCases.IsReduce(method, unionSlice))
         {
             AnalyzeBody(context, context.Operation, method, rules, "reducer", drafts);
         }
-    }
-
-    /// <summary>Whether <paramref name="method"/> overrides (through any number of overrides) <c>Slice&lt;TState, TAction&gt;.Reduce</c>.</summary>
-    internal static bool IsUnionReduce(IMethodSymbol method, INamedTypeSymbol? unionSlice)
-    {
-        var declared = method;
-        while (declared.OverriddenMethod is { } overridden)
-        {
-            declared = overridden;
-        }
-
-        return declared.Name == "Reduce" && Is(declared.ContainingType.OriginalDefinition, unionSlice);
     }
 
     // `function` is the lambda or method whose parameters are the arm's inputs, and whose locals are its own.

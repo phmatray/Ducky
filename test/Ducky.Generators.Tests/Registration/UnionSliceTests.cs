@@ -147,18 +147,22 @@ public sealed class UnionSliceTests
         generated.ShouldContain("On<global::X>((s, a) => Reduce(s, new global::A(a)));");
     }
 
-    // #324: an [Experimental] case, one nested in an [Experimental] type, an [Experimental] union and an [Obsolete] case with its own
-    // DiagnosticId compile without their ids surfacing from generated code (GEN-06).
+    // #324: an [Experimental] case, one nested in an [Experimental] type, an [Experimental] union (outer or nested), an
+    // [Experimental] type argument of a case and an [Obsolete] case with its own DiagnosticId compile without their ids
+    // surfacing from generated code (GEN-06).
     [Fact]
     public void UnionSlice_ExperimentalAndObsoleteIdCases_CompilesClean()
     {
         GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile("""
-            #pragma warning disable CS1591, X001, X002, X003, X004 // justification: undocumented test sources; the union names the cases
+            #pragma warning disable CS1591, X001, X002, X003, X004, X005, X006 // justification: undocumented test sources; the union names the cases
             public sealed record Cart(int Count);
             [System.Diagnostics.CodeAnalysis.Experimental("X001")] public sealed record Exp;
             [System.Obsolete("old", DiagnosticId = "X002")] public sealed record Old;
             [System.Diagnostics.CodeAnalysis.Experimental("X003")] public static class Outer { public sealed record Nested; public sealed record Other; }
-            [System.Diagnostics.CodeAnalysis.Experimental("X004")] public union A(Exp, Old, Outer.Nested, Outer.Other);
+            public sealed record Box<T>(T Value);
+            [System.Diagnostics.CodeAnalysis.Experimental("X006")] public sealed record Arg;
+            [System.Diagnostics.CodeAnalysis.Experimental("X005")] public union Inner(Box<Arg>);
+            [System.Diagnostics.CodeAnalysis.Experimental("X004")] public union A(Exp, Old, Outer.Nested, Outer.Other, Inner);
             public sealed partial class CartSlice : Ducky.Slice<Cart, A>
             {
                 protected override Cart Initial => new(0);
@@ -168,8 +172,8 @@ public sealed class UnionSliceTests
 
         output.ShouldCompileClean();
         var generated = Generated(output, "CartSlice.UnionSlice.g.cs");
-        generated.ShouldContain("#pragma warning disable X001, X002, X003, X004 //");
-        generated.ShouldContain("#pragma warning restore X001, X002, X003, X004\n");
+        generated.ShouldContain("#pragma warning disable X001, X002, X003, X004, X005, X006 //");
+        generated.ShouldContain("#pragma warning restore X001, X002, X003, X004, X005, X006\n");
     }
 
     // ADR-0050 reads only the public single-parameter constructors: a hand-written IUnion's private one is no case.
@@ -313,6 +317,7 @@ public sealed class UnionSliceTests
     [InlineData("public abstract record Item;", "Item", "'App.Item'")]
     [InlineData("", "object", "'object'")]
     [InlineData("", "int?", "'int?'")]
+    [InlineData("", "dynamic", "'dynamic'")]
     [InlineData("public interface IItem;", "IItem, object", "'App.IItem', 'object'")]
     public void UnionSlice_UndispatchableCase_IsDucky029(string declaration, string cases, string display)
     {
@@ -351,23 +356,25 @@ public sealed class UnionSliceTests
         ShouldBeAt(diagnostic, output, "CartSlice");
     }
 
-    // #324: a hand-written RegisterCases while the generator is on is DUCKY031 instead of CS0111, partial or not.
+    // #324: a hand-written RegisterCases() while the generator is on is DUCKY031 instead of CS0111, partial or not, and
+    // whether it overrides or hides.
     [Theory]
-    [InlineData("public sealed partial class CartSlice")]
-    [InlineData("public sealed class CartSlice")]
-    public void UnionSlice_HandWrittenRegisterCases_IsDucky031(string declaration)
+    [InlineData("public sealed partial class CartSlice", "protected override void RegisterCases() => On<AddItem>((s, a) => s);")]
+    [InlineData("public sealed class CartSlice", "protected override void RegisterCases() => On<AddItem>((s, a) => s);")]
+    [InlineData("public sealed partial class CartSlice", "private static new void RegisterCases() { }")]
+    public void UnionSlice_HandWrittenRegisterCases_IsDucky031(string declaration, string member)
     {
         var diagnostic = Diagnose(Cart + $$"""
             {{declaration}} : Ducky.Slice<Cart, CartAction>
             {
             {{Reduce}}
-                protected override void RegisterCases() => On<AddItem>((s, a) => s);
+                {{member}}
             }
             """, out var output);
 
         diagnostic.Id.ShouldBe("DUCKY031");
         diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture)
-            .ShouldBe("'App.CartSlice' overrides RegisterCases, which the Ducky generator writes for it: remove the override");
+            .ShouldBe("'App.CartSlice' declares RegisterCases(), which the Ducky generator writes for it: remove it");
         ShouldBeAt(diagnostic, output, "CartSlice");
     }
 

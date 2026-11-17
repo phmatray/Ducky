@@ -45,7 +45,7 @@ internal static class RegistrationDiagnostics
 
     private const string HandWrittenId = "DUCKY031";
     private const string HandWrittenTitle = "Hand-written RegisterCases on a generated union-first type";
-    private const string HandWrittenMessage = "'{0}' overrides RegisterCases, which the Ducky generator writes for it: remove the override";
+    private const string HandWrittenMessage = "'{0}' declares RegisterCases(), which the Ducky generator writes for it: remove it";
     private const string HandWrittenHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY031.md";
 
     public static readonly DiagnosticDescriptor Unresolved = new(
