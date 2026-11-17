@@ -42,7 +42,7 @@ public sealed class QueueInterleavingTests
         private readonly int[] _active = new int[2];
         private int _overlaps;
         private int _lastSeq;
-        private bool? _settled;
+        private readonly Interleaving.Settlement<bool> _settlement = new();
 
         public Actual() => Store = new DuckyStore([new LogSlice()], NullLogger.Instance, effects: () => [(new QueueEffect<Add>(add => add.Producer, Handle), false)]);
 
@@ -54,9 +54,10 @@ public sealed class QueueInterleavingTests
 
         public void DispatchAndWait(int key) => Interleaving.Wait(Store.DispatchAsync(Next(key))).ShouldBe(DispatchResult.Reduced);
 
-        // Once, after the run (equal may be called once per linearization tried): idle means every run has ended, so each
-        // dispatched action's handler ran exactly once, with no overlap per key, and every slot was removed.
-        public bool Settled() => _settled ??= Settle();
+        // Once, after the run (equal may be called once per linearization tried, concurrently: Interleaving.Settlement):
+        // idle means every run has ended, so each dispatched action's handler ran exactly once, with no overlap per key, and
+        // every slot was removed.
+        public bool Settled() => _settlement.TryGet(Settle, out var settled) && settled;
 
         public override string ToString() =>
             $"{Dispatched} dispatched, {_calls.Count} handled, {_overlaps} overlaps, {Store.Dispatcher.SlotCount} slots";
