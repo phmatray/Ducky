@@ -49,10 +49,6 @@ A component that selects from the store (`DuckyComponent`, `DuckySelect`) re-ren
 
 After a dispatch or interaction, settle before asserting on markup. `WhenRenderedAsync` (Ducky.Blazor) waits until the store is idle and then until the render it requested has run:
 
-```csharp
-Store.Dispatch(new SetItem(0, "changed"));
-await Store.WhenRenderedAsync(Renderer.Dispatcher); // bUnit: Renderer.Dispatcher
-cut.Markup.ShouldBe("changed");
-```
+[!code-csharp[](../../../test/Ducky.Blazor.Tests/Components/StoreRenderingTests.cs#when-rendered)]
 
 It is async, so there is nothing to block on: [DUCKY010](../../diagnostics/DUCKY010.md) reports `WhenRenderedAsync(...).GetAwaiter().GetResult()` like the other Ducky tasks. Output that depends on the culture follows the render's execution context, which is empty (see #296).

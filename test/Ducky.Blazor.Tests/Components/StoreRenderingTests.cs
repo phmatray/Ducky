@@ -17,10 +17,12 @@ public sealed class StoreRenderingTests : BunitContext
         var cut = Render<ItemView>(p => p.Add(c => c.Index, 0));
         var renders = cut.RenderCount;
 
+        #region when-rendered
         Store.Dispatch(new SetItem(0, "changed"));
         await Store.WhenRenderedAsync(Renderer.Dispatcher, Xunit.TestContext.Current.CancellationToken);
-
         cut.Markup.ShouldBe("changed");
+        #endregion
+
         cut.RenderCount.ShouldBe(renders + 1);
     }
 
