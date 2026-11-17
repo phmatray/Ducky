@@ -4,7 +4,8 @@ using Microsoft.CodeAnalysis;
 namespace Ducky.Generators.Tests.Registration;
 
 // ADR-0051 (#314): a partial EffectGroup<TAction> over a union gets a RegisterCases override with one On<Case> per case,
-// read by the same case reader as union slices; a non-union action type is DUCKY026 and a non-partial group DUCKY027.
+// read by the same case reader as union slices; a non-union action type is DUCKY026, a non-partial group DUCKY027, and
+// DUCKY029-031 are shared with union slices (#324).
 public sealed class UnionEffectGroupTests
 {
     private const string Cart = """
@@ -99,6 +100,28 @@ public sealed class UnionEffectGroupTests
 
         diagnostic.Id.ShouldBe("DUCKY027");
         diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture).ShouldBe("The cases of 'App.CartEffects' can't be registered: declare 'App.CartEffects' partial");
+    }
+
+    // #324: a union effect group gets the union slices' DUCKY029, DUCKY030 and DUCKY031, not ids of its own.
+    [Theory]
+    [InlineData("public interface IItem; public union Bad(AddItem, IItem);", "public sealed partial class CartEffects : Ducky.EffectGroup<Bad>", "Bad", "", "DUCKY029")]
+    [InlineData("public union Bad(AddItem, int?);", "public sealed partial class CartEffects : Ducky.EffectGroup<Bad>", "Bad", "", "DUCKY029")]
+    [InlineData("", "file sealed partial class CartEffects : Ducky.EffectGroup<CartAction>", "CartAction", "", "DUCKY030")]
+    [InlineData("", "public sealed partial class CartEffects : Ducky.EffectGroup<CartAction>", "CartAction",
+        "protected override void RegisterCases() { }", "DUCKY031")]
+    public void UnionEffectGroup_SliceMistakes_ReportTheSliceIds(string union, string declaration, string action, string member, string id)
+    {
+        var diagnostic = Diagnose(Cart + union + $$"""
+
+            {{declaration}}
+            {
+                public override System.Threading.Tasks.Task Handle({{action}} action, Ducky.EffectContext context, System.Threading.CancellationToken cancellationToken) =>
+                    System.Threading.Tasks.Task.CompletedTask;
+                {{member}}
+            }
+            """);
+
+        diagnostic.Id.ShouldBe(id);
     }
 
     // One diagnostic, no override emitted, and the output still compiles (the group merely registers nothing).

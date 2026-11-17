@@ -35,7 +35,7 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
             .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, UnionSliceModel.From)
             .WithTrackingName("RegistrationUnionSlices");
         context.RegisterSourceOutput(
-            unionSlices.Select(static (model, _) => model is { NotUnion: null, NotPartial: null } ? model with { Location = Location.None } : null)
+            unionSlices.Select(static (model, _) => model is { Rule: null } ? model with { Location = Location.None } : null)
                 .WithTrackingName("RegistrationUnionEmit")
                 .Collect(),
             static (spc, models) => EmitUnionSlices(spc, models));
@@ -142,20 +142,13 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
         }
     }
 
-    // DUCKY026 for a union slice or effect group whose action type is not a union, DUCKY027 for one not partial (or nested in a type that
-    // isn't): neither gets a RegisterCases override.
+    // A union slice or effect group with a Rule (DUCKY026, 027, 029, 030 or 031) gets that diagnostic and no RegisterCases
+    // override.
     private static void ReportUnionSlices(SourceProductionContext context, ImmutableArray<UnionSliceModel?> models)
     {
-        foreach (var model in models.OfType<UnionSliceModel>().Distinct())
+        foreach (var model in models.OfType<UnionSliceModel>().Distinct().Where(m => m.Rule is not null))
         {
-            if (model.NotUnion is not null)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.NotUnion, model.Location, model.Display, model.Base, model.NotUnion));
-            }
-            else if (model.NotPartial is not null)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.NotPartial, model.Location, model.Display, model.NotPartial));
-            }
+            context.ReportDiagnostic(Diagnostic.Create(model.Rule!, model.Location, [.. model.Arguments.Items]));
         }
     }
 

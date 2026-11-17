@@ -33,6 +33,21 @@ internal static class RegistrationDiagnostics
     private const string NotPartialMessage = "The cases of '{0}' can't be registered: declare {1} partial";
     private const string NotPartialHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY027.md";
 
+    private const string UndispatchableId = "DUCKY029";
+    private const string UndispatchableTitle = "Union case can never be dispatched";
+    private const string UndispatchableMessage = "The cases of '{0}' can't be registered: dispatch matches an action's exact runtime type, which is never {1}";
+    private const string UndispatchableHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY029.md";
+
+    private const string FileLocalId = "DUCKY030";
+    private const string FileLocalTitle = "Union-first type is file-local";
+    private const string FileLocalMessage = "The cases of '{0}' can't be registered: '{1}' is file-local, so no generated declaration can extend it";
+    private const string FileLocalHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY030.md";
+
+    private const string HandWrittenId = "DUCKY031";
+    private const string HandWrittenTitle = "Hand-written RegisterCases on a generated union-first type";
+    private const string HandWrittenMessage = "'{0}' overrides RegisterCases, which the Ducky generator writes for it: remove the override";
+    private const string HandWrittenHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY031.md";
+
     public static readonly DiagnosticDescriptor Unresolved = new(
         UnresolvedId, UnresolvedTitle, UnresolvedMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: UnresolvedHelp);
 
@@ -45,5 +60,14 @@ internal static class RegistrationDiagnostics
     public static readonly DiagnosticDescriptor NotPartial = new(
         NotPartialId, NotPartialTitle, NotPartialMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: NotPartialHelp);
 
-    public static readonly ImmutableArray<DiagnosticDescriptor> All = [Unresolved, Excluded, NotUnion, NotPartial];
+    public static readonly DiagnosticDescriptor Undispatchable = new(
+        UndispatchableId, UndispatchableTitle, UndispatchableMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: UndispatchableHelp);
+
+    public static readonly DiagnosticDescriptor FileLocal = new(
+        FileLocalId, FileLocalTitle, FileLocalMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: FileLocalHelp);
+
+    public static readonly DiagnosticDescriptor HandWritten = new(
+        HandWrittenId, HandWrittenTitle, HandWrittenMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: HandWrittenHelp);
+
+    public static readonly ImmutableArray<DiagnosticDescriptor> All = [Unresolved, Excluded, NotUnion, NotPartial, Undispatchable, FileLocal, HandWritten];
 }

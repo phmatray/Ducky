@@ -13,14 +13,15 @@ namespace Ducky.Generators.Registration;
 
 /// <summary>
 /// A union-first type (ADR-0051) deriving directly from <c>Ducky.Slice&lt;TState, TAction&gt;</c> or
-/// <c>Ducky.EffectGroup&lt;TAction&gt;</c>, named by <see cref="Base"/>, symbol-free. Emitted as an override of
+/// <c>Ducky.EffectGroup&lt;TAction&gt;</c>, symbol-free. Emitted as an override of
 /// <c>RegisterCases</c> in its <see cref="Declarations"/> (outermost first, inside <see cref="Namespace"/>), one
-/// <see cref="Registrations"/> line per case of the union, when <see cref="NotUnion"/> and <see cref="NotPartial"/> are
-/// null; otherwise DUCKY026 (the action type) or DUCKY027 (the types to declare partial) at <see cref="Location"/>.
+/// <see cref="Registrations"/> line per case of the union, when <see cref="Rule"/> is null; otherwise that diagnostic,
+/// formatted with <see cref="Arguments"/>, at <see cref="Location"/>: DUCKY026 (not a union), DUCKY027 (not partial),
+/// DUCKY029 (a case dispatch never matches), DUCKY030 (file-local) or DUCKY031 (a hand-written <c>RegisterCases</c>).
 /// </summary>
 internal sealed record UnionSliceModel(
-    string Display, string Base, string HintName, string? Namespace, EquatableArray<string> Declarations, EquatableArray<string> Registrations,
-    string? NotUnion, string? NotPartial, Location Location)
+    string Display, string HintName, string? Namespace, EquatableArray<string> Declarations, EquatableArray<string> Registrations,
+    DiagnosticDescriptor? Rule, EquatableArray<string> Arguments, Location Location)
 {
     private static readonly SymbolDisplayFormat _declaration = new(
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
@@ -38,31 +39,18 @@ internal sealed record UnionSliceModel(
     public static UnionSliceModel? From(GeneratorSyntaxContext context, CancellationToken cancellationToken) =>
         Classify((INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!, context.SemanticModel.Compilation, cancellationToken);
 
-    /// <summary>Null unless <paramref name="type"/>'s direct base is a union-first base.</summary>
+    /// <summary>Null unless <paramref name="type"/>'s direct base is a union-first base with a closed action type.</summary>
     public static UnionSliceModel? Classify(INamedTypeSymbol type, Compilation compilation, CancellationToken cancellationToken)
     {
-        if (type.BaseType is not { } baseType
-            || _kinds.FirstOrDefault(k => SymbolEqualityComparer.Default.Equals(baseType.OriginalDefinition, compilation.GetTypeByMetadataName(k.MetadataName))) is not { } kind)
-        {
-            return null;
-        }
-
-        // An open action type (a reusable generic base) has no cases to read; its concrete subclasses aren't generated
-        // either, since only the direct derivation is.
-        var action = baseType.TypeArguments[kind.ActionIndex];
-        if (action is ITypeParameterSymbol)
+        if (ActionOf(type, compilation) is not ({ } kind, { } action))
         {
             return null;
         }
 
         var display = type.ToDisplayString();
         var location = type.Locations[0];
-        var model = new UnionSliceModel(display, kind.Display, IdentifierSanitizer.HintName(display) + kind.Suffix, null, default, default, null, null, location);
-        var iunion = UnionCases.Resolve(compilation);
-        if (!UnionCases.IsUnion(action, iunion))
-        {
-            return model with { NotUnion = action.ToDisplayString() };
-        }
+        var model = new UnionSliceModel(display, IdentifierSanitizer.HintName(display) + kind.Suffix, null, default, default, null, default, location);
+        UnionSliceModel Reported(DiagnosticDescriptor rule, params string[] arguments) => model with { Rule = rule, Arguments = new([display, .. arguments]) };
 
         var chain = new List<INamedTypeSymbol>();
         for (var t = type; t is not null; t = t.ContainingType)
@@ -70,16 +58,45 @@ internal sealed record UnionSliceModel(
             chain.Insert(0, t);
         }
 
+        // A file-local type can't span two files, so no generated declaration can extend it (its DUCKY023 is dropped).
+        if (chain[0].IsFileLocal)
+        {
+            return Reported(RegistrationDiagnostics.FileLocal, chain[0].ToDisplayString());
+        }
+
+        var iunion = UnionCases.Resolve(compilation);
+        if (!UnionCases.IsUnion(action, iunion))
+        {
+            return Reported(RegistrationDiagnostics.NotUnion, kind.Display, action.ToDisplayString());
+        }
+
+        // Checked before partial: a hand-written override is the generator-off shape, which needs no partial.
+        if (type.GetMembers("RegisterCases").Any(m => m is IMethodSymbol { Parameters.IsEmpty: true, IsGenericMethod: false }))
+        {
+            return Reported(RegistrationDiagnostics.HandWritten);
+        }
+
         var notPartial = chain.Where(t => !t.DeclaringSyntaxReferences.All(r =>
                 ((TypeDeclarationSyntax)r.GetSyntax(cancellationToken)).Modifiers.Any(SyntaxKind.PartialKeyword)))
             .Select(t => $"'{t.ToDisplayString()}'").ToList();
         if (notPartial.Count > 0)
         {
-            return model with { NotPartial = string.Join(", ", notPartial) };
+            return Reported(RegistrationDiagnostics.NotPartial, string.Join(", ", notPartial));
         }
 
-        // The first path to a case wins, since On<T> takes one handler per type.
-        var registrations = UnionCases.Of(action, iunion).Select(c => string.Format(
+        // Dispatch matches an action's exact runtime type (ADR-0008): never an abstract type, an interface or object
+        // (On<T> throws DUCKY307), nor a Nullable<T>, which boxes to its T. The first path to a case wins, since On<T>
+        // takes one handler per type.
+        var cases = UnionCases.Of(action, iunion);
+        var undispatchable = cases.Where(c => c.Case.IsAbstract || c.Case.SpecialType == SpecialType.System_Object
+                || c.Case.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            .Select(c => $"'{c.Case.ToDisplayString()}'").ToList();
+        if (undispatchable.Count > 0)
+        {
+            return Reported(RegistrationDiagnostics.Undispatchable, string.Join(", ", undispatchable));
+        }
+
+        var registrations = cases.Select(c => string.Format(
             CultureInfo.InvariantCulture, kind.Registration, c.Case.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), c.Wrap("a")));
         return model with
         {
@@ -87,6 +104,22 @@ internal sealed record UnionSliceModel(
             Declarations = new([.. chain.Select(t => $"partial {Keyword(t)} {t.ToDisplayString(_declaration)}")]),
             Registrations = new([.. registrations]),
         };
+    }
+
+    /// <summary>
+    /// Whether <paramref name="type"/> derives directly from a union-first base with a closed action type: what
+    /// <see cref="Classify"/> models, so registration leaves a file-local one to DUCKY030.
+    /// </summary>
+    public static bool IsUnionFirst(INamedTypeSymbol type, Compilation compilation) => ActionOf(type, compilation).Action is not null;
+
+    // An open action type (a reusable generic base) has no cases to read; its concrete subclasses aren't generated
+    // either, since only the direct derivation is.
+    private static (Kind? Kind, ITypeSymbol? Action) ActionOf(INamedTypeSymbol type, Compilation compilation)
+    {
+        var baseType = type.BaseType;
+        var kind = baseType is null ? null
+            : _kinds.FirstOrDefault(k => SymbolEqualityComparer.Default.Equals(baseType.OriginalDefinition, compilation.GetTypeByMetadataName(k.MetadataName)));
+        return kind is null || baseType!.TypeArguments[kind.ActionIndex] is ITypeParameterSymbol ? (null, null) : (kind, baseType.TypeArguments[kind.ActionIndex]);
     }
 
     private static string Keyword(INamedTypeSymbol type) =>

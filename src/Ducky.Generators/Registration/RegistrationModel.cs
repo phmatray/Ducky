@@ -86,10 +86,11 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
         var display = type.ToDisplayString();
         var location = type.Locations[0];
 
-        // Accessibility doesn't model `file`, so the outermost type's IsFileLocal is checked first.
+        // Accessibility doesn't model `file`, so the outermost type's IsFileLocal is checked first; a union-first one is
+        // DUCKY030 instead.
         if (containing[containing.Count - 1].IsFileLocal)
         {
-            return new(name, display, isSlice, FileLocal, location, Reactive: isReactive);
+            return UnionSliceModel.IsUnionFirst(type, compilation) ? null : new(name, display, isSlice, FileLocal, location, Reactive: isReactive);
         }
 
         var constructors = type.InstanceConstructors.Where(c => c.DeclaredAccessibility == Accessibility.Public).ToList();

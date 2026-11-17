@@ -4,7 +4,8 @@ using Microsoft.CodeAnalysis;
 namespace Ducky.Generators.Tests.Registration;
 
 // ADR-0051 (#313): a partial Slice<TState, TAction> over a union gets a RegisterCases override with one On<Case> per case,
-// read as ADR-0050 says; a non-union action type is DUCKY026 and a non-partial slice DUCKY027, with no override emitted.
+// read as ADR-0050 says; a non-union action type is DUCKY026, a non-partial slice DUCKY027, a case dispatch never matches
+// DUCKY029, a file-local slice DUCKY030 and a hand-written RegisterCases DUCKY031 (#324), with no override emitted.
 public sealed class UnionSliceTests
 {
     private const string Cart = """
@@ -278,6 +279,88 @@ public sealed class UnionSliceTests
         var display = container.Length > 0 ? "App.Holder.CartSlice" : "App.CartSlice";
         diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture).ShouldBe($"The cases of '{display}' can't be registered: declare {types} partial");
         ShouldBeAt(diagnostic, output, "CartSlice");
+    }
+
+    // #324: a case exact-type dispatch can never match (ADR-0008) is DUCKY029 at build time, instead of DUCKY307 when the
+    // slice is built (abstract, interface, object) or a handler that never runs (Nullable<T>: a boxed T? is a T).
+    [Theory]
+    [InlineData("public interface IItem;", "IItem", "'App.IItem'")]
+    [InlineData("public abstract record Item;", "Item", "'App.Item'")]
+    [InlineData("", "object", "'object'")]
+    [InlineData("", "int?", "'int?'")]
+    [InlineData("public interface IItem;", "IItem, object", "'App.IItem', 'object'")]
+    public void UnionSlice_UndispatchableCase_IsDucky029(string declaration, string cases, string display)
+    {
+        var diagnostic = Diagnose(Cart + declaration + $$"""
+
+            public union Bad(AddItem, {{cases}});
+            public sealed partial class CartSlice : Ducky.Slice<Cart, Bad>
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, Bad action) => state;
+            }
+            """, out var output);
+
+        diagnostic.Id.ShouldBe("DUCKY029");
+        diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture).ShouldBe(
+            $"The cases of 'App.CartSlice' can't be registered: dispatch matches an action's exact runtime type, which is never {display}");
+        ShouldBeAt(diagnostic, output, "CartSlice");
+    }
+
+    // #324: a file-local slice (or one nested in a file-local type) can't be extended by a generated declaration; DUCKY030
+    // replaces both the CS-series error and the DUCKY023 its registration would get.
+    [Theory]
+    [InlineData("file sealed partial class CartSlice", "", "App.CartSlice")]
+    [InlineData("public sealed partial class CartSlice", "file static partial class Holder {", "App.Holder")]
+    public void UnionSlice_FileLocal_IsDucky030(string declaration, string container, string fileLocal)
+    {
+        var diagnostic = Diagnose(Cart + container + $$"""
+            {{declaration}} : Ducky.Slice<Cart, CartAction>
+            {
+            {{Reduce}}
+            }
+            """ + (container.Length > 0 ? "}" : ""), out var output);
+
+        diagnostic.Id.ShouldBe("DUCKY030");
+        diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture).ShouldContain($"'{fileLocal}' is file-local");
+        ShouldBeAt(diagnostic, output, "CartSlice");
+    }
+
+    // #324: a hand-written RegisterCases while the generator is on is DUCKY031 instead of CS0111, partial or not.
+    [Theory]
+    [InlineData("public sealed partial class CartSlice")]
+    [InlineData("public sealed class CartSlice")]
+    public void UnionSlice_HandWrittenRegisterCases_IsDucky031(string declaration)
+    {
+        var diagnostic = Diagnose(Cart + $$"""
+            {{declaration}} : Ducky.Slice<Cart, CartAction>
+            {
+            {{Reduce}}
+                protected override void RegisterCases() => On<AddItem>((s, a) => s);
+            }
+            """, out var output);
+
+        diagnostic.Id.ShouldBe("DUCKY031");
+        diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture)
+            .ShouldBe("'App.CartSlice' overrides RegisterCases, which the Ducky generator writes for it: remove the override");
+        ShouldBeAt(diagnostic, output, "CartSlice");
+    }
+
+    // Only a parameterless, non-generic RegisterCases collides with the generated one.
+    [Fact]
+    public void UnionSlice_RegisterCasesOverloads_StillGenerated()
+    {
+        GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile(Cart + $$"""
+            public sealed partial class CartSlice : Ducky.Slice<Cart, CartAction>
+            {
+            {{Reduce}}
+                private void RegisterCases(int unused) { }
+                private void RegisterCases<T>() { }
+            }
+            """), out var output);
+
+        output.ShouldCompileClean();
+        Generated(output, "App.CartSlice.UnionSlice.g.cs").ShouldContain("protected override void RegisterCases()");
     }
 
     [Fact]

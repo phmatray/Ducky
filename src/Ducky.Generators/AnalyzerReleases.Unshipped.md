@@ -29,3 +29,6 @@ DUCKY025 | Ducky | Warning | UsageDiagnostics
 DUCKY026 | Ducky | Error | RegistrationDiagnostics
 DUCKY027 | Ducky | Error | RegistrationDiagnostics
 DUCKY028 | Ducky | Warning | DispatchDiagnostics
+DUCKY029 | Ducky | Error | RegistrationDiagnostics
+DUCKY030 | Ducky | Error | RegistrationDiagnostics
+DUCKY031 | Ducky | Error | RegistrationDiagnostics
