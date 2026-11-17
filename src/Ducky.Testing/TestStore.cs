@@ -61,7 +61,7 @@ public sealed partial class TestStore : IStore
     /// <param name="failureTypes">Action types recorded in <see cref="Failures"/> besides <see cref="ReducerFailed"/> and <see cref="EffectFailed"/>.</param>
     /// <returns>The store.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="configure"/> or <paramref name="failureTypes"/> is null.</exception>
-#pragma warning disable RS0026 // Create(configure, ...) and Create<TSlice>(...) differ by arity, so a call never binds to the wrong one; 2.0 is unshipped
+#pragma warning disable RS0026 // justification: Create(configure, ...) and Create<TSlice>(...) differ by arity, so a call never binds to the wrong one; 2.0 is unshipped
     public static TestStore Create(Action<DuckyBuilder> configure, Action<IServiceCollection>? services = null, params Type[] failureTypes)
     {
         ArgumentNullException.ThrowIfNull(configure);
