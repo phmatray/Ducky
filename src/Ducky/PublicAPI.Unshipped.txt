@@ -89,6 +89,10 @@ Ducky.Slice<TState>.On<TAction>(System.Func<TState!, TAction, TState!>! reducer)
 Ducky.Slice<TState>.On<TAction>(System.Func<TState!, TState!>! reducer) -> void
 Ducky.Slice<TState>.Slice() -> void
 override sealed Ducky.Slice<TState>.StateType.get -> System.Type!
+abstract Ducky.Slice<TState, TAction>.Reduce(TState! state, TAction action) -> TState!
+Ducky.Slice<TState, TAction>
+Ducky.Slice<TState, TAction>.Slice() -> void
+virtual Ducky.Slice<TState, TAction>.RegisterCases() -> void
 virtual Ducky.Slice.Key.get -> string!
 Ducky.StateSnapshot
 Ducky.StateSnapshot.Get(string! key) -> object!
