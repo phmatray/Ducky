@@ -68,6 +68,16 @@ public sealed class TestingGuideTests
     }
     #endregion
 
+    #region testing-store-single
+    [Fact]
+    public async Task TestStore_SingleSlice_Create()
+    {
+        await using var store = TestStore.Create<TodosSlice>();
+
+        store.State.Get<Todos>().Items.Count.ShouldBe(0);
+    }
+    #endregion
+
     #region testing-store
     [Fact]
     public async Task TestStore_SeedDispatchSettle()

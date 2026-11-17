@@ -30,7 +30,11 @@ The actions an effect dispatches usually have no reducer in the test; they are r
 
 ## The whole store
 
-`TestStore` is an `IStore` for tests:
+`TestStore` is an `IStore` for tests. A test of one slice needs no lambda:
+
+[!code-csharp[](../../../test/Ducky.Docs.Tests/Core/TestingGuideTests.cs#testing-store-single)]
+
+Several slices, seeding and settling go through `Create(configure)`:
 
 [!code-csharp[](../../../test/Ducky.Docs.Tests/Core/TestingGuideTests.cs#testing-store)]
 

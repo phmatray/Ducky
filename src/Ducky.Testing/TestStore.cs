@@ -61,6 +61,7 @@ public sealed partial class TestStore : IStore
     /// <param name="failureTypes">Action types recorded in <see cref="Failures"/> besides <see cref="ReducerFailed"/> and <see cref="EffectFailed"/>.</param>
     /// <returns>The store.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="configure"/> or <paramref name="failureTypes"/> is null.</exception>
+#pragma warning disable RS0026 // Create(configure, ...) and Create<TSlice>(...) differ by arity, so a call never binds to the wrong one; 2.0 is unshipped
     public static TestStore Create(Action<DuckyBuilder> configure, Action<IServiceCollection>? services = null, params Type[] failureTypes)
     {
         ArgumentNullException.ThrowIfNull(configure);
@@ -82,6 +83,15 @@ public sealed partial class TestStore : IStore
         collection.AddSingleton<TimeProvider>(time);
         return new(collection.BuildServiceProvider(), recorder, time);
     }
+
+    /// <summary>Builds a store around one slice: <c>Create(b =&gt; b.AddSlice&lt;TSlice&gt;(), services)</c>.</summary>
+    /// <typeparam name="TSlice">The slice to register.</typeparam>
+    /// <param name="services">Registers the services the store's effects and middleware need (fakes).</param>
+    /// <returns>The store.</returns>
+    public static TestStore Create<TSlice>(Action<IServiceCollection>? services = null)
+        where TSlice : Slice, new() =>
+        Create(builder => builder.AddSlice<TSlice>(), services);
+#pragma warning restore RS0026
 
     /// <summary>
     /// Restores <paramref name="state"/> into the slice whose declared state type is exactly <typeparamref name="TState"/>,
