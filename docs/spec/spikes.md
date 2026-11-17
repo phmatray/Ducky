@@ -717,3 +717,55 @@ of Stryker time against the 56-minute full run that the added test file triggere
 status, within the noise above.
 
 Not measured here: `ubuntu-latest` (2 vCPU; Stryker's default concurrency there is 1).
+
+## Persisted envelope compression with Zstandard (#309)
+
+**Question.** Would compressing the persisted envelope (`{"v":2,"at":…,"s":<state>}`) with .NET 11's Zstandard help
+Ducky, and does Zstandard work on `browser-wasm`? **Verdict: no. Do not implement `PersistOptions.Compress`; the issue
+closes with this entry.**
+
+**Probe.** `spikes/S-envelope-compression` (net11.0 console, SDK 11.0.100, Apple M1 Max, Release, the host runtime, not
+wasm). Envelopes are built to the shape of `EnvelopeWriter` from synthetic, deterministic payloads that mirror the
+samples' persisted slices (`TodoList`, `BasketState`, an orders list); no sample was run in a browser, so the sizes
+are those of the shapes, not of captured user data. Rerun with
+`dotnet run --project spikes/S-envelope-compression -c Release`.
+
+| Slice | Raw B | Brotli q4 | Brotli q11 | Zstd fast | Zstd optimal | Zstd max |
+|---|--:|--:|--:|--:|--:|--:|
+| basket, 3 lines | 159 | 94 | 90 | 105 | 105 | 100 |
+| todos, 10 items | 596 | 248 | 219 | 281 | 259 | 243 |
+| todos, 100 items | 5 337 | 1 064 | 874 | 1 209 | 1 103 | 950 |
+| orders, 50 | 10 566 | 2 420 | 2 179 | 2 414 | 2 434 | 2 268 |
+| todos, 1000 items | 53 040 | 8 814 | 6 528 | 9 069 | 8 767 | 6 760 |
+| orders, 500 | 107 835 | 22 525 | 19 302 | 22 305 | 22 954 | 20 161 |
+
+Compress time on the host per call: Zstd fast/optimal 0.003 to 0.11 ms, Brotli q4 0.007 to 0.49 ms, and the maximum
+levels 3 to 74 ms (Brotli q11 74 ms and Zstd max 29 ms on the 108 KB case). The per-slice times are not a deciding
+factor: a persist runs off the dispatch path and the optimal levels are sub-millisecond up to 100 KB.
+
+**What the numbers say.**
+- **Typical slices are small.** The samples' slices are 0.2 to 10 KB, far below `InlinePayloadBytes` (16 KiB) and the
+  32 KB SignalR message (ADR-0030). Compression only matters for the rare slice at 50 KB and up.
+- **Zstandard does not beat Brotli on size.** At comparable effort (Brotli q4 against Zstd optimal) the two are
+  within 12% of each other on every case (under 4% from 5 KB up), and Brotli q11 is smaller than Zstd max on all 6. Brotli is
+  already in the BCL, so the assumption in the issue holds: the same win means prefer the older codec.
+- **The storage win is smaller than the ratio.** `localStorage` holds strings, so compressed bytes must be base64:
+  +33%. At the large end the 0.17 ratio becomes 0.22 to 0.28, and a 5 KB slice goes from 5 337 to about 1 400 chars.
+  Over the wire (`IJSStreamReference`, SignalR) bytes would travel raw, but those paths exist precisely to carry
+  large values already.
+- **The cost is on every reader.** A compression marker in the envelope means `ducky.js` (cross-tab, pruning,
+  inline budget) and every other reader must learn to decompress, for slices that are mostly under 10 KB.
+
+**Zstandard on `browser-wasm`: not established, and the evidence leans unfavourable.** Checked on the
+`Microsoft.NETCore.App.Runtime.Mono.browser-wasm` 11.0.0 pack (not run in a browser: the `wasm-tools` workload is
+not installed on this machine, so no wasm publish or execution was done):
+- the managed `System.IO.Compression.dll` of the pack contains `ZstandardStream` and `ZstandardEncoder`;
+- the pack ships `native/libzstd.a` (2.7 MB), but neither the prebuilt `dotnet.native.wasm` nor
+  `libSystem.IO.Compression.Native.a` contains a `zstd` or `ZSTD_*` string, so the shipped runtime does not appear to
+  link it; it would at best take a native relink (`wasm-tools`, slow publish) and add the library to the download.
+  Brotli, by contrast, ships in the same pack as a managed assembly over the already-linked native compression library.
+
+**Decision.** Not worthwhile: small typical envelopes, no size win over Brotli, a 33% base64 tax in storage, a format
+and reader change across .NET and `ducky.js`, and an unproven (probably relink-only) browser-wasm story. Revisit if a
+real slice exceeds the inline threshold in practice, and then with Brotli, not Zstandard. Task 2 of #309 is therefore
+not done and no source file changed.
