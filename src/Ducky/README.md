@@ -1,6 +1,6 @@
 # Ducky
 
-Ducky is a state library for .NET 10 and Blazor. Application state lives in slices: immutable records, each changed only by its reducers. You dispatch actions to one store, which reduces them one at a time and notifies whoever selected the changed values. Effects do the work that leaves the store, such as HTTP calls and timers.
+Ducky is a state library for .NET 11 and Blazor. Application state lives in slices: immutable records, each changed only by its reducers. You dispatch actions to one store, which reduces them one at a time and notifies whoever selected the changed values. Effects do the work that leaves the store, such as HTTP calls and timers.
 
 This package holds the store, slices, effects, selectors, middleware, `SliceStore` and `EntityState`, plus the source generators and analyzers: a generated registration method per assembly, dispatch helpers and build-time checks.
 
@@ -9,6 +9,8 @@ This package holds the store, slices, effects, selectors, middleware, `SliceStor
 ```shell
 dotnet add package Ducky --prerelease
 ```
+
+Ducky 2.x targets `net11.0` only, so the app needs the .NET 11 SDK and runtime. For C# 15 union actions, `Slice<TState, TAction>` and `EffectGroup<TAction>`, see the [union guide](https://phmatray.github.io/Ducky/docs/guides/core/unions.html).
 
 Reference `Ducky` directly from every project that declares actions, slices or effects. The generators ship inside this package, and generator assets never flow through a `ProjectReference`.
 

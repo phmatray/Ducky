@@ -4,7 +4,9 @@ Ducky keeps your application state in slices: immutable records, each changed on
 
 ## Install
 
-Ducky targets .NET 11.
+Ducky 2.x targets `net11.0` only: it needs the .NET 11 SDK to build and the .NET 11 runtime to run. An app on .NET 10 or earlier can't reference it. Upgrade the app first, or stay on Ducky 1.x ([Migrating from Ducky 1.x](../../migration/ducky-1x.md)).
+
+**What's new in 2.0:** C# 15 unions are first-class. Dispatch a union and the store delivers its case; `Slice<TState, TAction>` reduces a whole union in one exhaustive `switch`; one `EffectGroup<TAction>` and one `[DuckyAction]` cover every case. [Unions in Ducky](unions.md) ties the pieces together. On WebAssembly the store now starts from a hosted service, and a paused and resumed Blazor Server circuit keeps its prerendered state ([prerender](../blazor/prerender.md)).
 
 ```shell
 dotnet add package Ducky

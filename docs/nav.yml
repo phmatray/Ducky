@@ -28,6 +28,7 @@ sections:
       - pages:
           - guides/core/slices-and-keys.md
           - guides/core/effects.md
+          - guides/core/unions.md
           - guides/core/union-effects.md
           - guides/core/selectors.md
           - guides/core/slice-store.md

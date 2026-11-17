@@ -15,7 +15,7 @@ It adds:
 dotnet add package Ducky.Blazor --prerelease
 ```
 
-Ducky.Blazor brings Ducky, its source generators and its analyzers. A class library that declares its own slices or actions still needs a direct `Ducky` reference.
+Ducky.Blazor targets `net11.0`. On WebAssembly, `AddDucky` starts the store from a hosted service (`BlazorOptions.InitializeOnStart`), so an app needs no `<DuckyInitializer>`. Ducky.Blazor brings Ducky, its source generators and its analyzers. A class library that declares its own slices or actions still needs a direct `Ducky` reference.
 
 ## Example
 

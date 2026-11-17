@@ -6,7 +6,7 @@ Every snippet on this page comes from the compiled sample in `docs/migration/sam
 
 ## Checklist
 
-1. Update the packages: `Ducky` and `Ducky.Blazor` to 2.0, add `Ducky.Testing` to test projects, and remove `Ducky.Generator`. Its generators now ship inside `Ducky`; its final 2.0.0 package only raises DUCKY900 to say so.
+1. Target `net11.0`: Ducky 2.x does not run on .NET 10 or earlier, so upgrade the app's SDK and `TargetFramework` first. Then update the packages: `Ducky` and `Ducky.Blazor` to 2.0, add `Ducky.Testing` to test projects, and remove `Ducky.Generator`. Its generators now ship inside `Ducky`; its final 2.0.0 package only raises DUCKY900 to say so.
 2. Fix each DUCKYM error (see [Tombstones](#tombstones-duckym001-to-duckym008)). Each one names the 2.0 replacement and links its page.
 3. Add a `JsonSerializerContext` and pass it with `UseJson(AppJson.Default)`. It may start empty: [DUCKY006](../diagnostics/DUCKY006.md) then lists every `[DuckyAction]` and slice state type missing from it, and [DUCKY306](../diagnostics/DUCKY306.md) at startup names any persisted or prerendered state type still missing.
 

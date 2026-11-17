@@ -13,7 +13,7 @@ It does not depend on [Ducky](https://www.nuget.org/packages/Ducky): any code th
 dotnet add package Ducky.Draft --prerelease
 ```
 
-Ducky.Draft targets .NET 10. Reference it directly from every project that declares `[Draftable]` records: the generator ships inside this package.
+Ducky.Draft targets .NET 11 (`net11.0`). Reference it directly from every project that declares `[Draftable]` records: the generator ships inside this package.
 
 ## Example
 
