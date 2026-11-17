@@ -14,13 +14,13 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
 
     <!-- Ducky's only runtime dependencies (SPEC §3). -->
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.15" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0" />
 
     <!-- Ducky.Blazor's runtime dependencies (SPEC §3), added with the features that use them. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.15" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.15" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="11.0.0" />
 
     <!-- R3 1.3.x: plain version, pinned by the lock file, packed as R3 >= 1.3.x (SPEC §3). -->
     <PackageVersion Include="R3" Version="1.3.1" />
@@ -29,12 +29,12 @@
     <PackageVersion Include="CsCheck" Version="5.0.1" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.3" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.11.0" />
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.0" />
     <!-- Ducky.Blazor.Tests: PersistStorage.Server runs against the real MemoryDistributedCache (SPEC §11.6, §17.2). -->
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="11.0.0" />
     <!-- Ducky.Blazor.Tests: the Interactive Server data protection the prerender seed's wire estimate covers (SPEC §11.4). -->
-    <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.64.1" />
     <!-- Generator snapshots (SPEC §16.1, GEN-06): Verify.SourceGenerators over the xUnit v3 adapter. 32.0.1 is the last
          MIT Verify: 33.x ships under an EULA whose SponsorCheck fails the build until a sponsorship or exemption is
@@ -58,18 +58,18 @@
     <!-- Audit (SPEC §17.1): transitive pins of patched versions. 10.0.12 and 9.0.6 have high advisories (GHSA-846f-f764-76mx,
          GHSA-7hqp-7c5m-4vq6, GHSA-c399-9853-6jmj, GHSA-r955-8q5j-3h83), reached through Microsoft.AspNetCore.DataProtection
          (Ducky.Blazor.Tests), the analyzer testing stack (the generator tests) and Fallout (build/); no src/ project uses them. -->
-    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.15" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="11.0.0" />
 
     <!-- samples/Ducky.Samples.Server (+ .Client, Interactive Auto, SPEC §18). WebAssembly.Server 10.0.14 is the first
          release without GHSA-g27p-qf6j-c96c and GHSA-qjpx-jqm5-h2c4; it needs WebAssembly 10.0.14, which needs the
          10.0.14 Components and Microsoft.Extensions packages, so every 10.0.x pin above moves with it and transitive
          pinning stays on everywhere. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.15" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.15" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="11.0.0" />
     <!-- samples/Ducky.Samples.Wasm (SPEC §18): the dev server for `dotnet run` of the standalone sample. -->
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="11.0.0" />
 
     <!-- benchmarks/Ducky.Benchmarks (SPEC §17.1): the informational nightly Benchmarks target. -->
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
