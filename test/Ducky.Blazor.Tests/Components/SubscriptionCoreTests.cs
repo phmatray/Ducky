@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using Ducky.Blazor.Tests.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -95,6 +96,39 @@ public sealed class SubscriptionCoreTests
         calls.ShouldBe(1);
         host.Renders.ShouldBe(0);
         host.Logs().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Evaluate_RunsUnderCreatorCulture_NotDispatcherCulture()
+    {
+        // CurrentCulture/CurrentUICulture are AsyncLocal-backed, so the empty context drops them; the core re-applies the ones
+        // it was created under around the check and the render it requests (§11.2).
+        await using var host = await Host.CreateAsync();
+        var creator = new CultureInfo("nl-BE");
+        var dispatcher = new CultureInfo("fr-BE");
+        var previous = (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
+        (CultureInfo, CultureInfo) inRender = default, inSelector = default;
+        CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = creator;
+        try
+        {
+            using var core = host.Core(work => work(), () => inRender = (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture));
+            using var count = core.Select(state =>
+            {
+                inSelector = (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
+                return Count(state);
+            });
+
+            CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = dispatcher;
+            host.Store.Dispatch(new Increment());
+            await host.Rendered.Task.WaitAsync(_bound, TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture) = previous;
+        }
+
+        inRender.ShouldBe((creator, creator));
+        inSelector.ShouldBe((creator, creator));
     }
 
     [Fact]

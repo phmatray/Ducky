@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -27,8 +28,14 @@ internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invo
     private volatile bool _disposed;
     private int _scheduled;
 
+    // The circuit's cultures, captured once on the renderer at creation; a culture changed later is not picked up (§11.2).
+    private readonly CultureInfo _culture = CultureInfo.CurrentCulture;
+    private readonly CultureInfo _uiCulture = CultureInfo.CurrentUICulture;
+
     // The context the change check is scheduled under (§11.2): the empty one, so neither the drainer's nor the creator's
-    // AsyncLocals (a causal scope, an effect run) reach it. Tests set null to take the fallback.
+    // AsyncLocals (a causal scope, an effect run) reach it. The one deliberate exception is the creator's CurrentCulture and
+    // CurrentUICulture, which Evaluate sets explicitly (they are AsyncLocal-backed, so the empty context would drop them).
+    // Tests set null to take the fallback.
     internal ExecutionContext? Context { private get; init; } = EmptyContext;
 
     /// <summary>
@@ -153,8 +160,10 @@ internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invo
     private void Evaluate()
     {
         Interlocked.Exchange(ref _scheduled, 0);
+        var (culture, uiCulture) = (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
         try
         {
+            (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture) = (_culture, _uiCulture);
             if (!_disposed && Changed())
             {
                 stateHasChanged();
@@ -164,6 +173,10 @@ internal sealed class SubscriptionCore(IStore store, Func<Func<Task>, Task> invo
         {
             // Changed() catches every selector and comparer throw, so only stateHasChanged() reaches here.
             Log.RenderRequestFailed(_logger, ex);
+        }
+        finally
+        {
+            (CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture) = (culture, uiCulture);
         }
     }
 
