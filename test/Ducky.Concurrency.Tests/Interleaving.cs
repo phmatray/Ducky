@@ -94,6 +94,36 @@ internal static class Interleaving
             ]);
     }
 
+    // A linearizability check's settle, run by one caller only (#321). CsCheck's Linearizable calls equal from a
+    // Parallel.ForEach, once per linearization tried, so every pool thread it is given can enter a settle at once, and
+    // each blocks in Wait on progress that itself needs a pool thread (an effect's continuation, the idle waiter's). With
+    // the pool exhausted and no thread injected within _bound, the run failed as a hang with a correct store. The first
+    // caller settles; one arriving meanwhile answers "not this linearization" without blocking, which is sound only when,
+    // as in every caller here, the verdict does not depend on which linearization is tried: the settler's decides.
+    public sealed class Settlement<T>
+    {
+        private int _claimed;
+        private volatile bool _done;
+        private T _value = default!;
+
+        public bool TryGet(Func<T> settle, out T value)
+        {
+            if (Interlocked.Exchange(ref _claimed, 1) == 0)
+            {
+                _value = settle();
+                _done = true;
+            }
+            else if (!_done)
+            {
+                value = default!;
+                return false;
+            }
+
+            value = _value;
+            return true;
+        }
+    }
+
     private static string Describe(ProcessThread thread)
     {
         try

@@ -65,7 +65,7 @@ namespace Ducky.Concurrency.Tests
             private readonly DuckyStore _store;
             private readonly Line _line = new();
             private readonly Task _init;
-            private bool? _settled;
+            private readonly Interleaving.Settlement<bool> _settlement = new();
 
             public Actual()
             {
@@ -95,8 +95,8 @@ namespace Ducky.Concurrency.Tests
                 _init = _store.InitializeAsync(TestContext.Current.CancellationToken);
             }
 
-            // Once, after the run (equal may be called once per linearization tried).
-            public bool SettledWrittenFinalState => _settled ??= Settle();
+            // Once, after the run (equal may be called once per linearization tried, concurrently: Interleaving.Settlement).
+            public bool SettledWrittenFinalState => _settlement.TryGet(Settle, out var settled) && settled;
 
             public void Change(int value) => _line.Send!(new SetDial(value), false);
 
