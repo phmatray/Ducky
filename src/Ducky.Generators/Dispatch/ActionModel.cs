@@ -32,19 +32,38 @@ internal sealed record ActionModel(
     private static readonly SymbolDisplayFormat _namespaceFormat =
         SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted);
 
-    public static ActionModel Create(GeneratorAttributeSyntaxContext context)
+    /// <summary>
+    /// The helpers of one <c>[DuckyAction]</c> type: its own, or, for a C# union (ADR-0050), one set per case, each named
+    /// after its case. Dispatch unwraps a union to its case (#304), so dispatching the case is dispatching the union.
+    /// </summary>
+    public static ActionTarget Create(GeneratorAttributeSyntaxContext context)
     {
         var type = (INamedTypeSymbol)context.TargetSymbol;
         var compilation = context.SemanticModel.Compilation;
+        var methodName = context.Attributes[0].NamedArguments
+            .Where(a => a.Key == "MethodName")
+            .Select(a => a.Value.Value as string)
+            .FirstOrDefault();
+        var location = ((TypeDeclarationSyntax)context.TargetNode).Identifier.GetLocation();
+        var iunion = compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.IUnion");
+
+        // A generic union takes the type's own path, which reports it as generic (DUCKY020).
+        if (!UnionCases.IsUnion(type, iunion) || type.IsGenericType)
+        {
+            return new(new([For(type, methodName ?? type.Name, location, compilation)]), null, Info(location));
+        }
+
+        var cases = UnionCases.Of(type, iunion).Select(c => c.Case).OfType<INamedTypeSymbol>().Select(c => For(c, c.Name, location, compilation));
+        return new(new([.. cases]), methodName is null ? null : type.ToDisplayString(), Info(location));
+    }
+
+    private static ActionModel For(INamedTypeSymbol type, string methodName, Location location, Compilation compilation)
+    {
         var obsolete = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
         var experimental = compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.ExperimentalAttribute");
         var setsRequired = compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.SetsRequiredMembersAttribute");
         var containers = Containers(type);
         var className = string.Join("_", containers.Select(t => t.Name).Reverse()) + "DispatchExtensions";
-        var methodName = context.Attributes[0].NamedArguments
-            .Where(a => a.Key == "MethodName")
-            .Select(a => a.Value.Value as string)
-            .FirstOrDefault() ?? type.Name;
 
         // One helper per accessible, explicitly declared constructor; the implicit ones only when none is declared, and
         // never the record copy constructor (the implicit Inc() of a record struct would otherwise dispatch By = 0).
@@ -83,7 +102,6 @@ internal sealed record ActionModel(
             : type.ContainingNamespace.GetMembers(className).Any() ? $"a type or namespace named '{className}' is already declared in its namespace"
             : null;
 
-        var location = ((TypeDeclarationSyntax)context.TargetNode).Identifier.GetLocation();
         return new ActionModel(
             type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
             type.ToDisplayString(),
@@ -93,8 +111,10 @@ internal sealed record ActionModel(
             new EquatableArray<HelperModel>(helpers),
             new EquatableArray<string>(diagnosticIds),
             error,
-            new LocationInfo(location.SourceTree!.FilePath, location.SourceSpan, location.GetLineSpan().Span));
+            Info(location));
     }
+
+    private static LocationInfo Info(Location location) => new(location.SourceTree!.FilePath, location.SourceSpan, location.GetLineSpan().Span);
 
     // The type itself, then each containing type outwards.
     private static List<INamedTypeSymbol> Containers(INamedTypeSymbol type)
@@ -272,6 +292,12 @@ internal sealed record ActionModel(
         : double.IsNegativeInfinity(value) ? $"(-1{suffix} / 0{suffix})"
         : text + suffix;
 }
+
+/// <summary>
+/// What one <c>[DuckyAction]</c> generates: its <see cref="Actions"/>, and, for a union with a <c>MethodName</c>, the union
+/// to report DUCKY028 for at <see cref="Location"/>.
+/// </summary>
+internal sealed record ActionTarget(EquatableArray<ActionModel> Actions, string? IgnoredMethodName, LocationInfo Location);
 
 /// <summary>One overload pair: its accessibility, its parameter list (each with a leading comma), its constructor
 /// arguments, and its parameter types for the DUCKY024 comparison (nullability ignored, as overload resolution does).</summary>

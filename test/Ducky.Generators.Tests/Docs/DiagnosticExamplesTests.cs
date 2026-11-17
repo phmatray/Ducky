@@ -415,6 +415,18 @@ public sealed class DiagnosticExamplesTests
         """;
     #endregion
 
+    #region DUCKY028
+    private const string Ducky028 = """
+        using Ducky;
+
+        public sealed record AddItem(string Name);
+        public sealed record Clear;
+
+        [DuckyAction(MethodName = "Cart")]
+        public union CartAction(AddItem, Clear);
+        """;
+    #endregion
+
     public static TheoryData<string, string> Examples => new()
     {
         { "DUCKY001", Ducky001 },
@@ -440,6 +452,7 @@ public sealed class DiagnosticExamplesTests
         { "DUCKY025", Ducky025 },
         { "DUCKY026", Ducky026 },
         { "DUCKY027", Ducky027 },
+        { "DUCKY028", Ducky028 },
     };
 
     [Theory]
