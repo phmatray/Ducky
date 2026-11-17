@@ -90,13 +90,16 @@ public sealed class DispatchHelperTests
             {
                 public static async System.Threading.Tasks.Task<string> Run(Ducky.IStore store)
                 {
+                    store.AddItem("pear");
+                    await store.WhenIdleAsync();
+                    var first = store.State.Get<Seen>().Action;
                     var result = await store.AddItemAsync("apple");
-                    return $"{result} {store.State.Get<Seen>().Action}";
+                    return $"{first} | {result} {store.State.Get<Seen>().Action}";
                 }
             }
             """);
 
-        result.ShouldBe("Reduced AddItem { Name = apple }");
+        result.ShouldBe("AddItem { Name = pear } | Reduced AddItem { Name = apple }");
     }
 
     // Non-normative: every default literal kind dispatches the constructor's own default (NaN, infinities, -0.0, enums,

@@ -11,6 +11,19 @@ namespace Ducky.Generators;
 /// </summary>
 internal static class UnionCases
 {
+    /// <summary>The <c>IUnion</c> interface every C# union implements; null on a runtime without unions.</summary>
+    public static INamedTypeSymbol? Resolve(Compilation compilation) =>
+        compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.IUnion");
+
+    /// <summary>
+    /// The cases of a <c>[DuckyAction]</c> union that are actions of this compilation: declared in it (a BCL or referenced
+    /// case is not), and not carrying their own <paramref name="attribute"/>, which acts for them.
+    /// </summary>
+    public static IEnumerable<INamedTypeSymbol> OwnActions(ITypeSymbol union, Compilation compilation, INamedTypeSymbol? iunion, INamedTypeSymbol? attribute) =>
+        Of(union, iunion).Select(c => c.Case).OfType<INamedTypeSymbol>()
+            .Where(c => SymbolEqualityComparer.Default.Equals(c.ContainingAssembly, compilation.Assembly)
+                && !c.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attribute)));
+
     public static bool IsUnion(ITypeSymbol type, INamedTypeSymbol? iunion) =>
         type.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iunion));
 

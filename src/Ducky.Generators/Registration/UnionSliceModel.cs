@@ -58,7 +58,7 @@ internal sealed record UnionSliceModel(
         var display = type.ToDisplayString();
         var location = type.Locations[0];
         var model = new UnionSliceModel(display, kind.Display, IdentifierSanitizer.HintName(display) + kind.Suffix, null, default, default, null, null, location);
-        var iunion = compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.IUnion");
+        var iunion = UnionCases.Resolve(compilation);
         if (!UnionCases.IsUnion(action, iunion))
         {
             return model with { NotUnion = action.ToDisplayString() };

@@ -45,8 +45,10 @@ public sealed class DispatchExtensionsGenerator : IIncrementalGenerator
             .Select(m => m.Name)
             .ToImmutableArray());
 
-    private static void Emit(SourceProductionContext context, ImmutableArray<ActionModel> actions, EquatableArray<string> reservedNames)
+    private static void Emit(SourceProductionContext context, ImmutableArray<ActionModel> all, EquatableArray<string> reservedNames)
     {
+        // A case shared by two [DuckyAction] unions is emitted once, for the first of them.
+        var actions = all.GroupBy(a => a.TypeName).Select(g => g.First()).ToImmutableArray();
         var reserved = new HashSet<string>(reservedNames.Items);
         var sharedClass = actions.Where(a => a.Error is null)
             .GroupBy(a => (a.Namespace, a.ClassName))

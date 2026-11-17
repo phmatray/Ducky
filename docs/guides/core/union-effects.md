@@ -10,8 +10,9 @@ Put `[DuckyAction]` on the union, not on each case:
 
 The generator emits the helpers of each case, named after the case (`store.AddNote("milk")`, `store.AddNoteAsync("milk")`), as if each case carried `[DuckyAction]` itself. A helper dispatches the case, which is what dispatching the union delivers: dispatch unwraps a union to its case. A case that is itself a union is unwrapped to its own cases.
 
-- `MethodName` can't name several cases, so on a union it is ignored ([DUCKY028](../../diagnostics/DUCKY028.md)). To rename one case's helpers, put `[DuckyAction(MethodName = "...")]` on that case and leave the union without the attribute.
-- A case that gets no helper (an abstract record, for example) is reported as [DUCKY020](../../diagnostics/DUCKY020.md) at the union, naming the case.
+- `MethodName` can't name several cases, so on a union it is ignored ([DUCKY028](../../diagnostics/DUCKY028.md)). To rename one case's helpers, put `[DuckyAction(MethodName = "...")]` on that case: a case with its own `[DuckyAction]` keeps its own helpers.
+- Only the cases declared in your project get helpers: a case such as `string` gets none, and a case shared by two `[DuckyAction]` unions gets one set.
+- A case that can't get a helper (an abstract record, for example) is skipped; dispatch it through the union instead.
 
 ## One effect group for the union
 

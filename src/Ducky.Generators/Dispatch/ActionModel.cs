@@ -45,7 +45,7 @@ internal sealed record ActionModel(
             .Select(a => a.Value.Value as string)
             .FirstOrDefault();
         var location = ((TypeDeclarationSyntax)context.TargetNode).Identifier.GetLocation();
-        var iunion = compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.IUnion");
+        var iunion = UnionCases.Resolve(compilation);
 
         // A generic union takes the type's own path, which reports it as generic (DUCKY020).
         if (!UnionCases.IsUnion(type, iunion) || type.IsGenericType)
@@ -53,7 +53,11 @@ internal sealed record ActionModel(
             return new(new([For(type, methodName ?? type.Name, location, compilation)]), null, Info(location));
         }
 
-        var cases = UnionCases.Of(type, iunion).Select(c => c.Case).OfType<INamedTypeSymbol>().Select(c => For(c, c.Name, location, compilation));
+        // Only the cases that are this compilation's own actions; a case that can't get a helper (an abstract record) is
+        // skipped rather than failing the union: dispatching it through the union still works.
+        var cases = UnionCases.OwnActions(type, compilation, iunion, context.Attributes[0].AttributeClass)
+            .Select(c => For(c, c.Name, location, compilation))
+            .Where(a => a.Error is null);
         return new(new([.. cases]), methodName is null ? null : type.ToDisplayString(), Info(location));
     }
 

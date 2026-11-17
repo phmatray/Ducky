@@ -19,7 +19,7 @@ public sealed class DispatchUnionTests
 
         """;
 
-    // A good test here fails if a case gets no helper: three cases, one of them through a nested union, three files.
+    // A good test here fails if a case gets no helper: four cases, two of them through a nested union, four files.
     [Fact]
     public void Union_GeneratesOneHelperPerCase()
     {
@@ -56,9 +56,9 @@ public sealed class DispatchUnionTests
         output.SyntaxTrees.ShouldNotContain(t => t.ToString().Contains("static void Cart(", StringComparison.Ordinal));
     }
 
-    // A case's own error is reported at the union, naming the case: a case with no usable constructor gets no helper.
+    // A case that can't get a helper (an abstract record) is skipped, without failing the union; the others get theirs.
     [Fact]
-    public void Union_CaseWithoutUsableConstructor_IsDucky020AtTheUnion()
+    public void Union_CaseWithoutUsableConstructor_IsSkipped()
     {
         var input = GeneratorHarness.Compile(Cases + """
             public abstract record Shape;
@@ -66,11 +66,46 @@ public sealed class DispatchUnionTests
             """);
         DiagnosingHarness.Run(new DispatchExtensionsGenerator(), input, out var output, out var diagnostics);
 
-        var diagnostic = diagnostics.ShouldHaveSingleItem();
-        diagnostic.Id.ShouldBe("DUCKY020");
-        diagnostic.GetMessage(CultureInfo.InvariantCulture).ShouldStartWith("'App.Shape' gets no dispatch helper");
-        var declared = output.GetSymbolsWithName("CartAction", SymbolFilter.Type, TestContext.Current.CancellationToken).Single().Locations[0];
-        diagnostic.Location.SourceSpan.ShouldBe(declared.SourceSpan);
+        output.ShouldCompileClean();
+        diagnostics.ShouldBeEmpty();
+        output.SyntaxTrees.Count(t => t.FilePath.EndsWith(".DispatchExtensions.g.cs", StringComparison.Ordinal)).ShouldBe(1);
+    }
+
+    // A nested union that carries [DuckyAction] too: its cases are generated once, with no DUCKY020.
+    [Fact]
+    public void Union_NestedAttributedUnion_GeneratesEachCaseOnce()
+    {
+        var input = GeneratorHarness.Compile(Cases + """
+            [Ducky.DuckyAction] public union CartAction(AddItem, Clear);
+            [Ducky.DuckyAction] public union AppAction(CartAction, Other);
+            """);
+        DiagnosingHarness.Run(new DispatchExtensionsGenerator(), input, out var output, out var diagnostics);
+
+        output.ShouldCompileClean();
+        diagnostics.ShouldBeEmpty();
+        output.SyntaxTrees.Count(t => t.FilePath.EndsWith(".DispatchExtensions.g.cs", StringComparison.Ordinal)).ShouldBe(3);
+    }
+
+    // A case carrying its own [DuckyAction] keeps its own helpers (and MethodName); a case shared by two unions gets one set;
+    // a case declared outside the project (string) gets none. Each class is generated once, so nothing is DUCKY020.
+    [Fact]
+    public void Union_SharedOwnAndForeignCases_EachCaseGeneratedOnce()
+    {
+        var input = GeneratorHarness.Compile(Cases + """
+            [Ducky.DuckyAction(MethodName = "Wipe")] public sealed record Reset;
+            [Ducky.DuckyAction] public union CartAction(AddItem, Reset, string);
+            [Ducky.DuckyAction] public union OtherAction(AddItem, Clear);
+            """);
+        DiagnosingHarness.Run(new DispatchExtensionsGenerator(), input, out var output, out var diagnostics);
+
+        output.ShouldCompileClean();
+        diagnostics.ShouldBeEmpty();
+        var generated = output.SyntaxTrees.Where(t => t.FilePath.EndsWith(".DispatchExtensions.g.cs", StringComparison.Ordinal)).Select(t => t.ToString()).ToList();
+        generated.Count.ShouldBe(3);
+        generated.Count(g => g.Contains("static void AddItem(", StringComparison.Ordinal)).ShouldBe(1);
+        generated.ShouldContain(g => g.Contains("static void Wipe(", StringComparison.Ordinal));
+        generated.ShouldContain(g => g.Contains("static void Clear(", StringComparison.Ordinal));
+        generated.ShouldNotContain(g => g.Contains("String", StringComparison.Ordinal));
     }
 
     // A generic union is reported as generic, as a generic record is.

@@ -56,7 +56,7 @@ public sealed class JsonContextAnalyzer : DiagnosticAnalyzer
                 compilation.GetTypeByMetadataName("System.Text.Json.Serialization.JsonSourceGenerationOptionsAttribute"),
                 compilation.GetTypeByMetadataName("System.Text.Json.Serialization.Metadata.JsonTypeInfoResolver"),
                 compilation.GetTypeByMetadataName("System.Text.Json.Serialization.Metadata.JsonTypeInfo`1"),
-                compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.IUnion"));
+                UnionCases.Resolve(compilation));
             start.RegisterOperationAction(c => Analyze(c, types), OperationKind.Invocation);
         });
     }
@@ -95,10 +95,10 @@ public sealed class JsonContextAnalyzer : DiagnosticAnalyzer
         var required = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
         foreach (var type in context.Compilation.GetSymbolsWithName(_ => true, SymbolFilter.Type, context.CancellationToken).OfType<INamedTypeSymbol>())
         {
-            // A [DuckyAction] union is never dispatched itself: its helpers dispatch its cases (#314, ADR-0050).
+            // A [DuckyAction] union is never dispatched itself: its helpers dispatch its cases of this compilation (#314).
             if (type.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, types.Action)))
             {
-                required.UnionWith(UnionCases.IsUnion(type, types.Union) ? UnionCases.Of(type, types.Union).Select(c => c.Case) : [type]);
+                required.UnionWith(UnionCases.IsUnion(type, types.Union) ? UnionCases.OwnActions(type, context.Compilation, types.Union, types.Action) : [type]);
             }
 
             required.UnionWith(States(type, types.Slice));

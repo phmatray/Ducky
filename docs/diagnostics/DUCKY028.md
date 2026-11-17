@@ -15,5 +15,5 @@ For example, this code is reported:
 
 ## How to fix it
 
-Remove `MethodName` from the union. To name one case's helpers, put `[DuckyAction(MethodName = "...")]` on that case
-instead of on the union, and leave the union without the attribute.
+Remove `MethodName` from the union. To name one case's helpers, put `[DuckyAction(MethodName = "...")]` on that case: a
+case carrying its own `[DuckyAction]` keeps its own helpers, and the union generates none for it.

@@ -85,13 +85,14 @@ public sealed class JsonCoverageTests
             Missing("Feature.Reset"),
             Missing("Total"));
 
-    // A [DuckyAction] union asks for its cases, which its helpers dispatch, and not for itself (#314).
+    // A [DuckyAction] union asks for its cases of this compilation, which its helpers dispatch, and not for itself or a BCL
+    // case (#314).
     [Fact]
     public Task Ducky006_UnionAction_ReportsItsCases() =>
         VerifyAsync(
             Source(Both, "{|#0:AppJson.Default|}", """
                 public sealed record Remove(int Amount);
-                [DuckyAction] public union Change(Add, Remove);
+                [DuckyAction] public union Change(Add, Remove, string);
                 """),
             Missing("Remove"));
 
