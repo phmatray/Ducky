@@ -22,7 +22,7 @@ internal partial class Build
                 .Select(p => p.Name)
                 .Except(CoverageExclusions)
                 .ToHashSet();
-            var solution = JsonDocument.Parse(TestFilter.ReadAllText()).RootElement.GetProperty("solution");
+            var solution = JsonElement.Parse(TestFilter.ReadAllText()).GetProperty("solution");
             Assert.True(Normalize(solution.GetProperty("path")) == Solution.FileName,
                 $"{TestFilter.Name} must filter {Solution.FileName}");
             var filtered = solution.GetProperty("projects").EnumerateArray()

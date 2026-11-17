@@ -750,6 +750,24 @@ public sealed class HydrationTests : BunitContext
     }
 
     [Fact]
+    public async Task LargeRead_DisposeTimesOut_ReadStands()
+    {
+        // The other arm of the disposal filter: an interop timeout is swallowed like a disconnect.
+        Browser(static d => d.AddBlazor(static o => o.MaxPayloadBytes = 64 * 1024).Persist<CounterSlice>());
+        _storage[("local", "ducky:counter")] = BrowserStorageProvider.TooLarge;
+        var respond = _js.Respond;
+        _js.Respond = (identifier, args) => identifier == "storageGetStream"
+            ? Pulled(new(System.Text.Encoding.UTF8.GetBytes(Envelope("""{"Value":3}"""))) { OnDispose = new TaskCanceledException("timeout") })
+            : respond(identifier, args);
+
+        await Store.InitializeAsync(Ct);
+
+        Store.State.WasRestored<Counter>().ShouldBeTrue();
+        _pulled.ShouldHaveSingleItem().Disposed.ShouldBeTrue();
+        _logs.GetSnapshot().ShouldContain(static r => r.Id.Id == 2000 && r.Message.Contains("'dispose'") && r.Exception is TaskCanceledException);
+    }
+
+    [Fact]
     public async Task LargeRead_PullInterrupted_AttemptFailed()
     {
         // (non-normative) How "a failed pull is caught per key" (§11.5 step 4) is read here: a pull that FAILED (the runtime

@@ -107,7 +107,7 @@ public sealed partial class PrerenderHandoffTests : BunitContext
 
         seed.RenderModes.ShouldBe([RenderMode.InteractiveAuto]);
         seed.State.Keys.ShouldBe([SeedKey]);
-        var envelope = JsonDocument.Parse(JsonSerializer.Deserialize<byte[]>(seed.State[SeedKey])).RootElement;
+        var envelope = JsonElement.Parse(JsonSerializer.Deserialize<byte[]>(seed.State[SeedKey]));
         envelope.GetProperty("v").GetInt32().ShouldBe(1);
         envelope.GetProperty("src").GetString().ShouldBe("prerender");
         envelope.GetProperty("slices").GetProperty(new CounterSlice().Key).GetProperty("value").GetInt32().ShouldBe(1);

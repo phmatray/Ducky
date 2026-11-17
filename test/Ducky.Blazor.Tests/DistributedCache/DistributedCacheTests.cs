@@ -322,7 +322,7 @@ public sealed class DistributedCacheTests
         store.Middleware.Writers.Keys.ShouldBe(["counter"]);
     }
 
-    private static string Payload(string envelope) => System.Text.Json.JsonDocument.Parse(envelope).RootElement.GetProperty("s").GetRawText();
+    private static string Payload(string envelope) => System.Text.Json.JsonElement.Parse(envelope).GetProperty("s").GetRawText();
 
     private static string Envelope(string payload) => EnvelopeWriter.Write(payload, version: 1, new DateTimeOffset(2026, 9, 30, 12, 0, 0, TimeSpan.Zero));
 

@@ -37,7 +37,7 @@ internal sealed partial class Build
             Assert.True(selfCheck.Count == 0, $"AotSmoke: {selfCheck.Count} self-check violation(s)");
             Assert.True(OperatingSystem.IsLinux(), "AotSmoke publishes Ducky.AotSmoke for linux-x64 and runs it: Linux only (SPEC §10)");
 
-            DotNet("workload install wasm-tools");
+            DotNet("workload install wasm-tools-net10");
             DotNet($"restore {AotSolution}");
             // PublishAot=true comes from the csproj: as a global -p: it would reach the netstandard2.0 generator (NETSDK1207).
             // Cleaned first, so files left by an earlier publish can't hide what this one produced. The RID intermediates go

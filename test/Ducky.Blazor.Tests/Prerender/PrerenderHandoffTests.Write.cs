@@ -155,7 +155,7 @@ public sealed partial class PrerenderHandoffTests
         // as one is persisted; a slice that is only prerendered has no version and no entry.
         var seed = await PrerenderAsync(static d => d.Prerender<CounterSlice>().Persist<CounterSlice>().Prerender<ProductsSlice>(), static store => Increment(store, 1));
 
-        var envelope = JsonDocument.Parse(SeedBytes(seed)).RootElement;
+        var envelope = JsonElement.Parse(SeedBytes(seed));
         envelope.GetProperty("slices").EnumerateObject().Select(static p => p.Name).ShouldBe([new CounterSlice().Key, new ProductsSlice().Key], ignoreOrder: true);
         envelope.GetProperty("ver").EnumerateObject().Select(static p => (p.Name, p.Value.GetInt32())).ShouldBe([(new CounterSlice().Key, 1)]);
     }
@@ -342,7 +342,7 @@ public sealed partial class PrerenderHandoffTests
 
     private static byte[] SeedBytes(FakeComponentStateStore persisted) => JsonSerializer.Deserialize<byte[]>(persisted.State[SeedKey])!;
 
-    private static JsonElement Envelope(FakeComponentStateStore persisted) => JsonDocument.Parse(SeedBytes(persisted)).RootElement;
+    private static JsonElement Envelope(FakeComponentStateStore persisted) => JsonElement.Parse(SeedBytes(persisted));
 
     private static JsonElement Slices(FakeComponentStateStore persisted) => Envelope(persisted).GetProperty("slices");
 }

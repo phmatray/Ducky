@@ -703,7 +703,7 @@ public sealed class PauseSeedTests : BunitContext
     private static string Envelope(int value, int version) =>
         EnvelopeWriter.Write($$"""{"Value":{{value}}}""", version, new DateTimeOffset(2026, 9, 30, 11, 0, 0, TimeSpan.Zero));
 
-    private static string Payload(string envelope) => JsonDocument.Parse(envelope).RootElement.GetProperty("s").GetRawText();
+    private static string Payload(string envelope) => JsonElement.Parse(envelope).GetProperty("s").GetRawText();
 
     private static JsonNode Seed(FakeComponentStateStore persisted) =>
         JsonNode.Parse(JsonSerializer.Deserialize<byte[]>(persisted.State[PrerenderHandoff.SeedKey]))!;

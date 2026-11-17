@@ -107,7 +107,7 @@ internal sealed partial class Build
 
     // The highest GA (no prerelease label) of a flat-container index.json, or null when there is no 2.x GA yet.
     private static string? LatestGa(string indexJson) =>
-        JsonDocument.Parse(indexJson).RootElement.GetProperty("versions").EnumerateArray()
+        JsonElement.Parse(indexJson).GetProperty("versions").EnumerateArray()
             .Select(v => Version.TryParse(v.GetString(), out var version) ? version : null)
             .Where(v => v?.Major >= 2)
             .Max()?.ToString();
@@ -196,7 +196,7 @@ internal sealed partial class Build
                     $"msbuild {project} -getProperty:UsingMicrosoftNoTargetsSdk -getProperty:DuckyIsSrcProject -getProperty:NoWarn -getProperty:WarningsNotAsErrors",
                     logOutput: false, logInvocation: false)
                 .Select(o => o.Text));
-            var properties = JsonDocument.Parse(json).RootElement.GetProperty("Properties");
+            var properties = JsonElement.Parse(json).GetProperty("Properties");
             string Property(string name) => properties.GetProperty(name).GetString() ?? "";
             if (Property("UsingMicrosoftNoTargetsSdk").Equals("true", StringComparison.OrdinalIgnoreCase))
             {

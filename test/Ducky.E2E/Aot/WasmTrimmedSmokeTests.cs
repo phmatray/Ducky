@@ -47,7 +47,7 @@ public sealed class WasmTrimmedSmokeTests
 
         await Assertions.Expect(page.GetByTestId("todo")).ToContainTextAsync(Title);
         await page.WaitForFunctionAsync("() => devtools.some(m => m.action.type === 'todos/added')", null, new() { PollingInterval = 50 });
-        var added = JsonDocument.Parse(await page.EvaluateAsync<string>("() => JSON.stringify(devtools.find(m => m.action.type === 'todos/added').action)")).RootElement;
+        var added = JsonElement.Parse(await page.EvaluateAsync<string>("() => JSON.stringify(devtools.find(m => m.action.type === 'todos/added').action)"));
         added.GetProperty("payload").GetRawText().ShouldContain(Title);
         // Trace is on when the action carries a "stack" key (DevToolsMiddleware adds it only under Trace): that key is the
         // assertion. The trimmed AOT publish captures no frame (Mono walks no AOT-compiled WebAssembly frame; measured on

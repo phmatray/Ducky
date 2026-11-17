@@ -182,7 +182,7 @@ public sealed class ScopeSwitchRaceTests : IDisposable
         (Payload(Alice), Payload(Bob), Payload(Carol)).ShouldBe(("""{"Value":3}""", """{"Value":5}""", """{"Value":7}"""));
     }
 
-    private string Payload(string key) => System.Text.Json.JsonDocument.Parse(_cache.Stored(key)!).RootElement.GetProperty("s").GetRawText();
+    private string Payload(string key) => System.Text.Json.JsonElement.Parse(_cache.Stored(key)!).GetProperty("s").GetRawText();
 
     private WriterHarness Circuit() => new(
         static d =>
