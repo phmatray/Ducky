@@ -1103,6 +1103,7 @@ Ducky.Blazor's configuration checks (DUCKY310–312 and DUCKY314–317) are `Add
   2. `if (_disposed) return;`
   3. recompute every registered selection with the current snapshot and the current component fields, and compare each with the value **the renderer last observed** (updated whenever `Selection.Value` is read during render, and by `Evaluate` itself);
   4. if any differs under its comparer, call `StateHasChanged()` once;
+  - the one AsyncLocals `Evaluate` does carry are the creator's `CultureInfo.CurrentCulture` and `CurrentUICulture`: the core records both at construction and sets them explicitly around steps 3–4, restoring the previous values in a `finally`, so a store-triggered render formats like any other render. A culture changed on the circuit after the component was created is not picked up;
   steps 2–4 run inside one try/catch that logs (a throwing selector or comparer is treated as changed, so the render surfaces the exception through the component's normal error path).
 - No lost wake-up: interlocked operations are totally ordered full fences. If the drainer's CAS saw `1`, the pending `Evaluate` has not yet reset the flag, so its later snapshot read observes the drainer's earlier `Volatile.Write`. The CsCheck `SampleParallel` property `SubscriptionCore_RandomPublishInterleavings_LastPublishAlwaysEvaluated` checks this.
 - The drainer never reads component fields (D9). A `[Parameter]` change is correct on the next render with no dispatch, because `Selection.Value` evaluates on read.
