@@ -27,3 +27,8 @@ playwright-report/
 
 # Fallout run logs and caches
 .fallout/temp/
+
+# Agent tooling: worktrees and local telemetry, never committed
+.claude/worktrees/
+.worktrees/
+.claude/decision-events.jsonl
