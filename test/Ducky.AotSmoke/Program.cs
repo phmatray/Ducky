@@ -70,7 +70,7 @@ await CheckAsync("AotSmoke", async () =>
     return reduced && running && journal.Runs(Concurrency.Exhaust) is [_] && journal.Runs(Concurrency.Queue) is [_, _]
         && store.State.Get<Counter>().Count == 3 && changes is [1, 2, 3]
         && await SliceStoreAndEntityStateAsync() && await ServerPersistenceRoundTripAsync()
-        && DraftProduce() && await ReactiveEmissionAsync();
+        && DraftProduce() && await ReactiveEmissionAsync() && await UnionSliceAsync();
 });
 
 // [ActionType] read at run time, after ILC, as ActionContext.ActionType (M4-07, §5.8) and as the DevTools FSA type (M12-05).
@@ -223,6 +223,22 @@ static async Task<bool> ReactiveEmissionAsync()
     return store.State.Get<Basket>() is { Owner: "smoke", Items: [{ Name: "tea", Quantity: 1 }] };
 }
 
+// A union slice (ADR-0051): the generated RegisterCases reduces each case through Reduce, dispatched alone or in the union.
+static async Task<bool> UnionSliceAsync()
+{
+    await using var provider = new ServiceCollection().AddDucky(d => d.AddSlice<TallySlice>()).BuildServiceProvider();
+    await using var scope = provider.CreateAsyncScope();
+    var store = scope.ServiceProvider.GetRequiredService<IStore>();
+    await store.InitializeAsync();
+
+    await store.DispatchAsync(new Bump(5));
+    await store.DispatchAsync(new TallyAction(new Drop(2)));
+    var afterTwo = store.State.Get<Tally>().Count;
+    await store.DispatchAsync(new TallyAction(new Zero()));
+
+    return afterTwo == 3 && store.State.Get<Tally>().Count == 0;
+}
+
 async Task CheckAsync(string name, Func<Task<bool>> assertion)
 {
     bool passed;
@@ -243,6 +259,28 @@ async Task CheckAsync(string name, Func<Task<bool>> assertion)
 }
 
 internal sealed record Counter(int Count);
+
+internal sealed record Tally(int Count);
+
+internal sealed record Bump(int By);
+
+internal sealed record Drop(int By);
+
+internal sealed record Zero;
+
+internal union TallyAction(Bump, Drop, Zero);
+
+internal sealed partial class TallySlice : Slice<Tally, TallyAction>
+{
+    protected override Tally Initial => new(0);
+
+    protected override Tally Reduce(Tally state, TallyAction action) => action switch
+    {
+        Bump b => new(state.Count + b.By),
+        Drop d => new(state.Count - d.By),
+        Zero => new(0),
+    };
+}
 
 internal sealed record Increment;
 
@@ -362,8 +400,9 @@ internal sealed class AnswerEffect : ReactiveEffect
 [JsonSerializable(typeof(EntityState<int, Todo>))]
 [JsonSerializable(typeof(Counter))]
 // DUCKY006 (an error in the smoke under warnings-as-errors): every slice state type declared in this project must be
-// covered by the context passed to UseJson, and BasketSlice's state is Basket, though no store that uses SmokeJson registers it.
+// covered by the context passed to UseJson, and BasketSlice's and TallySlice's states, Basket and Tally, though no store that uses SmokeJson registers them.
 [JsonSerializable(typeof(Basket))]
+[JsonSerializable(typeof(Tally))]
 [JsonSerializable(typeof(TodoAdded))]
 internal sealed partial class SmokeJson : JsonSerializerContext;
 

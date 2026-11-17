@@ -1,6 +1,6 @@
 # ADR-0050: Read union cases from constructor parameters on the Roslyn 5.0.0 floor
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-17
 - Related: ADR-0003; spike S-7 (union) in `docs/spec/spikes.md`; #311, #312
 
