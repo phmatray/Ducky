@@ -61,6 +61,11 @@ internal static class DuckyErrors
         $"{Display(owner)} calls On<{Display(actionType)}>() more than once.",
         $"Keep one On<{Display(actionType)}>() call in {Display(owner)} and merge the handlers into it.");
 
+    public static DuckyError UnionHandlerType(Type owner, Type unionType) => Create(
+        "DUCKY319",
+        $"{Display(owner)} calls On<{Display(unionType)}>(), but {Display(unionType)} is a C# 15 union: dispatch unwraps it to its case, so this handler would never run.",
+        $"Call On<T>() once per case type declared by {Display(unionType)} instead.");
+
     public static DuckyError UnresolvableConstructor(Type type, string requiredBy, Type service, object? serviceKey)
     {
         var key = Convert.ToString(serviceKey, CultureInfo.InvariantCulture);

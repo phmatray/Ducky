@@ -143,6 +143,11 @@ public abstract class Slice<TState> : Slice
                 $"Slice {GetType()} registers On<{actionType}> after the store froze it. Register every handler in the slice constructor.");
         }
 
+        if (typeof(System.Runtime.CompilerServices.IUnion).IsAssignableFrom(actionType))
+        {
+            throw new DuckyConfigurationException([DuckyErrors.UnionHandlerType(GetType(), actionType)]);
+        }
+
         // Interfaces are abstract too.
         if (actionType.IsAbstract || actionType == typeof(object))
         {
