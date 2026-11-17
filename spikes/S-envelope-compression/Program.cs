@@ -65,7 +65,7 @@ var codecs = new (string Name, Func<Stream, Stream> Wrap)[]
     ("brotli-q11", s => new BrotliStream(s, CompressionLevel.SmallestSize, leaveOpen: true)),
     ("zstd-fast", s => new ZstandardStream(s, CompressionLevel.Fastest, leaveOpen: true)),
     ("zstd-opt", s => new ZstandardStream(s, CompressionLevel.Optimal, leaveOpen: true)),
-    ("zstd-max", s => new ZstandardStream(s, CompressionLevel.SmallestSize, leaveOpen: true)),
+    ("zstd-smallest", s => new ZstandardStream(s, CompressionLevel.SmallestSize, leaveOpen: true)),
 };
 
 Console.WriteLine("| slice | raw B | codec | compressed B | ratio | as base64 B | base64 ratio | compress ms (host) |");

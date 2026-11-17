@@ -730,7 +730,7 @@ samples' persisted slices (`TodoList`, `BasketState`, an orders list); no sample
 are those of the shapes, not of captured user data. Rerun with
 `dotnet run --project spikes/S-envelope-compression -c Release`.
 
-| Slice | Raw B | Brotli q4 | Brotli q11 | Zstd fast | Zstd optimal | Zstd max |
+| Slice | Raw B | Brotli q4 | Brotli q11 | Zstd fast | Zstd optimal | Zstd smallest-size |
 |---|--:|--:|--:|--:|--:|--:|
 | basket, 3 lines | 159 | 94 | 90 | 105 | 105 | 100 |
 | todos, 10 items | 596 | 248 | 219 | 281 | 259 | 243 |
@@ -739,15 +739,18 @@ are those of the shapes, not of captured user data. Rerun with
 | todos, 1000 items | 53 040 | 8 814 | 6 528 | 9 069 | 8 767 | 6 760 |
 | orders, 500 | 107 835 | 22 525 | 19 302 | 22 305 | 22 954 | 20 161 |
 
-Compress time on the host per call: Zstd fast/optimal 0.003 to 0.11 ms, Brotli q4 0.007 to 0.49 ms, and the maximum
-levels 3 to 74 ms (Brotli q11 74 ms and Zstd max 29 ms on the 108 KB case). The per-slice times are not a deciding
+"Zstd smallest-size" is `CompressionLevel.SmallestSize`, not necessarily Zstandard's level 22, so Zstd's best case
+is not fully explored (it would not change the verdict: the other criteria decide).
+
+Compress time on the host per call: Zstd fast/optimal 0.003 to 0.11 ms, Brotli q4 0.007 to 0.49 ms, and the smallest-size
+levels 3 to 74 ms (Brotli q11 74 ms and Zstd smallest-size 29 ms on the 108 KB case). The per-slice times are not a deciding
 factor: a persist runs off the dispatch path and the optimal levels are sub-millisecond up to 100 KB.
 
 **What the numbers say.**
 - **Typical slices are small.** The samples' slices are 0.2 to 10 KB, far below `InlinePayloadBytes` (16 KiB) and the
   32 KB SignalR message (ADR-0030). Compression only matters for the rare slice at 50 KB and up.
 - **Zstandard does not beat Brotli on size.** At comparable effort (Brotli q4 against Zstd optimal) the two are
-  within 12% of each other on every case (under 4% from 5 KB up), and Brotli q11 is smaller than Zstd max on all 6. Brotli is
+  within 12% of each other on every case (under 4% from 5 KB up), and Brotli q11 is smaller than Zstd smallest-size on all 6. Brotli is
   already in the BCL, so the assumption in the issue holds: the same win means prefer the older codec.
 - **The storage win is smaller than the ratio.** `localStorage` holds strings, so compressed bytes must be base64:
   +33%. At the large end the 0.17 ratio becomes 0.22 to 0.28, and a 5 KB slice goes from 5 337 to about 1 400 chars.
