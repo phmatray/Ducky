@@ -160,3 +160,34 @@ public abstract class Slice<TState> : Slice
         }
     }
 }
+
+/// <summary>
+/// A slice whose actions form the C# union <typeparamref name="TAction"/>, reduced by one exhaustive <see cref="Reduce"/>
+/// (ADR-0051). Declare it <c>partial</c>: the Ducky generator overrides <see cref="RegisterCases"/> with one
+/// <c>On&lt;Case&gt;</c> per case of the union, each calling <see cref="Reduce"/> with the case wrapped in the union, so a
+/// case dispatched alone or in the union reaches the same arm.
+/// </summary>
+/// <typeparam name="TState">The state type; a reference type, since change detection is by reference.</typeparam>
+/// <typeparam name="TAction">The union of the slice's actions (DUCKY026 otherwise).</typeparam>
+public abstract class Slice<TState, TAction> : Slice<TState>
+    where TState : class
+{
+    /// <summary>Initializes a new instance of the <see cref="Slice{TState, TAction}"/> class and registers its cases.</summary>
+#pragma warning disable CA2214 // justification: by design (ADR-0051), the hook only calls On<T>, whose table the base constructor already built
+    protected Slice() => RegisterCases();
+#pragma warning restore CA2214
+
+    /// <summary>Reduces one action of the union; a <c>switch</c> over <paramref name="action"/> is checked for exhaustiveness.</summary>
+    /// <param name="state">The current state.</param>
+    /// <param name="action">The dispatched case, wrapped in the union.</param>
+    /// <returns>The next state; the same instance when nothing changed.</returns>
+    protected abstract TState Reduce(TState state, TAction action);
+
+    /// <summary>
+    /// Registers each case of <typeparamref name="TAction"/> with <c>On&lt;Case&gt;</c>, called once by the constructor. The
+    /// Ducky generator overrides it in the slice's <c>partial</c> declaration; without the generator, override it by hand.
+    /// </summary>
+    protected virtual void RegisterCases()
+    {
+    }
+}

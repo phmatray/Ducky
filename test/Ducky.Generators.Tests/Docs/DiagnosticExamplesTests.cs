@@ -377,6 +377,44 @@ public sealed class DiagnosticExamplesTests
         """;
     #endregion
 
+    #region DUCKY026
+    private const string Ducky026 = """
+        using Ducky;
+
+        public sealed record Cart(int Count);
+        public sealed record AddItem(int Count);
+
+        public sealed partial class CartSlice : Slice<Cart, AddItem>
+        {
+            protected override Cart Initial => new(0);
+
+            protected override Cart Reduce(Cart state, AddItem action) => new(state.Count + action.Count);
+        }
+        """;
+    #endregion
+
+    #region DUCKY027
+    private const string Ducky027 = """
+        using Ducky;
+
+        public sealed record Cart(int Count);
+        public sealed record AddItem(int Count);
+        public sealed record Clear;
+        public union CartAction(AddItem, Clear);
+
+        public sealed class CartSlice : Slice<Cart, CartAction>
+        {
+            protected override Cart Initial => new(0);
+
+            protected override Cart Reduce(Cart state, CartAction action) => action switch
+            {
+                AddItem a => new(state.Count + a.Count),
+                Clear => new(0),
+            };
+        }
+        """;
+    #endregion
+
     public static TheoryData<string, string> Examples => new()
     {
         { "DUCKY001", Ducky001 },
@@ -400,6 +438,8 @@ public sealed class DiagnosticExamplesTests
         { "DUCKY023", Ducky023 },
         { "DUCKY024", Ducky024 },
         { "DUCKY025", Ducky025 },
+        { "DUCKY026", Ducky026 },
+        { "DUCKY027", Ducky027 },
     };
 
     [Theory]

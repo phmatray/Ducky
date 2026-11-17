@@ -23,11 +23,27 @@ internal static class RegistrationDiagnostics
     private const string ExcludedMessage = "'{0}' is not registered by AddDuckyGenerated: {1}";
     private const string ExcludedHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY023.md";
 
+    private const string NotUnionId = "DUCKY026";
+    private const string NotUnionTitle = "Union slice action type is not a union";
+    private const string NotUnionMessage = "'{0}' derives from Slice<TState, TAction>, but its action type '{1}' is not a C# union";
+    private const string NotUnionHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY026.md";
+
+    private const string NotPartialId = "DUCKY027";
+    private const string NotPartialTitle = "Union slice is not partial";
+    private const string NotPartialMessage = "The cases of '{0}' can't be registered: declare {1} partial";
+    private const string NotPartialHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY027.md";
+
     public static readonly DiagnosticDescriptor Unresolved = new(
         UnresolvedId, UnresolvedTitle, UnresolvedMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: UnresolvedHelp);
 
     public static readonly DiagnosticDescriptor Excluded = new(
         ExcludedId, ExcludedTitle, ExcludedMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: ExcludedHelp);
 
-    public static readonly ImmutableArray<DiagnosticDescriptor> All = [Unresolved, Excluded];
+    public static readonly DiagnosticDescriptor NotUnion = new(
+        NotUnionId, NotUnionTitle, NotUnionMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: NotUnionHelp);
+
+    public static readonly DiagnosticDescriptor NotPartial = new(
+        NotPartialId, NotPartialTitle, NotPartialMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: NotPartialHelp);
+
+    public static readonly ImmutableArray<DiagnosticDescriptor> All = [Unresolved, Excluded, NotUnion, NotPartial];
 }

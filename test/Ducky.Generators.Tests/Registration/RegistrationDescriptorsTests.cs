@@ -11,6 +11,8 @@ public sealed class RegistrationDescriptorsTests
     {
         { "DUCKY022", DiagnosticSeverity.Warning, "Registration call not emitted", "{0} on '{1}' is ignored: {2}" },
         { "DUCKY023", DiagnosticSeverity.Warning, "Type excluded from generated registration", "'{0}' is not registered by AddDuckyGenerated: {1}" },
+        { "DUCKY026", DiagnosticSeverity.Error, "Union slice action type is not a union", "'{0}' derives from Slice<TState, TAction>, but its action type '{1}' is not a C# union" },
+        { "DUCKY027", DiagnosticSeverity.Error, "Union slice is not partial", "The cases of '{0}' can't be registered: declare {1} partial" },
     };
 
     [Theory]

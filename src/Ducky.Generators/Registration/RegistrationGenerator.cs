@@ -29,6 +29,18 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
             .WithTrackingName("RegistrationEmit");
         context.RegisterSourceOutput(registered.Collect().Combine(gates), static (spc, input) => Emit(spc, input.Left, input.Right));
 
+        // ADR-0051: one RegisterCases override per union slice, from symbol-free models (Location dropped, as above); the
+        // diagnostics read the located ones. A partial slice yields one model per declaration, hence Distinct.
+        var unionSlices = context.SyntaxProvider
+            .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, UnionSliceModel.From)
+            .WithTrackingName("RegistrationUnionSlices");
+        context.RegisterSourceOutput(
+            unionSlices.Select(static (model, _) => model is { NotUnion: null, NotPartial: null } ? model with { Location = Location.None } : null)
+                .WithTrackingName("RegistrationUnionEmit")
+                .Collect(),
+            static (spc, models) => EmitUnionSlices(spc, models));
+        context.RegisterSourceOutput(unionSlices.Collect(), static (spc, models) => ReportUnionSlices(spc, models));
+
         var attributes = Attributed(context, "Persist").Collect().Combine(Attributed(context, "Prerender").Collect());
         context.RegisterSourceOutput(
             types.Collect().Combine(attributes).Combine(gates),
@@ -95,6 +107,56 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
 
         writer.Line("#pragma warning restore CS0612, CS0618").Line("return b;").Close().Close();
         context.AddSource("DuckyRegistrations.g.cs", writer.ToString());
+    }
+
+    private static void EmitUnionSlices(SourceProductionContext context, ImmutableArray<UnionSliceModel?> models)
+    {
+        foreach (var model in models.OfType<UnionSliceModel>().Distinct())
+        {
+            var writer = new CodeWriter();
+            if (model.Namespace is not null)
+            {
+                writer.Line($"namespace {model.Namespace};").Line();
+            }
+
+            foreach (var declaration in model.Declarations.Items)
+            {
+                writer.Open(declaration);
+            }
+
+            writer.Line("/// <inheritdoc />").Open("protected override void RegisterCases()")
+                .Line("#pragma warning disable CS0612, CS0618 // justification: generated code references user [Obsolete] cases (GEN-06)");
+            foreach (var registration in model.Registrations.Items)
+            {
+                writer.Line(registration);
+            }
+
+            writer.Line("#pragma warning restore CS0612, CS0618");
+
+            for (var i = 0; i <= model.Declarations.Items.Length; i++)
+            {
+                writer.Close();
+            }
+
+            context.AddSource(model.HintName + ".UnionSlice.g.cs", writer.ToString());
+        }
+    }
+
+    // DUCKY026 for a union slice whose action type is not a union, DUCKY027 for one not partial (or nested in a type that
+    // isn't): neither gets a RegisterCases override.
+    private static void ReportUnionSlices(SourceProductionContext context, ImmutableArray<UnionSliceModel?> models)
+    {
+        foreach (var model in models.OfType<UnionSliceModel>().Distinct())
+        {
+            if (model.NotUnion is not null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.NotUnion, model.Location, model.Display, model.NotUnion));
+            }
+            else if (model.NotPartial is not null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.NotPartial, model.Location, model.Display, model.NotPartial));
+            }
+        }
     }
 
     // DUCKY023 for each excluded type; DUCKY022 for [Persist]/[Prerender] on a non-slice, or on any slice (registered or
