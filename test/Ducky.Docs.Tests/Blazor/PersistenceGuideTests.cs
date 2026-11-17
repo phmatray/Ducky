@@ -30,7 +30,8 @@ public sealed class PreferencesSlice : Slice<Preferences>
 }
 #endregion
 
-// The other guides' state types: DUCKY006 asks the context to cover every slice state type of the project.
+// The other guides' state types and [DuckyAction] cases: DUCKY006 asks the context to cover every slice state type and
+// every [DuckyAction] type of the project, for a union its cases.
 [JsonSerializable(typeof(Counter))]
 [JsonSerializable(typeof(Core.Cart))]
 [JsonSerializable(typeof(Core.EffectsGuideTests.TickCount))]
@@ -41,6 +42,9 @@ public sealed class PreferencesSlice : Slice<Preferences>
 [JsonSerializable(typeof(Core.Settings))]
 [JsonSerializable(typeof(Core.Todos))]
 [JsonSerializable(typeof(Core.Weather))]
+[JsonSerializable(typeof(Core.AddNote))]
+[JsonSerializable(typeof(Core.RemoveNote))]
+[JsonSerializable(typeof(Core.ClearNotes))]
 [JsonSerializable(typeof(CatalogState))]
 [JsonSerializable(typeof(ForecastState))]
 [JsonSerializable(typeof(Reactive.Search))]
