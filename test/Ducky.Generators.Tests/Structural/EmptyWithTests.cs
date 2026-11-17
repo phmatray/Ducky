@@ -38,4 +38,28 @@ public sealed class EmptyWithTests
     [Theory]
     [MemberData(nameof(Silent))]
     public Task Ducky011_NoEmptyWithOnState_NotReported(string source) => Verifier.VerifyAsync(source);
+
+    // #324: a Reduce override of Slice<TState, TAction> is a reducer too; a copy of its action, or a Reduce of another
+    // base, is not reported.
+    private static string UnionSlice(string reduce, string baseType = "Slice<S, Hit>") => Prelude + $$"""
+        public sealed class Host : {{baseType}}
+        {
+            protected override S Initial => new(0);
+            protected override S Reduce(S state, Hit action) => {{reduce}};
+        }
+        public abstract class Other<TState, TAction> : Slice<TState> where TState : class
+        {
+            protected abstract TState Reduce(TState state, TAction action);
+        }
+        """;
+
+    [Fact]
+    public Task Ducky011_EmptyWithInReduce_Reported() =>
+        Verifier.VerifyAsync(UnionSlice("action.Id > 0 ? state with { Count = action.Id } : {|#0:state with { }|}"),
+            Verifier.Diagnostic(StructuralDiagnostics.EmptyWith).WithLocation(0).WithArguments("state with { }"));
+
+    [Theory]
+    [InlineData("action with { } is null ? state : state", "Slice<S, Hit>")]
+    [InlineData("state with { }", "Other<S, Hit>")]
+    public Task Ducky011_NoEmptyWithOnReduceState_NotReported(string reduce, string baseType) => Verifier.VerifyAsync(UnionSlice(reduce, baseType));
 }

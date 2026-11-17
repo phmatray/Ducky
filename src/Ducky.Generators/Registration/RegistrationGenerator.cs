@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using Ducky.Generators.Registration;
 using Ducky.Shared.Generators;
 using Microsoft.CodeAnalysis;
@@ -15,9 +16,10 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var types = context.SyntaxProvider
-            .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, RegistrationModel.From)
-            .WithTrackingName("RegistrationTypes");
+        // One semantic transform per class with a base list feeds both pipelines (#324).
+        var classified = context.SyntaxProvider
+            .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, Classify);
+        var types = classified.Select(static (c, _) => c.Registration).WithTrackingName("RegistrationTypes");
         var gates = context.CompilationProvider
             .Select(static (compilation, _) => RegistrationGates.From(compilation))
             .WithTrackingName("RegistrationGates");
@@ -31,11 +33,9 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
 
         // ADR-0051: one RegisterCases override per union slice or union effect group, from symbol-free models (Location dropped, as above); the
         // diagnostics read the located ones. A partial slice yields one model per declaration, hence Distinct.
-        var unionSlices = context.SyntaxProvider
-            .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, UnionSliceModel.From)
-            .WithTrackingName("RegistrationUnionSlices");
+        var unionSlices = classified.Select(static (c, _) => c.Union).WithTrackingName("RegistrationUnionSlices");
         context.RegisterSourceOutput(
-            unionSlices.Select(static (model, _) => model is { NotUnion: null, NotPartial: null } ? model with { Location = Location.None } : null)
+            unionSlices.Select(static (model, _) => model is { Rule: null } ? model with { Location = Location.None } : null)
                 .WithTrackingName("RegistrationUnionEmit")
                 .Collect(),
             static (spc, models) => EmitUnionSlices(spc, models));
@@ -45,6 +45,15 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(
             types.Collect().Combine(attributes).Combine(gates),
             static (spc, input) => Report(spc, input.Left.Left, input.Left.Right.Left.AddRange(input.Left.Right.Right), input.Right));
+    }
+
+    // A file-local union-first type is DUCKY030, which replaces the DUCKY023 of its registration.
+    private static (RegistrationModel? Registration, UnionSliceModel? Union) Classify(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+    {
+        var type = (INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!;
+        var compilation = context.SemanticModel.Compilation;
+        var union = UnionSliceModel.Classify(type, compilation, cancellationToken);
+        return (union?.Rule == RegistrationDiagnostics.FileLocal ? null : RegistrationModel.Classify(type, compilation), union);
     }
 
     // Only type declarations (INV-25): FAWMN ignores AttributeUsage, so an enum, delegate, method or field carrying the
@@ -126,9 +135,20 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
 
             writer.Line("/// <inheritdoc />").Open("protected override void RegisterCases()")
                 .Line("#pragma warning disable CS0612, CS0618 // justification: generated code references user [Obsolete] cases (GEN-06)");
+            var suppressed = string.Join(", ", model.Suppressed.Items);
+            if (suppressed.Length > 0)
+            {
+                writer.Line($"#pragma warning disable {suppressed} // justification: generated code references user [Obsolete]/[Experimental] cases (GEN-06)");
+            }
+
             foreach (var registration in model.Registrations.Items)
             {
                 writer.Line(registration);
+            }
+
+            if (suppressed.Length > 0)
+            {
+                writer.Line($"#pragma warning restore {suppressed}");
             }
 
             writer.Line("#pragma warning restore CS0612, CS0618");
@@ -142,20 +162,13 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
         }
     }
 
-    // DUCKY026 for a union slice or effect group whose action type is not a union, DUCKY027 for one not partial (or nested in a type that
-    // isn't): neither gets a RegisterCases override.
+    // A union slice or effect group with a Rule (DUCKY026, 027, 029, 030 or 031) gets that diagnostic and no RegisterCases
+    // override.
     private static void ReportUnionSlices(SourceProductionContext context, ImmutableArray<UnionSliceModel?> models)
     {
-        foreach (var model in models.OfType<UnionSliceModel>().Distinct())
+        foreach (var model in models.OfType<UnionSliceModel>().Distinct().Where(m => m.Rule is not null))
         {
-            if (model.NotUnion is not null)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.NotUnion, model.Location, model.Display, model.Base, model.NotUnion));
-            }
-            else if (model.NotPartial is not null)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(RegistrationDiagnostics.NotPartial, model.Location, model.Display, model.NotPartial));
-            }
+            context.ReportDiagnostic(Diagnostic.Create(model.Rule!, model.Location, [.. model.Arguments.Items]));
         }
     }
 

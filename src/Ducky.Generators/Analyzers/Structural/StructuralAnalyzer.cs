@@ -13,7 +13,8 @@ namespace Ducky.Generators;
 
 /// <summary>
 /// DUCKY005 and DUCKY011–015 (SPEC §16.2): handlers and <c>OfActionType&lt;T&gt;</c> filters for non-concrete action
-/// types, an unchanged <c>with</c> copy of the state in an <c>On&lt;T&gt;</c> reducer lambda, a <c>[Persist]</c> or
+/// types, an unchanged <c>with</c> copy of the state in an <c>On&lt;T&gt;</c> reducer lambda or a <c>Reduce</c> override of
+/// <c>Slice&lt;TState, TAction&gt;</c> (#324), a <c>[Persist]</c> or
 /// <c>Persist&lt;T&gt;()</c> slice on its derived key, a concurrency key without value equality, a duplicate
 /// <c>On&lt;T&gt;</c> in one constructor, and two slices sharing a state type. Generated code is not analysed.
 /// </summary>
@@ -49,6 +50,8 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
             var slices = new ConcurrentBag<(INamedTypeSymbol Slice, ITypeSymbol State)>();
 
             start.RegisterOperationBlockStartAction(block => OnBlockStart(block, symbols));
+            var unionSlice = compilation.GetTypeByMetadataName("Ducky.Slice`2");
+            start.RegisterOperationAction(op => OnReduce(op, unionSlice), OperationKind.MethodBody);
             start.RegisterOperationAction(op => OnReturn(op, symbols), OperationKind.Return);
             start.RegisterOperationAction(op => OnPersistCall(op, symbols), OperationKind.Invocation);
             start.RegisterOperationAction(op => OnOfActionType(op, symbols), OperationKind.Invocation);
@@ -97,17 +100,26 @@ public sealed class StructuralAnalyzer : DiagnosticAnalyzer
                 var reducer = (invocation.Arguments[0].Value as IDelegateCreationOperation)?.Target as IAnonymousFunctionOperation;
                 if (isSlice && reducer is not null)
                 {
-                    ReportEmptyWith(op, reducer);
+                    ReportEmptyWith(op, reducer.Body, reducer.Symbol.Parameters[0]);
                 }
             },
             OperationKind.Invocation);
     }
 
-    // DUCKY011: `s with { }` on the reducer's state parameter, nested lambdas included.
-    private static void ReportEmptyWith(OperationAnalysisContext op, IAnonymousFunctionOperation reducer)
+    // DUCKY011 in a Reduce override of Slice<TState, TAction>, a reducer whose first parameter is the state.
+    private static void OnReduce(OperationAnalysisContext op, INamedTypeSymbol? unionSlice)
     {
-        var state = reducer.Symbol.Parameters[0];
-        foreach (var with in reducer.Body.Descendants().OfType<IWithOperation>())
+        var method = (IMethodSymbol)op.ContainingSymbol;
+        if (UnionCases.IsReduce(method, unionSlice))
+        {
+            ReportEmptyWith(op, op.Operation, method.Parameters[0]);
+        }
+    }
+
+    // DUCKY011: `s with { }` on the reducer's state parameter, nested lambdas included.
+    private static void ReportEmptyWith(OperationAnalysisContext op, IOperation body, IParameterSymbol state)
+    {
+        foreach (var with in body.Descendants().OfType<IWithOperation>())
         {
             if (with.Initializer.Initializers.IsEmpty && Is((with.Operand as IParameterReferenceOperation)?.Parameter, state))
             {

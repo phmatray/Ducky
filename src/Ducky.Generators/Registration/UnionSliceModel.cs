@@ -13,14 +13,16 @@ namespace Ducky.Generators.Registration;
 
 /// <summary>
 /// A union-first type (ADR-0051) deriving directly from <c>Ducky.Slice&lt;TState, TAction&gt;</c> or
-/// <c>Ducky.EffectGroup&lt;TAction&gt;</c>, named by <see cref="Base"/>, symbol-free. Emitted as an override of
+/// <c>Ducky.EffectGroup&lt;TAction&gt;</c>, symbol-free. Emitted as an override of
 /// <c>RegisterCases</c> in its <see cref="Declarations"/> (outermost first, inside <see cref="Namespace"/>), one
-/// <see cref="Registrations"/> line per case of the union, when <see cref="NotUnion"/> and <see cref="NotPartial"/> are
-/// null; otherwise DUCKY026 (the action type) or DUCKY027 (the types to declare partial) at <see cref="Location"/>.
+/// <see cref="Registrations"/> line per case of the union (suppressing the <see cref="Suppressed"/> ids of the
+/// [Experimental] and [Obsolete] cases besides CS0612/CS0618), when <see cref="Rule"/> is null; otherwise that diagnostic,
+/// formatted with <see cref="Arguments"/>, at <see cref="Location"/>: DUCKY026 (not a union), DUCKY027 (not partial),
+/// DUCKY029 (a case dispatch never matches), DUCKY030 (file-local) or DUCKY031 (a hand-written <c>RegisterCases</c>).
 /// </summary>
 internal sealed record UnionSliceModel(
-    string Display, string Base, string HintName, string? Namespace, EquatableArray<string> Declarations, EquatableArray<string> Registrations,
-    string? NotUnion, string? NotPartial, Location Location)
+    string Display, string HintName, string? Namespace, EquatableArray<string> Declarations, EquatableArray<string> Registrations,
+    DiagnosticDescriptor? Rule, EquatableArray<string> Arguments, Location Location, EquatableArray<string> Suppressed = default)
 {
     private static readonly SymbolDisplayFormat _declaration = new(
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
@@ -34,11 +36,7 @@ internal sealed record UnionSliceModel(
         new("Ducky.EffectGroup`1", 0, "EffectGroup<TAction>", ".UnionEffectGroup", "On<{0}>((a, c, t) => Handle({1}, c, t));"),
     ];
 
-    /// <summary>The <see cref="Classify"/> of a class with a base list, the generator's syntax step.</summary>
-    public static UnionSliceModel? From(GeneratorSyntaxContext context, CancellationToken cancellationToken) =>
-        Classify((INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!, context.SemanticModel.Compilation, cancellationToken);
-
-    /// <summary>Null unless <paramref name="type"/>'s direct base is a union-first base.</summary>
+    /// <summary>Null unless <paramref name="type"/>'s direct base is a union-first base with a closed action type.</summary>
     public static UnionSliceModel? Classify(INamedTypeSymbol type, Compilation compilation, CancellationToken cancellationToken)
     {
         if (type.BaseType is not { } baseType
@@ -57,12 +55,8 @@ internal sealed record UnionSliceModel(
 
         var display = type.ToDisplayString();
         var location = type.Locations[0];
-        var model = new UnionSliceModel(display, kind.Display, IdentifierSanitizer.HintName(display) + kind.Suffix, null, default, default, null, null, location);
-        var iunion = UnionCases.Resolve(compilation);
-        if (!UnionCases.IsUnion(action, iunion))
-        {
-            return model with { NotUnion = action.ToDisplayString() };
-        }
+        var model = new UnionSliceModel(display, IdentifierSanitizer.HintName(display) + kind.Suffix, null, default, default, null, default, location);
+        UnionSliceModel Reported(DiagnosticDescriptor rule, params string[] arguments) => model with { Rule = rule, Arguments = new([display, .. arguments]) };
 
         var chain = new List<INamedTypeSymbol>();
         for (var t = type; t is not null; t = t.ContainingType)
@@ -70,23 +64,82 @@ internal sealed record UnionSliceModel(
             chain.Insert(0, t);
         }
 
+        // A file-local type can't span two files, so no generated declaration can extend it (its DUCKY023 is dropped).
+        if (chain[0].IsFileLocal)
+        {
+            return Reported(RegistrationDiagnostics.FileLocal, chain[0].ToDisplayString());
+        }
+
+        var iunion = UnionCases.Resolve(compilation);
+        if (!UnionCases.IsUnion(action, iunion))
+        {
+            return Reported(RegistrationDiagnostics.NotUnion, kind.Display, action.ToDisplayString());
+        }
+
+        // Checked before partial: a hand-written override is the generator-off shape, which needs no partial.
+        if (type.GetMembers("RegisterCases").Any(m => m is IMethodSymbol { Parameters.IsEmpty: true, IsGenericMethod: false }))
+        {
+            return Reported(RegistrationDiagnostics.HandWritten);
+        }
+
         var notPartial = chain.Where(t => !t.DeclaringSyntaxReferences.All(r =>
                 ((TypeDeclarationSyntax)r.GetSyntax(cancellationToken)).Modifiers.Any(SyntaxKind.PartialKeyword)))
             .Select(t => $"'{t.ToDisplayString()}'").ToList();
         if (notPartial.Count > 0)
         {
-            return model with { NotPartial = string.Join(", ", notPartial) };
+            return Reported(RegistrationDiagnostics.NotPartial, string.Join(", ", notPartial));
         }
 
-        // The first path to a case wins, since On<T> takes one handler per type.
-        var registrations = UnionCases.Of(action, iunion).Select(c => string.Format(
+        // Dispatch matches an action's exact runtime type (ADR-0008): never an abstract type, an interface or object
+        // (On<T> throws DUCKY307), nor a Nullable<T>, which boxes to its T. The first path to a case wins, since On<T>
+        // takes one handler per type.
+        var seen = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+        var cases = UnionCases.Of(action, iunion, seen);
+        var undispatchable = cases.Where(c => c.Case.IsAbstract || c.Case.SpecialType == SpecialType.System_Object || c.Case.TypeKind == TypeKind.Dynamic
+                || c.Case.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            .Select(c => $"'{c.Case.ToDisplayString()}'").ToList();
+        if (undispatchable.Count > 0)
+        {
+            return Reported(RegistrationDiagnostics.Undispatchable, string.Join(", ", undispatchable));
+        }
+
+        var referenced = new List<ISymbol>();
+        foreach (var named in seen)
+        {
+            Referenced(named, referenced);
+        }
+
+        var registrations = cases.Select(c => string.Format(
             CultureInfo.InvariantCulture, kind.Registration, c.Case.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), c.Wrap("a")));
         return model with
         {
             Namespace = type.ContainingNamespace.IsGlobalNamespace ? null : type.ContainingNamespace.ToDisplayString(),
             Declarations = new([.. chain.Select(t => $"partial {Keyword(t)} {t.ToDisplayString(_declaration)}")]),
             Registrations = new([.. registrations]),
+            // Every type the registrations name: the cases, the unions the wraps construct, their containing types and type
+            // arguments.
+            Suppressed = new([.. RegistrationModel.SuppressedIds(referenced, compilation)
+                .Distinct().OrderBy(id => id, StringComparer.Ordinal)]),
         };
+    }
+
+    private static void Referenced(ITypeSymbol type, List<ISymbol> into)
+    {
+        if (type is not INamedTypeSymbol named)
+        {
+            return;
+        }
+
+        into.Add(named);
+        foreach (var argument in named.TypeArguments)
+        {
+            Referenced(argument, into);
+        }
+
+        if (named.ContainingType is { } containing)
+        {
+            Referenced(containing, into);
+        }
     }
 
     private static string Keyword(INamedTypeSymbol type) =>

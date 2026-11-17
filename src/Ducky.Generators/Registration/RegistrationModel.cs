@@ -59,10 +59,6 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
     public const string FileLocal = "it is file-local, so the generated registration can't reference it";
     public const string NoConstructor = "a slice needs a public parameterless constructor that new() can call (one marked [SetsRequiredMembers] when the slice has required members)";
 
-    /// <summary>The <see cref="Classify"/> of a class with a base list, the generator's syntax step.</summary>
-    public static RegistrationModel? From(GeneratorSyntaxContext context, CancellationToken cancellationToken) =>
-        Classify((INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!, context.SemanticModel.Compilation);
-
     /// <summary>
     /// Classifies <paramref name="type"/>: null unless it is a non-abstract, non-generic slice, effect or reactive effect
     /// (a <c>Ducky.Reactive.ReactiveEffect</c>, when that type resolves) that generated code may reference (accessible from
@@ -106,13 +102,7 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
             return new(name, display, isSlice, NoConstructor, location);
         }
 
-        // [Obsolete(DiagnosticId = "X")] reports X instead of CS0618 (an empty id keeps CS0618), [Experimental("X")] X.
-        var experimental = compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.ExperimentalAttribute");
-        var suppressed = containing.SelectMany(t => t.GetAttributes()).SelectMany(a =>
-                SymbolEqualityComparer.Default.Equals(a.AttributeClass, experimental) ? a.ConstructorArguments.Select(c => c.Value) :
-                SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete) ? a.NamedArguments.Where(n => n.Key == "DiagnosticId").Select(n => n.Value.Value) :
-                [])
-            .OfType<string>().Where(id => id.Length > 0);
+        var suppressed = SuppressedIds(containing, compilation);
         var persistAttribute = compilation.GetTypeByMetadataName("Ducky.PersistAttribute");
         var persist = isSlice ? type.GetAttributes().FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, persistAttribute)) : null;
         return new(name, display, isSlice, null, location, new([.. suppressed]),
@@ -129,6 +119,21 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
     private static string Literal(TypedConstant value) => value.Kind == TypedConstantKind.Enum
         ? $"({value.Type!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})({Convert.ToString(value.Value, CultureInfo.InvariantCulture)})"
         : value.ToCSharpString();
+
+    /// <summary>
+    /// The DiagnosticIds generated code referencing <paramref name="types"/> has to suppress besides CS0612/CS0618 (GEN-06):
+    /// <c>[Obsolete(DiagnosticId = "X")]</c> reports X instead of CS0618 (an empty id keeps CS0618), <c>[Experimental("X")]</c> X.
+    /// </summary>
+    public static IEnumerable<string> SuppressedIds(IEnumerable<ISymbol> types, Compilation compilation)
+    {
+        var obsolete = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
+        var experimental = compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.ExperimentalAttribute");
+        return types.SelectMany(t => t.GetAttributes()).SelectMany(a =>
+                SymbolEqualityComparer.Default.Equals(a.AttributeClass, experimental) ? a.ConstructorArguments.Select(c => c.Value) :
+                SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete) ? a.NamedArguments.Where(n => n.Key == "DiagnosticId").Select(n => n.Value.Value) :
+                [])
+            .OfType<string>().Where(id => id.Length > 0);
+    }
 
     /// <summary>Whether <paramref name="type"/> derives from <paramref name="baseType"/>.</summary>
     public static bool Derives(INamedTypeSymbol type, INamedTypeSymbol? baseType) =>

@@ -30,13 +30,34 @@ internal static class UnionCases
     /// <summary>
     /// The cases of <paramref name="union"/>, each with the expression that wraps a value of it into
     /// <paramref name="union"/>. A case that is itself a union is unwrapped to its own cases, as Dispatch unwraps (#304);
-    /// the first path to a case wins, and unions that contain each other end the walk.
+    /// the first path to a case wins, and unions that contain each other end the walk. <paramref name="seen"/>, when
+    /// given, ends up holding every union the walk entered (<paramref name="union"/> included) and every case.
     /// </summary>
-    public static List<(ITypeSymbol Case, Func<string, string> Wrap)> Of(ITypeSymbol union, INamedTypeSymbol? iunion)
+    public static List<(ITypeSymbol Case, Func<string, string> Wrap)> Of(ITypeSymbol union, INamedTypeSymbol? iunion, HashSet<ITypeSymbol>? seen = null)
     {
         var cases = new List<(ITypeSymbol, Func<string, string>)>();
-        Add(union, static value => value, cases, new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default), iunion);
+        Add(union, static value => value, cases, seen ?? new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default), iunion);
         return cases;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="method"/> is a <c>Reduce</c> override (of an override…) of <c>Slice&lt;TState, TAction&gt;.Reduce</c>
+    /// (<paramref name="unionSlice"/>), the union slice's reducer that DUCKY001–003 and DUCKY011 analyse (#324).
+    /// </summary>
+    public static bool IsReduce(IMethodSymbol method, INamedTypeSymbol? unionSlice)
+    {
+        if (method.Name != "Reduce")
+        {
+            return false;
+        }
+
+        var declared = method;
+        while (declared.OverriddenMethod is { } overridden)
+        {
+            declared = overridden;
+        }
+
+        return SymbolEqualityComparer.Default.Equals(declared.ContainingType.OriginalDefinition, unionSlice);
     }
 
     // seen holds the unions entered as well as the cases.

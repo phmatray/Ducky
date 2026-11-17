@@ -427,6 +427,70 @@ public sealed class DiagnosticExamplesTests
         """;
     #endregion
 
+    #region DUCKY029
+    private const string Ducky029 = """
+        using Ducky;
+
+        public sealed record Cart(int Count);
+        public interface ICartAction;
+        public sealed record Clear : ICartAction;
+        public union CartAction(ICartAction, Clear);
+
+        public sealed partial class CartSlice : Slice<Cart, CartAction>
+        {
+            protected override Cart Initial => new(0);
+
+            protected override Cart Reduce(Cart state, CartAction action) => new(0);
+        }
+        """;
+    #endregion
+
+    #region DUCKY030
+    private const string Ducky030 = """
+        using Ducky;
+
+        public sealed record Cart(int Count);
+        public sealed record AddItem(int Count);
+        public sealed record Clear;
+        public union CartAction(AddItem, Clear);
+
+        file sealed partial class CartSlice : Slice<Cart, CartAction>
+        {
+            protected override Cart Initial => new(0);
+
+            protected override Cart Reduce(Cart state, CartAction action) => action switch
+            {
+                AddItem a => new(state.Count + a.Count),
+                Clear => new(0),
+            };
+        }
+        """;
+    #endregion
+
+    #region DUCKY031
+    private const string Ducky031 = """
+        using Ducky;
+
+        public sealed record Cart(int Count);
+        public sealed record AddItem(int Count);
+        public sealed record Clear;
+        public union CartAction(AddItem, Clear);
+
+        public sealed partial class CartSlice : Slice<Cart, CartAction>
+        {
+            protected override Cart Initial => new(0);
+
+            protected override Cart Reduce(Cart state, CartAction action) => action switch
+            {
+                AddItem a => new(state.Count + a.Count),
+                Clear => new(0),
+            };
+
+            protected override void RegisterCases() => On<AddItem>((s, a) => Reduce(s, new CartAction(a)));
+        }
+        """;
+    #endregion
+
     public static TheoryData<string, string> Examples => new()
     {
         { "DUCKY001", Ducky001 },
@@ -453,6 +517,9 @@ public sealed class DiagnosticExamplesTests
         { "DUCKY026", Ducky026 },
         { "DUCKY027", Ducky027 },
         { "DUCKY028", Ducky028 },
+        { "DUCKY029", Ducky029 },
+        { "DUCKY030", Ducky030 },
+        { "DUCKY031", Ducky031 },
     };
 
     [Theory]
