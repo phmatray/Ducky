@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using Ducky.Generators.Registration;
 using Ducky.Shared.Generators;
 using Microsoft.CodeAnalysis;
@@ -15,9 +16,10 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var types = context.SyntaxProvider
-            .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, RegistrationModel.From)
-            .WithTrackingName("RegistrationTypes");
+        // One semantic transform per class with a base list feeds both pipelines (#324).
+        var classified = context.SyntaxProvider
+            .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, Classify);
+        var types = classified.Select(static (c, _) => c.Registration).WithTrackingName("RegistrationTypes");
         var gates = context.CompilationProvider
             .Select(static (compilation, _) => RegistrationGates.From(compilation))
             .WithTrackingName("RegistrationGates");
@@ -31,9 +33,7 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
 
         // ADR-0051: one RegisterCases override per union slice or union effect group, from symbol-free models (Location dropped, as above); the
         // diagnostics read the located ones. A partial slice yields one model per declaration, hence Distinct.
-        var unionSlices = context.SyntaxProvider
-            .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax { BaseList: not null }, UnionSliceModel.From)
-            .WithTrackingName("RegistrationUnionSlices");
+        var unionSlices = classified.Select(static (c, _) => c.Union).WithTrackingName("RegistrationUnionSlices");
         context.RegisterSourceOutput(
             unionSlices.Select(static (model, _) => model is { Rule: null } ? model with { Location = Location.None } : null)
                 .WithTrackingName("RegistrationUnionEmit")
@@ -45,6 +45,15 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(
             types.Collect().Combine(attributes).Combine(gates),
             static (spc, input) => Report(spc, input.Left.Left, input.Left.Right.Left.AddRange(input.Left.Right.Right), input.Right));
+    }
+
+    // A file-local union-first type is DUCKY030, which replaces the DUCKY023 of its registration.
+    private static (RegistrationModel? Registration, UnionSliceModel? Union) Classify(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+    {
+        var type = (INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!;
+        var compilation = context.SemanticModel.Compilation;
+        var union = UnionSliceModel.Classify(type, compilation, cancellationToken);
+        return (union?.Rule == RegistrationDiagnostics.FileLocal ? null : RegistrationModel.Classify(type, compilation), union);
     }
 
     // Only type declarations (INV-25): FAWMN ignores AttributeUsage, so an enum, delegate, method or field carrying the

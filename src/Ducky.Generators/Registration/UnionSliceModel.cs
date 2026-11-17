@@ -36,14 +36,19 @@ internal sealed record UnionSliceModel(
         new("Ducky.EffectGroup`1", 0, "EffectGroup<TAction>", ".UnionEffectGroup", "On<{0}>((a, c, t) => Handle({1}, c, t));"),
     ];
 
-    /// <summary>The <see cref="Classify"/> of a class with a base list, the generator's syntax step.</summary>
-    public static UnionSliceModel? From(GeneratorSyntaxContext context, CancellationToken cancellationToken) =>
-        Classify((INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!, context.SemanticModel.Compilation, cancellationToken);
-
     /// <summary>Null unless <paramref name="type"/>'s direct base is a union-first base with a closed action type.</summary>
     public static UnionSliceModel? Classify(INamedTypeSymbol type, Compilation compilation, CancellationToken cancellationToken)
     {
-        if (ActionOf(type, compilation) is not ({ } kind, { } action))
+        if (type.BaseType is not { } baseType
+            || _kinds.FirstOrDefault(k => SymbolEqualityComparer.Default.Equals(baseType.OriginalDefinition, compilation.GetTypeByMetadataName(k.MetadataName))) is not { } kind)
+        {
+            return null;
+        }
+
+        // An open action type (a reusable generic base) has no cases to read; its concrete subclasses aren't generated
+        // either, since only the direct derivation is.
+        var action = baseType.TypeArguments[kind.ActionIndex];
+        if (action is ITypeParameterSymbol)
         {
             return null;
         }
@@ -107,22 +112,6 @@ internal sealed record UnionSliceModel(
             Suppressed = new([.. RegistrationModel.SuppressedIds(cases.SelectMany(c => Containing(c.Case)).Concat(Containing(action)), compilation)
                 .Distinct().OrderBy(id => id, StringComparer.Ordinal)]),
         };
-    }
-
-    /// <summary>
-    /// Whether <paramref name="type"/> derives directly from a union-first base with a closed action type: what
-    /// <see cref="Classify"/> models, so registration leaves a file-local one to DUCKY030.
-    /// </summary>
-    public static bool IsUnionFirst(INamedTypeSymbol type, Compilation compilation) => ActionOf(type, compilation).Action is not null;
-
-    // An open action type (a reusable generic base) has no cases to read; its concrete subclasses aren't generated
-    // either, since only the direct derivation is.
-    private static (Kind? Kind, ITypeSymbol? Action) ActionOf(INamedTypeSymbol type, Compilation compilation)
-    {
-        var baseType = type.BaseType;
-        var kind = baseType is null ? null
-            : _kinds.FirstOrDefault(k => SymbolEqualityComparer.Default.Equals(baseType.OriginalDefinition, compilation.GetTypeByMetadataName(k.MetadataName)));
-        return kind is null || baseType!.TypeArguments[kind.ActionIndex] is ITypeParameterSymbol ? (null, null) : (kind, baseType.TypeArguments[kind.ActionIndex]);
     }
 
     private static IEnumerable<ISymbol> Containing(ISymbol symbol)

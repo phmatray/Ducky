@@ -59,10 +59,6 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
     public const string FileLocal = "it is file-local, so the generated registration can't reference it";
     public const string NoConstructor = "a slice needs a public parameterless constructor that new() can call (one marked [SetsRequiredMembers] when the slice has required members)";
 
-    /// <summary>The <see cref="Classify"/> of a class with a base list, the generator's syntax step.</summary>
-    public static RegistrationModel? From(GeneratorSyntaxContext context, CancellationToken cancellationToken) =>
-        Classify((INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)!, context.SemanticModel.Compilation);
-
     /// <summary>
     /// Classifies <paramref name="type"/>: null unless it is a non-abstract, non-generic slice, effect or reactive effect
     /// (a <c>Ducky.Reactive.ReactiveEffect</c>, when that type resolves) that generated code may reference (accessible from
@@ -86,11 +82,10 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
         var display = type.ToDisplayString();
         var location = type.Locations[0];
 
-        // Accessibility doesn't model `file`, so the outermost type's IsFileLocal is checked first; a union-first one is
-        // DUCKY030 instead.
+        // Accessibility doesn't model `file`, so the outermost type's IsFileLocal is checked first.
         if (containing[containing.Count - 1].IsFileLocal)
         {
-            return UnionSliceModel.IsUnionFirst(type, compilation) ? null : new(name, display, isSlice, FileLocal, location, Reactive: isReactive);
+            return new(name, display, isSlice, FileLocal, location, Reactive: isReactive);
         }
 
         var constructors = type.InstanceConstructors.Where(c => c.DeclaredAccessibility == Accessibility.Public).ToList();
