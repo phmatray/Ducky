@@ -34,7 +34,7 @@ public sealed class SubscriptionCoreInterleavingTests
             () => Gen.Const(() => (new Actual(), new Model())).SampleParallel(
                 publish,
                 render,
-                equal: (a, m) => a.Ticks == m.Ticks && a.SettledRender == m.Ticks && a.MaxPending <= 1,
+                equal: (a, m) => a.Ticks == m.Ticks && a.TrySettledRender(out var rendered) && rendered == m.Ticks && a.MaxPending <= 1,
                 maxSequentialOperations: MaxSequentialOperations,
                 maxParallelOperations: MaxParallelOperations),
             cancellationToken));
@@ -47,7 +47,7 @@ public sealed class SubscriptionCoreInterleavingTests
         private long _rendered;
         private int _pending;
         private int _maxPending;
-        private long? _settledRender;
+        private readonly Interleaving.Settlement<long> _settlement = new();
 
         public Actual()
         {
@@ -63,10 +63,11 @@ public sealed class SubscriptionCoreInterleavingTests
 
         public int MaxPending => Volatile.Read(ref _maxPending);
 
-        // Once, after the run (equal may be called once per linearization tried). Every publish has returned, so the
+        // Once, after the run (equal may be called once per linearization tried, concurrently: Interleaving.Settlement; false
+        // while another caller settles). Every publish has returned, so the
         // drain's exit follows every OnCommit and the InvokeAsync it made. The first renderer round runs every queued
         // delegate, whose Task.Yield posts Evaluate behind it; the second runs those Evaluates and their renders.
-        public long SettledRender => _settledRender ??= Settle();
+        public bool TrySettledRender(out long rendered) => _settlement.TryGet(Settle, out rendered);
 
         public void Publish() => Interleaving.Wait(Store.DispatchAsync(new Tick())).ShouldBe(DispatchResult.Reduced);
 
