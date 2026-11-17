@@ -79,6 +79,12 @@
       "enabled": false
     },
     {
+      "description": "The implicit SDK packs stay on the 11.0 line of the net11.0 target (Directory.Build.targets): they must match the SDK's own pack versions.",
+      "matchPackageNames": ["Microsoft.NET.ILLink.Tasks", "Microsoft.AspNetCore.App.Internal.Assets", "Microsoft.NET.Sdk.WebAssembly.Pack"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
       "description": "The 1.x legacy fixtures (docs/migration/samples/legacy) model third-party libraries as published and stay on net10.0, so their framework packages stay on 10.0.x (ADR-0049).",
       "matchFileNames": ["docs/migration/samples/legacy/**"],
       "enabled": false

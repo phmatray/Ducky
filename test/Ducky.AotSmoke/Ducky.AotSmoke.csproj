@@ -28,7 +28,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <!-- The container AddDucky registers into. VersionOverride, not a PackageVersion: with transitive pinning a central
          entry would move every locked test project's transitive copy to CentralTransitive (NU1004). Ducky.Testing's version. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="10.0.15" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="11.0.0" />
   </ItemGroup>
 
   <!-- .NET 10's Microsoft.AspNetCore.Components has IL3050 in its own PersistentComponentState.PersistAsJson/TryTakeFromJson
