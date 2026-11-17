@@ -44,7 +44,7 @@ internal static class AnalyzerVerifier<TAnalyzer>
         var test = new TTest
         {
             TestCode = source,
-            ReferenceAssemblies = new ReferenceAssemblies("net10.0"),
+            ReferenceAssemblies = new ReferenceAssemblies("net11.0"),
         };
         test.TestState.AdditionalReferences.AddRange(_references);
         return test;

@@ -4,12 +4,15 @@
        (.github/workflows/docs.yml). Workload-free like Ducky.Samples.Wasm: never RunAOTCompilation here (NETSDK1147).
        Built with warnings as errors, so Ducky's analyzers (DUCKY001-025, DUCKY101-109) run on it. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <DuckyUseGenerators>true</DuckyUseGenerators>
     <DuckyUseDraftGenerator>true</DuckyUseDraftGenerator>
     <!-- Blazor WebAssembly trims System.Diagnostics.Metrics out by default; the inspector's DropMeter listens to the
          store's drop counters, so the feature stays on. -->
     <MetricsSupport>true</MetricsSupport>
+    <!-- BL0016 (.NET 11): the Playground's JS calls are cosmetic (scroll, focus, clipboard) and a failure changes nothing a visitor
+         can act on, so they are not wrapped in a try/catch. -->
+    <NoWarn>$(NoWarn);BL0016</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -82,6 +82,13 @@
     <AssemblyOriginatorKeyFile>$(RepoRoot)ducky.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+  <!-- .NET 11 Razor analyzers on JS interop and auth state (BL0010, BL0013, BL0016) advise app code. Test fixtures call
+       IJSRuntime and AuthenticationStateProvider unguarded on purpose: they fake or provoke exactly those calls. src/ keeps them
+       on (JsBridge is the one audited interop site, suppressed there with its justification). -->
+  <PropertyGroup Condition="'$(DuckyIsTestProject)' == 'true'">
+    <NoWarn>$(NoWarn);BL0010;BL0013;BL0016</NoWarn>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!-- Full public key of ducky.snk, for <InternalsVisibleTo Include="X" Key="$(DuckyPublicKey)" />. -->
     <DuckyPublicKey>0024000004800000940000000602000000240000525341310004000001000100859dbfcae1c04735cd362e81b6902192d1d6c8ed0b0b1a475ff5fd5a96e6f4cdf5483dcf92c5a88fca24c5184bc0fe470ac76c0c80da574a3d84f33c4fad0dd89b9bedc533e030fbc5fd52616c96341e99e10dd30695c427c293bdc4042027b01c8f3ecb2242e868ab50e88a43b8e1b2e7a50df3c1cc075ea5f1b0b98264f9ca</DuckyPublicKey>

@@ -2,7 +2,7 @@
   <!-- NativeAOT smoke (SPEC §10, INV-24). Only in Ducky.Aot.slnx: with PublishAot a lock file would record the host-RID
        ILCompiler package (NU1004 on other hosts), so it is restored unlocked, by the AotSmoke target on Linux only. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <!-- Set here, not only as a global -p: on the command line it would also reach the netstandard2.0 generator that
          src/Ducky builds (NETSDK1207). -->
@@ -28,7 +28,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <!-- The container AddDucky registers into. VersionOverride, not a PackageVersion: with transitive pinning a central
          entry would move every locked test project's transitive copy to CentralTransitive (NU1004). Ducky.Testing's version. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="10.0.15" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="11.0.0" />
   </ItemGroup>
 
   <!-- .NET 10's Microsoft.AspNetCore.Components has IL3050 in its own PersistentComponentState.PersistAsJson/TryTakeFromJson

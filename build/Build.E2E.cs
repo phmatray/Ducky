@@ -60,7 +60,7 @@ internal sealed partial class Build
     // MTP syntax (§19); the harness reads the browser from DUCKY_BROWSER and writes coverage only when given a directory.
     private void RunE2E(AbsolutePath samples, string browser, AbsolutePath? coverage = null)
     {
-        ProcessTasks.StartProcess("pwsh", $"{E2EProject.Parent / "bin" / "Release" / "net10.0" / "playwright.ps1"} install --with-deps {browser}")
+        ProcessTasks.StartProcess("pwsh", $"{E2EProject.Parent / "bin" / "Release" / "net11.0" / "playwright.ps1"} install --with-deps {browser}")
             .AssertZeroExitCode();
         var environment = new Dictionary<string, string>(EnvironmentInfo.Variables)
         {

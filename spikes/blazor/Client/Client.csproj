@@ -5,7 +5,7 @@
        SuppressTrimAnalysisWarnings=true unless TrimmerDefaultAction is link, so a trimmed publish would report no IL
        warning at all: the spike turns it off. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
     <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
     <IsTrimmable>true</IsTrimmable>
