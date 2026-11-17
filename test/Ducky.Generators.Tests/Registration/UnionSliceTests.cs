@@ -226,6 +226,9 @@ public sealed class UnionSliceTests
     [InlineData("[System.Obsolete(\"gone\", true)] public static class Old { public sealed record Gone; }", "Old.Gone", "'App.Old'")]
     [InlineData("[System.Obsolete(\"gone\", true)] public sealed record Gone; public sealed record Box<T>(T Value);", "Box<Gone>", "'App.Gone'")]
     [InlineData("[System.Obsolete(\"gone\", true)] public union Inner(Clear);", "Inner", "'App.Inner'")]
+    [InlineData("[System.Obsolete(\"gone\", true)] public sealed record Gone;", "Gone[]", "'App.Gone'")]
+    [InlineData("[System.Obsolete(\"gone\", true)] public static class Old { public sealed record A; public sealed record B; } [System.Obsolete(\"gone\", true)] public sealed record Gone;",
+        "Old.A, Old.B, Gone", "'App.Old', 'App.Gone'")]
     public void UnionSlice_ErrorObsoleteCase_IsDucky032(string declaration, string @case, string display)
     {
         var diagnostic = Diagnose(Cart + declaration + $$"""
@@ -243,6 +246,73 @@ public sealed class UnionSliceTests
         diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture).ShouldBe(
             $"The cases of 'App.CartSlice' can't be registered: generated code can't reference {display}, obsolete as an error");
         ShouldBeAt(diagnostic, output, "CartSlice");
+    }
+
+    // Only the constructors the wraps call count: a private or two-parameter union constructor, or a case's own
+    // constructor, never appears in generated code.
+    [Fact]
+    public void UnionSlice_ErrorObsoleteUncalledConstructor_StillGenerated()
+    {
+        GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile(Cart + """
+            public sealed record Made { [System.Obsolete("gone", true)] public Made(int unused) { } public Made() { } }
+            public readonly struct Hand : System.Runtime.CompilerServices.IUnion
+            {
+                public Hand(AddItem value) => Value = value;
+                public Hand(Made value) => Value = value;
+                [System.Obsolete("gone", true)] public Hand(AddItem value, int unused) => Value = value;
+                [System.Obsolete("gone", true)] private Hand(Clear value) => Value = value;
+                public object? Value { get; }
+            }
+            public sealed partial class HandSlice : Ducky.Slice<Cart, Hand>
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, Hand action) => state;
+            }
+            """), out var output);
+
+        output.ShouldCompileClean();
+        Generated(output, "App.HandSlice.UnionSlice.g.cs").ShouldContain("On<global::App.Made>");
+    }
+
+    // A nested union's constructor whose case an earlier path already reached is never called, and an obsolete slice is an
+    // obsolete context, where the compiler reports no CS0619: both still generate.
+    [Fact]
+    public void UnionSlice_ErrorObsoleteShadowedConstructor_StillGenerated()
+    {
+        GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile(Cart + """
+            public readonly struct Inner : System.Runtime.CompilerServices.IUnion
+            {
+                [System.Obsolete("gone", true)] public Inner(AddItem value) => Value = value;
+                public Inner(Clear value) => Value = value;
+                public object? Value { get; }
+            }
+            public union Outer(AddItem, Inner);
+            public sealed partial class OuterSlice : Ducky.Slice<Cart, Outer>
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, Outer action) => state;
+            }
+            """), out var output);
+
+        output.ShouldCompileClean();
+        Generated(output, "App.OuterSlice.UnionSlice.g.cs").ShouldContain("On<global::App.AddItem>((s, a) => Reduce(s, new global::App.Outer(a)));");
+    }
+
+    [Fact]
+    public void UnionSlice_ObsoleteSliceOverErrorObsoleteCase_StillGenerated()
+    {
+        GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile(Cart + """
+            [System.Obsolete("gone", true)] public sealed record Gone;
+            [System.Obsolete] public union Bad(AddItem, Gone);
+            [System.Obsolete] public sealed partial class CartSlice : Ducky.Slice<Cart, Bad>
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, Bad action) => state;
+            }
+            """), out var output);
+
+        output.ShouldCompileClean();
+        Generated(output, "App.CartSlice.UnionSlice.g.cs").ShouldContain("On<global::App.Gone>");
     }
 
     [Fact]

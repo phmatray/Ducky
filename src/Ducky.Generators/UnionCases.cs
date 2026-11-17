@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -29,14 +30,14 @@ internal static class UnionCases
 
     /// <summary>
     /// The cases of <paramref name="union"/>, each with the expression that wraps a value of it into
-    /// <paramref name="union"/>. A case that is itself a union is unwrapped to its own cases, as Dispatch unwraps (#304);
-    /// the first path to a case wins, and unions that contain each other end the walk. <paramref name="seen"/>, when
-    /// given, ends up holding every union the walk entered (<paramref name="union"/> included) and every case.
+    /// <paramref name="union"/> and the unions and constructors that expression names (<c>Path</c>). A case that is itself
+    /// a union is unwrapped to its own cases, as Dispatch unwraps (#304); the first path to a case wins, and unions that
+    /// contain each other end the walk.
     /// </summary>
-    public static List<(ITypeSymbol Case, Func<string, string> Wrap)> Of(ITypeSymbol union, INamedTypeSymbol? iunion, HashSet<ITypeSymbol>? seen = null)
+    public static List<(ITypeSymbol Case, Func<string, string> Wrap, ImmutableArray<ISymbol> Path)> Of(ITypeSymbol union, INamedTypeSymbol? iunion)
     {
-        var cases = new List<(ITypeSymbol, Func<string, string>)>();
-        Add(union, static value => value, cases, seen ?? new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default), iunion);
+        var cases = new List<(ITypeSymbol, Func<string, string>, ImmutableArray<ISymbol>)>();
+        Add(union, static value => value, [], cases, new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default), iunion);
         return cases;
     }
 
@@ -61,7 +62,9 @@ internal static class UnionCases
     }
 
     // seen holds the unions entered as well as the cases.
-    private static void Add(ITypeSymbol union, Func<string, string> wrap, List<(ITypeSymbol, Func<string, string>)> cases, HashSet<ITypeSymbol> seen, INamedTypeSymbol? iunion)
+    private static void Add(
+        ITypeSymbol union, Func<string, string> wrap, ImmutableArray<ISymbol> path, List<(ITypeSymbol, Func<string, string>, ImmutableArray<ISymbol>)> cases,
+        HashSet<ITypeSymbol> seen, INamedTypeSymbol? iunion)
     {
         if (!seen.Add(union))
         {
@@ -69,19 +72,20 @@ internal static class UnionCases
         }
 
         var name = union.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        var parameters = ((INamedTypeSymbol)union).InstanceConstructors
-            .Where(c => c.DeclaredAccessibility == Accessibility.Public && c.Parameters.Length == 1)
-            .Select(c => c.Parameters[0].Type);
-        foreach (var @case in parameters)
+        var constructors = ((INamedTypeSymbol)union).InstanceConstructors
+            .Where(c => c.DeclaredAccessibility == Accessibility.Public && c.Parameters.Length == 1);
+        foreach (var constructor in constructors)
         {
+            var @case = constructor.Parameters[0].Type;
             Func<string, string> wrapped = value => wrap($"new {name}({value})");
+            var step = path.Add(union).Add(constructor);
             if (IsUnion(@case, iunion))
             {
-                Add(@case, wrapped, cases, seen, iunion);
+                Add(@case, wrapped, step, cases, seen, iunion);
             }
             else if (seen.Add(@case))
             {
-                cases.Add((@case, wrapped));
+                cases.Add((@case, wrapped, step));
             }
         }
     }

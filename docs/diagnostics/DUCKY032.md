@@ -8,7 +8,8 @@ The generator writes the `RegisterCases` override of every `Slice<TState, TActio
 `On<Case>` per case of the union, which names each case, the unions that wrap it and the constructors those wraps call. One
 of them carries `[Obsolete(…, true)]`, or sits in a type that does, and CS0619 can't be suppressed, so the override would not
 compile. The generator writes nothing for this type, and reports this instead, naming what is obsolete. A union declared in
-an obsolete context may list such a case; the generated override is not in that context.
+an obsolete context may list such a case; the generated override is in that context only when the slice or effect group,
+or a type containing it, is itself `[Obsolete]`, and then it is generated as usual.
 
 For example, this code is reported:
 

@@ -156,9 +156,9 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         var method = (IMethodSymbol)context.ContainingSymbol;
         if (UnionCases.IsReduce(method, unionSlice))
         {
-            var arms = Walk(context.Operation).OfType<IInvocationOperation>().Select(i => Arm(i, slice, sliceStore, selector).Lambda)
-                .OfType<IOperation>().ToImmutableHashSet();
-            AnalyzeBody(context, context.Operation, method, rules, "reducer", drafts, arms);
+            AnalyzeBody(context, context.Operation, method, rules, "reducer", drafts,
+                operation => operation is IAnonymousFunctionOperation { Parent: IDelegateCreationOperation { Parent: IArgumentOperation { Parent: IInvocationOperation invocation } } } lambda
+                    && Arm(invocation, slice, sliceStore, selector).Lambda == lambda);
         }
     }
 
@@ -170,7 +170,7 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules,
         string arm,
         Drafts drafts,
-        ImmutableHashSet<IOperation>? skipped = null)
+        Func<IOperation, bool>? skipped = null)
     {
         foreach (var operation in Walk(body, skipped))
         {
@@ -350,13 +350,13 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
     }
 
     // Every operation below the root, nested lambdas included, except the operand of a nameof: nothing there runs.
-    private static IEnumerable<IOperation> Walk(IOperation root, ImmutableHashSet<IOperation>? skipped = null)
+    private static IEnumerable<IOperation> Walk(IOperation root, Func<IOperation, bool>? skipped = null)
     {
         var pending = new Stack<IOperation>(root.ChildOperations);
         while (pending.Count > 0)
         {
             var operation = pending.Pop();
-            if (operation is INameOfOperation || skipped?.Contains(operation) == true)
+            if (operation is INameOfOperation || skipped?.Invoke(operation) == true)
             {
                 continue;
             }
