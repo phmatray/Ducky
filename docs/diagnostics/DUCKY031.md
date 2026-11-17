@@ -5,8 +5,8 @@
 ## What happened
 
 With the generator on, it writes the `RegisterCases` override of every `Slice<TState, TAction>` and
-`EffectGroup<TAction>`, one `On<Case>` per case of the union. This type overrides `RegisterCases` itself, so the two
-overrides would collide (CS0111). The generator writes nothing for it, and reports this instead.
+`EffectGroup<TAction>`, one `On<Case>` per case of the union. This type declares a `RegisterCases()` of its own, so the two
+members would collide (CS0111). The generator writes nothing for it, and reports this instead.
 
 For example, this code is reported:
 
@@ -14,6 +14,6 @@ For example, this code is reported:
 
 ## How to fix it
 
-Remove the hand-written override and let the generator register every case. A hand-written `RegisterCases` is for a build
+Remove the hand-written `RegisterCases()` and let the generator register every case. A hand-written `RegisterCases` is for a build
 without the Ducky generator; for a policy or key per case,
 derive from `EffectGroup` and call `On<TCase>` instead.
