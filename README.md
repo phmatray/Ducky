@@ -24,6 +24,10 @@ Ducky is a small, strict Redux store for .NET 11 and Blazor. Application state l
 
 > **Status:** 2.0 is in preview (`2.0.0-rc.1`). Install it with `--prerelease`. Ducky 1.x lives on the `main` branch; see [Migrating from Ducky 1.x](https://phmatray.github.io/Ducky/docs/migration/ducky-1x.html).
 
+## What's new in 2.0
+
+Ducky 2.x targets `net11.0` only: it needs the .NET 11 SDK and runtime, and an app on .NET 10 or earlier can't reference it. C# 15 unions are first-class: dispatch a union and the store delivers its case, `Slice<TState, TAction>` reduces a whole union in one exhaustive `switch`, and `EffectGroup<TAction>` handles it in one effect. Read the [union guide](https://phmatray.github.io/Ducky/docs/guides/core/unions.html).
+
 ## Install
 
 ```shell

@@ -25,6 +25,8 @@ Inherit `DuckyComponent` (or `DuckyComponent<TState>`, whose `State` is the whol
 
 On the server the store is scoped to the circuit or the request. Code that runs in another DI scope (an `IHttpClientFactory` `DelegatingHandler`, a hosted service, a SignalR hub) resolves a different, empty store; reach the circuit's services through a circuit accessor.
 
+In the browser the store starts from a hosted service that `AddDucky` registers (`BlazorOptions.InitializeOnStart`, on by default), so a WebAssembly app needs no `<DuckyInitializer>`; the [prerender guide](prerender.md) says when it is still needed.
+
 In the browser there is one store per app, and its effects resolve scoped services from the store's own scope, so a scoped service injected into an effect (the template's scoped `HttpClient`, for example) is a different instance from the one components get.
 
 A circuit that .NET 10 pauses and resumes is a fresh store: its `Prerender<T>` slices come back from the pause state, its persisted slices from storage, and every other slice starts from its initial state. [Circuit pause and resume](prerender.md#circuit-pause-and-resume) says which one wins for a slice that is both, and when a change not yet written survives the pause.

@@ -12,6 +12,8 @@ Ducky.Testing runs your [Ducky](https://www.nuget.org/packages/Ducky) slices and
 dotnet add package Ducky.Testing --prerelease
 ```
 
+Ducky.Testing targets `net11.0`. A `TestStore` also runs union actions: dispatch a case or the union value, and the store sees the case.
+
 ## Example
 
 Given this slice:

@@ -45,6 +45,7 @@ public sealed class PreferencesSlice : Slice<Preferences>
 [JsonSerializable(typeof(Core.AddNote))]
 [JsonSerializable(typeof(Core.RemoveNote))]
 [JsonSerializable(typeof(Core.ClearNotes))]
+[JsonSerializable(typeof(Core.UnionSliceGuideTests.App.Account))]
 [JsonSerializable(typeof(CatalogState))]
 [JsonSerializable(typeof(ForecastState))]
 [JsonSerializable(typeof(Reactive.Search))]

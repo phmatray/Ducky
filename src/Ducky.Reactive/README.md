@@ -8,6 +8,8 @@ Ducky.Reactive writes [Ducky](https://www.nuget.org/packages/Ducky) effects as [
 dotnet add package Ducky.Reactive --prerelease
 ```
 
+Ducky.Reactive targets `net11.0`.
+
 ## Example
 
 The state and actions of a search box:

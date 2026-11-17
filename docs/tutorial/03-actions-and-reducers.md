@@ -28,6 +28,14 @@ A **reducer** takes the current state and an action, and returns the next state.
 
 A reducer is **pure**: given the same state and action it always returns the same result, and it does nothing else. No server call, no clock, no random number, no change to its inputs. Ducky's analyzers check the lambda you pass to `On<T>` as you type. They don't follow calls into a helper such as `WithQuantity`, so keep helpers pure too.
 
+## Another shape: a union of actions
+
+`On<T>` suits a slice that reacts to a few unrelated actions, as the basket does. When a slice owns a closed set of actions, declare them as a C# 15 `union` and derive from `Slice<TState, TAction>`: one `Reduce` with a `switch` that the compiler checks covers every case.
+
+[!code-csharp[](../../test/Ducky.Docs.Tests/Core/UnionSliceGuideTests.cs#union-slice)]
+
+Dispatch a case or the union value; the store delivers the case either way. This tutorial keeps `On<T>`, and [Unions in Ducky](../guides/core/unions.md) says when to pick which.
+
 ## One action at a time
 
 The store's **dispatcher** takes actions in the order they are dispatched and reduces them one at a time: each reducer sees the state the previous action left. Two buttons clicked at once, or a click while a server answer arrives, can't interleave halfway through a reducer, so a reducer never needs a lock.
