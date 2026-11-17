@@ -40,6 +40,21 @@ public sealed class ReduceTests
         Verifier.VerifyAsync(Slice(body),
             Verifier.Diagnostic(PurityDiagnostics.Mutation).WithLocation(0).WithArguments(target, owner, Reducer));
 
+    // #329: an On<T> reducer or Selector.Define projector lambda inside Reduce is its own arm, so a violation in it is
+    // reported once, as that arm's; what Reduce passes outside the lambda is still Reduce's.
+    [Fact]
+    public Task NestedArmLambdas_ReportedOnce() =>
+        Verifier.VerifyAsync(Slice("""
+            {
+                On<Hit>((x, y) => x with { Count = {|#0:DateTime.Now|}.Second });
+                _ = Selector.Define(c => c.Get<Bag>().Count + {|#1:Environment.TickCount|}, v => {|#2:Guid.NewGuid()|}.GetHashCode() + v);
+                return s;
+            }
+            """),
+            Verifier.Diagnostic(PurityDiagnostics.NonDeterministic).WithLocation(0).WithArguments("DateTime.Now", Reducer),
+            Verifier.Diagnostic(PurityDiagnostics.NonDeterministic).WithLocation(1).WithArguments("Environment.TickCount", Reducer),
+            Verifier.Diagnostic(PurityDiagnostics.NonDeterministic).WithLocation(2).WithArguments("Guid.NewGuid", Projector));
+
     // Rebinding a parameter and writing a local replace no shared value, as in a lambda.
     [Fact]
     public Task PureReduce_NotReported() =>

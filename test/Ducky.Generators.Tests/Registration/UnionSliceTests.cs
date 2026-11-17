@@ -470,6 +470,32 @@ public sealed class UnionSliceTests
         ShouldBeAt(diagnostic, output, "CartSlice");
     }
 
+    // #329: a type with two mistakes gets one diagnostic, the first in check order: file-local (DUCKY030), not a union
+    // (DUCKY026), hand-written RegisterCases (DUCKY031), not partial (DUCKY027), undispatchable (DUCKY029), error-obsolete
+    // (DUCKY032).
+    [Theory]
+    [InlineData("file sealed partial class CartSlice", "Cart", "", "DUCKY030")]
+    [InlineData("public sealed partial class CartSlice", "Cart", "protected override void RegisterCases() { }", "DUCKY026")]
+    [InlineData("public sealed class CartSlice", "Mixed", "protected override void RegisterCases() { }", "DUCKY031")]
+    [InlineData("public sealed class CartSlice", "Mixed", "", "DUCKY027")]
+    [InlineData("public sealed partial class CartSlice", "Mixed", "", "DUCKY029")]
+    public void UnionSlice_TwoMistakes_FirstInCheckOrder(string declaration, string action, string member, string id)
+    {
+        var diagnostic = Diagnose(Cart + $$"""
+            [System.Obsolete("gone", true)] public sealed record Gone;
+            #pragma warning disable CS0612 // justification: the slice names the obsolete union
+            [System.Obsolete] public union Mixed(AddItem, object, Gone);
+            {{declaration}} : Ducky.Slice<Cart, {{action}}>
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, {{action}} action) => state;
+                {{member}}
+            }
+            """, out _);
+
+        diagnostic.Id.ShouldBe(id);
+    }
+
     // Only a parameterless, non-generic RegisterCases collides with the generated one.
     [Fact]
     public void UnionSlice_RegisterCasesOverloads_StillGenerated()
