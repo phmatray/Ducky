@@ -12,7 +12,8 @@ namespace Ducky.Generators;
 
 /// <summary>
 /// DUCKY001–003 (SPEC §12, §16.2): an <c>On&lt;T&gt;</c> reducer lambda, a <c>SliceStore.Set</c>/<c>SetAsync</c> mutator
-/// lambda and a <c>Selector.Define</c> projector lambda must be pure. Method groups and generated code are not analysed.
+/// lambda and a <c>Selector.Define</c> projector lambda must be pure, and so must a <c>Reduce</c> override of
+/// <c>Slice&lt;TState, TAction&gt;</c>, a reducer too (#324). Method groups and generated code are not analysed.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class PurityAnalyzer : DiagnosticAnalyzer
@@ -87,6 +88,8 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             Drafts drafts = (compilation.GetTypeByMetadataName("Ducky.Draft.IDraft`1"), compilation.GetTypeByMetadataName("Ducky.Draft.IRevocable"));
             start.RegisterOperationAction(
                 c => AnalyzeInvocation(c, (IInvocationOperation)c.Operation, slice, sliceStore, selector, rules, drafts), OperationKind.Invocation);
+            var unionSlice = compilation.GetTypeByMetadataName("Ducky.Slice`2");
+            start.RegisterOperationAction(c => AnalyzeReduce(c, unionSlice, rules, drafts), OperationKind.MethodBody);
         });
     }
 
@@ -125,12 +128,49 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (lambda is null)
+        if (lambda is not null)
         {
-            return;
+            AnalyzeBody(context, lambda.Body, lambda.Symbol, rules, arm, drafts);
+        }
+    }
+
+    // A Reduce override (of an override…) of Slice<TState, TAction>.Reduce is a reducer whose parameters are the state and
+    // action, like an On<T> lambda's.
+    private static void AnalyzeReduce(
+        OperationAnalysisContext context,
+        INamedTypeSymbol? unionSlice,
+        ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules,
+        Drafts drafts)
+    {
+        var method = (IMethodSymbol)context.ContainingSymbol;
+        if (IsUnionReduce(method, unionSlice))
+        {
+            AnalyzeBody(context, context.Operation, method, rules, "reducer", drafts);
+        }
+    }
+
+    /// <summary>Whether <paramref name="method"/> overrides (through any number of overrides) <c>Slice&lt;TState, TAction&gt;.Reduce</c>.</summary>
+    internal static bool IsUnionReduce(IMethodSymbol method, INamedTypeSymbol? unionSlice)
+    {
+        var declared = method;
+        while (declared.OverriddenMethod is { } overridden)
+        {
+            declared = overridden;
         }
 
-        foreach (var operation in Walk(lambda.Body))
+        return declared.Name == "Reduce" && Is(declared.ContainingType.OriginalDefinition, unionSlice);
+    }
+
+    // `function` is the lambda or method whose parameters are the arm's inputs, and whose locals are its own.
+    private static void AnalyzeBody(
+        OperationAnalysisContext context,
+        IOperation body,
+        IMethodSymbol function,
+        ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules,
+        string arm,
+        Drafts drafts)
+    {
+        foreach (var operation in Walk(body))
         {
             switch (operation)
             {
@@ -145,7 +185,7 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
                     break;
                 case IInvocationOperation call:
                     Check(context, call, call.TargetMethod, rules, arm);
-                    CheckMutator(context, call, lambda, arm);
+                    CheckMutator(context, call, function, arm);
                     break;
                 case IMemberReferenceOperation reference:
                     Check(context, reference, reference.Member, rules, arm);
@@ -155,10 +195,10 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
                     Check(context, objectCreation, objectCreation.Constructor!, rules, arm);
                     break;
                 case IAssignmentOperation assignment:
-                    CheckWrite(context, assignment, assignment.Target, lambda, arm, drafts);
+                    CheckWrite(context, assignment, assignment.Target, function, arm, drafts);
                     break;
                 case IIncrementOrDecrementOperation increment:
-                    CheckWrite(context, increment, increment.Target, lambda, arm, drafts);
+                    CheckWrite(context, increment, increment.Target, function, arm, drafts);
                     break;
             }
         }
@@ -189,24 +229,24 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    // DUCKY003 on a known collection mutator whose receiver is the lambda's parameters' graph.
-    private static void CheckMutator(OperationAnalysisContext context, IInvocationOperation call, IAnonymousFunctionOperation lambda, string arm)
+    // DUCKY003 on a known collection mutator whose receiver is the function's parameters' graph.
+    private static void CheckMutator(OperationAnalysisContext context, IInvocationOperation call, IMethodSymbol function, string arm)
     {
         var method = call.TargetMethod;
         if (call.Instance is not null
             && _mutators.Contains(method.Name)
             && _mutatorNamespaces.Contains(method.ContainingType.ContainingNamespace.ToDisplayString())
-            && Owner(Root(call.Instance), lambda) == Parameter)
+            && Owner(Root(call.Instance), function) == Parameter)
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 PurityDiagnostics.Mutation, call.Syntax.GetLocation(), method.ContainingType.Name + "." + method.Name, Parameter, arm));
         }
     }
 
-    // DUCKY003 on a write. Rebinding the lambda's own parameter replaces no shared value, so only a member of it counts,
+    // DUCKY003 on a write. Rebinding the function's own parameter replaces no shared value, so only a member of it counts,
     // and a member of a draft edits the draft, not the state it was made from.
     private static void CheckWrite(
-        OperationAnalysisContext context, IOperation write, IOperation target, IAnonymousFunctionOperation lambda, string arm, Drafts drafts)
+        OperationAnalysisContext context, IOperation write, IOperation target, IMethodSymbol function, string arm, Drafts drafts)
     {
         switch (target)
         {
@@ -215,13 +255,13 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             case ITupleOperation tuple:
                 foreach (var element in tuple.Elements)
                 {
-                    CheckWrite(context, write, element, lambda, arm, drafts);
+                    CheckWrite(context, write, element, function, arm, drafts);
                 }
 
                 break;
             default:
                 var root = Root(target);
-                var owner = Owner(root, lambda);
+                var owner = Owner(root, function);
                 if (owner is not null && (owner != Parameter || root != target) && !DraftReceiver(target, drafts))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(PurityDiagnostics.Mutation, write.Syntax.GetLocation(), target.Syntax.ToString(), owner, arm));
@@ -264,26 +304,26 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    // What a root belongs to: the lambda's own parameters (the state and action, or the projector inputs), a captured
-    // local or parameter, or a field (`this` or a static member). Locals and parameters declared inside the lambda,
+    // What a root belongs to: the function's own parameters (the state and action, or the projector inputs), a captured
+    // local or parameter, or a field (`this` or a static member). Locals and parameters declared inside the function,
     // the parameters of a nested recipe lambda (s.Produce(d => …)) included, and initializer receivers are not state.
-    private static string? Owner(IOperation root, IAnonymousFunctionOperation lambda) => root switch
+    private static string? Owner(IOperation root, IMethodSymbol function) => root switch
     {
-        IParameterReferenceOperation p when SymbolEqualityComparer.Default.Equals(p.Parameter.ContainingSymbol, lambda.Symbol) => Parameter,
-        IParameterReferenceOperation p => Declared(p.Parameter, lambda),
-        ILocalReferenceOperation l => Declared(l.Local, lambda),
+        IParameterReferenceOperation p when SymbolEqualityComparer.Default.Equals(p.Parameter.ContainingSymbol, function) => Parameter,
+        IParameterReferenceOperation p => Declared(p.Parameter, function),
+        ILocalReferenceOperation l => Declared(l.Local, function),
         IInstanceReferenceOperation { ReferenceKind: InstanceReferenceKind.ContainingTypeInstance } => Field,
         IMemberReferenceOperation => Field,
         _ => null,
     };
 
-    private static string? Declared(ISymbol symbol, IAnonymousFunctionOperation lambda)
+    private static string? Declared(ISymbol symbol, IMethodSymbol function)
     {
         // By containing symbol, not by source span: a synthesized parameter (the top-level `args`) has no location,
-        // and a nested lambda's or local function's locals belong to the lambda too.
+        // and a nested lambda's or local function's locals belong to the function too.
         for (var container = symbol.ContainingSymbol; container is not null; container = container.ContainingSymbol)
         {
-            if (Is(container, lambda.Symbol))
+            if (Is(container, function))
             {
                 return null;
             }
