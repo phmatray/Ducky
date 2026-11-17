@@ -51,4 +51,6 @@ After a dispatch or interaction, settle before asserting on markup. `WhenRendere
 
 [!code-csharp[](../../../test/Ducky.Blazor.Tests/Components/StoreRenderingTests.cs#when-rendered)]
 
+To test a union slice or a union effect group on a `TestStore`, see [Unions in Ducky](unions.md#one-exhaustive-reducer).
+
 It is async, so there is nothing to block on: [DUCKY010](../../diagnostics/DUCKY010.md) reports `WhenRenderedAsync(...).GetAwaiter().GetResult()` like the other Ducky tasks. Output that depends on the culture follows the render's execution context, which is empty (see #296).
