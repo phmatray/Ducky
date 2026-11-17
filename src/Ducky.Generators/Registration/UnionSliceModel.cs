@@ -18,7 +18,8 @@ namespace Ducky.Generators.Registration;
 /// <see cref="Registrations"/> line per case of the union (suppressing the <see cref="Suppressed"/> ids of the
 /// [Experimental] and [Obsolete] cases besides CS0612/CS0618), when <see cref="Rule"/> is null; otherwise that diagnostic,
 /// formatted with <see cref="Arguments"/>, at <see cref="Location"/>: DUCKY026 (not a union), DUCKY027 (not partial),
-/// DUCKY029 (a case dispatch never matches), DUCKY030 (file-local) or DUCKY031 (a hand-written <c>RegisterCases</c>).
+/// DUCKY029 (a case dispatch never matches), DUCKY030 (file-local), DUCKY031 (a hand-written <c>RegisterCases</c>) or
+/// DUCKY032 (an error-obsolete case, union or constructor).
 /// </summary>
 internal sealed record UnionSliceModel(
     string Display, string HintName, string? Namespace, EquatableArray<string> Declarations, EquatableArray<string> Registrations,
@@ -103,10 +104,25 @@ internal sealed record UnionSliceModel(
             return Reported(RegistrationDiagnostics.Undispatchable, string.Join(", ", undispatchable));
         }
 
+        // Every symbol the registrations name: the cases, the unions the wraps construct and the constructors they call,
+        // their containing types and type arguments.
         var referenced = new List<ISymbol>();
         foreach (var named in seen)
         {
             Referenced(named, referenced);
+        }
+
+        referenced.AddRange(seen.Where(t => UnionCases.IsUnion(t, iunion)).SelectMany(u => ((INamedTypeSymbol)u).InstanceConstructors
+            .Where(c => c.DeclaredAccessibility == Accessibility.Public && c.Parameters.Length == 1)));
+
+        // CS0619 can't be suppressed, so generated code can't name an error-obsolete symbol (the registration path skips
+        // such a type the same way).
+        var obsolete = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
+        var errorObsolete = referenced.Where(s => RegistrationModel.IsErrorObsolete(s, obsolete)).Distinct(SymbolEqualityComparer.Default)
+            .Select(s => $"'{s!.ToDisplayString()}'").ToList();
+        if (errorObsolete.Count > 0)
+        {
+            return Reported(RegistrationDiagnostics.ErrorObsolete, string.Join(", ", errorObsolete));
         }
 
         var registrations = cases.Select(c => string.Format(
@@ -116,9 +132,8 @@ internal sealed record UnionSliceModel(
             Namespace = type.ContainingNamespace.IsGlobalNamespace ? null : type.ContainingNamespace.ToDisplayString(),
             Declarations = new([.. chain.Select(t => $"partial {Keyword(t)} {t.ToDisplayString(_declaration)}")]),
             Registrations = new([.. registrations]),
-            // Every type the registrations name: the cases, the unions the wraps construct, their containing types and type
-            // arguments.
-            Suppressed = new([.. RegistrationModel.SuppressedIds(referenced, compilation)
+            // An [Experimental] assembly or module marks every type it declares.
+            Suppressed = new([.. RegistrationModel.SuppressedIds(referenced.SelectMany(s => new[] { s, s.ContainingAssembly, s.ContainingModule }), compilation)
                 .Distinct().OrderBy(id => id, StringComparer.Ordinal)]),
         };
     }

@@ -491,6 +491,31 @@ public sealed class DiagnosticExamplesTests
         """;
     #endregion
 
+    #region DUCKY032
+    private const string Ducky032 = """
+        using Ducky;
+
+        public sealed record Cart(int Count);
+        public sealed record AddItem(int Count);
+        [System.Obsolete("Use AddItem.", true)] public sealed record AddItems(int Count);
+
+        [System.Obsolete("Use CartAction.")]
+        public union OldCartAction(AddItem, AddItems);
+
+        #pragma warning disable CS0618
+        public sealed partial class CartSlice : Slice<Cart, OldCartAction>
+        {
+            protected override Cart Initial => new(0);
+
+            protected override Cart Reduce(Cart state, OldCartAction action) => action switch
+            {
+                AddItem a => new(state.Count + a.Count),
+                _ => state,
+            };
+        }
+        """;
+    #endregion
+
     public static TheoryData<string, string> Examples => new()
     {
         { "DUCKY001", Ducky001 },
@@ -520,6 +545,7 @@ public sealed class DiagnosticExamplesTests
         { "DUCKY029", Ducky029 },
         { "DUCKY030", Ducky030 },
         { "DUCKY031", Ducky031 },
+        { "DUCKY032", Ducky032 },
     };
 
     [Theory]

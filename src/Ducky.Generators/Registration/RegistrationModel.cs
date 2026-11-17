@@ -73,7 +73,7 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
         var containing = Chain(type, t => t.ContainingType).ToList();
         var obsolete = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
         if (!(isSlice || isEffect || isReactive) || type.IsAbstract || type.IsGenericType ||
-            containing.Any(t => t.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete) && a.ConstructorArguments.Any(c => true.Equals(c.Value)))))
+            containing.Any(t => IsErrorObsolete(t, obsolete)))
         {
             return null;
         }
@@ -134,6 +134,10 @@ internal sealed record RegistrationModel(string Type, string Display, bool IsSli
                 [])
             .OfType<string>().Where(id => id.Length > 0);
     }
+
+    /// <summary>Whether <paramref name="symbol"/> carries <c>[Obsolete(…, true)]</c>, which generated code can't reference (CS0619).</summary>
+    public static bool IsErrorObsolete(ISymbol symbol, INamedTypeSymbol? obsolete) =>
+        symbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete) && a.ConstructorArguments.Any(c => true.Equals(c.Value)));
 
     /// <summary>Whether <paramref name="type"/> derives from <paramref name="baseType"/>.</summary>
     public static bool Derives(INamedTypeSymbol type, INamedTypeSymbol? baseType) =>

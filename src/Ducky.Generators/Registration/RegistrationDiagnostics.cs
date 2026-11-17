@@ -48,6 +48,11 @@ internal static class RegistrationDiagnostics
     private const string HandWrittenMessage = "'{0}' declares RegisterCases(), which the Ducky generator writes for it: remove it";
     private const string HandWrittenHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY031.md";
 
+    private const string ErrorObsoleteId = "DUCKY032";
+    private const string ErrorObsoleteTitle = "Union case is obsolete as an error";
+    private const string ErrorObsoleteMessage = "The cases of '{0}' can't be registered: generated code can't reference {1}, obsolete as an error";
+    private const string ErrorObsoleteHelp = "https://github.com/phmatray/Ducky/blob/main/docs/diagnostics/DUCKY032.md";
+
     public static readonly DiagnosticDescriptor Unresolved = new(
         UnresolvedId, UnresolvedTitle, UnresolvedMessage, Category, DiagnosticSeverity.Warning, Enabled, helpLinkUri: UnresolvedHelp);
 
@@ -69,5 +74,8 @@ internal static class RegistrationDiagnostics
     public static readonly DiagnosticDescriptor HandWritten = new(
         HandWrittenId, HandWrittenTitle, HandWrittenMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: HandWrittenHelp);
 
-    public static readonly ImmutableArray<DiagnosticDescriptor> All = [Unresolved, Excluded, NotUnion, NotPartial, Undispatchable, FileLocal, HandWritten];
+    public static readonly DiagnosticDescriptor ErrorObsolete = new(
+        ErrorObsoleteId, ErrorObsoleteTitle, ErrorObsoleteMessage, Category, DiagnosticSeverity.Error, Enabled, helpLinkUri: ErrorObsoleteHelp);
+
+    public static readonly ImmutableArray<DiagnosticDescriptor> All = [Unresolved, Excluded, NotUnion, NotPartial, Undispatchable, FileLocal, HandWritten, ErrorObsolete];
 }
