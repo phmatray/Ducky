@@ -717,3 +717,35 @@ of Stryker time against the 56-minute full run that the added test file triggere
 status, within the noise above.
 
 Not measured here: `ubuntu-latest` (2 vCPU; Stryker's default concurrency there is 1).
+
+## S-7 (union): can the Roslyn 5.0.0 generator see C# 15 union cases? (#312)
+
+Question: a generator built against `Microsoft.CodeAnalysis.CSharp` 5.0.0 (the SDK 10.0.100 floor, ADR-0003), running
+inside the SDK 11.0.100 compiler, can it read the case types of a `union`? (Numbered after the issue; not the §23 S-7
+above.) Probe: `spikes/S-7-union-symbols` — `Generator` (netstandard2.0, the repository's 5.0.0 pin) dumps the symbol of
+`public union CartAction(AddItem, RemoveItem, Clear);` declared in the net11.0 `Consumer` (source) and of `RefAction(RefA,
+RefB)` declared in the net11.0 `Lib` (referenced project); the consumer prints the dump.
+
+    dotnet run --project spikes/S-7-union-symbols/Consumer
+
+Measured with SDK 11.0.100 (host Roslyn 5.12.0, `LanguageVersion` `CSharp15`, default `LangVersion`); the 5.0.0 generator
+loaded and ran without CS9057 or any warning:
+
+| | source (`CartAction`) | referenced (`RefAction`) |
+|---|---|---|
+| `Kind` / `TypeKind` | `NamedType` / `Struct`, sealed, `IsRecord` false | same |
+| `AllInterfaces` | `System.Runtime.CompilerServices.IUnion` | same |
+| attributes | **none** (no `[Union]`) | `NullableContext`, `Nullable`, `System.Runtime.CompilerServices.UnionAttribute` |
+| constructors | one public ctor per case, `CartAction(AddItem)`, `(RemoveItem)`, `(Clear)`, all `IsImplicitlyDeclared`; plus the implicit parameterless struct ctor | `RefAction(RefA)`, `(RefB)`, explicitly declared; plus the parameterless struct ctor |
+| other members | `Value` property (`object?`, implicit) and its backing field | `Value` property and `<Value>k__BackingField` |
+
+Findings:
+
+- The union is an ordinary `INamedTypeSymbol` (a struct). The case types are the **parameter types of its public
+  single-parameter instance constructors**, readable with the 5.0.0 API surface alone, source and referenced alike. Nothing
+  new is needed from Roslyn 5.12.
+- Detection by `AllInterfaces` containing `System.Runtime.CompilerServices.IUnion` works for both. The `[Union]` attribute
+  does **not** — it is absent from the source-declared symbol (present only when read from metadata) — so a generator must
+  not key on it.
+- Not measured: a union with a user-declared constructor, a `union` generic in its cases, a union with non-trivial
+  members, and a generator running under an SDK 10 compiler (a C# 15 union cannot be compiled there at all).
