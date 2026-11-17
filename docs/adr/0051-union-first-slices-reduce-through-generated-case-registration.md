@@ -19,7 +19,8 @@ shape, a handler has to be registered per case, never per union (`On<TUnion>()` 
 cases read as ADR-0050 says (a case that is itself a union is unwrapped to its own cases, the way Dispatch unwraps). So a
 case dispatched alone or wrapped in the union reaches the same `Reduce` arm, and the runtime is unchanged.
 
-Only a slice deriving directly from `Slice<TState, TAction>` is generated. Two errors guard the shape: DUCKY026 when
+Only a slice deriving directly from `Slice<TState, TAction>`, with `TAction` closed, is generated (an open one, a reusable
+generic base, is skipped). Two errors guard the shape: DUCKY026 when
 `TAction` is not a union, DUCKY027 when the slice or a containing type is not `partial`.
 
 ## Consequences

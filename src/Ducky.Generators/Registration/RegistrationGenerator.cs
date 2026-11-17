@@ -124,11 +124,14 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
                 writer.Open(declaration);
             }
 
-            writer.Line("/// <inheritdoc />").Open("protected override void RegisterCases()");
+            writer.Line("/// <inheritdoc />").Open("protected override void RegisterCases()")
+                .Line("#pragma warning disable CS0612, CS0618 // justification: generated code references user [Obsolete] cases (GEN-06)");
             foreach (var registration in model.Registrations.Items)
             {
                 writer.Line(registration);
             }
+
+            writer.Line("#pragma warning restore CS0612, CS0618");
 
             for (var i = 0; i <= model.Declarations.Items.Length; i++)
             {

@@ -50,9 +50,11 @@ public sealed class UnionSliceTests
                 /// <inheritdoc />
                 protected override void RegisterCases()
                 {
+                    #pragma warning disable CS0612, CS0618 // justification: generated code references user [Obsolete] cases (GEN-06)
                     On<global::App.AddItem>((s, a) => Reduce(s, new global::App.CartAction(a)));
                     On<global::App.RemoveItem>((s, a) => Reduce(s, new global::App.CartAction(a)));
                     On<global::App.Clear>((s, a) => Reduce(s, new global::App.CartAction(a)));
+                    #pragma warning restore CS0612, CS0618
                 }
             }
 
@@ -73,20 +75,24 @@ public sealed class UnionSliceTests
             public union Outer(Inner, Add);
             public static partial class Holder
             {
-                public partial record struct Box
+                public partial interface IBox
                 {
-                    public abstract partial class @class<T> : Ducky.Slice<Cart, Outer>
+                    public partial record struct Box
                     {
-                        protected override Cart Initial => new(0);
-                        protected override Cart Reduce(Cart state, Outer action) => state;
+                        public abstract partial class @class<T> : Ducky.Slice<Cart, Outer>
+                        {
+                            protected override Cart Initial => new(0);
+                            protected override Cart Reduce(Cart state, Outer action) => state;
+                        }
                     }
                 }
             }
             """), out var output);
 
         output.ShouldCompileClean();
-        var generated = Generated(output, "Holder.Box._class_T_.UnionSlice.g.cs");
+        var generated = Generated(output, "Holder.IBox.Box._class_T_.UnionSlice.g.cs");
         generated.ShouldContain("partial class Holder\n");
+        generated.ShouldContain("partial interface IBox\n");
         generated.ShouldContain("partial record struct Box\n");
         generated.ShouldContain("partial class @class<T>\n");
         generated.ShouldContain("On<global::Add>((s, a) => Reduce(s, new global::Outer(new global::Inner(a))));");
@@ -114,6 +120,96 @@ public sealed class UnionSliceTests
         generated.ShouldContain("On<global::App.AddItem>");
         generated.ShouldContain("On<global::App.RemoveItem>");
         generated.ShouldContain("On<global::App.Clear>");
+    }
+
+    // Unions that contain each other end the walk; an [Obsolete] case compiles without CS0612 in generated code (GEN-06).
+    [Fact]
+    public void UnionSlice_MutuallyNestedUnionsAndObsoleteCase_CompilesClean()
+    {
+        GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile("""
+            #pragma warning disable CS1591, CS0612 // justification: undocumented test sources; the union names the obsolete case
+            public sealed record Cart(int Count);
+            public sealed record X;
+            [System.Obsolete] public sealed record Y;
+            public union A(B, X);
+            public union B(A, Y);
+            public sealed partial class CartSlice : Ducky.Slice<Cart, A>
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, A action) => state;
+            }
+            """), out var output);
+
+        output.ShouldCompileClean();
+        var generated = Generated(output, "CartSlice.UnionSlice.g.cs");
+        generated.ShouldContain("On<global::Y>((s, a) => Reduce(s, new global::A(new global::B(a))));");
+        generated.ShouldContain("On<global::X>((s, a) => Reduce(s, new global::A(a)));");
+    }
+
+    // ADR-0050 reads only the public single-parameter constructors: a hand-written IUnion's private one is no case.
+    [Fact]
+    public void UnionSlice_HandWrittenUnion_ReadsPublicSingleParameterConstructorsOnly()
+    {
+        GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile(Cart + """
+            public readonly struct Hand : System.Runtime.CompilerServices.IUnion
+            {
+                public Hand(AddItem value) => Value = value;
+                public Hand(AddItem value, int unused) => Value = value;
+                private Hand(Clear value) => Value = value;
+                public object? Value { get; }
+            }
+            public sealed partial class HandSlice : Ducky.Slice<Cart, Hand>
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, Hand action) => state;
+            }
+            """), out var output);
+
+        output.ShouldCompileClean();
+        var generated = Generated(output, "App.HandSlice.UnionSlice.g.cs");
+        generated.ShouldContain("On<global::App.AddItem>");
+        generated.ShouldNotContain("On<global::App.Clear>");
+    }
+
+    // An open action type is skipped, neither generated nor reported, and so is a slice deriving from it.
+    [Fact]
+    public void UnionSlice_OpenActionType_IsSkipped()
+    {
+        GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile(Cart + """
+            public abstract partial class Shared<TAction> : Ducky.Slice<Cart, TAction>
+                where TAction : struct, System.Runtime.CompilerServices.IUnion
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, TAction action) => state;
+            }
+            public sealed class CartSlice : Shared<CartAction> { }
+            """), out var output);
+
+        output.ShouldCompileClean();
+        output.SyntaxTrees.ShouldNotContain(t => t.FilePath.EndsWith(".UnionSlice.g.cs", StringComparison.Ordinal));
+    }
+
+    // A slice split over two declarations with base lists yields two models: one file, one diagnostic.
+    [Fact]
+    public void UnionSlice_TwoDeclarationsWithBaseLists_EmitsOnce()
+    {
+        const string Disposable = "public sealed partial class CartSlice : System.IDisposable { public void Dispose() { } }\n";
+        GeneratorHarness.Run(new RegistrationGenerator(), GeneratorHarness.Compile(Cart + Disposable + $$"""
+            public sealed partial class CartSlice : Ducky.Slice<Cart, CartAction>
+            {
+            {{Reduce}}
+            }
+            """), out var output);
+
+        output.ShouldCompileClean();
+        output.SyntaxTrees.Count(t => t.FilePath.EndsWith(".UnionSlice.g.cs", StringComparison.Ordinal)).ShouldBe(1);
+        Diagnose(Cart + Disposable + """
+            public sealed partial class CartSlice : Ducky.Slice<Cart, AddItem>
+            {
+                protected override Cart Initial => new(0);
+                protected override Cart Reduce(Cart state, AddItem action) => state;
+            }
+            """, out _).Id.ShouldBe("DUCKY026");
     }
 
     // A slice deriving from a union slice inherits its override; only the direct derivation is generated.

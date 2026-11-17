@@ -36,6 +36,13 @@ internal sealed record UnionSliceModel(
             return null;
         }
 
+        // An open action type (a reusable generic base) has no cases to read; its concrete subclasses aren't generated
+        // either, since only the direct derivation is.
+        if (baseType.TypeArguments[1] is ITypeParameterSymbol)
+        {
+            return null;
+        }
+
         var display = type.ToDisplayString();
         var location = type.Locations[0];
         var action = baseType.TypeArguments[1];
@@ -76,11 +83,17 @@ internal sealed record UnionSliceModel(
     // ADR-0050: a union implements IUnion, and its cases are the parameter types of its public single-parameter instance
     // constructors.
     private static bool IsUnion(ITypeSymbol type, INamedTypeSymbol? iunion) =>
-        iunion is not null && type.AllInterfaces.Contains(iunion, SymbolEqualityComparer.Default);
+        type.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iunion));
 
-    // wrap puts a value of this union into the slice's own action type, through the enclosing unions.
+    // wrap puts a value of this union into the slice's own action type, through the enclosing unions. seen holds the
+    // unions entered as well as the cases, so unions that contain each other end the walk.
     private static void AddCases(ITypeSymbol union, Func<string, string> wrap, List<string> registrations, HashSet<ITypeSymbol> seen, INamedTypeSymbol? iunion)
     {
+        if (!seen.Add(union))
+        {
+            return;
+        }
+
         var name = union.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var cases = ((INamedTypeSymbol)union).InstanceConstructors
             .Where(c => c.DeclaredAccessibility == Accessibility.Public && c.Parameters.Length == 1)
