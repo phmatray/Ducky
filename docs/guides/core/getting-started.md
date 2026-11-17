@@ -4,7 +4,7 @@ Ducky keeps your application state in slices: immutable records, each changed on
 
 ## Install
 
-Ducky targets .NET 10.
+Ducky targets .NET 11.
 
 ```shell
 dotnet add package Ducky

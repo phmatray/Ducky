@@ -43,7 +43,7 @@ internal sealed partial class Build : FalloutBuild, IHasSolution, IConfigureGitH
         .DependsOn(Restore)
         .Executes(() => DotNet($"format {Solution} --verify-no-changes --no-restore"));
 
-    // Warnings are errors via Directory.Build.props; Directory.Build.targets fails a packable net10.0 src project
+    // Warnings are errors via Directory.Build.props; Directory.Build.targets fails a packable net11.0 src project
     // without IsAotCompatible (§3) and loads PublicApiAnalyzers in every src project, whose RS0016/RS0017 .globalconfig
     // raises to errors. PublicApiSelfCheck proves it on a planted fixture and checks each src project takes it (M0-10).
     private Target Compile => _ => _

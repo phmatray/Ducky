@@ -4,13 +4,13 @@ This guide takes a Blazor app from TimeWarp.State 11.0.3 (formerly Blazor-State)
 
 The 12.0 line of TimeWarp.State is a pre-release: 12.0.0-beta.17 on nuget.org as of 2026-11-08. Its betas depend on TimeWarp.Mediator instead of MediatR (from [12.0.0-beta.1](https://www.nuget.org/packages/TimeWarp.State/12.0.0-beta.1)); from [12.0.0-beta.9](https://github.com/TimeWarpEngineering/timewarp-state/blob/v12.0.0-beta.9/documentation/release-notes/release12.0.0-beta.9.md) they target `net11.0` only, and [12.0.0-beta.11](https://github.com/TimeWarpEngineering/timewarp-state/blob/v12.0.0-beta.11/documentation/release-notes/release12.0.0-beta.11.md) generates the state clones and removes the Redux DevTools integration. This guide maps the stable 11.0.3 line, which targets `net8.0`.
 
-Ducky 2.0 targets `net10.0` only, and it is a pre-release. [How Ducky compares](../compare.md) sets the two side by side.
+Ducky 2.0 targets `net11.0` only, and it is a pre-release. [How Ducky compares](../compare.md) sets the two side by side.
 
 Every snippet on this page comes from the compiled sample in `docs/migration/samples/timewarp-state`. `Before` is user code against `TimeWarp.State` 11.0.3 from nuget.org, written from TimeWarp.State's own [sample](https://github.com/TimeWarpEngineering/timewarp-state/tree/11.0.3/Samples/00-StateActionHandler). `After` is the same app on Ducky 2.0, and `After.Tests` holds its tests and one test per behaviour change below.
 
 ## Checklist
 
-1. Target `net10.0`. Replace `TimeWarp.State` (and `TimeWarp.State.Plus`) with `Ducky` and `Ducky.Blazor`, and add `Ducky.Testing` to test projects. Remove MediatR, AnyClone and Blazored storage if nothing else uses them.
+1. Target `net11.0`. Replace `TimeWarp.State` (and `TimeWarp.State.Plus`) with `Ducky` and `Ducky.Blazor`, and add `Ducky.Testing` to test projects. Remove MediatR, AnyClone and Blazored storage if nothing else uses them.
 2. Turn each `State<T>` into an immutable record and move `Initialize()` into a slice's `Initial` (see [State](#state)).
 3. Lift each nested `*ActionSet.Action` to a top-level record. Mark it `[DuckyAction]` to keep a generated dispatch method (see [Actions and handlers](#actions-and-handlers)).
 4. Rewrite each handler's mutations as `On<TAction>` reducers returning `state with { ... }`. Split an async handler into a reducer for what it set before the `await` and an `Effect<TAction>` that dispatches what it learned (see [The async handler becomes an effect](#the-async-handler-becomes-an-effect)).
@@ -76,7 +76,7 @@ TimeWarp.State column: TimeWarp.State 11.0.3, as of 2026-11-08.
 
 | TimeWarp.State 11.0.3 | Ducky 2.0 |
 |---|---|
-| `TimeWarp.State` (`net8.0`; depends on MediatR, version 12.4.1 or later, and AnyClone) | `Ducky`, `Ducky.Blazor` (`net10.0`; no MediatR) |
+| `TimeWarp.State` (`net8.0`; depends on MediatR, version 12.4.1 or later, and AnyClone) | `Ducky`, `Ducky.Blazor` (`net11.0`; no MediatR) |
 | `services.AddTimeWarpState(o => o.Assemblies = [...])` ([assembly scan and MediatR registration](https://github.com/TimeWarpEngineering/timewarp-state/blob/11.0.3/Source/TimeWarp.State/Extensions/ServiceCollectionExtensions.AddTimeWarpState.cs#L105-L119)) | `services.AddDucky(d => d.AddDuckyGenerated_{Assembly}())`, generated at build time |
 | `sealed partial class XState : State<XState>` with `private set` properties | a `record` state and a `Slice<TState>` |
 | `Initialize()` | `protected override TState Initial` |

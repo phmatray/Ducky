@@ -1,20 +1,20 @@
 {
   "version": 2,
   "dependencies": {
-    "net10.0": {
+    "net11.0": {
       "Microsoft.AspNetCore.App.Internal.Assets": {
         "type": "Direct",
-        "requested": "[10.0.14, )",
-        "resolved": "10.0.14",
-        "contentHash": "T1IOYbID1msKjQEh684HebnN+Xnq/pocMXDukOMZtzzPTf9c4/30+/JndM/1txrqwuSYqWvLiAQWzu4U93cshw=="
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "Mc4ywjacnewbl9TPTfRaBxGpBJudLEHCpJrG4digzG5v32aJkC1PwCDHwSq0nPiuMftMVAqnlhl6nKZpW60Gwg=="
       },
       "Microsoft.AspNetCore.Components.WebAssembly.Server": {
         "type": "Direct",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "0fLVpTv9PMxOihGgSCxwTFQ8MOk0He2lqD5Hh97WKhXyZPiOj3N7c3SEBNYwUlk7J4Bv6Qe49G58SldIoJq1EA==",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "I5CdPhgM4Vywbfa9wxnbnVxWwomxiOx4ZO16qoCOfLCr4cfK7vhl6h9w510tnz7tXsXYewgFoRsV6lz89lTNsQ==",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.WebAssembly": "10.0.15"
+          "Microsoft.AspNetCore.Components.WebAssembly": "11.0.0"
         }
       },
       "MinVer": {
@@ -25,8 +25,8 @@
       },
       "Microsoft.JSInterop.WebAssembly": {
         "type": "Transitive",
-        "resolved": "10.0.15",
-        "contentHash": "/UTg2l5MAipHsPlCXBTfTCCLHUsyVeQM+z+QSStjfbP2b4RCrxl9NoKVZ7Ls9heBUT1/4yRjhMbqojl59A/xew=="
+        "resolved": "11.0.0",
+        "contentHash": "bleuot+tja5TWg/MyxxBGZRnM9uaovoYDZpGSpsyZ3COlk4Ltc5NZUcGAYuk09C1YU+Qp/F9Hbdn+cOJg/10tQ=="
       },
       "ducky": {
         "type": "Project"
@@ -41,16 +41,16 @@
         "type": "Project",
         "dependencies": {
           "Ducky.Blazor": "[1.0.0, )",
-          "Microsoft.AspNetCore.Components.WebAssembly": "[10.0.15, )"
+          "Microsoft.AspNetCore.Components.WebAssembly": "[11.0.0, )"
         }
       },
       "Microsoft.AspNetCore.Components.WebAssembly": {
         "type": "CentralTransitive",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "YWFk0tbTM25BfeJ2kFuUQ9E2HB0t6GK8jWFm2oIJeTVp3CS7CXGPU/TEpwLvtvK/uQGSX7eL4lpoRQGXgyWJZA==",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "ALx0RdIo5DXIFN/HxSCrcrpSrptaYhBelAMWeh8JJidux3Qjx0Zu+D0bB7XcGgwWk0/UAs7zgzEERNg4WgcgQQ==",
         "dependencies": {
-          "Microsoft.JSInterop.WebAssembly": "10.0.15"
+          "Microsoft.JSInterop.WebAssembly": "11.0.0"
         }
       }
     }

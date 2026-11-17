@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <!-- Verify's solution discovery sees three .slnx files at the root and warns; name the one this project belongs to. -->
     <SolutionDir Condition="'$(SolutionDir)' == ''">$(RepoRoot)</SolutionDir>

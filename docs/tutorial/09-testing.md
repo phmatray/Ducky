@@ -16,15 +16,15 @@ Stop `dotnet watch` (Ctrl+C). From the folder that contains `DuckShop`, install 
 
 ```shell
 dotnet new install xunit.v3.templates
-dotnet new xunit3 -f net10.0 -o DuckShop.Tests
+dotnet new xunit3 -f net11.0 -o DuckShop.Tests
 cd DuckShop.Tests
 dotnet add reference ../DuckShop/DuckShop.csproj
 dotnet add package Ducky.Testing --prerelease
 dotnet add package Shouldly
 ```
 
-- `-f net10.0` matters: the template targets .NET 8 by default, and a .NET 8 project can't reference the .NET 10 app.
-- With `-f net10.0`, the template also writes a `global.json` in `DuckShop.Tests`: `{ "test": { "runner": "Microsoft.Testing.Platform" } }`. On the .NET 10 SDK, `dotnet test` needs it to run xUnit v3 projects, which use Microsoft.Testing.Platform. Without it, `dotnet test` stops with *Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later*. Keep it, and run `dotnet test` from the `DuckShop.Tests` folder.
+- `-f net11.0` matters: the template targets .NET 8 by default, and a .NET 8 project can't reference the .NET 11 app.
+- With `-f net11.0`, the template also writes a `global.json` in `DuckShop.Tests`: `{ "test": { "runner": "Microsoft.Testing.Platform" } }`. On the .NET 11 SDK, `dotnet test` needs it to run xUnit v3 projects, which use Microsoft.Testing.Platform. Without it, `dotnet test` stops with *Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 11 SDK and later*. Keep it, and run `dotnet test` from the `DuckShop.Tests` folder.
 
 Delete the template's `UnitTest1.cs`. The test files below go in the namespace `DuckShop.Tests` and start with `using Shouldly;` and `using Ducky.Testing;`; the ones that register services also need `using Ducky;`, `using Ducky.Generated;` and `using Microsoft.Extensions.DependencyInjection;`. Each snippet's caption links to the full file.
 

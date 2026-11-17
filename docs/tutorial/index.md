@@ -14,7 +14,7 @@ The finished app is in the repository, in [docs/tutorial/samples/DuckShop](sampl
 
 ## What you need
 
-- The .NET 10 SDK. Check it with `dotnet --version`: it prints `10.0.100` or later.
+- The .NET 11 SDK. Check it with `dotnet --version`: it prints `11.0.100` or later.
 - An editor with C# support: Visual Studio, Visual Studio Code with the C# Dev Kit, or Rider.
 - About an hour. Each step takes 5 to 10 minutes.
 
