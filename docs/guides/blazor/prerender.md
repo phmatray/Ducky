@@ -34,6 +34,8 @@ The idle wait counts running effects. It doesn't count `LongRunning` effects, so
 
 ## WebAssembly
 
+On .NET 11, `AddDucky` registers a hosted service that starts the store's initialization when the WebAssembly host starts, so an app needs no `<DuckyInitializer>` and no `Program.cs` preload to hydrate early. The host runs hosted services in `RunAsync` after it restored the page's state and before it renders the root components, so the seed is already there. Set `BlazorOptions.InitializeOnStart = false` to control the start yourself; an app with a `Scope` and no Ducky component still renders `<DuckyInitializer>` (see [persistence](persistence.md)).
+
 WebAssembly restores the page's state only when the host runs, so the store takes the seed at init, or at the first Ducky component (or `<DuckyInitializer>`) if init started earlier. Don't await a store preload in `Program.cs` before `RunAsync`: init then waits at most `PrerenderSeedWaitTimeout` (250 ms) for the seed, and logs a Warning that names this fix.
 
 ## Circuit pause and resume

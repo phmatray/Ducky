@@ -30,6 +30,14 @@ public sealed class BlazorOptions
     public Func<IServiceProvider, CancellationToken, ValueTask<string?>>? Scope { get; set; }
 
     /// <summary>
+    /// In a WebAssembly app, whether Ducky starts <see cref="IStore.InitializeAsync"/> itself when the host starts, so no
+    /// <c>&lt;DuckyInitializer&gt;</c> or <c>Program.cs</c> preload is needed to hydrate early. Default
+    /// <see langword="true"/>; set it to <see langword="false"/> to control the start. Server stores are never started
+    /// this way.
+    /// </summary>
+    public bool InitializeOnStart { get; set; } = true;
+
+    /// <summary>
     /// How long hydration may take before it fails and persistence resumes. Default 5 s. It must be shorter than
     /// <see cref="DuckyBuilder.InitTimeout"/>, so the persistence timeout fires first (DUCKY316).
     /// </summary>
