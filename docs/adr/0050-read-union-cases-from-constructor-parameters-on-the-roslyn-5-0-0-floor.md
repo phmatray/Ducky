@@ -1,4 +1,4 @@
-# ADR-0049: Read union cases from constructor parameters on the Roslyn 5.0.0 floor
+# ADR-0050: Read union cases from constructor parameters on the Roslyn 5.0.0 floor
 
 - Status: Proposed
 - Date: 2026-11-17

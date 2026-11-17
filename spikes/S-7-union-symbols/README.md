@@ -2,4 +2,4 @@
 
     dotnet run --project spikes/S-7-union-symbols/Consumer
 
-Results and decision: `docs/spec/spikes.md` (S-7 union), `docs/adr/0049-*.md`. Throwaway; needs SDK 11.0.100.
+Results and decision: `docs/spec/spikes.md` (S-7 union), `docs/adr/0050-*.md`. Throwaway; needs SDK 11.0.100.
