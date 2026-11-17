@@ -103,6 +103,12 @@ internal sealed record UnionSliceModel(
             return Reported(RegistrationDiagnostics.Undispatchable, string.Join(", ", undispatchable));
         }
 
+        var referenced = new List<ISymbol>();
+        foreach (var named in seen)
+        {
+            Referenced(named, referenced);
+        }
+
         var registrations = cases.Select(c => string.Format(
             CultureInfo.InvariantCulture, kind.Registration, c.Case.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), c.Wrap("a")));
         return model with
@@ -112,20 +118,27 @@ internal sealed record UnionSliceModel(
             Registrations = new([.. registrations]),
             // Every type the registrations name: the cases, the unions the wraps construct, their containing types and type
             // arguments.
-            Suppressed = new([.. RegistrationModel.SuppressedIds(seen.SelectMany(Referenced), compilation)
+            Suppressed = new([.. RegistrationModel.SuppressedIds(referenced, compilation)
                 .Distinct().OrderBy(id => id, StringComparer.Ordinal)]),
         };
     }
 
-    private static IEnumerable<ISymbol> Referenced(ITypeSymbol type)
+    private static void Referenced(ITypeSymbol type, List<ISymbol> into)
     {
-        for (var t = type as INamedTypeSymbol; t is not null; t = t.ContainingType)
+        if (type is not INamedTypeSymbol named)
         {
-            yield return t;
-            foreach (var argument in t.TypeArguments.SelectMany(Referenced))
-            {
-                yield return argument;
-            }
+            return;
+        }
+
+        into.Add(named);
+        foreach (var argument in named.TypeArguments)
+        {
+            Referenced(argument, into);
+        }
+
+        if (named.ContainingType is { } containing)
+        {
+            Referenced(containing, into);
         }
     }
 

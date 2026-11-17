@@ -161,7 +161,7 @@ public sealed class UnionSliceTests
             [System.Diagnostics.CodeAnalysis.Experimental("X003")] public static class Outer { public sealed record Nested; public sealed record Other; }
             public sealed record Box<T>(T Value);
             [System.Diagnostics.CodeAnalysis.Experimental("X006")] public sealed record Arg;
-            [System.Diagnostics.CodeAnalysis.Experimental("X005")] public union Inner(Box<Arg>);
+            [System.Diagnostics.CodeAnalysis.Experimental("X005")] public union Inner(Box<Arg>, Box<int[]>);
             [System.Diagnostics.CodeAnalysis.Experimental("X004")] public union A(Exp, Old, Outer.Nested, Outer.Other, Inner);
             public sealed partial class CartSlice : Ducky.Slice<Cart, A>
             {
