@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <!-- Verify's solution discovery sees three .slnx files at the root and warns; name the one this project belongs to. -->
     <SolutionDir Condition="'$(SolutionDir)' == ''">$(RepoRoot)</SolutionDir>
@@ -31,7 +31,10 @@
     <PackageReference Include="CsCheck" />
     <PackageReference Include="R3" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <!-- 5.12.0 is the Roslyn of SDK 11.0.100: the System.Text.Json source generator referenced below is built against it (CS1705
+         on the 5.0.0 floor). Test-only: the generators still compile against the 5.0.0 floor (R-PKG-3). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.12.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="5.12.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
     <PackageReference Include="Verify.SourceGenerators" />
     <PackageReference Include="Verify.XunitV3" />

@@ -45,10 +45,13 @@ internal sealed record Status(Mood Mood);
 
 // Two derived types share a discriminator: STJ throws InvalidOperationException from every type info lookup of Shape,
 // read-only options caching the exception.
+// SYSLIB1242 (.NET 11 reports it at compile time) is the very defect this fixture plants.
+#pragma warning disable SYSLIB1242
 [JsonPolymorphic]
 [JsonDerivedType(typeof(Circle), "shape")]
 [JsonDerivedType(typeof(Square), "shape")]
 internal abstract record Shape;
+#pragma warning restore SYSLIB1242
 
 internal sealed record Circle : Shape;
 

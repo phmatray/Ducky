@@ -50,7 +50,7 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
             // The runtime is read at every use: the gate's hand-off switches it to the renderer's (§6.10), which imports anew.
             // ponytail: the import it replaces is dropped: a module that succeeded is not disposed, and one still pending that
             // only the probe saw is never observed, so a later fault reaches TaskScheduler.UnobservedTaskException (no crash by
-            // default). Both need two different runtimes, which .NET 10 never hands over (S-7); retire the old task when one does.
+            // default). Both need two different runtimes, which .NET 11 never hands over (S-7); retire the old task when one does.
             // A host without JS (a console or plain DI host) has no runtime: like UnsupportedJavaScriptRuntime, non-interactive.
             var current = runtime() ?? throw new InvalidOperationException("No IJSRuntime is registered: JS interop is unavailable in this host.");
             // A faulted or cancelled import is imported again, and once that re-import succeeds the watchStorage registration
@@ -58,9 +58,9 @@ internal sealed class JsBridge(Func<IJSRuntime?> runtime, ILogger logger) : IAsy
             if (_module is not { IsFaulted: false, IsCanceled: false } || !ReferenceEquals(current, _moduleRuntime))
             {
                 var reimport = _module is { IsCompletedSuccessfully: false };
-#pragma warning disable RS0030 // justification: JsBridge is the single interop wrapper (§10, INV-23)
+#pragma warning disable RS0030, BL0016 // justification: JsBridge is the single interop wrapper (§10, INV-23); the import task is kept and a fault is observed by every awaiter, a try/catch here would swallow it
                 _module = current.InvokeAsync<IJSObjectReference>("import", [ModulePath]).AsTask();
-#pragma warning restore RS0030
+#pragma warning restore RS0030, BL0016
                 _moduleRuntime = current;
                 if (reimport)
                 {

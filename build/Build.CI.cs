@@ -104,7 +104,7 @@ internal sealed partial class Build
                         Uses = pipeline.BuiltInSteps.OfType<GitHubActionsRunStep>().Single().SetupDotNetAction,
                         With = { ["global-json-file"] = "global.json" },
                     },
-                    new GitHubActionsCustomStep { Name = "Install: wasm-tools", Run = ["dotnet workload install wasm-tools-net10"] },
+                    new GitHubActionsCustomStep { Name = "Install: wasm-tools", Run = ["dotnet workload install wasm-tools"] },
                 ]);
                 break;
             case "e2e":

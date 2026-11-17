@@ -356,9 +356,19 @@ public sealed class DuckyBuilderTests
         var exception = Should.Throw<DuckyConfigurationException>(() => scope.ServiceProvider.GetRequiredService<IStore>());
 
         exception.Errors.ShouldBeEmpty();
-        exception.InnerException.ShouldBeOfType<InvalidOperationException>().Message.ShouldBe(
-            "An AddValidation rule resolved the store (or a service that depends on it) while the store was being validated. "
-            + "Resolve only the services the rule checks, never IStore, IDispatcher, a slice or anything built from them.");
+        // Since .NET 11 the container detects a singleton resolving itself before Ducky's own re-entrancy mark is reached, so for
+        // Singleton the rule's failure is the container's circular-dependency report; either way the cycle is reported, never hangs.
+        var message = exception.InnerException.ShouldBeOfType<InvalidOperationException>().Message;
+        if (lifetime == ServiceLifetime.Singleton)
+        {
+            message.ShouldContain("circular dependency");
+        }
+        else
+        {
+            message.ShouldBe(
+                "An AddValidation rule resolved the store (or a service that depends on it) while the store was being validated. "
+                + "Resolve only the services the rule checks, never IStore, IDispatcher, a slice or anything built from them.");
+        }
         exception.Message.ShouldContain("AddValidation");
     }
 

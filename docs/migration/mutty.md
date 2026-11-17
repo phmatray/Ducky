@@ -2,7 +2,7 @@
 
 Ducky.Draft is Mutty's successor: the same Immer-style `Produce` over records, rewritten around lazy copy-on-write drafts that keep the original instances of everything a recipe leaves unchanged. It does not depend on Ducky, so a project that used Mutty without Ducky can switch too.
 
-**Ducky.Draft needs `net10.0`.** Mutty is deprecated on nuget.org. Its last release, Mutty 2.0.0, keeps working on older target frameworks, unmaintained: a project that can't move to `net10.0` can stay on it.
+**Ducky.Draft needs `net11.0`.** Mutty is deprecated on nuget.org. Its last release, Mutty 2.0.0, keeps working on older target frameworks, unmaintained: a project that can't move to `net11.0` can stay on it.
 
 Every snippet on this page comes from the compiled sample in `docs/migration/samples/mutty`: `Before` builds against Mutty 2.0.0, `After` is the same code on Ducky.Draft, and `After.Tests` holds its tests.
 

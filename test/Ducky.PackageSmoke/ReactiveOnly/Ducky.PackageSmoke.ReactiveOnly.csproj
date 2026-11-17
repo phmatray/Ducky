@@ -3,7 +3,7 @@
        generated AddDuckyGenerated_Ducky_PackageSmoke_ReactiveOnly() holds the AddReactiveEffect<T> call for its reactive
        effect, compiled from the packages with TreatWarningsAsErrors (a DUCKY022 for a skewed method fails it). -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

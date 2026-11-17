@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
   <!-- Razor SDK: only it turns wwwroot/ducky.js into the static web asset _content/Ducky.Blazor/ducky.js (SPEC §3). -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
     <Description>Blazor integration for Ducky: components that re-render when a selected value changes, browser storage and IDistributedCache persistence, the prerender state handoff, cross-tab sync and Redux DevTools, in the WebAssembly, Server and Auto render modes.</Description>
@@ -29,6 +29,5 @@
     <ProjectReference Include="../Ducky/Ducky.csproj" PrivateAssets="none" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
   </ItemGroup>
 </Project>

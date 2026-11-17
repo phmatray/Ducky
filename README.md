@@ -20,7 +20,7 @@
   <a href="https://phmatray.github.io/Ducky/docs/compare.html">How Ducky compares</a>
 </p>
 
-Ducky is a small, strict Redux store for .NET 10 and Blazor. Application state lives in slices: immutable records, each changed only by its reducers. You dispatch actions to one store, which reduces them one at a time and notifies whoever selected the changed values. Effects do the work that leaves the store, such as HTTP calls and timers. Persistence, the prerender handoff, cross-tab sync and Redux DevTools follow the same rules in every render mode.
+Ducky is a small, strict Redux store for .NET 11 and Blazor. Application state lives in slices: immutable records, each changed only by its reducers. You dispatch actions to one store, which reduces them one at a time and notifies whoever selected the changed values. Effects do the work that leaves the store, such as HTTP calls and timers. Persistence, the prerender handoff, cross-tab sync and Redux DevTools follow the same rules in every render mode.
 
 > **Status:** 2.0 is in preview (`2.0.0-rc.1`). Install it with `--prerelease`. Ducky 1.x lives on the `main` branch; see [Migrating from Ducky 1.x](https://phmatray.github.io/Ducky/docs/migration/ducky-1x.html).
 

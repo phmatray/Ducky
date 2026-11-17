@@ -4,7 +4,7 @@
        A web project, so its DUCKY004 variant (-p:SmokeSingleton=true) proves the CompilerVisibleProperty items flow too.
        Its DUCKY900 variant sets -p:SmokeLegacyGenerator=1.0.292 (the committed fake). -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
