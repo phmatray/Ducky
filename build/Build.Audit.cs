@@ -53,9 +53,9 @@ internal sealed partial class Build
     // of a PackageReference or ProjectReference. Evaluated values, so imports, $(...) indirection and multi-line values count.
     private List<string> AuditSuppressionViolations(AbsolutePath project)
     {
-        var evaluated = JsonDocument.Parse(string.Join('\n',
+        var evaluated = JsonElement.Parse(string.Join('\n',
             DotNet($"msbuild {project} -getProperty:NoWarn -getItem:PackageReference -getItem:ProjectReference {AuditProperties:nq}", logOutput: false, logInvocation: false)
-                .Where(o => o.Type == OutputType.Std).Select(o => o.Text))).RootElement;
+                .Where(o => o.Type == OutputType.Std).Select(o => o.Text)));
         var noWarns = evaluated.GetProperty("Items").EnumerateObject()
             .SelectMany(items => items.Value.EnumerateArray().Select(item =>
                 (Source: $"{items.Name} {item.GetProperty("Identity").GetString()}", NoWarn: item.TryGetProperty("NoWarn", out var n) ? n.GetString()! : "")))
@@ -149,7 +149,7 @@ internal sealed partial class Build
     // FullName -> (mean ns, allocated bytes per operation) of every BenchmarkDotNet JSON report in the directory.
     private static Dictionary<string, (double Mean, long? Allocated)> BenchmarkResults(AbsolutePath directory) =>
         directory.GlobFiles("*.json")
-            .SelectMany(f => JsonDocument.Parse(f.ReadAllText()).RootElement.GetProperty(BenchmarksReportKey).EnumerateArray())
+            .SelectMany(f => JsonElement.Parse(f.ReadAllText()).GetProperty(BenchmarksReportKey).EnumerateArray())
             .Where(b => b.TryGetProperty("Statistics", out var s) && s.ValueKind == JsonValueKind.Object)
             .ToDictionary(
                 b => b.GetProperty("FullName").GetString()!,
@@ -158,7 +158,7 @@ internal sealed partial class Build
 
     // "ProcessorName, OsVersion, Architecture" of the reports in the directory.
     private static string BenchmarkHosts(AbsolutePath directory) =>
-        string.Join(" | ", directory.GlobFiles("*.json").Select(f => BenchmarkHost(JsonDocument.Parse(f.ReadAllText()).RootElement)).Distinct().Order(StringComparer.Ordinal));
+        string.Join(" | ", directory.GlobFiles("*.json").Select(f => BenchmarkHost(JsonElement.Parse(f.ReadAllText()))).Distinct().Order(StringComparer.Ordinal));
 
     private static string BenchmarkHost(JsonElement report)
     {
@@ -187,7 +187,7 @@ internal sealed partial class Build
         {
             yield return $"BenchmarkSelfCheck: expected [{string.Join("; ", expected)}], got [{string.Join("; ", report)}]";
         }
-        var host = BenchmarkHost(JsonDocument.Parse("""{"HostEnvironmentInfo":{"OsVersion":"Ubuntu 24.04","ProcessorName":"AMD EPYC","LogicalCoreCount":2,"Architecture":"X64"}}""").RootElement);
+        var host = BenchmarkHost(JsonElement.Parse("""{"HostEnvironmentInfo":{"OsVersion":"Ubuntu 24.04","ProcessorName":"AMD EPYC","LogicalCoreCount":2,"Architecture":"X64"}}"""));
         if (host != "AMD EPYC, Ubuntu 24.04, X64")
         {
             yield return $"BenchmarkSelfCheck: expected the host [AMD EPYC, Ubuntu 24.04, X64], got [{host}]";

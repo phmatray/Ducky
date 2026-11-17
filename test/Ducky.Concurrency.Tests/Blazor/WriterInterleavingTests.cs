@@ -121,7 +121,7 @@ namespace Ducky.Concurrency.Tests
 
             private string? Stored() =>
                 _stored.TryGetValue(StorageKey, out var envelope)
-                    ? JsonDocument.Parse(envelope).RootElement.GetProperty("s").GetRawText()
+                    ? JsonElement.Parse(envelope).GetProperty("s").GetRawText()
                     : null;
 
             // Progress-bounded (Interleaving.Wait), spun on a dedicated thread.

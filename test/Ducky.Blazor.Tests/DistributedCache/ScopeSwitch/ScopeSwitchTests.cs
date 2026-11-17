@@ -1424,7 +1424,7 @@ public sealed partial class ScopeSwitchTests : IDisposable
 
     private static PersistenceState Persistence(WriterHarness h) => h.Store.State.Get<PersistenceState>();
 
-    private static string Payload(string envelope) => System.Text.Json.JsonDocument.Parse(envelope).RootElement.GetProperty("s").GetRawText();
+    private static string Payload(string envelope) => System.Text.Json.JsonElement.Parse(envelope).GetProperty("s").GetRawText();
 
     private static string Envelope(int value) => EnvelopeWriter.Write($$"""{"Value":{{value}}}""", version: 1, new DateTimeOffset(2026, 9, 30, 12, 0, 0, TimeSpan.Zero));
 

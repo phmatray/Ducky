@@ -155,7 +155,7 @@ internal sealed class ThrowingMeterListener : IDisposable
 // One storageSet call: what the writer stored, and its payload s.
 internal sealed record StoredWrite(string Area, string Key, string Value, string Id)
 {
-    public string Payload => JsonDocument.Parse(Value).RootElement.GetProperty("s").GetRawText();
+    public string Payload => JsonElement.Parse(Value).GetProperty("s").GetRawText();
 }
 
 // One storageRemove call.

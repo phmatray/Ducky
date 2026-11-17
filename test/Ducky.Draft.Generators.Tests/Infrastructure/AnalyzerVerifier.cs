@@ -42,7 +42,8 @@ internal static class AnalyzerVerifier<TAnalyzer>
         {
             var options = (CSharpCompilationOptions)solution.GetProject(id)!.CompilationOptions!;
             return solution
-                .WithProjectCompilationOptions(id, options.WithNullableContextOptions(NullableContextOptions.Enable).WithWarningLevel(9999))
+                .WithProjectCompilationOptions(id, options.WithNullableContextOptions(NullableContextOptions.Enable).WithWarningLevel(9999)
+                    .WithSpecificDiagnosticOptions(options.SpecificDiagnosticOptions.AddRange(GeneratorHarness.AssemblyVersionSkew)))
                 .WithProjectParseOptions(id, GeneratorHarness.ParseOptions);
         });
         return test;

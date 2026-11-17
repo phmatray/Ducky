@@ -13,8 +13,14 @@ internal static class GeneratorHarness
 {
     public static readonly CSharpParseOptions ParseOptions = new(LanguageVersion.Latest, DocumentationMode.Diagnose);
 
-    private static readonly CSharpCompilationOptions _compilationOptions = new(
-        OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable, warningLevel: 9999);
+    // CS1701 (a reference built against an older assembly version than the one loaded) is the one warning the harness
+    // allows: it references the running framework, which SDK 11 hosts as 11.0 while Ducky.Draft.dll targets net10.0.
+    // ponytail: drop this when the TFMs move to net11.0 (#302).
+    public static readonly KeyValuePair<string, ReportDiagnostic>[] AssemblyVersionSkew = [new("CS1701", ReportDiagnostic.Suppress)];
+
+    private static readonly CSharpCompilationOptions _compilationOptions = new CSharpCompilationOptions(
+        OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable, warningLevel: 9999)
+        .WithSpecificDiagnosticOptions(AssemblyVersionSkew);
 
     // The running framework, plus the real Ducky.Draft.dll and the packages it references.
     private static readonly ImmutableArray<MetadataReference> _references = LoadReferences();

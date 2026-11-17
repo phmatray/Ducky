@@ -172,7 +172,7 @@ public sealed class ServerFlushTests
         await h.IterationsAsync("counter", 1);
         h.Middleware.LastKnownPayload["app:alice:counter"].ShouldBe("""{"Value":2}""");
         // Stamped at the attempt: a retry woken early by the change would carry an earlier time.
-        System.Text.Json.JsonDocument.Parse(cache.Stored("app:alice:counter")!).RootElement.GetProperty("at").GetDateTimeOffset().ShouldBe(start + TimeSpan.FromSeconds(3));
+        System.Text.Json.JsonElement.Parse(cache.Stored("app:alice:counter")!).GetProperty("at").GetDateTimeOffset().ShouldBe(start + TimeSpan.FromSeconds(3));
         cache.Calls.Count(static c => c == "set:app:alice:counter").ShouldBe(3);
         h.Inbox.Failures.Reader.TryRead(out _).ShouldBeFalse();
         h.Js.Calls.ShouldBeEmpty();
@@ -417,7 +417,7 @@ public sealed class ServerFlushTests
     private static void Slow(PersistOptions o) => (o.Storage, o.Debounce) = (PersistStorage.Server, TimeSpan.FromHours(1));
 
     private static string? Payload(string? envelope) =>
-        envelope is null ? null : System.Text.Json.JsonDocument.Parse(envelope).RootElement.GetProperty("s").GetRawText();
+        envelope is null ? null : System.Text.Json.JsonElement.Parse(envelope).GetProperty("s").GetRawText();
 
     private static string Envelope(string payload) => EnvelopeWriter.Write(payload, version: 1, new DateTimeOffset(2026, 9, 30, 12, 0, 0, TimeSpan.Zero));
 

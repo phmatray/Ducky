@@ -415,7 +415,7 @@ internal sealed partial class Build
         JsonElement? root;
         try
         {
-            root = JsonDocument.Parse(output).RootElement;
+            root = JsonElement.Parse(output);
         }
         catch (JsonException)
         {

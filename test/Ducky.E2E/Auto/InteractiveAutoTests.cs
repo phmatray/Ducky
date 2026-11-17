@@ -281,7 +281,7 @@ public sealed class InteractiveAutoTests
 
         var json = await page.EvaluateAsync<string>("() => JSON.stringify(devtools)");
         json.ShouldNotContain(Secret);
-        var connections = JsonDocument.Parse(json).RootElement.EnumerateArray().ToList();
+        var connections = JsonElement.Parse(json).EnumerateArray().ToList();
         connections.Count.ShouldBe(2);
         var messages = connections.SelectMany(c => c.GetProperty("messages").EnumerateArray()).ToList();
         connections.ShouldAllBe(c => c.GetProperty("options").GetProperty("name").GetString() == "Ducky.Samples.Server");

@@ -337,7 +337,7 @@ public sealed class CrossTabConvergenceTests
 
         await tabs.DrainAsync();
         var stored = tabs.Storage.TryGetValue("ducky:tags", out var envelope)
-            ? JsonDocument.Parse(envelope).RootElement.GetProperty("s").EnumerateArray().Select(static item => item.GetString()!).ToList()
+            ? JsonElement.Parse(envelope).GetProperty("s").EnumerateArray().Select(static item => item.GetString()!).ToList()
             : [];
         return new([.. a.Items], [.. b.Items], stored, (a.Writes, b.Writes), (a.Allowed, b.Allowed));
     }

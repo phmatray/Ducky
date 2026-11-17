@@ -218,6 +218,13 @@ public sealed class JsBridgeTests
         (record.Id.Id, record.Message).ShouldBe((2000, "JS interop call 'dispose' interrupted: circuit disconnected or interop timed out"));
         record.Exception.ShouldBeSameAs(js.OnDispose);
 
+        // An interop timeout while disposing the module is swallowed the same way (the other arm of the filter).
+        var timedOut = new FakeJsRuntime { OnDispose = new TaskCanceledException("timeout") };
+        var timedOutBridge = new JsBridge(timedOut, NullLogger.Instance);
+        (await timedOutBridge.TryInvokeAsync<object>("ready", TestContext.Current.CancellationToken)).Delivered.ShouldBeTrue();
+        await timedOutBridge.DisposeAsync();
+        timedOut.Disposed.ShouldBe(1);
+
         // Once disposed, a late call (a flush after DisposeTimeout, §11.5) is not delivered, silently, and imports nothing.
         (await bridge.TryInvokeAsync<object>("ready", TestContext.Current.CancellationToken)).ShouldBe((false, null));
         Should.Throw<ObjectDisposedException>(() => bridge.ImportAsync());

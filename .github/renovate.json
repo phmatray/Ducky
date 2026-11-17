@@ -50,7 +50,7 @@
       "enabled": false
     },
     {
-      "description": "S-1 (R-PKG-3, ADR-0003): Microsoft.CodeAnalysis.CSharp 5.0.0 is the Roslyn of SDK 10.0.100, the generator floor, and global.json pins that SDK. Never update either. Microsoft.CodeAnalysis.CSharp.Workspaces (the analyzer verifier tests) stays on the same floor: it depends on exactly its own Microsoft.CodeAnalysis.Common, so any other version fails the restore with NU1107 against the 5.0.0 pin.",
+      "description": "S-1 (R-PKG-3, ADR-0003): Microsoft.CodeAnalysis.CSharp 5.0.0 is the Roslyn of the SDK 10 line, the generator floor that consumers on SDK 10 still load, and it does not move with the SDK 11 toolchain pin of global.json (11.0.100). Never update the Roslyn pin; dotnet-sdk moves by hand, in a PR that also runs the Nuke Ci target on the new SDK. Microsoft.CodeAnalysis.CSharp.Workspaces (the analyzer verifier tests) stays on the same floor: it depends on exactly its own Microsoft.CodeAnalysis.Common, so any other version fails the restore with NU1107 against the 5.0.0 pin.",
       "matchPackageNames": ["Microsoft.CodeAnalysis.CSharp", "Microsoft.CodeAnalysis.CSharp.Workspaces", "dotnet-sdk"],
       "enabled": false
     },
@@ -67,7 +67,7 @@
       "automerge": false
     },
     {
-      "description": "These analyzers load into the repo's own compiler, and the repo must build on SDK 10.0.100 (Roslyn 5.0.0; global.json, M0-01): a release built against a newer Roslyn fails every 10.0.100 build with CS9057, which CI on a newer SDK (rollForward latestFeature) does not see. Before merging, build the repo with exactly SDK 10.0.100 (the spikes/S-1-roslyn-floor/README.md side-by-side install and a global.json with rollForward disable).",
+      "description": "These analyzers load into the repo's own compiler, and the generators must load in the Roslyn 5.0.0 of the SDK 10 line (the S-1 floor): a release built against a newer Roslyn fails an SDK 10 consumer with CS9057, which CI on SDK 11 does not see. Before merging, build a sample with the SDK 10 line (the spikes/S-1-roslyn-floor/README.md side-by-side install and a global.json with rollForward disable).",
       "matchPackageNames": ["Microsoft.CodeAnalysis.BannedApiAnalyzers", "Microsoft.CodeAnalysis.PublicApiAnalyzers", "Microsoft.VisualStudio.Threading.Analyzers"],
       "dependencyDashboardApproval": true,
       "automerge": false

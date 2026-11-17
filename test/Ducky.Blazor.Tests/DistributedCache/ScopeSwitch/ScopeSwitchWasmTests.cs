@@ -184,5 +184,5 @@ public sealed partial class ScopeSwitchWasmTests : BunitContext
     }
 
     private List<int> Payloads(string key) =>
-        [.. Writes().Where(w => w.Key == key).Select(static w => System.Text.Json.JsonDocument.Parse(w.Value).RootElement.GetProperty("s").GetProperty("Value").GetInt32())];
+        [.. Writes().Where(w => w.Key == key).Select(static w => System.Text.Json.JsonElement.Parse(w.Value).GetProperty("s").GetProperty("Value").GetInt32())];
 }
