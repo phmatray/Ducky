@@ -15,9 +15,13 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preload" href="fonts/anybody.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/atkinson-next.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="scrollcraft.css">
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="styles.css">
+  <noscript><style>[data-sc-in], [data-sc-stagger] > *, [data-sc-cue] { opacity: 1 !important; transform: none !important; } .asks { position: static; width: auto; height: auto; clip: auto; white-space: normal; font-weight: 800; }</style></noscript>
+  <script src="scrollcraft.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="scroll.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -41,7 +45,7 @@
 
   <main id="main">
     <!-- First viewport: the duck asks, Ducky answers -->
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="hero" data-sc-act="flow" aria-labelledby="hero-title">
       <div class="hero-copy">
         <h1 id="hero-title">Blazor state you can explain to a&nbsp;duck.</h1>
         <p class="offer">Ducky is a small, strict Redux store for .NET and Blazor. Slices, effects, persistence, prerender handoff, cross-tab sync and Redux DevTools follow the same rules in every render mode, and every promise it makes is a named test.</p>
@@ -62,27 +66,43 @@
         </div>
       </div>
 
-      <figure class="duck-stage" aria-hidden="true">
-        <blockquote class="bubble" id="bubble"><p id="bubble-text">So what happens when two dispatches race?</p></blockquote>
+      <figure class="duck-stage" aria-hidden="true" data-sc-parallax="-0.8">
+        <blockquote class="bubble" data-sc-parallax="0.5"><p>So what happens when two dispatches race?</p></blockquote>
         <img class="duck" src="duck.svg" alt="" width="400" height="360">
       </figure>
 
-      <div class="questions" id="questions">
+      <nav class="questions" aria-labelledby="q-lead">
         <p class="q-lead" id="q-lead">The duck's questions</p>
-        <div class="q-list" role="tablist" aria-labelledby="q-lead">
-          <button role="tab" id="q-race" aria-controls="a-race" aria-selected="true" data-q="So what happens when two dispatches race?">Two dispatches race</button>
-          <button role="tab" id="q-prerender" aria-controls="a-prerender" aria-selected="false" tabindex="-1" data-q="The page prerendered. Does my data load twice?">Prerender, then interactive</button>
-          <button role="tab" id="q-tabs" aria-controls="a-tabs" aria-selected="false" tabindex="-1" data-q="Your user just opened a second tab. Now what?">A second tab</button>
-          <button role="tab" id="q-typing" aria-controls="a-typing" aria-selected="false" tabindex="-1" data-q="They type faster than your API answers. Who wins?">Faster than the API</button>
-          <button role="tab" id="q-aot" aria-controls="a-aot" aria-selected="false" tabindex="-1" data-q="Trimmed and AOT-compiled. Still works?">Trimmed and AOT</button>
-          <button role="tab" id="q-test" aria-controls="a-test" aria-selected="false" tabindex="-1" data-q="Fine. How do you test any of it?">How do I test it</button>
-        </div>
-      </div>
+        <ul class="q-list">
+          <li><a href="#a-race">Two dispatches race</a></li>
+          <li><a href="#a-prerender">Prerender, then interactive</a></li>
+          <li><a href="#a-tabs">A second tab</a></li>
+          <li><a href="#a-aot">Trimmed and AOT</a></li>
+          <li><a href="#a-test">How do I test it</a></li>
+          <li><a href="#a-typing">Faster than the API</a></li>
+        </ul>
+      </nav>
     </section>
 
     <!-- The answer sheet -->
     <section class="sheet" aria-label="Ducky's answers">
-      <article class="answer" role="tabpanel" id="a-race" aria-labelledby="q-race">
+      <aside class="rail" aria-label="The duck's docket">
+        <figure class="rail-duck" aria-hidden="true">
+          <blockquote class="bubble"><p id="rail-text">So what happens when two dispatches race?</p></blockquote>
+          <img class="duck" src="duck.svg" alt="" width="400" height="360">
+        </figure>
+        <ol class="docket">
+          <li><a href="#a-race" data-q="So what happens when two dispatches race?" class="current" aria-current="true">Two dispatches race</a></li>
+          <li><a href="#a-prerender" data-q="The page prerendered. Does my data load twice?">Prerender, then interactive</a></li>
+          <li><a href="#a-tabs" data-q="Your user just opened a second tab. Now what?">A second tab</a></li>
+          <li><a href="#a-aot" data-q="Trimmed and AOT-compiled. Still works?">Trimmed and AOT</a></li>
+          <li><a href="#a-test" data-q="Fine. How do you test any of it?">How do I test it</a></li>
+          <li><a href="#a-typing" data-q="They type faster than your API answers. Who wins?">Faster than the API</a></li>
+        </ol>
+      </aside>
+      <div class="answers">
+      <article class="answer" id="a-race" data-sc-in>
+        <p class="sr-only asks">The duck asks: So what happens when two dispatches race?</p>
         <div class="a-text">
           <h2>One dispatcher. One action at a time.</h2>
           <p>Every action goes through one queue, and a single drainer reduces it. Reducers never run concurrently, actions keep their order, and every committed snapshot comes from one commit, so no reader sees torn state.</p>
@@ -106,7 +126,8 @@ var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
         </aside>
       </article>
 
-      <article class="answer" role="tabpanel" id="a-prerender" aria-labelledby="q-prerender" hidden>
+      <article class="answer" id="a-prerender" data-sc-in>
+        <p class="sr-only asks">The duck asks: The page prerendered. Does my data load twice?</p>
         <div class="a-text">
           <h2>Load once, in every render mode.</h2>
           <p>Mark the slice <code>Persist&lt;T&gt;()</code> and <code>Prerender&lt;T&gt;()</code>. The prerendered page hands its state to the interactive store before the first interactive render, and your load effect asks one question: was this slice already restored?</p>
@@ -142,7 +163,8 @@ var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
         </aside>
       </article>
 
-      <article class="answer" role="tabpanel" id="a-tabs" aria-labelledby="q-tabs" hidden>
+      <article class="answer" id="a-tabs" data-sc-in>
+        <p class="sr-only asks">The duck asks: Your user just opened a second tab. Now what?</p>
         <div class="a-text">
           <h2>Tabs converge. Nothing echoes.</h2>
           <p>Turn on <code>SyncAcrossTabs</code> for a localStorage slice and a change in one tab reaches the others. A value received from another tab is never written back, even when two processes serialize the same state in different orders.</p>
@@ -165,9 +187,114 @@ var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
         </aside>
       </article>
 
-      <article class="answer" role="tabpanel" id="a-typing" aria-labelledby="q-typing" hidden>
+      <article class="answer" id="a-aot" data-sc-in>
+        <p class="sr-only asks">The duck asks: Trimmed and AOT-compiled. Still works?</p>
         <div class="a-text">
-          <h2>The newest request wins. The stale one can't speak.</h2>
+          <h2>No reflection to trim away.</h2>
+          <p>Source generators write the registration, the dispatch helpers and the analyzers. Persistence serializes through each slice's <code>JsonTypeInfo</code>. Every runtime library builds with zero IL2xxx and IL3xxx warnings.</p>
+          <p>CI publishes a NativeAOT binary and a trimmed AOT WebAssembly app and runs both.</p>
+        </div>
+        <pre class="code" tabindex="0"><code data-lang="cs">// Persistence serializes each state through its declared
+// type's JsonTypeInfo: trim- and AOT-safe, no reflection.
+[JsonSerializable(typeof(Preferences))]
+[JsonSerializable(typeof(Basket))]
+public sealed partial class DocsJson : JsonSerializerContext;</code></pre>
+        <aside class="proof" aria-label="Proved by">
+          <p class="proof-head">Proved by <a href="https://github.com/phmatray/Ducky/tree/v2/test/Ducky.AotSmoke">INV-24</a></p>
+          <ul>
+            <li>AotSmoke <span>NativeAOT</span></li>
+            <li>WasmTrimmedSmoke <span>Playwright</span></li>
+            <li>zero IL2xxx/IL3xxx in every runtime library</li>
+          </ul>
+        </aside>
+      </article>
+
+      <article class="answer" id="a-test" data-sc-in>
+        <p class="sr-only asks">The duck asks: Fine. How do you test any of it?</p>
+        <div class="a-text">
+          <h2>Given, when, then. No browser required.</h2>
+          <p><code>Ducky.Testing</code> tests a slice in three lines, runs one effect against stub services, or spins up a whole <code>TestStore</code> you can seed, dispatch into and settle.</p>
+          <p>Every snippet on this page comes from a compiled, tested file in the repository.</p>
+        </div>
+        <pre class="code" tabindex="0"><code data-lang="cs">[Fact]
+public void ThemeChanged_NewTheme_Applied() =&gt;
+    SliceTest.For&lt;SettingsSlice, Settings&gt;()
+        .Given(new Settings("light", FontSize: 14))
+        .When(new ThemeChanged("dark"))
+        .Then(new Settings("dark", FontSize: 14));</code></pre>
+        <aside class="proof" aria-label="Tested in">
+          <p class="proof-head">Tested in <a href="docs/guides/core/testing.html">the testing guide</a></p>
+          <ul>
+            <li>ThemeChanged_<wbr>NewTheme_<wbr>Applied</li>
+            <li>ThemeChanged_<wbr>SameTheme_<wbr>Unchanged</li>
+            <li>LoadProfile_<wbr>ApiAnswers_<wbr>DispatchesProfileLoaded</li>
+            <li>TestStore_<wbr>SeedDispatchSettle</li>
+          </ul>
+        </aside>
+      </article>
+      </div>
+    </section>
+
+    <!-- The silence before the race -->
+    <section class="turn" data-sc-act="flow" aria-label="The last question">
+      <p data-sc-cue="0.2 1 0.12 0.05" data-sc-kinetic="lines">They type faster than your API answers. Who wins?</p>
+    </section>
+
+    <!-- The race: the scroll position is the clock -->
+    <section class="race" id="a-typing" data-sc-act="pin" data-sc-span="6" aria-labelledby="race-title">
+      <div class="race-stage" data-sc-stage>
+        <div class="race-grid">
+          <div class="race-copy">
+            <h2 id="race-title">The newest request wins. The stale one can't speak.</h2>
+            <ol class="beats">
+              <li data-beat="0">You search for Paris. Run 1 starts on a slow connection.</li>
+              <li data-beat="0.26">You ask again. Run 2 supersedes run 1.</li>
+              <li data-beat="0.38">Run 1 ignores its cancellation token and keeps going.</li>
+              <li data-beat="0.52">Run 2 answers first. Paris is 14°C.</li>
+              <li data-beat="0.62">The old answer is still on its way. It says 11°C.</li>
+            </ol>
+            <p class="race-note">A JavaScript model of <code>Concurrency.Switch</code> with demonstration values. Your scroll is its clock, so scroll back and it un-happens.</p>
+          </div>
+          <div class="race-live">
+            <div class="lanes" aria-hidden="true">
+              <div class="lane" data-run="1"><span class="lane-name">Run 1</span><div class="track"><span class="pkt">11°C</span></div></div>
+              <div class="lane" data-run="2"><span class="lane-name">Run 2</span><div class="track"><span class="pkt">14°C</span></div></div>
+              <p class="gate-label">Dispatcher</p>
+            </div>
+            <dl class="race-state">
+              <div><dt>Paris</dt><dd id="race-paris">14°C</dd></div>
+              <div><dt>State v</dt><dd id="race-version">2</dd></div>
+              <div><dt>Dropped</dt><dd id="race-dropped">1</dd></div>
+            </dl>
+            <div class="race-log">
+              <table class="board">
+                <caption class="sr-only">The action log of the race</caption>
+                <colgroup><col class="c-act"><col class="c-org"><col class="c-res"></colgroup>
+                <thead><tr><th scope="col">Action</th><th scope="col">Origin</th><th scope="col">Result</th></tr></thead>
+                <tbody>
+                  <tr data-at="0.03" data-type="start"><td>LoadForecast("Paris")</td><td>Local</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                  <tr data-at="0.08" data-type="loading"><td>ForecastLoading("Paris")</td><td>Effect</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                  <tr data-at="0.26" data-type="start"><td>LoadForecast("Paris")</td><td>Local</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                  <tr data-at="0.30" data-type="loading"><td>ForecastLoading("Paris")</td><td>Effect</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                  <tr data-at="0.52" data-type="loaded" data-value="14°C"><td>ForecastLoaded("Paris")</td><td>Effect</td><td><span class="lamp reduced">Reduced</span></td></tr>
+                  <tr data-at="0.78" data-type="dropped"><td>ForecastLoaded("Paris") <em>stale run</em></td><td>Effect</td><td><span class="lamp dropped">Dropped</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="stamp">
+          <p class="stamp-word">Dropped.</p>
+          <p class="stamp-line">Run 1 answered late, and Ducky refused it. Paris stays 14°C.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- What the race costs you to write -->
+    <section class="race-after" aria-label="The policy behind the race">
+      <article class="answer" data-sc-in>
+        <div class="a-text">
+          <h3>One policy, declared on the effect.</h3>
           <p>Effects declare a concurrency policy. With <code>Switch</code>, a newer request for the same key cancels the running one, and a superseded run that ignores its token still can't dispatch: its late result is dropped, typed and counted.</p>
           <p>Other keys load side by side.</p>
         </div>
@@ -199,50 +326,6 @@ var name = store.State.Get&lt;Greeting&gt;().Name; // "Grace"</code></pre>
             <li>Switch_<wbr>OldRunCompletion_<wbr>DoesNotRemoveNewSlot</li>
             <li>Switch_<wbr>SupersededRunCallingSliceStoreSet_<wbr>IsDropped</li>
             <li>the full concurrency policy matrix</li>
-          </ul>
-        </aside>
-      </article>
-
-      <article class="answer" role="tabpanel" id="a-aot" aria-labelledby="q-aot" hidden>
-        <div class="a-text">
-          <h2>No reflection to trim away.</h2>
-          <p>Source generators write the registration, the dispatch helpers and the analyzers. Persistence serializes through each slice's <code>JsonTypeInfo</code>. Every runtime library builds with zero IL2xxx and IL3xxx warnings.</p>
-          <p>CI publishes a NativeAOT binary and a trimmed AOT WebAssembly app and runs both.</p>
-        </div>
-        <pre class="code" tabindex="0"><code data-lang="cs">// Persistence serializes each state through its declared
-// type's JsonTypeInfo: trim- and AOT-safe, no reflection.
-[JsonSerializable(typeof(Preferences))]
-[JsonSerializable(typeof(Basket))]
-public sealed partial class DocsJson : JsonSerializerContext;</code></pre>
-        <aside class="proof" aria-label="Proved by">
-          <p class="proof-head">Proved by <a href="https://github.com/phmatray/Ducky/tree/v2/test/Ducky.AotSmoke">INV-24</a></p>
-          <ul>
-            <li>AotSmoke <span>NativeAOT</span></li>
-            <li>WasmTrimmedSmoke <span>Playwright</span></li>
-            <li>zero IL2xxx/IL3xxx in every runtime library</li>
-          </ul>
-        </aside>
-      </article>
-
-      <article class="answer" role="tabpanel" id="a-test" aria-labelledby="q-test" hidden>
-        <div class="a-text">
-          <h2>Given, when, then. No browser required.</h2>
-          <p><code>Ducky.Testing</code> tests a slice in three lines, runs one effect against stub services, or spins up a whole <code>TestStore</code> you can seed, dispatch into and settle.</p>
-          <p>Every snippet on this page comes from a compiled, tested file in the repository.</p>
-        </div>
-        <pre class="code" tabindex="0"><code data-lang="cs">[Fact]
-public void ThemeChanged_NewTheme_Applied() =&gt;
-    SliceTest.For&lt;SettingsSlice, Settings&gt;()
-        .Given(new Settings("light", FontSize: 14))
-        .When(new ThemeChanged("dark"))
-        .Then(new Settings("dark", FontSize: 14));</code></pre>
-        <aside class="proof" aria-label="Tested in">
-          <p class="proof-head">Tested in <a href="docs/guides/core/testing.html">the testing guide</a></p>
-          <ul>
-            <li>ThemeChanged_<wbr>NewTheme_<wbr>Applied</li>
-            <li>ThemeChanged_<wbr>SameTheme_<wbr>Unchanged</li>
-            <li>LoadProfile_<wbr>ApiAnswers_<wbr>DispatchesProfileLoaded</li>
-            <li>TestStore_<wbr>SeedDispatchSettle</li>
           </ul>
         </aside>
       </article>
@@ -383,14 +466,14 @@ public sealed class GreetingSlice : Slice&lt;Greeting&gt;
     </section>
 
     <!-- Playground -->
-    <section class="play-sec" aria-labelledby="play-title">
+    <section class="play-sec" data-sc-act="flow" aria-labelledby="play-title">
       <div class="wrap">
         <div class="play-head">
           <h2 id="play-title">A shop that explains itself.</h2>
           <p class="lede">Rubber Duck Supply Co. is a small Blazor WebAssembly shop built only from Ducky, running in your browser. Switch on X-ray and every part names the feature behind it and opens the code that runs it.</p>
         </div>
         <div class="play-grid">
-          <a class="play-shot" href="playground/" aria-label="Open the playground">
+          <a class="play-shot" href="playground/" aria-label="Open the playground" data-sc-reveal="left" data-sc-reveal-at="0.12 0.42">
             <img src="playground.png" width="1440" height="900" loading="lazy" decoding="async"
               alt="The playground with X-ray on: the search, the colour filters, the duck shelf and the basket, each outlined and tagged with the Ducky feature that runs it (Switch, EntityState and selectors, Persist and SyncAcrossTabs, Exhaust), and the inspector tape along the bottom.">
           </a>
@@ -454,7 +537,7 @@ public sealed class GreetingSlice : Slice&lt;Greeting&gt;
     <section class="packages" aria-labelledby="packages-title">
       <div class="wrap">
         <h2 id="packages-title">Take what you need.</h2>
-        <ol class="stack">
+        <ol class="stack" data-sc-in data-sc-stagger="60">
           <li><a href="docs/guides/core/getting-started.html"><code>Ducky</code><span>The store, effects, selectors, <code>SliceStore</code>, <code>EntityState</code>, and the generators and analyzers inside the package.</span></a></li>
           <li><a href="docs/guides/blazor/render-modes.html"><code>Ducky.Blazor</code><span>Components, persistence, prerender handoff, the server cache, cross-tab sync and Redux DevTools.</span></a></li>
           <li><a href="docs/guides/draft/produce.html"><code>Ducky.Draft</code><span>Immer-style <code>Produce</code> for <code>[Draftable]</code> records.</span></a></li>
@@ -473,12 +556,12 @@ public sealed class GreetingSlice : Slice&lt;Greeting&gt;
           <p><a class="go dark" href="https://github.com/phmatray/Ducky/blob/v2/docs/spec/SPEC.md">Read the specification
             <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
         </div>
-        <ul class="ledger">
-          <li><b>100%</b><span>line and branch coverage of every library</span></li>
-          <li><b>100%</b><span>Stryker mutation score of all seven projects, measured before the release candidate; the build breaks below 85%</span></li>
+        <ul class="ledger" data-sc-in data-sc-stagger="60">
+          <li><b><span data-sc-count="0 100">100</span>%</b><span>line and branch coverage of every library</span></li>
+          <li><b><span data-sc-count="0 100">100</span>%</b><span>Stryker mutation score of all seven projects, measured before the release candidate; the build breaks below 85%</span></li>
           <li><b>0</b><span>IL2xxx and IL3xxx warnings, with NativeAOT and trimmed WebAssembly smoke runs</span></li>
-          <li><b>32</b><span>invariants, each with named tests, including linearizability and property tests</span></li>
-          <li><b>64</b><span>diagnostic pages: every configuration error is coded and says how to fix it</span></li>
+          <li><b data-sc-count="0 32">32</b><span>invariants, each with named tests, including linearizability and property tests</span></li>
+          <li><b data-sc-count="0 64">64</b><span>diagnostic pages: every configuration error is coded and says how to fix it</span></li>
           <li><b>3</b><span>browser engines run the Playwright end-to-end suite: Chromium, Firefox, WebKit</span></li>
         </ul>
       </div>

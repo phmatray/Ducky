@@ -5,3 +5,6 @@ This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 
 The Draft generator caching tests (test/Ducky.Draft.Generators.Tests/Pipeline/MuttyCachingTests.cs) are ported from
 Mutty (https://github.com/phmatray/Mutty), Copyright 2020-2024 Atypical Consulting SRL, Apache License, Version 2.0.
+
+The home page's scroll engine (site/scrollcraft.js, site/scrollcraft.css) is scroll-craft
+(https://github.com/nateherkai/scroll-craft), Copyright (c) 2026 Nate Herk, MIT License (see site/scrollcraft.LICENSE).
