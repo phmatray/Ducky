@@ -206,7 +206,7 @@ internal sealed partial class Build
             yield return "DocsSiteSelfCheck: llms-full.txt holds every listed page and no unlisted one";
         }
         var sitemap = clean.Files.GetValueOrDefault("sitemap.xml") ?? "";
-        string[] sitemapUrls = ["https://phmatray.github.io/Ducky/<", "https://phmatray.github.io/Ducky/playground/<", "https://phmatray.github.io/Ducky/docs/guides/a.html<"];
+        string[] sitemapUrls = ["https://phmatray.github.io/Ducky/<", "https://phmatray.github.io/Ducky/playground/<", "https://phmatray.github.io/Ducky/docs/index.html<", "https://phmatray.github.io/Ducky/docs/guides/a.html<", "https://phmatray.github.io/Ducky/docs/diagnostics/DUCKY001.html<"];
         if (!sitemapUrls.All(url => sitemap.Contains(url, StringComparison.Ordinal)) || sitemap.Contains("old.html", StringComparison.Ordinal))
         {
             yield return "DocsSiteSelfCheck: sitemap.xml holds the home page, the playground and every listed page, and no unlisted one";
@@ -488,7 +488,7 @@ internal sealed partial class Build
         var home = DocsSiteUrl[..^"docs/".Length];
         var urls = new[] { home, home + "playground/" }.Concat(listed.Where(pages.ContainsKey).Select(path => DocsSiteUrl + DocsHtmlPath(path)));
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"
-            + string.Concat(urls.Select(url => $"  <url><loc>{url}</loc></url>\n"))
+            + string.Concat(urls.Select(url => $"  <url><loc>{System.Security.SecurityElement.Escape(url)}</loc></url>\n"))
             + "</urlset>\n";
     }
 
