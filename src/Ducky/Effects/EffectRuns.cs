@@ -10,7 +10,7 @@ internal sealed partial class Dispatcher
     internal TimeProvider Time => timeProvider;
 
     // For tests: the slots every runner of this store holds (§6.6).
-    internal int SlotCount => _materialized.Value.Effects.Values.Sum(runners => runners.Sum(r => r.SlotCount));
+    internal int SlotCount => _materialized.Value.Effects.Values.SelectMany(runners => runners).Distinct().Sum(r => r.SlotCount);
 
     // EffectContext.Dispatch/DispatchAsync (§6.6). Disposal takes precedence (one volatile read): once it began, the call
     // completes Disposed, uncounted, whatever the run's token. Only on a live store is a cancelled token a superseded

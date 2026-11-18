@@ -26,6 +26,32 @@ The generator registers each case for `Handle`, wrapped in the union, so a case 
 - Each case runs as its own effect with the `Merge` policy and one global slot. For a policy or a key per action, derive from `EffectGroup` and register each action with `On<TAction>(handler, policy, key)`, as in [Effects and concurrency policies](effects.md).
 - Without the generator (`DuckyUseGenerators` off), override `RegisterCases` and call `On<Case>((a, c, t) => Handle(new TAction(a), c, t))` for each case.
 
+## One slot for every case
+
+An effect group gives each case its own slot, so one case never cancels the run of another. When several actions start the same work and a new one must replace the run in flight, they need one slot. Without a union effect, that takes a forwarder: every trigger dispatches one internal action, and one effect handles it.
+
+[!code-csharp[](../../../test/Ducky.Docs.Tests/Core/UnionEffectsGuideTests.cs#union-effect-before)]
+
+Nothing checks that the group lists every trigger, each load appears twice in the action log, and cancelling needs a flag of its own.
+
+Derive from `Effect<TAction>` with the union as `TAction` instead, and declare the effect `partial`:
+
+[!code-csharp[](../../../test/Ducky.Docs.Tests/Core/UnionEffectsGuideTests.cs#union-effect-slot)]
+
+The generator registers each case for `Handle`, wrapped in the union. One effect serves every case, so its `Policy` and `ConcurrencyKey` apply across the cases:
+
+- `Concurrency.Switch`: the newest case wins. It cancels the run in flight, and anything that run dispatches afterwards is dropped.
+- `Concurrency.Exhaust`: the first case holds the slot, and the other cases are dropped until its run ends.
+- `ConcurrencyKey(TAction)` receives the union. Runs with an equal key share a slot, and runs with different keys run side by side.
+
+A case missing from the `switch` is a CS8509 warning, an error with warnings as errors.
+
+- The effect, and every type it is nested in, must be `partial` ([DUCKY027](../../diagnostics/DUCKY027.md)). A non-union `Effect<TAction>` is an ordinary effect that the union rules do not apply to.
+- A case that belongs to two trigger unions starts both effects, each in its own slots.
+- Without the generator (`DuckyUseGenerators` off), override `RegisterCases` and call `OnCase<Case>(a => new TAction(a))` for each case.
+
+Choose `Effect<TAction>` over a union when the cases start or stop the same work. Choose `EffectGroup<TAction>` when the cases are independent: each case stays its own effect, with its own slot.
+
 ## Testing it
 
 Register the group on a `TestStore`, dispatch through the generated helpers, and read what the group dispatched:

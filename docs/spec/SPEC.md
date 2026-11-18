@@ -396,10 +396,15 @@ public abstract class Effect
 
 public abstract class Effect<TAction> : Effect where TAction : notnull
 {
-    protected Effect();
+    protected Effect();                                      // calls RegisterCases() once
     public virtual Concurrency Policy => Concurrency.Merge;
     protected virtual object? ConcurrencyKey(TAction action) => null;   // null = one global slot; keys need value equality (DUCKY013)
     public abstract Task Handle(TAction action, EffectContext context, CancellationToken cancellationToken);
+    protected virtual void RegisterCases();                  // the generator overrides it for a union TAction (ADR-0052)
+    protected void OnCase<TCase>(Func<TCase, TAction> wrap) where TCase : notnull;   // from RegisterCases only; every case shares one runner
+                                                             // and its slots. Null wrap => ArgumentNullException; after a store created the
+                                                             // runners => InvalidOperationException; a union case => DUCKY319; abstract,
+                                                             // interface or object => DUCKY307; duplicate => DUCKY308
 }
 
 public abstract class EffectGroup : Effect                  // several action types in one DI class (the unreleased dev branch's AsyncEffectGroup)
@@ -891,8 +896,8 @@ Analyzer IDs are in §16. Runtime codes appear in `DuckyError.Code`, in exceptio
 | DUCKY304 | duplicate slice key (names both types) | Ducky |
 | DUCKY305 | two slices share a `TState` | Ducky |
 | DUCKY306 | `RequireJsonTypeInfo` type not resolvable by the `UseJson` resolver (message contains the `[JsonSerializable(typeof(X))]` line), or `UseJson(options)` whose `TypeInfoResolver` is null | Ducky |
-| DUCKY307 | `On<T>`/`EffectGroup.On<T>` with a non-concrete `T` (runtime twin of DUCKY005); recorded from the throwing constructor | Ducky |
-| DUCKY308 | duplicate `On<T>`/`EffectGroup.On<T>` for one `T` (runtime twin of DUCKY014); recorded from the throwing constructor | Ducky |
+| DUCKY307 | `On<T>`/`EffectGroup.On<T>`/`Effect<TAction>.OnCase<T>` with a non-concrete `T` (runtime twin of DUCKY005); recorded from the throwing constructor | Ducky |
+| DUCKY308 | duplicate `On<T>`/`EffectGroup.On<T>`/`Effect<TAction>.OnCase<T>` for one `T` (runtime twin of DUCKY014); recorded from the throwing constructor | Ducky |
 | DUCKY309 | an effect, middleware or reactive-effect constructor has a parameter no candidate constructor can resolve (`IServiceProviderIsService`, or `IServiceProviderIsKeyedService` for a `[FromKeyedServices(key)]` parameter; a `[ServiceKey]` parameter never resolves), first resolution (§5.1); names the type, the missing service and its key | Ducky |
 | DUCKY310 | `Persist<T>`/`Prerender<T>` for a slice not added | Ducky.Blazor |
 | DUCKY311 | migration chain gap (`Version = 3` without `Migrate(2, …)`) | Ducky.Blazor |
@@ -1685,12 +1690,12 @@ Every ID has `docs/diagnostics/{ID}.md` (checked by the `Docs` target for every 
 | DUCKY024 | Info | Two `[DuckyAction]` types in this compilation, in different namespaces, generate helpers with the same name and parameter types; importing both namespaces makes calls ambiguous (CS0121). Set `MethodName` on one | Ducky.Generators |
 | DUCKY025 | Warning | `UseJson(JsonTypeInfoResolver.Combine(...))` where a combined `JsonSerializerContext`'s `[JsonSourceGenerationOptions]` sets a non-default option (naming policy, options-level converters, number handling, ignore conditions…, through a named argument or through the `JsonSerializerDefaults` constructor argument, any value other than `General`, as in `[JsonSourceGenerationOptions(JsonSerializerDefaults.Web)]`): `Combine` carries no options, so those settings would silently not apply to persisted, seed and DevTools JSON (§10). The message gives the fix, `UseJson(new JsonSerializerOptions(A.Default.Options) { TypeInfoResolver = JsonTypeInfoResolver.Combine(A.Default, B.Default) })`. Verifier cases: two default-option contexts (no diagnostic), one camelCase context (reported), one context annotated `[JsonSourceGenerationOptions(JsonSerializerDefaults.Web)]` (reported), the recommended form (no diagnostic) | Ducky.Generators |
 | DUCKY026 | Error | A class deriving directly from `Slice<TState, TAction>` or `EffectGroup<TAction>` whose `TAction` is not a C# union (it does not implement `System.Runtime.CompilerServices.IUnion`, ADR-0050): there are no cases to register, so no `RegisterCases` override is emitted (ADR-0051) | Ducky.Generators |
-| DUCKY027 | Error | A class deriving directly from `Slice<TState, TAction>` or `EffectGroup<TAction>` that is not `partial`, or is nested in a type that is not: the generator can't emit its `RegisterCases` override, one `On<Case>` per case of the union (ADR-0051). The message names every type to declare `partial` | Ducky.Generators |
+| DUCKY027 | Error | A class deriving directly from `Slice<TState, TAction>`, `EffectGroup<TAction>` or `Effect<TAction>` with a union `TAction` that is not `partial`, or is nested in a type that is not: the generator can't emit its `RegisterCases` override, one `On<Case>` (`OnCase<Case>` on an `Effect<TAction>`) per case of the union (ADR-0051, ADR-0052). The message names every type to declare `partial`. A non-union `Effect<TAction>` is an ordinary effect that the union rules do not apply to | Ducky.Generators |
 | DUCKY028 | Warning | `[DuckyAction(MethodName = ...)]` on a C# union: the union's helpers are its cases' (one set per case, each named after its case, unwrapping nested unions), so the `MethodName` is ignored | Ducky.Generators |
-| DUCKY029 | Error | A case of the union of a `Slice<TState, TAction>` or `EffectGroup<TAction>` that dispatch can never match (it matches an action's exact runtime type): an abstract type, an interface, `object`, `dynamic` or a `Nullable<T>`. The message names those cases; no `RegisterCases` override is emitted (ADR-0051) | Ducky.Generators |
-| DUCKY030 | Error | A `file`-local `Slice<TState, TAction>` or `EffectGroup<TAction>`, or one nested in a `file`-local type: no generated declaration can extend it, so no `RegisterCases` override is emitted, and its DUCKY023 is not reported (ADR-0051) | Ducky.Generators |
-| DUCKY031 | Error | A hand-written parameterless `RegisterCases()` on a `Slice<TState, TAction>` or `EffectGroup<TAction>` while the generator is on, which writes that override (ADR-0051); checked before DUCKY027 | Ducky.Generators |
-| DUCKY032 | Error | A case of the union of a `Slice<TState, TAction>` or `EffectGroup<TAction>`, a containing type or type argument of one, a nested union or a union constructor the registration calls, is `[Obsolete(…, true)]`: generated code can't reference it (CS0619), so no `RegisterCases` override is emitted (ADR-0051), unless the type or a containing type is `[Obsolete]`, an obsolete context where the compiler reports none. Checks run in this order and a type gets only the first: DUCKY030, DUCKY026, DUCKY031, DUCKY027, DUCKY029, DUCKY032 | Ducky.Generators |
+| DUCKY029 | Error | A case of the union of a `Slice<TState, TAction>`, `EffectGroup<TAction>` or `Effect<TAction>` with a union `TAction` that dispatch can never match (it matches an action's exact runtime type): an abstract type, an interface, `object`, `dynamic` or a `Nullable<T>`. The message names those cases; no `RegisterCases` override is emitted (ADR-0051, ADR-0052) | Ducky.Generators |
+| DUCKY030 | Error | A `file`-local `Slice<TState, TAction>`, `EffectGroup<TAction>` or `Effect<TAction>` with a union `TAction`, or one nested in a `file`-local type: no generated declaration can extend it, so no `RegisterCases` override is emitted, and its DUCKY023 is not reported (ADR-0051, ADR-0052) | Ducky.Generators |
+| DUCKY031 | Error | A hand-written parameterless `RegisterCases()` on a `Slice<TState, TAction>`, `EffectGroup<TAction>` or `Effect<TAction>` with a union `TAction` while the generator is on, which writes that override (ADR-0051, ADR-0052); checked before DUCKY027 | Ducky.Generators |
+| DUCKY032 | Error | A case of the union of a `Slice<TState, TAction>`, `EffectGroup<TAction>` or `Effect<TAction>` with a union `TAction`, a containing type or type argument of one, a nested union or a union constructor the registration calls, is `[Obsolete(…, true)]`: generated code can't reference it (CS0619), so no `RegisterCases` override is emitted (ADR-0051, ADR-0052), unless the type or a containing type is `[Obsolete]`, an obsolete context where the compiler reports none. Checks run in this order and a type gets only the first: DUCKY030, DUCKY026, DUCKY031, DUCKY027, DUCKY029, DUCKY032 | Ducky.Generators |
 | DUCKY101 | Error | `[Draftable]` on something other than a `partial record class` (including record structs) | Ducky.Draft.Generators |
 | DUCKY102 | Error | A containing type of a `[Draftable]` record is not partial | Ducky.Draft.Generators |
 | DUCKY103 | Error | `[Draftable]` generic record, or a record nested in a generic type (not supported in 2.0) | Ducky.Draft.Generators |

@@ -4,7 +4,7 @@
 
 ## What happened
 
-A slice or an `EffectGroup` calls `On<T>()` more than once for the same `T`. Only one handler per exact action type
+A slice or an `EffectGroup` calls `On<T>()`, or a union `Effect<TAction>` calls `OnCase<T>()`, more than once for the same `T`. Only one handler per exact action type
 is allowed. This is the runtime twin of the DUCKY014 analyzer.
 
 ## How to fix it

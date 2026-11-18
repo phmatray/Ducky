@@ -2,14 +2,13 @@ using System.Collections.Concurrent;
 
 namespace Ducky;
 
-// One per handled action type of an effect registration, per store (SPEC §6.6, INV-11): an Effect<T> has one, an
-// EffectGroup one per On<T>. It holds the effect, its action type, policy (read once, at materialization), key function
-// and handler, and its slots, keyed by a SlotKey over the key ?? NullKey (the private sentinel _nullKey). Every start
+// One per store for each Effect<T>, serving every case of a union T, and for each On<T> of an EffectGroup (SPEC §6.6,
+// INV-11). It holds the effect, its action types, policy (read once, at materialization), key function and handler, and its slots, keyed by a SlotKey over the key ?? NullKey (the private sentinel _nullKey). Every start
 // installs a new immutable Slot, and a completing run removes only its own slot (compare-and-remove), so an old run never
 // removes its successor's slot.
 internal sealed partial class EffectRunner(
     Effect effect,
-    Type actionType,
+    Type[] actionTypes,
     Concurrency policy,
     Func<object, object?> keyOf,
     Func<object, EffectContext, CancellationToken, Task> handle)
@@ -21,8 +20,8 @@ internal sealed partial class EffectRunner(
 
     internal Effect Effect => effect;
 
-    // The exact action type the store's effect index maps to this runner (ADR-0008).
-    internal Type ActionType => actionType;
+    // The exact action types the store's effect index maps to this runner (ADR-0008): one, or every case of a union effect.
+    internal Type[] ActionTypes => actionTypes;
 
     internal Concurrency Policy => policy;
 
