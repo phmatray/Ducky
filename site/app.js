@@ -57,7 +57,7 @@
   });
 
   // ---------- tabs (WAI-ARIA tabs, automatic activation) ----------
-  function tabs(list, onSelect) {
+  function tabs(list) {
     const items = [...list.querySelectorAll('[role="tab"]')];
     const select = (tab, focus) => {
       items.forEach((t) => {
@@ -67,7 +67,6 @@
         document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
       });
       if (focus) tab.focus();
-      onSelect?.(tab);
     };
     items.forEach((tab, i) => {
       tab.addEventListener("click", () => { if (tab.getAttribute("aria-selected") !== "true") select(tab, false); });

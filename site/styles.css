@@ -1,6 +1,7 @@
 /* Ducky site. Three inks (yolk, ink, sheet) and one action accent (beak). No tints, no gradients, no glows. */
 
 body { letter-spacing: normal; -webkit-font-smoothing: auto; }
+.no-engine [data-sc-in], .no-engine [data-sc-stagger] > *, .no-engine [data-sc-cue] { opacity: 1; transform: none; }
 h1, h2, h3 { font-family: var(--display); font-weight: 880; font-stretch: 125%; line-height: 0.98; letter-spacing: -0.025em; text-wrap: balance; margin: 0; }
 h2 { font-size: clamp(2.1rem, 4.6vw, 3.9rem); }
 p { margin: 0; text-wrap: pretty; }
@@ -119,6 +120,7 @@ p { margin: 0; text-wrap: pretty; }
 /* ---------- the race: static ledger first, pinned stage when live ---------- */
 .race { background: var(--ink); color: var(--sheet); }
 .race :focus-visible { outline-color: var(--yolk); }
+.race ::selection, .race-after ::selection { background: var(--yolk); color: var(--ink); }
 .race-grid { max-width: var(--wrap); margin: 0 auto; padding: clamp(2rem, 5vh, 4rem) var(--gutter); display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1.6rem clamp(2rem, 5vw, 4.5rem); align-items: center; }
 .is-live .race-grid { height: 100%; }
 .race-copy h2 { color: var(--yolk); font-size: clamp(1.9rem, 3.5vw, 3.3rem); }
@@ -332,7 +334,7 @@ p { margin: 0; text-wrap: pretty; }
   .rail-duck { display: flex; align-items: center; gap: 0.8rem; width: 100%; }
   .rail .duck { order: -1; flex: none; width: 52px; margin: 0; }
   .rail .bubble { flex: 1; padding: 0.5rem 0.8rem; border-radius: 14px; font-size: 1rem; }
-  .rail .bubble p { min-height: 2.4em; }
+  .rail .bubble p { min-height: 3.6em; }
   .rail .bubble::before, .rail .bubble::after { display: none; }
   .docket { display: none; }
   .answer { padding-inline: var(--gutter); scroll-margin-top: 6.5rem; }

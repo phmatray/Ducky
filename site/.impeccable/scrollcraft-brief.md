@@ -38,7 +38,7 @@ Why the eight lost: filmic, continuous world and cutlist hide or rush code that 
 | The playground | Mischief | An invitation to break it |
 | Render modes | Assurance | One rule across five hosts |
 | Platform and packages | Appetite | Take what you need |
-| Receipts | Confidence | Real figures counting up |
+| Receipts | Confidence | Real figures, each tied to the gate that enforces it |
 | Migration | Welcome | A guide from where you are now |
 | Close | Resolve | The duck, the command, nothing left to ask |
 
@@ -63,7 +63,6 @@ The scroll position is the clock of a small reducer. Every frame recomputes the 
 | The last question | `kinetic` |
 | The race | `pin`, driven by the page's own reducer |
 | Playground | `reveal` |
-| Receipts | `count`, real figures only |
 
 ## Fallbacks
 

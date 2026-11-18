@@ -8,10 +8,16 @@
   const replay = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
 
   // Under reduced motion the race is not pinned: it stays the static ledger the markup already is.
+  // The same static ledger stands in if the engine failed to load, and nothing stays hidden waiting for it.
+  const engine = window.ScrollCraft;
   const race = document.getElementById("a-typing");
-  if (race && reduceMotion) race.removeAttribute("data-sc-act");
-  if (race && !reduceMotion) race.classList.add("is-live");
-  window.ScrollCraft?.mount(document.body);
+  if (!engine) document.documentElement.classList.add("no-engine");
+  if (race && (reduceMotion || !engine)) race.removeAttribute("data-sc-act");
+  if (race && engine && !reduceMotion) race.classList.add("is-live");
+  const stage = engine?.mount(document.body);
+
+  // The engine re-measures only when the width changes, but the board and the code tabs change the page's height.
+  if (stage && "ResizeObserver" in window) new ResizeObserver(() => stage.layout()).observe(document.getElementById("main"));
 
   // ---------- the docket: the duck asks whichever answer is being read ----------
   const links = [...document.querySelectorAll(".docket a")];
@@ -40,7 +46,7 @@
 
   // ---------- the race: scroll is the clock ----------
   // The state is never stored. Each frame reduces the event log up to the scroll position, so scrolling back un-happens it.
-  if (!race || reduceMotion) return;
+  if (!race?.classList.contains("is-live")) return;
 
   const rows = [...race.querySelectorAll("tr[data-at]")].map((el) => ({ el, at: +el.dataset.at, type: el.dataset.type, value: el.dataset.value }));
   const beats = [...race.querySelectorAll("[data-beat]")].map((el) => ({ el, at: +el.dataset.beat }));
@@ -88,11 +94,12 @@
     race.classList.toggle("stamped", wipe > 0);
   }
 
-  let queued = false;
+  let queued = false, rendered = -1;
   const tick = () => {
     queued = false;
     const box = race.getBoundingClientRect();
-    render(clamp(-box.top / Math.max(1, box.height - innerHeight)));
+    const p = clamp(-box.top / Math.max(1, box.height - innerHeight));
+    if (p !== rendered) render(rendered = p); // parked at 0 or 1 while the rest of the page scrolls
   };
   const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(tick); } };
   addEventListener("scroll", schedule, { passive: true });
