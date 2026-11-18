@@ -150,6 +150,33 @@ public sealed class UnionEffectTests
     }
 
     [Fact]
+    public async Task Switch_TwoStoresSharingOneInstance_KeepTheirOwnSlots()
+    {
+        var gate = new TaskCompletionSource();
+        List<CancellationToken> tokens = [];
+        var effect = new TriggerEffect(
+            async (_, _, token) =>
+            {
+                tokens.Add(token);
+                await gate.Task.ConfigureAwait(false);
+            },
+            Concurrency.Switch);
+        await using var first = Build(effect);
+        await using var second = Build(effect);
+
+        first.Dispatch(new Opened(1));
+        second.Dispatch(new Refreshed(1));
+
+        tokens.Select(t => t.IsCancellationRequested).ShouldBe([false, false]);
+        first.Dispatcher.SlotCount.ShouldBe(1);
+        second.Dispatcher.SlotCount.ShouldBe(1);
+
+        gate.SetResult();
+        await first.WhenIdleAsync(TestContext.Current.CancellationToken);
+        await second.WhenIdleAsync(TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
     public async Task NoRegisteredCase_HandlesNothing()
     {
         var effect = new CaseRegistrar();
