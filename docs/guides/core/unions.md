@@ -1,12 +1,13 @@
 # Unions in Ducky
 
-Ducky 2.x runs on C# 15, and a `union` of record cases is the natural shape for a feature's actions. Three pieces work together, and each builds on the one before:
+Ducky 2.x runs on C# 15, and a `union` of record cases is the natural shape for a feature's actions. Four pieces work together, and each builds on the one before:
 
 | You want | Use | Details |
 |---|---|---|
 | to dispatch a union | `store.Dispatch(new MyAction(new Case(...)))`, or just the case | the store unwraps a union to its case ([DUCKY319](../../diagnostics/DUCKY319.md)); see [Slices and keys](slices-and-keys.md#actions-and-state-as-c-15-unions) |
 | one reducer for the whole union | `Slice<TState, TAction>` | below; [DUCKY026](../../diagnostics/DUCKY026.md), [DUCKY027](../../diagnostics/DUCKY027.md) |
 | one effect handler and one helper per case | `EffectGroup<TAction>` and `[DuckyAction]` on the union | [Union effects and dispatch helpers](union-effects.md); [DUCKY028](../../diagnostics/DUCKY028.md) |
+| one concurrency slot shared by every case | `Effect<TAction>` with the union as `TAction` | [One slot for every case](union-effects.md#one-slot-for-every-case); [DUCKY027](../../diagnostics/DUCKY027.md) |
 
 ## Dispatching a union
 
@@ -36,4 +37,4 @@ The two compose: a store can mix both kinds of slice, and an action reaches ever
 
 ## Effects and helpers
 
-An `EffectGroup<TAction>` handles every case of the union in one `switch`, and `[DuckyAction]` on the union generates a dispatch helper per case. [Union effects and dispatch helpers](union-effects.md) covers both, with the same tested examples.
+An `EffectGroup<TAction>` handles every case of the union in one `switch`, and `[DuckyAction]` on the union generates a dispatch helper per case. An `Effect<TAction>` over the union also shares one concurrency slot across the cases. [Union effects and dispatch helpers](union-effects.md) covers all three, with the same tested examples.

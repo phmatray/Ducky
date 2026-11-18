@@ -1,11 +1,11 @@
 # DUCKY030: Union-first type is file-local
 
-**Package:** Ducky (generator `Ducky.Generators`). **Surface:** build error on the slice's or effect group's name (ADR-0051).
+**Package:** Ducky (generator `Ducky.Generators`). **Surface:** build error on the name of the slice, effect group or union effect (ADR-0051, ADR-0052).
 
 ## What happened
 
-The generator registers the cases of a `Slice<TState, TAction>` or an `EffectGroup<TAction>` by overriding
-`RegisterCases` in a generated `partial` declaration of the type, in a file of its own. A `file` type can't span two
+The generator registers the cases of a `Slice<TState, TAction>`, an `EffectGroup<TAction>` or an `Effect<TAction>` with a
+union `TAction` by overriding `RegisterCases` in a generated `partial` declaration of the type, in a file of its own. A `file` type can't span two
 files, so when the type, or a type it is nested in, is declared `file`, no generated declaration can extend it and no
 case is registered. This replaces the DUCKY023 its registration would otherwise get.
 
