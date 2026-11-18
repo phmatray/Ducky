@@ -185,6 +185,26 @@ public sealed class UnionEffectTests
             .Message.ShouldBe($"{typeof(CaseRegistrar)} calls OnCase<{typeof(Refreshed)}>() after a store created its runners. Call OnCase<T>() only from RegisterCases().");
     }
 
+    [Fact]
+    public void OnCase_ErrorsNameOnCase()
+    {
+        MessageOf(e => e.Register<LoadTrigger>(a => a)).ShouldContain("calls OnCase<");
+        MessageOf(e => e.Register<AbstractCase>(_ => default)).ShouldContain("calls OnCase<");
+        MessageOf(e =>
+        {
+            e.Register<Opened>(a => new LoadTrigger(a));
+            e.Register<Opened>(a => new LoadTrigger(a));
+        }).ShouldContain("calls OnCase<");
+    }
+
+    [Fact]
+    public void OnCase_OnAnOrdinaryEffect_Throws() =>
+        Should.Throw<InvalidOperationException>(() => new PlainRegistrar())
+            .Message.ShouldBe($"{typeof(PlainRegistrar)} calls OnCase<{typeof(Refreshed)}>(), but {typeof(Opened)} is not a C# union: an ordinary effect handles its action type itself.");
+
+    private static string MessageOf(Action<CaseRegistrar> register) =>
+        Should.Throw<DuckyConfigurationException>(() => new CaseRegistrar(register)).Errors.ShouldHaveSingleItem().Message;
+
     private static string CodeOf(Action<CaseRegistrar> register) =>
         Should.Throw<DuckyConfigurationException>(() => new CaseRegistrar(register)).Errors.ShouldHaveSingleItem().Code;
 
@@ -241,6 +261,13 @@ public sealed class UnionEffectTests
             OnCase<Opened>(a => new AuditTrigger(a));
             OnCase<Audited>(a => new AuditTrigger(a));
         }
+    }
+
+    private sealed class PlainRegistrar : Effect<Opened>
+    {
+        public override Task Handle(Opened action, EffectContext context, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        protected override void RegisterCases() => OnCase<Refreshed>(a => new Opened(a.Id));
     }
 
     private sealed class CaseRegistrar(Action<CaseRegistrar>? register = null) : Effect<LoadTrigger>

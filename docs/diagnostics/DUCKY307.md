@@ -4,7 +4,7 @@
 
 ## What happened
 
-A slice or an `EffectGroup` calls `On<T>()` with a `T` that is abstract, an interface or `object`. Handlers match
+A slice or an `EffectGroup` calls `On<T>()`, or a union `Effect<TAction>` calls `OnCase<T>()`, with a `T` that is abstract, an interface or `object`. Handlers match
 the exact runtime type of an action, so such a handler could never run. This is the runtime twin of the DUCKY005
 analyzer.
 

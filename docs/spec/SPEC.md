@@ -896,8 +896,8 @@ Analyzer IDs are in §16. Runtime codes appear in `DuckyError.Code`, in exceptio
 | DUCKY304 | duplicate slice key (names both types) | Ducky |
 | DUCKY305 | two slices share a `TState` | Ducky |
 | DUCKY306 | `RequireJsonTypeInfo` type not resolvable by the `UseJson` resolver (message contains the `[JsonSerializable(typeof(X))]` line), or `UseJson(options)` whose `TypeInfoResolver` is null | Ducky |
-| DUCKY307 | `On<T>`/`EffectGroup.On<T>` with a non-concrete `T` (runtime twin of DUCKY005); recorded from the throwing constructor | Ducky |
-| DUCKY308 | duplicate `On<T>`/`EffectGroup.On<T>` for one `T` (runtime twin of DUCKY014); recorded from the throwing constructor | Ducky |
+| DUCKY307 | `On<T>`/`EffectGroup.On<T>`/`Effect<TAction>.OnCase<T>` with a non-concrete `T` (runtime twin of DUCKY005); recorded from the throwing constructor | Ducky |
+| DUCKY308 | duplicate `On<T>`/`EffectGroup.On<T>`/`Effect<TAction>.OnCase<T>` for one `T` (runtime twin of DUCKY014); recorded from the throwing constructor | Ducky |
 | DUCKY309 | an effect, middleware or reactive-effect constructor has a parameter no candidate constructor can resolve (`IServiceProviderIsService`, or `IServiceProviderIsKeyedService` for a `[FromKeyedServices(key)]` parameter; a `[ServiceKey]` parameter never resolves), first resolution (§5.1); names the type, the missing service and its key | Ducky |
 | DUCKY310 | `Persist<T>`/`Prerender<T>` for a slice not added | Ducky.Blazor |
 | DUCKY311 | migration chain gap (`Version = 3` without `Migrate(2, …)`) | Ducky.Blazor |

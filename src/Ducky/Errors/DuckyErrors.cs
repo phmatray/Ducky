@@ -51,20 +51,20 @@ internal static class DuckyErrors
         "UseJson received JsonSerializerOptions whose TypeInfoResolver is null.",
         "Set TypeInfoResolver on those options, or call UseJson with your JsonSerializerContext.Default instead.");
 
-    public static DuckyError NonConcreteHandlerType(Type owner, Type actionType) => Create(
+    public static DuckyError NonConcreteHandlerType(Type owner, Type actionType, string method = "On") => Create(
         "DUCKY307",
-        $"{Display(owner)} calls On<{Display(actionType)}>(), but {Display(actionType)} is abstract, an interface or object.",
-        $"Call On<T>() once per concrete action type instead of {Display(actionType)}: handlers match the exact runtime type.");
+        $"{Display(owner)} calls {method}<{Display(actionType)}>(), but {Display(actionType)} is abstract, an interface or object.",
+        $"Call {method}<T>() once per concrete action type instead of {Display(actionType)}: handlers match the exact runtime type.");
 
-    public static DuckyError DuplicateHandler(Type owner, Type actionType) => Create(
+    public static DuckyError DuplicateHandler(Type owner, Type actionType, string method = "On") => Create(
         "DUCKY308",
-        $"{Display(owner)} calls On<{Display(actionType)}>() more than once.",
-        $"Keep one On<{Display(actionType)}>() call in {Display(owner)} and merge the handlers into it.");
+        $"{Display(owner)} calls {method}<{Display(actionType)}>() more than once.",
+        $"Keep one {method}<{Display(actionType)}>() call in {Display(owner)} and merge the handlers into it.");
 
-    public static DuckyError UnionHandlerType(Type owner, Type unionType) => Create(
+    public static DuckyError UnionHandlerType(Type owner, Type unionType, string method = "On") => Create(
         "DUCKY319",
-        $"{Display(owner)} calls On<{Display(unionType)}>(), but {Display(unionType)} is a C# 15 union: dispatch unwraps it to its case, so this handler would never run.",
-        $"Call On<T>() once per case type declared by {Display(unionType)} instead.");
+        $"{Display(owner)} calls {method}<{Display(unionType)}>(), but {Display(unionType)} is a C# 15 union: dispatch unwraps it to its case, so this handler would never run.",
+        $"Call {method}<T>() once per case type declared by {Display(unionType)} instead.");
 
     public static DuckyError UnresolvableConstructor(Type type, string requiredBy, Type service, object? serviceKey)
     {

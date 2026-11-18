@@ -22,8 +22,14 @@ public abstract class Effect
     internal abstract EffectRunner[] CreateRunners();
 }
 
-/// <summary>Reacts to every action of the exact type <typeparamref name="TAction"/> once it is processed.</summary>
-/// <typeparam name="TAction">The action type, matched exactly: a derived action type does not start this effect.</typeparam>
+/// <summary>
+/// Reacts to every action of the exact type <typeparamref name="TAction"/> once it is processed or, when
+/// <typeparamref name="TAction"/> is a C# union, to every case registered with <c>OnCase</c>.
+/// </summary>
+/// <typeparam name="TAction">
+/// The action type, matched exactly: a derived action type does not start this effect. A union is matched through its
+/// registered cases, which share one set of slots.
+/// </typeparam>
 public abstract class Effect<TAction> : Effect
     where TAction : notnull
 {
@@ -82,7 +88,9 @@ public abstract class Effect<TAction> : Effect
     /// <typeparamref name="TCase"/> is a union (DUCKY319), is abstract, an interface or <see cref="object"/> (DUCKY307),
     /// or is already registered (DUCKY308).
     /// </exception>
-    /// <exception cref="InvalidOperationException">Called after a store created this effect's runners.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// <typeparamref name="TAction"/> is not a C# union, or a store already created this effect's runners.
+    /// </exception>
     protected void OnCase<TCase>(Func<TCase, TAction> wrap)
         where TCase : notnull
     {
@@ -94,21 +102,27 @@ public abstract class Effect<TAction> : Effect
                 $"{GetType()} calls OnCase<{caseType}>() after a store created its runners. Call OnCase<T>() only from RegisterCases().");
         }
 
+        if (!typeof(System.Runtime.CompilerServices.IUnion).IsAssignableFrom(typeof(TAction)))
+        {
+            throw new InvalidOperationException(
+                $"{GetType()} calls OnCase<{caseType}>(), but {typeof(TAction)} is not a C# union: an ordinary effect handles its action type itself.");
+        }
+
         if (typeof(System.Runtime.CompilerServices.IUnion).IsAssignableFrom(caseType))
         {
-            throw new DuckyConfigurationException([DuckyErrors.UnionHandlerType(GetType(), caseType)]);
+            throw new DuckyConfigurationException([DuckyErrors.UnionHandlerType(GetType(), caseType, nameof(OnCase))]);
         }
 
         // Interfaces are abstract too.
         if (caseType.IsAbstract || caseType == typeof(object))
         {
-            throw new DuckyConfigurationException([DuckyErrors.NonConcreteHandlerType(GetType(), caseType)]);
+            throw new DuckyConfigurationException([DuckyErrors.NonConcreteHandlerType(GetType(), caseType, nameof(OnCase))]);
         }
 
         _cases ??= [];
         if (!_cases.TryAdd(caseType, action => wrap((TCase)action)))
         {
-            throw new DuckyConfigurationException([DuckyErrors.DuplicateHandler(GetType(), caseType)]);
+            throw new DuckyConfigurationException([DuckyErrors.DuplicateHandler(GetType(), caseType, nameof(OnCase))]);
         }
     }
 

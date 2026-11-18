@@ -4,7 +4,7 @@
 
 ## What happened
 
-A slice or an `EffectGroup` calls `On<T>()` with a C# 15 `union` type (a type implementing
+A slice or an `EffectGroup` calls `On<T>()`, or a union `Effect<TAction>` calls `OnCase<T>()`, with a C# 15 `union` type (a type implementing
 `System.Runtime.CompilerServices.IUnion`). Dispatch unwraps a union action to its case before anything else sees it, so
 reducers and effects only ever receive the case types, and a handler registered on the union itself could never run.
 
