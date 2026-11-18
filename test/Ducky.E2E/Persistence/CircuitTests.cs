@@ -44,6 +44,17 @@ public sealed class CircuitTests
         await using var harness = await Harness.StartAsync();
         var page = await harness.NewPageAsync();
         var errors = ServerPages.CollectErrors(page);
+        // The client's pause ends by stopping its SignalR connection, once the server has answered its PauseCircuit call.
+        var connectionClosed = Task.CompletedTask;
+        page.WebSocket += (_, socket) =>
+        {
+            if (socket.Url.Contains("/_blazor", StringComparison.Ordinal))
+            {
+                var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                socket.Close += (_, _) => closed.TrySetResult();
+                connectionClosed = closed.Task;
+            }
+        };
         await ServerPages.HoldWebAssemblyAsync(page);
         await page.GotoAsync(host, "/products");
         await Assertions.Expect(page.GetByTestId("idle")).ToHaveTextAsync("Server", new() { Timeout = ServerPages.InteractiveTimeoutMs });
@@ -52,7 +63,10 @@ public sealed class CircuitTests
         using var http = new HttpClient { BaseAddress = host.BaseUrl };
         using var request = await http.PostAsync(new Uri("/api/circuit/pause", UriKind.Relative), null, TestContext.Current.CancellationToken);
         (await request.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldBe("true");
-        // The pause is a request the client honours: the server's circuit is gone once the client has paused.
+        // The pause is a request the client honours: the server's circuit is gone once the client has paused. The server
+        // closes the circuit before it answers the client's PauseCircuit call, so the circuit count reaches 0 while the client
+        // is still pausing, and Blazor.resumeCircuit() returns false until its pause has ended (#339): wait for the client.
+        await connectionClosed.WaitAsync(TimeSpan.FromMilliseconds(ServerPages.InteractiveTimeoutMs), TestContext.Current.CancellationToken);
         await page.WaitForFunctionAsync("async () => (await (await fetch('/api/circuit/open')).text()) === '0'",
             null, new() { PollingInterval = 50, Timeout = ServerPages.InteractiveTimeoutMs });
 
