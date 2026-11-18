@@ -31,3 +31,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 - Real adopters/testimonials: none exist; the page has no such section.
 - Mutation scores: the campaign (M16-02) finished at 100% on all seven projects (strict run, 2026-11-09); the receipts ledger states the measured score and the gate.
+
+## Scroll staging
+
+The page is staged as an interrogation transcript with a pinned race (2026-11-18). The brief, feeling curve and score are in `../scrollcraft-brief.md`; where they differ from the first viewport and story above, the brief is current.

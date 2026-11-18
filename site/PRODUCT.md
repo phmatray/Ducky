@@ -10,7 +10,7 @@ web
 
 ## Stack
 
-delegated: plain static HTML/CSS with a few small vanilla JS modules, no build step and no runtime dependency, in `site/`. Chosen because the GitHub Pages workflow (`.github/workflows/docs.yml`) already assembles a static artifact, the docs beside it are rendered by the build into the same world (`site/docs-theme`, owner: "really ugly docfx site, I'd prefer a custom solution", 2026-11-08), and a dependency-free page cannot rot between releases.
+delegated: plain static HTML/CSS with a few small vanilla JS modules, no build step and no package dependency, in `site/`. The home page's scroll staging vendors the scrollcraft engine (`scrollcraft.js`, `scrollcraft.css`, MIT); see `.impeccable/scrollcraft-brief.md`. Chosen because the GitHub Pages workflow (`.github/workflows/docs.yml`) already assembles a static artifact, the docs beside it are rendered by the build into the same world (`site/docs-theme`, owner: "really ugly docfx site, I'd prefer a custom solution", 2026-11-08), and a dependency-free page cannot rot between releases.
 
 ## Users
 

@@ -1,5 +1,5 @@
-// Ducky site: code highlighting, copy, tabs, the duck's questions and a model of the dispatcher.
-// Everything is progressive: without this file the page shows the first answer, the first file and an empty board.
+// Ducky site: code highlighting, copy, tabs and a model of the dispatcher. The scroll staging lives in scroll.js.
+// Everything is progressive: without this file the page shows every answer, the first file and the settled board.
 (() => {
   "use strict";
 
@@ -57,7 +57,7 @@
   });
 
   // ---------- tabs (WAI-ARIA tabs, automatic activation) ----------
-  function tabs(list, onSelect) {
+  function tabs(list) {
     const items = [...list.querySelectorAll('[role="tab"]')];
     const select = (tab, focus) => {
       items.forEach((t) => {
@@ -67,7 +67,6 @@
         document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
       });
       if (focus) tab.focus();
-      onSelect?.(tab);
     };
     items.forEach((tab, i) => {
       tab.addEventListener("click", () => { if (tab.getAttribute("aria-selected") !== "true") select(tab, false); });
@@ -80,16 +79,6 @@
     });
   }
 
-  const duck = document.querySelector(".hero .duck");
-  const bubble = document.getElementById("bubble-text");
-  const qList = document.querySelector(".q-list");
-  if (qList) {
-    tabs(qList, (tab) => {
-      bubble.textContent = tab.dataset.q;
-      const panel = document.getElementById(tab.getAttribute("aria-controls"));
-      if (!reduceMotion) { replay(bubble, "swap"); replay(duck, "quack"); replay(panel, "enter"); }
-    });
-  }
   document.querySelectorAll("[data-tabs] .tab-list").forEach((list) => tabs(list));
 
   // ---------- the dispatcher, modelled ----------
