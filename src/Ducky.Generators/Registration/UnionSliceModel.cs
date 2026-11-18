@@ -18,7 +18,8 @@ namespace Ducky.Generators.Registration;
 /// <see cref="Registrations"/> line per case of the union (suppressing the <see cref="Suppressed"/> ids of the
 /// [Experimental] and [Obsolete] cases besides CS0612/CS0618), when <see cref="Rule"/> is null; otherwise that diagnostic,
 /// formatted with <see cref="Arguments"/>, at <see cref="Location"/>: DUCKY026 (not a union), DUCKY027 (not partial),
-/// DUCKY029 (a case dispatch never matches), DUCKY030 (file-local) or DUCKY031 (a hand-written <c>RegisterCases</c>).
+/// DUCKY029 (a case dispatch never matches), DUCKY030 (file-local), DUCKY031 (a hand-written <c>RegisterCases</c>) or
+/// DUCKY032 (an error-obsolete case, union or constructor).
 /// </summary>
 internal sealed record UnionSliceModel(
     string Display, string HintName, string? Namespace, EquatableArray<string> Declarations, EquatableArray<string> Registrations,
@@ -93,8 +94,7 @@ internal sealed record UnionSliceModel(
         // Dispatch matches an action's exact runtime type (ADR-0008): never an abstract type, an interface or object
         // (On<T> throws DUCKY307), nor a Nullable<T>, which boxes to its T. The first path to a case wins, since On<T>
         // takes one handler per type.
-        var seen = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
-        var cases = UnionCases.Of(action, iunion, seen);
+        var cases = UnionCases.Of(action, iunion);
         var undispatchable = cases.Where(c => c.Case.IsAbstract || c.Case.SpecialType == SpecialType.System_Object || c.Case.TypeKind == TypeKind.Dynamic
                 || c.Case.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
             .Select(c => $"'{c.Case.ToDisplayString()}'").ToList();
@@ -103,10 +103,34 @@ internal sealed record UnionSliceModel(
             return Reported(RegistrationDiagnostics.Undispatchable, string.Join(", ", undispatchable));
         }
 
+        // Every symbol the registrations name: the cases, the unions the wraps construct and the constructors they call,
+        // their containing types, type arguments and array element types.
         var referenced = new List<ISymbol>();
-        foreach (var named in seen)
+        foreach (var (@case, _, path) in cases)
         {
-            Referenced(named, referenced);
+            Referenced(@case, referenced);
+            foreach (var step in path)
+            {
+                if (step is ITypeSymbol union)
+                {
+                    Referenced(union, referenced);
+                }
+                else
+                {
+                    referenced.Add(step);
+                }
+            }
+        }
+
+        // CS0619 can't be suppressed, so generated code can't name an error-obsolete symbol (the registration path skips
+        // such a type the same way), unless the override sits in an obsolete type, where the compiler reports none.
+        var obsolete = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
+        var errorObsolete = referenced.Where(s => RegistrationModel.IsErrorObsolete(s, obsolete)).Distinct(SymbolEqualityComparer.Default)
+            .Select(s => $"'{s!.ToDisplayString()}'").ToList();
+        var obsoleteContext = chain.Any(t => t.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, obsolete)));
+        if (errorObsolete.Count > 0 && !obsoleteContext)
+        {
+            return Reported(RegistrationDiagnostics.ErrorObsolete, string.Join(", ", errorObsolete));
         }
 
         var registrations = cases.Select(c => string.Format(
@@ -116,15 +140,20 @@ internal sealed record UnionSliceModel(
             Namespace = type.ContainingNamespace.IsGlobalNamespace ? null : type.ContainingNamespace.ToDisplayString(),
             Declarations = new([.. chain.Select(t => $"partial {Keyword(t)} {t.ToDisplayString(_declaration)}")]),
             Registrations = new([.. registrations]),
-            // Every type the registrations name: the cases, the unions the wraps construct, their containing types and type
-            // arguments.
-            Suppressed = new([.. RegistrationModel.SuppressedIds(referenced, compilation)
+            // An [Experimental] assembly or module marks every type it declares.
+            Suppressed = new([.. RegistrationModel.SuppressedIds(referenced.SelectMany(s => new[] { s, s.ContainingAssembly, s.ContainingModule })
+                    .OfType<ISymbol>().Distinct(SymbolEqualityComparer.Default), compilation)
                 .Distinct().OrderBy(id => id, StringComparer.Ordinal)]),
         };
     }
 
     private static void Referenced(ITypeSymbol type, List<ISymbol> into)
     {
+        if (type is IArrayTypeSymbol array)
+        {
+            Referenced(array.ElementType, into);
+        }
+
         if (type is not INamedTypeSymbol named)
         {
             return;

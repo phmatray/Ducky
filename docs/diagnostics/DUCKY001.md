@@ -17,7 +17,10 @@ so a non-deterministic result is cached and may be computed twice by racing read
 
 Only the lambda written directly as the `On<T>` reducer, the `Set`/`SetAsync` mutator or the `Define` projector is
 analysed, nested lambdas inside
-it included. A method group, a delegate stored in a variable, effects and generated code are not analysed.
+it included, and so is a `Reduce` override of `Slice<TState, TAction>`, a reducer whose parameters stand for the lambda's
+(ADR-0051). An `On<T>`, `Set`/`SetAsync` or `Define` lambda written inside `Reduce` is its own reducer, mutator or
+projector, so a call in it is reported once, for that lambda. A method group, a delegate stored in a variable, effects and
+generated code are not analysed.
 
 For example, this code is reported:
 

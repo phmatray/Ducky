@@ -20,13 +20,17 @@ cases read as ADR-0050 says (a case that is itself a union is unwrapped to its o
 case dispatched alone or wrapped in the union reaches the same `Reduce` arm, and the runtime is unchanged.
 
 Only a slice deriving directly from `Slice<TState, TAction>`, with `TAction` closed, is generated (an open one, a reusable
-generic base, is skipped). Two errors guard the shape: DUCKY026 when
-`TAction` is not a union, DUCKY027 when the slice or a containing type is not `partial`.
+generic base, is skipped). Errors guard the shape, and each skips the override so no second error follows: DUCKY026 when
+`TAction` is not a union, DUCKY027 when the slice or a containing type is not `partial`, DUCKY029 when a case can never be
+dispatched (abstract, an interface, `object`, `dynamic` or `Nullable<T>`), DUCKY030 when the slice is `file`-local,
+DUCKY031 when it declares its own `RegisterCases()`, and DUCKY032 when a case, a nested union or a union constructor is
+`[Obsolete(…, true)]` (#324, #329). The override suppresses the ids of `[Experimental]` and `[Obsolete(DiagnosticId=…)]` on
+everything it names, a case's assembly and module included. DUCKY001–003 and DUCKY011 analyse `Reduce` as a reducer.
 
 Effects follow the same shape (#314): `EffectGroup<TAction> : EffectGroup` declares
 `public abstract Task Handle(TAction action, EffectContext context, CancellationToken cancellationToken)` and the same
 `RegisterCases` hook, which the generator overrides with one `On<Case>((a, c, t) => Handle(new TAction(a), c, t))` per
-case, through the same case reader and the same two errors. Each case stays its own effect (`Concurrency.Merge`, one
+case, through the same case reader and the same errors. Each case stays its own effect (`Concurrency.Merge`, one
 global slot): a policy or key per case is `EffectGroup.On<T>`'s job.
 
 ## Consequences

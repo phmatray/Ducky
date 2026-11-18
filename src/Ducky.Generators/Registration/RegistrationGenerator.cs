@@ -162,7 +162,7 @@ public sealed class RegistrationGenerator : IIncrementalGenerator
         }
     }
 
-    // A union slice or effect group with a Rule (DUCKY026, 027, 029, 030 or 031) gets that diagnostic and no RegisterCases
+    // A union slice or effect group with a Rule (DUCKY026, 027, 029, 030, 031 or 032) gets that diagnostic and no RegisterCases
     // override.
     private static void ReportUnionSlices(SourceProductionContext context, ImmutableArray<UnionSliceModel?> models)
     {

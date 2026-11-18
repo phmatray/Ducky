@@ -102,13 +102,16 @@ public sealed class UnionEffectGroupTests
         diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture).ShouldBe("The cases of 'App.CartEffects' can't be registered: declare 'App.CartEffects' partial");
     }
 
-    // #324: a union effect group gets the union slices' DUCKY029, DUCKY030 and DUCKY031, not ids of its own.
+    // #324: a union effect group gets the union slices' DUCKY029, DUCKY030, DUCKY031 and DUCKY032 (#329), not ids of
+    // its own.
     [Theory]
     [InlineData("public interface IItem; public union Bad(AddItem, IItem);", "public sealed partial class CartEffects : Ducky.EffectGroup<Bad>", "Bad", "", "DUCKY029")]
     [InlineData("public union Bad(AddItem, int?);", "public sealed partial class CartEffects : Ducky.EffectGroup<Bad>", "Bad", "", "DUCKY029")]
     [InlineData("", "file sealed partial class CartEffects : Ducky.EffectGroup<CartAction>", "CartAction", "", "DUCKY030")]
     [InlineData("", "public sealed partial class CartEffects : Ducky.EffectGroup<CartAction>", "CartAction",
         "protected override void RegisterCases() { }", "DUCKY031")]
+    [InlineData("[System.Obsolete(\"gone\", true)] public sealed record Gone; [System.Obsolete] public union Bad(AddItem, Gone);",
+        "#pragma warning disable CS0612\npublic sealed partial class CartEffects : Ducky.EffectGroup<Bad>", "Bad", "", "DUCKY032")]
     public void UnionEffectGroup_SliceMistakes_ReportTheSliceIds(string union, string declaration, string action, string member, string id)
     {
         var diagnostic = Diagnose(Cart + union + $$"""

@@ -8,8 +8,9 @@ A reducer lambda passed to `On<T>` returns `s with { }`, a copy of its state par
 changed if and only if its reducer returned a different reference (ADR-0007), so this copy notifies every subscriber
 of the slice on every such action, although the state is equal.
 
-Only the lambda written directly as the `On<T>` reducer is analysed, nested lambdas inside it included; a method group
-or a delegate stored in a variable is not.
+Only the lambda written directly as the `On<T>` reducer is analysed, nested lambdas inside it included, and so is a
+`Reduce` override of `Slice<TState, TAction>`, whose first parameter is the state (ADR-0051); a method group or a delegate
+stored in a variable is not.
 
 For example, this code is reported:
 

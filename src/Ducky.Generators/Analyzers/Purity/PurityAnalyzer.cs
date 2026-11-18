@@ -89,12 +89,10 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             start.RegisterOperationAction(
                 c => AnalyzeInvocation(c, (IInvocationOperation)c.Operation, slice, sliceStore, selector, rules, drafts), OperationKind.Invocation);
             var unionSlice = compilation.GetTypeByMetadataName("Ducky.Slice`2");
-            start.RegisterOperationAction(c => AnalyzeReduce(c, unionSlice, rules, drafts), OperationKind.MethodBody);
+            start.RegisterOperationAction(c => AnalyzeReduce(c, unionSlice, slice, sliceStore, selector, rules, drafts), OperationKind.MethodBody);
         });
     }
 
-    // Pattern variables live only in case labels: on an `||`, a negated condition or a ternary, a mutant could leave
-    // one unassigned, and Stryker would roll the whole method back (Safe Mode).
     private static void AnalyzeInvocation(
         OperationAnalysisContext context,
         IInvocationOperation invocation,
@@ -103,6 +101,18 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? selector,
         ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules,
         Drafts drafts)
+    {
+        if (Arm(invocation, slice, sliceStore, selector) is ({ } arm, { } lambda))
+        {
+            AnalyzeBody(context, lambda.Body, lambda.Symbol, rules, arm, drafts);
+        }
+    }
+
+    // The arm and lambda an On<T>, Set/SetAsync or Define call carries; a null arm for any other call. Pattern variables
+    // live only in case labels: on an `||`, a negated condition or a ternary, a mutant could leave one unassigned, and
+    // Stryker would roll the whole method back (Safe Mode).
+    private static (string? Arm, IAnonymousFunctionOperation? Lambda) Arm(
+        IInvocationOperation invocation, INamedTypeSymbol? slice, INamedTypeSymbol? sliceStore, INamedTypeSymbol? selector)
     {
         // On<T>, Set/SetAsync and Define are the only members a consumer can invoke on Slice<TState>,
         // SliceStore<TState> and Selector. Every On<T> and Define overload takes the reducer or projector as its last
@@ -113,7 +123,7 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         var arm = Is(type, slice) ? "reducer" : Is(type, sliceStore) ? Mutator : Is(type, selector) ? "projector" : null;
         if (arm is null)
         {
-            return;
+            return default;
         }
 
         // A loop, not FirstOrDefault: exactly one argument matches, so a First mutant would be equivalent. C# has no
@@ -128,24 +138,27 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (lambda is not null)
-        {
-            AnalyzeBody(context, lambda.Body, lambda.Symbol, rules, arm, drafts);
-        }
+        return (arm, lambda);
     }
 
-    // A Reduce override (of an override…) of Slice<TState, TAction>.Reduce is a reducer whose parameters are the state and
-    // action, like an On<T> lambda's.
+    // A Reduce override (of an override...) of Slice<TState, TAction>.Reduce is a reducer whose parameters are the state and
+    // action, like an On<T> lambda's. A reducer, mutator or projector lambda inside it is analysed as its own arm, so the
+    // walk skips it and a violation in it is reported once (#329).
     private static void AnalyzeReduce(
         OperationAnalysisContext context,
         INamedTypeSymbol? unionSlice,
+        INamedTypeSymbol? slice,
+        INamedTypeSymbol? sliceStore,
+        INamedTypeSymbol? selector,
         ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules,
         Drafts drafts)
     {
         var method = (IMethodSymbol)context.ContainingSymbol;
         if (UnionCases.IsReduce(method, unionSlice))
         {
-            AnalyzeBody(context, context.Operation, method, rules, "reducer", drafts);
+            AnalyzeBody(context, context.Operation, method, rules, "reducer", drafts,
+                operation => operation is IAnonymousFunctionOperation { Parent: IDelegateCreationOperation { Parent: IArgumentOperation { Parent: IInvocationOperation invocation } } } lambda
+                    && Arm(invocation, slice, sliceStore, selector).Lambda == lambda);
         }
     }
 
@@ -156,9 +169,10 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
         IMethodSymbol function,
         ImmutableArray<(INamedTypeSymbol? Type, string? Member, DiagnosticDescriptor Rule)> rules,
         string arm,
-        Drafts drafts)
+        Drafts drafts,
+        Func<IOperation, bool>? skipped = null)
     {
-        foreach (var operation in Walk(body))
+        foreach (var operation in Walk(body, skipped))
         {
             switch (operation)
             {
@@ -336,13 +350,13 @@ public sealed class PurityAnalyzer : DiagnosticAnalyzer
     }
 
     // Every operation below the root, nested lambdas included, except the operand of a nameof: nothing there runs.
-    private static IEnumerable<IOperation> Walk(IOperation root)
+    private static IEnumerable<IOperation> Walk(IOperation root, Func<IOperation, bool>? skipped = null)
     {
         var pending = new Stack<IOperation>(root.ChildOperations);
         while (pending.Count > 0)
         {
             var operation = pending.Pop();
-            if (operation is INameOfOperation)
+            if (operation is INameOfOperation || skipped?.Invoke(operation) == true)
             {
                 continue;
             }

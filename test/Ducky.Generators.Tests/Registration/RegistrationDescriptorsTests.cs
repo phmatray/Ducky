@@ -16,6 +16,7 @@ public sealed class RegistrationDescriptorsTests
         { "DUCKY029", DiagnosticSeverity.Error, "Union case can never be dispatched", "The cases of '{0}' can't be registered: dispatch matches an action's exact runtime type, which is never {1}" },
         { "DUCKY030", DiagnosticSeverity.Error, "Union-first type is file-local", "The cases of '{0}' can't be registered: '{1}' is file-local, so no generated declaration can extend it" },
         { "DUCKY031", DiagnosticSeverity.Error, "Hand-written RegisterCases on a generated union-first type", "'{0}' declares RegisterCases(), which the Ducky generator writes for it: remove it" },
+        { "DUCKY032", DiagnosticSeverity.Error, "Union case is obsolete as an error", "The cases of '{0}' can't be registered: generated code can't reference {1}, obsolete as an error" },
     };
 
     [Theory]

@@ -32,3 +32,4 @@ DUCKY028 | Ducky | Warning | DispatchDiagnostics
 DUCKY029 | Ducky | Error | RegistrationDiagnostics
 DUCKY030 | Ducky | Error | RegistrationDiagnostics
 DUCKY031 | Ducky | Error | RegistrationDiagnostics
+DUCKY032 | Ducky | Error | RegistrationDiagnostics
