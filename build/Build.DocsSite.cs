@@ -91,6 +91,7 @@ internal sealed partial class Build
         }
         files["_assets/search.json"] = DocsSearchIndex(sections, pages);
         files["llms-full.txt"] = DocsLlmsFull(listed, pages);
+        files["sitemap.xml"] = DocsSitemap(listed, pages);
         return new DocsSiteOutput(files, violations);
     }
 
@@ -203,6 +204,12 @@ internal sealed partial class Build
         if (!full.Contains("# Guide `A`", StringComparison.Ordinal) || full.Contains("# Old", StringComparison.Ordinal))
         {
             yield return "DocsSiteSelfCheck: llms-full.txt holds every listed page and no unlisted one";
+        }
+        var sitemap = clean.Files.GetValueOrDefault("sitemap.xml") ?? "";
+        string[] sitemapUrls = ["https://phmatray.github.io/Ducky/<", "https://phmatray.github.io/Ducky/playground/<", "https://phmatray.github.io/Ducky/docs/index.html<", "https://phmatray.github.io/Ducky/docs/guides/a.html<", "https://phmatray.github.io/Ducky/docs/diagnostics/DUCKY001.html<"];
+        if (!sitemapUrls.All(url => sitemap.Contains(url, StringComparison.Ordinal)) || sitemap.Contains("old.html", StringComparison.Ordinal))
+        {
+            yield return "DocsSiteSelfCheck: sitemap.xml holds the home page, the playground and every listed page, and no unlisted one";
         }
         var llms = LlmsTxtViolations("- [a](docs/guides/a.md)\n- [b](docs/guides/a.html#x)\n- [p](playground/)\n- [gone](docs/gone.md)\n- [x](https://x.org/y)\n",
             clean.Files.Keys.ToList(), _ => false).ToList();
@@ -472,6 +479,17 @@ internal sealed partial class Build
             text.Append("\n---\n\n<!-- ").Append(DocsSiteUrl).Append(DocsHtmlPath(path)).Append(" -->\n\n").Append(pages[path].Markdown);
         }
         return text.ToString();
+    }
+
+    // The published site's public pages: the home page, the playground and every listed docs page. docs.yml moves this
+    // file to the site root, because a sitemap only covers URLs at or below its own folder.
+    private static string DocsSitemap(List<string> listed, Dictionary<string, DocPage> pages)
+    {
+        var home = DocsSiteUrl[..^"docs/".Length];
+        var urls = new[] { home, home + "playground/" }.Concat(listed.Where(pages.ContainsKey).Select(path => DocsSiteUrl + DocsHtmlPath(path)));
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"
+            + string.Concat(urls.Select(url => $"  <url><loc>{System.Security.SecurityElement.Escape(url)}</loc></url>\n"))
+            + "</urlset>\n";
     }
 
     // The relative links of site/llms.txt name pages and files the published site has: a docs page or its .md twin (the
