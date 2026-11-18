@@ -12,6 +12,7 @@ internal sealed class Materialized((Effect Effect, bool Owned)[] effects, Middle
 
     public Dictionary<Type, EffectRunner[]> Effects { get; } = effects
         .SelectMany(e => e.Effect.CreateRunners())
-        .GroupBy(runner => runner.ActionType)
+        .SelectMany(runner => runner.ActionTypes.Select(type => (Type: type, Runner: runner)))
+        .GroupBy(entry => entry.Type, entry => entry.Runner)
         .ToDictionary(g => g.Key, g => g.ToArray());
 }

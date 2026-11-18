@@ -62,7 +62,7 @@ public abstract class EffectGroup : Effect
             throw new DuckyConfigurationException([DuckyErrors.NonConcreteHandlerType(GetType(), actionType)]);
         }
 
-        if (!_handlers.TryAdd(actionType, () => new(this, actionType, policy, action => key?.Invoke((TAction)action), (action, context, token) => handler((TAction)action, context, token))))
+        if (!_handlers.TryAdd(actionType, () => new(this, [actionType], policy, action => key?.Invoke((TAction)action), (action, context, token) => handler((TAction)action, context, token))))
         {
             throw new DuckyConfigurationException([DuckyErrors.DuplicateHandler(GetType(), actionType)]);
         }

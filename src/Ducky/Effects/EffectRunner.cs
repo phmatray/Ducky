@@ -9,7 +9,7 @@ namespace Ducky;
 // removes its successor's slot.
 internal sealed partial class EffectRunner(
     Effect effect,
-    Type actionType,
+    Type[] actionTypes,
     Concurrency policy,
     Func<object, object?> keyOf,
     Func<object, EffectContext, CancellationToken, Task> handle)
@@ -21,8 +21,8 @@ internal sealed partial class EffectRunner(
 
     internal Effect Effect => effect;
 
-    // The exact action type the store's effect index maps to this runner (ADR-0008).
-    internal Type ActionType => actionType;
+    // The exact action types the store's effect index maps to this runner (ADR-0008): one, or every case of a union effect.
+    internal Type[] ActionTypes => actionTypes;
 
     internal Concurrency Policy => policy;
 
