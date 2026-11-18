@@ -12,8 +12,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Ducky.Generators.Registration;
 
 /// <summary>
-/// A union-first type (ADR-0051) deriving directly from <c>Ducky.Slice&lt;TState, TAction&gt;</c> or
-/// <c>Ducky.EffectGroup&lt;TAction&gt;</c>, symbol-free. Emitted as an override of
+/// A union-first type (ADR-0051) deriving directly from <c>Ducky.Slice&lt;TState, TAction&gt;</c>,
+/// <c>Ducky.EffectGroup&lt;TAction&gt;</c> or, over a union, <c>Ducky.Effect&lt;TAction&gt;</c>, symbol-free.
+/// Emitted as an override of
 /// <c>RegisterCases</c> in its <see cref="Declarations"/> (outermost first, inside <see cref="Namespace"/>), one
 /// <see cref="Registrations"/> line per case of the union (suppressing the <see cref="Suppressed"/> ids of the
 /// [Experimental] and [Obsolete] cases besides CS0612/CS0618), when <see cref="Rule"/> is null; otherwise that diagnostic,
@@ -29,15 +30,20 @@ internal sealed record UnionSliceModel(
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers);
 
-    // The union-first bases: where the action type is among the type arguments, the hint-name suffix, and the registration
-    // of one case ({0}) through the expression that wraps the case value `a` into the action type ({1}).
+    // The union-first bases: where the action type is among the type arguments, the hint-name suffix, the registration of
+    // one case ({0}) through the expression that wraps the case value `a` into the action type ({1}), and whether the base
+    // is also an ordinary type over a non-union action, which no union rule applies to.
     private static readonly ImmutableArray<Kind> _kinds =
     [
         new("Ducky.Slice`2", 1, "Slice<TState, TAction>", ".UnionSlice", "On<{0}>((s, a) => Reduce(s, {1}));"),
         new("Ducky.EffectGroup`1", 0, "EffectGroup<TAction>", ".UnionEffectGroup", "On<{0}>((a, c, t) => Handle({1}, c, t));"),
+        new("Ducky.Effect`1", 0, "Effect<TAction>", ".UnionEffect", "OnCase<{0}>(a => {1});", UnionOnly: true),
     ];
 
-    /// <summary>Null unless <paramref name="type"/>'s direct base is a union-first base with a closed action type.</summary>
+    /// <summary>
+    /// Null unless <paramref name="type"/>'s direct base is a union-first base with a closed action type, which
+    /// <c>Effect&lt;TAction&gt;</c> is only over a union.
+    /// </summary>
     public static UnionSliceModel? Classify(INamedTypeSymbol type, Compilation compilation, CancellationToken cancellationToken)
     {
         if (type.BaseType is not { } baseType
@@ -50,6 +56,14 @@ internal sealed record UnionSliceModel(
         // either, since only the direct derivation is.
         var action = baseType.TypeArguments[kind.ActionIndex];
         if (action is ITypeParameterSymbol)
+        {
+            return null;
+        }
+
+        // Effect<NonUnion> is the ordinary effect, valid in every shape: this comes before each rule below.
+        var iunion = UnionCases.Resolve(compilation);
+        var isUnion = UnionCases.IsUnion(action, iunion);
+        if (kind.UnionOnly && !isUnion)
         {
             return null;
         }
@@ -71,8 +85,7 @@ internal sealed record UnionSliceModel(
             return Reported(RegistrationDiagnostics.FileLocal, chain[0].ToDisplayString());
         }
 
-        var iunion = UnionCases.Resolve(compilation);
-        if (!UnionCases.IsUnion(action, iunion))
+        if (!isUnion)
         {
             return Reported(RegistrationDiagnostics.NotUnion, kind.Display, action.ToDisplayString());
         }
@@ -174,5 +187,5 @@ internal sealed record UnionSliceModel(
     private static string Keyword(INamedTypeSymbol type) =>
         (type.IsRecord ? "record " : string.Empty) + (type.TypeKind == TypeKind.Struct ? "struct" : type.TypeKind == TypeKind.Interface ? "interface" : "class");
 
-    private sealed record Kind(string MetadataName, int ActionIndex, string Display, string Suffix, string Registration);
+    private sealed record Kind(string MetadataName, int ActionIndex, string Display, string Suffix, string Registration, bool UnionOnly = false);
 }
