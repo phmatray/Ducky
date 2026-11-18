@@ -7,6 +7,22 @@ namespace Ducky.Testing.Tests;
 // SPEC §15 (TST-01, ADR-0039): TestStore on Ducky's public API.
 public sealed class TestStoreTests
 {
+    // Create<TSlice>() is Create(d => d.AddSlice<TSlice>()): initial state, reduction, and the services callback runs.
+    [Fact]
+    public async Task TestStore_CreateOfSlice_BuildsSingleSliceStore()
+    {
+        var calls = 0;
+        await using var store = TestStore.Create<CounterSlice>(_ => calls++);
+        store.State.Get<Counter>().ShouldBe(new Counter(0));
+
+        await store.DispatchAsync(new Increment());
+        await store.Settled();
+
+        store.State.Get<Counter>().ShouldBe(new Counter(1));
+        store.Slices.ShouldHaveSingleItem().ShouldBeOfType<CounterSlice>();
+        calls.ShouldBe(1);
+    }
+
     // Seed restores with Origin.Hydration, which strict mode never checks; an unhandled user action still fails.
     [Fact]
     public async Task TestStore_Seed_NoFailure()
