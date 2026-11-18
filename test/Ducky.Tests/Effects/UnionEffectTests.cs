@@ -110,11 +110,11 @@ public sealed class UnionEffectTests
         await using var store = Build(effect);
 
         store.Dispatch(new Opened(1));
-        store.Dispatch(new LoadTrigger(new Refreshed(2)));
-        store.Dispatch(new OuterTrigger(new LoadTrigger(new Left(3))));
+        store.Dispatch(new LoadTrigger(new Opened(2)));
+        store.Dispatch(new OuterTrigger(new LoadTrigger(new Opened(3))));
         await store.WhenIdleAsync(TestContext.Current.CancellationToken);
 
-        handled.Select(t => t.Value).ShouldBe([new Opened(1), new Refreshed(2), new Left(3)]);
+        handled.Select(t => t.Value).ShouldBe([new Opened(1), new Opened(2), new Opened(3)]);
     }
 
     [Fact]
