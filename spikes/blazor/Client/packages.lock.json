@@ -25,21 +25,21 @@
       },
       "Microsoft.AspNetCore.Components.WebAssembly.Authentication": {
         "type": "Direct",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "QuN6lTvKLluAIzLYA6KZ5w5ny6nI/n/Fm7Pr9ZLfeFwSgv1HfaYkGDTVWEhkga4p+1Bl/9ZMZXmgDDJZSL+mnA==",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "6KBbiQYjaJ1jio/V25V/7MCrg8Y+t7jYlA18lMdtdo8tpXrUACaUYmeCQhQQSDTsveT00jJkwi7ZjlvoBgAZMQ==",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.Authorization": "10.0.15",
-          "Microsoft.AspNetCore.Components.Web": "10.0.15"
+          "Microsoft.AspNetCore.Components.Authorization": "11.0.0",
+          "Microsoft.AspNetCore.Components.Web": "11.0.0"
         }
       },
       "Microsoft.Authentication.WebAssembly.Msal": {
         "type": "Direct",
-        "requested": "[10.0.15, )",
-        "resolved": "10.0.15",
-        "contentHash": "7kFqnNGI+kGA42R8Qd46+ecy2SJSRE15+F5VM+5pyZupsQjx+ymkPhJQeR30ELN53fRFbXFRTV9dHV5F7hmrGA==",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "dh79Z5Hqkm0mUDu4XIvuQ2UiVrMXVF+1hSXmgmZbslZ6V40ybcLF8FkIcPtdZQ8GBYgmTrsVXQAVqVeYyo1Q5Q==",
         "dependencies": {
-          "Microsoft.AspNetCore.Components.WebAssembly.Authentication": "10.0.15"
+          "Microsoft.AspNetCore.Components.WebAssembly.Authentication": "11.0.0"
         }
       },
       "Microsoft.NET.ILLink.Tasks": {

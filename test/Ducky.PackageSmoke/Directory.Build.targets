@@ -1,0 +1,10 @@
+<Project>
+  <Import Project="../../Directory.Build.targets" />
+
+  <!-- Renovate runs a forced restore (RestoreForceEvaluate) on every project of the repository to update the lock files, and
+       one failure stops it. Outside the PackageSmoke target nothing was packed and no -p:DuckyVersion is set, so that restore
+       leaves the Ducky packages out. Every other evaluation keeps them: `dotnet list package` reads them from the assets. -->
+  <ItemGroup Condition="'$(DuckyVersion)' == '' And '$(RestoreForceEvaluate)' == 'true'">
+    <PackageReference Remove="Ducky;Ducky.Blazor;Ducky.Draft;Ducky.Reactive;Ducky.Testing;Ducky.Generator" />
+  </ItemGroup>
+</Project>
