@@ -24,8 +24,8 @@
     <PackageVersion Include="CsCheck" Version="5.0.1" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.3" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="11.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="11.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.1" />
     <!-- Ducky.Blazor.Tests: PersistStorage.Server runs against the real MemoryDistributedCache (SPEC §11.6, §17.2). -->
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="11.0.0" />
     <!-- Ducky.Blazor.Tests: the Interactive Server data protection the prerender seed's wire estimate covers (SPEC §11.4). -->
